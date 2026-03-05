@@ -244,6 +244,7 @@ const main = async (): Promise<void> => {
     const nextCommandsWithExecutionGroup = nextCommands?.map((step) => ({
       ...step,
       execution_group_id: runId,
+      origin_schema_version: BACKLOG_JSON_SCHEMA_VERSION,
     }));
     writeFileSync(
       process.stdout.fd,

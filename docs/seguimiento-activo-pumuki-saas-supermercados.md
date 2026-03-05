@@ -1478,9 +1478,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#705`.
 
-- 🚧 PUMUKI-121: Ejecutar mejora DX siguiente para `next_commands[].origin_schema_version` en JSON de watch/reconcile.
+- ✅ PUMUKI-121: Ejecutar mejora DX siguiente para `next_commands[].origin_schema_version` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `origin_schema_version` alineado con `schema_version`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `origin_schema_version`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de alineación `next_commands[].origin_schema_version == payload.schema_version`.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].origin_schema_version`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#706`.
+
+- 🚧 PUMUKI-122: Ejecutar mejora DX siguiente para `next_commands[].recommendation_type` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `origin_schema_version` por paso en `next_commands[]`.
+    - Exponer `recommendation_type` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Alinear versión por paso con `schema_version` del payload.
-  - Issue upstream activa: `#706`.
+    - Mantener valor estable para clasificación de dashboards.
+  - Issue upstream activa: `#707`.

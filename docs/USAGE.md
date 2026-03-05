@@ -345,6 +345,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog --json` includes `next_commands[].depends_on` for step sequencing (`null` for dry-run, `dry_run` for apply).
 - `watch-consumer-backlog --json` includes `next_commands[].execution_group_id` to correlate all suggested steps in the same run.
 - `watch-consumer-backlog --json` includes `next_commands[].origin_tool` (`backlog-watch`) for multi-tool aggregation.
+- `watch-consumer-backlog --json` includes `next_commands[].origin_schema_version` to bind each step to the emitting schema contract.
 - `watch-consumer-backlog --json` includes `next_commands[].description` for human-readable step guidance.
 - `watch-consumer-backlog` (modo humano) imprime `action_required_reasons=<...|none>`.
 - `watch-consumer-backlog` (modo humano) añade hint `--no-fail` cuando hay acción requerida.
@@ -364,6 +365,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].depends_on` for step sequencing (`null` for dry-run, `dry_run` for apply).
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].execution_group_id` to correlate all suggested steps in the same run.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].origin_tool` (`backlog-reconcile`) for multi-tool aggregation.
+- `reconcile-consumer-backlog-issues --json` includes `next_commands[].origin_schema_version` to bind each step to the emitting schema contract.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].description` for human-readable step guidance.
 - `reconcile-consumer-backlog-issues` (modo humano) muestra `heading_changes=<n>` y lista las líneas afectadas cuando hay drift en encabezados.
 - `reconcile-consumer-backlog-issues` (modo humano) imprime `action_required_reasons=<...|none>`.
