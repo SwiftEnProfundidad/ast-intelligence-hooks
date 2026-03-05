@@ -58,6 +58,15 @@ Detalle.
 Detalle.
 `;
 
+const headingOnlyDriftMarkdown = `# Backlog
+| ID | Estado | Referencia upstream |
+|---|---|---|
+| PUMUKI-010 | ✅ | Pendiente |
+
+### ⏳ PUMUKI-010
+Detalle.
+`;
+
 const closedNarrativeMarkdown = `# Registro de Bugs y Mejoras de Pumuki
 
 ## Estado de este backlog
@@ -358,4 +367,26 @@ test('runBacklogIssuesReconcile mantiene unresolvedReferenceIds cuando no se pue
   assert.deepEqual(result.referenceResolution.unresolvedReferenceIds, ['AST-GAP-010']);
   assert.equal(result.referenceChanges.length, 0);
   assert.equal(result.issuesResolved, 0);
+});
+
+test('runBacklogIssuesReconcile apply escribe cuando el único delta es heading sync', async () => {
+  let written: string | undefined;
+  const result = await runBacklogIssuesReconcile({
+    filePath: '/tmp/backlog-heading-only.md',
+    apply: true,
+    readFile: () => headingOnlyDriftMarkdown,
+    writeFile: (_path, contents) => {
+      written = contents;
+    },
+    resolveIssueState: () => 'OPEN',
+  });
+
+  assert.equal(result.referenceChanges.length, 0);
+  assert.equal(result.changes.length, 0);
+  assert.equal(result.summaryUpdated, false);
+  assert.equal(result.nextStepUpdated, false);
+  assert.equal(result.headingUpdated, true);
+  assert.equal(result.headingChanges.length, 1);
+  assert.equal(result.updated, true);
+  assert.match(written ?? '', /### ✅ PUMUKI-010/);
 });

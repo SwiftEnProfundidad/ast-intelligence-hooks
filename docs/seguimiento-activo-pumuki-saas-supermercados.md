@@ -1044,9 +1044,23 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#676`.
 
-- 🚧 PUMUKI-092: Ejecutar mejora DX siguiente para trazabilidad e2e del heading sync en salida CLI/docs de reconciliación.
+- ✅ PUMUKI-092: Ejecutar mejora DX siguiente para trazabilidad e2e del heading sync en salida CLI/docs de reconciliación.
+  - Fix:
+    - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`:
+      - nuevo caso e2e donde el único delta es `heading sync` y `--apply` persiste cambios.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - nuevo test JSON para `headingUpdated` + `headingChanges`.
+    - `docs/USAGE.md`:
+      - documentado contrato JSON de heading sync en backlog tooling.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `23 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `40 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#677`.
+
+- 🚧 PUMUKI-093: Ejecutar mejora DX siguiente para resumen humano de heading sync en salida no-JSON del reconciliador.
   - Alcance:
-    - Añadir caso e2e donde el único cambio reconciliado sea heading emoji.
-    - Verificar contrato JSON (`headingUpdated`, `headingChanges`) en flujo CLI.
-    - Documentar comportamiento en sección backlog tooling.
-  - Issue upstream activa: `#677`.
+    - Exponer `heading_changes` en salida humana (`stdout`) del comando `reconcile-consumer-backlog-issues`.
+    - Listar líneas/IDs impactadas cuando existan cambios de heading.
+    - Mantener compatibilidad del formato actual.
+  - Issue upstream activa: `#678`.

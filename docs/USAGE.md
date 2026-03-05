@@ -331,6 +331,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - mapping precedence is deterministic: inline `#issue` -> `--id-issue-map-from` -> `--id-issue-map` -> `--resolve-missing-via-gh`.
 - `watch-consumer-backlog` is non-destructive and reports action-required drift.
 - `reconcile-consumer-backlog-issues` supports dry-run/apply and now reports mapping source (`none|json|markdown|merged`).
+- `reconcile-consumer-backlog-issues --json` includes heading sync metadata (`headingUpdated`, `headingChanges`) for section headings `### ✅/🚧/⏳/⛔ <ID>`.
 
 Backlog tooling quick reference:
 

@@ -135,3 +135,21 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
   assert.equal(payload.compat?.is_backward_compatible, true);
   assert.deepEqual(payload.compat?.breaking_changes, []);
 });
+
+test('reconcile-consumer-backlog-issues --json expone heading sync metadata', () => {
+  const scriptPath = resolveScriptPath('../reconcile-consumer-backlog-issues.ts');
+  const backlogFile = createBacklogFile(
+    `| ID | Estado | Referencia upstream |\n|---|---|---|\n| PUMUKI-010 | ✅ | Pendiente |\n\n### ⏳ PUMUKI-010\nDetalle.\n`
+  );
+  const result = runTsxScript(scriptPath, ['--file=' + backlogFile, '--json', '--apply']);
+  assert.equal(result.status, 0);
+  const payload = JSON.parse(result.stdout) as {
+    headingUpdated?: boolean;
+    headingChanges?: Array<{ id?: string; from?: string; to?: string }>;
+  };
+  assert.equal(payload.headingUpdated, true);
+  assert.equal(payload.headingChanges?.length, 1);
+  assert.equal(payload.headingChanges?.[0]?.id, 'PUMUKI-010');
+  assert.equal(payload.headingChanges?.[0]?.from, '⏳');
+  assert.equal(payload.headingChanges?.[0]?.to, '✅');
+});
