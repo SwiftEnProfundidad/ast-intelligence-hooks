@@ -84,6 +84,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
       heading_drift?: number;
     };
     action_required_reasons?: string[];
+    next_command?: string;
   };
   assert.equal(payload.tool, 'backlog-watch');
   assert.equal(payload.schema_version, '1.0.0');
@@ -103,6 +104,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
   assert.equal(payload.classification_counts?.active_issue, 0);
   assert.equal(payload.classification_counts?.heading_drift, 0);
   assert.deepEqual(payload.action_required_reasons, []);
+  assert.equal(payload.next_command, undefined);
 });
 
 test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () => {
@@ -129,6 +131,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
       heading_drift?: number;
     };
     action_required_reasons?: string[];
+    next_command?: string;
     heading_drift_count?: number;
     headingDrift?: Array<{ id?: string; headingStatus?: string; effectiveStatus?: string }>;
     hasActionRequired?: boolean;
@@ -143,6 +146,9 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.equal(payload.classification_counts?.active_issue, 0);
   assert.equal(payload.classification_counts?.heading_drift, 1);
   assert.deepEqual(payload.action_required_reasons, ['needs_issue', 'heading_drift']);
+  assert.match(payload.next_command ?? '', /--file='/);
+  assert.match(payload.next_command ?? '', /--json &&/);
+  assert.match(payload.next_command ?? '', /--apply$/);
   assert.equal(payload.hasActionRequired, true);
 });
 

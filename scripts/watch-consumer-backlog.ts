@@ -32,6 +32,8 @@ type ParsedArgs = {
 
 const JSON_TOOL_NAME = 'backlog-watch';
 
+const shellQuote = (value: string): string => `'${value.replace(/'/g, `'\\''`)}'`;
+
 const HELP_TEXT = `Usage:
   npx --yes tsx@4.21.0 scripts/watch-consumer-backlog.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--id-issue-map-from=<md-path>] [--resolve-missing-via-gh] [--json] [--no-fail]
 
@@ -197,6 +199,13 @@ const main = async (): Promise<void> => {
     driftClosedIssueCount: result.classification.driftClosedIssue.length,
     headingDriftCount: result.headingDrift.length,
   });
+  const nextCommand = result.hasActionRequired
+    ? `npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=${shellQuote(
+        parsed.filePath
+      )} --json && npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=${shellQuote(
+        parsed.filePath
+      )} --apply`
+    : undefined;
 
   if (parsed.json) {
     const generatedAt = new Date().toISOString();
@@ -229,6 +238,7 @@ const main = async (): Promise<void> => {
             heading_drift: result.headingDrift.length,
           },
           action_required_reasons: actionRequiredReasons,
+          ...(nextCommand ? { next_command: nextCommand } : {}),
           heading_drift_count: result.headingDrift.length,
           ...result,
         },

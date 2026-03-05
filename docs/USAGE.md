@@ -334,6 +334,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog --json` exposes `heading_drift_count` for low-friction alerting parsers.
 - `watch-consumer-backlog --json` exposes `classification_counts` (`needs_issue`, `drift_closed_issue`, `active_issue`, `heading_drift`).
 - `watch-consumer-backlog --json` exposes `action_required_reasons` when findings are active.
+- `watch-consumer-backlog --json` exposes `next_command` when action is required (safe reconcile sequence).
 - `watch-consumer-backlog` (modo humano) imprime `action_required_reasons=<...|none>`.
 - `watch-consumer-backlog` (modo humano) añade hint `--no-fail` cuando hay acción requerida.
 - `reconcile-consumer-backlog-issues` supports dry-run/apply and now reports mapping source (`none|json|markdown|merged`).
