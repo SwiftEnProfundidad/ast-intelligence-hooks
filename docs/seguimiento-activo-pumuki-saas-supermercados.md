@@ -937,8 +937,19 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#666`.
 
-- 🚧 PUMUKI-082: Ejecutar mejora DX siguiente para añadir `compat.is_backward_compatible` al contrato JSON.
+- ✅ PUMUKI-082: Ejecutar mejora DX siguiente para añadir `compat.is_backward_compatible` al contrato JSON.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye `compat.is_backward_compatible`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de `compat.is_backward_compatible` en ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#667`.
+
+- 🚧 PUMUKI-083: Ejecutar mejora DX siguiente para añadir `compat.contract_id` al contrato JSON.
   - Alcance:
-    - Añadir señal booleana directa de compatibilidad en `watch` y `reconcile`.
-    - Simplificar lectura por consumidores automáticos.
-  - Issue upstream activa: `#667`.
+    - Incluir identificador estable del contrato en `watch` y `reconcile`.
+    - Facilitar trazabilidad cross-tooling y versionado futuro.
+  - Issue upstream activa: `#668`.

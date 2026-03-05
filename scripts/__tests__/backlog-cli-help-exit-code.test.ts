@@ -73,6 +73,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
     };
     compat?: {
       min_reader_version?: string;
+      is_backward_compatible?: boolean;
       breaking_changes?: unknown[];
     };
   };
@@ -86,6 +87,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
   assert.equal(payload.invocation?.id_issue_map, 'none');
   assert.equal(payload.invocation?.id_issue_map_from, 'none');
   assert.equal(payload.compat?.min_reader_version, '1.0.0');
+  assert.equal(payload.compat?.is_backward_compatible, true);
   assert.deepEqual(payload.compat?.breaking_changes, []);
 });
 
@@ -111,6 +113,7 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
     };
     compat?: {
       min_reader_version?: string;
+      is_backward_compatible?: boolean;
       breaking_changes?: unknown[];
     };
   };
@@ -125,5 +128,6 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
   assert.equal(payload.invocation?.id_issue_map, 'none');
   assert.equal(payload.invocation?.id_issue_map_from, 'none');
   assert.equal(payload.compat?.min_reader_version, '1.0.0');
+  assert.equal(payload.compat?.is_backward_compatible, true);
   assert.deepEqual(payload.compat?.breaking_changes, []);
 });

@@ -185,6 +185,7 @@ const main = async (): Promise<void> => {
           },
           compat: {
             min_reader_version: '1.0.0',
+            is_backward_compatible: true,
             breaking_changes: [],
           },
           ...result,
