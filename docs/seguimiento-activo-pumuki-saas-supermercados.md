@@ -316,4 +316,23 @@
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `47 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-037: Ejecutar siguiente mejora SAAS prioritaria (`#618`) para `pumuki watch` proactivo (notificaciones + anti-spam) y cierre trazable de issue upstream.
+- ✅ PUMUKI-037: Ejecutar siguiente mejora SAAS prioritaria (`#618`) para `pumuki watch` proactivo (notificaciones + anti-spam) y cierre trazable de issue upstream.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts` -> `3 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `32 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#618`.
+
+- ✅ PUMUKI-038: Ejecutar siguiente bug SAAS prioritaria (`#619`) para cerrar trazabilidad upstream de resolución robusta de binarios `pumuki` vía `npx` en hooks/CLI.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-command-resolution-lib.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/hookBlock.test.ts integrations/lifecycle/__tests__/hookManager.test.ts` -> `31 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#619`.
+
+- ✅ PUMUKI-039: Ejecutar siguiente bug SAAS prioritaria (`#620`) para cerrar trazabilidad upstream de robustez en repos con `:` en path.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-workspace-factory-lib.test.ts scripts/__tests__/package-install-smoke-command-resolution-lib.test.ts integrations/lifecycle/__tests__/doctor.test.ts` -> `15 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#620`.
+
+- 🚧 PUMUKI-040: Revisar el backlog SAAS actualizado y abrir/ejecutar la siguiente incidencia nueva no cubierta (sin saltar a RuralGo hasta cerrar SAAS).

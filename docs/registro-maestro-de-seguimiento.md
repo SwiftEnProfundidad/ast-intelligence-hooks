@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-036 (issue `#617`, hardening de seguridad repo-bound para `--from-evidence` en `sdd sync/learn/auto-sync`).
-- Task activa (`🚧`): PUMUKI-037 (siguiente mejora SAAS prioritaria: issue `#618`, `pumuki watch` proactivo con cierre trazable).
+- Última task cerrada (`✅`): PUMUKI-039 (issue `#620`, cierre upstream de robustez en repos con `:` en path).
+- Task activa (`🚧`): PUMUKI-040 (revisión del backlog SAAS actualizado para seleccionar/abrir y ejecutar la siguiente incidencia nueva, sin saltar a RuralGo).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
