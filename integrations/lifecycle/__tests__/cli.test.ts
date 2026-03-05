@@ -254,6 +254,31 @@ test('parseLifecycleCliArgs interpreta comandos y flags soportados', () => {
     json: true,
     remoteChecks: true,
   });
+  assert.deepEqual(
+    parseLifecycleCliArgs([
+      'watch',
+      '--stage=pre_push',
+      '--scope=repoAndStaged',
+      '--severity=medium',
+      '--interval-ms=1500',
+      '--notify-cooldown-ms=45000',
+      '--iterations=2',
+      '--no-notify',
+      '--json',
+    ]),
+    {
+      command: 'watch',
+      purgeArtifacts: false,
+      json: true,
+      watchStage: 'PRE_PUSH',
+      watchScope: 'repoAndStaged',
+      watchIntervalMs: 1500,
+      watchNotifyCooldownMs: 45000,
+      watchSeverityThreshold: 'medium',
+      watchNotifyEnabled: false,
+      watchIterations: 2,
+    }
+  );
 });
 
 test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
@@ -497,6 +522,14 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
   assert.throws(() => parseLifecycleCliArgs([]), /Pumuki lifecycle commands/i);
   assert.throws(() => parseLifecycleCliArgs(['-h']), /Pumuki lifecycle commands/i);
   assert.throws(() => parseLifecycleCliArgs(['unknown']), /Unknown command/i);
+  assert.throws(
+    () => parseLifecycleCliArgs(['watch', '--severity=urgent']),
+    /Unsupported watch severity threshold/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['watch', '--interval-ms=0']),
+    /Invalid --interval-ms value/i
+  );
   assert.throws(() => parseLifecycleCliArgs(['analytics']), /Unsupported analytics command/i);
   assert.throws(
     () => parseLifecycleCliArgs(['analytics', 'hotspots']),
@@ -553,6 +586,66 @@ test('runLifecycleCli retorna 0 para ayuda explícita en comando raíz', async (
 test('runLifecycleCli retorna 0 para ayuda explícita en subcomando', async () => {
   const code = await withSilentConsole(() => runLifecycleCli(['sdd', '--help']));
   assert.equal(code, 0);
+});
+
+test('runLifecycleCli watch --json delega en runLifecycleWatch y devuelve payload estable', async () => {
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  try {
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+    const code = await runLifecycleCli(
+      ['watch', '--stage=pre_commit', '--once', '--json'],
+      {
+        runLifecycleWatch: async () => ({
+          command: 'pumuki watch',
+          repoRoot: '/repo',
+          stage: 'PRE_COMMIT',
+          scope: 'workingTree',
+          intervalMs: 3000,
+          notifyCooldownMs: 30000,
+          severityThreshold: 'high',
+          notifyEnabled: true,
+          ticks: 1,
+          evaluations: 1,
+          notificationsSent: 1,
+          notificationsSuppressed: 0,
+          lastTick: {
+            tick: 1,
+            changed: true,
+            evaluated: true,
+            stage: 'PRE_COMMIT',
+            scope: 'workingTree',
+            gateExitCode: 1,
+            gateOutcome: 'BLOCK',
+            threshold: 'high',
+            thresholdSeverity: 'ERROR',
+            totalFindings: 2,
+            findingsAtOrAboveThreshold: 1,
+            topCodes: ['RULE_BLOCK'],
+            notification: 'sent',
+          },
+        }),
+      }
+    );
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      command?: string;
+      stage?: string;
+      ticks?: number;
+      notificationsSent?: number;
+      lastTick?: { notification?: string };
+    };
+    assert.equal(payload.command, 'pumuki watch');
+    assert.equal(payload.stage, 'PRE_COMMIT');
+    assert.equal(payload.ticks, 1);
+    assert.equal(payload.notificationsSent, 1);
+    assert.equal(payload.lastTick?.notification, 'sent');
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+  }
 });
 
 test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto en payload', async () => {

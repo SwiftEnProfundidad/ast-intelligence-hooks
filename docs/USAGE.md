@@ -245,6 +245,12 @@ npx --yes pumuki doctor
 # show lifecycle status
 npx --yes pumuki status
 
+# proactive local watch (worktree + anti-spam notifications)
+npx --yes pumuki watch --stage=PRE_COMMIT --scope=workingTree --severity=high --interval-ms=3000 --notify-cooldown-ms=30000
+
+# one-shot watch tick (scripts/diagnostics)
+npx --yes pumuki watch --once --json
+
 # show SDD/OpenSpec status snapshot
 npx --yes pumuki sdd status
 
@@ -298,6 +304,13 @@ Loop runtime behavior:
 - Each run executes one gate attempt on `workingTree`.
 - Gate policy is strict fail-fast: a blocked attempt returns exit code `1` and status `blocked`.
 - Per-attempt evidence is persisted as `.pumuki/loop-sessions/<session-id>.attempt-<n>.json`.
+
+Watch runtime behavior:
+- `pumuki watch` evaluates gate policy on local changes and emits terminal summaries on each evaluation tick.
+- `--severity` defines notification threshold (`critical|high|medium|low`) without changing gate block policy.
+- `--notify-cooldown-ms` enables anti-spam throttling for repeated alerts with equal signature.
+- `--no-notify` keeps watch output without OS notifications.
+- `--once` or `--iterations=<n>` is recommended for CI/scripts to avoid long-running sessions.
 
 OpenSpec integration behavior:
 - `pumuki install` auto-bootstraps OpenSpec (`@fission-ai/openspec`) when missing/incompatible and scaffolds `openspec/` project baseline when absent.

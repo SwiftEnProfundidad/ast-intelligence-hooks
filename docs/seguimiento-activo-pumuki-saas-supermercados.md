@@ -202,4 +202,16 @@
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `44 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-027: Ejecutar siguiente mejora SAAS prioritaria (`#618`) para `pumuki watch` proactivo con notificaciones/alertas sin spam y controles de silencio.
+- ✅ PUMUKI-027: Ejecutar siguiente mejora SAAS prioritaria (`#618`) para `pumuki watch` proactivo con notificaciones/alertas sin spam y controles de silencio.
+  - Fix:
+    - Nuevo comando `pumuki watch` en CLI lifecycle.
+    - Configuración operativa: `--stage`, `--scope`, `--severity`, `--interval-ms`, `--notify-cooldown-ms`, `--no-notify`, `--once|--iterations`.
+    - Motor local de watch en `integrations/lifecycle/watch.ts` con ciclo `change -> evaluate -> notify`.
+    - Anti-spam determinista por firma+cooldown y umbral de severidad configurable para alertas.
+    - Integración con notificación de bloqueo (`gate.blocked`) y resumen (`audit.summary`) sin alterar política de bloqueo del gate.
+    - Documentación de uso y límites en `docs/USAGE.md`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `34 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-028: Ejecutar siguiente bug SAAS prioritaria (`#619`) para robustecer resolución de binarios `pumuki` vía `npx` en hooks/CLI.

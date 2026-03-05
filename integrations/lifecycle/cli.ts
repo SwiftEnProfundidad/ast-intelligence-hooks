@@ -46,6 +46,12 @@ import {
   buildPreWriteAutomationTrace,
   type PreWriteAutomationTrace,
 } from './preWriteAutomation';
+import {
+  runLifecycleWatch,
+  type LifecycleWatchScope,
+  type LifecycleWatchSeverityThreshold,
+  type LifecycleWatchStage,
+} from './watch';
 import { buildLocalHotspotsReport, type LocalHotspotsReport } from './analyticsHotspots';
 import { resolveHotspotsSaasIngestionAuditPath } from './saasIngestionAudit';
 import { readHotspotsSaasIngestionPayload } from './saasIngestionContract';
@@ -66,6 +72,7 @@ type LifecycleCommand =
   | 'update'
   | 'doctor'
   | 'status'
+  | 'watch'
   | 'loop'
   | 'sdd'
   | 'adapter'
@@ -110,6 +117,13 @@ type ParsedArgs = {
   sddAutoSyncStage?: SddStage;
   sddAutoSyncTask?: string;
   sddAutoSyncFromEvidence?: string;
+  watchStage?: LifecycleWatchStage;
+  watchScope?: LifecycleWatchScope;
+  watchIntervalMs?: number;
+  watchNotifyCooldownMs?: number;
+  watchSeverityThreshold?: LifecycleWatchSeverityThreshold;
+  watchNotifyEnabled?: boolean;
+  watchIterations?: number;
   adapterCommand?: 'install';
   adapterAgent?: AdapterAgent;
   adapterDryRun?: boolean;
@@ -129,6 +143,7 @@ Pumuki lifecycle commands:
   pumuki update [--latest|--spec=<package-spec>]
   pumuki doctor [--remote-checks] [--deep] [--json]
   pumuki status [--json] [--remote-checks]
+  pumuki watch [--stage=PRE_COMMIT|PRE_PUSH|CI] [--scope=workingTree|staged|repoAndStaged|repo] [--severity=critical|high|medium|low] [--interval-ms=<n>] [--notify-cooldown-ms=<n>] [--no-notify] [--once|--iterations=<n>] [--json]
   pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]
   pumuki loop status --session=<session-id> [--json]
   pumuki loop stop --session=<session-id> [--json]
@@ -177,6 +192,7 @@ const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'update' ||
   value === 'doctor' ||
   value === 'status' ||
+  value === 'watch' ||
   value === 'loop' ||
   value === 'sdd' ||
   value === 'adapter' ||
@@ -209,6 +225,44 @@ const parseSddEvidencePath = (value: string): string => {
     throw new Error(`Invalid --from-evidence value "${value}".`);
   }
   return normalized;
+};
+
+const parseWatchStage = (value?: string): LifecycleWatchStage => {
+  const normalized = (value ?? 'PRE_COMMIT').trim().toUpperCase();
+  if (normalized === 'PRE_COMMIT' || normalized === 'PRE_PUSH' || normalized === 'CI') {
+    return normalized;
+  }
+  throw new Error(`Unsupported watch stage "${value}". Use PRE_COMMIT, PRE_PUSH or CI.`);
+};
+
+const parseWatchScope = (value?: string): LifecycleWatchScope => {
+  const normalized = (value ?? 'workingTree').trim();
+  if (
+    normalized === 'workingTree' ||
+    normalized === 'staged' ||
+    normalized === 'repoAndStaged' ||
+    normalized === 'repo'
+  ) {
+    return normalized;
+  }
+  throw new Error(
+    `Unsupported watch scope "${value}". Use workingTree, staged, repoAndStaged or repo.`
+  );
+};
+
+const parseWatchSeverityThreshold = (value?: string): LifecycleWatchSeverityThreshold => {
+  const normalized = (value ?? 'high').trim().toLowerCase();
+  if (
+    normalized === 'critical' ||
+    normalized === 'high' ||
+    normalized === 'medium' ||
+    normalized === 'low'
+  ) {
+    return normalized;
+  }
+  throw new Error(
+    `Unsupported watch severity threshold "${value}". Use critical, high, medium or low.`
+  );
 };
 
 const parseOutputPathFlag = (value: string, flagName: '--output-json' | '--output-markdown'): string => {
@@ -443,6 +497,13 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let json = false;
   let remoteChecks = false;
   let doctorDeep = false;
+  let watchStage: ParsedArgs['watchStage'];
+  let watchScope: ParsedArgs['watchScope'];
+  let watchIntervalMs: ParsedArgs['watchIntervalMs'];
+  let watchNotifyCooldownMs: ParsedArgs['watchNotifyCooldownMs'];
+  let watchSeverityThreshold: ParsedArgs['watchSeverityThreshold'];
+  let watchNotifyEnabled: ParsedArgs['watchNotifyEnabled'];
+  let watchIterations: ParsedArgs['watchIterations'];
   let sddCommand: ParsedArgs['sddCommand'];
   let loopCommand: ParsedArgs['loopCommand'];
   let loopSessionId: ParsedArgs['loopSessionId'];
@@ -477,6 +538,78 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let analyticsSinceDays: ParsedArgs['analyticsSinceDays'];
   let analyticsJsonOutputPath: ParsedArgs['analyticsJsonOutputPath'];
   let analyticsMarkdownOutputPath: ParsedArgs['analyticsMarkdownOutputPath'];
+
+  if (commandRaw === 'watch') {
+    for (const arg of argv.slice(1)) {
+      if (arg === '--json') {
+        json = true;
+        continue;
+      }
+      if (arg === '--no-notify') {
+        watchNotifyEnabled = false;
+        continue;
+      }
+      if (arg === '--once') {
+        watchIterations = 1;
+        continue;
+      }
+      if (arg.startsWith('--stage=')) {
+        watchStage = parseWatchStage(arg.slice('--stage='.length));
+        continue;
+      }
+      if (arg.startsWith('--scope=')) {
+        watchScope = parseWatchScope(arg.slice('--scope='.length));
+        continue;
+      }
+      if (arg.startsWith('--severity=')) {
+        watchSeverityThreshold = parseWatchSeverityThreshold(
+          arg.slice('--severity='.length)
+        );
+        continue;
+      }
+      if (arg.startsWith('--interval-ms=')) {
+        const parsedInterval = Number.parseInt(arg.slice('--interval-ms='.length), 10);
+        if (!Number.isInteger(parsedInterval) || parsedInterval <= 0) {
+          throw new Error(`Invalid --interval-ms value "${arg}".`);
+        }
+        watchIntervalMs = parsedInterval;
+        continue;
+      }
+      if (arg.startsWith('--notify-cooldown-ms=')) {
+        const parsedCooldown = Number.parseInt(
+          arg.slice('--notify-cooldown-ms='.length),
+          10
+        );
+        if (!Number.isInteger(parsedCooldown) || parsedCooldown < 0) {
+          throw new Error(`Invalid --notify-cooldown-ms value "${arg}".`);
+        }
+        watchNotifyCooldownMs = parsedCooldown;
+        continue;
+      }
+      if (arg.startsWith('--iterations=')) {
+        const parsedIterations = Number.parseInt(arg.slice('--iterations='.length), 10);
+        if (!Number.isInteger(parsedIterations) || parsedIterations <= 0) {
+          throw new Error(`Invalid --iterations value "${arg}".`);
+        }
+        watchIterations = parsedIterations;
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    }
+
+    return {
+      command: commandRaw,
+      purgeArtifacts: false,
+      json,
+      watchStage: watchStage ?? 'PRE_COMMIT',
+      watchScope: watchScope ?? 'workingTree',
+      watchIntervalMs: watchIntervalMs ?? 3000,
+      watchNotifyCooldownMs: watchNotifyCooldownMs ?? 30_000,
+      watchSeverityThreshold: watchSeverityThreshold ?? 'high',
+      watchNotifyEnabled: watchNotifyEnabled !== false,
+      ...(typeof watchIterations === 'number' ? { watchIterations } : {}),
+    };
+  }
 
   if (commandRaw === 'analytics') {
     const subcommandRaw = argv[1] ?? '';
@@ -1111,6 +1244,7 @@ type LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate: typeof emitAuditSummaryNotificationFromAiGate;
   emitGateBlockedNotification: typeof emitGateBlockedNotification;
   runPlatformGate: typeof runPlatformGate;
+  runLifecycleWatch: typeof runLifecycleWatch;
   collectRemoteCiDiagnostics: typeof collectRemoteCiDiagnostics;
 };
 
@@ -1118,6 +1252,7 @@ const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate,
   emitGateBlockedNotification,
   runPlatformGate,
+  runLifecycleWatch,
   collectRemoteCiDiagnostics,
 };
 
@@ -1490,6 +1625,35 @@ export const runLifecycleCli = async (
           if (remoteCiDiagnostics) {
             printRemoteCiDiagnostics(remoteCiDiagnostics);
           }
+        }
+        return 0;
+      }
+      case 'watch': {
+        const watchResult = await activeDependencies.runLifecycleWatch(
+          {
+            repoRoot: process.cwd(),
+            stage: parsed.watchStage,
+            scope: parsed.watchScope,
+            intervalMs: parsed.watchIntervalMs,
+            notifyCooldownMs: parsed.watchNotifyCooldownMs,
+            severityThreshold: parsed.watchSeverityThreshold,
+            notifyEnabled: parsed.watchNotifyEnabled,
+            maxIterations: parsed.watchIterations,
+            onTick: parsed.json
+              ? undefined
+              : (tick) => {
+                  writeInfo(
+                    `[pumuki][watch] tick=${tick.tick} stage=${tick.stage} scope=${tick.scope} changed=${tick.changed ? 'yes' : 'no'} evaluated=${tick.evaluated ? 'yes' : 'no'} exit=${tick.gateExitCode ?? 'n/a'} threshold=${tick.threshold} matched=${tick.findingsAtOrAboveThreshold} notification=${tick.notification}`
+                  );
+                },
+          }
+        );
+        if (parsed.json) {
+          writeInfo(JSON.stringify(watchResult, null, 2));
+        } else {
+          writeInfo(
+            `[pumuki][watch] done ticks=${watchResult.ticks} evaluations=${watchResult.evaluations} sent=${watchResult.notificationsSent} suppressed=${watchResult.notificationsSuppressed}`
+          );
         }
         return 0;
       }
