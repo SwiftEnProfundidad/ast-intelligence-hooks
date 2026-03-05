@@ -65,6 +65,9 @@ const defaultDependencies: PreWriteAutomationDependencies = {
 const hasAutoFixableEvidenceViolation = (aiGate: ReturnType<typeof evaluateAiGate>): boolean =>
   aiGate.violations.some((violation) => PRE_WRITE_AUTOFIXABLE_EVIDENCE_CODES.has(violation.code));
 
+const hasEvidenceGateBlockedViolation = (aiGate: ReturnType<typeof evaluateAiGate>): boolean =>
+  aiGate.violations.some((violation) => violation.code === 'EVIDENCE_GATE_BLOCKED');
+
 const hasAutoFixableMcpReceiptViolation = (aiGate: ReturnType<typeof evaluateAiGate>): boolean =>
   aiGate.violations.some((violation) => PRE_WRITE_AUTOFIXABLE_MCP_RECEIPT_CODES.has(violation.code));
 
@@ -123,7 +126,7 @@ export const buildPreWriteAutomationTrace = async (params: {
       trace.actions.push({
         action: 'refresh_evidence',
         status: 'OK',
-        details: `runPlatformGate exit_code=${gateExitCode}`,
+        details: `stage=PRE_COMMIT runPlatformGate exit_code=${gateExitCode}`,
       });
       aiGate = activeDependencies.runEnterpriseAiGateCheck({
         repoRoot: params.repoRoot,
@@ -134,7 +137,43 @@ export const buildPreWriteAutomationTrace = async (params: {
       trace.actions.push({
         action: 'refresh_evidence',
         status: 'FAILED',
-        details: error instanceof Error ? error.message : 'Unknown evidence refresh error',
+        details: error instanceof Error ? error.message : 'Unknown PRE_COMMIT evidence refresh error',
+      });
+    }
+  }
+
+  if (!aiGate.allowed && hasEvidenceGateBlockedViolation(aiGate)) {
+    trace.attempted = true;
+    try {
+      const gateExitCode = await params.runPlatformGate({
+        policy: {
+          stage: 'PRE_PUSH',
+          blockOnOrAbove: 'ERROR',
+          warnOnOrAbove: 'WARN',
+        },
+        scope: {
+          kind: 'workingTree',
+        },
+        auditMode: 'gate',
+        dependencies: {
+          printGateFindings: () => {},
+        },
+      });
+      trace.actions.push({
+        action: 'refresh_evidence',
+        status: 'OK',
+        details: `stage=PRE_PUSH runPlatformGate exit_code=${gateExitCode}`,
+      });
+      aiGate = activeDependencies.runEnterpriseAiGateCheck({
+        repoRoot: params.repoRoot,
+        stage: 'PRE_WRITE',
+        requireMcpReceipt: true,
+      }).result;
+    } catch (error) {
+      trace.actions.push({
+        action: 'refresh_evidence',
+        status: 'FAILED',
+        details: error instanceof Error ? error.message : 'Unknown PRE_PUSH evidence refresh error',
       });
     }
   }
