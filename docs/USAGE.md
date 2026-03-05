@@ -337,6 +337,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog --json` exposes `next_command` when action is required (safe reconcile sequence).
 - `watch-consumer-backlog --json` exposes `next_command_reason` when `next_command` is present.
 - `watch-consumer-backlog --json` exposes `next_commands[]` (ordered dry-run/apply steps) when action is required.
+- `watch-consumer-backlog --json` includes `next_commands[].id` (1-based stable order).
 - `watch-consumer-backlog --json` includes `next_commands[].safety` (`read_only` | `mutating`) for orchestration safety.
 - `watch-consumer-backlog --json` includes `next_commands[].description` for human-readable step guidance.
 - `watch-consumer-backlog` (modo humano) imprime `action_required_reasons=<...|none>`.
@@ -349,6 +350,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `reconcile-consumer-backlog-issues --json` exposes `next_command` when there are actionable deltas (`--json` + `--apply` sequence).
 - `reconcile-consumer-backlog-issues --json` exposes `next_command_reason` when `next_command` is present.
 - `reconcile-consumer-backlog-issues --json` exposes `next_commands[]` (ordered dry-run/apply steps) when action is required.
+- `reconcile-consumer-backlog-issues --json` includes `next_commands[].id` (1-based stable order).
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].safety` (`read_only` | `mutating`) for orchestration safety.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].description` for human-readable step guidance.
 - `reconcile-consumer-backlog-issues` (modo humano) muestra `heading_changes=<n>` y lista las líneas afectadas cuando hay drift en encabezados.

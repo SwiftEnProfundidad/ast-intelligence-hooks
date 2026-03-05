@@ -229,6 +229,7 @@ const main = async (): Promise<void> => {
     actionRequiredReasons.length > 0
       ? [
           {
+            id: 1,
             label: 'dry_run',
             mode: 'dry-run',
             safety: 'read_only',
@@ -236,6 +237,7 @@ const main = async (): Promise<void> => {
             command: dryRunCommand,
           },
           {
+            id: 2,
             label: 'apply',
             mode: 'apply',
             safety: 'mutating',

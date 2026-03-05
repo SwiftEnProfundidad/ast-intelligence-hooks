@@ -87,6 +87,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
     next_command?: string;
     next_command_reason?: string;
     next_commands?: Array<{
+      id?: number;
       label?: string;
       mode?: string;
       safety?: string;
@@ -144,6 +145,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
     next_command?: string;
     next_command_reason?: string;
     next_commands?: Array<{
+      id?: number;
       label?: string;
       mode?: string;
       safety?: string;
@@ -169,11 +171,13 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.match(payload.next_command ?? '', /--apply$/);
   assert.equal(payload.next_command_reason, 'needs_issue');
   assert.equal(payload.next_commands?.length, 2);
+  assert.equal(payload.next_commands?.[0]?.id, 1);
   assert.equal(payload.next_commands?.[0]?.label, 'dry_run');
   assert.equal(payload.next_commands?.[0]?.mode, 'dry-run');
   assert.equal(payload.next_commands?.[0]?.safety, 'read_only');
   assert.match(payload.next_commands?.[0]?.description ?? '', /without mutating files/);
   assert.match(payload.next_commands?.[0]?.command ?? '', /--json$/);
+  assert.equal(payload.next_commands?.[1]?.id, 2);
   assert.equal(payload.next_commands?.[1]?.label, 'apply');
   assert.equal(payload.next_commands?.[1]?.mode, 'apply');
   assert.equal(payload.next_commands?.[1]?.safety, 'mutating');
@@ -221,6 +225,7 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
     next_command?: string;
     next_command_reason?: string;
     next_commands?: Array<{
+      id?: number;
       label?: string;
       mode?: string;
       safety?: string;
@@ -275,6 +280,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
     next_command?: string;
     next_command_reason?: string;
     next_commands?: Array<{
+      id?: number;
       label?: string;
       mode?: string;
       safety?: string;
@@ -301,11 +307,13 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.match(payload.next_command ?? '', /--apply$/);
   assert.equal(payload.next_command_reason, 'heading_changes');
   assert.equal(payload.next_commands?.length, 2);
+  assert.equal(payload.next_commands?.[0]?.id, 1);
   assert.equal(payload.next_commands?.[0]?.label, 'dry_run');
   assert.equal(payload.next_commands?.[0]?.mode, 'dry-run');
   assert.equal(payload.next_commands?.[0]?.safety, 'read_only');
   assert.match(payload.next_commands?.[0]?.description ?? '', /without mutating files/);
   assert.match(payload.next_commands?.[0]?.command ?? '', /--json$/);
+  assert.equal(payload.next_commands?.[1]?.id, 2);
   assert.equal(payload.next_commands?.[1]?.label, 'apply');
   assert.equal(payload.next_commands?.[1]?.mode, 'apply');
   assert.equal(payload.next_commands?.[1]?.safety, 'mutating');
