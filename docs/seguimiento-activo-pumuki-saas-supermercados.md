@@ -335,4 +335,20 @@
     - `npm run -s typecheck` -> `PASS`.
     - Issue upstream cerrada: `#620`.
 
-- 🚧 PUMUKI-040: Revisar el backlog SAAS actualizado y abrir/ejecutar la siguiente incidencia nueva no cubierta (sin saltar a RuralGo hasta cerrar SAAS).
+- ✅ PUMUKI-040: Revisar el backlog SAAS actualizado y abrir/ejecutar la siguiente incidencia nueva no cubierta (sin saltar a RuralGo hasta cerrar SAAS).
+  - Evidencia (2026-03-05):
+    - Verificación upstream consolidada: `#614 #615 #616 #617 #618 #619 #620 #621 #622 #623` en estado `CLOSED`.
+    - Nueva incidencia abierta desde backlog SAAS (`PUMUKI-009`): `#624` (`install --with-mcp y healthcheck de wiring MCP`).
+
+- ✅ PUMUKI-041: Implementar `#624` (`install --with-mcp` + healthcheck MCP) con RED -> GREEN -> REFACTOR y cierre trazable.
+  - Fix:
+    - `integrations/lifecycle/cli.ts`: soporte `install --with-mcp` con `--agent=<name>` opcional.
+    - `integrations/lifecycle/cli.ts`: tras instalar con MCP, wiring adapter + healthcheck MCP visible (check `adapter-wiring` de `doctor --deep`).
+    - `integrations/lifecycle/__tests__/cli.test.ts`: cobertura de parseo y flujo install con wiring MCP.
+    - `docs/INSTALLATION.md`, `docs/USAGE.md`: documentación de comando y healthcheck.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `32 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#624`.
+
+- 🚧 PUMUKI-042: Implementar `#625` (pipeline AGENTS -> policy/rules con contrato ejecutable en PRE_WRITE y stages) con cierre trazable.

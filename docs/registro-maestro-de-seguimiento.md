@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-039 (issue `#620`, cierre upstream de robustez en repos con `:` en path).
-- Task activa (`🚧`): PUMUKI-040 (revisión del backlog SAAS actualizado para seleccionar/abrir y ejecutar la siguiente incidencia nueva, sin saltar a RuralGo).
+- Última task cerrada (`✅`): PUMUKI-041 (issue `#624`, `install --with-mcp` + healthcheck MCP y cierre upstream).
+- Task activa (`🚧`): PUMUKI-042 (implementación de `#625`: pipeline AGENTS -> policy/rules con contrato ejecutable).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
