@@ -5,6 +5,20 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-05 (v6.3.41)
+
+- UX de notificaciones de bloqueo mejorada para escenarios multi-repo:
+  - el subtítulo ahora incluye proyecto/repositorio (`<project> · <stage> · <causa>`),
+  - facilita distinguir bloqueos cuando hay varios repos abiertos.
+- Modal de bloqueo en macOS ahora activa por defecto en `gate.blocked`:
+  - sin requerir `PUMUKI_MACOS_BLOCKED_DIALOG=1`,
+  - override explícito soportado con `PUMUKI_MACOS_BLOCKED_DIALOG=0|1`.
+- Contrato de configuración de notificaciones endurecido:
+  - `blockedDialogEnabled` persistido y leído de forma determinista.
+- Evidencia de validación:
+  - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts` (`13 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+
 ### 2026-03-05 (v6.3.40)
 
 - AST Intelligence dual validation PoC (`#616`) integrado en gate:

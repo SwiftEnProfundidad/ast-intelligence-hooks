@@ -14,6 +14,24 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No changes yet.
 
+## [6.3.41] - 2026-03-05
+
+### Changed
+
+- macOS blocked notifications now include project context in subtitle:
+  - format: `<project> · <stage> · <cause-summary>`,
+  - improves differentiation when multiple repos are active.
+- Blocked dialog is now enabled by default on macOS for `gate.blocked`:
+  - explicit override remains available via `PUMUKI_MACOS_BLOCKED_DIALOG=0|1`,
+  - existing anti-spam controls (`mute/disable`) are preserved.
+
+### Fixed
+
+- Notification config parser and persistence now carry `blockedDialogEnabled` deterministically.
+- Added regression coverage for:
+  - project label rendering in blocked subtitle,
+  - default blocked-dialog activation without explicit env flag.
+
 ## [6.3.40] - 2026-03-05
 
 ### Added
