@@ -352,6 +352,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog --json` includes `next_commands[].recommendation_type` (`reconcile_loop`) for recommendation classification.
 - `watch-consumer-backlog --json` includes `next_commands[].priority` (`high` for `dry_run`, `medium` for `apply`) for scheduling.
 - `watch-consumer-backlog --json` includes `next_commands[].description` for human-readable step guidance.
+- `watch-consumer-backlog --json` includes `next_commands[].expected_outcome` with success signal per step.
 - `watch-consumer-backlog --json` includes `next_commands[].failure_hint` with compact remediation guidance per step.
 - `watch-consumer-backlog` (modo humano) imprime `action_required_reasons=<...|none>`.
 - `watch-consumer-backlog` (modo humano) añade hint `--no-fail` cuando hay acción requerida.
@@ -378,6 +379,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].recommendation_type` (`reconcile_loop`) for recommendation classification.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].priority` (`high` for `dry_run`, `medium` for `apply`) for scheduling.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].description` for human-readable step guidance.
+- `reconcile-consumer-backlog-issues --json` includes `next_commands[].expected_outcome` with success signal per step.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].failure_hint` with compact remediation guidance per step.
 - `reconcile-consumer-backlog-issues` (modo humano) muestra `heading_changes=<n>` y lista las líneas afectadas cuando hay drift en encabezados.
 - `reconcile-consumer-backlog-issues` (modo humano) imprime `action_required_reasons=<...|none>`.
