@@ -1713,8 +1713,22 @@
     - actualización directa de `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
     - verificación de consistencia: `rg -n \"🚧 REPORTED|⏳ REPORTED\" .../pumuki-integration-feedback.md` -> sin incidencias abiertas.
 
-- 🚧 PUMUKI-137: Preparar y ejecutar el siguiente corte de release (versionado + publicación npm + upgrade en consumidores RuralGo/SAAS/Flux_training).
+- ✅ PUMUKI-137: Preparar y ejecutar el siguiente corte de release (versionado + publicación npm + upgrade en consumidores RuralGo/SAAS/Flux_training).
+  - Resultado implementado:
+    - release publicada: `pumuki@6.3.40` (npm `latest`).
+    - upgrade consumidores completado:
+      - `R_GO`: `pumuki@6.3.40` + `pumuki install` + `status/doctor` en verde.
+      - `SAAS:APP_SUPERMERCADOS`: `pumuki@6.3.40` + `pumuki install` + `status/doctor` en verde.
+      - `Flux_training`: instalación inicial `pumuki@6.3.40` + `pumuki install` + `status/doctor` en verde.
+  - Evidencia (2026-03-05):
+    - `npm publish --access public` -> `+ pumuki@6.3.40`.
+    - `npm view pumuki version` -> `6.3.40`.
+    - validación local release:
+      - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+      - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-138: Monitorizar feedback post-release en consumidores reales (SAAS y RuralGo) y registrar únicamente hallazgos netos nuevos para siguiente corte.
   - Alcance:
-    - validar worktree/release notes/changelog y publicar patch release con fixes recientes (`PUMUKI-132..136`),
-    - verificar versión publicada en npm,
-    - ejecutar upgrade de `pumuki` en repos consumidores acordados y dejar evidencia.
+    - vigilar nuevos bloqueos/regresiones tras `6.3.40`,
+    - mantener MDs externos sincronizados por leyenda sin contradicciones,
+    - preparar siguiente paquete de fixes/mejoras sin re-bugs.
