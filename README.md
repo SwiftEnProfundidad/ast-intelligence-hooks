@@ -32,9 +32,15 @@ Install and bootstrap:
 
 ```bash
 npm install --save-exact pumuki
-npx --yes pumuki install
-npx --yes pumuki doctor
+npx --yes pumuki bootstrap --enterprise --agent=codex
 npx --yes pumuki status
+```
+
+Fallback (equivalent in pasos separados):
+
+```bash
+npx --yes pumuki install --with-mcp --agent=codex
+npx --yes pumuki doctor --deep --json
 ```
 
 OpenSpec/SDD baseline:

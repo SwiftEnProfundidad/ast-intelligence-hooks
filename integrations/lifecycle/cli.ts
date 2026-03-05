@@ -66,6 +66,7 @@ import {
 } from './remoteCiDiagnostics';
 
 type LifecycleCommand =
+  | 'bootstrap'
   | 'install'
   | 'uninstall'
   | 'remove'
@@ -90,6 +91,8 @@ type ParsedArgs = {
   purgeArtifacts: boolean;
   updateSpec?: string;
   json: boolean;
+  bootstrapEnterprise?: boolean;
+  bootstrapAgent?: AdapterAgent;
   installWithMcp?: boolean;
   installMcpAgent?: AdapterAgent;
   remoteChecks?: boolean;
@@ -139,6 +142,7 @@ type ParsedArgs = {
 
 const HELP_TEXT = `
 Pumuki lifecycle commands:
+  pumuki bootstrap [--enterprise] [--agent=<name>] [--json]
   pumuki install [--with-mcp] [--agent=<name>]
   pumuki uninstall [--purge-artifacts]
   pumuki remove
@@ -188,6 +192,7 @@ const withOptionalLocation = (message: string, location?: string): string => {
 };
 
 const isLifecycleCommand = (value: string): value is LifecycleCommand =>
+  value === 'bootstrap' ||
   value === 'install' ||
   value === 'uninstall' ||
   value === 'remove' ||
@@ -497,6 +502,8 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let purgeArtifacts = false;
   let updateSpec: ParsedArgs['updateSpec'];
   let json = false;
+  let bootstrapEnterprise = false;
+  let bootstrapAgent: ParsedArgs['bootstrapAgent'];
   let installWithMcp = false;
   let installMcpAgent: ParsedArgs['installMcpAgent'];
   let remoteChecks = false;
@@ -1100,12 +1107,23 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       installWithMcp = true;
       continue;
     }
-    if (arg.startsWith('--agent=')) {
-      if (commandRaw !== 'install') {
-        throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    if (arg === '--enterprise') {
+      if (commandRaw !== 'bootstrap') {
+        throw new Error(`--enterprise is only supported with "pumuki bootstrap".\n\n${HELP_TEXT}`);
       }
-      installMcpAgent = parseAdapterAgent(arg.slice('--agent='.length).trim());
+      bootstrapEnterprise = true;
       continue;
+    }
+    if (arg.startsWith('--agent=')) {
+      if (commandRaw === 'install') {
+        installMcpAgent = parseAdapterAgent(arg.slice('--agent='.length).trim());
+        continue;
+      }
+      if (commandRaw === 'bootstrap') {
+        bootstrapAgent = parseAdapterAgent(arg.slice('--agent='.length).trim());
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
     }
     if (arg === '--remote-checks') {
       remoteChecks = true;
@@ -1137,6 +1155,12 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   if (doctorDeep && commandRaw !== 'doctor') {
     throw new Error(`--deep is only supported with "pumuki doctor".\n\n${HELP_TEXT}`);
   }
+  if (commandRaw !== 'bootstrap' && bootstrapEnterprise) {
+    throw new Error(`--enterprise is only supported with "pumuki bootstrap".\n\n${HELP_TEXT}`);
+  }
+  if (commandRaw !== 'bootstrap' && bootstrapAgent) {
+    throw new Error(`--agent is only supported with "pumuki bootstrap" or "pumuki install --with-mcp".\n\n${HELP_TEXT}`);
+  }
   if (commandRaw !== 'install' && installWithMcp) {
     throw new Error(`--with-mcp is only supported with "pumuki install".\n\n${HELP_TEXT}`);
   }
@@ -1152,6 +1176,8 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
     purgeArtifacts,
     updateSpec,
     json,
+    ...(commandRaw === 'bootstrap' ? { bootstrapEnterprise: true } : {}),
+    ...(bootstrapAgent ? { bootstrapAgent } : {}),
     ...(installWithMcp ? { installWithMcp: true } : {}),
     ...(installMcpAgent ? { installMcpAgent } : {}),
     ...(remoteChecks ? { remoteChecks: true } : {}),
@@ -1541,6 +1567,98 @@ export const runLifecycleCli = async (
     const parsed = parseLifecycleCliArgs(argv);
 
     switch (parsed.command) {
+      case 'bootstrap': {
+        const installResult = runLifecycleInstall();
+        const agent = parsed.bootstrapAgent ?? 'codex';
+        const adapterResult = runLifecycleAdapterInstall({
+          agent,
+        });
+        const doctorReport = runLifecycleDoctor({
+          deep: true,
+        });
+        const adapterCheck = doctorReport.deep?.checks.find(
+          (check) => check.id === 'adapter-wiring'
+        );
+        const blocking = doctorHasBlockingIssues(doctorReport);
+
+        if (parsed.json) {
+          writeInfo(
+            JSON.stringify(
+              {
+                command: 'bootstrap',
+                enterprise: parsed.bootstrapEnterprise === true,
+                install: {
+                  repo_root: installResult.repoRoot,
+                  version: installResult.version,
+                  hooks_changed: installResult.changedHooks,
+                  openspec: installResult.openSpecBootstrap
+                    ? {
+                        installed: installResult.openSpecBootstrap.packageInstalled,
+                        project_initialized: installResult.openSpecBootstrap.projectInitialized,
+                        actions: installResult.openSpecBootstrap.actions,
+                        skipped_reason: installResult.openSpecBootstrap.skippedReason ?? null,
+                      }
+                    : null,
+                },
+                mcp: {
+                  agent: adapterResult.agent,
+                  changed_files: adapterResult.changedFiles,
+                  adapter_health: adapterCheck
+                    ? {
+                        status: adapterCheck.status,
+                        severity: adapterCheck.severity,
+                        message: adapterCheck.message,
+                        remediation: adapterCheck.remediation ?? null,
+                      }
+                    : null,
+                },
+                doctor: {
+                  blocking,
+                  issues: doctorReport.issues,
+                  deep: doctorReport.deep ?? null,
+                },
+              },
+              null,
+              2
+            )
+          );
+        } else {
+          writeInfo(
+            `[pumuki] bootstrap enterprise: repo=${installResult.repoRoot} version=${installResult.version}`
+          );
+          writeInfo(
+            `[pumuki] bootstrap install: hooks changed=${installResult.changedHooks.join(', ') || 'none'}`
+          );
+          if (installResult.openSpecBootstrap) {
+            writeInfo(
+              `[pumuki] bootstrap openspec: installed=${installResult.openSpecBootstrap.packageInstalled ? 'yes' : 'no'} project=${installResult.openSpecBootstrap.projectInitialized ? 'yes' : 'no'} actions=${installResult.openSpecBootstrap.actions.join(', ') || 'none'}`
+            );
+            if (installResult.openSpecBootstrap.skippedReason === 'NO_PACKAGE_JSON') {
+              writeInfo('[pumuki] bootstrap openspec skipped npm install (package.json not found)');
+            }
+          }
+          writeInfo(
+            `[pumuki] bootstrap mcp: agent=${adapterResult.agent} changed=${adapterResult.changedFiles.length}`
+          );
+          if (adapterResult.changedFiles.length > 0) {
+            writeInfo(`[pumuki] bootstrap mcp files: ${adapterResult.changedFiles.join(', ')}`);
+          }
+          if (adapterCheck) {
+            writeInfo(
+              `[pumuki] bootstrap doctor deep adapter-wiring: status=${adapterCheck.status.toUpperCase()} severity=${adapterCheck.severity.toUpperCase()} message=${adapterCheck.message}`
+            );
+            if (adapterCheck.remediation) {
+              writeInfo(`[pumuki] bootstrap doctor remediation: ${adapterCheck.remediation}`);
+            }
+          }
+        }
+
+        if (blocking) {
+          writeError('[pumuki] bootstrap enterprise detected blocking issues. Review doctor output.');
+          return 1;
+        }
+        return 0;
+      }
       case 'install': {
         const result = runLifecycleInstall();
         writeInfo(

@@ -230,6 +230,21 @@ test('parseLifecycleCliArgs interpreta comandos y flags soportados', () => {
     installWithMcp: true,
     installMcpAgent: 'codex',
   });
+  assert.deepEqual(parseLifecycleCliArgs(['bootstrap']), {
+    command: 'bootstrap',
+    purgeArtifacts: false,
+    updateSpec: undefined,
+    json: false,
+    bootstrapEnterprise: true,
+  });
+  assert.deepEqual(parseLifecycleCliArgs(['bootstrap', '--enterprise', '--agent=cursor', '--json']), {
+    command: 'bootstrap',
+    purgeArtifacts: false,
+    updateSpec: undefined,
+    json: true,
+    bootstrapEnterprise: true,
+    bootstrapAgent: 'cursor',
+  });
   assert.deepEqual(parseLifecycleCliArgs(['uninstall', '--purge-artifacts']), {
     command: 'uninstall',
     purgeArtifacts: true,
@@ -573,6 +588,14 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
   assert.throws(
     () => parseLifecycleCliArgs(['install', '--agent=codex']),
     /only supported with "pumuki install --with-mcp"/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['install', '--enterprise']),
+    /only supported with "pumuki bootstrap"/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['bootstrap', '--with-mcp']),
+    /only supported with "pumuki install"/i
   );
   assert.throws(
     () => parseLifecycleCliArgs(['status', '--deep']),
@@ -1745,6 +1768,51 @@ test('runLifecycleCli ejecuta flujo install/doctor/status/remove/uninstall en re
     );
     assert.equal(uninstallCode, 0);
   } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli bootstrap --enterprise orquesta install + mcp wiring + doctor deep', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['bootstrap', '--enterprise', '--agent=codex', '--json']);
+    assert.equal(code, 0);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      command?: string;
+      enterprise?: boolean;
+      install?: {
+        repo_root?: string;
+      };
+      mcp?: {
+        agent?: string;
+        changed_files?: string[];
+      };
+      doctor?: {
+        blocking?: boolean;
+      };
+    };
+    assert.equal(payload.command, 'bootstrap');
+    assert.equal(payload.enterprise, true);
+    assert.equal(typeof payload.install?.repo_root, 'string');
+    assert.equal(payload.install?.repo_root?.endsWith(repo), true);
+    assert.equal(payload.mcp?.agent, 'codex');
+    assert.equal(Array.isArray(payload.mcp?.changed_files), true);
+    assert.equal(typeof payload.doctor?.blocking, 'boolean');
+    assert.equal(existsSync(join(repo, '.pumuki', 'adapter.json')), true);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });
   }

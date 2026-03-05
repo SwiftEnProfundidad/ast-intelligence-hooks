@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-043 (issue `#626`, higiene temprana en PRE_WRITE con umbrales configurables + remediación determinista).
-- Task activa (`🚧`): PUMUKI-044 (issue `#627`, bootstrap enterprise unificado).
+- Última task cerrada (`✅`): PUMUKI-044 (issue `#627`, bootstrap enterprise unificado en un solo comando + docs + validación).
+- Task activa (`🚧`): PUMUKI-045 (generador oficial de evidencia por `scenario_id` con validación de tests reales).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

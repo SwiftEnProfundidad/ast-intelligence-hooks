@@ -378,4 +378,15 @@
     - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `32 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-044: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M001`, issue `#627`) para bootstrap enterprise unificado en un solo flujo.
+- ✅ PUMUKI-044: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M001`, issue `#627`) para bootstrap enterprise unificado en un solo flujo.
+  - Fix:
+    - `integrations/lifecycle/cli.ts`: nuevo comando `pumuki bootstrap [--enterprise] [--agent=<name>] [--json]` que orquesta `install + adapter wiring + doctor --deep`.
+    - Salida JSON/texto con resumen determinista de `install`, `mcp` y `doctor`, y retorno `exit 1` cuando `doctor` detecta bloqueos.
+    - `integrations/lifecycle/__tests__/cli.test.ts`: cobertura de parseo, flags inválidos y flujo integrado de bootstrap enterprise.
+    - Documentación actualizada: `README.md`, `docs/INSTALLATION.md`, `docs/USAGE.md`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `33 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#627`.
+
+- 🚧 PUMUKI-045: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M003`) para generador oficial de evidencia por `scenario_id` con validación de tests reales.

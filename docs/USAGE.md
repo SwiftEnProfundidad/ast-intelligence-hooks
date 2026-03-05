@@ -70,8 +70,8 @@ Pumuki enforces OpenSpec policy/session before allowing normal gate execution.
 Minimal daily flow:
 
 ```bash
-# bootstrap lifecycle + OpenSpec baseline when needed
-npx --yes pumuki install
+# bootstrap lifecycle + OpenSpec + MCP wiring + doctor deep
+npx --yes pumuki bootstrap --enterprise --agent=codex
 
 # inspect current SDD status
 npx --yes pumuki sdd status
@@ -236,9 +236,10 @@ npm uninstall pumuki
 `npm upgrade pumuki` is valid where npm maps `upgrade` to `update`.
 
 ```bash
-# install managed hooks
-npx --yes pumuki install
-# install managed hooks + MCP wiring in one step
+# recommended: one-shot enterprise bootstrap
+npx --yes pumuki bootstrap --enterprise --agent=codex
+
+# fallback: separated flow
 npx --yes pumuki install --with-mcp --agent=codex
 
 # inspect enterprise baseline safety checks
@@ -317,6 +318,7 @@ Watch runtime behavior:
 - `--once` or `--iterations=<n>` is recommended for CI/scripts to avoid long-running sessions.
 
 OpenSpec integration behavior:
+- `pumuki bootstrap --enterprise --agent=<name>` orquesta `install + adapter wiring + doctor --deep` en un solo paso.
 - `pumuki install` auto-bootstraps OpenSpec (`@fission-ai/openspec`) when missing/incompatible and scaffolds `openspec/` project baseline when absent.
 - `pumuki install --with-mcp` adds adapter/MCP wiring bootstrap and prints MCP health summary on completion.
 - `pumuki update --latest` migrates legacy `openspec` package to `@fission-ai/openspec` before hook reinstall.
