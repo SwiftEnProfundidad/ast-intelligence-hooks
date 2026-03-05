@@ -32,6 +32,13 @@ Options:
   --json              Imprime resultado en JSON.
   --no-fail           No devuelve exit code 1 aunque existan findings accionables.`;
 
+class HelpRequestedError extends Error {
+  constructor() {
+    super(HELP_TEXT);
+    this.name = 'HelpRequestedError';
+  }
+}
+
 const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   let filePath: string | undefined;
   let repo: string | undefined;
@@ -43,7 +50,7 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
 
   for (const arg of argv) {
     if (arg === '--help' || arg === '-h') {
-      throw new Error(HELP_TEXT);
+      throw new HelpRequestedError();
     }
     if (arg === '--json') {
       json = true;
@@ -166,6 +173,11 @@ const main = async (): Promise<void> => {
 };
 
 main().catch((error: unknown) => {
+  if (error instanceof HelpRequestedError) {
+    writeFileSync(process.stdout.fd, `${HELP_TEXT}\n`);
+    process.exitCode = 0;
+    return;
+  }
   const message = error instanceof Error ? error.message : String(error);
   writeFileSync(process.stderr.fd, `${message}\n`);
   process.exitCode = 1;

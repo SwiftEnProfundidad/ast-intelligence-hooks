@@ -865,8 +865,20 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#660`.
 
-- 🚧 PUMUKI-076: Ejecutar bug DX siguiente para normalizar `--help` a exit code `0` en scripts de backlog tooling.
+- ✅ PUMUKI-076: Ejecutar bug DX siguiente para normalizar `--help` a exit code `0` en scripts de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - `--help/-h` ahora devuelve `exit code 0`.
+      - errores reales mantienen `exit code 1`.
+    - Nueva cobertura de proceso real:
+      - `scripts/__tests__/backlog-cli-help-exit-code.test.ts` valida help vs unknown-arg en ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `33 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#661`.
+
+- 🚧 PUMUKI-077: Ejecutar mejora DX siguiente para versionar contrato JSON en backlog tooling (`schema_version` + `tool`).
   - Alcance:
-    - `watch-consumer-backlog.ts` y `reconcile-consumer-backlog-issues.ts` deben devolver `0` con `--help/-h`.
-    - Mantener `1` solo para errores reales de argumentos/ejecución.
-  - Issue upstream activa: `#661`.
+    - Añadir metadatos de contrato en salida JSON de `watch` y `reconcile` para pipelines consumidores.
+    - Mantener compatibilidad de campos existentes.
+  - Issue upstream activa: `#662`.

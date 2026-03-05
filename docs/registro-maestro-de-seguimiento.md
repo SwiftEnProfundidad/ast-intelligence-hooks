@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-075 (issue `#660`, alineación de documentación/ayuda de watch+reconcile).
-- Task activa (`🚧`): PUMUKI-076 (issue `#661`, normalizar `--help` a exit code 0 en backlog scripts).
+- Última task cerrada (`✅`): PUMUKI-076 (issue `#661`, normalizar `--help` a exit code 0 en backlog scripts).
+- Task activa (`🚧`): PUMUKI-077 (issue `#662`, versionado de contrato JSON para backlog tooling).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
