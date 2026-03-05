@@ -1638,9 +1638,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#715`.
 
-- 🚧 PUMUKI-131: Ejecutar mejora DX siguiente para `next_commands[].probe_timeout_ms` en JSON de watch/reconcile.
+- ✅ PUMUKI-131: Ejecutar mejora DX siguiente para `next_commands[].probe_timeout_ms` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].probe_timeout_ms` por paso (`1500` dry-run, `4000` apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `probe_timeout_ms` por paso.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `probe_timeout_ms` en watch/reconcile.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].probe_timeout_ms` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#716`.
+
+- 🚧 PUMUKI-132: Ejecutar mejora DX siguiente para `next_commands[].probe_kind` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `probe_timeout_ms` por paso en `next_commands[]`.
+    - Exponer `probe_kind` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Facilitar tiempo recomendado para ejecutar `success_probe`.
-  - Issue upstream activa: `#716`.
+    - Facilitar tipado explícito del mecanismo de verificación post-ejecución.
+  - Issue upstream activa: `#717`.
