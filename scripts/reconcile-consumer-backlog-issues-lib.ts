@@ -55,8 +55,13 @@ export type BacklogReconcileResult = {
 
 const STATUS_EMOJI_PATTERN = /(✅|🚧|⏳|⛔)/;
 const ISSUE_REF_PATTERN = /#(\d+)/;
-const BACKLOG_ID_PATTERN = /^PUMUKI-(?:M)?\d+$/;
+const BACKLOG_ID_PATTERN = /^(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)$/;
 const PENDING_REFERENCE_PATTERN = /\|\s*Pendiente(?:\s*\(rel\.\s*#\d+\))?\s*\|/;
+
+export type BacklogIssueNumberResolver = (
+  backlogId: string,
+  repo?: string
+) => number | null | Promise<number | null>;
 
 const parseIssueNumber = (line: string): number | null => {
   const match = ISSUE_REF_PATTERN.exec(line);
@@ -193,6 +198,41 @@ export const applyBacklogIssueReferenceMapping = (params: {
     updatedMarkdown: lines.join('\n'),
     changes,
   };
+};
+
+const parseResolvedIssueNumber = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return Math.trunc(value);
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+  return null;
+};
+
+const collectPendingReferenceIds = (markdown: string): ReadonlyArray<string> => {
+  const lines = markdown.split(/\r?\n/);
+  const ids = new Set<string>();
+  for (const line of lines) {
+    if (!line.includes('|')) {
+      continue;
+    }
+    if (parseIssueNumber(line) !== null) {
+      continue;
+    }
+    if (!PENDING_REFERENCE_PATTERN.test(line)) {
+      continue;
+    }
+    const id = parseBacklogId(line);
+    if (!id) {
+      continue;
+    }
+    ids.add(id);
+  }
+  return Array.from(ids).sort();
 };
 
 const formatSummaryLine = (params: {
@@ -437,6 +477,7 @@ export const runBacklogIssuesReconcile = async (params: {
   repo?: string;
   apply?: boolean;
   idIssueMap?: ReadonlyMap<string, number>;
+  resolveIssueNumberById?: BacklogIssueNumberResolver;
   readFile?: (path: string) => string;
   writeFile?: (path: string, contents: string) => void;
   resolveIssueState?: (issueNumber: number, repo?: string) => BacklogIssueState | Promise<BacklogIssueState>;
@@ -447,9 +488,25 @@ export const runBacklogIssuesReconcile = async (params: {
   const resolveIssueState = params.resolveIssueState ?? resolveIssueStateWithGh;
 
   const markdown = readFile(filePath);
+  const idIssueMap = new Map<string, number>(params.idIssueMap ? Array.from(params.idIssueMap.entries()) : []);
+  const resolveIssueNumberById = params.resolveIssueNumberById;
+  if (typeof resolveIssueNumberById === 'function') {
+    const pendingIds = collectPendingReferenceIds(markdown);
+    for (const backlogId of pendingIds) {
+      if (idIssueMap.has(backlogId)) {
+        continue;
+      }
+      const resolvedIssue = await resolveIssueNumberById(backlogId, params.repo);
+      const parsedIssue = parseResolvedIssueNumber(resolvedIssue);
+      if (parsedIssue === null) {
+        continue;
+      }
+      idIssueMap.set(backlogId, parsedIssue);
+    }
+  }
   const mapped = applyBacklogIssueReferenceMapping({
     markdown,
-    idIssueMap: params.idIssueMap,
+    idIssueMap,
   });
   const entries = collectBacklogIssueEntries(mapped.updatedMarkdown);
   const uniqueIssueNumbers = Array.from(new Set(entries.map((entry) => entry.issueNumber))).sort((a, b) => a - b);

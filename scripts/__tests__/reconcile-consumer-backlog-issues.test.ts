@@ -240,3 +240,52 @@ test('runBacklogIssuesReconcile aplica mapping y reconcilia estado para issue ce
   assert.equal(result.updated, true);
   assert.match(written ?? '', /\| 1 \| PUMUKI-009 \| ✅ \| #624 \| pendiente \|/);
 });
+
+test('runBacklogIssuesReconcile resuelve referencia pendiente vía resolver por ID', async () => {
+  const markdown = `| Orden | ID | Estado | Referencia upstream | Nota |\n|---|---|---|---|---|\n| 1 | PUMUKI-INC-200 | ⏳ | Pendiente | pendiente |\n`;
+  const lookedUp: Array<[string, string | undefined]> = [];
+  let written: string | undefined;
+
+  const result = await runBacklogIssuesReconcile({
+    filePath: '/tmp/backlog-resolver.md',
+    repo: 'SwiftEnProfundidad/ast-intelligence-hooks',
+    apply: true,
+    readFile: () => markdown,
+    writeFile: (_path, contents) => {
+      written = contents;
+    },
+    resolveIssueNumberById: (id, repo) => {
+      lookedUp.push([id, repo]);
+      return id === 'PUMUKI-INC-200' ? 654 : null;
+    },
+    resolveIssueState: (issueNumber) => (issueNumber === 654 ? 'CLOSED' : 'OPEN'),
+  });
+
+  assert.deepEqual(lookedUp, [['PUMUKI-INC-200', 'SwiftEnProfundidad/ast-intelligence-hooks']]);
+  assert.equal(result.referenceChanges.length, 1);
+  assert.equal(result.referenceChanges[0]?.issueNumber, 654);
+  assert.equal(result.changes.length, 1);
+  assert.equal(result.issuesResolved, 1);
+  assert.match(written ?? '', /\| 1 \| PUMUKI-INC-200 \| ✅ \| #654 \| pendiente \|/);
+});
+
+test('runBacklogIssuesReconcile prioriza idIssueMap y evita lookup redundante', async () => {
+  const markdown = `| Orden | ID | Estado | Referencia upstream | Nota |\n|---|---|---|---|---|\n| 1 | PUMUKI-INC-201 | ⏳ | Pendiente | pendiente |\n`;
+  const lookedUp: string[] = [];
+  const result = await runBacklogIssuesReconcile({
+    filePath: '/tmp/backlog-resolver-priority.md',
+    apply: false,
+    idIssueMap: new Map([['PUMUKI-INC-201', 700]]),
+    readFile: () => markdown,
+    resolveIssueNumberById: (id) => {
+      lookedUp.push(id);
+      return 701;
+    },
+    resolveIssueState: (issueNumber) => (issueNumber === 700 ? 'OPEN' : 'CLOSED'),
+  });
+
+  assert.deepEqual(lookedUp, []);
+  assert.equal(result.referenceChanges.length, 1);
+  assert.equal(result.referenceChanges[0]?.issueNumber, 700);
+  assert.equal(result.issuesResolved, 1);
+});

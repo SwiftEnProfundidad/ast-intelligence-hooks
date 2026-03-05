@@ -1,23 +1,26 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { runBacklogIssuesReconcile } from './reconcile-consumer-backlog-issues-lib';
+import { resolveIssueNumberByIdWithGh } from './watch-consumer-backlog-lib';
 
 type ParsedArgs = {
   filePath: string;
   repo?: string;
   idIssueMapPath?: string;
   idIssueMap?: ReadonlyMap<string, number>;
+  resolveMissingViaGh: boolean;
   apply: boolean;
   json: boolean;
 };
 
 const HELP_TEXT = `Usage:
-  npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--apply] [--json]
+  npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--resolve-missing-via-gh] [--apply] [--json]
 
 Options:
   --file=<path>       Ruta del backlog markdown consumidor a reconciliar.
   --repo=<owner/name> Repositorio GitHub a consultar con gh CLI (default: repo remoto actual).
   --id-issue-map=<path> JSON con mapping {"PUMUKI-XXX": 123} para filas sin referencia upstream.
+  --resolve-missing-via-gh Resolver IDs sin referencia upstream mediante búsqueda opcional en GitHub.
   --apply             Aplica cambios sobre el markdown (sin este flag es dry-run).
   --json              Imprime resultado en JSON.`;
 
@@ -26,7 +29,7 @@ const parseIdIssueMap = (path: string): ReadonlyMap<string, number> => {
   const parsed = JSON.parse(raw) as Record<string, unknown>;
   const map = new Map<string, number>();
   for (const [id, value] of Object.entries(parsed)) {
-    if (!/^PUMUKI-(?:M)?\d+$/.test(id)) {
+    if (!/^(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)$/.test(id)) {
       throw new Error(`Invalid id in --id-issue-map: "${id}"`);
     }
     if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
@@ -42,6 +45,7 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   let repo: string | undefined;
   let idIssueMapPath: string | undefined;
   let idIssueMap: ReadonlyMap<string, number> | undefined;
+  let resolveMissingViaGh = false;
   let apply = false;
   let json = false;
 
@@ -55,6 +59,10 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
     }
     if (arg === '--json') {
       json = true;
+      continue;
+    }
+    if (arg === '--resolve-missing-via-gh') {
+      resolveMissingViaGh = true;
       continue;
     }
     if (arg.startsWith('--file=')) {
@@ -85,6 +93,7 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
     repo: repo && repo.length > 0 ? repo : undefined,
     idIssueMapPath: idIssueMapPath && idIssueMapPath.length > 0 ? resolve(idIssueMapPath) : undefined,
     idIssueMap,
+    resolveMissingViaGh,
     apply,
     json,
   };
@@ -124,6 +133,7 @@ const main = async (): Promise<void> => {
     filePath: parsed.filePath,
     repo: parsed.repo,
     idIssueMap: parsed.idIssueMap,
+    resolveIssueNumberById: parsed.resolveMissingViaGh ? resolveIssueNumberByIdWithGh : undefined,
     apply: parsed.apply,
   });
 

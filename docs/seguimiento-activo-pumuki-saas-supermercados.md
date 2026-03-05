@@ -778,8 +778,28 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#655`.
 
-- 🚧 PUMUKI-071: Ejecutar mejora DX siguiente para reconciliador de backlog con resolución opcional `ID->issue` sin mapa manual.
+- ✅ PUMUKI-071: Ejecutar mejora DX siguiente para reconciliador de backlog con resolución opcional `ID->issue` sin mapa manual.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts`:
+      - nuevo `resolveIssueNumberById` opcional en `runBacklogIssuesReconcile`.
+      - resolución de referencias pendientes por orden determinista:
+        - `idIssueMap` explícito
+        - lookup opcional por ID (si sigue pendiente).
+      - soporte de IDs extendidos (`PUMUKI-INC-*`, `FP-*`, `AST-GAP-*`) para reconciliación.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - nuevo flag `--resolve-missing-via-gh` que reutiliza resolver GH del watcher.
+      - validación de `--id-issue-map` ampliada a IDs extendidos.
+    - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`:
+      - tests RED/GREEN para:
+        - resolver referencia pendiente vía resolver por ID,
+        - prioridad de `idIssueMap` sobre lookup para evitar consultas redundantes.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `24 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#656`.
+
+- 🚧 PUMUKI-072: Ejecutar mejora DX siguiente para reconciliador con paridad `--id-issue-map-from=<md>` (fuente canónica markdown).
   - Alcance:
-    - Reusar lookup de issue por ID en `reconcile-consumer-backlog-issues` para rellenar `Referencia upstream` en modo `--apply`.
-    - Reducir dependencia de `idIssueMap` JSON cuando el issue ya existe upstream.
-  - Issue upstream activa: `#656`.
+    - Alinear `reconcile-consumer-backlog-issues` con `watch-consumer-backlog` en extracción automática de mapping desde markdown canónico.
+    - Mantener merge determinista (`map-from` base + `id-issue-map` como override explícito).
+  - Issue upstream activa: `#657`.
