@@ -456,4 +456,16 @@
     - `git status --short --branch` -> worktree limpio tras sincronización documental.
     - Cierre issue upstream: `#631`.
 
-- 🚧 PUMUKI-049: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#632`) para normalizar fixtures MCP de `package_version/lifecycle_version` a resolución dinámica y evitar drift de versiones obsoletas en tests/salidas.
+- ✅ PUMUKI-049: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#632`) para normalizar fixtures MCP de `package_version/lifecycle_version` a resolución dinámica y evitar drift de versiones obsoletas en tests/salidas.
+  - Fix:
+    - `integrations/mcp/__tests__/enterpriseServer.test.ts`:
+      - eliminación de hardcodes de versión (`6.3.16`) en fixtures MCP críticos;
+      - uso de `getCurrentPumukiVersion({ repoRoot })` para `package_version/lifecycle_version`;
+      - adaptación al contrato actual de evidencia (`evidence_chain`) con helper local basado en `computeEvidencePayloadHash`, evitando falsos bloqueos `EVIDENCE_CHAIN_INVALID`.
+    - Alcance limitado a tests MCP (sin cambios funcionales en runtime productivo).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/enterpriseServer.test.ts` -> `14 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#632`.
+
+- 🚧 PUMUKI-050: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#633`) para normalizar fixtures lifecycle de `package_version/lifecycle_version` a resolución dinámica y evitar drift equivalente en `cli.test.ts`.

@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-048 (issue `#631`, sincronización canónica de leyenda/estado SAAS contra upstream para eliminar bloqueos obsoletos).
-- Task activa (`🚧`): PUMUKI-049 (issue `#632`, normalizar fixtures MCP de versión para evitar drift en trazabilidad/tests).
+- Última task cerrada (`✅`): PUMUKI-049 (issue `#632`, normalización de fixtures MCP de versión + evidencia_chain en tests).
+- Task activa (`🚧`): PUMUKI-050 (issue `#633`, normalizar fixtures lifecycle de versión para eliminar drift residual).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
