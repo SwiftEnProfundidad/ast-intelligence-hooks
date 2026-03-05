@@ -326,6 +326,7 @@ Watch runtime behavior:
 - `--no-notify` keeps watch output without OS notifications.
 - `--once` or `--iterations=<n>` is recommended for CI/scripts to avoid long-running sessions.
 
+<a id="backlog-tooling"></a>
 Backlog tooling behavior (`watch` + `reconcile` scripts):
 - mapping precedence is deterministic: inline `#issue` -> `--id-issue-map-from` -> `--id-issue-map` -> `--resolve-missing-via-gh`.
 - `watch-consumer-backlog` is non-destructive and reports action-required drift.

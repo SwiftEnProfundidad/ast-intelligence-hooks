@@ -365,7 +365,7 @@ Highlights:
 
 - Installation: `docs/INSTALLATION.md`
 - Usage: `docs/USAGE.md`
-- Backlog tooling quick section: `docs/USAGE.md#backlog-tooling-behavior-watch--reconcile-scripts`
+- Backlog tooling quick section: `docs/USAGE.md#backlog-tooling`
 - Testing: `docs/TESTING.md`
 - API reference: `docs/API_REFERENCE.md`
 - Architecture: `docs/ARCHITECTURE.md`

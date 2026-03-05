@@ -1011,8 +1011,18 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#673`.
 
-- 🚧 PUMUKI-089: Ejecutar mejora DX siguiente para estabilizar anchor de referencia a backlog tooling en docs.
+- ✅ PUMUKI-089: Ejecutar mejora DX siguiente para estabilizar anchor de referencia a backlog tooling en docs.
+  - Fix:
+    - `docs/USAGE.md`:
+      - añadido anchor estable `<a id="backlog-tooling"></a>`.
+    - `README.md`:
+      - enlace actualizado a `docs/USAGE.md#backlog-tooling`.
+  - Evidencia (2026-03-05):
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#674`.
+
+- 🚧 PUMUKI-090: Ejecutar mejora DX siguiente para añadir tabla rápida de comandos backlog tooling en `docs/USAGE.md`.
   - Alcance:
-    - Definir anchor estable en `docs/USAGE.md`.
-    - Actualizar README para apuntar a ese anchor estable y evitar drift por cambios de heading.
-  - Issue upstream activa: `#674`.
+    - Incluir vista rápida comando->objetivo para legibilidad humana.
+    - Mantener ejemplos largos existentes sin duplicación excesiva.
+  - Issue upstream activa: `#675`.
