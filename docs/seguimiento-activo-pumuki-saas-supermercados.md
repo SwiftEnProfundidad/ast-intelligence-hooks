@@ -268,4 +268,13 @@
     - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> `17 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-032: Ejecutar siguiente bug SAAS prioritaria (`#623`) para enforcement AST de calidad de tests iOS (`makeSUT` + `trackForMemoryLeaks`) y cerrar trazabilidad con RED->GREEN->REFACTOR.
+- ✅ PUMUKI-032: Ejecutar siguiente bug SAAS prioritaria (`#623`) para enforcement AST de calidad de tests iOS (`makeSUT` + `trackForMemoryLeaks`) y cerrar trazabilidad con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts`: en PRE_WRITE se exige regla crítica iOS `skills.ios.critical-test-quality` cuando iOS está detectado.
+    - Nuevo código de bloqueo explícito: `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING`.
+    - Se mantiene comportamiento no bloqueante en plataformas no-iOS (sin falsos bloqueos).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `51 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-033: Ejecutar siguiente bug SAAS prioritaria (`#614`) para enforcement AST transversal multi-plataforma y cerrar trazabilidad con RED->GREEN->REFACTOR.

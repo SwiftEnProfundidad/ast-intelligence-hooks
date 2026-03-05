@@ -99,6 +99,12 @@ const PLATFORM_REQUIRED_SKILLS_BUNDLES: Readonly<Record<PreWriteSkillsPlatform, 
   backend: ['backend-guidelines'],
   frontend: ['frontend-guidelines'],
 };
+const PREWRITE_CRITICAL_SKILLS_RULES: Readonly<Record<PreWriteSkillsPlatform, ReadonlyArray<string>>> = {
+  ios: ['skills.ios.critical-test-quality'],
+  android: [],
+  backend: [],
+  frontend: [],
+};
 const MCP_RECEIPT_STAGE_ORDER: Readonly<Record<AiGateStage, number>> = {
   PRE_WRITE: 0,
   PRE_COMMIT: 1,
@@ -244,6 +250,34 @@ const collectPreWritePlatformSkillsViolations = (params: {
       toErrorViolation(
         'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING',
         `Detected platforms missing required skill bundles in PRE_WRITE: ${missingBundlesByPlatform.join(' | ')}.`
+      )
+    );
+  }
+
+  const missingCriticalRulesByPlatform: string[] = [];
+  for (const platform of detectedPlatforms) {
+    const requiredCriticalRuleIds = PREWRITE_CRITICAL_SKILLS_RULES[platform];
+    if (requiredCriticalRuleIds.length === 0) {
+      continue;
+    }
+    const missingCriticalRuleIds = requiredCriticalRuleIds.filter((ruleId) => {
+      const hasActive = params.coverage.active_rule_ids.includes(ruleId);
+      const hasEvaluated = params.coverage.evaluated_rule_ids.includes(ruleId);
+      return !hasActive || !hasEvaluated;
+    });
+    if (missingCriticalRuleIds.length === 0) {
+      continue;
+    }
+    missingCriticalRulesByPlatform.push(
+      `${platform}{missing_critical_rule_ids=[${missingCriticalRuleIds.join(', ')}]}`
+    );
+  }
+
+  if (missingCriticalRulesByPlatform.length > 0) {
+    violations.push(
+      toErrorViolation(
+        'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+        `Detected platforms missing critical skill-rule enforcement in PRE_WRITE: ${missingCriticalRulesByPlatform.join(' | ')}.`
       )
     );
   }

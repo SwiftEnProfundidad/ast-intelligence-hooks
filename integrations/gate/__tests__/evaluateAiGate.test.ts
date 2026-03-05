@@ -665,6 +665,145 @@ test('evaluateAiGate permite PRE_WRITE con plataformas detectadas cuando skills 
   );
 });
 
+test('evaluateAiGate bloquea PRE_WRITE cuando iOS detectado no incluye regla crítica de calidad de tests', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          platforms: {
+            ios: {
+              detected: true,
+              confidence: 'HIGH',
+            },
+          },
+          rulesets: [
+            {
+              platform: 'skills',
+              bundle: 'ios-guidelines@1.0.0',
+              hash: 'skills-ios-hash',
+            },
+            {
+              platform: 'skills',
+              bundle: 'ios-concurrency-guidelines@1.0.0',
+              hash: 'skills-ios-concurrency-hash',
+            },
+            {
+              platform: 'skills',
+              bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+              hash: 'skills-ios-swiftui-hash',
+            },
+          ],
+          snapshot: {
+            ...base.snapshot,
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              active_rule_ids: ['skills.ios.no-force-unwrap'],
+              evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 1,
+                evaluated: 1,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+    ),
+    true
+  );
+});
+
+test('evaluateAiGate permite PRE_WRITE cuando iOS detectado incluye regla crítica de calidad de tests', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          platforms: {
+            ios: {
+              detected: true,
+              confidence: 'HIGH',
+            },
+          },
+          rulesets: [
+            {
+              platform: 'skills',
+              bundle: 'ios-guidelines@1.0.0',
+              hash: 'skills-ios-hash',
+            },
+            {
+              platform: 'skills',
+              bundle: 'ios-concurrency-guidelines@1.0.0',
+              hash: 'skills-ios-concurrency-hash',
+            },
+            {
+              platform: 'skills',
+              bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+              hash: 'skills-ios-swiftui-hash',
+            },
+          ],
+          snapshot: {
+            ...base.snapshot,
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              active_rule_ids: [
+                'skills.ios.no-force-unwrap',
+                'skills.ios.critical-test-quality',
+              ],
+              evaluated_rule_ids: [
+                'skills.ios.no-force-unwrap',
+                'skills.ios.critical-test-quality',
+              ],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 2,
+                evaluated: 2,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+    ),
+    false
+  );
+});
+
 test('evaluateAiGate bloquea PRE_WRITE cuando se requiere recibo MCP y no existe', () => {
   const result = evaluateAiGate(
     {
