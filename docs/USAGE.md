@@ -354,6 +354,12 @@ Backlog tooling quick reference:
 | `scripts/reconcile-consumer-backlog-issues.ts --json` | Simular reconciliación (dry-run) y revisar cambios planeados. |
 | `scripts/reconcile-consumer-backlog-issues.ts --apply` | Aplicar reconciliación sobre el backlog consumidor. |
 
+Backlog tooling quick nav (terminal):
+
+```bash
+rg -n "backlog-tooling|backlog-reasons" docs/USAGE.md README.md
+```
+
 Backlog tooling quick examples:
 
 ```bash

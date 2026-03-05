@@ -1215,9 +1215,18 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#688`.
 
-- 🚧 PUMUKI-104: Ejecutar mejora docs siguiente para snippet de navegación rápida a backlog tooling desde terminal.
+- ✅ PUMUKI-104: Ejecutar mejora docs siguiente para snippet de navegación rápida a backlog tooling desde terminal.
+  - Fix:
+    - `docs/USAGE.md`:
+      - snippet corto copy-ready con `rg` para localizar rápido `backlog-tooling` y `backlog-reasons`.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#689`.
+
+- 🚧 PUMUKI-105: Ejecutar mejora docs siguiente para visibilidad de quick nav en README.
   - Alcance:
-    - Añadir snippet copy-ready corto en docs.
-    - Mantener docs limpias, sin verbosidad.
-    - Sin cambios funcionales.
-  - Issue upstream activa: `#689`.
+    - Añadir mención mínima en Documentation Index.
+    - Evitar duplicación de contenido técnico.
+    - Mantener tono claro y breve.
+  - Issue upstream activa: `#690`.
