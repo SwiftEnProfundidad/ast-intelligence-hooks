@@ -243,6 +243,7 @@ const main = async (): Promise<void> => {
             requires_confirmation: false,
             depends_on: null,
             description: 'Inspect planned reconcile changes without mutating files.',
+            failure_hint: 'Re-run dry_run with --json and inspect action_required_reasons before applying.',
             command: dryRunCommand,
           },
           {
@@ -260,6 +261,7 @@ const main = async (): Promise<void> => {
             requires_confirmation: true,
             depends_on: 'dry_run',
             description: 'Apply reconcile changes to the backlog markdown file.',
+            failure_hint: 'Run dry_run first, then retry apply on a clean worktree with file write permissions.',
             command: applyCommand,
           },
         ]

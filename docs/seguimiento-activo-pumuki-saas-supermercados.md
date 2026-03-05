@@ -1574,9 +1574,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#711`.
 
-- 🚧 PUMUKI-127: Ejecutar mejora DX siguiente para `next_commands[].failure_hint` en JSON de watch/reconcile.
+- ✅ PUMUKI-127: Ejecutar mejora DX siguiente para `next_commands[].failure_hint` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].failure_hint` compacto por paso (`dry_run`/`apply`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `failure_hint` por paso.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `failure_hint` en watch/reconcile.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].failure_hint` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#712`.
+
+- 🚧 PUMUKI-128: Ejecutar mejora DX siguiente para `next_commands[].expected_outcome` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `failure_hint` por paso en `next_commands[]`.
+    - Exponer `expected_outcome` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Mejorar remediación automática cuando falle un paso de ejecución.
-  - Issue upstream activa: `#712`.
+    - Facilitar validación automática de éxito por paso.
+  - Issue upstream activa: `#713`.

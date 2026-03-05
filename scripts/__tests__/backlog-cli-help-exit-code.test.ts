@@ -107,6 +107,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
       origin_schema_version?: string;
       origin_contract_id?: string;
       description?: string;
+      failure_hint?: string;
       command?: string;
     }>;
   };
@@ -176,6 +177,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
       execution_group_id?: string;
       origin_schema_version?: string;
       description?: string;
+      failure_hint?: string;
       command?: string;
     }>;
     heading_drift_count?: number;
@@ -214,6 +216,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.equal(payload.next_commands?.[0]?.requires_confirmation, false);
   assert.equal(payload.next_commands?.[0]?.depends_on, null);
   assert.match(payload.next_commands?.[0]?.description ?? '', /without mutating files/);
+  assert.match(payload.next_commands?.[0]?.failure_hint ?? '', /Re-run dry_run/);
   assert.match(payload.next_commands?.[0]?.command ?? '', /--json$/);
   assert.equal(payload.next_commands?.[1]?.execution_group_id, payload.run_id);
   assert.equal(payload.next_commands?.[1]?.origin_schema_version, payload.schema_version);
@@ -232,6 +235,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.equal(payload.next_commands?.[1]?.requires_confirmation, true);
   assert.equal(payload.next_commands?.[1]?.depends_on, 'dry_run');
   assert.match(payload.next_commands?.[1]?.description ?? '', /Apply reconcile changes/);
+  assert.match(payload.next_commands?.[1]?.failure_hint ?? '', /Run dry_run first/);
   assert.match(payload.next_commands?.[1]?.command ?? '', /--apply$/);
   assert.equal(payload.hasActionRequired, true);
 });
@@ -291,6 +295,7 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
       execution_group_id?: string;
       origin_schema_version?: string;
       description?: string;
+      failure_hint?: string;
       command?: string;
     }>;
   };
@@ -361,6 +366,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
       origin_schema_version?: string;
       origin_contract_id?: string;
       description?: string;
+      failure_hint?: string;
       command?: string;
     }>;
   };
@@ -400,6 +406,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.next_commands?.[0]?.requires_confirmation, false);
   assert.equal(payload.next_commands?.[0]?.depends_on, null);
   assert.match(payload.next_commands?.[0]?.description ?? '', /without mutating files/);
+  assert.match(payload.next_commands?.[0]?.failure_hint ?? '', /Re-run dry_run/);
   assert.match(payload.next_commands?.[0]?.command ?? '', /--json$/);
   assert.equal(payload.next_commands?.[1]?.execution_group_id, payload.run_id);
   assert.equal(payload.next_commands?.[1]?.origin_schema_version, payload.schema_version);
@@ -418,6 +425,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.next_commands?.[1]?.requires_confirmation, true);
   assert.equal(payload.next_commands?.[1]?.depends_on, 'dry_run');
   assert.match(payload.next_commands?.[1]?.description ?? '', /Apply reconcile changes/);
+  assert.match(payload.next_commands?.[1]?.failure_hint ?? '', /Run dry_run first/);
   assert.match(payload.next_commands?.[1]?.command ?? '', /--apply$/);
 });
 
