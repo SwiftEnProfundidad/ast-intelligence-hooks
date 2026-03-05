@@ -219,14 +219,20 @@ const main = async (): Promise<void> => {
     summaryUpdated: result.summaryUpdated,
     nextStepUpdated: result.nextStepUpdated,
   });
-  const nextCommand =
+  const dryRunCommand = `npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=${shellQuote(
+    parsed.filePath
+  )} --json`;
+  const applyCommand = `npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=${shellQuote(
+    parsed.filePath
+  )} --apply`;
+  const nextCommands =
     actionRequiredReasons.length > 0
-      ? `npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=${shellQuote(
-          parsed.filePath
-        )} --json && npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=${shellQuote(
-          parsed.filePath
-        )} --apply`
+      ? [
+          { label: 'dry_run', mode: 'dry-run', command: dryRunCommand },
+          { label: 'apply', mode: 'apply', command: applyCommand },
+        ]
       : undefined;
+  const nextCommand = nextCommands ? `${dryRunCommand} && ${applyCommand}` : undefined;
   const nextCommandReason = nextCommand ? actionRequiredReasons[0] : undefined;
 
   if (parsed.json) {
@@ -266,6 +272,7 @@ const main = async (): Promise<void> => {
           action_required_reasons: actionRequiredReasons,
           ...(nextCommand ? { next_command: nextCommand } : {}),
           ...(nextCommandReason ? { next_command_reason: nextCommandReason } : {}),
+          ...(nextCommands ? { next_commands: nextCommands } : {}),
           heading_changes_count: result.headingChanges.length,
           ...result,
         },

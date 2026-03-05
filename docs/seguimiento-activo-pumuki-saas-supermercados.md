@@ -1315,9 +1315,28 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#695`.
 
-- 🚧 PUMUKI-111: Ejecutar mejora DX siguiente para `next_commands` estructurado en JSON de watch/reconcile.
+- ✅ PUMUKI-111: Ejecutar mejora DX siguiente para `next_commands` estructurado en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida JSON añade `next_commands[]` cuando hay acción requerida.
+      - orden estable: `dry_run` y luego `apply`.
+      - se mantiene `next_command` para compatibilidad.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `next_commands[]` y compatibilidad con `next_command`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de presencia/ausencia de `next_commands`.
+      - validación de orden/shape (`label`, `mode`, `command`).
+    - `docs/USAGE.md`:
+      - documentado `next_commands[]` para watch y reconcile.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#696`.
+
+- 🚧 PUMUKI-112: Ejecutar mejora DX siguiente para `next_commands[].safety` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `next_commands[]` (pasos estructurados) cuando haya acción requerida.
-    - Mantener `next_command` actual por compatibilidad.
-    - Orden estable: dry-run y luego apply.
-  - Issue upstream activa: `#696`.
+    - Exponer `safety` por paso (`read_only` o `mutating`) dentro de `next_commands[]`.
+    - Mantener contrato JSON backward-compatible.
+    - Conservar orden estable dry-run/apply.
+  - Issue upstream activa: `#697`.
