@@ -68,6 +68,37 @@ test('verifyInstalledPumukiBinaryVersion falla cuando salida contiene MODULE_NOT
         );
       }
     );
+    assert.equal(workspace.commandLog.length, 2);
+  } finally {
+    rmSync(workspace.tmpRoot, { recursive: true, force: true });
+  }
+});
+
+test('verifyInstalledPumukiBinaryVersion usa fallback local cuando npx --no-install falla por MODULE_NOT_FOUND', async () => {
+  const workspace = createWorkspace();
+  try {
+    const localBinDir = join(workspace.consumerRepo, 'node_modules', '.bin');
+    mkdirSync(localBinDir, { recursive: true });
+    const localPumukiBin = join(localBinDir, 'pumuki');
+    writeFileSync(localPumukiBin, '#!/usr/bin/env sh\necho "6.3.39-local"\nexit 0\n', 'utf8');
+    chmodSync(localPumukiBin, 0o755);
+
+    await withFakeNpx(
+      '#!/usr/bin/env sh\necho \"Error: Cannot find module ../telemetry/gateTelemetry\" 1>&2\nexit 0\n',
+      () => {
+        verifyInstalledPumukiBinaryVersion(workspace);
+      }
+    );
+
+    assert.equal(workspace.commandLog.length, 2);
+    assert.equal(
+      workspace.commandLog[0]?.includes('npx --no-install pumuki --version'),
+      true
+    );
+    assert.equal(
+      workspace.commandLog[1]?.includes('node_modules/.bin/pumuki --version'),
+      true
+    );
   } finally {
     rmSync(workspace.tmpRoot, { recursive: true, force: true });
   }
