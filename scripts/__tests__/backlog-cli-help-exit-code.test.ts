@@ -171,9 +171,11 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   const result = runTsxScript(scriptPath, ['--file=' + backlogFile, '--json', '--apply']);
   assert.equal(result.status, 0);
   const payload = JSON.parse(result.stdout) as {
+    heading_changes_count?: number;
     headingUpdated?: boolean;
     headingChanges?: Array<{ id?: string; from?: string; to?: string }>;
   };
+  assert.equal(payload.heading_changes_count, 1);
   assert.equal(payload.headingUpdated, true);
   assert.equal(payload.headingChanges?.length, 1);
   assert.equal(payload.headingChanges?.[0]?.id, 'PUMUKI-010');

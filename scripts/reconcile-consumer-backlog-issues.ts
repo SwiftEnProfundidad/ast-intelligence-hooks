@@ -215,6 +215,7 @@ const main = async (): Promise<void> => {
             is_backward_compatible: true,
             breaking_changes: [],
           },
+          heading_changes_count: result.headingChanges.length,
           ...result,
         },
         null,

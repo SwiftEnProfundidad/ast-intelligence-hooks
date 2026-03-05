@@ -334,6 +334,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog --json` exposes `heading_drift_count` for low-friction alerting parsers.
 - `reconcile-consumer-backlog-issues` supports dry-run/apply and now reports mapping source (`none|json|markdown|merged`).
 - `reconcile-consumer-backlog-issues --json` includes heading sync metadata (`headingUpdated`, `headingChanges`) for section headings `### ✅/🚧/⏳/⛔ <ID>`.
+- `reconcile-consumer-backlog-issues --json` exposes `heading_changes_count` for lightweight consumers.
 - `reconcile-consumer-backlog-issues` (modo humano) muestra `heading_changes=<n>` y lista las líneas afectadas cuando hay drift en encabezados.
 
 Backlog tooling quick reference:

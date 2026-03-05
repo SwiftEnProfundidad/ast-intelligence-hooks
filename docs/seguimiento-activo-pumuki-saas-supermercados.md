@@ -1106,9 +1106,23 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#680`.
 
-- 🚧 PUMUKI-096: Ejecutar mejora DX siguiente para exponer `heading_changes_count` estable en JSON de reconcile.
+- ✅ PUMUKI-096: Ejecutar mejora DX siguiente para exponer `heading_changes_count` estable en JSON de reconcile.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - payload JSON añade `heading_changes_count` sin romper contrato existente.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación del nuevo campo en salida JSON de reconcile.
+    - `docs/USAGE.md`:
+      - documentado `heading_changes_count` para consumidores livianos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#681`.
+
+- 🚧 PUMUKI-097: Ejecutar mejora DX siguiente para añadir `classification_counts` en JSON de backlog tooling.
   - Alcance:
-    - Añadir contador dedicado en payload JSON sin romper `headingChanges[]`.
-    - Cubrir contrato con tests de CLI.
+    - Exponer bloque de conteos estable en `watch` y `reconcile`.
+    - Cubrir contrato con tests CLI JSON.
     - Mantener compatibilidad backward.
-  - Issue upstream activa: `#681`.
+  - Issue upstream activa: `#682`.
