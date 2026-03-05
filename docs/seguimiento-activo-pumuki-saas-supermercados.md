@@ -1558,9 +1558,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#710`.
 
-- 🚧 PUMUKI-126: Ejecutar mejora DX siguiente para `next_commands[].retry_strategy` en JSON de watch/reconcile.
+- ✅ PUMUKI-126: Ejecutar mejora DX siguiente para `next_commands[].retry_strategy` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].retry_strategy` por paso (`immediate` dry-run, `manual` apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `retry_strategy` por paso (`immediate`/`manual`).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `retry_strategy` en watch/reconcile.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].retry_strategy` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#711`.
+
+- 🚧 PUMUKI-127: Ejecutar mejora DX siguiente para `next_commands[].failure_hint` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `retry_strategy` por paso en `next_commands[]`.
+    - Exponer `failure_hint` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Facilitar estrategia de retry explícita para orquestadores.
-  - Issue upstream activa: `#711`.
+    - Mejorar remediación automática cuando falle un paso de ejecución.
+  - Issue upstream activa: `#712`.

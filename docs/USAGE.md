@@ -341,6 +341,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog --json` includes `next_commands[].safety` (`read_only` | `mutating`) for orchestration safety.
 - `watch-consumer-backlog --json` includes `next_commands[].idempotent` for retry-safe orchestration.
 - `watch-consumer-backlog --json` includes `next_commands[].max_retries` (`2` for `dry_run`, `0` for `apply`) for bounded retries.
+- `watch-consumer-backlog --json` includes `next_commands[].retry_strategy` (`immediate` for `dry_run`, `manual` for `apply`) for retry policy semantics.
 - `watch-consumer-backlog --json` includes `next_commands[].estimated_duration_ms` for timeout/scheduling hints.
 - `watch-consumer-backlog --json` includes `next_commands[].requires_confirmation` for safe mutating-step execution.
 - `watch-consumer-backlog --json` includes `next_commands[].depends_on` for step sequencing (`null` for dry-run, `dry_run` for apply).
@@ -365,6 +366,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].safety` (`read_only` | `mutating`) for orchestration safety.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].idempotent` for retry-safe orchestration.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].max_retries` (`2` for `dry_run`, `0` for `apply`) for bounded retries.
+- `reconcile-consumer-backlog-issues --json` includes `next_commands[].retry_strategy` (`immediate` for `dry_run`, `manual` for `apply`) for retry policy semantics.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].estimated_duration_ms` for timeout/scheduling hints.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].requires_confirmation` for safe mutating-step execution.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].depends_on` for step sequencing (`null` for dry-run, `dry_run` for apply).
