@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
+import { getCurrentPumukiVersion } from '../../lifecycle/packageInfo';
 import { runSddEvidenceScaffold } from '../evidenceScaffold';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
@@ -82,8 +83,8 @@ const writeValidEvidence = (repoRoot: string): void => {
       },
       lifecycle: {
         installed: true,
-        package_version: '6.3.39',
-        lifecycle_version: '6.3.39',
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
         hooks: {
           pre_commit: 'managed' as const,
           pre_push: 'managed' as const,

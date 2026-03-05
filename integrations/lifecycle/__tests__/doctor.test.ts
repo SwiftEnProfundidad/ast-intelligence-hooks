@@ -113,8 +113,8 @@ const sampleEvidence = (params: {
       },
       lifecycle: {
         installed: true,
-        package_version: '6.3.26',
-        lifecycle_version: '6.3.26',
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
         hooks: {
           pre_commit: 'managed',
           pre_push: 'managed',

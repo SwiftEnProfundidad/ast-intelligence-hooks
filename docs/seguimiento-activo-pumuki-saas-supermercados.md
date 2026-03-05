@@ -484,4 +484,22 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#633`.
 
-- 🚧 PUMUKI-051: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#634`) para normalizar hardcodes residuales de versión en fixtures de `evidence/gate/telemetry/lifecycle/sdd` y cerrar el drift global.
+- ✅ PUMUKI-051: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#634`) para normalizar hardcodes residuales de versión en fixtures de `evidence/gate/telemetry/lifecycle/sdd` y cerrar el drift global.
+  - Fix:
+    - Normalización a versión dinámica con `getCurrentPumukiVersion()` en:
+      - `integrations/evidence/readEvidence.test.ts`
+      - `integrations/evidence/writeEvidence.test.ts`
+      - `integrations/evidence/schema.test.ts`
+      - `integrations/evidence/__tests__/buildEvidence.test.ts`
+      - `integrations/gate/__tests__/evaluateAiGate.test.ts`
+      - `integrations/telemetry/__tests__/gateTelemetry.test.ts`
+      - `integrations/lifecycle/__tests__/doctor.test.ts`
+      - `integrations/lifecycle/__tests__/preWriteAutomation.test.ts`
+      - `integrations/sdd/__tests__/evidenceScaffold.test.ts`
+    - Eliminados hardcodes de `package_version/lifecycle_version` para evitar drift cross-release.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/evidence/readEvidence.test.ts integrations/evidence/writeEvidence.test.ts integrations/evidence/schema.test.ts integrations/evidence/__tests__/buildEvidence.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts integrations/telemetry/__tests__/gateTelemetry.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/preWriteAutomation.test.ts integrations/sdd/__tests__/evidenceScaffold.test.ts` -> `97 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#634`.
+
+- 🚧 PUMUKI-052: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#635`) para normalizar hardcodes `producerVersion`/`producer_version` en tests de ingesta/operational-memory y eliminar drift residual de versión de productor.

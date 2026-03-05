@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { AiEvidenceV2_1 } from '../../evidence/schema';
 import type { EvidenceSourceDescriptor } from '../../evidence/readEvidence';
+import { getCurrentPumukiVersion } from '../../lifecycle/packageInfo';
 import { evaluateAiGate } from '../evaluateAiGate';
 
 const sampleEvidence = (overrides: Partial<AiEvidenceV2_1> = {}): AiEvidenceV2_1 => ({
@@ -59,8 +60,8 @@ const sampleEvidence = (overrides: Partial<AiEvidenceV2_1> = {}): AiEvidenceV2_1
     },
     lifecycle: {
       installed: true,
-      package_version: '6.3.16',
-      lifecycle_version: '6.3.16',
+      package_version: getCurrentPumukiVersion(),
+      lifecycle_version: getCurrentPumukiVersion(),
       hooks: {
         pre_commit: 'managed',
         pre_push: 'managed',

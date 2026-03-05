@@ -3,6 +3,7 @@ import test from 'node:test';
 import type { RepoState } from '../../evidence/schema';
 import type { AiGateCheckResult, AiGateViolation } from '../../gate/evaluateAiGate';
 import type { SddEvaluateResult } from '../../sdd/types';
+import { getCurrentPumukiVersion } from '../packageInfo';
 import { buildPreWriteAutomationTrace } from '../preWriteAutomation';
 
 const sampleRepoState: RepoState = {
@@ -19,8 +20,8 @@ const sampleRepoState: RepoState = {
   },
   lifecycle: {
     installed: true,
-    package_version: '6.3.26',
-    lifecycle_version: '6.3.26',
+    package_version: getCurrentPumukiVersion(),
+    lifecycle_version: getCurrentPumukiVersion(),
     hooks: {
       pre_commit: 'managed',
       pre_push: 'managed',
