@@ -1510,9 +1510,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#707`.
 
-- 🚧 PUMUKI-123: Ejecutar mejora DX siguiente para `next_commands[].origin_contract_id` en JSON de watch/reconcile.
+- ✅ PUMUKI-123: Ejecutar mejora DX siguiente para `next_commands[].origin_contract_id` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `origin_contract_id` alineado con `compat.contract_id`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `origin_contract_id`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de alineación con contrato de compatibilidad.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].origin_contract_id`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#708`.
+
+- 🚧 PUMUKI-124: Ejecutar mejora DX siguiente para `next_commands[].priority` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `origin_contract_id` por paso en `next_commands[]`.
+    - Exponer `priority` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Alinear `origin_contract_id` con `compat.contract_id`.
-  - Issue upstream activa: `#708`.
+    - Facilitar scheduling por prioridad en consumidores.
+  - Issue upstream activa: `#709`.

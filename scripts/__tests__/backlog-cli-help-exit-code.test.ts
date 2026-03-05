@@ -83,6 +83,9 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
       active_issue?: number;
       heading_drift?: number;
     };
+    compat?: {
+      contract_id?: string;
+    };
     action_required_reasons?: string[];
     next_command?: string;
     next_command_reason?: string;
@@ -99,6 +102,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
       depends_on?: string | null;
       execution_group_id?: string;
       origin_schema_version?: string;
+      origin_contract_id?: string;
       description?: string;
       command?: string;
     }>;
@@ -189,6 +193,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.equal(payload.next_commands?.length, 2);
   assert.equal(payload.next_commands?.[0]?.execution_group_id, payload.run_id);
   assert.equal(payload.next_commands?.[0]?.origin_schema_version, payload.schema_version);
+  assert.equal(payload.next_commands?.[0]?.origin_contract_id, payload.compat?.contract_id);
   assert.equal(payload.next_commands?.[0]?.id, 1);
   assert.equal(payload.next_commands?.[0]?.origin_tool, 'backlog-watch');
   assert.equal(payload.next_commands?.[0]?.label, 'dry_run');
@@ -203,6 +208,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.match(payload.next_commands?.[0]?.command ?? '', /--json$/);
   assert.equal(payload.next_commands?.[1]?.execution_group_id, payload.run_id);
   assert.equal(payload.next_commands?.[1]?.origin_schema_version, payload.schema_version);
+  assert.equal(payload.next_commands?.[1]?.origin_contract_id, payload.compat?.contract_id);
   assert.equal(payload.next_commands?.[1]?.id, 2);
   assert.equal(payload.next_commands?.[1]?.origin_tool, 'backlog-watch');
   assert.equal(payload.next_commands?.[1]?.label, 'apply');
@@ -315,6 +321,9 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
     };
     action_required_reasons?: string[];
     heading_changes_count?: number;
+    compat?: {
+      contract_id?: string;
+    };
     headingUpdated?: boolean;
     headingChanges?: Array<{ id?: string; from?: string; to?: string }>;
     next_command?: string;
@@ -332,6 +341,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
       depends_on?: string | null;
       execution_group_id?: string;
       origin_schema_version?: string;
+      origin_contract_id?: string;
       description?: string;
       command?: string;
     }>;
@@ -357,6 +367,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.next_commands?.length, 2);
   assert.equal(payload.next_commands?.[0]?.execution_group_id, payload.run_id);
   assert.equal(payload.next_commands?.[0]?.origin_schema_version, payload.schema_version);
+  assert.equal(payload.next_commands?.[0]?.origin_contract_id, payload.compat?.contract_id);
   assert.equal(payload.next_commands?.[0]?.id, 1);
   assert.equal(payload.next_commands?.[0]?.origin_tool, 'backlog-reconcile');
   assert.equal(payload.next_commands?.[0]?.label, 'dry_run');
@@ -371,6 +382,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.match(payload.next_commands?.[0]?.command ?? '', /--json$/);
   assert.equal(payload.next_commands?.[1]?.execution_group_id, payload.run_id);
   assert.equal(payload.next_commands?.[1]?.origin_schema_version, payload.schema_version);
+  assert.equal(payload.next_commands?.[1]?.origin_contract_id, payload.compat?.contract_id);
   assert.equal(payload.next_commands?.[1]?.id, 2);
   assert.equal(payload.next_commands?.[1]?.origin_tool, 'backlog-reconcile');
   assert.equal(payload.next_commands?.[1]?.label, 'apply');

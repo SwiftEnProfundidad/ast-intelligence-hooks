@@ -346,6 +346,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog --json` includes `next_commands[].execution_group_id` to correlate all suggested steps in the same run.
 - `watch-consumer-backlog --json` includes `next_commands[].origin_tool` (`backlog-watch`) for multi-tool aggregation.
 - `watch-consumer-backlog --json` includes `next_commands[].origin_schema_version` to bind each step to the emitting schema contract.
+- `watch-consumer-backlog --json` includes `next_commands[].origin_contract_id` to bind each step to compatibility contract id.
 - `watch-consumer-backlog --json` includes `next_commands[].recommendation_type` (`reconcile_loop`) for recommendation classification.
 - `watch-consumer-backlog --json` includes `next_commands[].description` for human-readable step guidance.
 - `watch-consumer-backlog` (modo humano) imprime `action_required_reasons=<...|none>`.
@@ -367,6 +368,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].execution_group_id` to correlate all suggested steps in the same run.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].origin_tool` (`backlog-reconcile`) for multi-tool aggregation.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].origin_schema_version` to bind each step to the emitting schema contract.
+- `reconcile-consumer-backlog-issues --json` includes `next_commands[].origin_contract_id` to bind each step to compatibility contract id.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].recommendation_type` (`reconcile_loop`) for recommendation classification.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].description` for human-readable step guidance.
 - `reconcile-consumer-backlog-issues` (modo humano) muestra `heading_changes=<n>` y lista las líneas afectadas cuando hay drift en encabezados.

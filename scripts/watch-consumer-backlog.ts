@@ -247,6 +247,7 @@ const main = async (): Promise<void> => {
       ...step,
       execution_group_id: runId,
       origin_schema_version: BACKLOG_JSON_SCHEMA_VERSION,
+      origin_contract_id: BACKLOG_JSON_COMPAT_CONTRACT_ID,
     }));
     writeFileSync(
       process.stdout.fd,
