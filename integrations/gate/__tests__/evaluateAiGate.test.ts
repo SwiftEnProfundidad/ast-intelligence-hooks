@@ -443,6 +443,100 @@ test('evaluateAiGate bloquea PRE_WRITE cuando falta cobertura de prefijos skills
   );
 });
 
+test('evaluateAiGate bloquea PRE_WRITE cuando active_rule_ids está vacío con plataforma de código detectada', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          platforms: {
+            backend: {
+              detected: true,
+              confidence: 'HIGH',
+            },
+          },
+          snapshot: {
+            ...base.snapshot,
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              active_rule_ids: [],
+              evaluated_rule_ids: [],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 0,
+                evaluated: 0,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES'
+    ),
+    true
+  );
+});
+
+test('evaluateAiGate permite PRE_WRITE cuando active_rule_ids está vacío sin plataformas de código detectadas', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          platforms: {},
+          snapshot: {
+            ...base.snapshot,
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              active_rule_ids: [],
+              evaluated_rule_ids: [],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 0,
+                evaluated: 0,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES'
+    ),
+    false
+  );
+});
+
 test('evaluateAiGate bloquea PRE_WRITE cuando faltan bundles skills requeridos por plataforma detectada', () => {
   const base = sampleEvidence();
   const result = evaluateAiGate(

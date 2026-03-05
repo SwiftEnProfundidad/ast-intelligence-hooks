@@ -162,6 +162,26 @@ const toDetectedSkillsPlatforms = (
   return detected;
 };
 
+const collectActiveRuleIdsCoverageViolations = (params: {
+  stage: AiGateStage;
+  evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
+}): AiGateViolation[] => {
+  if (params.coverage.active_rule_ids.length > 0) {
+    return [];
+  }
+  const detectedPlatforms = toDetectedSkillsPlatforms(params.evidence.platforms);
+  if (detectedPlatforms.length === 0) {
+    return [];
+  }
+  return [
+    toErrorViolation(
+      'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES',
+      `Active rules coverage is empty at ${params.stage} with detected code platforms=[${detectedPlatforms.join(', ')}].`
+    ),
+  ];
+};
+
 const collectPreWritePlatformSkillsViolations = (params: {
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
   coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
@@ -324,6 +344,14 @@ const collectPreWriteCoherenceViolations = (params: {
         )
       );
     }
+
+    violations.push(
+      ...collectActiveRuleIdsCoverageViolations({
+        stage: 'PRE_WRITE',
+        evidence: params.evidence,
+        coverage,
+      })
+    );
 
     violations.push(
       ...collectPreWritePlatformSkillsViolations({

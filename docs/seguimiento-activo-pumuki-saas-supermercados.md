@@ -259,4 +259,13 @@
     - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/gitAtomicity.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/git/__tests__/GitService.test.ts` -> `34 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-031: Ejecutar siguiente bug SAAS prioritaria (`#622`) para evitar `PASS` con `active_rule_ids` vacío cuando hay cambios de código y cerrar trazabilidad con RED->GREEN->REFACTOR.
+- ✅ PUMUKI-031: Ejecutar siguiente bug SAAS prioritaria (`#622`) para evitar `PASS` con `active_rule_ids` vacío cuando hay cambios de código y cerrar trazabilidad con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts`: guard adicional en `PRE_WRITE` para bloquear evidencia con `active_rule_ids=[]` cuando hay plataformas de código detectadas (`ios/android/backend/frontend`).
+    - Código de bloqueo añadido: `EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES`.
+    - Se mantiene compatibilidad en escenarios sin superficie de código detectada (no falso bloqueo).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> `17 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-032: Ejecutar siguiente bug SAAS prioritaria (`#623`) para enforcement AST de calidad de tests iOS (`makeSUT` + `trackForMemoryLeaks`) y cerrar trazabilidad con RED->GREEN->REFACTOR.

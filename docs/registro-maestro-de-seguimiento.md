@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-030 (issue `#621`, bootstrap robusto en repos sin `HEAD` inicial + eliminación de ruido fatal ambiguo).
-- Task activa (`🚧`): PUMUKI-031 (siguiente bug SAAS prioritaria: issue `#622`, evitar `PASS` con `active_rule_ids` vacío cuando hay cambios de código).
+- Última task cerrada (`✅`): PUMUKI-031 (issue `#622`, guard PRE_WRITE para bloquear `active_rule_ids` vacío con plataformas de código detectadas).
+- Task activa (`🚧`): PUMUKI-032 (siguiente bug SAAS prioritaria: issue `#623`, enforcement AST de calidad de tests iOS).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
