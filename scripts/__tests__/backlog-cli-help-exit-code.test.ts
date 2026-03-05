@@ -64,11 +64,23 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
     schema_version?: string;
     generated_at?: string;
     run_id?: string;
+    invocation?: {
+      mode?: string;
+      repo?: string | null;
+      resolve_missing_via_gh?: boolean;
+      id_issue_map?: string;
+      id_issue_map_from?: string;
+    };
   };
   assert.equal(payload.tool, 'backlog-watch');
   assert.equal(payload.schema_version, '1.0.0');
   assert.match(payload.generated_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
   assert.match(payload.run_id ?? '', /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+  assert.equal(payload.invocation?.mode, 'json');
+  assert.equal(payload.invocation?.repo, null);
+  assert.equal(payload.invocation?.resolve_missing_via_gh, false);
+  assert.equal(payload.invocation?.id_issue_map, 'none');
+  assert.equal(payload.invocation?.id_issue_map_from, 'none');
 });
 
 test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', () => {
@@ -83,9 +95,23 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
     schema_version?: string;
     generated_at?: string;
     run_id?: string;
+    invocation?: {
+      mode?: string;
+      repo?: string | null;
+      apply?: boolean;
+      resolve_missing_via_gh?: boolean;
+      id_issue_map?: string;
+      id_issue_map_from?: string;
+    };
   };
   assert.equal(payload.tool, 'backlog-reconcile');
   assert.equal(payload.schema_version, '1.0.0');
   assert.match(payload.generated_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
   assert.match(payload.run_id ?? '', /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+  assert.equal(payload.invocation?.mode, 'json');
+  assert.equal(payload.invocation?.repo, null);
+  assert.equal(payload.invocation?.apply, false);
+  assert.equal(payload.invocation?.resolve_missing_via_gh, false);
+  assert.equal(payload.invocation?.id_issue_map, 'none');
+  assert.equal(payload.invocation?.id_issue_map_from, 'none');
 });

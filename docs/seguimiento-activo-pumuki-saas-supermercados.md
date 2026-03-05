@@ -913,8 +913,19 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#664`.
 
-- 🚧 PUMUKI-080: Ejecutar mejora DX siguiente para añadir `invocation` metadata al contrato JSON de backlog tooling.
+- ✅ PUMUKI-080: Ejecutar mejora DX siguiente para añadir `invocation` metadata al contrato JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye `invocation` con contexto no sensible de ejecución (`repo`, flags clave, `mode`).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de `invocation` en contrato JSON de ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#665`.
+
+- 🚧 PUMUKI-081: Ejecutar mejora DX siguiente para añadir bloque `compat` al contrato JSON de backlog tooling.
   - Alcance:
-    - Adjuntar contexto mínimo de invocación en salidas JSON (`repo`, flags clave, modo).
-    - Mantener payload seguro (sin secretos) y compatible.
-  - Issue upstream activa: `#665`.
+    - Incluir metadatos de compatibilidad (`min_reader_version`, `breaking_changes`) en ambos scripts.
+    - Preparar evolución de contrato sin romper consumidores.
+  - Issue upstream activa: `#666`.
