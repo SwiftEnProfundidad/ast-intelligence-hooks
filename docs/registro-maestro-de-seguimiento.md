@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-058 (issue `#642`, sincronización automática de narrativa de cierre total en backlog consumidor).
-- Task activa (`🚧`): PUMUKI-059 (vigilancia activa de nuevos hallazgos SAAS con ejecución inmediata en core Pumuki).
+- Última task cerrada (`✅`): PUMUKI-060 (issues `#644`, `#645`, watcher RuralGo con dedupe + parse canónico de issue_ref).
+- Task activa (`🚧`): PUMUKI-061 (issue `#646`, fix crítico de bootstrap upstream en `pre-push` reportado por RuralGo).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

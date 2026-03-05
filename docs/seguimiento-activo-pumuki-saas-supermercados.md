@@ -601,7 +601,41 @@
       - Resultado: `nextStepUpdated=true`, `closed=22`, `inProgress=0`, `pending=0`, `blocked=0`.
     - Cierre issue upstream: `#642`.
 
-- 🚧 PUMUKI-059: Mantener ciclo de vigilancia activa para nuevos hallazgos SAAS (sin tocar código consumidor), abriendo issue upstream y ejecutando fix en Pumuki core al primer bug/mejora nueva.
+- ✅ PUMUKI-059: Mantener ciclo de vigilancia activa para nuevos hallazgos SAAS (sin tocar código consumidor), abriendo issue upstream y ejecutando fix en Pumuki core al primer bug/mejora nueva.
+  - Fix:
+    - Nuevo watcher operativo de backlog consumidor:
+      - `scripts/watch-consumer-backlog-lib.ts`
+      - `scripts/watch-consumer-backlog.ts`
+      - `npm run validation:backlog-watch`
+    - Clasificación automática:
+      - `needs_issue` (incidencia sin issue upstream),
+      - `drift_closed_issue` (estado no cerrado con issue cerrada),
+      - `active_issue` (trabajo realmente abierto).
+    - Salida JSON/humana + exit code determinista para CI (`--no-fail` opcional).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `13 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Ejecución real sobre SAAS:
+      - `npm run -s validation:backlog-watch -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --json`
+      - Resultado: `nonClosedEntries=0`, `hasActionRequired=false`.
+    - Cierre issue upstream: `#643`.
+
+- ✅ PUMUKI-060: Iniciar vigilancia activa del feedback canónico de RuralGo usando `backlog-watch` (sin tocar código del consumer) y abrir ciclo inmediato ante nuevos hallazgos.
+  - Fix:
+    - `watch-consumer-backlog` ampliado para formato RuralGo:
+      - soporte de estados textuales (`REPORTED/OPEN/FIXED/CLOSED/BLOCKED/PENDING/IN_PROGRESS`),
+      - soporte de IDs canónicos (`PUMUKI-INC-*`, `FP-*`, `AST-GAP-*`),
+      - dedupe por ID para evitar ruido resumen+detalle,
+      - parse robusto de `issue_ref` priorizando columnas derechas.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts` -> `7 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Watcher real RuralGo (`--no-fail`):
+      - `npm run -s validation:backlog-watch -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --json --no-fail`
+      - Resultado consolidado: `entriesScanned=106`, `nonClosedEntries=9`, `needsIssue=8`, `driftClosedIssue=1`, `hasActionRequired=true`.
+    - Cierres upstream: `#644`, `#645`.
+
+- 🚧 PUMUKI-061: Ejecutar primer fix crítico del paquete RuralGo detectado por watcher (`PUMUKI-INC-059 / FP-030`) en `pre-push` bootstrap/upstream.
   - Alcance:
-    - Monitorizar cambios del MD de SAAS.
-    - Al detectar entrada nueva: issue -> rama -> fix -> tests -> reconciliación.
+    - Reproducir deadlock reportado en escenario real de primer push.
+    - Añadir test de regresión y fix determinista en stage runner/hook.

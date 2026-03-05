@@ -1,0 +1,123 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {
+  collectBacklogWatchEntries,
+  dedupeBacklogWatchEntriesById,
+  runBacklogWatch,
+} from '../watch-consumer-backlog-lib';
+
+const sampleMarkdown = `# Backlog
+
+| Orden | ID | Estado | Referencia upstream | Nota |
+|---|---|---|---|---|
+| 1 | PUMUKI-001 | ✅ | #100 | cerrado |
+| 2 | PUMUKI-002 | ⏳ | Pendiente | pendiente |
+| 3 | PUMUKI-M001 | 🚧 | #101 | en curso |
+| 4 | PUMUKI-003 | ⛔ | #102 | bloqueado |
+`;
+
+const textualStatusMarkdown = `# Feedback canónico
+
+| ID | Fecha | Tipo | Severidad | Estado |
+|---|---|---|---|---|
+| PUMUKI-INC-001 | 2026-03-02 | Incoherencia | High | REPORTED |
+| FP-001 | 2026-03-02 | Falso positivo | High | FIXED (#481, #490) |
+| AST-GAP-001 | 2026-03-02 | Gap | Medium | OPEN |
+`;
+
+test('collectBacklogWatchEntries detecta ids, estados e issueRef', () => {
+  const entries = collectBacklogWatchEntries(sampleMarkdown);
+  assert.deepEqual(
+    entries.map((entry) => [entry.id, entry.status, entry.issueNumber]),
+    [
+      ['PUMUKI-001', '✅', 100],
+      ['PUMUKI-002', '⏳', null],
+      ['PUMUKI-M001', '🚧', 101],
+      ['PUMUKI-003', '⛔', 102],
+    ]
+  );
+});
+
+test('runBacklogWatch clasifica needs_issue, drift y active', async () => {
+  const result = await runBacklogWatch({
+    filePath: '/tmp/backlog-watch.md',
+    readFile: () => sampleMarkdown,
+    resolveIssueState: (issueNumber) => {
+      if (issueNumber === 101) {
+        return 'OPEN';
+      }
+      if (issueNumber === 102) {
+        return 'CLOSED';
+      }
+      return 'OPEN';
+    },
+  });
+
+  assert.equal(result.entriesScanned, 4);
+  assert.equal(result.nonClosedEntries, 3);
+  assert.equal(result.issueStatesResolved, 2);
+  assert.equal(result.classification.needsIssue.length, 1);
+  assert.equal(result.classification.driftClosedIssue.length, 1);
+  assert.equal(result.classification.activeIssue.length, 1);
+  assert.equal(result.classification.needsIssue[0]?.id, 'PUMUKI-002');
+  assert.equal(result.classification.driftClosedIssue[0]?.id, 'PUMUKI-003');
+  assert.equal(result.classification.activeIssue[0]?.id, 'PUMUKI-M001');
+  assert.equal(result.hasActionRequired, true);
+});
+
+test('runBacklogWatch queda en no-action cuando todo está cerrado', async () => {
+  const markdown = `| Orden | ID | Estado | Referencia upstream | Nota |\n|---|---|---|---|---|\n| 1 | PUMUKI-001 | ✅ | #100 | cerrado |\n`;
+  const result = await runBacklogWatch({
+    filePath: '/tmp/backlog-watch-closed.md',
+    readFile: () => markdown,
+    resolveIssueState: () => 'CLOSED',
+  });
+  assert.equal(result.nonClosedEntries, 0);
+  assert.equal(result.hasActionRequired, false);
+  assert.equal(result.classification.needsIssue.length, 0);
+  assert.equal(result.classification.driftClosedIssue.length, 0);
+  assert.equal(result.classification.activeIssue.length, 0);
+});
+
+test('collectBacklogWatchEntries soporta estados textuales e IDs de RuralGo', () => {
+  const entries = collectBacklogWatchEntries(textualStatusMarkdown);
+  assert.deepEqual(
+    entries.map((entry) => [entry.id, entry.status, entry.issueNumber]),
+    [
+      ['PUMUKI-INC-001', '🚧', null],
+      ['FP-001', '✅', 481],
+      ['AST-GAP-001', '⏳', null],
+    ]
+  );
+});
+
+test('collectBacklogWatchEntries prioriza issue de columnas derechas frente a # en contexto', () => {
+  const markdown = `| ID | Estado | Contexto | Referencia |\n|---|---|---|---|\n| PUMUKI-INC-056 | 🚧 REPORTED (#544, #547) | post-#543 auditoría | Pendiente |\n`;
+  const entries = collectBacklogWatchEntries(markdown);
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0]?.issueNumber, 544);
+});
+
+test('dedupeBacklogWatchEntriesById conserva entrada más útil por id', () => {
+  const entries = collectBacklogWatchEntries(
+    `| ID | Estado | Ref |\n|---|---|---|\n| PUMUKI-INC-100 | 🚧 REPORTED | Pendiente |\n| PUMUKI-INC-100 | 🚧 REPORTED (#700) | #700 |\n`
+  );
+  const deduped = dedupeBacklogWatchEntriesById(entries);
+  assert.equal(deduped.length, 1);
+  assert.equal(deduped[0]?.issueNumber, 700);
+});
+
+test('runBacklogWatch deduplica IDs repetidos en tablas resumen/detalle', async () => {
+  const markdown =
+    `| ID | Estado | Ref |\n|---|---|---|\n| PUMUKI-INC-100 | 🚧 REPORTED | Pendiente |\n| PUMUKI-INC-100 | 🚧 REPORTED (#700) | #700 |\n`;
+  const result = await runBacklogWatch({
+    filePath: '/tmp/backlog-watch-dedupe.md',
+    readFile: () => markdown,
+    resolveIssueState: (issueNumber) => (issueNumber === 700 ? 'OPEN' : 'CLOSED'),
+  });
+  assert.equal(result.entriesScanned, 2);
+  assert.equal(result.nonClosedEntries, 1);
+  assert.equal(result.classification.needsIssue.length, 0);
+  assert.equal(result.classification.activeIssue.length, 1);
+  assert.equal(result.classification.activeIssue[0]?.issueNumber, 700);
+});
