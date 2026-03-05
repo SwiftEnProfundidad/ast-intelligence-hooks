@@ -1727,7 +1727,20 @@
       - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
       - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-138: Monitorizar feedback post-release en consumidores reales (SAAS y RuralGo) y registrar únicamente hallazgos netos nuevos para siguiente corte.
+- ✅ PUMUKI-138: Endurecer UX de notificaciones de bloqueo multi-repo (contexto de proyecto + modal fiable).
+  - Resultado implementado:
+    - `scripts/framework-menu-system-notifications-lib.ts`:
+      - añade contexto de proyecto en notificaciones (`<repo> · <stage> · <causa>`),
+      - activa modal de bloqueo por defecto en macOS cuando hay `gate.blocked` (sin depender obligatoriamente de `PUMUKI_MACOS_BLOCKED_DIALOG=1`),
+      - soporta override explícito (`PUMUKI_MACOS_BLOCKED_DIALOG=0|1`) y preserva control anti-spam existente.
+    - `scripts/__tests__/framework-menu-system-notifications.test.ts`:
+      - nueva cobertura para subtítulo con proyecto,
+      - nueva cobertura para apertura de modal por defecto.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts` -> `13 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-139: Monitorizar feedback post-release en consumidores reales (SAAS y RuralGo) y registrar únicamente hallazgos netos nuevos para siguiente corte.
   - Alcance:
     - vigilar nuevos bloqueos/regresiones tras `6.3.40`,
     - mantener MDs externos sincronizados por leyenda sin contradicciones,
