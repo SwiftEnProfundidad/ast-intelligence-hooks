@@ -277,4 +277,13 @@
     - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `51 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-033: Ejecutar siguiente bug SAAS prioritaria (`#614`) para enforcement AST transversal multi-plataforma y cerrar trazabilidad con RED->GREEN->REFACTOR.
+- ✅ PUMUKI-033: Ejecutar siguiente bug SAAS prioritaria (`#614`) para enforcement AST transversal multi-plataforma y cerrar trazabilidad con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts`: guard transversal en PRE_WRITE para plataformas detectadas con reglas críticas mínimas por ámbito (`android/backend/frontend`) además de la cobertura iOS ya cerrada.
+    - Nuevo código de bloqueo explícito: `EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE`.
+    - El gate ahora bloquea determinísticamente cuando hay cobertura de prefijo pero falta enforcement crítico transversal por plataforma.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `53 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-034: Ejecutar siguiente bug SAAS prioritaria (`#615`) para compilación dinámica skills `.codex` -> reglas AST por nodos y cerrar trazabilidad con RED->GREEN->REFACTOR.

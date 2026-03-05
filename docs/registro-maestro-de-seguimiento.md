@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-032 (issue `#623`, enforcement PRE_WRITE de regla crítica iOS `skills.ios.critical-test-quality`).
-- Task activa (`🚧`): PUMUKI-033 (siguiente bug SAAS prioritaria: issue `#614`, enforcement AST transversal multi-plataforma).
+- Última task cerrada (`✅`): PUMUKI-033 (issue `#614`, enforcement transversal PRE_WRITE para reglas críticas multi-plataforma).
+- Task activa (`🚧`): PUMUKI-034 (siguiente bug SAAS prioritaria: issue `#615`, compilación dinámica skills `.codex` -> reglas AST por nodos).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

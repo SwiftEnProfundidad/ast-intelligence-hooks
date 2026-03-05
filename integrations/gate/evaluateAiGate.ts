@@ -105,6 +105,12 @@ const PREWRITE_CRITICAL_SKILLS_RULES: Readonly<Record<PreWriteSkillsPlatform, Re
   backend: [],
   frontend: [],
 };
+const PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES: Readonly<Record<PreWriteSkillsPlatform, ReadonlyArray<string>>> = {
+  ios: [],
+  android: ['skills.android.no-runblocking', 'skills.android.no-thread-sleep'],
+  backend: ['skills.backend.no-empty-catch', 'skills.backend.avoid-explicit-any'],
+  frontend: ['skills.frontend.no-empty-catch', 'skills.frontend.avoid-explicit-any'],
+};
 const MCP_RECEIPT_STAGE_ORDER: Readonly<Record<AiGateStage, number>> = {
   PRE_WRITE: 0,
   PRE_COMMIT: 1,
@@ -285,6 +291,48 @@ const collectPreWritePlatformSkillsViolations = (params: {
   return violations;
 };
 
+const collectPreWriteCrossPlatformCriticalViolations = (params: {
+  evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
+}): AiGateViolation[] => {
+  const detectedPlatforms = toDetectedSkillsPlatforms(params.evidence.platforms);
+  if (detectedPlatforms.length === 0) {
+    return [];
+  }
+
+  const missingCriticalCoverage: string[] = [];
+  for (const platform of detectedPlatforms) {
+    const requiredRuleIds = PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES[platform];
+    if (requiredRuleIds.length === 0) {
+      continue;
+    }
+
+    const hasCoverage = requiredRuleIds.some((ruleId) =>
+      params.coverage.active_rule_ids.includes(ruleId) &&
+      params.coverage.evaluated_rule_ids.includes(ruleId)
+    );
+
+    if (hasCoverage) {
+      continue;
+    }
+
+    missingCriticalCoverage.push(
+      `${platform}{required_any=[${requiredRuleIds.join(', ')}]}`
+    );
+  }
+
+  if (missingCriticalCoverage.length === 0) {
+    return [];
+  }
+
+  return [
+    toErrorViolation(
+      'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE',
+      `Cross-platform critical enforcement incomplete in PRE_WRITE: ${missingCriticalCoverage.join(' | ')}.`
+    ),
+  ];
+};
+
 const collectPreWriteCoherenceViolations = (params: {
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
   repoRoot: string;
@@ -389,6 +437,12 @@ const collectPreWriteCoherenceViolations = (params: {
 
     violations.push(
       ...collectPreWritePlatformSkillsViolations({
+        evidence: params.evidence,
+        coverage,
+      })
+    );
+    violations.push(
+      ...collectPreWriteCrossPlatformCriticalViolations({
         evidence: params.evidence,
         coverage,
       })
