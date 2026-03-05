@@ -1654,9 +1654,31 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#716`.
 
-- 🚧 PUMUKI-132: Ejecutar mejora DX siguiente para `next_commands[].probe_kind` en JSON de watch/reconcile.
+- ⏳ PUMUKI-132: Ejecutar mejora DX siguiente para `next_commands[].probe_kind` en JSON de watch/reconcile.
   - Alcance:
     - Exponer `probe_kind` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
     - Facilitar tipado explícito del mecanismo de verificación post-ejecución.
   - Issue upstream activa: `#717`.
+  - Nota de prioridad (2026-03-05): diferida temporalmente por cierre de incidencias High del watcher RuralGo.
+
+- ✅ PUMUKI-133: Cerrar `PUMUKI-INC-062` (incoherencia `ai_gate_check` vs hooks `ALLOW`) con hint de precedencia robusto para códigos `EVIDENCE_*` legacy.
+  - Resultado implementado:
+    - `integrations/mcp/aiGateCheck.ts`:
+      - `consistency_hint` pasa a detectar de forma genérica cualquier código `EVIDENCE_*` para stage hook (`PRE_COMMIT/PRE_PUSH/CI`), incluyendo casos legacy como `EVIDENCE_INTEGRITY_MISSING`.
+      - soporte de dependencias inyectables para test de regresión determinista.
+    - `integrations/mcp/__tests__/aiGateCheck.test.ts`:
+      - nuevo test RED/GREEN para `EVIDENCE_INTEGRITY_MISSING` con `reason_code=HOOK_RUNNER_CAN_REFRESH_EVIDENCE`.
+    - `integrations/mcp/preFlightCheck.ts` + `integrations/lifecycle/cli.ts`:
+      - remediación humana explícita para `EVIDENCE_INTEGRITY_MISSING`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts` -> `6 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `39 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Commit: `6f6aa69`.
+
+- 🚧 PUMUKI-134: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-060`) sobre falso positivo de coverage iOS por upstream desalineado.
+  - Alcance:
+    - reproducir contra `PRE_PUSH` en escenario de tracking desalineado,
+    - reforzar cálculo de delta real para evitar arrastre de histórico,
+    - cerrar con test de regresión y actualización de MD canónico RuralGo.
