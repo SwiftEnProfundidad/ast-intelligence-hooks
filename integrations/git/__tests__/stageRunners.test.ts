@@ -682,6 +682,56 @@ test('runPrePushStage sin upstream emite notificación de bloqueo accionable', a
   });
 });
 
+test('runPrePushStage bloquea con código específico cuando upstream está desalineado para rama topic', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    let gateCalls = 0;
+    const blocked: Array<{
+      stage: StageName;
+      causeCode: string;
+      causeMessage: string;
+      remediation: string;
+    }> = [];
+
+    const messages = await withCapturedStderr(async () => {
+      const exitCode = await runPrePushStage({
+        resolveUpstreamRef: () => 'origin/develop',
+        resolveCurrentBranchRef: () => 'feature/misaligned-upstream',
+        resolveUpstreamTrackingRef: () => 'origin/develop',
+        resolveAheadBehindFromRef: () => ({ ahead: 42, behind: 0 }),
+        runPlatformGate: async () => {
+          gateCalls += 1;
+          return 0;
+        },
+        notifyGateBlocked: (params) => {
+          blocked.push({
+            stage: params.stage,
+            causeCode: params.causeCode,
+            causeMessage: params.causeMessage,
+            remediation: params.remediation,
+          });
+        },
+        resolveRepoRoot: () => repoRoot,
+      });
+
+      assert.equal(exitCode, 1);
+    });
+
+    assert.equal(gateCalls, 0);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.stage, 'PRE_PUSH');
+    assert.equal(blocked[0]?.causeCode, 'PRE_PUSH_UPSTREAM_MISALIGNED');
+    assert.equal((blocked[0]?.causeMessage ?? '').includes('upstream appears misaligned'), true);
+    assert.match(blocked[0]?.remediation ?? '', /set-upstream/i);
+    assert.equal(
+      messages.some((message) =>
+        message.includes('pumuki pre-push blocked: upstream appears misaligned')
+      ),
+      true
+    );
+  });
+});
+
 test('runPreCommitStage bloquea temprano cuando falla git atomicity y no ejecuta el gate principal', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     stageBackendFile(repoRoot);

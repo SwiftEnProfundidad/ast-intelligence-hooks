@@ -1,7 +1,10 @@
 import { resolvePolicyForStage } from '../gate/stagePolicies';
 import {
+  resolveAheadBehindFromRef,
+  resolveCurrentBranchRef,
   resolveCiBaseRef,
   resolvePrePushBootstrapBaseRef,
+  resolveUpstreamTrackingRef,
   resolveUpstreamRef,
 } from './resolveGitRefs';
 import { runPlatformGate } from './runPlatformGate';
@@ -23,6 +26,7 @@ const PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE =
   'pumuki pre-push blocked: branch has no upstream tracking reference. Configure upstream first (for example: git push --set-upstream origin <branch>) and retry.';
 const PRE_PUSH_UPSTREAM_BOOTSTRAP_FALLBACK_MESSAGE =
   '[pumuki][pre-push] branch has no upstream; using bootstrap range ';
+const PRE_PUSH_UPSTREAM_MISALIGNED_AHEAD_THRESHOLD = 25;
 
 const PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS = 900;
 const PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS = 1800;
@@ -39,11 +43,16 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura coverage_ratio=1 y unevaluated=0.',
   GITFLOW_PROTECTED_BRANCH: 'Trabaja en feature/* y evita ramas protegidas.',
   PRE_PUSH_UPSTREAM_MISSING: 'Ejecuta: git push --set-upstream origin <branch>',
+  PRE_PUSH_UPSTREAM_MISALIGNED:
+    'Alinea upstream con la rama actual: git branch --unset-upstream && git push --set-upstream origin <branch>',
 };
 
 type StageRunnerDependencies = {
   resolvePolicyForStage: typeof resolvePolicyForStage;
   resolveUpstreamRef: typeof resolveUpstreamRef;
+  resolveUpstreamTrackingRef: typeof resolveUpstreamTrackingRef;
+  resolveCurrentBranchRef: typeof resolveCurrentBranchRef;
+  resolveAheadBehindFromRef: typeof resolveAheadBehindFromRef;
   resolvePrePushBootstrapBaseRef: typeof resolvePrePushBootstrapBaseRef;
   resolveCiBaseRef: typeof resolveCiBaseRef;
   runPlatformGate: typeof runPlatformGate;
@@ -77,6 +86,9 @@ type StageRunnerDependencies = {
 const defaultDependencies: StageRunnerDependencies = {
   resolvePolicyForStage,
   resolveUpstreamRef,
+  resolveUpstreamTrackingRef,
+  resolveCurrentBranchRef,
+  resolveAheadBehindFromRef,
   resolvePrePushBootstrapBaseRef,
   resolveCiBaseRef,
   runPlatformGate,
@@ -235,6 +247,57 @@ const shouldAllowBootstrapPrePush = (rawInput: string): boolean => {
   return false;
 };
 
+const PRE_PUSH_TOPIC_BRANCH_PREFIXES = [
+  'feature/',
+  'bugfix/',
+  'refactor/',
+  'chore/',
+  'docs/',
+];
+
+const toShortRef = (value: string): string =>
+  value
+    .replace(/^refs\/heads\//, '')
+    .replace(/^refs\/remotes\/[^/]+\//, '')
+    .replace(/^[^/]+\//, '');
+
+const detectPrePushUpstreamMisalignment = (params: {
+  dependencies: StageRunnerDependencies;
+  upstreamRef: string;
+}): { message: string; remediation: string } | null => {
+  const currentBranch = params.dependencies.resolveCurrentBranchRef();
+  const upstreamTrackingRef = params.dependencies.resolveUpstreamTrackingRef();
+  if (!currentBranch || !upstreamTrackingRef) {
+    return null;
+  }
+
+  const isTopicBranch = PRE_PUSH_TOPIC_BRANCH_PREFIXES.some((prefix) =>
+    currentBranch.startsWith(prefix)
+  );
+  if (!isTopicBranch) {
+    return null;
+  }
+
+  const upstreamShort = toShortRef(upstreamTrackingRef);
+  if (upstreamShort !== 'main' && upstreamShort !== 'develop') {
+    return null;
+  }
+
+  const aheadBehind = params.dependencies.resolveAheadBehindFromRef(params.upstreamRef);
+  if (!aheadBehind || aheadBehind.ahead < PRE_PUSH_UPSTREAM_MISALIGNED_AHEAD_THRESHOLD) {
+    return null;
+  }
+
+  return {
+    message:
+      `pumuki pre-push blocked: upstream appears misaligned for ${currentBranch}. ` +
+      `tracking=${upstreamTrackingRef} ahead=${aheadBehind.ahead} behind=${aheadBehind.behind}.`,
+    remediation:
+      'Alinea upstream con la rama actual para evaluar solo el delta real: ' +
+      'git branch --unset-upstream && git push --set-upstream origin <branch>',
+  };
+};
+
 const enforceGitAtomicityGate = (params: {
   dependencies: StageRunnerDependencies;
   repoRoot: string;
@@ -363,6 +426,23 @@ export async function runPrePushStage(
       fallbackCauseCode: 'PRE_PUSH_UPSTREAM_MISSING',
       fallbackCauseMessage: 'Branch has no upstream tracking reference.',
       fallbackRemediation: 'Ejecuta: git push --set-upstream origin <branch>',
+    });
+    notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');
+    return 1;
+  }
+
+  const misalignedUpstream = detectPrePushUpstreamMisalignment({
+    dependencies: activeDependencies,
+    upstreamRef,
+  });
+  if (misalignedUpstream) {
+    process.stderr.write(`${misalignedUpstream.message}\n`);
+    notifyGateBlockedForStage({
+      dependencies: activeDependencies,
+      stage: 'PRE_PUSH',
+      fallbackCauseCode: 'PRE_PUSH_UPSTREAM_MISALIGNED',
+      fallbackCauseMessage: misalignedUpstream.message,
+      fallbackRemediation: misalignedUpstream.remediation,
     });
     notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');
     return 1;

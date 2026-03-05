@@ -660,8 +660,22 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#647`.
 
-- 🚧 PUMUKI-063: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-060 / FP-030`) sobre falso positivo de coverage en `PRE_PUSH` por upstream desalineado.
+- ✅ PUMUKI-063: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-060 / FP-030`) sobre falso positivo de coverage en `PRE_PUSH` por upstream desalineado.
+  - Fix:
+    - `integrations/git/stageRunners.ts`:
+      - detección explícita de upstream desalineado para ramas topic (`feature/bugfix/refactor/chore/docs`) cuando el tracking apunta a `main/develop` y el delta `ahead` supera umbral operativo.
+      - bloqueo determinista con código `PRE_PUSH_UPSTREAM_MISALIGNED` y remediación accionable (alinear upstream al branch real).
+    - `integrations/git/resolveGitRefs.ts`:
+      - nuevos resolvers para branch actual, tracking upstream simbólico y `ahead/behind`.
+    - `integrations/git/__tests__/stageRunners.test.ts`:
+      - nuevo test RED/GREEN para confirmar bloqueo específico por misalignment y evitar falso `skills scope` blocking posterior.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `24 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#648`.
+
+- 🚧 PUMUKI-064: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-061`) sobre incoherencia de metadata de versión en payload de lifecycle (`runtime` vs `consumer-installed`).
   - Alcance:
-    - Reproducir RED con upstream desalineado (`origin/develop`) y bloqueo no representativo del delta real.
-    - Aplicar fix de detección/remediación determinista para evitar falso scope-blocking.
-  - Issue upstream activa: `#648`.
+    - Reproducir RED comparando `sdd validate --json` vs `npm ls pumuki`.
+    - Ajustar contrato de salida para separar fuentes de versión y eliminar ambigüedad diagnóstica.
+  - Issue upstream activa: `#649`.
