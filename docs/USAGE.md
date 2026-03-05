@@ -444,6 +444,10 @@ npm run validation:clean-artifacts -- --dry-run
 - Runs SDD pre-write guardrail and then AI Gate validation before continuing editing flow.
 - Requires OpenSpec installed, compatible, initialized, and valid active session.
 - AI Gate blocks on missing/invalid/stale evidence, blocked evidence gate status, or protected branch usage.
+- AI Gate applies early worktree hygiene for atomicity:
+  - warning code: `EVIDENCE_PREWRITE_WORKTREE_WARN`
+  - blocking code: `EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT`
+  - configurable via `PUMUKI_PREWRITE_WORKTREE_HYGIENE_ENABLED`, `PUMUKI_PREWRITE_WORKTREE_WARN_THRESHOLD`, `PUMUKI_PREWRITE_WORKTREE_BLOCK_THRESHOLD`
 - `pumuki sdd validate --stage=PRE_WRITE --json` returns an envelope with:
   - `sdd` (SDD decision payload)
   - `ai_gate` (AI Gate evaluation payload)

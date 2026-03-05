@@ -1296,6 +1296,10 @@ const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura unevaluated=0 y coverage_ratio=1.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
     'Completa contrato skills/policy para el stage actual y vuelve a validar.',
+  EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
+    'Reduce el worktree pendiente en slices atómicos antes de continuar.',
+  EVIDENCE_PREWRITE_WORKTREE_WARN:
+    'Particiona cambios ahora para evitar bloqueos tardíos en commit/push.',
   GITFLOW_PROTECTED_BRANCH: 'Trabaja en feature/* y evita ramas protegidas.',
   MCP_ENTERPRISE_RECEIPT_MISSING: 'Invoca ai_gate_check desde pumuki-enterprise MCP antes de PRE_WRITE.',
   MCP_ENTERPRISE_RECEIPT_INVALID: 'Corrige recibo MCP y vuelve a invocar ai_gate_check.',

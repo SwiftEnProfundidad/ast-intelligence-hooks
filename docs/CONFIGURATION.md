@@ -300,6 +300,21 @@ Blocking code:
 
 - `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE` (when contract is incomplete outside PRE_WRITE)
 
+## PRE_WRITE worktree hygiene guard
+
+AI Gate can enforce early worktree hygiene in `PRE_WRITE` to reduce non-atomic changes before commit time.
+
+Environment variables:
+
+- `PUMUKI_PREWRITE_WORKTREE_HYGIENE_ENABLED` (`true|false`, default: `true`)
+- `PUMUKI_PREWRITE_WORKTREE_WARN_THRESHOLD` (default: `12`)
+- `PUMUKI_PREWRITE_WORKTREE_BLOCK_THRESHOLD` (default: `24`)
+
+Codes emitted:
+
+- `EVIDENCE_PREWRITE_WORKTREE_WARN` (warning, still `ALLOWED`)
+- `EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT` (blocking error)
+
 ## TDD/BDD Vertical Enforcement Contract
 
 For new/complex changes, Pumuki enforces a neutral TDD/BDD evidence contract.

@@ -62,6 +62,10 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
     'asegura unevaluated=0 y coverage_ratio=1 antes de continuar.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
     'completa contrato de skills/policy para el stage actual y vuelve a validar.',
+  EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
+    'reduce el worktree pendiente en slices atómicos y vuelve a ejecutar PRE_WRITE.',
+  EVIDENCE_PREWRITE_WORKTREE_WARN:
+    'conviene particionar cambios ahora para evitar bloqueo tardío en commit/push.',
   EVIDENCE_UNSUPPORTED_AUTO_RULES:
     'mapea todas las reglas AUTO a detectores AST antes de continuar.',
   EVIDENCE_TIMESTAMP_FUTURE: 'corrige la hora del sistema y regenera evidencia.',

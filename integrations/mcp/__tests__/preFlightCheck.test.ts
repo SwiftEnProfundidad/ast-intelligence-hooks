@@ -167,3 +167,83 @@ test('pre_flight_check expone hint accionable cuando falta cobertura de skills p
     rmSync(repoRoot, { recursive: true, force: true });
   }
 });
+
+test('pre_flight_check expone hint accionable cuando PRE_WRITE supera umbral de higiene de worktree', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-preflight-worktree-hygiene-'));
+  try {
+    runGit(repoRoot, ['init', '-b', 'feature/preflight-worktree-hygiene']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+
+    const evidence: AiEvidenceV2_1 = {
+      version: '2.1',
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_WRITE',
+        outcome: 'PASS',
+        rules_coverage: {
+          stage: 'PRE_WRITE',
+          active_rule_ids: ['skills.backend.no-empty-catch'],
+          evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      ai_gate: {
+        status: 'ALLOWED',
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED',
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      platforms: {},
+      rulesets: [],
+      ledger: [],
+      human_intent: null,
+    };
+    evidence.evidence_chain = buildEvidenceChain({ evidence });
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    for (let index = 0; index < 30; index += 1) {
+      writeFileSync(join(repoRoot, `dirty-file-${index}.txt`), `line-${index}`, 'utf8');
+    }
+
+    const preFlightResult = runEnterprisePreFlightCheck({
+      repoRoot,
+      stage: 'PRE_WRITE',
+    });
+
+    assert.equal(preFlightResult.result.allowed, false);
+    assert.equal(
+      preFlightResult.result.violations.some(
+        (item) => item.code === 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT'
+      ),
+      true
+    );
+    assert.equal(
+      preFlightResult.result.hints.some((hint) =>
+        hint.startsWith('EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:')
+      ),
+      true
+    );
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});

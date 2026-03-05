@@ -20,6 +20,12 @@ export type AiGateViolation = {
   severity: 'ERROR' | 'WARN';
 };
 
+type PreWriteWorktreeHygienePolicy = {
+  enabled: boolean;
+  warnThreshold: number;
+  blockThreshold: number;
+};
+
 export type AiGateSkillsContractPlatformRequirement = {
   platform: PreWriteSkillsPlatform;
   required_rule_prefix: string;
@@ -103,6 +109,14 @@ const DEFAULT_MAX_AGE_SECONDS: Readonly<Record<AiGateStage, number>> = {
   PRE_PUSH: 1800,
   CI: 7200,
 };
+const DEFAULT_PREWRITE_WORKTREE_HYGIENE: PreWriteWorktreeHygienePolicy = {
+  enabled: true,
+  warnThreshold: 12,
+  blockThreshold: 24,
+};
+const PREWRITE_WORKTREE_HYGIENE_ENABLED_ENV = 'PUMUKI_PREWRITE_WORKTREE_HYGIENE_ENABLED';
+const PREWRITE_WORKTREE_HYGIENE_WARN_THRESHOLD_ENV = 'PUMUKI_PREWRITE_WORKTREE_WARN_THRESHOLD';
+const PREWRITE_WORKTREE_HYGIENE_BLOCK_THRESHOLD_ENV = 'PUMUKI_PREWRITE_WORKTREE_BLOCK_THRESHOLD';
 
 const DEFAULT_PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
 const PREWRITE_SKILLS_PLATFORMS = ['ios', 'android', 'backend', 'frontend'] as const;
@@ -147,6 +161,66 @@ const toErrorViolation = (code: string, message: string): AiGateViolation => ({
   severity: 'ERROR',
   message,
 });
+
+const toWarnViolation = (code: string, message: string): AiGateViolation => ({
+  code,
+  severity: 'WARN',
+  message,
+});
+
+const toPositiveInteger = (value: unknown, fallback: number): number => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return fallback;
+  }
+  const normalized = Math.trunc(value);
+  return normalized > 0 ? normalized : fallback;
+};
+
+const toBooleanFromEnv = (value: string | undefined, fallback: boolean): boolean => {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+  const normalized = value.trim().toLowerCase();
+  if (normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on') {
+    return true;
+  }
+  if (normalized === '0' || normalized === 'false' || normalized === 'no' || normalized === 'off') {
+    return false;
+  }
+  return fallback;
+};
+
+const resolvePreWriteWorktreeHygienePolicy = (
+  input?: Partial<PreWriteWorktreeHygienePolicy>
+): PreWriteWorktreeHygienePolicy => {
+  const enabled = input?.enabled
+    ?? toBooleanFromEnv(
+      process.env[PREWRITE_WORKTREE_HYGIENE_ENABLED_ENV],
+      DEFAULT_PREWRITE_WORKTREE_HYGIENE.enabled
+    );
+  const warnThreshold = toPositiveInteger(
+    input?.warnThreshold
+      ?? (process.env[PREWRITE_WORKTREE_HYGIENE_WARN_THRESHOLD_ENV]
+        ? Number(process.env[PREWRITE_WORKTREE_HYGIENE_WARN_THRESHOLD_ENV])
+        : undefined),
+    DEFAULT_PREWRITE_WORKTREE_HYGIENE.warnThreshold
+  );
+  const requestedBlockThreshold = toPositiveInteger(
+    input?.blockThreshold
+      ?? (process.env[PREWRITE_WORKTREE_HYGIENE_BLOCK_THRESHOLD_ENV]
+        ? Number(process.env[PREWRITE_WORKTREE_HYGIENE_BLOCK_THRESHOLD_ENV])
+        : undefined),
+    DEFAULT_PREWRITE_WORKTREE_HYGIENE.blockThreshold
+  );
+  const blockThreshold =
+    requestedBlockThreshold >= warnThreshold ? requestedBlockThreshold : warnThreshold;
+
+  return {
+    enabled,
+    warnThreshold,
+    blockThreshold,
+  };
+};
 
 const toTimestampAgeSeconds = (
   timestamp: string,
@@ -500,6 +574,7 @@ const collectPreWriteCoherenceViolations = (params: {
   repoRoot: string;
   repoState: RepoState;
   nowMs: number;
+  preWriteWorktreeHygiene: PreWriteWorktreeHygienePolicy;
 }): AiGateViolation[] => {
   const violations: AiGateViolation[] = [];
   const evidenceRepoRoot = params.evidence.repo_state?.repo_root;
@@ -620,6 +695,25 @@ const collectPreWriteCoherenceViolations = (params: {
     );
   }
 
+  if (params.preWriteWorktreeHygiene.enabled && params.repoState.git.available) {
+    const pendingChanges = params.repoState.git.staged + params.repoState.git.unstaged;
+    if (pendingChanges >= params.preWriteWorktreeHygiene.blockThreshold) {
+      violations.push(
+        toErrorViolation(
+          'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT',
+          `PRE_WRITE hygiene exceeded: pending_changes=${pendingChanges} (block_threshold=${params.preWriteWorktreeHygiene.blockThreshold}). Split worktree into atomic slices.`
+        )
+      );
+    } else if (pendingChanges >= params.preWriteWorktreeHygiene.warnThreshold) {
+      violations.push(
+        toWarnViolation(
+          'EVIDENCE_PREWRITE_WORKTREE_WARN',
+          `PRE_WRITE hygiene warning: pending_changes=${pendingChanges} (warn_threshold=${params.preWriteWorktreeHygiene.warnThreshold}). Consider splitting worktree into smaller slices.`
+        )
+      );
+    }
+  }
+
   return violations;
 };
 
@@ -629,7 +723,8 @@ const collectEvidenceViolations = (
   repoState: RepoState,
   stage: AiGateStage,
   nowMs: number,
-  maxAgeSecondsByStage: Readonly<Record<AiGateStage, number>>
+  maxAgeSecondsByStage: Readonly<Record<AiGateStage, number>>,
+  preWriteWorktreeHygiene: PreWriteWorktreeHygienePolicy
 ): { violations: AiGateViolation[]; ageSeconds: number | null } => {
   const violations: AiGateViolation[] = [];
   const maxAgeSeconds = maxAgeSecondsByStage[stage];
@@ -680,6 +775,7 @@ const collectEvidenceViolations = (
         repoRoot,
         repoState,
         nowMs,
+        preWriteWorktreeHygiene,
       })
     );
   }
@@ -866,6 +962,7 @@ export const evaluateAiGate = (
     maxAgeSecondsByStage?: Readonly<Record<AiGateStage, number>>;
     protectedBranches?: ReadonlyArray<string>;
     requireMcpReceipt?: boolean;
+    preWriteWorktreeHygiene?: Partial<PreWriteWorktreeHygienePolicy>;
   },
   dependencies: Partial<AiGateDependencies> = {}
 ): AiGateCheckResult => {
@@ -874,6 +971,9 @@ export const evaluateAiGate = (
     ...dependencies,
   };
   const maxAgeSecondsByStage = params.maxAgeSecondsByStage ?? DEFAULT_MAX_AGE_SECONDS;
+  const preWriteWorktreeHygiene = resolvePreWriteWorktreeHygienePolicy(
+    params.preWriteWorktreeHygiene
+  );
   const protectedBranches = new Set(params.protectedBranches ?? Array.from(DEFAULT_PROTECTED_BRANCHES));
   const nowMs = activeDependencies.now();
   const evidenceResult = activeDependencies.readEvidenceResult(params.repoRoot);
@@ -889,7 +989,8 @@ export const evaluateAiGate = (
     repoState,
     params.stage,
     nowMs,
-    maxAgeSecondsByStage
+    maxAgeSecondsByStage,
+    preWriteWorktreeHygiene
   );
   const mcpReceiptAssessment = collectMcpReceiptViolations({
     required: params.requireMcpReceipt ?? false,

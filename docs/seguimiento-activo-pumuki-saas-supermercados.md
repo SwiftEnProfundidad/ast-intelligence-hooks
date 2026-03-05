@@ -362,4 +362,20 @@
     - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `32 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-043: Ejecutar siguiente bug/mejora SAAS prioritaria de higiene temprana en `PRE_WRITE` (`PUMUKI-011`, issue `#626`) con guardas de worktree atómico y remediación determinista.
+- ✅ PUMUKI-043: Ejecutar siguiente bug/mejora SAAS prioritaria de higiene temprana en `PRE_WRITE` (`PUMUKI-011`, issue `#626`) con guardas de worktree atómico y remediación determinista.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts`: añade guard nativo de higiene en `PRE_WRITE` con umbrales configurables (`warn/block`) y códigos deterministas:
+      - `EVIDENCE_PREWRITE_WORKTREE_WARN`
+      - `EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT`
+    - Configuración por entorno:
+      - `PUMUKI_PREWRITE_WORKTREE_HYGIENE_ENABLED`
+      - `PUMUKI_PREWRITE_WORKTREE_WARN_THRESHOLD`
+      - `PUMUKI_PREWRITE_WORKTREE_BLOCK_THRESHOLD`
+    - `integrations/mcp/preFlightCheck.ts`, `integrations/mcp/autoExecuteAiStart.ts`, `scripts/framework-menu-consumer-preflight-lib.ts`, `integrations/lifecycle/cli.ts`: hints y remediación accionable alineados con los nuevos códigos.
+    - `docs/CONFIGURATION.md`, `docs/USAGE.md`: contrato y uso documentados.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts` -> `32 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `32 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-044: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M001`, issue `#627`) para bootstrap enterprise unificado en un solo flujo.

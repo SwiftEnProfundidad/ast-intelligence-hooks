@@ -250,6 +250,66 @@ test('evaluateAiGate permite continuar cuando evidencia está fresca y rama cump
   });
 });
 
+test('evaluateAiGate bloquea PRE_WRITE cuando la higiene de worktree supera umbral crítico', () => {
+  const repoState = sampleEvidence().repo_state!;
+  repoState.git.dirty = true;
+  repoState.git.staged = 11;
+  repoState.git.unstaged = 14;
+
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+      preWriteWorktreeHygiene: {
+        warnThreshold: 8,
+        blockThreshold: 20,
+      },
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
+      captureRepoState: () => repoState,
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
+  assert.equal(
+    result.violations.some((item) => item.code === 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT'),
+    true
+  );
+});
+
+test('evaluateAiGate mantiene PRE_WRITE en ALLOWED y emite WARN cuando el worktree supera umbral de aviso', () => {
+  const repoState = sampleEvidence().repo_state!;
+  repoState.git.dirty = true;
+  repoState.git.staged = 3;
+  repoState.git.unstaged = 6;
+
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+      preWriteWorktreeHygiene: {
+        warnThreshold: 8,
+        blockThreshold: 20,
+      },
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
+      captureRepoState: () => repoState,
+    }
+  );
+
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some((item) => item.code === 'EVIDENCE_PREWRITE_WORKTREE_WARN'),
+    true
+  );
+});
+
 test('evaluateAiGate bloquea PRE_WRITE cuando falta rules_coverage en evidencia válida', () => {
   const evidence = sampleEvidence();
   const snapshotWithoutCoverage = {

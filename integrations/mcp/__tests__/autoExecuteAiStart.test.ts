@@ -197,3 +197,39 @@ test('auto_execute_ai_start devuelve next_action de remediación para cobertura 
     rmSync(repoRoot, { recursive: true, force: true });
   }
 });
+
+test('auto_execute_ai_start devuelve next_action accionable cuando PRE_WRITE supera umbral de higiene de worktree', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-auto-execute-worktree-hygiene-'));
+  try {
+    runGit(repoRoot, ['init', '-b', 'feature/auto-execute-worktree-hygiene']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeEvidence({
+      repoRoot,
+      timestamp: new Date().toISOString(),
+      status: 'ALLOWED',
+      snapshotStage: 'PRE_WRITE',
+    });
+
+    for (let index = 0; index < 30; index += 1) {
+      writeFileSync(join(repoRoot, `dirty-file-${index}.txt`), `line-${index}`, 'utf8');
+    }
+
+    const result = runEnterpriseAutoExecuteAiStart({
+      repoRoot,
+      stage: 'PRE_WRITE',
+    });
+
+    assert.equal(result.result.action, 'ask');
+    assert.equal(result.result.reason_code, 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT');
+    assert.equal(result.result.next_action.kind, 'run_command');
+    assert.equal(
+      result.result.next_action.message.includes('Particiona el worktree en slices atómicos'),
+      true
+    );
+    assert.equal(result.result.next_action.command, 'git status --short && git add -p');
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});

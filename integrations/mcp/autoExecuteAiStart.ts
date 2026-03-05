@@ -13,6 +13,8 @@ const isEvidenceCode = (code: string): boolean =>
   || code === 'EVIDENCE_INVALID'
   || code === 'EVIDENCE_STALE'
   || code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'
+  || code === 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT'
+  || code === 'EVIDENCE_PREWRITE_WORKTREE_WARN'
   || code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
   || code === 'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING';
 
@@ -53,6 +55,14 @@ const nextActionFromViolation = (violation: AiGateViolation | undefined): AutoEx
         message:
           'Completa cobertura de skills por plataforma (prefijos + bundles) y revalida PRE_WRITE.',
         command: 'npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
+      };
+    case 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT':
+    case 'EVIDENCE_PREWRITE_WORKTREE_WARN':
+      return {
+        kind: 'run_command',
+        message:
+          'Particiona el worktree en slices atómicos y revalida PRE_WRITE para continuar sin fricción.',
+        command: 'git status --short && git add -p',
       };
     case 'GITFLOW_PROTECTED_BRANCH':
       return {

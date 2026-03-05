@@ -20,6 +20,10 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
     'Carga los bundles de skills requeridos por plataforma detectada y regenera evidencia.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
     'Completa el contrato skills/policy para el stage solicitado y vuelve a validar.',
+  EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
+    'Reduce el worktree pendiente en slices atómicos y vuelve a ejecutar PRE_WRITE.',
+  EVIDENCE_PREWRITE_WORKTREE_WARN:
+    'Conviene particionar cambios ahora para evitar bloqueo tardío en commit/push.',
   EVIDENCE_UNSUPPORTED_AUTO_RULES:
     'Mapea todas las reglas AUTO a detectores AST antes de continuar.',
   EVIDENCE_TIMESTAMP_FUTURE: 'Corrige la hora del sistema y regenera evidencia.',
