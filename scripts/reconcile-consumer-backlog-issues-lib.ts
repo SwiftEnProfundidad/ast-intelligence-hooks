@@ -48,6 +48,7 @@ export type BacklogReconcileResult = {
   referenceChanges: ReadonlyArray<BacklogIssueReferenceChange>;
   changes: ReadonlyArray<BacklogIssueChange>;
   summaryUpdated: boolean;
+  nextStepUpdated: boolean;
   summary: BacklogStatusSummary;
   updated: boolean;
 };
@@ -270,6 +271,63 @@ export const syncBacklogStatusSummary = (
   };
 };
 
+export const syncBacklogNextStepNarrative = (params: {
+  markdown: string;
+  summary: BacklogStatusSummary;
+}): { markdown: string; updated: boolean } => {
+  const heading = '## Próximo paso operativo (sin intervención manual en el seguimiento)';
+  if (
+    params.summary.inProgress !== 0 ||
+    params.summary.pending !== 0 ||
+    params.summary.blocked !== 0
+  ) {
+    return {
+      markdown: params.markdown,
+      updated: false,
+    };
+  }
+
+  const lines = params.markdown.split(/\r?\n/);
+  const headerIndex = lines.findIndex((line) => line.trim() === heading);
+  if (headerIndex < 0) {
+    return {
+      markdown: params.markdown,
+      updated: false,
+    };
+  }
+
+  const start = headerIndex + 1;
+  let end = start;
+  while (end < lines.length && !lines[end].trimStart().startsWith('## ')) {
+    end += 1;
+  }
+
+  const replacement = [
+    '- Objetivo inmediato:',
+    '  - Backlog cerrado al 100% (sin tareas activas).',
+    '- Entregables de este estado:',
+    '  - Mantener monitorización de nuevos hallazgos y abrir issue upstream al primer incidente real.',
+    '  - Reejecutar reconciliación automática cuando entren nuevas filas en el backlog consumidor.',
+    '- Regla de continuidad:',
+    '  - Si entra una incidencia nueva, marcar exactamente una `🚧` y mantener el resto en `⏳` o `✅` según estado real.',
+  ];
+
+  const current = lines.slice(start, end);
+  const changed = current.join('\n') !== replacement.join('\n');
+  if (!changed) {
+    return {
+      markdown: params.markdown,
+      updated: false,
+    };
+  }
+
+  const updatedLines = [...lines.slice(0, start), ...replacement, ...lines.slice(end)];
+  return {
+    markdown: updatedLines.join('\n'),
+    updated: true,
+  };
+};
+
 const deriveTargetEmoji = (params: {
   current: BacklogStatusEmoji;
   issueState: BacklogIssueState;
@@ -306,6 +364,7 @@ export const reconcileBacklogMarkdown = (params: {
   updatedMarkdown: string;
   changes: ReadonlyArray<BacklogIssueChange>;
   summaryUpdated: boolean;
+  nextStepUpdated: boolean;
   summary: BacklogStatusSummary;
 } => {
   const entries = collectBacklogIssueEntries(params.markdown);
@@ -335,10 +394,15 @@ export const reconcileBacklogMarkdown = (params: {
 
   if (byLine.size === 0) {
     const syncedOnlySummary = syncBacklogStatusSummary(params.markdown);
+    const syncedNarrative = syncBacklogNextStepNarrative({
+      markdown: syncedOnlySummary.markdown,
+      summary: syncedOnlySummary.summary,
+    });
     return {
-      updatedMarkdown: syncedOnlySummary.markdown,
+      updatedMarkdown: syncedNarrative.markdown,
       changes: [],
       summaryUpdated: syncedOnlySummary.updated,
+      nextStepUpdated: syncedNarrative.updated,
       summary: syncedOnlySummary.summary,
     };
   }
@@ -355,10 +419,15 @@ export const reconcileBacklogMarkdown = (params: {
 
   const reconciledMarkdown = lines.join('\n');
   const syncedSummary = syncBacklogStatusSummary(reconciledMarkdown);
+  const syncedNarrative = syncBacklogNextStepNarrative({
+    markdown: syncedSummary.markdown,
+    summary: syncedSummary.summary,
+  });
   return {
-    updatedMarkdown: syncedSummary.markdown,
+    updatedMarkdown: syncedNarrative.markdown,
     changes: Array.from(byLine.values()).sort((a, b) => a.lineNumber - b.lineNumber),
     summaryUpdated: syncedSummary.updated,
+    nextStepUpdated: syncedNarrative.updated,
     summary: syncedSummary.summary,
   };
 };
@@ -396,7 +465,13 @@ export const runBacklogIssuesReconcile = async (params: {
   });
 
   const apply = params.apply === true;
-  if (apply && (mapped.changes.length > 0 || reconciled.changes.length > 0 || reconciled.summaryUpdated)) {
+  if (
+    apply &&
+    (mapped.changes.length > 0 ||
+      reconciled.changes.length > 0 ||
+      reconciled.summaryUpdated ||
+      reconciled.nextStepUpdated)
+  ) {
     writeFile(filePath, reconciled.updatedMarkdown);
   }
 
@@ -409,7 +484,13 @@ export const runBacklogIssuesReconcile = async (params: {
     referenceChanges: mapped.changes,
     changes: reconciled.changes,
     summaryUpdated: reconciled.summaryUpdated,
+    nextStepUpdated: reconciled.nextStepUpdated,
     summary: reconciled.summary,
-    updated: apply && (reconciled.changes.length > 0 || reconciled.summaryUpdated),
+    updated:
+      apply &&
+      (mapped.changes.length > 0 ||
+        reconciled.changes.length > 0 ||
+        reconciled.summaryUpdated ||
+        reconciled.nextStepUpdated),
   };
 };

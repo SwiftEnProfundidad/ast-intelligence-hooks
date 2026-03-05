@@ -111,6 +111,7 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesRec
       lines.push(`- line ${change.lineNumber} ${change.id}: ${change.from} -> ${change.to}`);
     }
   }
+  lines.push(`[pumuki][backlog-reconcile] next_step_updated=${result.nextStepUpdated ? 'yes' : 'no'}`);
   lines.push(
     `[pumuki][backlog-reconcile] summary closed=${result.summary.closed} in_progress=${result.summary.inProgress} pending=${result.summary.pending} blocked=${result.summary.blocked}`
   );

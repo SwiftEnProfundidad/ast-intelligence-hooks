@@ -7,6 +7,7 @@ import {
   collectBacklogOperationalStatusEntries,
   reconcileBacklogMarkdown,
   runBacklogIssuesReconcile,
+  syncBacklogNextStepNarrative,
   syncBacklogStatusSummary,
   type BacklogIssueState,
 } from '../reconcile-consumer-backlog-issues-lib';
@@ -39,6 +40,31 @@ const summaryMarkdown = `# Registro de Bugs y Mejoras de Pumuki
 |---|---|---|---|---|---|---|---|
 | 1 | PUMUKI-M001 | MEDIUM | P2 | 🚧 | Pendiente | TBC | en curso |
 | 2 | PUMUKI-M002 | HIGH | P1 | ⛔ | #101 | TBC | bloqueado |
+`;
+
+const closedNarrativeMarkdown = `# Registro de Bugs y Mejoras de Pumuki
+
+## Estado de este backlog
+- ✅ Cerrados: 0
+- 🚧 En construcción: 1 (\`PUMUKI-002\`)
+- ⏳ Pendientes: 1
+- ⛔ Bloqueados: 0
+
+## Seguimiento operativo (Bugs)
+| Orden | ID | Severidad | Prioridad | Estado | Referencia upstream | Versión objetivo | Nota |
+|---|---|---|---|---|---|---|---|
+| 1 | PUMUKI-002 | MEDIUM | P1 | ✅ | #641 | TBC | cerrado |
+
+## Próximo paso operativo (sin intervención manual en el seguimiento)
+- Objetivo inmediato:
+  - Avanzar PUMUKI-002.
+- Entregables de ese paso:
+  - Mantener trazabilidad.
+- Regla de continuidad:
+  - Excepción documentada.
+
+## Formato obligatorio para bugs
+- ID
 `;
 
 test('collectBacklogIssueEntries detecta filas con emoji de estado e issue', () => {
@@ -81,6 +107,17 @@ test('syncBacklogStatusSummary reescribe estado de backlog con conteos reales', 
   assert.match(result.markdown, /- ⛔ Bloqueados: 1 \(`PUMUKI-M002`\)/);
 });
 
+test('syncBacklogNextStepNarrative actualiza narrativa cuando backlog queda 100% cerrado', () => {
+  const summary = buildBacklogStatusSummary(closedNarrativeMarkdown);
+  const result = syncBacklogNextStepNarrative({
+    markdown: closedNarrativeMarkdown,
+    summary,
+  });
+  assert.equal(result.updated, true);
+  assert.match(result.markdown, /Backlog cerrado al 100%/);
+  assert.match(result.markdown, /abrir issue upstream al primer incidente real/);
+});
+
 test('reconcileBacklogMarkdown corrige estados según OPEN/CLOSED', () => {
   const issueStates = new Map<number, BacklogIssueState>([
     [100, 'CLOSED'],
@@ -104,6 +141,7 @@ test('reconcileBacklogMarkdown corrige estados según OPEN/CLOSED', () => {
   assert.match(result.updatedMarkdown, /\| P1 \| PUMUKI-002 \| ⏳ \| #101 \|/);
   assert.match(result.updatedMarkdown, /\| P1 \| PUMUKI-003 \| 🚧 \| #102 \|/);
   assert.equal(result.summaryUpdated, false);
+  assert.equal(result.nextStepUpdated, false);
   assert.equal(result.summary.closed, 1);
   assert.equal(result.summary.inProgress, 1);
   assert.equal(result.summary.pending, 1);
@@ -132,6 +170,7 @@ test('runBacklogIssuesReconcile dry-run no escribe archivo', async () => {
   assert.equal(result.referenceChanges.length, 0);
   assert.equal(result.changes.length, 2);
   assert.equal(result.summaryUpdated, false);
+  assert.equal(result.nextStepUpdated, false);
   assert.equal(result.summary.closed, 1);
   assert.equal(written, undefined);
 });
@@ -158,6 +197,7 @@ test('runBacklogIssuesReconcile apply escribe archivo cuando hay cambios', async
   assert.equal(result.referenceChanges.length, 0);
   assert.equal(result.changes.length, 2);
   assert.equal(result.summaryUpdated, false);
+  assert.equal(result.nextStepUpdated, false);
   assert.equal(result.summary.pending, 1);
   assert.ok(typeof written === 'string');
   assert.match(written ?? '', /\| P0 \| PUMUKI-001 \| ✅ \| #100 \|/);
@@ -196,6 +236,7 @@ test('runBacklogIssuesReconcile aplica mapping y reconcilia estado para issue ce
 
   assert.equal(result.referenceChanges.length, 1);
   assert.equal(result.changes.length, 1);
+  assert.equal(result.nextStepUpdated, false);
   assert.equal(result.updated, true);
   assert.match(written ?? '', /\| 1 \| PUMUKI-009 \| ✅ \| #624 \| pendiente \|/);
 });
