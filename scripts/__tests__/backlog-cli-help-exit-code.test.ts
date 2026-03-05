@@ -252,3 +252,24 @@ test('reconcile-consumer-backlog-issues salida humana incluye resumen de heading
   assert.match(result.stdout, /PUMUKI-011: ⏳ -> ✅/);
   assert.match(result.stdout, /action_required_reasons=heading_changes/);
 });
+
+test('watch-consumer-backlog salida humana imprime action_required_reasons=none cuando está limpio', () => {
+  const scriptPath = resolveScriptPath('../watch-consumer-backlog.ts');
+  const backlogFile = createBacklogFile(
+    `| ID | Estado | Referencia upstream |\n|---|---|---|\n| PUMUKI-200 | ✅ | #900 |\n`
+  );
+  const result = runTsxScript(scriptPath, ['--file=' + backlogFile, '--no-fail']);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /action_required_reasons=none/);
+  assert.match(result.stdout, /action_required=no/);
+});
+
+test('reconcile-consumer-backlog-issues salida humana imprime action_required_reasons=none cuando no hay deltas', () => {
+  const scriptPath = resolveScriptPath('../reconcile-consumer-backlog-issues.ts');
+  const backlogFile = createBacklogFile(
+    `| ID | Estado | Referencia upstream |\n|---|---|---|\n| PUMUKI-201 | ✅ | Pendiente |\n`
+  );
+  const result = runTsxScript(scriptPath, ['--file=' + backlogFile]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /action_required_reasons=none/);
+});

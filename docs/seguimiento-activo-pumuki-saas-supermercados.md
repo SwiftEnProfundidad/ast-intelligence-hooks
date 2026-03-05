@@ -1169,9 +1169,19 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#684`.
 
-- 🚧 PUMUKI-100: Ejecutar mejora QA siguiente para cubrir `action_required_reasons=none` en salida humana.
+- ✅ PUMUKI-100: Ejecutar mejora QA siguiente para cubrir `action_required_reasons=none` en salida humana.
+  - Fix:
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - nuevos tests para caso limpio `action_required_reasons=none` en watch y reconcile.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `46 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#685`.
+
+- 🚧 PUMUKI-101: Ejecutar refactor DX siguiente para unificar builders de `action_required_reasons`.
   - Alcance:
-    - Añadir tests dedicados para caso limpio sin findings.
-    - Blindar formato humano de reasons en watch/reconcile.
-    - Sin cambios funcionales de lógica.
-  - Issue upstream activa: `#685`.
+    - Eliminar duplicación de lógica en salidas JSON/humana.
+    - Mantener comportamiento exacto con tests actuales.
+    - No introducir cambios funcionales.
+  - Issue upstream activa: `#686`.
