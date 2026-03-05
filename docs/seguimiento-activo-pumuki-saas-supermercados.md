@@ -536,4 +536,4 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#636`.
 
-- 🚧 PUMUKI-054: Ejecutar siguiente mejora prioritaria de hardening enterprise (issue `#543`) para policy-as-code versionada/firmada con validación estricta y trazabilidad completa en gates.
+- 🚧 PUMUKI-054: Ejecutar siguiente mejora prioritaria de hardening enterprise (issue `#637`) para policy-as-code versionada/firmada con validación estricta y trazabilidad completa en gates.
