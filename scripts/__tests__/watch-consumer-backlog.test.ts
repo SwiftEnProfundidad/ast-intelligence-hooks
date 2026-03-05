@@ -121,3 +121,21 @@ test('runBacklogWatch deduplica IDs repetidos en tablas resumen/detalle', async 
   assert.equal(result.classification.activeIssue.length, 1);
   assert.equal(result.classification.activeIssue[0]?.issueNumber, 700);
 });
+
+test('runBacklogWatch usa idIssueMap para resolver filas sin #issue y evitar needsIssue fantasma', async () => {
+  const markdown = `| ID | Estado | Ref |\n|---|---|---|\n| PUMUKI-INC-059 | 🚧 REPORTED | Pendiente |\n`;
+  const result = await runBacklogWatch({
+    filePath: '/tmp/backlog-watch-id-map.md',
+    readFile: () => markdown,
+    idIssueMap: {
+      'PUMUKI-INC-059': 646,
+    },
+    resolveIssueState: (issueNumber) => (issueNumber === 646 ? 'CLOSED' : 'OPEN'),
+  });
+
+  assert.equal(result.nonClosedEntries, 1);
+  assert.equal(result.classification.needsIssue.length, 0);
+  assert.equal(result.classification.driftClosedIssue.length, 1);
+  assert.equal(result.classification.driftClosedIssue[0]?.issueNumber, 646);
+  assert.equal(result.issueStatesResolved, 1);
+});

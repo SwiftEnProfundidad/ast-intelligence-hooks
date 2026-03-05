@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-066 (issue `#651`, smoke guard `--no-install` contra `MODULE_NOT_FOUND`).
-- Task activa (`🚧`): PUMUKI-067 (issue `#652`, watcher con mapeo `ID->issue` para trazabilidad real).
+- Última task cerrada (`✅`): PUMUKI-067 (issue `#652`, watcher con mapeo `ID->issue` para reducir `needsIssue` fantasma).
+- Task activa (`🚧`): PUMUKI-068 (issue `#653`, mapeo canónico sin JSON manual).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

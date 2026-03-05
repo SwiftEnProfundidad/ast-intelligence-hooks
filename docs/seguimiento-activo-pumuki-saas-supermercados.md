@@ -719,8 +719,21 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#651`.
 
-- 🚧 PUMUKI-067: Ejecutar mejora DX para watcher (`backlog-watch`) con mapeo opcional `ID -> issue` y eliminar `needsIssue` fantasma en backlogs consumidores.
+- ✅ PUMUKI-067: Ejecutar mejora DX para watcher (`backlog-watch`) con mapeo opcional `ID -> issue` y eliminar `needsIssue` fantasma en backlogs consumidores.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - nuevo flag `--id-issue-map=<json-path>` con carga de mapeo robusta.
+    - `scripts/watch-consumer-backlog-lib.ts`:
+      - clasificación soporta `idIssueMap` para resolver `needsIssue` cuando hay issue canónica fuera del MD consumidor.
+    - `scripts/__tests__/watch-consumer-backlog.test.ts`:
+      - nuevo test RED/GREEN de mapeo `ID -> issue` evitando falsos `needsIssue`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `18 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#652`.
+
+- 🚧 PUMUKI-068: Ejecutar mejora DX siguiente para watcher con resolución de mapeo desde fuente canónica sin JSON manual ad hoc.
   - Alcance:
-    - Añadir flag `--id-issue-map=<json>` en watcher.
-    - Resolver clasificación con referencias canónicas aunque el MD consumidor no tenga `#issue` en línea.
-  - Issue upstream activa: `#652`.
+    - Evitar mantenimiento manual recurrente de `id-issue-map` por consumer.
+    - Resolver mapeo desde fuente canónica de seguimiento o snapshot reconciliado.
+  - Issue upstream activa: `#653`.

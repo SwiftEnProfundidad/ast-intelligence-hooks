@@ -29,6 +29,8 @@ export type BacklogWatchResult = {
   hasActionRequired: boolean;
 };
 
+export type BacklogWatchIdIssueMap = Readonly<Record<string, number>>;
+
 const STATUS_EMOJI_PATTERN = /(✅|🚧|⏳|⛔)/;
 const ISSUE_REF_PATTERN = /#(\d+)/;
 const BACKLOG_ID_PATTERN = /^(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)$/;
@@ -171,6 +173,7 @@ const resolveIssueStateWithGh = (issueNumber: number, repo?: string): BacklogIss
 export const runBacklogWatch = async (params: {
   filePath: string;
   repo?: string;
+  idIssueMap?: BacklogWatchIdIssueMap;
   readFile?: (path: string) => string;
   resolveIssueState?: (issueNumber: number, repo?: string) => BacklogIssueState | Promise<BacklogIssueState>;
 }): Promise<BacklogWatchResult> => {
@@ -182,8 +185,26 @@ export const runBacklogWatch = async (params: {
   const entries = collectBacklogWatchEntries(markdown);
   const nonClosedRaw = entries.filter((entry) => entry.status !== '✅');
   const nonClosed = dedupeBacklogWatchEntriesById(nonClosedRaw);
+  const nonClosedWithIssueMap = nonClosed.map((entry) => {
+    if (entry.issueNumber !== null) {
+      return entry;
+    }
+    const mappedIssue = params.idIssueMap?.[entry.id];
+    if (typeof mappedIssue !== 'number' || !Number.isFinite(mappedIssue)) {
+      return entry;
+    }
+    return {
+      ...entry,
+      issueNumber: Math.trunc(mappedIssue),
+    };
+  });
+
   const issueNumbers = Array.from(
-    new Set(nonClosed.map((entry) => entry.issueNumber).filter((value): value is number => typeof value === 'number'))
+    new Set(
+      nonClosedWithIssueMap
+        .map((entry) => entry.issueNumber)
+        .filter((value): value is number => typeof value === 'number')
+    )
   ).sort((a, b) => a - b);
 
   const issueStates = new Map<number, BacklogIssueState>();
@@ -191,11 +212,11 @@ export const runBacklogWatch = async (params: {
     issueStates.set(issueNumber, await resolveIssueState(issueNumber, params.repo));
   }
 
-  const needsIssue = nonClosed.filter((entry) => entry.issueNumber === null);
-  const driftClosedIssue = nonClosed.filter(
+  const needsIssue = nonClosedWithIssueMap.filter((entry) => entry.issueNumber === null);
+  const driftClosedIssue = nonClosedWithIssueMap.filter(
     (entry) => typeof entry.issueNumber === 'number' && issueStates.get(entry.issueNumber) === 'CLOSED'
   );
-  const activeIssue = nonClosed.filter(
+  const activeIssue = nonClosedWithIssueMap.filter(
     (entry) => typeof entry.issueNumber === 'number' && issueStates.get(entry.issueNumber) === 'OPEN'
   );
 
