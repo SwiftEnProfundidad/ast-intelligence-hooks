@@ -1494,9 +1494,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#706`.
 
-- 🚧 PUMUKI-122: Ejecutar mejora DX siguiente para `next_commands[].recommendation_type` en JSON de watch/reconcile.
+- ✅ PUMUKI-122: Ejecutar mejora DX siguiente para `next_commands[].recommendation_type` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `recommendation_type=reconcile_loop`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `recommendation_type`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de clasificación estable por paso.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].recommendation_type`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#707`.
+
+- 🚧 PUMUKI-123: Ejecutar mejora DX siguiente para `next_commands[].origin_contract_id` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `recommendation_type` por paso en `next_commands[]`.
+    - Exponer `origin_contract_id` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Mantener valor estable para clasificación de dashboards.
-  - Issue upstream activa: `#707`.
+    - Alinear `origin_contract_id` con `compat.contract_id`.
+  - Issue upstream activa: `#708`.
