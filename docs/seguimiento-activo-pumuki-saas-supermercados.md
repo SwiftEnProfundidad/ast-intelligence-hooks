@@ -1092,9 +1092,23 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#679`.
 
-- 🚧 PUMUKI-095: Ejecutar mejora DX siguiente para exponer `heading_drift_count` estable en JSON de watch.
+- ✅ PUMUKI-095: Ejecutar mejora DX siguiente para exponer `heading_drift_count` estable en JSON de watch.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - payload JSON añade `heading_drift_count` sin romper contrato existente.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación del nuevo campo en salida JSON.
+    - `docs/USAGE.md`:
+      - documentado `heading_drift_count` para parsers simples.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#680`.
+
+- 🚧 PUMUKI-096: Ejecutar mejora DX siguiente para exponer `heading_changes_count` estable en JSON de reconcile.
   - Alcance:
-    - Añadir campo contador explícito (`heading_drift_count`) en payload JSON.
-    - Mantener backward compatibility con `headingDrift`.
-    - Cubrir contrato con tests.
-  - Issue upstream activa: `#680`.
+    - Añadir contador dedicado en payload JSON sin romper `headingChanges[]`.
+    - Cubrir contrato con tests de CLI.
+    - Mantener compatibilidad backward.
+  - Issue upstream activa: `#681`.

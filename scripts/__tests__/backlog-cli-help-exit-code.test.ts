@@ -108,9 +108,11 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   const json = runTsxScript(scriptPath, ['--file=' + backlogFile, '--json', '--no-fail']);
   assert.equal(json.status, 0);
   const payload = JSON.parse(json.stdout) as {
+    heading_drift_count?: number;
     headingDrift?: Array<{ id?: string; headingStatus?: string; effectiveStatus?: string }>;
     hasActionRequired?: boolean;
   };
+  assert.equal(payload.heading_drift_count, 1);
   assert.equal(payload.headingDrift?.length, 1);
   assert.equal(payload.headingDrift?.[0]?.id, 'PUMUKI-INC-301');
   assert.equal(payload.headingDrift?.[0]?.headingStatus, '⏳');

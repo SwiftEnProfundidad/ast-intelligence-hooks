@@ -331,6 +331,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - mapping precedence is deterministic: inline `#issue` -> `--id-issue-map-from` -> `--id-issue-map` -> `--resolve-missing-via-gh`.
 - `watch-consumer-backlog` is non-destructive and reports action-required drift.
 - `watch-consumer-backlog` reports heading drift (`heading_drift`) when section headers `### ✅/🚧/⏳/⛔ <ID>` diverge from effective table status.
+- `watch-consumer-backlog --json` exposes `heading_drift_count` for low-friction alerting parsers.
 - `reconcile-consumer-backlog-issues` supports dry-run/apply and now reports mapping source (`none|json|markdown|merged`).
 - `reconcile-consumer-backlog-issues --json` includes heading sync metadata (`headingUpdated`, `headingChanges`) for section headings `### ✅/🚧/⏳/⛔ <ID>`.
 - `reconcile-consumer-backlog-issues` (modo humano) muestra `heading_changes=<n>` y lista las líneas afectadas cuando hay drift en encabezados.

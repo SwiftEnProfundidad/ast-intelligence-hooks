@@ -202,6 +202,7 @@ const main = async (): Promise<void> => {
             is_backward_compatible: true,
             breaking_changes: [],
           },
+          heading_drift_count: result.headingDrift.length,
           ...result,
         },
         null,
