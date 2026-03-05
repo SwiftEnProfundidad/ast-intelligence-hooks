@@ -242,6 +242,31 @@ test('runPreCommitStage evita ruido de HEAD ambiguo en repos sin commit inicial'
   });
 });
 
+test('runCiStage no rompe bootstrap en repo sin commit inicial con git-atomicity activa', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const previousAtomicity = process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
+    process.env.PUMUKI_GIT_ATOMICITY_ENABLED = '1';
+
+    try {
+      const stderr = await withCapturedStderr(async () => {
+        const exitCode = await runCiStage();
+        assert.equal(exitCode, 0);
+      });
+
+      const merged = stderr.join('\n');
+      assert.doesNotMatch(merged, /ambiguous argument 'HEAD'/i);
+      assert.doesNotMatch(merged, /argumento ambiguo 'HEAD'/i);
+    } finally {
+      if (typeof previousAtomicity === 'undefined') {
+        delete process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
+      } else {
+        process.env.PUMUKI_GIT_ATOMICITY_ENABLED = previousAtomicity;
+      }
+    }
+  });
+});
+
 test('runPrePushStage uses skills policy override and writes PRE_PUSH policy trace', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     writeSkillsPolicy(repoRoot, {

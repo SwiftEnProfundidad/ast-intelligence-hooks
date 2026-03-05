@@ -31,6 +31,29 @@ const withAtomicityEnv = async (
   }
 };
 
+const withCapturedStderr = async (
+  callback: () => Promise<void> | void
+): Promise<ReadonlyArray<string>> => {
+  const originalWrite = process.stderr.write.bind(process.stderr);
+  const chunks: string[] = [];
+  process.stderr.write = ((chunk: unknown, encoding?: unknown, cb?: unknown) => {
+    chunks.push(typeof chunk === 'string' ? chunk : String(chunk));
+    if (typeof encoding === 'function') {
+      encoding();
+    } else if (typeof cb === 'function') {
+      cb();
+    }
+    return true;
+  }) as typeof process.stderr.write;
+
+  try {
+    await callback();
+  } finally {
+    process.stderr.write = originalWrite;
+  }
+  return chunks;
+};
+
 test('evaluateGitAtomicity está activado por defecto con umbrales base', async () => {
   await withTempRepo(async (repoRoot) => {
     const result = evaluateGitAtomicity({
@@ -110,6 +133,50 @@ test('evaluateGitAtomicity bloquea PRE_PUSH cuando detecta commits sin patrón t
           true
         );
       }, { tempPrefix: 'pumuki-git-atomicity-pre-push-' });
+    }
+  );
+});
+
+test('evaluateGitAtomicity no rompe bootstrap en repo sin HEAD inicial para PRE_PUSH/CI', async () => {
+  await withAtomicityEnv(
+    {
+      PUMUKI_GIT_ATOMICITY_ENABLED: '1',
+      PUMUKI_GIT_ATOMICITY_MAX_FILES: '25',
+      PUMUKI_GIT_ATOMICITY_MAX_SCOPES: '2',
+      PUMUKI_GIT_ATOMICITY_ENFORCE_COMMIT_PATTERN: '1',
+    },
+    async () => {
+      await withTempRepo(async (repoRoot) => {
+        const captured = await withCapturedStderr(() => {
+          assert.doesNotThrow(() => {
+            const prePush = evaluateGitAtomicity({
+              repoRoot,
+              stage: 'PRE_PUSH',
+              fromRef: 'HEAD',
+              toRef: 'HEAD',
+            });
+            assert.equal(prePush.enabled, true);
+            assert.equal(prePush.allowed, true);
+            assert.equal(prePush.violations.length, 0);
+          });
+
+          assert.doesNotThrow(() => {
+            const ci = evaluateGitAtomicity({
+              repoRoot,
+              stage: 'CI',
+              fromRef: 'HEAD',
+              toRef: 'HEAD',
+            });
+            assert.equal(ci.enabled, true);
+            assert.equal(ci.allowed, true);
+            assert.equal(ci.violations.length, 0);
+          });
+        });
+
+        const merged = captured.join('\n');
+        assert.doesNotMatch(merged, /ambiguous argument 'HEAD'/i);
+        assert.doesNotMatch(merged, /argumento ambiguo 'HEAD'/i);
+      }, { tempPrefix: 'pumuki-git-atomicity-no-head-' });
     }
   );
 });

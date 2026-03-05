@@ -249,4 +249,14 @@
     - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-workspace-factory-lib.test.ts scripts/__tests__/package-install-smoke-command-resolution-lib.test.ts integrations/lifecycle/__tests__/doctor.test.ts` -> `15 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-030: Ejecutar siguiente bug SAAS prioritaria (`#621`) para robustecer bootstrap en repos sin `HEAD` inicial y cerrar trazabilidad con RED->GREEN->REFACTOR.
+- ✅ PUMUKI-030: Ejecutar siguiente bug SAAS prioritaria (`#621`) para robustecer bootstrap en repos sin `HEAD` inicial y cerrar trazabilidad con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/git/gitAtomicity.ts`: fallback seguro cuando refs no son resolubles (`HEAD` ausente) para `diff/log` sin romper stage.
+    - `integrations/git/GitService.ts`: ejecución de `git` con `stdio` capturado (`pipe`) para evitar ruido fatal en bootstrap controlado.
+    - `integrations/git/__tests__/gitAtomicity.test.ts`: cobertura RED->GREEN para repos sin commit inicial y aserción explícita de no ruido `ambiguous argument`.
+    - `integrations/git/__tests__/stageRunners.test.ts`: validación de `runCiStage` en repo virgen con git-atomicity activa.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/gitAtomicity.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/git/__tests__/GitService.test.ts` -> `34 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-031: Ejecutar siguiente bug SAAS prioritaria (`#622`) para evitar `PASS` con `active_rule_ids` vacío cuando hay cambios de código y cerrar trazabilidad con RED->GREEN->REFACTOR.

@@ -138,6 +138,25 @@ const parseLines = (value: string): ReadonlyArray<string> =>
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
 
+const toErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+};
+
+const isUnresolvableRevisionError = (error: unknown): boolean => {
+  const message = toErrorMessage(error).toLowerCase();
+  return (
+    message.includes('unknown revision') ||
+    message.includes('bad revision') ||
+    message.includes('ambiguous argument') ||
+    message.includes('argumento ambiguo') ||
+    message.includes('invalid object name') ||
+    message.includes('not a valid object name')
+  );
+};
+
 const resolveScopeKey = (filePath: string): string => {
   const normalized = filePath.replace(/\\/g, '/').trim();
   const segments = normalized.split('/').filter((segment) => segment.length > 0);
@@ -168,12 +187,19 @@ const collectChangedPaths = (params: {
   if (!params.fromRef || !params.toRef) {
     return [];
   }
-  return parseLines(
-    params.git.runGit(
-      ['diff', '--name-only', '--diff-filter=ACMR', `${params.fromRef}..${params.toRef}`],
-      params.repoRoot
-    )
-  );
+  try {
+    return parseLines(
+      params.git.runGit(
+        ['diff', '--name-only', '--diff-filter=ACMR', `${params.fromRef}..${params.toRef}`],
+        params.repoRoot
+      )
+    );
+  } catch (error) {
+    if (isUnresolvableRevisionError(error)) {
+      return [];
+    }
+    throw error;
+  }
 };
 
 const collectCommitSubjects = (params: {
@@ -185,9 +211,16 @@ const collectCommitSubjects = (params: {
   if (!params.fromRef || !params.toRef) {
     return [];
   }
-  return parseLines(
-    params.git.runGit(['log', '--format=%s', `${params.fromRef}..${params.toRef}`], params.repoRoot)
-  );
+  try {
+    return parseLines(
+      params.git.runGit(['log', '--format=%s', `${params.fromRef}..${params.toRef}`], params.repoRoot)
+    );
+  } catch (error) {
+    if (isUnresolvableRevisionError(error)) {
+      return [];
+    }
+    throw error;
+  }
 };
 
 export const evaluateGitAtomicity = (params: {

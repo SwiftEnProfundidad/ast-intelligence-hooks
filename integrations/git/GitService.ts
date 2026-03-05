@@ -26,7 +26,11 @@ const assertSafeGitArgs = (args: ReadonlyArray<string>): void => {
 export class GitService implements IGitService {
   runGit(args: ReadonlyArray<string>, cwd?: string): string {
     assertSafeGitArgs(args);
-    return runBinarySync('git', [...args], { cwd, encoding: 'utf8' });
+    return runBinarySync('git', [...args], {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
   }
 
   getStagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact> {
