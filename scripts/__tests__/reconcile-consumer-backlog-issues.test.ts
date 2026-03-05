@@ -7,6 +7,7 @@ import {
   collectBacklogOperationalStatusEntries,
   reconcileBacklogMarkdown,
   runBacklogIssuesReconcile,
+  syncBacklogSectionHeadingStatus,
   syncBacklogNextStepNarrative,
   syncBacklogStatusSummary,
   type BacklogIssueState,
@@ -40,6 +41,21 @@ const summaryMarkdown = `# Registro de Bugs y Mejoras de Pumuki
 |---|---|---|---|---|---|---|---|
 | 1 | PUMUKI-M001 | MEDIUM | P2 | 🚧 | Pendiente | TBC | en curso |
 | 2 | PUMUKI-M002 | HIGH | P1 | ⛔ | #101 | TBC | bloqueado |
+`;
+
+const headingSyncMarkdown = `# Registro de Bugs y Mejoras de Pumuki
+
+## Seguimiento operativo (Bugs)
+| Orden | ID | Estado | Referencia upstream | Nota |
+|---|---|---|---|---|
+| 1 | PUMUKI-004 | ✅ | #700 | cerrado |
+| 2 | PUMUKI-005 | ⏳ | #701 | pendiente |
+
+### ⏳ PUMUKI-004
+Detalle.
+
+### ✅ PUMUKI-005
+Detalle.
 `;
 
 const closedNarrativeMarkdown = `# Registro de Bugs y Mejoras de Pumuki
@@ -107,6 +123,22 @@ test('syncBacklogStatusSummary reescribe estado de backlog con conteos reales', 
   assert.match(result.markdown, /- ⛔ Bloqueados: 1 \(`PUMUKI-M002`\)/);
 });
 
+test('syncBacklogSectionHeadingStatus alinea emoji de headings con estado efectivo por ID', () => {
+  const result = syncBacklogSectionHeadingStatus(headingSyncMarkdown);
+  assert.equal(result.updated, true);
+  assert.equal(result.changes.length, 2);
+  assert.match(result.markdown, /### ✅ PUMUKI-004/);
+  assert.match(result.markdown, /### ⏳ PUMUKI-005/);
+});
+
+test('syncBacklogSectionHeadingStatus no cambia markdown sin headings compatibles', () => {
+  const markdown = `## Seguimiento\n| ID | Estado | Issue |\n|---|---|---|\n| PUMUKI-010 | ✅ | #710 |\n`;
+  const result = syncBacklogSectionHeadingStatus(markdown);
+  assert.equal(result.updated, false);
+  assert.equal(result.changes.length, 0);
+  assert.equal(result.markdown, markdown);
+});
+
 test('syncBacklogNextStepNarrative actualiza narrativa cuando backlog queda 100% cerrado', () => {
   const summary = buildBacklogStatusSummary(closedNarrativeMarkdown);
   const result = syncBacklogNextStepNarrative({
@@ -142,6 +174,8 @@ test('reconcileBacklogMarkdown corrige estados según OPEN/CLOSED', () => {
   assert.match(result.updatedMarkdown, /\| P1 \| PUMUKI-003 \| 🚧 \| #102 \|/);
   assert.equal(result.summaryUpdated, false);
   assert.equal(result.nextStepUpdated, false);
+  assert.equal(result.headingUpdated, false);
+  assert.equal(result.headingChanges.length, 0);
   assert.equal(result.summary.closed, 1);
   assert.equal(result.summary.inProgress, 1);
   assert.equal(result.summary.pending, 1);
@@ -174,6 +208,8 @@ test('runBacklogIssuesReconcile dry-run no escribe archivo', async () => {
   assert.equal(result.changes.length, 2);
   assert.equal(result.summaryUpdated, false);
   assert.equal(result.nextStepUpdated, false);
+  assert.equal(result.headingUpdated, false);
+  assert.equal(result.headingChanges.length, 0);
   assert.equal(result.summary.closed, 1);
   assert.equal(written, undefined);
 });
@@ -204,6 +240,8 @@ test('runBacklogIssuesReconcile apply escribe archivo cuando hay cambios', async
   assert.equal(result.changes.length, 2);
   assert.equal(result.summaryUpdated, false);
   assert.equal(result.nextStepUpdated, false);
+  assert.equal(result.headingUpdated, false);
+  assert.equal(result.headingChanges.length, 0);
   assert.equal(result.summary.pending, 1);
   assert.ok(typeof written === 'string');
   assert.match(written ?? '', /\| P0 \| PUMUKI-001 \| ✅ \| #100 \|/);

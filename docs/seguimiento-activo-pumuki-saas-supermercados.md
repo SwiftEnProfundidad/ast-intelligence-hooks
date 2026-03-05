@@ -1031,9 +1031,22 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#675`.
 
-- 🚧 PUMUKI-091: Ejecutar mejora DX siguiente para sincronizar emoji de encabezados por estado real en reconciliación de backlog consumidor.
+- ✅ PUMUKI-091: Ejecutar mejora DX siguiente para sincronizar emoji de encabezados por estado real en reconciliación de backlog consumidor.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts`:
+      - nueva sincronización de encabezados `### ✅/🚧/⏳/⛔ <ID>` según estado efectivo por ID.
+      - trazabilidad añadida en resultado (`headingUpdated`, `headingChanges`) y persistencia en `--apply`.
+    - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`:
+      - nuevos tests de alineación de headings y no-regresión para markdown sin headings.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `15 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `38 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#676`.
+
+- 🚧 PUMUKI-092: Ejecutar mejora DX siguiente para trazabilidad e2e del heading sync en salida CLI/docs de reconciliación.
   - Alcance:
-    - Extender `reconcile-consumer-backlog-issues` para actualizar encabezados `### ✅/🚧/⏳/⛔ <ID>` según estado efectivo.
-    - Evitar contradicciones visuales entre tablas y secciones de detalle en el mismo MD.
-    - Mantener comportamiento seguro en markdown sin headings compatibles.
-  - Issue upstream activa: `#676`.
+    - Añadir caso e2e donde el único cambio reconciliado sea heading emoji.
+    - Verificar contrato JSON (`headingUpdated`, `headingChanges`) en flujo CLI.
+    - Documentar comportamiento en sección backlog tooling.
+  - Issue upstream activa: `#677`.

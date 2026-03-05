@@ -30,6 +30,14 @@ export type BacklogIssueReferenceChange = {
   line: string;
 };
 
+export type BacklogSectionHeadingChange = {
+  id: string;
+  lineNumber: number;
+  from: BacklogStatusEmoji;
+  to: BacklogStatusEmoji;
+  line: string;
+};
+
 export type BacklogStatusSummary = {
   closed: number;
   inProgress: number;
@@ -59,14 +67,18 @@ export type BacklogReconcileResult = {
   changes: ReadonlyArray<BacklogIssueChange>;
   summaryUpdated: boolean;
   nextStepUpdated: boolean;
+  headingUpdated: boolean;
   summary: BacklogStatusSummary;
   updated: boolean;
+  headingChanges: ReadonlyArray<BacklogSectionHeadingChange>;
 };
 
 const STATUS_EMOJI_PATTERN = /(✅|🚧|⏳|⛔)/;
 const ISSUE_REF_PATTERN = /#(\d+)/;
 const BACKLOG_ID_PATTERN = /^(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)$/;
 const PENDING_REFERENCE_PATTERN = /\|\s*Pendiente(?:\s*\(rel\.\s*#\d+\))?\s*\|/;
+const BACKLOG_SECTION_HEADING_PATTERN =
+  /^(\s*###\s*)(✅|🚧|⏳|⛔)(\s+)(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)\b/;
 
 export type BacklogIssueNumberResolver = (
   backlogId: string,
@@ -321,6 +333,55 @@ export const syncBacklogStatusSummary = (
   };
 };
 
+export const syncBacklogSectionHeadingStatus = (
+  markdown: string
+): {
+  markdown: string;
+  updated: boolean;
+  changes: ReadonlyArray<BacklogSectionHeadingChange>;
+} => {
+  const lines = markdown.split(/\r?\n/);
+  const statusEntries = collectBacklogOperationalStatusEntries(markdown);
+  const idToStatus = new Map<string, BacklogStatusEmoji>();
+  for (const entry of statusEntries) {
+    if (!idToStatus.has(entry.id)) {
+      idToStatus.set(entry.id, entry.status);
+    }
+  }
+
+  const changes: BacklogSectionHeadingChange[] = [];
+  lines.forEach((line, index) => {
+    const match = BACKLOG_SECTION_HEADING_PATTERN.exec(line);
+    if (!match?.[2] || !match[4]) {
+      return;
+    }
+    const currentEmoji = match[2] as BacklogStatusEmoji;
+    const id = match[4];
+    const targetEmoji = idToStatus.get(id);
+    if (!targetEmoji || targetEmoji === currentEmoji) {
+      return;
+    }
+    const next = line.replace(BACKLOG_SECTION_HEADING_PATTERN, `$1${targetEmoji}$3$4`);
+    if (next === line) {
+      return;
+    }
+    lines[index] = next;
+    changes.push({
+      id,
+      lineNumber: index + 1,
+      from: currentEmoji,
+      to: targetEmoji,
+      line,
+    });
+  });
+
+  return {
+    markdown: lines.join('\n'),
+    updated: changes.length > 0,
+    changes,
+  };
+};
+
 export const syncBacklogNextStepNarrative = (params: {
   markdown: string;
   summary: BacklogStatusSummary;
@@ -415,7 +476,9 @@ export const reconcileBacklogMarkdown = (params: {
   changes: ReadonlyArray<BacklogIssueChange>;
   summaryUpdated: boolean;
   nextStepUpdated: boolean;
+  headingUpdated: boolean;
   summary: BacklogStatusSummary;
+  headingChanges: ReadonlyArray<BacklogSectionHeadingChange>;
 } => {
   const entries = collectBacklogIssueEntries(params.markdown);
   const byLine = new Map<number, BacklogIssueChange>();
@@ -448,12 +511,15 @@ export const reconcileBacklogMarkdown = (params: {
       markdown: syncedOnlySummary.markdown,
       summary: syncedOnlySummary.summary,
     });
+    const syncedHeadings = syncBacklogSectionHeadingStatus(syncedNarrative.markdown);
     return {
-      updatedMarkdown: syncedNarrative.markdown,
+      updatedMarkdown: syncedHeadings.markdown,
       changes: [],
       summaryUpdated: syncedOnlySummary.updated,
       nextStepUpdated: syncedNarrative.updated,
+      headingUpdated: syncedHeadings.updated,
       summary: syncedOnlySummary.summary,
+      headingChanges: syncedHeadings.changes,
     };
   }
 
@@ -473,12 +539,15 @@ export const reconcileBacklogMarkdown = (params: {
     markdown: syncedSummary.markdown,
     summary: syncedSummary.summary,
   });
+  const syncedHeadings = syncBacklogSectionHeadingStatus(syncedNarrative.markdown);
   return {
-    updatedMarkdown: syncedNarrative.markdown,
+    updatedMarkdown: syncedHeadings.markdown,
     changes: Array.from(byLine.values()).sort((a, b) => a.lineNumber - b.lineNumber),
     summaryUpdated: syncedSummary.updated,
     nextStepUpdated: syncedNarrative.updated,
+    headingUpdated: syncedHeadings.updated,
     summary: syncedSummary.summary,
+    headingChanges: syncedHeadings.changes,
   };
 };
 
@@ -550,7 +619,8 @@ export const runBacklogIssuesReconcile = async (params: {
     (mapped.changes.length > 0 ||
       reconciled.changes.length > 0 ||
       reconciled.summaryUpdated ||
-      reconciled.nextStepUpdated)
+      reconciled.nextStepUpdated ||
+      reconciled.headingUpdated)
   ) {
     writeFile(filePath, reconciled.updatedMarkdown);
   }
@@ -567,12 +637,15 @@ export const runBacklogIssuesReconcile = async (params: {
     changes: reconciled.changes,
     summaryUpdated: reconciled.summaryUpdated,
     nextStepUpdated: reconciled.nextStepUpdated,
+    headingUpdated: reconciled.headingUpdated,
     summary: reconciled.summary,
+    headingChanges: reconciled.headingChanges,
     updated:
       apply &&
       (mapped.changes.length > 0 ||
         reconciled.changes.length > 0 ||
         reconciled.summaryUpdated ||
-        reconciled.nextStepUpdated),
+        reconciled.nextStepUpdated ||
+        reconciled.headingUpdated),
   };
 };
