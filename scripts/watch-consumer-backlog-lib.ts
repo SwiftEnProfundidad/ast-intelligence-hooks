@@ -157,6 +157,20 @@ export const dedupeBacklogWatchEntriesById = (
   return Array.from(byId.values()).sort((a, b) => a.lineNumber - b.lineNumber);
 };
 
+export const collectBacklogIdIssueMap = (
+  markdown: string
+): BacklogWatchIdIssueMap => {
+  const entries = dedupeBacklogWatchEntriesById(collectBacklogWatchEntries(markdown));
+  const map: Record<string, number> = {};
+  for (const entry of entries) {
+    if (typeof entry.issueNumber !== 'number') {
+      continue;
+    }
+    map[entry.id] = entry.issueNumber;
+  }
+  return map;
+};
+
 const resolveIssueStateWithGh = (issueNumber: number, repo?: string): BacklogIssueState => {
   const args = ['issue', 'view', String(issueNumber), '--json', 'state'];
   if (typeof repo === 'string' && repo.trim().length > 0) {

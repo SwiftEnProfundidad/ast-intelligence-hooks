@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  collectBacklogIdIssueMap,
   collectBacklogWatchEntries,
   dedupeBacklogWatchEntriesById,
   runBacklogWatch,
@@ -138,4 +139,14 @@ test('runBacklogWatch usa idIssueMap para resolver filas sin #issue y evitar nee
   assert.equal(result.classification.driftClosedIssue.length, 1);
   assert.equal(result.classification.driftClosedIssue[0]?.issueNumber, 646);
   assert.equal(result.issueStatesResolved, 1);
+});
+
+test('collectBacklogIdIssueMap extrae mapeo canónico ID->issue desde markdown', () => {
+  const markdown =
+    `| ID | Estado | Ref |\n|---|---|---|\n| PUMUKI-INC-059 | 🚧 REPORTED (#646) | #646 |\n| FP-030 | ✅ FIXED (#648) | #648 |\n| AST-GAP-001 | ⏳ PENDING | Pendiente |\n`;
+  const map = collectBacklogIdIssueMap(markdown);
+  assert.deepEqual(map, {
+    'PUMUKI-INC-059': 646,
+    'FP-030': 648,
+  });
 });

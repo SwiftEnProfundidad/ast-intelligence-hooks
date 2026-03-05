@@ -732,8 +732,22 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#652`.
 
-- 🚧 PUMUKI-068: Ejecutar mejora DX siguiente para watcher con resolución de mapeo desde fuente canónica sin JSON manual ad hoc.
+- ✅ PUMUKI-068: Ejecutar mejora DX siguiente para watcher con resolución de mapeo desde fuente canónica sin JSON manual ad hoc.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - nuevo flag `--id-issue-map-from=<md-path>` para extraer mapeo automáticamente desde markdown canónico.
+      - merge determinista de mapas (`--id-issue-map-from` + `--id-issue-map`), priorizando override explícito del JSON.
+    - `scripts/watch-consumer-backlog-lib.ts`:
+      - nuevo helper `collectBacklogIdIssueMap(markdown)` para extraer `ID -> #issue`.
+    - `scripts/__tests__/watch-consumer-backlog.test.ts`:
+      - cobertura RED/GREEN para extracción canónica de mapeo desde markdown.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `19 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#653`.
+
+- 🚧 PUMUKI-069: Ejecutar mejora DX siguiente para watcher con enriquecimiento opcional de mapeo `ID->issue` por búsqueda GitHub cuando el ID no está en markdown local.
   - Alcance:
-    - Evitar mantenimiento manual recurrente de `id-issue-map` por consumer.
-    - Resolver mapeo desde fuente canónica de seguimiento o snapshot reconciliado.
-  - Issue upstream activa: `#653`.
+    - Resolver automáticamente IDs de consumer (`PUMUKI-INC-*`, `FP-*`, `AST-GAP-*`) contra issues upstream.
+    - Reducir `needsIssue` fantasma en planes donde el ID no se refleja literalmente.
+  - Issue upstream activa: `#654`.

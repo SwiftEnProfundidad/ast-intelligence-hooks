@@ -1,22 +1,28 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { runBacklogWatch, type BacklogWatchIdIssueMap } from './watch-consumer-backlog-lib';
+import {
+  collectBacklogIdIssueMap,
+  runBacklogWatch,
+  type BacklogWatchIdIssueMap,
+} from './watch-consumer-backlog-lib';
 
 type ParsedArgs = {
   filePath: string;
   repo?: string;
   idIssueMapPath?: string;
+  idIssueMapSourcePath?: string;
   json: boolean;
   failOnFindings: boolean;
 };
 
 const HELP_TEXT = `Usage:
-  npx --yes tsx@4.21.0 scripts/watch-consumer-backlog.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--json] [--no-fail]
+  npx --yes tsx@4.21.0 scripts/watch-consumer-backlog.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--id-issue-map-from=<md-path>] [--json] [--no-fail]
 
 Options:
   --file=<path>       Ruta del backlog markdown consumidor a vigilar.
   --repo=<owner/name> Repositorio GitHub a consultar con gh CLI (default: repo remoto actual).
   --id-issue-map=<path> JSON con mapeo {"ID":"issueNumber"} para enlazar filas sin #issue.
+  --id-issue-map-from=<path> Markdown canónico desde el que extraer mapeo ID->issue automáticamente.
   --json              Imprime resultado en JSON.
   --no-fail           No devuelve exit code 1 aunque existan findings accionables.`;
 
@@ -24,6 +30,7 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   let filePath: string | undefined;
   let repo: string | undefined;
   let idIssueMapPath: string | undefined;
+  let idIssueMapSourcePath: string | undefined;
   let json = false;
   let failOnFindings = true;
 
@@ -51,6 +58,10 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
       idIssueMapPath = arg.slice('--id-issue-map='.length).trim();
       continue;
     }
+    if (arg.startsWith('--id-issue-map-from=')) {
+      idIssueMapSourcePath = arg.slice('--id-issue-map-from='.length).trim();
+      continue;
+    }
     throw new Error(`Unknown argument "${arg}"\n\n${HELP_TEXT}`);
   }
 
@@ -62,6 +73,10 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
     filePath: resolve(filePath),
     repo: repo && repo.length > 0 ? repo : undefined,
     idIssueMapPath: idIssueMapPath && idIssueMapPath.length > 0 ? resolve(idIssueMapPath) : undefined,
+    idIssueMapSourcePath:
+      idIssueMapSourcePath && idIssueMapSourcePath.length > 0
+        ? resolve(idIssueMapSourcePath)
+        : undefined,
     json,
     failOnFindings,
   };
@@ -83,6 +98,19 @@ const parseIdIssueMapFile = (filePath: string): BacklogWatchIdIssueMap => {
     normalized[id] = Math.trunc(parsed);
   }
   return normalized;
+};
+
+const mergeIdIssueMaps = (
+  base: BacklogWatchIdIssueMap | undefined,
+  extension: BacklogWatchIdIssueMap | undefined
+): BacklogWatchIdIssueMap | undefined => {
+  if (!base && !extension) {
+    return undefined;
+  }
+  return {
+    ...(base ?? {}),
+    ...(extension ?? {}),
+  };
 };
 
 const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>): string => {
@@ -118,10 +146,16 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>):
 
 const main = async (): Promise<void> => {
   const parsed = parseArgs(process.argv.slice(2));
+  const fileMap = parsed.idIssueMapPath ? parseIdIssueMapFile(parsed.idIssueMapPath) : undefined;
+  const markdownMap = parsed.idIssueMapSourcePath
+    ? collectBacklogIdIssueMap(readFileSync(parsed.idIssueMapSourcePath, 'utf8'))
+    : undefined;
+  const idIssueMap = mergeIdIssueMaps(markdownMap, fileMap);
+
   const result = await runBacklogWatch({
     filePath: parsed.filePath,
     repo: parsed.repo,
-    idIssueMap: parsed.idIssueMapPath ? parseIdIssueMapFile(parsed.idIssueMapPath) : undefined,
+    idIssueMap,
   });
 
   if (parsed.json) {
