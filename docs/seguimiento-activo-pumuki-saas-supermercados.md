@@ -1382,9 +1382,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#699`.
 
-- 🚧 PUMUKI-115: Ejecutar mejora DX siguiente para `next_commands[].depends_on` en JSON de watch/reconcile.
+- ✅ PUMUKI-115: Ejecutar mejora DX siguiente para `next_commands[].depends_on` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `depends_on` (`null` en `dry_run`, `dry_run` en `apply`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `depends_on`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de secuenciación por dependencia.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].depends_on`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#700`.
+
+- 🚧 PUMUKI-116: Ejecutar mejora DX siguiente para `next_commands[].idempotent` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer dependencia secuencial entre pasos en `next_commands[]`.
+    - Exponer `idempotent` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Preservar flujo `dry_run` -> `apply`.
-  - Issue upstream activa: `#700`.
+    - Mantener semántica estable del pipeline dry-run/apply.
+  - Issue upstream activa: `#701`.
