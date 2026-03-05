@@ -286,4 +286,16 @@
     - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `53 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-034: Ejecutar siguiente bug SAAS prioritaria (`#615`) para compilación dinámica skills `.codex` -> reglas AST por nodos y cerrar trazabilidad con RED->GREEN->REFACTOR.
+- ✅ PUMUKI-034: Ejecutar siguiente bug SAAS prioritaria (`#615`) para compilación dinámica skills `.codex` -> reglas AST por nodos y cerrar trazabilidad con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/config/skillsLock.ts`: nuevo IR mínimo en lock por regla (`astNodeIds`) con validación, normalización y hash determinista.
+    - `integrations/config/skillsMarkdownRules.ts`: compilador markdown detecta nodos AST explícitos (`heuristics.*.ast`) y convierte reglas no canónicas a `AUTO` cuando tienen nodos.
+    - `integrations/config/skillsDetectorRegistry.ts`: resolver dinámico por regla compilada (`astNodeIds`) con fallback al registry estático por `ruleId`.
+    - `integrations/config/skillsRuleSet.ts`: evaluador runtime consume IR dinámico por nodos para construir condiciones heurísticas y trazabilidad `skills-ir`.
+    - `integrations/config/skillsCustomRules.ts`: persiste/carga `ast_node_ids` en `.pumuki/custom-rules.json` para mantener paridad end-to-end.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsMarkdownRules.test.ts integrations/config/__tests__/skillsRuleSet.test.ts integrations/config/skillsLock.test.ts integrations/config/__tests__/skillsCustomRules.test.ts` -> `29 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test core/gate/evaluateRules.test.ts integrations/config/__tests__/skillsMarkdownRules.test.ts integrations/config/__tests__/skillsRuleSet.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `61 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-035: Ejecutar siguiente mejora SAAS prioritaria (`#616`) para motor AST Intelligence por nodos multilenguaje desde `.codex` (siguiente bloque tras cerrar #615).

@@ -13,6 +13,7 @@ const MARKDOWN_LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g;
 const INLINE_CODE_PATTERN = /`([^`]+)`/g;
 const MARKDOWN_BOLD_PATTERN = /[*_]{1,3}/g;
 const MULTISPACE_PATTERN = /\s+/g;
+const AST_NODE_ID_PATTERN = /\bheuristics\.[a-z0-9._-]+\.ast\b/gi;
 const RULE_KEYWORDS =
   /\b(always|siempre|prefer|use|usar|avoid|evitar|never|nunca|must|obligatorio|required|disallow|do not|no)\b/i;
 
@@ -130,6 +131,15 @@ const extractRuleCandidateLines = (markdown: string): string[] => {
   }
 
   return candidates;
+};
+
+const extractAstNodeIdsFromLine = (line: string): string[] => {
+  const matches = line.match(AST_NODE_ID_PATTERN);
+  if (!matches) {
+    return [];
+  }
+  const normalized = matches.map((token) => token.trim().toLowerCase());
+  return [...new Set(normalized)].sort();
 };
 
 const resolvePlatformFromBundle = (
@@ -301,6 +311,7 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
     if (description.length < 6) {
       continue;
     }
+    const astNodeIds = extractAstNodeIdsFromLine(rawLine);
 
     const knownRuleId = normalizeKnownRuleTarget(platform, normalizeForLookup(description));
     let nextId: string;
@@ -325,9 +336,8 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
     }
     usedIds.add(nextId);
 
-    const evaluationMode: SkillsRuleEvaluationMode = knownRuleId
-      ? 'AUTO'
-      : 'DECLARATIVE';
+    const evaluationMode: SkillsRuleEvaluationMode =
+      knownRuleId || astNodeIds.length > 0 ? 'AUTO' : 'DECLARATIVE';
 
     rules.push({
       id: nextId,
@@ -341,6 +351,7 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
       locked: true,
       evaluationMode,
       origin: params.origin ?? 'core',
+      ...(astNodeIds.length > 0 ? { astNodeIds } : {}),
     });
   }
 

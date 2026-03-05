@@ -287,6 +287,65 @@ test('marca reglas AUTO no mapeadas como unsupported y mantiene reglas mapeadas 
   }));
 });
 
+test('compila reglas AUTO con astNodeIds dinámicos aunque no existan en registry estático', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-dynamic-ast-ir-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+            hash: 'a'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.dynamic-explicit-any',
+                description: 'Avoid dynamic explicit any usages in backend runtime code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                evaluationMode: 'AUTO',
+                astNodeIds: ['heuristics.ts.explicit-any.ast'],
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+
+      const dynamicRule = result.rules[0];
+      assert.ok(dynamicRule);
+      assert.equal(dynamicRule.id, 'skills.backend.guideline.dynamic-explicit-any');
+      assert.equal(dynamicRule.when.kind, 'Heuristic');
+      if (dynamicRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for dynamic AST node mapping.');
+      }
+      assert.equal(dynamicRule.when.where?.ruleId, 'heuristics.ts.explicit-any.ast');
+      assert.equal(
+        dynamicRule.then.source?.includes('ast_nodes=[heuristics.ts.explicit-any.ast]'),
+        true
+      );
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ts.explicit-any.ast'),
+        true
+      );
+    })
+  );
+});
+
 test('scopes backend/frontend heuristic rules to platform file prefixes', async () => {
   await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-platform-scope-', async (tempRoot) => {
     mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });

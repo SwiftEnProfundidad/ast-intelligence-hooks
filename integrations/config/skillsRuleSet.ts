@@ -13,7 +13,7 @@ import {
 import { loadSkillsPolicy, type SkillsBundlePolicy } from './skillsPolicy';
 import type { DetectedPlatforms } from '../platform/detectPlatforms';
 import { loadEffectiveSkillsLock } from './skillsEffectiveLock';
-import { resolveMappedHeuristicRuleIds } from './skillsDetectorRegistry';
+import { resolveMappedHeuristicRuleIdsForCompiledRule } from './skillsDetectorRegistry';
 
 export type SkillsRuleSetLoadResult = {
   rules: RuleSet;
@@ -349,7 +349,7 @@ const toRuleDefinition = (params: {
   repoRoot: string;
   observedFilePaths?: ReadonlyArray<string>;
 }): RuleDefinition | undefined => {
-  const mappedHeuristicRuleIds = resolveMappedHeuristicRuleIds(params.rule.id);
+  const mappedHeuristicRuleIds = resolveMappedHeuristicRuleIdsForCompiledRule(params.rule);
 
   if (!stageApplies(params.stage, params.rule.stage)) {
     return undefined;
@@ -522,7 +522,7 @@ export const loadSkillsRuleSetForStage = (
         continue;
       }
 
-      const mappedRuleIds = resolveMappedHeuristicRuleIds(compiledRule.id);
+      const mappedRuleIds = resolveMappedHeuristicRuleIdsForCompiledRule(compiledRule);
       const evaluationMode = resolveRuleEvaluationMode(compiledRule);
       if (evaluationMode === 'AUTO' && mappedRuleIds.length === 0) {
         unsupportedAutoRuleIds.add(compiledRule.id);

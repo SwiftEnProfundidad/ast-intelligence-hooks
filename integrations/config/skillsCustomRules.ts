@@ -28,6 +28,7 @@ type CustomSkillsRuleV1 = {
   confidence?: SkillsRuleConfidence;
   locked?: boolean;
   evaluationMode?: SkillsRuleEvaluationMode;
+  ast_node_ids?: string[];
 };
 
 export type CustomSkillsRulesFileV1 = {
@@ -110,6 +111,14 @@ const isCustomRule = (value: unknown): value is CustomSkillsRuleV1 => {
   if (
     typeof value.evaluationMode !== 'undefined' &&
     !evaluationModeValues.has(value.evaluationMode as SkillsRuleEvaluationMode)
+  ) {
+    return false;
+  }
+  if (
+    typeof value.ast_node_ids !== 'undefined' &&
+    (!Array.isArray(value.ast_node_ids) ||
+      value.ast_node_ids.length === 0 ||
+      !value.ast_node_ids.every(isNonEmptyString))
   ) {
     return false;
   }
@@ -196,6 +205,10 @@ const toCustomRulesFile = (
       confidence: rule.confidence,
       locked: rule.locked ?? false,
       evaluationMode: rule.evaluationMode ?? 'AUTO',
+      ast_node_ids:
+        rule.astNodeIds && rule.astNodeIds.length > 0
+          ? [...new Set(rule.astNodeIds)].sort()
+          : undefined,
     }))
     .sort((left, right) => left.id.localeCompare(right.id));
 
@@ -239,6 +252,7 @@ export const loadCustomSkillsLock = (
 
   const rules: SkillsCompiledRule[] = payload.rules.map((rule) => ({
     ...rule,
+    astNodeIds: rule.ast_node_ids,
     sourceSkill: 'custom-guidelines',
     sourcePath: '.pumuki/custom-rules.json',
     evaluationMode: rule.evaluationMode ?? 'AUTO',

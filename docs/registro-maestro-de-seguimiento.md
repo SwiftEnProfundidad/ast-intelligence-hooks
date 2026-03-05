@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-033 (issue `#614`, enforcement transversal PRE_WRITE para reglas críticas multi-plataforma).
-- Task activa (`🚧`): PUMUKI-034 (siguiente bug SAAS prioritaria: issue `#615`, compilación dinámica skills `.codex` -> reglas AST por nodos).
+- Última task cerrada (`✅`): PUMUKI-034 (issue `#615`, IR dinámico `astNodeIds` para compilar skills `.codex` a reglas AST trazables en runtime).
+- Task activa (`🚧`): PUMUKI-035 (siguiente mejora SAAS prioritaria: issue `#616`, motor AST Intelligence por nodos multilenguaje desde `.codex`).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
