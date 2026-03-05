@@ -1,6 +1,6 @@
 import { execFileSync as runBinarySync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 export type PumukiNotificationStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI' | 'PRE_WRITE';
 
@@ -41,6 +41,7 @@ export type SystemNotificationsConfig = {
   enabled: boolean;
   channel: 'macos';
   muteUntil?: string;
+  blockedDialogEnabled?: boolean;
 };
 
 export type SystemNotificationEmitResult =
@@ -108,6 +109,37 @@ const isTruthyFlag = (value?: string): boolean => {
   }
   const normalized = value.trim().toLowerCase();
   return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on';
+};
+
+const resolveProjectLabel = (params: {
+  repoRoot?: string;
+  projectLabel?: string;
+}): string | null => {
+  const explicit = params.projectLabel
+    ? normalizeNotificationText(params.projectLabel)
+    : '';
+  if (explicit.length > 0) {
+    return truncateNotificationText(explicit, 28);
+  }
+  if (!params.repoRoot) {
+    return null;
+  }
+  const inferred = normalizeNotificationText(basename(params.repoRoot));
+  if (inferred.length === 0) {
+    return null;
+  }
+  return truncateNotificationText(inferred, 28);
+};
+
+const resolveBlockedDialogEnabled = (params: {
+  env: NodeJS.ProcessEnv;
+  config: SystemNotificationsConfig;
+}): boolean => {
+  const raw = params.env.PUMUKI_MACOS_BLOCKED_DIALOG;
+  if (typeof raw === 'string' && raw.trim().length > 0) {
+    return isTruthyFlag(raw);
+  }
+  return params.config.blockedDialogEnabled !== false;
 };
 
 const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
@@ -253,6 +285,7 @@ export const buildSystemNotificationsConfigFromSelection = (
 ): SystemNotificationsConfig => ({
   enabled,
   channel: 'macos',
+  blockedDialogEnabled: true,
 });
 
 export const persistSystemNotificationsConfig = (repoRoot: string, enabled: boolean): string => {
@@ -273,10 +306,12 @@ export const readSystemNotificationsConfig = (repoRoot: string): SystemNotificat
       enabled?: unknown;
       channel?: unknown;
       muteUntil?: unknown;
+      blockedDialogEnabled?: unknown;
     };
     const config: SystemNotificationsConfig = {
       enabled: parsed.enabled === true,
       channel: 'macos',
+      blockedDialogEnabled: parsed.blockedDialogEnabled !== false,
     };
     if (typeof parsed.muteUntil === 'string' && parsed.muteUntil.trim().length > 0) {
       config.muteUntil = parsed.muteUntil;
@@ -319,6 +354,7 @@ const applyDialogChoice = (params: {
     persistSystemNotificationsConfigFile(params.repoRoot, {
       enabled: false,
       channel: params.config.channel,
+      blockedDialogEnabled: params.config.blockedDialogEnabled !== false,
     });
     return;
   }
@@ -329,13 +365,24 @@ const applyDialogChoice = (params: {
       enabled: true,
       channel: params.config.channel,
       muteUntil,
+      blockedDialogEnabled: params.config.blockedDialogEnabled !== false,
     });
   }
 };
 
 export const buildSystemNotificationPayload = (
-  event: PumukiCriticalNotificationEvent
+  event: PumukiCriticalNotificationEvent,
+  context?: {
+    repoRoot?: string;
+    projectLabel?: string;
+  }
 ): SystemNotificationPayload => {
+  const projectLabel = resolveProjectLabel({
+    repoRoot: context?.repoRoot,
+    projectLabel: context?.projectLabel,
+  });
+  const projectPrefix = projectLabel ? `${projectLabel} · ` : '';
+
   if (event.kind === 'audit.summary') {
     if (event.criticalViolations > 0) {
       return {
@@ -370,7 +417,7 @@ export const buildSystemNotificationPayload = (
     const remediation = resolveBlockedRemediation(event, causeCode);
     return {
       title: '🔴 Pumuki bloqueado',
-      subtitle: `${event.stage} · ${causeSummary}`,
+      subtitle: `${projectPrefix}${event.stage} · ${causeSummary}`,
       message: `Solución: ${remediation}`,
       soundName: 'Basso',
     };
@@ -418,7 +465,10 @@ export const emitSystemNotification = (params: {
   }
 
   const runner = params.runCommand ?? runSystemCommand;
-  const payload = buildSystemNotificationPayload(params.event);
+  const payload = buildSystemNotificationPayload(params.event, {
+    repoRoot: params.repoRoot,
+    projectLabel: params.env?.PUMUKI_PROJECT_LABEL,
+  });
   const script = buildDisplayNotificationScript(payload);
   const exitCode = runner('osascript', ['-e', script]);
 
@@ -427,12 +477,22 @@ export const emitSystemNotification = (params: {
   }
 
   const env = params.env ?? process.env;
-  if (params.event.kind === 'gate.blocked' && isTruthyFlag(env.PUMUKI_MACOS_BLOCKED_DIALOG)) {
+  if (
+    params.event.kind === 'gate.blocked'
+    && resolveBlockedDialogEnabled({ env, config })
+  ) {
     const causeCode = params.event.causeCode ?? 'GATE_BLOCKED';
     const cause = resolveBlockedCauseSummary(params.event, causeCode);
     const remediation = resolveBlockedRemediation(params.event, causeCode);
+    const projectLabel = resolveProjectLabel({
+      repoRoot: params.repoRoot,
+      projectLabel: env.PUMUKI_PROJECT_LABEL,
+    });
+    const dialogTitle = projectLabel
+      ? `🔴 Pumuki bloqueado · ${projectLabel}`
+      : '🔴 Pumuki bloqueado';
     const dialogScript = buildDisplayDialogScript({
-      title: '🔴 Pumuki bloqueado',
+      title: dialogTitle,
       cause,
       remediation,
     });

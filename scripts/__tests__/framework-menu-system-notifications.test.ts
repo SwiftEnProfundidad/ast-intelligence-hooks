@@ -25,6 +25,23 @@ test('buildSystemNotificationPayload construye payload para gate BLOCK', () => {
   assert.equal(payload.soundName, 'Basso');
 });
 
+test('buildSystemNotificationPayload incluye proyecto en subtítulo cuando hay repoRoot', () => {
+  const payload = buildSystemNotificationPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_STALE',
+    },
+    {
+      repoRoot: '/Users/dev/Projects/SAAS:APP_SUPERMERCADOS',
+    }
+  );
+
+  assert.match(payload.subtitle ?? '', /SAAS:APP_SUPERMERCADOS/);
+  assert.match(payload.subtitle ?? '', /PRE_COMMIT/);
+});
+
 test('buildSystemNotificationPayload para gate BLOCK incluye causa y remediación accionable', () => {
   const payload = buildSystemNotificationPayload({
     kind: 'gate.blocked',
@@ -93,6 +110,7 @@ test('readSystemNotificationsConfig habilita notificaciones por defecto cuando n
     assert.deepEqual(config, {
       enabled: true,
       channel: 'macos',
+      blockedDialogEnabled: true,
     });
   });
 });
@@ -112,6 +130,7 @@ test('readSystemNotificationsConfig conserva muteUntil cuando existe', async () 
     assert.equal(config.enabled, true);
     assert.equal(config.channel, 'macos');
     assert.equal(config.muteUntil, muteUntil);
+    assert.equal(config.blockedDialogEnabled, true);
   });
 });
 
@@ -202,6 +221,36 @@ test('emitSystemNotification en macOS permite silenciar 30 min desde diálogo', 
       Date.parse(config.muteUntil ?? ''),
       nowMs + 30 * 60_000
     );
+  });
+});
+
+test('emitSystemNotification en macOS abre diálogo por defecto sin flag explícito', async () => {
+  await withTempDir('pumuki-notifications-dialog-default-', async (repoRoot) => {
+    const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];
+    const result = emitSystemNotification({
+      platform: 'darwin',
+      repoRoot,
+      event: {
+        kind: 'gate.blocked',
+        stage: 'PRE_PUSH',
+        totalViolations: 1,
+        causeCode: 'EVIDENCE_STALE',
+      },
+      runCommand: (command, args) => {
+        calls.push({ command, args });
+        return 0;
+      },
+      runCommandWithOutput: (command, args) => {
+        calls.push({ command, args });
+        return {
+          exitCode: 0,
+          stdout: 'button returned:Mantener activas\n',
+        };
+      },
+    });
+
+    assert.equal(result.delivered, true);
+    assert.equal(calls.length, 2);
   });
 });
 
