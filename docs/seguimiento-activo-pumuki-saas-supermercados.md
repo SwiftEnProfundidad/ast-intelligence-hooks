@@ -1526,9 +1526,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#708`.
 
-- 🚧 PUMUKI-124: Ejecutar mejora DX siguiente para `next_commands[].priority` en JSON de watch/reconcile.
+- ✅ PUMUKI-124: Ejecutar mejora DX siguiente para `next_commands[].priority` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].priority` estable por paso (`high` dry-run, `medium` apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `priority` por paso (`high`/`medium`).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `priority` en watch/reconcile.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].priority` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#709`.
+
+- 🚧 PUMUKI-125: Ejecutar mejora DX siguiente para `next_commands[].max_retries` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `priority` por paso en `next_commands[]`.
+    - Exponer `max_retries` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Facilitar scheduling por prioridad en consumidores.
-  - Issue upstream activa: `#709`.
+    - Facilitar orquestación automática con límites de retry explícitos.
+  - Issue upstream activa: `#710`.

@@ -94,6 +94,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
       origin_tool?: string;
       label?: string;
       recommendation_type?: string;
+      priority?: string;
       mode?: string;
       safety?: string;
       idempotent?: boolean;
@@ -161,6 +162,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
       origin_tool?: string;
       label?: string;
       recommendation_type?: string;
+      priority?: string;
       mode?: string;
       safety?: string;
       idempotent?: boolean;
@@ -198,6 +200,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.equal(payload.next_commands?.[0]?.origin_tool, 'backlog-watch');
   assert.equal(payload.next_commands?.[0]?.label, 'dry_run');
   assert.equal(payload.next_commands?.[0]?.recommendation_type, 'reconcile_loop');
+  assert.equal(payload.next_commands?.[0]?.priority, 'high');
   assert.equal(payload.next_commands?.[0]?.mode, 'dry-run');
   assert.equal(payload.next_commands?.[0]?.safety, 'read_only');
   assert.equal(payload.next_commands?.[0]?.idempotent, true);
@@ -213,6 +216,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.equal(payload.next_commands?.[1]?.origin_tool, 'backlog-watch');
   assert.equal(payload.next_commands?.[1]?.label, 'apply');
   assert.equal(payload.next_commands?.[1]?.recommendation_type, 'reconcile_loop');
+  assert.equal(payload.next_commands?.[1]?.priority, 'medium');
   assert.equal(payload.next_commands?.[1]?.mode, 'apply');
   assert.equal(payload.next_commands?.[1]?.safety, 'mutating');
   assert.equal(payload.next_commands?.[1]?.idempotent, true);
@@ -267,6 +271,7 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
       origin_tool?: string;
       label?: string;
       recommendation_type?: string;
+      priority?: string;
       mode?: string;
       safety?: string;
       idempotent?: boolean;
@@ -333,6 +338,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
       origin_tool?: string;
       label?: string;
       recommendation_type?: string;
+      priority?: string;
       mode?: string;
       safety?: string;
       idempotent?: boolean;
@@ -372,6 +378,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.next_commands?.[0]?.origin_tool, 'backlog-reconcile');
   assert.equal(payload.next_commands?.[0]?.label, 'dry_run');
   assert.equal(payload.next_commands?.[0]?.recommendation_type, 'reconcile_loop');
+  assert.equal(payload.next_commands?.[0]?.priority, 'high');
   assert.equal(payload.next_commands?.[0]?.mode, 'dry-run');
   assert.equal(payload.next_commands?.[0]?.safety, 'read_only');
   assert.equal(payload.next_commands?.[0]?.idempotent, true);
@@ -387,6 +394,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.next_commands?.[1]?.origin_tool, 'backlog-reconcile');
   assert.equal(payload.next_commands?.[1]?.label, 'apply');
   assert.equal(payload.next_commands?.[1]?.recommendation_type, 'reconcile_loop');
+  assert.equal(payload.next_commands?.[1]?.priority, 'medium');
   assert.equal(payload.next_commands?.[1]?.mode, 'apply');
   assert.equal(payload.next_commands?.[1]?.safety, 'mutating');
   assert.equal(payload.next_commands?.[1]?.idempotent, true);
