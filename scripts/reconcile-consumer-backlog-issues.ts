@@ -1,26 +1,47 @@
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { runBacklogIssuesReconcile } from './reconcile-consumer-backlog-issues-lib';
 
 type ParsedArgs = {
   filePath: string;
   repo?: string;
+  idIssueMapPath?: string;
+  idIssueMap?: ReadonlyMap<string, number>;
   apply: boolean;
   json: boolean;
 };
 
 const HELP_TEXT = `Usage:
-  npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=<markdown-path> [--repo=<owner/name>] [--apply] [--json]
+  npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--apply] [--json]
 
 Options:
   --file=<path>       Ruta del backlog markdown consumidor a reconciliar.
   --repo=<owner/name> Repositorio GitHub a consultar con gh CLI (default: repo remoto actual).
+  --id-issue-map=<path> JSON con mapping {"PUMUKI-XXX": 123} para filas sin referencia upstream.
   --apply             Aplica cambios sobre el markdown (sin este flag es dry-run).
   --json              Imprime resultado en JSON.`;
+
+const parseIdIssueMap = (path: string): ReadonlyMap<string, number> => {
+  const raw = readFileSync(resolve(path), 'utf8');
+  const parsed = JSON.parse(raw) as Record<string, unknown>;
+  const map = new Map<string, number>();
+  for (const [id, value] of Object.entries(parsed)) {
+    if (!/^PUMUKI-(?:M)?\d+$/.test(id)) {
+      throw new Error(`Invalid id in --id-issue-map: "${id}"`);
+    }
+    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+      throw new Error(`Invalid issue number for "${id}" in --id-issue-map`);
+    }
+    map.set(id, Math.trunc(value));
+  }
+  return map;
+};
 
 const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   let filePath: string | undefined;
   let repo: string | undefined;
+  let idIssueMapPath: string | undefined;
+  let idIssueMap: ReadonlyMap<string, number> | undefined;
   let apply = false;
   let json = false;
 
@@ -44,6 +65,10 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
       repo = arg.slice('--repo='.length).trim();
       continue;
     }
+    if (arg.startsWith('--id-issue-map=')) {
+      idIssueMapPath = arg.slice('--id-issue-map='.length).trim();
+      continue;
+    }
     throw new Error(`Unknown argument "${arg}"\n\n${HELP_TEXT}`);
   }
 
@@ -51,9 +76,15 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
     throw new Error(`Missing --file\n\n${HELP_TEXT}`);
   }
 
+  if (idIssueMapPath && idIssueMapPath.length > 0) {
+    idIssueMap = parseIdIssueMap(idIssueMapPath);
+  }
+
   return {
     filePath: resolve(filePath),
     repo: repo && repo.length > 0 ? repo : undefined,
+    idIssueMapPath: idIssueMapPath && idIssueMapPath.length > 0 ? resolve(idIssueMapPath) : undefined,
+    idIssueMap,
     apply,
     json,
   };
@@ -74,6 +105,15 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesRec
       );
     }
   }
+  if (result.referenceChanges.length > 0) {
+    lines.push('[pumuki][backlog-reconcile] mapped_references:');
+    for (const change of result.referenceChanges) {
+      lines.push(`- line ${change.lineNumber} ${change.id}: ${change.from} -> ${change.to}`);
+    }
+  }
+  lines.push(
+    `[pumuki][backlog-reconcile] summary closed=${result.summary.closed} in_progress=${result.summary.inProgress} pending=${result.summary.pending} blocked=${result.summary.blocked}`
+  );
   return `${lines.join('\n')}\n`;
 };
 
@@ -82,6 +122,7 @@ const main = async (): Promise<void> => {
   const result = await runBacklogIssuesReconcile({
     filePath: parsed.filePath,
     repo: parsed.repo,
+    idIssueMap: parsed.idIssueMap,
     apply: parsed.apply,
   });
 

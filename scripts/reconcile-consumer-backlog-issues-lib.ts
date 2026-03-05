@@ -21,6 +21,15 @@ export type BacklogIssueChange = {
   line: string;
 };
 
+export type BacklogIssueReferenceChange = {
+  id: string;
+  issueNumber: number;
+  lineNumber: number;
+  from: string;
+  to: string;
+  line: string;
+};
+
 export type BacklogStatusSummary = {
   closed: number;
   inProgress: number;
@@ -36,6 +45,7 @@ export type BacklogReconcileResult = {
   apply: boolean;
   entriesScanned: number;
   issuesResolved: number;
+  referenceChanges: ReadonlyArray<BacklogIssueReferenceChange>;
   changes: ReadonlyArray<BacklogIssueChange>;
   summaryUpdated: boolean;
   summary: BacklogStatusSummary;
@@ -45,6 +55,7 @@ export type BacklogReconcileResult = {
 const STATUS_EMOJI_PATTERN = /(✅|🚧|⏳|⛔)/;
 const ISSUE_REF_PATTERN = /#(\d+)/;
 const BACKLOG_ID_PATTERN = /^PUMUKI-(?:M)?\d+$/;
+const PENDING_REFERENCE_PATTERN = /\|\s*Pendiente(?:\s*\(rel\.\s*#\d+\))?\s*\|/;
 
 const parseIssueNumber = (line: string): number | null => {
   const match = ISSUE_REF_PATTERN.exec(line);
@@ -80,6 +91,12 @@ export const collectBacklogIssueEntries = (markdown: string): ReadonlyArray<Back
   });
 
   return entries;
+};
+
+const parseBacklogId = (line: string): string | null => {
+  const cells = line.split('|').map((cell) => cell.trim());
+  const id = cells.find((cell) => BACKLOG_ID_PATTERN.test(cell));
+  return id ?? null;
 };
 
 export const collectBacklogOperationalStatusEntries = (
@@ -118,6 +135,62 @@ export const buildBacklogStatusSummary = (markdown: string): BacklogStatusSummar
     blocked: blockedIds.length,
     inProgressIds: inProgressIds.sort(),
     blockedIds: blockedIds.sort(),
+  };
+};
+
+export const applyBacklogIssueReferenceMapping = (params: {
+  markdown: string;
+  idIssueMap?: ReadonlyMap<string, number>;
+}): {
+  updatedMarkdown: string;
+  changes: ReadonlyArray<BacklogIssueReferenceChange>;
+} => {
+  if (!params.idIssueMap || params.idIssueMap.size === 0) {
+    return {
+      updatedMarkdown: params.markdown,
+      changes: [],
+    };
+  }
+
+  const lines = params.markdown.split(/\r?\n/);
+  const changes: BacklogIssueReferenceChange[] = [];
+
+  lines.forEach((line, index) => {
+    if (!line.includes('|')) {
+      return;
+    }
+    if (parseIssueNumber(line) !== null) {
+      return;
+    }
+    const id = parseBacklogId(line);
+    if (!id) {
+      return;
+    }
+    const issueNumber = params.idIssueMap?.get(id);
+    if (!issueNumber) {
+      return;
+    }
+    if (!PENDING_REFERENCE_PATTERN.test(line)) {
+      return;
+    }
+    const next = line.replace(PENDING_REFERENCE_PATTERN, `| #${issueNumber} |`);
+    if (next === line) {
+      return;
+    }
+    lines[index] = next;
+    changes.push({
+      id,
+      issueNumber,
+      lineNumber: index + 1,
+      from: 'Pendiente',
+      to: `#${issueNumber}`,
+      line,
+    });
+  });
+
+  return {
+    updatedMarkdown: lines.join('\n'),
+    changes,
   };
 };
 
@@ -294,6 +367,7 @@ export const runBacklogIssuesReconcile = async (params: {
   filePath: string;
   repo?: string;
   apply?: boolean;
+  idIssueMap?: ReadonlyMap<string, number>;
   readFile?: (path: string) => string;
   writeFile?: (path: string, contents: string) => void;
   resolveIssueState?: (issueNumber: number, repo?: string) => BacklogIssueState | Promise<BacklogIssueState>;
@@ -304,7 +378,11 @@ export const runBacklogIssuesReconcile = async (params: {
   const resolveIssueState = params.resolveIssueState ?? resolveIssueStateWithGh;
 
   const markdown = readFile(filePath);
-  const entries = collectBacklogIssueEntries(markdown);
+  const mapped = applyBacklogIssueReferenceMapping({
+    markdown,
+    idIssueMap: params.idIssueMap,
+  });
+  const entries = collectBacklogIssueEntries(mapped.updatedMarkdown);
   const uniqueIssueNumbers = Array.from(new Set(entries.map((entry) => entry.issueNumber))).sort((a, b) => a - b);
 
   const issueStates = new Map<number, BacklogIssueState>();
@@ -313,12 +391,12 @@ export const runBacklogIssuesReconcile = async (params: {
   }
 
   const reconciled = reconcileBacklogMarkdown({
-    markdown,
+    markdown: mapped.updatedMarkdown,
     issueStates,
   });
 
   const apply = params.apply === true;
-  if (apply && (reconciled.changes.length > 0 || reconciled.summaryUpdated)) {
+  if (apply && (mapped.changes.length > 0 || reconciled.changes.length > 0 || reconciled.summaryUpdated)) {
     writeFile(filePath, reconciled.updatedMarkdown);
   }
 
@@ -328,6 +406,7 @@ export const runBacklogIssuesReconcile = async (params: {
     apply,
     entriesScanned: entries.length,
     issuesResolved: uniqueIssueNumbers.length,
+    referenceChanges: mapped.changes,
     changes: reconciled.changes,
     summaryUpdated: reconciled.summaryUpdated,
     summary: reconciled.summary,

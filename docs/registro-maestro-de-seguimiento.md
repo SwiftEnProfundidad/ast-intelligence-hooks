@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-054 (issue `#637`, policy-as-code versionada/firmada con validación estricta en gates).
-- Task activa (`🚧`): PUMUKI-055 (issue `#638`, reconciliación automática del backlog SAAS para normalizar leyenda/estado real).
+- Última task cerrada (`✅`): PUMUKI-056 (issue `#639`, mapeo `ID->issue` para reconciliar filas `Pendiente` sin referencia upstream).
+- Task activa (`🚧`): PUMUKI-057 (issue `#640`, cierre de trazabilidad residual `PUMUKI-004` en backlog SAAS).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  applyBacklogIssueReferenceMapping,
   buildBacklogStatusSummary,
   collectBacklogIssueEntries,
   collectBacklogOperationalStatusEntries,
@@ -128,6 +129,7 @@ test('runBacklogIssuesReconcile dry-run no escribe archivo', async () => {
 
   assert.equal(result.apply, false);
   assert.equal(result.updated, false);
+  assert.equal(result.referenceChanges.length, 0);
   assert.equal(result.changes.length, 2);
   assert.equal(result.summaryUpdated, false);
   assert.equal(result.summary.closed, 1);
@@ -153,10 +155,47 @@ test('runBacklogIssuesReconcile apply escribe archivo cuando hay cambios', async
 
   assert.equal(result.apply, true);
   assert.equal(result.updated, true);
+  assert.equal(result.referenceChanges.length, 0);
   assert.equal(result.changes.length, 2);
   assert.equal(result.summaryUpdated, false);
   assert.equal(result.summary.pending, 1);
   assert.ok(typeof written === 'string');
   assert.match(written ?? '', /\| P0 \| PUMUKI-001 \| ✅ \| #100 \|/);
   assert.match(written ?? '', /\| P1 \| PUMUKI-002 \| ⏳ \| #101 \|/);
+});
+
+test('applyBacklogIssueReferenceMapping rellena issue en filas con referencia pendiente', () => {
+  const markdown = `| Orden | ID | Estado | Referencia upstream | Nota |\n|---|---|---|---|---|\n| 1 | PUMUKI-009 | ⏳ | Pendiente | pendiente |\n`;
+  const result = applyBacklogIssueReferenceMapping({
+    markdown,
+    idIssueMap: new Map([['PUMUKI-009', 624]]),
+  });
+
+  assert.equal(result.changes.length, 1);
+  assert.match(result.updatedMarkdown, /\| 1 \| PUMUKI-009 \| ⏳ \| #624 \| pendiente \|/);
+});
+
+test('runBacklogIssuesReconcile aplica mapping y reconcilia estado para issue cerrada', async () => {
+  const markdown = `| Orden | ID | Estado | Referencia upstream | Nota |\n|---|---|---|---|---|\n| 1 | PUMUKI-009 | ⏳ | Pendiente | pendiente |\n`;
+  let written: string | undefined;
+  const result = await runBacklogIssuesReconcile({
+    filePath: '/tmp/backlog-map.md',
+    apply: true,
+    idIssueMap: new Map([['PUMUKI-009', 624]]),
+    readFile: () => markdown,
+    writeFile: (_path, contents) => {
+      written = contents;
+    },
+    resolveIssueState: (issueNumber) => {
+      if (issueNumber === 624) {
+        return 'CLOSED';
+      }
+      return 'OPEN';
+    },
+  });
+
+  assert.equal(result.referenceChanges.length, 1);
+  assert.equal(result.changes.length, 1);
+  assert.equal(result.updated, true);
+  assert.match(written ?? '', /\| 1 \| PUMUKI-009 \| ✅ \| #624 \| pendiente \|/);
 });

@@ -548,8 +548,36 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#637`.
 
-- 🚧 PUMUKI-055: Ejecutar siguiente mejora operativa (issue `#638`) para aplicar reconciliación automática del backlog SAAS y normalizar leyenda/estado real sin drift.
+- ✅ PUMUKI-055: Ejecutar siguiente mejora operativa (issue `#638`) para aplicar reconciliación automática del backlog SAAS y normalizar leyenda/estado real sin drift.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts` ahora sincroniza también `## Estado de este backlog` con conteos reales desde tablas operativas.
+    - Salida JSON del reconciliador enriquecida con `summaryUpdated` + `summary` (closed/inProgress/pending/blocked + IDs en construcción/bloqueados).
+    - Cobertura de regresión ampliada en:
+      - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `7 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Aplicación real sobre consumer SAAS:
+      - `npm run -s validation:backlog-reconcile -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --apply --json`
+      - Resultado: `summaryUpdated=true`, `closed=14`, `inProgress=1`, `pending=7`, `blocked=0`.
+    - Cierre issue upstream: `#638`.
+
+- ✅ PUMUKI-056: Ejecutar siguiente mejora operativa (issue `#639`) para soportar mapeo `ID consumidor -> issue upstream` en el reconciliador y cerrar filas `Pendiente` sin referencia.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts` añade `idIssueMap` y `referenceChanges` para inyectar referencias `#<issue>` en filas sin issue y reconciliarlas en el mismo ciclo.
+    - `scripts/reconcile-consumer-backlog-issues.ts` incorpora `--id-issue-map=<json>` con validación de contrato (`PUMUKI-(M)?NNN -> issue number`).
+    - Cobertura de regresión extendida:
+      - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` (mapping + reconciliación integrada).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Aplicación real sobre consumer SAAS con mapping:
+      - `npm run -s validation:backlog-reconcile -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --id-issue-map=/tmp/pumuki_saas_id_issue_map.json --apply --json`
+      - Resultado: `referenceChanges=6`, `summary.closed=20`, `summary.inProgress=1`, `summary.pending=1`, `summary.blocked=0`.
+    - Cierre issue upstream: `#639`.
+
+- 🚧 PUMUKI-057: Ejecutar siguiente task de trazabilidad residual (issue `#640`) para cerrar `PUMUKI-004` con referencia upstream canónica y dejar backlog SAAS sin pendientes fantasma.
   - Alcance:
-    - Ejecutar reconciliador sobre `PUMUKI_BUGS_MEJORAS.md` del consumer SAAS.
-    - Eliminar `⛔/⏳` falsos por issues upstream ya cerradas.
-    - Mantener trazabilidad legible en este plan y registro maestro.
+    - Verificar cobertura real existente de `core.hooksPath` en Pumuki core.
+    - Asociar referencia upstream verificable para `PUMUKI-004`.
+    - Reaplicar reconciliación y actualizar el MD consumidor con estado final consistente.
