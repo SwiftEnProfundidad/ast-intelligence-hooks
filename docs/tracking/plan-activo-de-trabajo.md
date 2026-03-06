@@ -3559,17 +3559,40 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-258: Atacar `framework-menu-rule-coverage-diagnostics-lib` separando tipos, build de diagnostico y render del informe para seguir cerrando `scripts/**` con el repo todavía limpio.
+- ✅ PUMUKI-258: Atacar `framework-menu-rule-coverage-diagnostics-lib` separando tipos, build de diagnostico y render del informe para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-rule-coverage-diagnostics-lib.ts` queda reducido a una fachada publica estable;
+    - la logica se separa en:
+      - `scripts/framework-menu-rule-coverage-diagnostics-types.ts`
+      - `scripts/framework-menu-rule-coverage-diagnostics-build.ts`
+      - `scripts/framework-menu-rule-coverage-diagnostics-format.ts`
+      - `scripts/framework-menu-rule-coverage-diagnostics-lib.ts`
+    - se añade un smoke minimo de fachada publica en:
+      - `scripts/__tests__/framework-menu-rule-coverage-diagnostics-lib.test.ts`
+    - la suite legacy monolitica:
+      - `scripts/__tests__/framework-menu-rule-coverage-diagnostics.test.ts`
+      se elimina para no reintroducir opacidad;
+    - la fachada publica usada por `scripts/framework-menu-runners-validation-rule-coverage-lib.ts` se mantiene intacta;
+    - el corte queda validado con `3` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene.
+  - Evidencia:
+    - `wc -l scripts/framework-menu-rule-coverage-diagnostics-lib.ts scripts/framework-menu-rule-coverage-diagnostics-types.ts scripts/framework-menu-rule-coverage-diagnostics-build.ts scripts/framework-menu-rule-coverage-diagnostics-format.ts scripts/__tests__/framework-menu-rule-coverage-diagnostics-lib.test.ts scripts/__tests__/framework-menu-rule-coverage-diagnostics-build.test.ts scripts/__tests__/framework-menu-rule-coverage-diagnostics-format.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-rule-coverage-diagnostics-lib.test.ts scripts/__tests__/framework-menu-rule-coverage-diagnostics-build.test.ts scripts/__tests__/framework-menu-rule-coverage-diagnostics-format.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-259: Atacar `framework-menu-consumer-preflight-lib` separando ejecucion del preflight, composicion del panel y render de sugerencias operativas para seguir cerrando `scripts/**` con el repo todavía limpio.
   - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-rule-coverage-diagnostics-lib.ts` y de su suite asociada;
+    - inventariar el peso real de `scripts/framework-menu-consumer-preflight-lib.ts` y de la suite que lo cubre;
     - separar, como minimo:
-      - tipos/contrato del informe,
-      - build de diagnostico por stage,
-      - render/format del informe;
+      - ejecucion/obtencion del estado de preflight,
+      - composicion del panel o snapshot,
+      - render de sugerencias y salida operativa;
     - mantener estable la fachada publica usada por:
-      - `scripts/framework-menu-runners-validation-rule-coverage-lib.ts`
+      - `scripts/framework-menu-consumer-preflight.ts`
+      - `scripts/framework-menu-consumer-runtime-lib.ts`
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
   - Inventario inicial (2026-03-06):
-    - tras cerrar `PUMUKI-257`, `scripts/framework-menu-rule-coverage-diagnostics-lib.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
-    - actualmente tiene `213` lineas;
-    - su suite asociada visible es `scripts/__tests__/framework-menu-rule-coverage-diagnostics.test.ts`.
+    - tras cerrar `PUMUKI-258`, `scripts/framework-menu-consumer-preflight-lib.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
+    - actualmente tiene `249` lineas;
+    - su suite legacy visible es `scripts/__tests__/framework-menu-consumer-preflight-format.test.ts` y `scripts/__tests__/framework-menu-consumer-preflight-run.test.ts`, lo que permite ya un corte por responsabilidad sin romper la interfaz pública.
