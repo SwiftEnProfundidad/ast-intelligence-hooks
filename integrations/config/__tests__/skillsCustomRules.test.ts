@@ -63,6 +63,47 @@ test('loads custom rules file and transforms it into custom-guidelines lock bund
   });
 });
 
+test('custom bundle hash cambia cuando cambia ast_node_ids', async () => {
+  await withTempDir('pumuki-skills-custom-ast-node-hash-', async (tempRoot) => {
+    mkdirSync(join(tempRoot, '.pumuki'), { recursive: true });
+
+    const writeRules = (astNodeIds: string[]) => {
+      writeFileSync(
+        join(tempRoot, '.pumuki/custom-rules.json'),
+        JSON.stringify(
+          {
+            version: '1.0',
+            generatedAt: '2026-03-06T10:00:00.000Z',
+            source_files: ['AGENTS.md'],
+            rules: [
+              {
+                id: 'skills.custom.backend.dynamic-ast',
+                description: 'Custom backend AST rule.',
+                severity: 'ERROR',
+                platform: 'backend',
+                evaluationMode: 'AUTO',
+                ast_node_ids: astNodeIds,
+              },
+            ],
+          },
+          null,
+          2
+        )
+      );
+    };
+
+    writeRules(['heuristics.ts.explicit-any.ast']);
+    const firstHash = loadCustomSkillsLock(tempRoot)?.bundles[0]?.hash;
+
+    writeRules(['heuristics.ts.console-error.ast']);
+    const secondHash = loadCustomSkillsLock(tempRoot)?.bundles[0]?.hash;
+
+    assert.ok(firstHash);
+    assert.ok(secondHash);
+    assert.notEqual(firstHash, secondHash);
+  });
+});
+
 test('resolveSkillImportSources discovers SKILL.md paths from AGENTS.md', async () => {
   await withTempDir('pumuki-skills-custom-agents-', async (tempRoot) => {
     const localSkillPath = join(tempRoot, 'docs/custom/backend/SKILL.md');

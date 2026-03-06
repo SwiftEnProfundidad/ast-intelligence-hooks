@@ -87,6 +87,25 @@ const inferRuleStage = (raw: string): SkillsStage | undefined => {
   return undefined;
 };
 
+const KNOWN_RULE_DEFAULT_STAGE: Readonly<Record<string, SkillsStage>> = {
+  'skills.backend.no-solid-violations': 'PRE_PUSH',
+  'skills.frontend.no-solid-violations': 'PRE_PUSH',
+  'skills.backend.enforce-clean-architecture': 'PRE_PUSH',
+  'skills.frontend.enforce-clean-architecture': 'PRE_PUSH',
+  'skills.backend.no-god-classes': 'PRE_PUSH',
+  'skills.frontend.no-god-classes': 'PRE_PUSH',
+};
+
+const resolveDefaultStageForKnownRule = (
+  ruleId: string,
+  inferredStage: SkillsStage | undefined
+): SkillsStage | undefined => {
+  if (inferredStage) {
+    return inferredStage;
+  }
+  return KNOWN_RULE_DEFAULT_STAGE[ruleId];
+};
+
 const isRuleCandidateLine = (line: string): boolean => {
   if (CHECK_RULE_PREFIX.test(line)) {
     return true;
@@ -339,6 +358,11 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
     const evaluationMode: SkillsRuleEvaluationMode =
       knownRuleId || astNodeIds.length > 0 ? 'AUTO' : 'DECLARATIVE';
 
+    const inferredStage = inferRuleStage(rawLine);
+    const resolvedStage = knownRuleId
+      ? resolveDefaultStageForKnownRule(knownRuleId, inferredStage)
+      : inferredStage;
+
     rules.push({
       id: nextId,
       description,
@@ -346,7 +370,7 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
       platform,
       sourceSkill: params.sourceSkill,
       sourcePath: params.sourcePath,
-      stage: inferRuleStage(rawLine),
+      stage: resolvedStage,
       confidence: inferRuleConfidence(rawLine),
       locked: true,
       evaluationMode,

@@ -128,6 +128,7 @@ export const captureRepoState = (repoRoot: string): RepoState => {
   const statusLines = toStatusLines(safeRunGit(repoRoot, ['status', '--short']) ?? '');
   const staged = statusLines.filter((line) => line[0] && line[0] !== '?' && line[0] !== ' ').length;
   const unstaged = statusLines.filter((line) => line[1] && line[1] !== ' ').length;
+  const pendingChanges = statusLines.length;
   const { ahead, behind } = toAheadBehind(repoRoot, upstream);
   const lifecycle = readLifecycleStatusSafe(repoRoot);
   const versionMetadata = resolvePumukiVersionMetadata({ repoRoot });
@@ -146,6 +147,7 @@ export const captureRepoState = (repoRoot: string): RepoState => {
       dirty: statusLines.length > 0,
       staged: toCount(staged),
       unstaged: toCount(unstaged),
+      pending_changes: toCount(pendingChanges),
     },
     lifecycle: {
       installed: lifecycle.lifecycleState.installed === 'true',

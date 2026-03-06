@@ -173,6 +173,10 @@ const computeBundleHash = (rules: ReadonlyArray<SkillsCompiledRule>): string => 
       confidence: rule.confidence ?? null,
       locked: rule.locked ?? false,
       evaluationMode: rule.evaluationMode ?? null,
+      ast_node_ids:
+        rule.astNodeIds && rule.astNodeIds.length > 0
+          ? [...new Set(rule.astNodeIds)].sort()
+          : null,
       origin: rule.origin ?? null,
       sourceSkill: rule.sourceSkill,
       sourcePath: rule.sourcePath,

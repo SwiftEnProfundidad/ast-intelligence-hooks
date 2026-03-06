@@ -168,6 +168,23 @@ const toWarnViolation = (code: string, message: string): AiGateViolation => ({
   message,
 });
 
+const normalizeRepoStateLifecycleVersions = (repoState: RepoState): RepoState => {
+  const packageVersion = repoState.lifecycle.package_version;
+  const lifecycleVersion = repoState.lifecycle.lifecycle_version;
+  if (packageVersion === lifecycleVersion) {
+    return repoState;
+  }
+  const canonicalVersion = packageVersion ?? lifecycleVersion ?? null;
+  return {
+    ...repoState,
+    lifecycle: {
+      ...repoState.lifecycle,
+      package_version: canonicalVersion,
+      lifecycle_version: canonicalVersion,
+    },
+  };
+};
+
 const toPositiveInteger = (value: unknown, fallback: number): number => {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return fallback;
@@ -272,6 +289,45 @@ const toDetectedSkillsPlatforms = (
   return detected;
 };
 
+const toCoverageInferredPlatforms = (
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']> | undefined
+): ReadonlyArray<PreWriteSkillsPlatform> => {
+  if (!coverage) {
+    return [];
+  }
+  const ruleIds = [...coverage.active_rule_ids, ...coverage.evaluated_rule_ids];
+  const inferred = new Set<PreWriteSkillsPlatform>();
+  for (const ruleId of ruleIds) {
+    for (const platform of PREWRITE_SKILLS_PLATFORMS) {
+      const prefix = PLATFORM_SKILLS_RULE_PREFIXES[platform];
+      if (ruleId.startsWith(prefix)) {
+        inferred.add(platform);
+      }
+    }
+  }
+  return PREWRITE_SKILLS_PLATFORMS.filter((platform) => inferred.has(platform));
+};
+
+const toEffectiveSkillsPlatforms = (params: {
+  platforms: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['platforms'] | undefined;
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']> | undefined;
+}): ReadonlyArray<PreWriteSkillsPlatform> => {
+  const detectedPlatforms = toDetectedSkillsPlatforms(params.platforms);
+  if (detectedPlatforms.length === 0) {
+    return [];
+  }
+  const inferredFromCoverage = toCoverageInferredPlatforms(params.coverage);
+  if (inferredFromCoverage.length === 0) {
+    return detectedPlatforms;
+  }
+  const inferredSet = new Set(inferredFromCoverage);
+  const intersection = detectedPlatforms.filter((platform) => inferredSet.has(platform));
+  if (intersection.length > 0) {
+    return intersection;
+  }
+  return detectedPlatforms;
+};
+
 const collectActiveRuleIdsCoverageViolations = (params: {
   stage: AiGateStage;
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
@@ -280,14 +336,23 @@ const collectActiveRuleIdsCoverageViolations = (params: {
   if (params.coverage.active_rule_ids.length > 0) {
     return [];
   }
-  const detectedPlatforms = toDetectedSkillsPlatforms(params.evidence.platforms);
-  if (detectedPlatforms.length === 0) {
+  const effectivePlatforms = toEffectiveSkillsPlatforms({
+    platforms: params.evidence.platforms,
+    coverage: params.coverage,
+  });
+  const inferredPlatforms =
+    effectivePlatforms.length > 0 ? [] : toCoverageInferredPlatforms(params.coverage);
+  const blockedPlatforms = effectivePlatforms.length > 0
+    ? effectivePlatforms
+    : inferredPlatforms;
+  if (blockedPlatforms.length === 0) {
     return [];
   }
+  const detectionMode = effectivePlatforms.length > 0 ? 'detected' : 'inferred';
   return [
     toErrorViolation(
       'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES',
-      `Active rules coverage is empty at ${params.stage} with detected code platforms=[${detectedPlatforms.join(', ')}].`
+      `Active rules coverage is empty at ${params.stage} with ${detectionMode} code platforms=[${blockedPlatforms.join(', ')}].`
     ),
   ];
 };
@@ -296,7 +361,10 @@ const collectPreWritePlatformSkillsViolations = (params: {
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
   coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
 }): AiGateViolation[] => {
-  const detectedPlatforms = toDetectedSkillsPlatforms(params.evidence.platforms);
+  const detectedPlatforms = toEffectiveSkillsPlatforms({
+    platforms: params.evidence.platforms,
+    coverage: params.coverage,
+  });
   if (detectedPlatforms.length === 0) {
     return [];
   }
@@ -393,7 +461,10 @@ const collectPreWriteCrossPlatformCriticalViolations = (params: {
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
   coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
 }): AiGateViolation[] => {
-  const detectedPlatforms = toDetectedSkillsPlatforms(params.evidence.platforms);
+  const detectedPlatforms = toEffectiveSkillsPlatforms({
+    platforms: params.evidence.platforms,
+    coverage: params.coverage,
+  });
   if (detectedPlatforms.length === 0) {
     return [];
   }
@@ -447,7 +518,10 @@ const toSkillsContractAssessment = (params: {
   }
 
   const coverage = params.evidenceResult.evidence.snapshot.rules_coverage;
-  const detectedPlatforms = toDetectedSkillsPlatforms(params.evidenceResult.evidence.platforms);
+  const detectedPlatforms = toEffectiveSkillsPlatforms({
+    platforms: params.evidenceResult.evidence.platforms,
+    coverage,
+  });
   if (detectedPlatforms.length === 0) {
     return {
       stage: params.stage,
@@ -696,7 +770,9 @@ const collectPreWriteCoherenceViolations = (params: {
   }
 
   if (params.preWriteWorktreeHygiene.enabled && params.repoState.git.available) {
-    const pendingChanges = params.repoState.git.staged + params.repoState.git.unstaged;
+    const pendingChanges =
+      params.repoState.git.pending_changes
+      ?? (params.repoState.git.staged + params.repoState.git.unstaged);
     if (pendingChanges >= params.preWriteWorktreeHygiene.blockThreshold) {
       violations.push(
         toErrorViolation(
@@ -977,7 +1053,9 @@ export const evaluateAiGate = (
   const protectedBranches = new Set(params.protectedBranches ?? Array.from(DEFAULT_PROTECTED_BRANCHES));
   const nowMs = activeDependencies.now();
   const evidenceResult = activeDependencies.readEvidenceResult(params.repoRoot);
-  const repoState = activeDependencies.captureRepoState(params.repoRoot);
+  const repoState = normalizeRepoStateLifecycleVersions(
+    activeDependencies.captureRepoState(params.repoRoot)
+  );
   const policyStage = toPolicyStage(params.stage);
   const resolvedPolicy = activeDependencies.resolvePolicyForStage(
     policyStage,

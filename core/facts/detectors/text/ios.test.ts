@@ -37,6 +37,19 @@ let flag = value!!
   assert.equal(hasSwiftForceUnwrap(source), false);
 });
 
+test('hasSwiftForceUnwrap excluye comparaciones seguras contra nil', () => {
+  const source = `
+if ProcessInfo.processInfo.environment["SIMULATOR_UDID"] != nil {
+  return
+}
+
+if waitersByKey[key] != nil {
+  consume()
+}
+`;
+  assert.equal(hasSwiftForceUnwrap(source), false);
+});
+
 test('hasSwiftAnyViewUsage detecta AnyView en codigo real', () => {
   const source = `
 func render() -> some View {

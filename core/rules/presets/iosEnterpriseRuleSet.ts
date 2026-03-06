@@ -153,8 +153,10 @@ export const iosEnterpriseRuleSet: RuleSet = [
       kind: 'All',
       conditions: [
         {
-          kind: 'FileContent',
-          contains: ['!'],
+          kind: 'Heuristic',
+          where: {
+            ruleId: 'heuristics.ios.force-unwrap.ast',
+          },
         },
         {
           kind: 'Not',

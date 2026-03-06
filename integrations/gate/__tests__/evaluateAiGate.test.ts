@@ -197,6 +197,31 @@ test('evaluateAiGate bloquea cuando evidencia válida ya está BLOCKED', () => {
   assert.equal(result.violations.some((item) => item.code === 'EVIDENCE_GATE_BLOCKED'), true);
 });
 
+test('evaluateAiGate normaliza package_version/lifecycle_version cuando captureRepoState llega desalineado', () => {
+  const repoState = sampleEvidence().repo_state!;
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
+      captureRepoState: () => ({
+        ...repoState,
+        lifecycle: {
+          ...repoState.lifecycle,
+          package_version: '6.3.26',
+          lifecycle_version: '6.3.41',
+        },
+      }),
+    }
+  );
+
+  assert.equal(result.repo_state.lifecycle.package_version, '6.3.26');
+  assert.equal(result.repo_state.lifecycle.lifecycle_version, '6.3.26');
+});
+
 test('evaluateAiGate bloquea en ramas protegidas por gitflow', () => {
   const repoState = sampleEvidence().repo_state!;
   repoState.git.branch = 'main';
@@ -308,6 +333,41 @@ test('evaluateAiGate mantiene PRE_WRITE en ALLOWED y emite WARN cuando el worktr
   assert.equal(
     result.violations.some((item) => item.code === 'EVIDENCE_PREWRITE_WORKTREE_WARN'),
     true
+  );
+});
+
+test('evaluateAiGate deduplica archivos parcialmente staged usando pending_changes en PRE_WRITE', () => {
+  const repoState = sampleEvidence().repo_state!;
+  repoState.git.dirty = true;
+  repoState.git.staged = 6;
+  repoState.git.unstaged = 6;
+  repoState.git.pending_changes = 6;
+
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+      preWriteWorktreeHygiene: {
+        warnThreshold: 8,
+        blockThreshold: 12,
+      },
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
+      captureRepoState: () => repoState,
+    }
+  );
+
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some((item) => item.code === 'EVIDENCE_PREWRITE_WORKTREE_WARN'),
+    false
+  );
+  assert.equal(
+    result.violations.some((item) => item.code === 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT'),
+    false
   );
 });
 
@@ -596,6 +656,54 @@ test('evaluateAiGate permite PRE_WRITE cuando active_rule_ids está vacío sin p
     ),
     false
   );
+});
+
+test('evaluateAiGate bloquea PRE_WRITE cuando active_rule_ids está vacío y la cobertura evaluada infiere plataforma', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          platforms: {},
+          snapshot: {
+            ...base.snapshot,
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              active_rule_ids: [],
+              evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 0,
+                evaluated: 1,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES'
+    ),
+    true
+  );
+  const violation = result.violations.find(
+    (item) => item.code === 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES'
+  );
+  assert.match(violation?.message ?? '', /inferred code platforms=\[backend\]/i);
 });
 
 test('evaluateAiGate bloquea PRE_WRITE cuando faltan bundles skills requeridos por plataforma detectada', () => {
@@ -970,6 +1078,73 @@ test('evaluateAiGate permite PRE_WRITE cuando plataforma backend detectada cubre
 
   assert.equal(result.status, 'ALLOWED');
   assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE'
+    ),
+    false
+  );
+});
+
+test('evaluateAiGate permite PRE_WRITE cuando platforms arrastra iOS pero la cobertura efectiva es backend', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          platforms: {
+            ios: {
+              detected: true,
+              confidence: 'HIGH',
+            },
+            backend: {
+              detected: true,
+              confidence: 'HIGH',
+            },
+          },
+          rulesets: [
+            {
+              platform: 'skills',
+              bundle: 'backend-guidelines@1.0.0',
+              hash: 'skills-backend-hash',
+            },
+          ],
+          snapshot: {
+            ...base.snapshot,
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              active_rule_ids: ['skills.backend.no-empty-catch'],
+              evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 1,
+                evaluated: 1,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+    ),
+    false
+  );
   assert.equal(
     result.violations.some(
       (item) => item.code === 'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE'

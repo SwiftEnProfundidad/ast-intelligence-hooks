@@ -164,6 +164,7 @@ export type RepoState = {
     dirty: boolean;
     staged: number;
     unstaged: number;
+    pending_changes?: number;
   };
   lifecycle: {
     installed: boolean;

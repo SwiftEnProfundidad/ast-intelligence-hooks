@@ -467,6 +467,57 @@ test('mapea reglas SOLID y God Class a detectores AST heuristics en backend', as
   );
 });
 
+test('enriquce mensaje de no-solid-violations con criterios accionables y métricas observadas', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-solid-actionable-message-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/web/src/presentation'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-03-05T10:00:00.000Z',
+        bundles: [
+          {
+            name: 'frontend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/windsurf-rules-frontend.md',
+            hash: 'f'.repeat(64),
+            rules: [
+              {
+                id: 'skills.frontend.no-solid-violations',
+                description: 'Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP).',
+                severity: 'ERROR',
+                platform: 'frontend',
+                sourceSkill: 'frontend-guidelines',
+                sourcePath: 'docs/codex-skills/windsurf-rules-frontend.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage(
+        'PRE_COMMIT',
+        tempRoot,
+        undefined,
+        ['apps/web/src/presentation/App.tsx']
+      );
+      const rule = result.rules.find((item) => item.id === 'skills.frontend.no-solid-violations');
+      assert.ok(rule);
+      if (rule.then.kind !== 'Finding') {
+        assert.fail('Expected finding consequence for skills.frontend.no-solid-violations');
+      }
+      assert.match(rule.then.message, /Criteria: ast_nodes=\[/);
+      assert.match(rule.then.message, /observed_paths=1/);
+      assert.match(rule.then.message, /sample_paths=\[apps\/web\/src\/presentation\/App\.tsx\]/);
+    })
+  );
+});
+
 test('falls back to unscoped heuristic conditions when platform folders are not present', async () => {
   await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-framework-fallback-', async (tempRoot) => {
     const lock = {

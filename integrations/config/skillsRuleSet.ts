@@ -256,6 +256,34 @@ const toSkillsRuntimeIrSource = (params: {
   );
 };
 
+const buildRuleFindingMessage = (params: {
+  rule: SkillsCompiledRule;
+  mappedHeuristicRuleIds: ReadonlyArray<string>;
+  observedFilePaths?: ReadonlyArray<string>;
+}): string => {
+  if (!params.rule.id.endsWith('.no-solid-violations')) {
+    return params.rule.description;
+  }
+
+  const relevantObservedPaths = (params.observedFilePaths ?? [])
+    .map((path) => normalizeObservedPath(path))
+    .filter((path) =>
+      isObservedPathForPlatform({
+        platform: params.rule.platform,
+        path,
+      })
+    );
+  const samplePaths = [...new Set(relevantObservedPaths)].slice(0, 3);
+  const astNodes = [...params.mappedHeuristicRuleIds].sort();
+  const astNodesToken = astNodes.length > 0 ? astNodes.join(',') : 'none';
+  const sampleToken = samplePaths.length > 0 ? ` sample_paths=[${samplePaths.join(', ')}].` : '';
+
+  return (
+    `${params.rule.description} ` +
+    `Criteria: ast_nodes=[${astNodesToken}], observed_paths=${relevantObservedPaths.length}.${sampleToken}`
+  );
+};
+
 const stageApplies = (
   currentStage: Exclude<GateStage, 'STAGED'>,
   ruleStage?: Exclude<GateStage, 'STAGED'>
@@ -365,6 +393,11 @@ const toRuleDefinition = (params: {
     rule: params.rule,
     mappedHeuristicRuleIds,
   });
+  const findingMessage = buildRuleFindingMessage({
+    rule: params.rule,
+    mappedHeuristicRuleIds,
+    observedFilePaths: params.observedFilePaths,
+  });
 
   if (evaluationMode === 'AUTO') {
     if (mappedHeuristicRuleIds.length === 0) {
@@ -395,7 +428,7 @@ const toRuleDefinition = (params: {
       when,
       then: {
         kind: 'Finding',
-        message: params.rule.description,
+        message: findingMessage,
         code: toCode(params.rule.id),
         source: runtimeIrSource,
       },

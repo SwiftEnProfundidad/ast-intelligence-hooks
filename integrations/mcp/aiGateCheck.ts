@@ -1,4 +1,17 @@
 import { evaluateAiGate, type AiGateStage } from '../gate/evaluateAiGate';
+import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
+
+const AUTO_FIX_BY_CODE: Readonly<Record<string, string>> = {
+  EVIDENCE_MISSING: 'Ejecuta una auditoría para generar .ai_evidence.json.',
+  EVIDENCE_INVALID: 'Regenera .ai_evidence.json y vuelve a evaluar.',
+  EVIDENCE_STALE: 'Refresca evidencia antes de continuar.',
+  EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual.',
+  EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera evidencia desde este repositorio.',
+  PRE_PUSH_UPSTREAM_MISSING: 'Ejecuta git push --set-upstream origin <branch>.',
+  GITFLOW_PROTECTED_BRANCH: 'Crea una rama feature/* y mueve el trabajo allí.',
+};
+
+const PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
 
 export type EnterpriseAiGateCheckResult = {
   tool: 'ai_gate_check';
@@ -8,9 +21,15 @@ export type EnterpriseAiGateCheckResult = {
   result: {
     allowed: ReturnType<typeof evaluateAiGate>['allowed'];
     status: ReturnType<typeof evaluateAiGate>['status'];
+    timestamp: string | null;
+    branch: string | null;
+    message: string;
     stage: ReturnType<typeof evaluateAiGate>['stage'];
     policy: ReturnType<typeof evaluateAiGate>['policy'];
     violations: ReturnType<typeof evaluateAiGate>['violations'];
+    warnings: ReadonlyArray<string>;
+    auto_fixes: ReadonlyArray<string>;
+    learning_context: SddLearningContext | null;
     evidence: ReturnType<typeof evaluateAiGate>['evidence'];
     mcp_receipt: ReturnType<typeof evaluateAiGate>['mcp_receipt'];
     skills_contract: ReturnType<typeof evaluateAiGate>['skills_contract'];
@@ -68,6 +87,56 @@ const buildConsistencyHint = (
   };
 };
 
+const buildWarnings = (evaluation: ReturnType<typeof evaluateAiGate>): ReadonlyArray<string> => {
+  const warnings: string[] = [];
+  const currentBranch = evaluation.repo_state.git.branch;
+  if (typeof currentBranch === 'string' && PROTECTED_BRANCHES.has(currentBranch.toLowerCase())) {
+    warnings.push(
+      `ON_PROTECTED_BRANCH: Estás en '${currentBranch}'. Crea una rama feature/* antes de continuar.`
+    );
+  }
+  if (evaluation.stage === 'PRE_PUSH' && !evaluation.repo_state.git.upstream) {
+    warnings.push('NO_UPSTREAM: Configura upstream con git push --set-upstream origin <branch>.');
+  }
+  return warnings;
+};
+
+const buildAutoFixes = (
+  evaluation: ReturnType<typeof evaluateAiGate>,
+  learningContext: SddLearningContext | null
+): ReadonlyArray<string> => {
+  const fixes: string[] = [];
+  const emittedCodes = new Set<string>();
+  for (const violation of evaluation.violations) {
+    if (emittedCodes.has(violation.code)) {
+      continue;
+    }
+    const fix = AUTO_FIX_BY_CODE[violation.code];
+    if (!fix) {
+      continue;
+    }
+    fixes.push(fix);
+    emittedCodes.add(violation.code);
+  }
+  for (const recommendation of learningContext?.recommended_actions ?? []) {
+    if (!fixes.includes(recommendation)) {
+      fixes.push(recommendation);
+    }
+  }
+  return fixes;
+};
+
+const buildMessage = (evaluation: ReturnType<typeof evaluateAiGate>): string => {
+  if (evaluation.allowed) {
+    return `✅ Gate ${evaluation.stage} ALLOWED.`;
+  }
+  const firstViolation = evaluation.violations[0];
+  if (!firstViolation) {
+    return `🔴 Gate ${evaluation.stage} BLOCKED.`;
+  }
+  return `🔴 ${firstViolation.code}: ${firstViolation.message}`;
+};
+
 export const runEnterpriseAiGateCheck = (params: {
   repoRoot: string;
   stage: AiGateStage;
@@ -82,6 +151,14 @@ export const runEnterpriseAiGateCheck = (params: {
     stage: params.stage,
     requireMcpReceipt: params.requireMcpReceipt ?? false,
   });
+  const branch = evaluation.repo_state.git.branch;
+  const timestamp = evaluation.evidence.source.generated_at;
+  const learningContext = readSddLearningContext({
+    repoRoot: params.repoRoot,
+  });
+  const warnings = buildWarnings(evaluation);
+  const autoFixes = buildAutoFixes(evaluation, learningContext);
+  const message = buildMessage(evaluation);
 
   return {
     tool: 'ai_gate_check',
@@ -91,9 +168,15 @@ export const runEnterpriseAiGateCheck = (params: {
     result: {
       allowed: evaluation.allowed,
       status: evaluation.status,
+      timestamp,
+      branch,
+      message,
       stage: evaluation.stage,
       policy: evaluation.policy,
       violations: evaluation.violations,
+      warnings,
+      auto_fixes: autoFixes,
+      learning_context: learningContext,
       evidence: evaluation.evidence,
       mcp_receipt: evaluation.mcp_receipt,
       skills_contract: evaluation.skills_contract,

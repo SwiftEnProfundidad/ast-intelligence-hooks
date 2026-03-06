@@ -464,6 +464,30 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
   ]);
 });
 
+test('does not detect iOS force-unwrap heuristic for safe nil comparisons', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Sources/ListRouting/Application/UseCases/SyncShoppingListUseCase.swift',
+        [
+          'if ProcessInfo.processInfo.environment["SIMULATOR_UDID"] != nil {',
+          '  return',
+          '}',
+          'if waitersByKey[key] != nil {',
+          '  consume()',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.force-unwrap.ast'), false);
+});
+
 test('skips iOS force-try heuristic in comments and strings', () => {
   const extracted = extractHeuristicFacts({
     facts: [
