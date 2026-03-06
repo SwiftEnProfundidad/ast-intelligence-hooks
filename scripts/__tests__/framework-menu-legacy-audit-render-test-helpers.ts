@@ -47,3 +47,39 @@ export const writeLegacyAuditEvidenceFixture = (repoRoot: string): void => {
   };
   writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(payload, null, 2), 'utf8');
 };
+
+export const writeLegacyAuditAbsolutePathsFixture = (repoRoot: string): void => {
+  const payload = {
+    version: '2.1',
+    snapshot: {
+      stage: 'PRE_COMMIT',
+      outcome: 'BLOCK',
+      findings: [
+        {
+          ruleId: 'skills.backend.no-empty-catch',
+          severity: 'CRITICAL',
+          filePath: `${repoRoot}/apps/backend/src/runtime/process.ts`,
+          lines: 27,
+        },
+        {
+          ruleId: 'skills.frontend.avoid-explicit-any',
+          severity: 'ERROR',
+          filePath: `${repoRoot}/apps/web/src/ui/banner.tsx`,
+          lines: [14, 22],
+        },
+      ],
+    },
+    severity_metrics: {
+      by_severity: {
+        CRITICAL: 1,
+        ERROR: 1,
+        WARN: 0,
+        INFO: 0,
+      },
+    },
+  };
+  writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(payload, null, 2), 'utf8');
+};
+
+export const escapeLegacyAuditRegExp = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
