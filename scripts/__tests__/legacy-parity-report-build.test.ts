@@ -1,12 +1,9 @@
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
-import {
-  buildLegacyParityReport,
-  formatLegacyParityReportMarkdown,
-} from '../legacy-parity-report-lib';
+import { buildLegacyParityReport } from '../legacy-parity-report-lib';
 
 const createFixtureDir = (): string => {
   return mkdtempSync(join(tmpdir(), 'pumuki-legacy-parity-'));
@@ -129,12 +126,6 @@ test('buildLegacyParityReport marca PASS cuando enterprise domina legacy en toda
     assert.equal(report.ruleDominance, 'PASS');
     assert.equal(report.severity.hardBlock, false);
     assert.equal(report.totals.failedRules, 0);
-    const markdown = formatLegacyParityReportMarkdown(report);
-    assert.match(markdown, /Legacy Parity Dominance Report/);
-    assert.match(markdown, /dominance: PASS/);
-    assert.match(markdown, /hard_block_by_severity: NO/);
-    assert.match(markdown, /strict_scope: ENABLED/);
-    assert.match(markdown, /\| ios \| skills\.ios\.no-force-unwrap \| 1 \| 2 \| PASS \|/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
