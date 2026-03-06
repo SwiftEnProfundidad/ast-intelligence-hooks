@@ -3534,19 +3534,42 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-257: Atacar `framework-menu-ui-components-lib` separando tokens, layout de panel y helpers de render para seguir cerrando `scripts/**` con el repo todavía limpio.
-  - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-ui-components-lib.ts` y de su suite asociada;
-    - separar, como minimo:
-      - resolucion de tokens y paleta,
-      - layout/panel width y bordes,
-      - helpers de render (`badge`, `section header`, `hint block`, etc.);
-    - mantener estable la fachada publica usada por:
+- ✅ PUMUKI-257: Atacar `framework-menu-ui-components-lib` separando tokens, layout de panel y helpers de render para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-ui-components-lib.ts` deja de concentrar `220` lineas y queda reducido a una fachada publica estable;
+    - la logica de `framework-menu-ui-components` se separa en:
+      - `scripts/framework-menu-ui-components-types.ts`
+      - `scripts/framework-menu-ui-components-tokens.ts`
+      - `scripts/framework-menu-ui-components-render.ts`
+      - `scripts/framework-menu-ui-components-panel.ts`
+      - `scripts/framework-menu-ui-components-lib.ts`
+    - la fachada publica mantiene estables los imports usados por:
       - `scripts/framework-menu-advanced-view-lib.ts`
       - `scripts/framework-menu-advanced-view-status.ts`
       - `scripts/framework-menu-consumer-runtime-lib.ts`
+    - la suite monolitica se sustituye por tests por responsabilidad:
+      - `scripts/__tests__/framework-menu-ui-components-tokens.test.ts`
+      - `scripts/__tests__/framework-menu-ui-components-render.test.ts`
+      - `scripts/__tests__/framework-menu-ui-components-panel.test.ts`
+    - el corte queda validado con `10` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-ui-components-lib.ts scripts/framework-menu-ui-components-types.ts scripts/framework-menu-ui-components-tokens.ts scripts/framework-menu-ui-components-render.ts scripts/framework-menu-ui-components-panel.ts scripts/__tests__/framework-menu-ui-components-tokens.test.ts scripts/__tests__/framework-menu-ui-components-render.test.ts scripts/__tests__/framework-menu-ui-components-panel.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-ui-components-tokens.test.ts scripts/__tests__/framework-menu-ui-components-render.test.ts scripts/__tests__/framework-menu-ui-components-panel.test.ts scripts/__tests__/framework-menu-advanced-view-status.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-258: Atacar `framework-menu-rule-coverage-diagnostics-lib` separando tipos, build de diagnostico y render del informe para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-rule-coverage-diagnostics-lib.ts` y de su suite asociada;
+    - separar, como minimo:
+      - tipos/contrato del informe,
+      - build de diagnostico por stage,
+      - render/format del informe;
+    - mantener estable la fachada publica usada por:
+      - `scripts/framework-menu-runners-validation-rule-coverage-lib.ts`
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
   - Inventario inicial (2026-03-06):
-    - tras cerrar `PUMUKI-256`, `scripts/framework-menu-ui-components-lib.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
-    - actualmente tiene `220` lineas;
-    - su suite asociada visible es `scripts/__tests__/framework-menu-ui-components.test.ts`.
+    - tras cerrar `PUMUKI-257`, `scripts/framework-menu-rule-coverage-diagnostics-lib.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
+    - actualmente tiene `213` lineas;
+    - su suite asociada visible es `scripts/__tests__/framework-menu-rule-coverage-diagnostics.test.ts`.
