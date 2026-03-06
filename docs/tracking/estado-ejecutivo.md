@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): `PUMUKI-252` (el bloque `scripts/**` ya separa `framework-menu-matrix-canary` en `types + scenario + evidence + facade` y `framework-menu-evidence-summary` en `types + read + format + facade`, con `9` tests focales en verde y `typecheck` en verde).
-- Task activa (`🚧`): `PUMUKI-253` (seguir cerrando `scripts/**` separando `watch-consumer-backlog-lib` y `reconcile-consumer-backlog-issues-lib` para que el bloque de backlog consumers quede tan revisable como el framework menu).
+- Última task cerrada (`✅`): `PUMUKI-253` (el bloque backlog consumers ya separa `watch-consumer-backlog` en `types + parse + gh + facade` y `reconcile-consumer-backlog-issues` en `types + parse + sync + facade`, con `34` tests focales en verde y `typecheck` en verde).
+- Task activa (`🚧`): `PUMUKI-254` (cerrar el slice de backlog consumers limpiando helpers compartidos como `backlog-action-reasons`, `backlog-id-issue-map` y el contrato JSON para que el bloque quede redondo y revisable extremo a extremo).
 - Pendiente priorizado (`⏳`): ninguno externo; los tres backlogs consumidores siguen en `0` abiertos.
 
 ## Historial resumido

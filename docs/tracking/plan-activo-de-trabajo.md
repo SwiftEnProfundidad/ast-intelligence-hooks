@@ -3443,13 +3443,43 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-253: Seguir cerrando `scripts/**` separando `watch-consumer-backlog-lib` y `reconcile-consumer-backlog-issues-lib` para que el bloque de backlog consumers quede tan revisable como el framework menu.
+- ✅ PUMUKI-253: Seguir cerrando `scripts/**` separando `watch-consumer-backlog-lib` y `reconcile-consumer-backlog-issues-lib` para que el bloque de backlog consumers quede tan revisable como el framework menu.
+  - Resultado (2026-03-06):
+    - `scripts/watch-consumer-backlog-lib.ts` deja de mezclar tipos, parseo, heading drift y lookups GitHub, y queda reducido a una fachada orquestadora;
+    - la logica de `watch-consumer-backlog` se separa en:
+      - `scripts/backlog-consumer-types.ts`
+      - `scripts/backlog-consumer-patterns.ts`
+      - `scripts/backlog-consumer-gh.ts`
+      - `scripts/watch-consumer-backlog-types.ts`
+      - `scripts/watch-consumer-backlog-parse.ts`
+      - `scripts/watch-consumer-backlog-lib.ts`
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts` deja de mezclar tipos, parseo, sync de markdown y resolucion de referencias, y queda reducido a una fachada orquestadora;
+    - la logica de `reconcile-consumer-backlog-issues` se separa en:
+      - `scripts/reconcile-consumer-backlog-issues-types.ts`
+      - `scripts/reconcile-consumer-backlog-issues-parse.ts`
+      - `scripts/reconcile-consumer-backlog-issues-sync.ts`
+      - `scripts/reconcile-consumer-backlog-issues-lib.ts`
+    - los contratos publicos usados por:
+      - `scripts/watch-consumer-backlog.ts`
+      - `scripts/reconcile-consumer-backlog-issues.ts`
+      - `scripts/watch-consumer-backlog-fleet-lib.ts`
+      se mantienen sin cambios de interfaz;
+    - el corte queda validado con `34` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene.
+  - Evidencia:
+    - `wc -l scripts/watch-consumer-backlog-lib.ts scripts/reconcile-consumer-backlog-issues-lib.ts scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-254: Rematar el bloque backlog consumers limpiando helpers compartidos (`backlog-action-reasons`, `backlog-id-issue-map`, `backlog-json-contract`) para que la superficie completa quede consistente y revisable extremo a extremo.
   - Alcance:
-    - inventariar el peso real de `scripts/watch-consumer-backlog-lib.ts` y `scripts/reconcile-consumer-backlog-issues-lib.ts`;
-    - extraer piezas pequeñas si el corte se mantiene limpio, preservando el contrato visible del watcher y la reconciliacion de issues;
+    - inventariar el peso real de `scripts/backlog-action-reasons-lib.ts`, `scripts/backlog-id-issue-map-lib.ts` y `scripts/backlog-json-contract-lib.ts`;
+    - separar o compactar helpers si siguen mezclando parseo, formato y contrato JSON;
     - mantener el repo limpio y con una sola task activa durante todo el corte.
   - Inventario inicial (2026-03-06):
-    - tras cerrar `PUMUKI-252`, las mayores piezas restantes de `scripts/**` quedan en:
-      - `scripts/reconcile-consumer-backlog-issues-lib.ts` (`651` lineas)
-      - `scripts/watch-consumer-backlog-lib.ts` (`465` lineas)
-    - ambas comparten superficie funcional de backlog consumers y forman el siguiente corte logico antes de entrar en utilidades mas pequeñas como `gitflow-cli-lib.ts` o `legacy-parity-report-lib.ts`.
+    - tras cerrar `PUMUKI-253`, el siguiente slice logico del bloque backlog consumers queda en:
+      - `scripts/backlog-id-issue-map-lib.ts`
+      - `scripts/backlog-action-reasons-lib.ts`
+      - `scripts/backlog-json-contract-lib.ts`
+    - estas piezas ya no son grandes, pero cierran el bloque compartido que usan `watch`, `reconcile` y el watcher fleet.
