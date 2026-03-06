@@ -3768,19 +3768,46 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-267: Atacar `framework-menu-legacy-audit-render.ts` separando paneles, bloques de resumen y remediación/métricas para seguir cerrando el slice legacy audit con el repo limpio.
+- ✅ PUMUKI-267: Atacar `framework-menu-legacy-audit-render.ts` separando paneles, bloques de resumen y remediación/métricas para seguir cerrando el slice legacy audit con el repo limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-legacy-audit-render.ts` queda reducido a una fachada pública estable de `16` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-legacy-audit-render-panel.ts`
+      - `scripts/framework-menu-legacy-audit-render-sections.ts`
+      - `scripts/framework-menu-legacy-audit-render-report.ts`
+      - `scripts/framework-menu-legacy-audit-render.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-legacy-audit-render-panel.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-render-report.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-render-test-helpers.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-legacy-audit-lib.ts`
+      - `scripts/framework-menu-legacy-audit-markdown.ts`
+      - `scripts/framework-menu-consumer-runtime-audit.ts`
+      - `scripts/framework-menu-consumer-preflight-render.ts`
+      - `scripts/framework-menu-consumer-runtime-menu.ts`
+      se mantiene intacta;
+    - el corte queda validado con `26` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-legacy-audit-render.ts scripts/framework-menu-legacy-audit-render-panel.ts scripts/framework-menu-legacy-audit-render-sections.ts scripts/framework-menu-legacy-audit-render-report.ts scripts/__tests__/framework-menu-legacy-audit-render-test-helpers.ts scripts/__tests__/framework-menu-legacy-audit-render-panel.test.ts scripts/__tests__/framework-menu-legacy-audit-render-report.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit-render-panel.test.ts scripts/__tests__/framework-menu-legacy-audit-render-report.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown.test.ts scripts/__tests__/framework-menu-legacy-audit-summary.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-platforms.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-metrics.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-top.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-268: Rematar el slice `legacy audit` atacando `framework-menu-legacy-audit-markdown.ts`, separando links clicables, normalización de paths y ensamblado final del markdown con el repo limpio.
   - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-legacy-audit-render.ts` y de la suite que lo cubre;
+    - inventariar el peso real de `scripts/framework-menu-legacy-audit-markdown.ts` y de la suite que lo cubre;
     - separar, como mínimo:
-      - composición de paneles,
-      - bloques de resumen y breakdown,
-      - remediación y métricas finales;
-    - mantener estable la fachada pública usada por `framework-menu-legacy-audit-lib.ts` y `framework-menu-legacy-audit-markdown.ts`;
+      - normalización de paths clicables,
+      - construcción de enlaces markdown,
+      - ensamblado final del documento exportado;
+    - mantener estable la fachada pública usada por `framework-menu-legacy-audit-lib.ts`;
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
   - Inventario inicial (2026-03-07):
-    - tras cerrar `PUMUKI-266`, el siguiente bloque más pesado del slice legacy audit es `scripts/framework-menu-legacy-audit-render.ts` (`505` líneas);
+    - tras cerrar `PUMUKI-267`, el último bloque funcional pendiente del slice `legacy audit` es `scripts/framework-menu-legacy-audit-markdown.ts` (`65` líneas);
     - actualmente convive con:
-      - `scripts/framework-menu-legacy-audit-markdown.ts` (`69` líneas),
       - `scripts/framework-menu-legacy-audit-lib.ts` (`14` líneas),
-      - `scripts/framework-menu-legacy-audit-summary.ts` (`105` líneas tras este corte),
-      lo que hace viable cerrar el render legacy sin romper la fachada pública.
+      - `scripts/framework-menu-legacy-audit-render.ts` (`16` líneas tras este corte),
+      - `scripts/framework-menu-legacy-audit-summary.ts` (`105` líneas),
+      lo que hace viable cerrar el slice legacy audit extremo a extremo sin romper la fachada pública.
