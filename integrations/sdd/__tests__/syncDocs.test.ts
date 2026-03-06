@@ -534,6 +534,74 @@ test('runSddSyncDocs soporta múltiples documentos canónicos de forma determini
   });
 });
 
+test('runSddSyncDocs por defecto sincroniza 3 docs canónicos SDD cuando existen en el repo consumer', async () => {
+  await withFixtureRepo('pumuki-sdd-sync-docs-default-consumer-targets-', (repoRoot) => {
+    writeCanonicalDoc(
+      repoRoot,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+
+    const trackingHubPath = join(repoRoot, 'docs', 'strategy', 'ruralgo-tracking-hub.md');
+    mkdirSync(dirname(trackingHubPath), { recursive: true });
+    writeFileSync(trackingHubPath, '# Tracking hub\n', 'utf8');
+
+    const operationalSummaryPath = join(
+      repoRoot,
+      'docs',
+      'technical',
+      '08-validation',
+      'refactor',
+      'operational-summary.md'
+    );
+    mkdirSync(dirname(operationalSummaryPath), { recursive: true });
+    writeFileSync(operationalSummaryPath, '# Operational summary\n', 'utf8');
+
+    const lastRunPath = join(repoRoot, 'docs', 'validation', 'refactor', 'last-run.json');
+    mkdirSync(dirname(lastRunPath), { recursive: true });
+    writeFileSync(
+      lastRunPath,
+      `${JSON.stringify({ status: 'IN_PROGRESS', task: 'RGO-TEST' }, null, 2)}\n`,
+      'utf8'
+    );
+
+    const result = runSddSyncDocs({
+      repoRoot,
+      dryRun: false,
+    });
+
+    const syncedTrackingHub = readFileSync(trackingHubPath, 'utf8');
+    const syncedOperationalSummary = readFileSync(operationalSummaryPath, 'utf8');
+    const syncedLastRun = JSON.parse(readFileSync(lastRunPath, 'utf8')) as {
+      pumuki_sdd_status?: {
+        source?: string;
+        session_active?: boolean;
+      };
+    };
+
+    assert.equal(result.files.length, 4);
+    assert.deepEqual(
+      result.files.map((file) => file.path).sort((left, right) => left.localeCompare(right)),
+      [
+        'docs/strategy/ruralgo-tracking-hub.md',
+        'docs/technical/08-validation/refactor/operational-summary.md',
+        'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
+        'docs/validation/refactor/last-run.json',
+      ]
+    );
+    assert.match(syncedTrackingHub, /PUMUKI:BEGIN SDD_SYNC_STATUS/);
+    assert.match(syncedOperationalSummary, /PUMUKI:BEGIN SDD_SYNC_STATUS/);
+    assert.equal(syncedLastRun.pumuki_sdd_status?.source, 'pumuki sdd sync-docs');
+    assert.equal(typeof syncedLastRun.pumuki_sdd_status?.session_active, 'boolean');
+  });
+});
+
 test('runSddSyncDocs es fail-safe: conflicto en un archivo evita escritura parcial de otros archivos', async () => {
   await withFixtureRepo('pumuki-sdd-sync-docs-failsafe-', (repoRoot) => {
     const firstPath = writeCanonicalDoc(
@@ -645,7 +713,16 @@ test('runSddAutoSync dry-run orquesta sync-docs + learning sin modificar archivo
     assert.equal(result.context.task, 'P12.F2.T70');
     assert.equal(result.context.fromEvidencePath, null);
     assert.equal(result.syncDocs.updated, true);
-    assert.equal(result.syncDocs.files.length, 1);
+    assert.equal(result.syncDocs.files.length, 4);
+    assert.deepEqual(
+      result.syncDocs.files.map((file) => file.path).sort((left, right) => left.localeCompare(right)),
+      [
+        'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
+        'openspec/changes/rgo-1700-06/design.md',
+        'openspec/changes/rgo-1700-06/retrospective.md',
+        'openspec/changes/rgo-1700-06/tasks.md',
+      ]
+    );
     assert.equal(result.learning.path, 'openspec/changes/rgo-1700-06/learning.json');
     assert.equal(result.learning.written, false);
     assert.equal(before, after);
@@ -679,6 +756,15 @@ test('runSddAutoSync aplica sync-docs y persiste learning en modo escritura', as
     assert.equal(result.syncDocs.updated, true);
     assert.equal(result.context.fromEvidencePath, null);
     assert.match(readFileSync(canonicalPath, 'utf8'), /openspec_installed:/);
+    const tasksPath = join(repoRoot, 'openspec', 'changes', 'rgo-1700-07', 'tasks.md');
+    const designPath = join(repoRoot, 'openspec', 'changes', 'rgo-1700-07', 'design.md');
+    const retrospectivePath = join(repoRoot, 'openspec', 'changes', 'rgo-1700-07', 'retrospective.md');
+    assert.equal(existsSync(tasksPath), true);
+    assert.equal(existsSync(designPath), true);
+    assert.equal(existsSync(retrospectivePath), true);
+    assert.match(readFileSync(tasksPath, 'utf8'), /PUMUKI:BEGIN AUTO_SYNC_STATUS/);
+    assert.match(readFileSync(designPath, 'utf8'), /PUMUKI:BEGIN AUTO_SYNC_STATUS/);
+    assert.match(readFileSync(retrospectivePath, 'utf8'), /PUMUKI:BEGIN AUTO_SYNC_STATUS/);
     const learningPath = join(repoRoot, 'openspec', 'changes', 'rgo-1700-07', 'learning.json');
     assert.equal(existsSync(learningPath), true);
     assert.equal(result.learning.written, true);
