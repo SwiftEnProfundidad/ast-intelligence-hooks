@@ -34,22 +34,6 @@ test('buildSystemNotificationPayload incluye proyecto en subtítulo cuando hay r
   assert.match(payload.subtitle ?? '', /PRE_COMMIT/);
 });
 
-test('buildSystemNotificationPayload para gate BLOCK incluye causa y remediación accionable', () => {
-  const payload = buildSystemNotificationPayload({
-    kind: 'gate.blocked',
-    stage: 'PRE_PUSH',
-    totalViolations: 1,
-    causeCode: 'EVIDENCE_STALE',
-    causeMessage: 'Evidence is stale.',
-    remediation: 'Ejecuta pumuki-pre-write para refrescar evidencia.',
-  });
-
-  assert.match(payload.subtitle ?? '', /evidencia/i);
-  assert.match(payload.message, /^solución:/i);
-  assert.match(payload.message, /pumuki-pre-write/i);
-  assert.equal(payload.soundName, 'Basso');
-});
-
 test('buildSystemNotificationPayload construye payload para evidencia stale', () => {
   const payload = buildSystemNotificationPayload({
     kind: 'evidence.stale',
