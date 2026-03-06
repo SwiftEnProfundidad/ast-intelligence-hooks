@@ -3581,18 +3581,38 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-259: Atacar `framework-menu-consumer-preflight-lib` separando ejecucion del preflight, composicion del panel y render de sugerencias operativas para seguir cerrando `scripts/**` con el repo todavía limpio.
-  - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-consumer-preflight-lib.ts` y de la suite que lo cubre;
-    - separar, como minimo:
-      - ejecucion/obtencion del estado de preflight,
-      - composicion del panel o snapshot,
-      - render de sugerencias y salida operativa;
-    - mantener estable la fachada publica usada por:
-      - `scripts/framework-menu-consumer-preflight.ts`
+- ✅ PUMUKI-259: Atacar `framework-menu-consumer-preflight-lib` separando ejecucion del preflight, composicion del panel y render de sugerencias operativas para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-consumer-preflight-lib.ts` queda reducido a una fachada publica estable;
+    - la logica se separa en:
+      - `scripts/framework-menu-consumer-preflight-types.ts`
+      - `scripts/framework-menu-consumer-preflight-hints.ts`
+      - `scripts/framework-menu-consumer-preflight-run.ts`
+      - `scripts/framework-menu-consumer-preflight-render.ts`
+      - `scripts/framework-menu-consumer-preflight-lib.ts`
+    - se añade un smoke minimo de fachada publica en:
+      - `scripts/__tests__/framework-menu-consumer-preflight-lib.test.ts`
+    - la interfaz usada por:
       - `scripts/framework-menu-consumer-runtime-lib.ts`
+      se mantiene intacta;
+    - el corte queda validado con `4` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene.
+  - Evidencia:
+    - `wc -l scripts/framework-menu-consumer-preflight-lib.ts scripts/framework-menu-consumer-preflight-types.ts scripts/framework-menu-consumer-preflight-hints.ts scripts/framework-menu-consumer-preflight-run.ts scripts/framework-menu-consumer-preflight-render.ts scripts/__tests__/framework-menu-consumer-preflight-lib.test.ts scripts/__tests__/framework-menu-consumer-preflight-run.test.ts scripts/__tests__/framework-menu-consumer-preflight-format.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-preflight-lib.test.ts scripts/__tests__/framework-menu-consumer-preflight-run.test.ts scripts/__tests__/framework-menu-consumer-preflight-format.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-260: Atacar `framework-menu-consumer-runtime-lib` separando orquestacion de acciones, render del summary legacy y composicion del menu para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-consumer-runtime-lib.ts` y de la suite que lo cubre;
+    - separar, como minimo:
+      - ejecucion/orquestacion de acciones del menu,
+      - render del summary legacy y notificaciones asociadas,
+      - composicion del menu clasico/moderno;
+    - mantener estable la fachada publica usada por los entrypoints de menu consumidor;
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
   - Inventario inicial (2026-03-06):
-    - tras cerrar `PUMUKI-258`, `scripts/framework-menu-consumer-preflight-lib.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
-    - actualmente tiene `249` lineas;
-    - su suite legacy visible es `scripts/__tests__/framework-menu-consumer-preflight-format.test.ts` y `scripts/__tests__/framework-menu-consumer-preflight-run.test.ts`, lo que permite ya un corte por responsabilidad sin romper la interfaz pública.
+    - tras cerrar `PUMUKI-259`, `scripts/framework-menu-consumer-runtime-lib.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
+    - actualmente tiene `233` lineas;
+    - ya consume bloques previamente limpiados (`consumer-preflight`, `legacy-audit`, `ui-components`, `layout`, `system-notifications`), lo que hace viable separarlo sin romper su interfaz pública.
