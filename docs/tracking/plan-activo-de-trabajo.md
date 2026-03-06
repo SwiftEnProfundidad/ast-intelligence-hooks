@@ -3795,7 +3795,7 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-268: Rematar el slice `legacy audit` atacando `framework-menu-legacy-audit-markdown.ts`, separando links clicables, normalización de paths y ensamblado final del markdown con el repo limpio.
+- ✅ PUMUKI-268: Rematar el slice `legacy audit` atacando `framework-menu-legacy-audit-markdown.ts`, separando links clicables, normalización de paths y ensamblado final del markdown con el repo limpio.
   - Alcance:
     - inventariar el peso real de `scripts/framework-menu-legacy-audit-markdown.ts` y de la suite que lo cubre;
     - separar, como mínimo:
@@ -3811,3 +3811,43 @@
       - `scripts/framework-menu-legacy-audit-render.ts` (`16` líneas tras este corte),
       - `scripts/framework-menu-legacy-audit-summary.ts` (`105` líneas),
       lo que hace viable cerrar el slice legacy audit extremo a extremo sin romper la fachada pública.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-legacy-audit-markdown.ts` queda reducido a una fachada pública estable de `19` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-legacy-audit-markdown-links.ts`
+      - `scripts/framework-menu-legacy-audit-markdown-document.ts`
+      - `scripts/framework-menu-legacy-audit-markdown.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-legacy-audit-markdown-links.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-markdown-document.test.ts`
+    - se amplían los helpers compartidos en:
+      - `scripts/__tests__/framework-menu-legacy-audit-render-test-helpers.ts`
+      para reutilizar fixtures de paths absolutos y utilidades de aserción;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-legacy-audit-lib.ts`
+      se mantiene intacta;
+    - el corte queda validado con `29` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-legacy-audit-markdown.ts scripts/framework-menu-legacy-audit-markdown-links.ts scripts/framework-menu-legacy-audit-markdown-document.ts scripts/__tests__/framework-menu-legacy-audit-markdown-links.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown-document.test.ts scripts/__tests__/framework-menu-legacy-audit-render-test-helpers.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit-markdown-links.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown-document.test.ts scripts/__tests__/framework-menu-legacy-audit-render-panel.test.ts scripts/__tests__/framework-menu-legacy-audit-render-report.test.ts scripts/__tests__/framework-menu-legacy-audit-summary.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-platforms.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-metrics.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-top.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-269: Atacar `framework-menu-system-notifications-macos-swift.ts`, separando source Swift, helpers del modal y ensamblado de argumentos para seguir limpiando `scripts/**` con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-swift.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - generación del source Swift,
+      - composición del modal flotante y botones,
+      - ensamblado de argumentos/bridge para la ejecución;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-268`, el siguiente fichero grande y todavía opaco dentro de `scripts/**` es `scripts/framework-menu-system-notifications-macos-swift.ts` (`331` líneas);
+    - actualmente convive con:
+      - `scripts/framework-menu-system-notifications-macos.ts` (`125` líneas),
+      - `scripts/framework-menu-system-notifications-macos-runner.ts`,
+      - `scripts/framework-menu-system-notifications-macos-applescript.ts`,
+      lo que hace viable cerrar el bloque macOS extremo a extremo sin romper la fachada pública de notificaciones.
