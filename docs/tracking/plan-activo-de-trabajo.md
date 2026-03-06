@@ -3694,7 +3694,45 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-264: Atacar `framework-menu-system-notifications-config.ts` separando persistencia, estado de mute y aplicación de decisiones para cerrar el bloque de notificaciones extremo a extremo.
+- ✅ PUMUKI-264: Atacar `framework-menu-system-notifications-config.ts` separando persistencia, estado de mute y aplicación de decisiones para cerrar el bloque de notificaciones extremo a extremo.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-config.ts` queda reducido a una fachada pública estable;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-config-file.ts`
+      - `scripts/framework-menu-system-notifications-config-state.ts`
+      - `scripts/framework-menu-system-notifications-config-choice.ts`
+      - `scripts/framework-menu-system-notifications-config.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-config-state.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-config-choice.test.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - el corte queda validado con `17` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `2` scopes).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-config.ts scripts/framework-menu-system-notifications-config-file.ts scripts/framework-menu-system-notifications-config-state.ts scripts/framework-menu-system-notifications-config-choice.ts scripts/__tests__/framework-menu-system-notifications-config-state.test.ts scripts/__tests__/framework-menu-system-notifications-config-choice.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-config-state.test.ts scripts/__tests__/framework-menu-system-notifications-config-choice.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-265: Atacar `framework-menu-layout-lib.ts` separando wrapping de líneas, composición de filas y bordes para seguir limpiando `scripts/**` con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-layout-lib.ts` y de los módulos que lo consumen;
+    - separar, como mínimo:
+      - helpers de wrapping de líneas,
+      - composición de filas/tablas,
+      - bordes y decoradores de panel;
+    - mantener estable la fachada pública usada por los bloques de menú ya refactorizados;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-264`, el siguiente bloque natural del sistema de menús es `scripts/framework-menu-layout-lib.ts` (`116` líneas);
+    - actualmente convive con:
+      - `scripts/framework-menu-ui-components-panel.ts` (`53` líneas),
+      - `scripts/framework-menu-ui-components-render.ts` (`71` líneas),
+      - `scripts/framework-menu-advanced-view-lib.ts` (`79` líneas),
+      lo que hace viable cerrar la capa de layout sin romper la interfaz pública del menú.
   - Alcance:
     - inventariar el peso real de `scripts/framework-menu-system-notifications-config.ts` y de la suite que lo cubre;
     - separar, como minimo:
