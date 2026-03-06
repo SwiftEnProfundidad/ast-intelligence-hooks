@@ -3740,50 +3740,47 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-266: Atacar `framework-menu-legacy-audit-summary.ts` separando parseo del summary, breakdown por plataforma, top violations y métricas para seguir limpiando `scripts/**` con el repo limpio.
+- ✅ PUMUKI-266: Atacar `framework-menu-legacy-audit-summary.ts` separando parseo del summary, breakdown por plataforma, top violations y métricas para seguir limpiando `scripts/**` con el repo limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-legacy-audit-summary.ts` queda reducido a una fachada pública estable de `105` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-legacy-audit-summary-types.ts`
+      - `scripts/framework-menu-legacy-audit-summary-normalize.ts`
+      - `scripts/framework-menu-legacy-audit-summary-platforms.ts`
+      - `scripts/framework-menu-legacy-audit-summary-ranked.ts`
+      - `scripts/framework-menu-legacy-audit-summary-metrics.ts`
+      - `scripts/framework-menu-legacy-audit-summary.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-legacy-audit-summary.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-summary-platforms.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-summary-metrics.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-summary-top.test.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-legacy-audit-lib.ts`
+      - `scripts/framework-menu-legacy-audit-render.ts`
+      - `scripts/framework-menu-legacy-audit-markdown.ts`
+      se mantiene intacta;
+    - el corte queda validado con `26` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`11` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-legacy-audit-summary.ts scripts/framework-menu-legacy-audit-summary-types.ts scripts/framework-menu-legacy-audit-summary-normalize.ts scripts/framework-menu-legacy-audit-summary-platforms.ts scripts/framework-menu-legacy-audit-summary-ranked.ts scripts/framework-menu-legacy-audit-summary-metrics.ts scripts/__tests__/framework-menu-legacy-audit-summary.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-platforms.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-metrics.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-top.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit-summary.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-platforms.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-metrics.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-top.test.ts scripts/__tests__/framework-menu-legacy-audit-render.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-267: Atacar `framework-menu-legacy-audit-render.ts` separando paneles, bloques de resumen y remediación/métricas para seguir cerrando el slice legacy audit con el repo limpio.
   - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-legacy-audit-summary.ts` y de su superficie de tests;
+    - inventariar el peso real de `scripts/framework-menu-legacy-audit-render.ts` y de la suite que lo cubre;
     - separar, como mínimo:
-      - parseo/normalización del summary legacy,
-      - breakdown por plataforma,
-      - top violations/remediaciones,
-      - métricas y score operativo;
-    - mantener estable la fachada pública usada por `framework-menu-legacy-audit-lib.ts` y `framework-menu-legacy-audit-render.ts`;
+      - composición de paneles,
+      - bloques de resumen y breakdown,
+      - remediación y métricas finales;
+    - mantener estable la fachada pública usada por `framework-menu-legacy-audit-lib.ts` y `framework-menu-legacy-audit-markdown.ts`;
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
   - Inventario inicial (2026-03-07):
-    - tras cerrar `PUMUKI-265`, el siguiente bloque natural y más pesado de `scripts/**` es `scripts/framework-menu-legacy-audit-summary.ts` (`590` líneas);
+    - tras cerrar `PUMUKI-266`, el siguiente bloque más pesado del slice legacy audit es `scripts/framework-menu-legacy-audit-render.ts` (`505` líneas);
     - actualmente convive con:
-      - `scripts/framework-menu-legacy-audit-render.ts` (`505` líneas),
-      - `scripts/framework-menu-gate-lib.ts` (`151` líneas),
-      - `scripts/framework-menu-matrix-canary-lib.ts` (`136` líneas),
-      lo que hace viable seguir limpiando el slice legacy audit sin tocar consumers externos ni romper la fachada pública.
-  - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-layout-lib.ts` y de los módulos que lo consumen;
-    - separar, como mínimo:
-      - helpers de wrapping de líneas,
-      - composición de filas/tablas,
-      - bordes y decoradores de panel;
-    - mantener estable la fachada pública usada por los bloques de menú ya refactorizados;
-    - cerrar el corte con tests focales, `typecheck` y repo limpio.
-  - Inventario inicial (2026-03-07):
-    - tras cerrar `PUMUKI-264`, el siguiente bloque natural del sistema de menús es `scripts/framework-menu-layout-lib.ts` (`116` líneas);
-    - actualmente convive con:
-      - `scripts/framework-menu-ui-components-panel.ts` (`53` líneas),
-      - `scripts/framework-menu-ui-components-render.ts` (`71` líneas),
-      - `scripts/framework-menu-advanced-view-lib.ts` (`79` líneas),
-      lo que hace viable cerrar la capa de layout sin romper la interfaz pública del menú.
-  - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-system-notifications-config.ts` y de la suite que lo cubre;
-    - separar, como minimo:
-      - persistencia del fichero de configuración,
-      - lectura/normalización del estado,
-      - cálculo del estado de silencio y aplicación de decisiones del diálogo;
-    - mantener estable la fachada pública usada por `framework-menu-system-notifications-lib.ts` y `framework-menu-system-notifications-macos.ts`;
-    - cerrar el corte con tests focales, `typecheck` y repo limpio.
-  - Inventario inicial (2026-03-07):
-    - tras cerrar `PUMUKI-263`, el siguiente bloque natural del sistema de notificaciones es `scripts/framework-menu-system-notifications-config.ts`;
-    - actualmente convive con:
-      - `scripts/framework-menu-system-notifications-lib.ts` (`75` líneas),
-      - `scripts/framework-menu-system-notifications-config.ts` (`101` líneas),
-      - `scripts/framework-menu-system-notifications-macos.ts` (`125` líneas tras el corte),
-      lo que hace viable cerrar la superficie de notificaciones sin romper la interfaz pública.
+      - `scripts/framework-menu-legacy-audit-markdown.ts` (`69` líneas),
+      - `scripts/framework-menu-legacy-audit-lib.ts` (`14` líneas),
+      - `scripts/framework-menu-legacy-audit-summary.ts` (`105` líneas tras este corte),
+      lo que hace viable cerrar el render legacy sin romper la fachada pública.
