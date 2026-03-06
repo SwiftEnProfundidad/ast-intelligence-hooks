@@ -27,6 +27,22 @@ const textualStatusMarkdown = `# Feedback canónico
 | AST-GAP-001 | 2026-03-02 | Gap | Medium | OPEN |
 `;
 
+const fluxStatusMarkdown = `# Bugs y Mejoras de Pumuki
+
+| ID | Fecha | Tipo | Area | Estado |
+|---|---|---|---|---|
+| PUM-001 | 2026-03-05 | Bug | SDD | ✅ Cerrado |
+| PUM-002 | 2026-03-05 | Bug | Skills | 🚧 En construccion |
+`;
+
+const saasOperationalMarkdown = `# Registro de Bugs y Mejoras de Pumuki
+
+## Seguimiento operativo (Bugs)
+| Orden | ID | Severidad | Prioridad | Estado | Referencia upstream | Versión objetivo | Nota |
+|---|---|---|---|---|---|---|---|
+| 18 | PUMUKI-018 | HIGH | P1 | ⏳ | Pendiente | TBC | Falso positivo \`ios.no-force-unwrap\` al detectar patrón seguro \`!= nil\` en Swift y bloquear \`ci:local\` por \`EVIDENCE_GATE_BLOCKED\`. |
+`;
+
 const headingDriftMarkdown = `| ID | Estado | Referencia upstream |
 |---|---|---|
 | PUMUKI-INC-300 | 🚧 | #710 |
@@ -102,6 +118,25 @@ test('collectBacklogWatchEntries soporta estados textuales e IDs de RuralGo', ()
       ['FP-001', '✅', 481],
       ['AST-GAP-001', '⏳', null],
     ]
+  );
+});
+
+test('collectBacklogWatchEntries soporta IDs PUM legacy de Flux', () => {
+  const entries = collectBacklogWatchEntries(fluxStatusMarkdown);
+  assert.deepEqual(
+    entries.map((entry) => [entry.id, entry.status]),
+    [
+      ['PUM-001', '✅'],
+      ['PUM-002', '🚧'],
+    ]
+  );
+});
+
+test('collectBacklogWatchEntries soporta el formato operativo real de SAAS con columna Pendiente sin issue', () => {
+  const entries = collectBacklogWatchEntries(saasOperationalMarkdown);
+  assert.deepEqual(
+    entries.map((entry) => [entry.id, entry.status, entry.issueNumber]),
+    [['PUMUKI-018', '⏳', null]]
   );
 });
 
@@ -261,5 +296,21 @@ test('runBacklogWatch reporta heading drift como action-required', async () => {
   assert.equal(result.classification.activeIssue.length, 1);
   assert.equal(result.headingDrift.length, 1);
   assert.equal(result.headingDrift[0]?.id, 'PUMUKI-INC-300');
+  assert.equal(result.hasActionRequired, true);
+});
+
+test('runBacklogWatch mantiene visible un pendiente real del backlog SAAS cuando no existe issue upstream', async () => {
+  const result = await runBacklogWatch({
+    filePath: '/tmp/backlog-watch-saas-real.md',
+    readFile: () => saasOperationalMarkdown,
+    resolveIssueState: () => 'OPEN',
+  });
+
+  assert.equal(result.entriesScanned, 1);
+  assert.equal(result.nonClosedEntries, 1);
+  assert.equal(result.classification.needsIssue.length, 1);
+  assert.equal(result.classification.needsIssue[0]?.id, 'PUMUKI-018');
+  assert.equal(result.classification.needsIssue[0]?.issueNumber, null);
+  assert.deepEqual(result.resolution.unresolvedIds, ['PUMUKI-018']);
   assert.equal(result.hasActionRequired, true);
 });

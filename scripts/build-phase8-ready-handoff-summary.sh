@@ -41,7 +41,7 @@ GENERATED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
   echo
   echo "- [ ] Confirm reports are \`READY\`: blockers, closure-status, external-handoff, startup-unblock."
   echo "- [ ] Publish final external handoff artifacts/URLs."
-  echo "- [ ] Update \`docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md\`: mark \`P8-3\` ✅ and set \`P8-4\` 🚧."
+  echo "- [ ] Update \`docs/tracking/historico-validacion-ruralgo-03-03-2026.md\`: mark \`P8-3\` ✅ and set \`P8-4\` 🚧."
   echo "- [ ] Close \`P8-4\` once URLs are attached and handoff is complete."
   echo
   echo "## Latest Run URLs"

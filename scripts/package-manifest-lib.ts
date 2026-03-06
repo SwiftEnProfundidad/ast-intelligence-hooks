@@ -14,6 +14,13 @@ export const REQUIRED_PACKAGE_PATHS = [
   'integrations/lifecycle/cli.ts',
   'integrations/notifications/emitAuditSummaryNotification.ts',
   'integrations/evidence/buildEvidence.ts',
+  'skills.sources.json',
+  'docs/codex-skills/windsurf-rules-android.md',
+  'docs/codex-skills/windsurf-rules-backend.md',
+  'docs/codex-skills/windsurf-rules-frontend.md',
+  'docs/codex-skills/windsurf-rules-ios.md',
+  'docs/codex-skills/swift-concurrency.md',
+  'docs/codex-skills/swiftui-expert-skill.md',
 ];
 
 export const CANONICAL_ALLOWED_LEGACY_PATHS = new Set([

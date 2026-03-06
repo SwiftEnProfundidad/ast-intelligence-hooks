@@ -26,7 +26,7 @@ export const appendAdapterReadinessNextActionsSection = (params: {
   }
   if (hasAdapterRuntimeBlocker(params.source)) {
     params.lines.push(
-      '- Execute `docs/validation/adapter-hook-runtime-validation.md`, then regenerate adapter readiness report.'
+      '- Execute `docs/validation/adapter-hook-runtime-runbook.md`, then regenerate adapter readiness report.'
     );
   }
   params.lines.push('');

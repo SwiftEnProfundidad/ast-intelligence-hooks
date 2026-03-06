@@ -67,6 +67,14 @@ const headingOnlyDriftMarkdown = `# Backlog
 Detalle.
 `;
 
+const fluxOperationalMarkdown = `# Backlog Flux
+
+| Orden | ID | Estado | Referencia upstream | Nota |
+|---|---|---|---|---|
+| 1 | PUM-001 | ✅ | #100 | cerrado |
+| 2 | PUM-002 | 🚧 | Pendiente | en curso |
+`;
+
 const closedNarrativeMarkdown = `# Registro de Bugs y Mejoras de Pumuki
 
 ## Estado de este backlog
@@ -110,6 +118,14 @@ test('collectBacklogOperationalStatusEntries detecta IDs y estado en tablas de s
   assert.deepEqual(
     entries.map((entry) => `${entry.id}:${entry.status}`),
     ['PUMUKI-001:✅', 'PUMUKI-002:⏳', 'PUMUKI-M001:🚧', 'PUMUKI-M002:⛔']
+  );
+});
+
+test('collectBacklogOperationalStatusEntries soporta IDs PUM legacy de Flux', () => {
+  const entries = collectBacklogOperationalStatusEntries(fluxOperationalMarkdown);
+  assert.deepEqual(
+    entries.map((entry) => `${entry.id}:${entry.status}`),
+    ['PUM-001:✅', 'PUM-002:🚧']
   );
 });
 

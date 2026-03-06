@@ -75,10 +75,10 @@ export type BacklogReconcileResult = {
 
 const STATUS_EMOJI_PATTERN = /(✅|🚧|⏳|⛔)/;
 const ISSUE_REF_PATTERN = /#(\d+)/;
-const BACKLOG_ID_PATTERN = /^(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)$/;
+const BACKLOG_ID_PATTERN = /^(PUMUKI-(?:M)?\d+|PUM-\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)$/;
 const PENDING_REFERENCE_PATTERN = /\|\s*Pendiente(?:\s*\(rel\.\s*#\d+\))?\s*\|/;
 const BACKLOG_SECTION_HEADING_PATTERN =
-  /^(\s*###\s*)(✅|🚧|⏳|⛔)(\s+)(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)\b/;
+  /^(\s*###\s*)(✅|🚧|⏳|⛔)(\s+)(PUMUKI-(?:M)?\d+|PUM-\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)\b/;
 
 export type BacklogIssueNumberResolver = (
   backlogId: string,

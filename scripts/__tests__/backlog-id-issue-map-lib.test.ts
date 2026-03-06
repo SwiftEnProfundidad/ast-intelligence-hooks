@@ -10,6 +10,7 @@ test('parseIdIssueMapRecord normaliza valores válidos number/string', () => {
   const record = parseIdIssueMapRecord(
     JSON.stringify({
       'PUMUKI-001': 100,
+      'PUM-001': 150,
       'PUMUKI-INC-020': '200',
       'FP-010': 300,
       'AST-GAP-005': '400',
@@ -18,6 +19,7 @@ test('parseIdIssueMapRecord normaliza valores válidos number/string', () => {
 
   assert.deepEqual(record, {
     'PUMUKI-001': 100,
+    'PUM-001': 150,
     'PUMUKI-INC-020': 200,
     'FP-010': 300,
     'AST-GAP-005': 400,

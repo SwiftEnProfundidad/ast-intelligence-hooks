@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FILE="${1:-docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md}"
+FILE="${1:-docs/tracking/historico-validacion-ruralgo-03-03-2026.md}"
 
 if [[ ! -f "${FILE}" ]]; then
   echo "[progress-single-active] missing file: ${FILE}" >&2

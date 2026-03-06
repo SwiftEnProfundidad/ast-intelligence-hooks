@@ -53,10 +53,10 @@ export type BacklogIssueNumberResolver = (
 
 const STATUS_EMOJI_PATTERN = /(✅|🚧|⏳|⛔)/;
 const ISSUE_REF_PATTERN = /#(\d+)/;
-const BACKLOG_ID_PATTERN = /^(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)$/;
+const BACKLOG_ID_PATTERN = /^(PUMUKI-(?:M)?\d+|PUM-\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)$/;
 const STATUS_TEXT_PATTERN = /^(OPEN|PENDING|REPORTED|IN_PROGRESS|BLOCKED|FIXED|CLOSED)\b/i;
 const BACKLOG_SECTION_HEADING_PATTERN =
-  /^(\s*###\s*)(✅|🚧|⏳|⛔)(\s+)(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)\b/;
+  /^(\s*###\s*)(✅|🚧|⏳|⛔)(\s+)(PUMUKI-(?:M)?\d+|PUM-\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)\b/;
 const STATUS_TEXT_TO_EMOJI: Record<string, BacklogStatusEmoji> = {
   OPEN: '⏳',
   PENDING: '⏳',

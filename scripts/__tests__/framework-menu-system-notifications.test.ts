@@ -251,6 +251,79 @@ test('emitSystemNotification en macOS abre diálogo por defecto sin flag explíc
 
     assert.equal(result.delivered, true);
     assert.equal(calls.length, 2);
+    assert.equal(calls[1]?.command, 'swift');
+  });
+});
+
+test('emitSystemNotification usa AppleScript si se fuerza modo applescript', async () => {
+  await withTempDir('pumuki-notifications-dialog-applescript-mode-', async (repoRoot) => {
+    const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];
+    const result = emitSystemNotification({
+      platform: 'darwin',
+      repoRoot,
+      event: {
+        kind: 'gate.blocked',
+        stage: 'PRE_PUSH',
+        totalViolations: 1,
+        causeCode: 'EVIDENCE_STALE',
+      },
+      env: {
+        PUMUKI_MACOS_BLOCKED_DIALOG_MODE: 'applescript',
+      } as NodeJS.ProcessEnv,
+      runCommand: (command, args) => {
+        calls.push({ command, args });
+        return 0;
+      },
+      runCommandWithOutput: (command, args) => {
+        calls.push({ command, args });
+        return {
+          exitCode: 0,
+          stdout: 'button returned:Mantener activas\n',
+        };
+      },
+    });
+
+    assert.equal(result.delivered, true);
+    assert.equal(calls.length, 2);
+    assert.equal(calls[1]?.command, 'osascript');
+  });
+});
+
+test('emitSystemNotification hace fallback a AppleScript si falla helper Swift', async () => {
+  await withTempDir('pumuki-notifications-dialog-swift-fallback-', async (repoRoot) => {
+    const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];
+    const result = emitSystemNotification({
+      platform: 'darwin',
+      repoRoot,
+      event: {
+        kind: 'gate.blocked',
+        stage: 'PRE_PUSH',
+        totalViolations: 1,
+        causeCode: 'EVIDENCE_STALE',
+      },
+      runCommand: (command, args) => {
+        calls.push({ command, args });
+        return 0;
+      },
+      runCommandWithOutput: (command, args) => {
+        calls.push({ command, args });
+        if (command === 'swift') {
+          return {
+            exitCode: 1,
+            stdout: '',
+          };
+        }
+        return {
+          exitCode: 0,
+          stdout: 'button returned:Mantener activas\n',
+        };
+      },
+    });
+
+    assert.equal(result.delivered, true);
+    assert.equal(calls.length, 3);
+    assert.equal(calls[1]?.command, 'swift');
+    assert.equal(calls[2]?.command, 'osascript');
   });
 });
 
