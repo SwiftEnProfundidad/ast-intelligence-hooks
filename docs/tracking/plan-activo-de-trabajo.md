@@ -3643,20 +3643,46 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-262: Atacar `framework-menu-system-notifications-payloads.ts` separando resolucion de causa, remediacion humana y ensamblado de payloads para seguir cerrando `scripts/**` con el repo todavía limpio.
+- ✅ PUMUKI-262: Atacar `framework-menu-system-notifications-payloads.ts` separando resolucion de causa, remediacion humana y ensamblado de payloads para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-payloads.ts` deja de mezclar normalización de texto, traducción de causas y remediaciones;
+    - la lógica queda separada en:
+      - `scripts/framework-menu-system-notifications-text.ts`
+      - `scripts/framework-menu-system-notifications-cause.ts`
+      - `scripts/framework-menu-system-notifications-remediation.ts`
+      - `scripts/framework-menu-system-notifications-payloads.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-cause.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-remediation.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-payloads.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - el corte queda validado con `19` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-payloads.ts scripts/framework-menu-system-notifications-text.ts scripts/framework-menu-system-notifications-cause.ts scripts/framework-menu-system-notifications-remediation.ts scripts/__tests__/framework-menu-system-notifications-payloads.test.ts scripts/__tests__/framework-menu-system-notifications-cause.test.ts scripts/__tests__/framework-menu-system-notifications-remediation.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-payloads.test.ts scripts/__tests__/framework-menu-system-notifications-cause.test.ts scripts/__tests__/framework-menu-system-notifications-remediation.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-263: Atacar `framework-menu-system-notifications-macos.ts` separando runner Swift, fallback AppleScript y ejecucion de comandos para seguir cerrando `scripts/**` con el repo todavía limpio.
   - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-system-notifications-payloads.ts` y de la suite que lo cubre;
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos.ts` y de la suite que lo cubre;
     - separar, como minimo:
-      - traduccion de causa a mensaje humano,
-      - construccion de remediaciones accionables,
-      - ensamblado final de payloads y textos para macOS;
-    - mantener estable la fachada publica usada por `framework-menu-system-notifications-lib.ts` y `framework-menu-system-notifications-macos.ts`;
+      - el source/configuración del dialogo Swift flotante,
+      - el fallback AppleScript,
+      - la ejecución de comandos y manejo de outputs;
+    - mantener estable la fachada pública usada por `framework-menu-system-notifications-lib.ts`;
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
   - Inventario inicial (2026-03-07):
-    - tras cerrar `PUMUKI-261`, `scripts/framework-menu-system-notifications-payloads.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
-    - actualmente tiene `203` lineas;
+    - tras cerrar `PUMUKI-262`, `scripts/framework-menu-system-notifications-macos.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
+    - actualmente tiene `537` lineas;
     - ya convive con:
       - `scripts/framework-menu-system-notifications-config.ts`
-      - `scripts/framework-menu-system-notifications-macos.ts`
+      - `scripts/framework-menu-system-notifications-payloads.ts`
       - `scripts/framework-menu-system-notifications-lib.ts`
-      lo que hace viable separar el ensamblado del payload sin romper la interfaz pública.
+      lo que hace viable separar el runner macOS sin romper la interfaz pública.
