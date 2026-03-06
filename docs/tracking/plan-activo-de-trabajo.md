@@ -3391,11 +3391,38 @@
     - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit-summary.test.ts scripts/__tests__/framework-menu-legacy-audit-render.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown.test.ts scripts/__tests__/framework-menu-matrix-evidence.test.ts`
     - `npm run -s typecheck`
 
-- 🚧 PUMUKI-251: Cerrar el bloque `scripts/**` separando `framework-menu-matrix-evidence` y `framework-menu-advanced-view` para que dependan de piezas pequeñas, con tests por responsabilidad y sin reintroducir fachadas opacas.
+- ✅ PUMUKI-251: Cerrar el bloque `scripts/**` separando `framework-menu-matrix-evidence` y `framework-menu-advanced-view` para que dependan de piezas pequeñas, con tests por responsabilidad y sin reintroducir fachadas opacas.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-matrix-evidence-lib.ts` deja de mezclar tipos, diagnosis y lectura de evidencia, y queda reducido a una fachada de `18` lineas;
+    - la logica de `matrix-evidence` se separa en:
+      - `scripts/framework-menu-matrix-evidence-types.ts`
+      - `scripts/framework-menu-matrix-evidence-diagnosis.ts`
+      - `scripts/framework-menu-matrix-evidence-lib.ts`
+    - `scripts/framework-menu-advanced-view-lib.ts` deja de concentrar ayuda, status y render, y queda reducido a `79` lineas de orquestacion;
+    - la logica de `advanced-view` se separa en:
+      - `scripts/framework-menu-advanced-view-help.ts`
+      - `scripts/framework-menu-advanced-view-status.ts`
+      - `scripts/framework-menu-advanced-view-lib.ts`
+    - las suites legacy desaparecen y quedan sustituidas por tests por responsabilidad:
+      - `scripts/__tests__/framework-menu-matrix-evidence-diagnosis.test.ts`
+      - `scripts/__tests__/framework-menu-matrix-evidence-lib.test.ts`
+      - `scripts/__tests__/framework-menu-advanced-view-status.test.ts`
+      - `scripts/__tests__/framework-menu-advanced-view-menu.test.ts`
+    - el corte queda validado con `11` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`12` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-matrix-evidence-lib.ts scripts/framework-menu-matrix-evidence-types.ts scripts/framework-menu-matrix-evidence-diagnosis.ts scripts/framework-menu-advanced-view-lib.ts scripts/framework-menu-advanced-view-help.ts scripts/framework-menu-advanced-view-status.ts scripts/__tests__/framework-menu-matrix-evidence-diagnosis.test.ts scripts/__tests__/framework-menu-matrix-evidence-lib.test.ts scripts/__tests__/framework-menu-advanced-view-status.test.ts scripts/__tests__/framework-menu-advanced-view-menu.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-evidence-diagnosis.test.ts scripts/__tests__/framework-menu-matrix-evidence-lib.test.ts scripts/__tests__/framework-menu-advanced-view-status.test.ts scripts/__tests__/framework-menu-advanced-view-menu.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-252: Seguir cerrando `scripts/**` separando `framework-menu-matrix-canary` y `framework-menu-evidence-summary` para que dependan de piezas mas pequeñas y revisables.
   - Alcance:
-    - inventariar el peso real de `framework-menu-matrix-evidence-lib.ts` y `framework-menu-advanced-view-lib.ts`;
-    - extraer helpers si el corte es limpio, manteniendo sus contratos visibles;
+    - inventariar el peso real de `scripts/framework-menu-matrix-canary-lib.ts` y `scripts/framework-menu-evidence-summary-lib.ts`;
+    - extraer helpers si el corte se mantiene limpio, preservando contratos visibles de canary y resumen de evidencia;
     - mantener el repo limpio y con una sola task activa durante todo el corte.
   - Inventario inicial (2026-03-06):
-    - tras `PUMUKI-250`, la mayor opacidad restante de `scripts/**` ya no está en `legacy-audit`, sino en piezas consumidoras que todavía dependen de esa fachada;
-    - el siguiente corte lógico es compactar `matrix-evidence` y `advanced-view` para cerrar la limpieza estructural de `scripts/**` sin tocar `git`, `sdd` ni `lifecycle`.
+    - tras cerrar `PUMUKI-251`, las mayores piezas del framework menu pendientes dentro de `scripts/**` quedan en:
+      - `scripts/framework-menu-matrix-canary-lib.ts` (`260` lineas)
+      - `scripts/framework-menu-evidence-summary-lib.ts` (`258` lineas)
+    - ambas comparten superficie funcional del framework menu y son el siguiente corte logico antes de tocar piezas mas grandes como `watch-consumer-backlog-lib.ts` o `reconcile-consumer-backlog-issues-lib.ts`.
