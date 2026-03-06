@@ -98,6 +98,16 @@ Antes de realizar cualquier accion:
 - Prohibido asumir permiso implicito del usuario para saltar reglas.
 - Prohibido ejecutar `merge`, `rebase`, `cherry-pick` o `push --force` sin instruccion explicita del usuario.
 
+## Contrato hard de release y adopcion en consumers
+- Si un cambio ya aporta valor real a repos consumidores, tiene tests verdes y no introduce regresiones conocidas, preparar y ejecutar una nueva publicacion de `pumuki`.
+- Tras cada publicacion util, y siempre que el usuario haya definido repos consumidores activos para rollout, ejecutar el ciclo:
+  - verificar publicacion remota,
+  - actualizar consumers a la nueva version,
+  - revalidar `status` / `doctor` / hooks segun aplique,
+  - actualizar el tracking real de esos consumers si cambia su estado.
+- No dejar consumidores largos periodos sobre una version antigua si ya existe una release estable que corrige bugs o mejoras que les afectan directamente.
+- Si publicar o actualizar consumers implica riesgo no obvio, explicarlo antes; si no, tratarlo como parte normal del ciclo enterprise.
+
 ## Contrato hard de higiene documental y artefactos (enterprise clean)
 - Objetivo no negociable: mantener el repositorio limpio, trazable y sin acumulacion de basura operativa.
 - Prohibido crear un `.md` nuevo por cada micro-paso si la informacion cabe en un documento existente.

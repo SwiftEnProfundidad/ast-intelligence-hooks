@@ -21,6 +21,6 @@ Pumuki v2.x follows a deterministic governance pipeline:
 
 The authoritative architecture contract lives in:
 
-- `docs/ARCHITECTURE.md`
+- `docs/product/ARCHITECTURE.md`
 
-Use this file for high-level orientation and `docs/ARCHITECTURE.md` for normative details, invariants, and control primitives.
+Use this file for high-level orientation and `docs/product/ARCHITECTURE.md` for normative details, invariants, and control primitives.
