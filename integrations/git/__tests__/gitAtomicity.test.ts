@@ -95,6 +95,81 @@ test('evaluateGitAtomicity bloquea PRE_COMMIT cuando supera maxFiles', async () 
   );
 });
 
+test('evaluateGitAtomicity sugiere split de staging cuando supera maxScopes', async () => {
+  await withAtomicityEnv(
+    {
+      PUMUKI_GIT_ATOMICITY_ENABLED: '1',
+      PUMUKI_GIT_ATOMICITY_MAX_FILES: '100',
+      PUMUKI_GIT_ATOMICITY_MAX_SCOPES: '1',
+    },
+    async () => {
+      await withTempRepo(async (repoRoot) => {
+        mkdirSync(join(repoRoot, 'apps', 'backend', 'src'), { recursive: true });
+        mkdirSync(join(repoRoot, 'apps', 'frontend', 'src'), { recursive: true });
+        writeFileSync(join(repoRoot, 'apps', 'backend', 'src', 'service.ts'), 'export const a = 1;\n', 'utf8');
+        writeFileSync(join(repoRoot, 'apps', 'frontend', 'src', 'view.tsx'), 'export const b = 2;\n', 'utf8');
+        runGit(repoRoot, ['add', 'apps/backend/src/service.ts', 'apps/frontend/src/view.tsx']);
+
+        const result = evaluateGitAtomicity({
+          repoRoot,
+          stage: 'PRE_COMMIT',
+        });
+
+        assert.equal(result.enabled, true);
+        assert.equal(result.allowed, false);
+        const violation = result.violations.find(
+          (candidate) => candidate.code === 'GIT_ATOMICITY_TOO_MANY_SCOPES'
+        );
+        assert.ok(violation);
+        assert.match(violation.message, /scope_files=/i);
+        assert.match(violation.message, /apps\/backend\/src\/service\.ts/i);
+        assert.match(violation.message, /apps\/frontend\/src\/view\.tsx/i);
+        assert.match(violation.remediation, /git restore --staged \./i);
+        assert.match(violation.remediation, /apps\/backend/i);
+        assert.match(violation.remediation, /apps\/frontend/i);
+        assert.match(violation.remediation, /Slices sugeridos:/i);
+        assert.match(violation.remediation, /git add -- 'apps\/backend\/src\/service\.ts'/i);
+        assert.match(violation.remediation, /git add -- 'apps\/frontend\/src\/view\.tsx'/i);
+        assert.match(violation.remediation, /Sugerencia split/i);
+      }, { tempPrefix: 'pumuki-git-atomicity-scopes-' });
+    }
+  );
+});
+
+test('evaluateGitAtomicity sugiere slices concretos cuando supera maxFiles en PRE_COMMIT', async () => {
+  await withAtomicityEnv(
+    {
+      PUMUKI_GIT_ATOMICITY_ENABLED: '1',
+      PUMUKI_GIT_ATOMICITY_MAX_FILES: '1',
+      PUMUKI_GIT_ATOMICITY_MAX_SCOPES: '10',
+    },
+    async () => {
+      await withTempRepo(async (repoRoot) => {
+        mkdirSync(join(repoRoot, 'apps', 'backend', 'src'), { recursive: true });
+        writeFileSync(join(repoRoot, 'apps', 'backend', 'src', 'service.ts'), 'export const a = 1;\n', 'utf8');
+        writeFileSync(join(repoRoot, 'apps', 'backend', 'src', 'controller.ts'), 'export const b = 2;\n', 'utf8');
+        runGit(repoRoot, ['add', 'apps/backend/src/service.ts', 'apps/backend/src/controller.ts']);
+
+        const result = evaluateGitAtomicity({
+          repoRoot,
+          stage: 'PRE_COMMIT',
+        });
+
+        const violation = result.violations.find(
+          (candidate) => candidate.code === 'GIT_ATOMICITY_TOO_MANY_FILES'
+        );
+        assert.ok(violation);
+        assert.match(violation.remediation, /Slices sugeridos:/i);
+        assert.match(violation.remediation, /apps\/backend/i);
+        assert.match(
+          violation.remediation,
+          /git add -- 'apps\/backend\/src\/controller\.ts' 'apps\/backend\/src\/service\.ts'/i
+        );
+      }, { tempPrefix: 'pumuki-git-atomicity-files-' });
+    }
+  );
+});
+
 test('evaluateGitAtomicity bloquea PRE_PUSH cuando detecta commits sin patrón trazable', async () => {
   await withAtomicityEnv(
     {

@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { GitService, type IGitService } from './GitService';
+import { collectWorktreeAtomicSlices } from './worktreeAtomicSlices';
 
 export type GitAtomicityStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 
@@ -172,6 +173,45 @@ const resolveScopeKey = (filePath: string): string => {
   return segments[0] ?? '';
 };
 
+const collectScopePaths = (
+  changedPaths: ReadonlyArray<string>
+): ReadonlyMap<string, ReadonlyArray<string>> => {
+  const buckets = new Map<string, Array<string>>();
+  for (const path of changedPaths) {
+    const scope = resolveScopeKey(path);
+    if (scope.length === 0) {
+      continue;
+    }
+    const current = buckets.get(scope) ?? [];
+    current.push(path.replace(/\\/g, '/'));
+    buckets.set(scope, current);
+  }
+  const normalized = new Map<string, ReadonlyArray<string>>();
+  for (const [scope, paths] of buckets.entries()) {
+    normalized.set(scope, [...new Set(paths)].sort());
+  }
+  return normalized;
+};
+
+const buildAtomicSlicesRemediation = (params: {
+  git: IGitService;
+  repoRoot: string;
+  stage: GitAtomicityStage;
+}): string | undefined => {
+  if (params.stage !== 'PRE_COMMIT') {
+    return undefined;
+  }
+  const plan = collectWorktreeAtomicSlices({
+    repoRoot: params.repoRoot,
+    git: params.git,
+  });
+  if (plan.slices.length === 0) {
+    return undefined;
+  }
+  const entries = plan.slices.map((slice) => `${slice.scope}: ${slice.staged_command}`);
+  return `Slices sugeridos: ${entries.join(' | ')}`;
+};
+
 const collectChangedPaths = (params: {
   git: IGitService;
   repoRoot: string;
@@ -249,27 +289,48 @@ export const evaluateGitAtomicity = (params: {
     fromRef: params.fromRef,
     toRef: params.toRef,
   });
+  const atomicSlicesRemediation = buildAtomicSlicesRemediation({
+    git,
+    repoRoot,
+    stage: params.stage,
+  });
 
   if (changedPaths.length > config.maxFiles) {
     violations.push({
       code: 'GIT_ATOMICITY_TOO_MANY_FILES',
       message:
         `Git atomicity guard blocked at ${params.stage}: changed_files=${changedPaths.length} exceeds max_files=${config.maxFiles}.`,
-      remediation: `Divide los cambios en commits más pequeños (máximo ${config.maxFiles} archivos por commit).`,
+      remediation:
+        `Divide los cambios en commits más pequeños (máximo ${config.maxFiles} archivos por commit).`
+        + (atomicSlicesRemediation ? ` ${atomicSlicesRemediation}` : ''),
     });
   }
 
-  const scopeKeys = new Set(
-    changedPaths
-      .map((filePath) => resolveScopeKey(filePath))
-      .filter((scopeKey) => scopeKey.length > 0)
-  );
+  const scopePaths = collectScopePaths(changedPaths);
+  const scopeKeys = new Set(scopePaths.keys());
   if (scopeKeys.size > config.maxScopes) {
+    const sortedScopes = [...scopeKeys].sort();
+    const suggestedScopeAdds = sortedScopes
+      .slice(0, Math.max(1, Math.min(config.maxScopes + 1, 3)))
+      .map((scope) => `git add ${scope}/`)
+      .join(' && ');
+    const scopeBreakdown = sortedScopes
+      .map((scope) => {
+        const paths = scopePaths.get(scope) ?? [];
+        const sample = paths.slice(0, 3);
+        return `${scope}{count=${paths.length}; sample=[${sample.join(', ')}]}`;
+      })
+      .join(' | ');
     violations.push({
       code: 'GIT_ATOMICITY_TOO_MANY_SCOPES',
       message:
-        `Git atomicity guard blocked at ${params.stage}: changed_scopes=${scopeKeys.size} exceeds max_scopes=${config.maxScopes}.`,
-      remediation: `Agrupa cambios por ámbito funcional (máximo ${config.maxScopes} scopes por commit).`,
+        `Git atomicity guard blocked at ${params.stage}: changed_scopes=${scopeKeys.size} exceeds max_scopes=${config.maxScopes}. ` +
+        `scope_files=${scopeBreakdown}.`,
+      remediation:
+        `Agrupa cambios por ámbito funcional (máximo ${config.maxScopes} scopes por commit). ` +
+        `scopes_detectados=[${sortedScopes.join(', ')}]. ` +
+        `Sugerencia split: git restore --staged . && ${suggestedScopeAdds} && git commit -m "<tipo>: <scope>".`
+        + (atomicSlicesRemediation ? ` ${atomicSlicesRemediation}` : ''),
     });
   }
 
