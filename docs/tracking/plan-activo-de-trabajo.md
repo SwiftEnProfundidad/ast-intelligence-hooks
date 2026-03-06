@@ -3334,12 +3334,29 @@
     - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts`
     - `npm run -s typecheck`
 
-- 🚧 PUMUKI-248: Alinear la suite de notificaciones con la arquitectura nueva, separando tests por payload, config y runner macOS para que acompañen el refactor sin volver a concentrar opacidad en un solo archivo.
+- ✅ PUMUKI-248: Alinear la suite de notificaciones con la arquitectura nueva, separando tests por payload, config y runner macOS para que acompañen el refactor sin volver a concentrar opacidad en un solo archivo.
+  - Resultado (2026-03-06):
+    - la suite monolítica `scripts/__tests__/framework-menu-system-notifications.test.ts` desaparece y se divide en cuatro entradas revisables:
+      - `scripts/__tests__/framework-menu-system-notifications-payloads.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-config.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - cada pieza queda alineada con el código refactorizado:
+      - `payloads` cubre títulos, subtítulos, traducción y remediación;
+      - `config` cubre persistencia, `muteUntil`, disable y selección del diálogo;
+      - `runner macOS` cubre `osascript`, helper Swift flotante, fallback y botones;
+      - `lib` conserva un smoke mínimo de fachada pública para `unsupported-platform` y `muted`;
+    - el contrato funcional visible no cambia y el repo se mantiene limpio tras el corte.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-payloads.test.ts scripts/__tests__/framework-menu-system-notifications-config.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+
+- 🚧 PUMUKI-249: Separar el bloque de tests `framework-menu-consumer-runtime` y `framework-menu-consumer-preflight` por responsabilidad para que `scripts/**` quede completamente alineado con la arquitectura nueva.
   - Alcance:
-    - dividir `scripts/__tests__/framework-menu-system-notifications.test.ts` por responsabilidad;
-    - mantener el contrato público actual sin reintroducir duplicación;
-    - conservar el repo en estado limpio mientras se hace el corte.
+    - inventariar y dividir los casos de `runtime` y `preflight` por responsabilidad;
+    - extraer helpers compartidos de test si hace falta, sin reintroducir opacidad;
+    - mantener el repo limpio y con una sola task activa durante el corte.
   - Inventario inicial (2026-03-06):
-    - la implementación ya está separada en `payloads`, `config` y `runner macOS`;
-    - la suite aún vive en un único archivo y es el siguiente punto natural de limpieza;
-    - el worktree vuelve a estar limpio tras cerrar `PUMUKI-247`, así que podemos atacar este paso sin deuda arrastrada.
+    - el bloque de notificaciones ya quedó desacoplado en implementación y suite;
+    - el siguiente punto más denso del slice `scripts/**` ahora son los tests de `framework-menu-consumer-runtime` y `framework-menu-consumer-preflight`;
+    - con `PUMUKI-248` cerrada, podemos atacar este corte sobre un árbol limpio y validado.
