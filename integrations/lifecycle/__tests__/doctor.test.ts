@@ -238,12 +238,59 @@ test('runLifecycleDoctor usa process.cwd por defecto y conserva metadatos de lif
     );
 
     assert.equal(report.packageVersion, getCurrentPumukiVersion());
+    assert.equal(report.version.effective, getCurrentPumukiVersion());
+    assert.equal(report.version.runtime, getCurrentPumukiVersion());
+    assert.equal(report.version.consumerInstalled, null);
+    assert.equal(report.version.lifecycleInstalled, '6.3.11');
+    assert.equal(report.version.driftFromRuntime, false);
+    assert.equal(report.version.driftFromLifecycleInstalled, true);
+    assert.match(report.version.driftWarning ?? '', /lifecycle=6\.3\.11/i);
+    assert.equal(
+      report.version.alignmentCommand,
+      `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && npx --yes --package pumuki@${getCurrentPumukiVersion()} pumuki install`
+    );
+    assert.equal(report.version.pathExecutionHazard, false);
+    assert.equal(report.version.pathExecutionWarning, null);
+    assert.equal(report.version.pathExecutionWorkaroundCommand, null);
     assert.equal(report.lifecycleState.installed, 'true');
     assert.equal(report.lifecycleState.version, '6.3.11');
     assert.equal(report.lifecycleState.hooks, 'pre-commit,pre-push');
     assert.equal(report.lifecycleState.installedAt, '2026-02-17T00:00:00.000Z');
     assert.equal(git.resolveRepoRootCalls.length >= 1, true);
     assert.equal(realpathSync(git.resolveRepoRootCalls[0] ?? defaultCwd), realpathSync(defaultCwd));
+  });
+});
+
+test('runLifecycleDoctor expone warning y workaround cuando repoRoot contiene el separador de PATH', async () => {
+  await withTempDir('pumuki:doctor-path-hazard-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: '6.3.11',
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.version.pathExecutionHazard, true);
+    assert.match(report.version.pathExecutionWarning ?? '', /rompe PATH/i);
+    assert.equal(
+      report.version.pathExecutionWorkaroundCommand,
+      process.platform === 'win32'
+        ? 'node .\\node_modules\\pumuki\\bin\\pumuki.js'
+        : 'node ./node_modules/pumuki/bin/pumuki.js'
+    );
+    assert.equal(
+      report.version.alignmentCommand,
+      process.platform === 'win32'
+        ? `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && node .\\node_modules\\pumuki\\bin\\pumuki.js install`
+        : `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && node ./node_modules/pumuki/bin/pumuki.js install`
+    );
   });
 });
 

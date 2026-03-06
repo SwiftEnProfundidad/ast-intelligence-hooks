@@ -1,16 +1,27 @@
 import { createHash } from 'node:crypto';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { setTimeout as sleepTimer } from 'node:timers/promises';
 import { isSeverityAtLeast, type Severity } from '../../core/rules/Severity';
 import type { GateScope } from '../git/runPlatformGateFacts';
 import { runPlatformGate } from '../git/runPlatformGate';
+import { resolveFactsForGateScope } from '../git/runPlatformGateFacts';
 import { resolvePolicyForStage, type ResolvedStagePolicy } from '../gate/stagePolicies';
 import { readEvidence } from '../evidence/readEvidence';
 import type { AiEvidenceV2_1, SnapshotFinding } from '../evidence/schema';
-import { GitService } from '../git/GitService';
+import { GitService, type IGitService } from '../git/GitService';
+import type { Fact } from '../../core/facts/Fact';
+import { ensureRuntimeArtifactsIgnored } from './artifacts';
 import {
   emitAuditSummaryNotificationFromEvidence,
   emitGateBlockedNotification,
 } from '../notifications/emitAuditSummaryNotification';
+import { runPolicyReconcile } from './policyReconcile';
+import {
+  buildLifecycleAlignmentCommand,
+  resolvePumukiVersionMetadata,
+  type PumukiVersionMetadata,
+} from './packageInfo';
 
 export type LifecycleWatchStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 export type LifecycleWatchScope = 'workingTree' | 'staged' | 'repoAndStaged' | 'repo';
@@ -29,6 +40,8 @@ export type LifecycleWatchTickResult = {
   totalFindings: number;
   findingsAtOrAboveThreshold: number;
   topCodes: ReadonlyArray<string>;
+  changedFiles: ReadonlyArray<string>;
+  evaluatedFiles: ReadonlyArray<string>;
   notification:
     | 'sent'
     | 'disabled'
@@ -43,6 +56,15 @@ export type LifecycleWatchTickResult = {
 export type LifecycleWatchResult = {
   command: 'pumuki watch';
   repoRoot: string;
+  version: {
+    effective: string;
+    runtime: string;
+    consumerInstalled: string | null;
+    source: PumukiVersionMetadata['source'];
+    driftFromRuntime: boolean;
+    driftWarning: string | null;
+    alignmentCommand: string | null;
+  };
   stage: LifecycleWatchStage;
   scope: LifecycleWatchScope;
   intervalMs: number;
@@ -61,14 +83,32 @@ type LifecycleWatchDependencies = {
   readChangeToken: (repoRoot: string) => string;
   resolvePolicyForStage: (stage: LifecycleWatchStage) => ResolvedStagePolicy;
   runPlatformGate: typeof runPlatformGate;
+  resolveFactsForGateScope: typeof resolveFactsForGateScope;
   readEvidence: (repoRoot: string) => AiEvidenceV2_1 | undefined;
+  ensureRuntimeArtifactsIgnored: (repoRoot: string) => void;
   emitAuditSummaryNotificationFromEvidence: typeof emitAuditSummaryNotificationFromEvidence;
   emitGateBlockedNotification: typeof emitGateBlockedNotification;
+  runPolicyReconcile: typeof runPolicyReconcile;
+  resolvePumukiVersionMetadata: (params?: { repoRoot?: string }) => PumukiVersionMetadata;
   nowMs: () => number;
   sleep: (ms: number) => Promise<void>;
 };
 
 const defaultGitService = new GitService();
+
+class RepoScopedGitService extends GitService implements IGitService {
+  constructor(private readonly repoRoot: string) {
+    super();
+  }
+
+  override runGit(args: ReadonlyArray<string>, cwd?: string): string {
+    return super.runGit(args, cwd ?? this.repoRoot);
+  }
+
+  override resolveRepoRoot(): string {
+    return this.repoRoot;
+  }
+}
 
 const defaultDependencies: LifecycleWatchDependencies = {
   resolveRepoRoot: () => defaultGitService.resolveRepoRoot(),
@@ -76,9 +116,18 @@ const defaultDependencies: LifecycleWatchDependencies = {
     defaultGitService.runGit(['status', '--porcelain=v1', '--untracked-files=all'], repoRoot),
   resolvePolicyForStage: (stage) => resolvePolicyForStage(stage),
   runPlatformGate,
+  resolveFactsForGateScope,
   readEvidence,
+  ensureRuntimeArtifactsIgnored: (repoRoot) => {
+    try {
+      ensureRuntimeArtifactsIgnored(repoRoot);
+    } catch {
+    }
+  },
   emitAuditSummaryNotificationFromEvidence,
   emitGateBlockedNotification,
+  runPolicyReconcile,
+  resolvePumukiVersionMetadata,
   nowMs: () => Date.now(),
   sleep: async (ms) => {
     await sleepTimer(ms);
@@ -97,13 +146,78 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   SDD_SESSION_INVALID: 'Refresca la sesión SDD y vuelve a intentar.',
   OPENSPEC_MISSING: 'Instala OpenSpec y reintenta la validación.',
   MCP_ENTERPRISE_RECEIPT_MISSING: 'Genera el receipt enterprise de MCP antes de continuar.',
+  MANIFEST_MUTATION_DETECTED:
+    'Validación no debe mutar package.json/lockfiles. Revisa wiring y realiza upgrades solo con comando explícito.',
 };
+
+const WATCH_POLICY_RECONCILE_CODES = new Set<string>([
+  'SKILLS_PLATFORM_COVERAGE_INCOMPLETE_HIGH',
+  'SKILLS_SCOPE_COMPLIANCE_INCOMPLETE_HIGH',
+  'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE',
+  'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING',
+  'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE',
+]);
 
 const THRESHOLD_TO_SEVERITY: Record<LifecycleWatchSeverityThreshold, Severity> = {
   critical: 'CRITICAL',
   high: 'ERROR',
   medium: 'WARN',
   low: 'INFO',
+};
+
+const WATCH_MANIFEST_GUARD_FILES = [
+  'package.json',
+  'package-lock.json',
+  'pnpm-lock.yaml',
+  'yarn.lock',
+] as const;
+
+type WatchManifestGuardEntry = {
+  relativePath: (typeof WATCH_MANIFEST_GUARD_FILES)[number];
+  absolutePath: string;
+  existed: boolean;
+  contents: string;
+};
+
+const captureWatchManifestGuardSnapshot = (
+  repoRoot: string
+): Array<WatchManifestGuardEntry> =>
+  WATCH_MANIFEST_GUARD_FILES.map((relativePath) => {
+    const absolutePath = join(repoRoot, relativePath);
+    const existed = existsSync(absolutePath);
+    return {
+      relativePath,
+      absolutePath,
+      existed,
+      contents: existed ? readFileSync(absolutePath, 'utf8') : '',
+    };
+  });
+
+const restoreWatchManifestGuardSnapshot = (
+  snapshot: ReadonlyArray<WatchManifestGuardEntry>
+): Array<string> => {
+  const mutated: Array<string> = [];
+  for (const entry of snapshot) {
+    const existsNow = existsSync(entry.absolutePath);
+    if (entry.existed) {
+      if (!existsNow) {
+        writeFileSync(entry.absolutePath, entry.contents, 'utf8');
+        mutated.push(entry.relativePath);
+        continue;
+      }
+      const current = readFileSync(entry.absolutePath, 'utf8');
+      if (current !== entry.contents) {
+        writeFileSync(entry.absolutePath, entry.contents, 'utf8');
+        mutated.push(entry.relativePath);
+      }
+      continue;
+    }
+    if (existsNow) {
+      unlinkSync(entry.absolutePath);
+      mutated.push(entry.relativePath);
+    }
+  }
+  return Array.from(new Set(mutated));
 };
 
 const toGateScope = (scope: LifecycleWatchScope): GateScope => {
@@ -148,6 +262,24 @@ const toTopCodes = (findings: ReadonlyArray<SnapshotFinding>): ReadonlyArray<str
   return codes;
 };
 
+const toSortedUniquePaths = (paths: ReadonlyArray<string>): ReadonlyArray<string> =>
+  [...new Set(paths.map((path) => path.trim()).filter((path) => path.length > 0))].sort();
+
+const collectChangedFilesFromFacts = (facts: ReadonlyArray<Fact>): ReadonlyArray<string> =>
+  toSortedUniquePaths(
+    facts.filter((fact) => fact.kind === 'FileChange').map((fact) => fact.path)
+  );
+
+const collectEvaluatedFilesFromFacts = (facts: ReadonlyArray<Fact>): ReadonlyArray<string> => {
+  const fromContent = toSortedUniquePaths(
+    facts.filter((fact) => fact.kind === 'FileContent').map((fact) => fact.path)
+  );
+  if (fromContent.length > 0) {
+    return fromContent;
+  }
+  return collectChangedFilesFromFacts(facts);
+};
+
 const toFirstCause = (params: {
   evidence: AiEvidenceV2_1 | undefined;
   matchedFindings: ReadonlyArray<SnapshotFinding>;
@@ -188,6 +320,13 @@ export const runLifecycleWatch = async (
     ...dependencies,
   };
   const repoRoot = params?.repoRoot ?? activeDependencies.resolveRepoRoot();
+  const repoGitService = new RepoScopedGitService(repoRoot);
+  const versionMetadata = activeDependencies.resolvePumukiVersionMetadata({ repoRoot });
+  const driftFromRuntime = versionMetadata.resolvedVersion !== versionMetadata.runtimeVersion;
+  const driftWarning = driftFromRuntime
+    ? `Version drift detectado: effective=${versionMetadata.resolvedVersion} runtime=${versionMetadata.runtimeVersion}. ` +
+      'Actualiza el consumer para alinear el binario local con @latest y evitar diagnósticos inconsistentes.'
+    : null;
   const stage = params?.stage ?? 'PRE_COMMIT';
   const scope = params?.scope ?? 'workingTree';
   const intervalMs = Math.max(250, Math.trunc(params?.intervalMs ?? 3000));
@@ -195,6 +334,8 @@ export const runLifecycleWatch = async (
   const severityThreshold = params?.severityThreshold ?? 'high';
   const thresholdSeverity = THRESHOLD_TO_SEVERITY[severityThreshold];
   const notifyEnabled = params?.notifyEnabled !== false;
+  const autoPolicyReconcileEnabled = process.env.PUMUKI_WATCH_POLICY_AUTO_RECONCILE !== '0';
+  activeDependencies.ensureRuntimeArtifactsIgnored(repoRoot);
   const maxIterations =
     typeof params?.maxIterations === 'number' && params.maxIterations > 0
       ? Math.trunc(params.maxIterations)
@@ -220,6 +361,8 @@ export const runLifecycleWatch = async (
     totalFindings: 0,
     findingsAtOrAboveThreshold: 0,
     topCodes: [],
+    changedFiles: [],
+    evaluatedFiles: [],
     notification: 'not-evaluated',
   };
 
@@ -235,28 +378,119 @@ export const runLifecycleWatch = async (
         tick: ticks,
         changed,
         evaluated: false,
+        changedFiles: [],
+        evaluatedFiles: [],
         notification: 'not-evaluated',
       };
       params?.onTick?.(lastTick);
     } else {
       evaluations += 1;
-      const resolvedPolicy = activeDependencies.resolvePolicyForStage(stage);
-      const gateExitCode = await activeDependencies.runPlatformGate({
-        policy: resolvedPolicy.policy,
-        policyTrace: resolvedPolicy.trace,
-        scope: toGateScope(scope),
+      const gateScope = toGateScope(scope);
+      const facts = await activeDependencies.resolveFactsForGateScope({
+        scope: gateScope,
+        git: repoGitService,
       });
-      const evidence = activeDependencies.readEvidence(repoRoot);
-      const allFindings = evidence?.snapshot.findings ?? [];
-      const matchedFindings = allFindings.filter((finding) =>
-        isSeverityAtLeast(finding.severity, thresholdSeverity)
-      );
-      const rawGateOutcome =
-        evidence?.snapshot.outcome ??
-        (gateExitCode !== 0 ? 'BLOCK' : 'NO_EVIDENCE');
-      const gateOutcome =
-        rawGateOutcome === 'PASS' ? 'ALLOW' : rawGateOutcome;
-      const topCodes = toTopCodes(matchedFindings);
+      const changedFiles = collectChangedFilesFromFacts(facts);
+      const evaluatedFiles = collectEvaluatedFilesFromFacts(facts);
+      const scopeHasFileDelta = changedFiles.length > 0 || evaluatedFiles.length > 0;
+      const runEvaluation = async (
+        resolvedPolicy: ResolvedStagePolicy
+      ): Promise<{
+        gateExitCode: number;
+        evidence: AiEvidenceV2_1 | undefined;
+        allFindings: ReadonlyArray<SnapshotFinding>;
+        matchedFindings: ReadonlyArray<SnapshotFinding>;
+        gateOutcome: 'BLOCK' | 'WARN' | 'ALLOW' | 'NO_EVIDENCE';
+        topCodes: ReadonlyArray<string>;
+      }> => {
+        const manifestSnapshot = captureWatchManifestGuardSnapshot(repoRoot);
+        let gateExitCode = await activeDependencies.runPlatformGate({
+          policy: resolvedPolicy.policy,
+          policyTrace: resolvedPolicy.trace,
+          scope: gateScope,
+          silent: true,
+          services: {
+            git: repoGitService,
+          },
+        });
+        const evidence = activeDependencies.readEvidence(repoRoot);
+        const allFindingsBase = evidence?.snapshot.findings ?? [];
+        const matchedFindingsBase = allFindingsBase.filter((finding) =>
+          isSeverityAtLeast(finding.severity, thresholdSeverity)
+        );
+        const manifestMutations = restoreWatchManifestGuardSnapshot(manifestSnapshot);
+        const manifestMutationFinding: SnapshotFinding | null =
+          manifestMutations.length > 0
+            ? {
+                ruleId: 'governance.manifest.no-silent-mutation',
+                severity: 'ERROR',
+                code: 'MANIFEST_MUTATION_DETECTED',
+                message:
+                  `Unexpected manifest mutation detected during watch and reverted: ${manifestMutations.join(', ')}.`,
+                file: manifestMutations[0] ?? 'package.json',
+                matchedBy: 'LifecycleWatch',
+                source: 'skills.backend.runtime-hygiene',
+              }
+            : null;
+        const allFindings = manifestMutationFinding
+          ? [...allFindingsBase, manifestMutationFinding]
+          : allFindingsBase;
+        const matchedFindings = manifestMutationFinding
+          ? [...matchedFindingsBase, manifestMutationFinding]
+          : matchedFindingsBase;
+        const rawGateOutcome =
+          evidence?.snapshot.outcome ??
+          (gateExitCode !== 0 ? 'BLOCK' : 'NO_EVIDENCE');
+        const gateOutcome = manifestMutationFinding
+          ? 'BLOCK'
+          : rawGateOutcome === 'PASS'
+            ? 'ALLOW'
+            : rawGateOutcome;
+        if (manifestMutationFinding) {
+          gateExitCode = 1;
+          process.stderr.write(
+            `[pumuki][watch-manifest-guard] unexpected manifest mutation detected and reverted: ${manifestMutations.join(', ')}\n`
+          );
+        }
+        const topCodes = toTopCodes(matchedFindings);
+        return {
+          gateExitCode,
+          evidence,
+          allFindings,
+          matchedFindings,
+          gateOutcome,
+          topCodes,
+        };
+      };
+
+      let evaluation = await runEvaluation(activeDependencies.resolvePolicyForStage(stage));
+      if (autoPolicyReconcileEnabled && evaluation.gateExitCode !== 0) {
+        const findingCodes = new Set<string>([
+          ...evaluation.allFindings.map((finding) => finding.code),
+          ...((evaluation.evidence?.ai_gate.violations ?? []).map((violation) => violation.code)),
+        ]);
+        const shouldAttemptAutoReconcile = [...findingCodes].some((code) =>
+          WATCH_POLICY_RECONCILE_CODES.has(code)
+        );
+        if (shouldAttemptAutoReconcile) {
+          const reconcile = activeDependencies.runPolicyReconcile({
+            repoRoot,
+            strict: true,
+            apply: true,
+          });
+          if (reconcile.autofix.status === 'APPLIED') {
+            evaluation = await runEvaluation(activeDependencies.resolvePolicyForStage(stage));
+          }
+        }
+      }
+      const {
+        gateExitCode,
+        evidence,
+        allFindings,
+        matchedFindings,
+        gateOutcome,
+        topCodes,
+      } = evaluation;
       const signature = toNotificationSignature({
         stage,
         gateOutcome,
@@ -321,7 +555,7 @@ export const runLifecycleWatch = async (
 
       lastTick = {
         tick: ticks,
-        changed,
+        changed: scopeHasFileDelta,
         evaluated: true,
         stage,
         scope,
@@ -332,6 +566,8 @@ export const runLifecycleWatch = async (
         totalFindings: allFindings.length,
         findingsAtOrAboveThreshold: matchedFindings.length,
         topCodes,
+        changedFiles,
+        evaluatedFiles,
         notification,
         ...(notificationDeliveryReason
           ? { notificationDeliveryReason }
@@ -346,6 +582,17 @@ export const runLifecycleWatch = async (
       return {
         command: 'pumuki watch',
         repoRoot,
+        version: {
+          effective: versionMetadata.resolvedVersion,
+          runtime: versionMetadata.runtimeVersion,
+          consumerInstalled: versionMetadata.consumerInstalledVersion,
+          source: versionMetadata.source,
+          driftFromRuntime,
+          driftWarning,
+          alignmentCommand: driftFromRuntime
+            ? buildLifecycleAlignmentCommand(versionMetadata.runtimeVersion)
+            : null,
+        },
         stage,
         scope,
         intervalMs,

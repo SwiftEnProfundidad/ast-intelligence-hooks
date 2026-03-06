@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import {
+  buildLifecycleVersionReport,
   getCurrentPumukiPackageName,
   getCurrentPumukiVersion,
   resolvePumukiVersionMetadata,
@@ -90,5 +91,72 @@ test('resolvePumukiVersionMetadata expone source/runtime/install de forma explí
     assert.equal(installed.consumerInstalledVersion, '8.8.8');
     assert.equal(installed.runtimeVersion, fallback.runtimeVersion);
     assert.equal(installed.resolvedVersion, '8.8.8');
+  });
+});
+
+test('buildLifecycleVersionReport expone drift entre runtime, consumer y lifecycle de forma explícita', async () => {
+  await withTempDir('pumuki-package-info-report-', async (repoRoot) => {
+    const packageRoot = join(repoRoot, 'node_modules', getCurrentPumukiPackageName());
+    mkdirSync(packageRoot, { recursive: true });
+    writeFileSync(
+      join(packageRoot, 'package.json'),
+      JSON.stringify({ name: getCurrentPumukiPackageName(), version: '8.8.8' }, null, 2),
+      'utf8'
+    );
+
+    const report = buildLifecycleVersionReport({
+      repoRoot,
+      lifecycleVersion: '7.7.7',
+    });
+
+    assert.equal(report.effective, '8.8.8');
+    assert.equal(report.runtime, getCurrentPumukiVersion());
+    assert.equal(report.consumerInstalled, '8.8.8');
+    assert.equal(report.lifecycleInstalled, '7.7.7');
+    assert.equal(report.source, 'consumer-node-modules');
+    assert.equal(report.driftFromRuntime, true);
+    assert.equal(report.driftFromLifecycleInstalled, true);
+    assert.match(report.driftWarning ?? '', /effective=8\.8\.8/i);
+    assert.match(report.driftWarning ?? '', /runtime=/i);
+    assert.match(report.driftWarning ?? '', /lifecycle=7\.7\.7/i);
+    assert.equal(
+      report.alignmentCommand,
+      `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && npx --yes --package pumuki@${getCurrentPumukiVersion()} pumuki install`
+    );
+    assert.equal(report.pathExecutionHazard, false);
+    assert.equal(report.pathExecutionWarning, null);
+    assert.equal(report.pathExecutionWorkaroundCommand, null);
+  });
+});
+
+test('buildLifecycleVersionReport usa workaround local cuando la ruta del repo contiene el separador de PATH', async () => {
+  await withTempDir('pumuki:package-info-path-hazard-', async (repoRoot) => {
+    const packageRoot = join(repoRoot, 'node_modules', getCurrentPumukiPackageName());
+    mkdirSync(packageRoot, { recursive: true });
+    writeFileSync(
+      join(packageRoot, 'package.json'),
+      JSON.stringify({ name: getCurrentPumukiPackageName(), version: '8.8.8' }, null, 2),
+      'utf8'
+    );
+
+    const report = buildLifecycleVersionReport({
+      repoRoot,
+      lifecycleVersion: '7.7.7',
+    });
+
+    assert.equal(report.pathExecutionHazard, true);
+    assert.match(report.pathExecutionWarning ?? '', /rompe PATH/i);
+    assert.equal(
+      report.pathExecutionWorkaroundCommand,
+      process.platform === 'win32'
+        ? 'node .\\node_modules\\pumuki\\bin\\pumuki.js'
+        : 'node ./node_modules/pumuki/bin/pumuki.js'
+    );
+    assert.equal(
+      report.alignmentCommand,
+      process.platform === 'win32'
+        ? `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && node .\\node_modules\\pumuki\\bin\\pumuki.js install`
+        : `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && node ./node_modules/pumuki/bin/pumuki.js install`
+    );
   });
 });

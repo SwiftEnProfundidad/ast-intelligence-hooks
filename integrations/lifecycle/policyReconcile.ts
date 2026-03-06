@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import {
   readLifecyclePolicyValidationSnapshot,
   type LifecyclePolicyValidationSnapshot,
@@ -33,6 +33,13 @@ export type PolicyReconcileReport = {
   repoRoot: string;
   generatedAt: string;
   strictRequested: boolean;
+  applyRequested: boolean;
+  autofix: {
+    attempted: boolean;
+    status: 'SKIPPED' | 'APPLIED' | 'FAILED';
+    actions: string[];
+    details: string;
+  };
   summary: {
     total: number;
     blocking: number;
@@ -45,6 +52,13 @@ export type PolicyReconcileReport = {
   stages: LifecyclePolicyValidationSnapshot['stages'];
   drifts: PolicyReconcileDrift[];
 };
+
+const POLICY_AS_CODE_CONTRACT_PATH = '.pumuki/policy-as-code.json';
+const POLICY_AUTOFIX_DRIFT_CODES = new Set<PolicyReconcileDriftCode>([
+  'POLICY_STAGE_INVALID',
+  'POLICY_STAGE_UNSIGNED_OR_COMPUTED',
+  'POLICY_STAGE_SIGNATURE_MISSING',
+]);
 
 const REQUIRED_SKILL_IDS = [
   'windsurf-rules-ios',
@@ -79,14 +93,88 @@ const hasRequiredSkillInLock = (params: {
   });
 };
 
+const toContractSource = (
+  value: LifecyclePolicyValidationSnapshot['stages'][keyof LifecyclePolicyValidationSnapshot['stages']]['source']
+): 'default' | 'skills.policy' | 'hard-mode' => {
+  if (value === 'skills.policy' || value === 'hard-mode') {
+    return value;
+  }
+  return 'default';
+};
+
+const tryApplyPolicyAutofix = (params: {
+  report: Omit<PolicyReconcileReport, 'applyRequested' | 'autofix'>;
+}): PolicyReconcileReport['autofix'] => {
+  const actionableDrifts = params.report.drifts.filter((drift) => POLICY_AUTOFIX_DRIFT_CODES.has(drift.code));
+  if (actionableDrifts.length === 0) {
+    return {
+      attempted: false,
+      status: 'SKIPPED',
+      actions: [],
+      details: 'No policy-as-code drift eligible for autofix.',
+    };
+  }
+
+  const signatures = {
+    PRE_COMMIT: params.report.stages.PRE_COMMIT.signature,
+    PRE_PUSH: params.report.stages.PRE_PUSH.signature,
+    CI: params.report.stages.CI.signature,
+  };
+  if (!signatures.PRE_COMMIT || !signatures.PRE_PUSH || !signatures.CI) {
+    return {
+      attempted: true,
+      status: 'FAILED',
+      actions: [],
+      details: 'Cannot autofix: missing computed signatures for one or more stages.',
+    };
+  }
+
+  const contractPath = resolve(params.report.repoRoot, POLICY_AS_CODE_CONTRACT_PATH);
+  const contract = {
+    version: '1.0',
+    source: toContractSource(params.report.stages.PRE_COMMIT.source),
+    signatures: {
+      PRE_COMMIT: signatures.PRE_COMMIT,
+      PRE_PUSH: signatures.PRE_PUSH,
+      CI: signatures.CI,
+    },
+    expires_at: '2999-01-01T00:00:00.000Z',
+  };
+
+  try {
+    mkdirSync(dirname(contractPath), { recursive: true });
+    writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`, 'utf8');
+    return {
+      attempted: true,
+      status: 'APPLIED',
+      actions: ['WRITE_POLICY_AS_CODE_CONTRACT'],
+      details: `Wrote ${POLICY_AS_CODE_CONTRACT_PATH} with deterministic stage signatures.`,
+    };
+  } catch (error) {
+    return {
+      attempted: true,
+      status: 'FAILED',
+      actions: [],
+      details: `Autofix failed: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+};
+
 export const runPolicyReconcile = (params?: {
   repoRoot?: string;
   now?: () => Date;
   strict?: boolean;
+  apply?: boolean;
 }): PolicyReconcileReport => {
   const repoRoot = resolve(params?.repoRoot ?? process.cwd());
   const now = params?.now ?? (() => new Date());
   const strictRequested = params?.strict === true;
+  const applyRequested = params?.apply === true;
+  const strictEnvPrevious = process.env.PUMUKI_POLICY_STRICT;
+  if (strictRequested) {
+    process.env.PUMUKI_POLICY_STRICT = '1';
+  }
+  try {
   const drifts: PolicyReconcileDrift[] = [];
 
   const agentsPath = resolve(repoRoot, 'AGENTS.md');
@@ -284,7 +372,7 @@ export const runPolicyReconcile = (params?: {
   const warnings = drifts.filter((drift) => drift.severity === 'WARN').length;
   const infos = drifts.filter((drift) => drift.severity === 'INFO').length;
 
-  return {
+  const baseReport: Omit<PolicyReconcileReport, 'applyRequested' | 'autofix'> = {
     command: 'pumuki policy reconcile',
     repoRoot,
     generatedAt: now().toISOString(),
@@ -301,4 +389,49 @@ export const runPolicyReconcile = (params?: {
     stages: snapshot.stages,
     drifts,
   };
+  if (!applyRequested) {
+    return {
+      ...baseReport,
+      applyRequested: false,
+      autofix: {
+        attempted: false,
+        status: 'SKIPPED',
+        actions: [],
+        details: 'Autofix not requested.',
+      },
+    };
+  }
+
+  const autofix = tryApplyPolicyAutofix({
+    report: baseReport,
+  });
+
+  if (autofix.status !== 'APPLIED') {
+    return {
+      ...baseReport,
+      applyRequested: true,
+      autofix,
+    };
+  }
+
+  const reevaluated = runPolicyReconcile({
+    repoRoot,
+    now,
+    strict: strictRequested,
+    apply: false,
+  });
+  return {
+    ...reevaluated,
+    applyRequested: true,
+    autofix,
+  };
+  } finally {
+    if (strictRequested) {
+      if (typeof strictEnvPrevious === 'string') {
+        process.env.PUMUKI_POLICY_STRICT = strictEnvPrevious;
+      } else {
+        delete process.env.PUMUKI_POLICY_STRICT;
+      }
+    }
+  }
 };

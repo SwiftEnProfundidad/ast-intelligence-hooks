@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
 import { runPlatformGate } from '../git/runPlatformGate';
+import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
 import {
   doctorHasBlockingIssues,
   runLifecycleDoctor,
@@ -167,6 +168,7 @@ type ParsedArgs = {
   analyticsMarkdownOutputPath?: string;
   policyCommand?: PolicyCommand;
   policyStrict?: boolean;
+  policyApply?: boolean;
 };
 
 const HELP_TEXT = `
@@ -188,10 +190,10 @@ Pumuki lifecycle commands:
   pumuki adapter install --agent=<name> [--dry-run] [--json]
   pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]
   pumuki analytics hotspots diagnose [--json]
-  pumuki policy reconcile [--strict] [--json]
+  pumuki policy reconcile [--strict] [--apply] [--json]
   pumuki sdd status [--json]
   pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]
-  pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]
+  pumuki sdd session --open --change=<change-id|auto> [--ttl-minutes=<n>] [--json]
   pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]
   pumuki sdd session --close [--json]
   pumuki sdd sync-docs [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
@@ -783,6 +785,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       throw new Error(`Unsupported policy subcommand "${subcommandRaw}".\n\n${HELP_TEXT}`);
     }
     let policyStrict = false;
+    let policyApply = false;
     const policyFlagsOffset =
       typeof firstArg === 'string' && !firstArg.startsWith('--') ? 2 : 1;
     for (const arg of argv.slice(policyFlagsOffset)) {
@@ -794,6 +797,10 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         policyStrict = true;
         continue;
       }
+      if (arg === '--apply') {
+        policyApply = true;
+        continue;
+      }
       throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
     }
     return {
@@ -802,6 +809,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       json,
       policyCommand: 'reconcile',
       policyStrict,
+      policyApply,
     };
   }
 
@@ -1474,7 +1482,28 @@ const printDoctorReport = (
   remoteCiDiagnostics?: RemoteCiDiagnostics
 ): void => {
   writeInfo(`[pumuki] repo: ${report.repoRoot}`);
-  writeInfo(`[pumuki] package version: ${report.packageVersion}`);
+  writeInfo(`[pumuki] effective version: ${report.version.effective}`);
+  writeInfo(`[pumuki] runtime version: ${report.version.runtime}`);
+  writeInfo(
+    `[pumuki] consumer installed version: ${report.version.consumerInstalled ?? 'unknown'}`
+  );
+  writeInfo(
+    `[pumuki] lifecycle installed version: ${report.version.lifecycleInstalled ?? 'unknown'}`
+  );
+  if (report.version.driftWarning) {
+    writeInfo(`[pumuki] version drift: ${report.version.driftWarning}`);
+    if (report.version.alignmentCommand) {
+      writeInfo(`[pumuki] version remediation: ${report.version.alignmentCommand}`);
+    }
+  }
+  if (report.version.pathExecutionWarning) {
+    writeInfo(`[pumuki] execution warning: ${report.version.pathExecutionWarning}`);
+    if (report.version.pathExecutionWorkaroundCommand) {
+      writeInfo(
+        `[pumuki] execution workaround: ${report.version.pathExecutionWorkaroundCommand} <command>`
+      );
+    }
+  }
   writeInfo(
     `[pumuki] hooks path: ${report.hooksDirectory} (${report.hooksDirectoryResolution})`
   );
@@ -1527,6 +1556,8 @@ const printDoctorReport = (
 const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->mcp->ai_gate->ai_evidence';
 const PRE_WRITE_INSTALL_REMEDIATION_COMMAND =
   'npx --yes --package pumuki@latest pumuki install';
+const PRE_WRITE_POLICY_RECONCILE_COMMAND =
+  'npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json';
 
 type PreWriteValidationEnvelope = {
   sdd: ReturnType<typeof evaluateSddPolicy>;
@@ -1585,6 +1616,12 @@ const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual.',
   EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
   EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura unevaluated=0 y coverage_ratio=1.',
+  EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
+    'No hay active_rule_ids para plataforma de código detectada. Reconcilia policy/skills en modo estricto y revalida PRE_WRITE.',
+  EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING:
+    'Reconcilia policy/skills en modo estricto y materializa reglas críticas (p.ej. skills.ios.critical-test-quality).',
+  EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE:
+    'Reconcilia policy/skills en modo estricto para completar enforcement crítico transversal.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
     'Completa contrato skills/policy para el stage actual y vuelve a validar.',
   EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
@@ -1607,6 +1644,15 @@ const PRE_WRITE_OPENSPEC_AUTOREMEDIABLE_CODES = new Set<string>([
   'OPENSPEC_VERSION_UNSUPPORTED',
   'OPENSPEC_PROJECT_MISSING',
 ]);
+const PRE_WRITE_POLICY_RECONCILE_CODES = new Set<string>([
+  'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES',
+  'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+  'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE',
+]);
+const PRE_WRITE_ATOMIC_SLICE_CODES = new Set<string>([
+  'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT',
+  'EVIDENCE_PREWRITE_WORKTREE_WARN',
+]);
 
 const resolvePreWriteNextAction = (params: {
   sdd: ReturnType<typeof evaluateSddPolicy>;
@@ -1620,6 +1666,31 @@ const resolvePreWriteNextAction = (params: {
   }
   if (!params.aiGate || params.aiGate.allowed) {
     return undefined;
+  }
+  const policyReconcileViolation = params.aiGate.violations.find((violation) =>
+    PRE_WRITE_POLICY_RECONCILE_CODES.has(violation.code)
+  );
+  if (policyReconcileViolation) {
+    return {
+      reason: policyReconcileViolation.code,
+      command: PRE_WRITE_POLICY_RECONCILE_COMMAND,
+    };
+  }
+  const atomicSliceViolation = params.aiGate.violations.find((violation) =>
+    PRE_WRITE_ATOMIC_SLICE_CODES.has(violation.code)
+  );
+  if (atomicSliceViolation) {
+    const plan = collectWorktreeAtomicSlices({
+      repoRoot: params.aiGate.repo_state.repo_root,
+      maxSlices: 3,
+      maxFilesPerSlice: 4,
+    });
+    const firstSliceCommand = plan.slices[0]?.staged_command ?? 'git add -p';
+    return {
+      reason: atomicSliceViolation.code,
+      command:
+        `${firstSliceCommand} && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json`,
+    };
   }
   const hasMcpViolation = params.aiGate.violations.some((violation) =>
     violation.code.startsWith('MCP_ENTERPRISE_RECEIPT_')
@@ -2049,9 +2120,29 @@ export const runLifecycleCli = async (
           );
         } else {
           writeInfo(`[pumuki] repo: ${status.repoRoot}`);
-          writeInfo(`[pumuki] package version: ${status.packageVersion}`);
+          writeInfo(`[pumuki] effective version: ${status.version.effective}`);
+          writeInfo(`[pumuki] runtime version: ${status.version.runtime}`);
+          writeInfo(
+            `[pumuki] consumer installed version: ${status.version.consumerInstalled ?? 'unknown'}`
+          );
+          writeInfo(
+            `[pumuki] lifecycle installed version: ${status.version.lifecycleInstalled ?? 'unknown'}`
+          );
+          if (status.version.driftWarning) {
+            writeInfo(`[pumuki] version drift: ${status.version.driftWarning}`);
+            if (status.version.alignmentCommand) {
+              writeInfo(`[pumuki] version remediation: ${status.version.alignmentCommand}`);
+            }
+          }
+          if (status.version.pathExecutionWarning) {
+            writeInfo(`[pumuki] execution warning: ${status.version.pathExecutionWarning}`);
+            if (status.version.pathExecutionWorkaroundCommand) {
+              writeInfo(
+                `[pumuki] execution workaround: ${status.version.pathExecutionWorkaroundCommand} <command>`
+              );
+            }
+          }
           writeInfo(`[pumuki] lifecycle installed: ${status.lifecycleState.installed ?? 'false'}`);
-          writeInfo(`[pumuki] lifecycle version: ${status.lifecycleState.version ?? 'unknown'}`);
           writeInfo(
             `[pumuki] hooks path: ${status.hooksDirectory} (${status.hooksDirectoryResolution})`
           );
@@ -2327,12 +2418,16 @@ export const runLifecycleCli = async (
           const report = runPolicyReconcile({
             repoRoot: process.cwd(),
             strict: parsed.policyStrict === true,
+            apply: parsed.policyApply === true,
           });
           if (parsed.json) {
             writeInfo(JSON.stringify(report, null, 2));
           } else {
             writeInfo(
-              `[pumuki][policy] reconcile status=${report.summary.status} total=${report.summary.total} blocking=${report.summary.blocking} warnings=${report.summary.warnings} strict_requested=${report.strictRequested ? 'yes' : 'no'}`
+              `[pumuki][policy] reconcile status=${report.summary.status} total=${report.summary.total} blocking=${report.summary.blocking} warnings=${report.summary.warnings} strict_requested=${report.strictRequested ? 'yes' : 'no'} apply_requested=${report.applyRequested ? 'yes' : 'no'}`
+            );
+            writeInfo(
+              `[pumuki][policy] autofix status=${report.autofix.status} attempted=${report.autofix.attempted ? 'yes' : 'no'} actions=${report.autofix.actions.length} details=${report.autofix.details}`
             );
             for (const drift of report.drifts) {
               writeInfo(
@@ -2417,7 +2512,7 @@ export const runLifecycleCli = async (
             }
           }
           const shouldEvaluateAiGate = result.stage === 'PRE_WRITE';
-          let aiGate = shouldEvaluateAiGate
+          let aiGate: ReturnType<typeof evaluateAiGate> | null = shouldEvaluateAiGate
             ? runEnterpriseAiGateCheck({
               repoRoot: process.cwd(),
               stage: result.stage,

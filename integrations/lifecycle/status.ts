@@ -1,6 +1,6 @@
 import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
-import { getCurrentPumukiVersion } from './packageInfo';
+import { buildLifecycleVersionReport } from './packageInfo';
 import {
   readLifecyclePolicyValidationSnapshot,
   type LifecyclePolicyValidationSnapshot,
@@ -10,6 +10,7 @@ import { readLifecycleState, type LifecycleState } from './state';
 export type LifecycleStatus = {
   repoRoot: string;
   packageVersion: string;
+  version: ReturnType<typeof buildLifecycleVersionReport>;
   lifecycleState: LifecycleState;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
   hooksDirectory: string;
@@ -27,11 +28,17 @@ export const readLifecycleStatus = (params?: {
   const repoRoot = git.resolveRepoRoot(cwd);
   const hooksDirectory = resolvePumukiHooksDirectory(repoRoot);
   const trackedNodeModulesCount = git.trackedNodeModulesPaths(repoRoot).length;
+  const lifecycleState = readLifecycleState(git, repoRoot);
+  const version = buildLifecycleVersionReport({
+    repoRoot,
+    lifecycleVersion: lifecycleState.version,
+  });
 
   return {
     repoRoot,
-    packageVersion: getCurrentPumukiVersion({ repoRoot }),
-    lifecycleState: readLifecycleState(git, repoRoot),
+    packageVersion: version.effective,
+    version,
+    lifecycleState,
     hookStatus: getPumukiHooksStatus(repoRoot),
     hooksDirectory: hooksDirectory.path,
     hooksDirectoryResolution: hooksDirectory.source,

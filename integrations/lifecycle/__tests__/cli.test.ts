@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 import type { LocalHotspotsReport } from '../analyticsHotspots';
+import { PUMUKI_CONFIG_KEYS } from '../constants';
 import { getCurrentPumukiPackageName, getCurrentPumukiVersion } from '../packageInfo';
 import { readLifecyclePolicyValidationSnapshot } from '../policyValidationSnapshot';
 import { resolveHotspotsSaasIngestionAuditPath } from '../saasIngestionAudit';
@@ -659,6 +660,7 @@ test('parseLifecycleCliArgs soporta policy reconcile', () => {
     json: true,
     policyCommand: 'reconcile',
     policyStrict: false,
+    policyApply: false,
   });
   assert.deepEqual(parseLifecycleCliArgs(['policy']), {
     command: 'policy',
@@ -666,6 +668,7 @@ test('parseLifecycleCliArgs soporta policy reconcile', () => {
     json: false,
     policyCommand: 'reconcile',
     policyStrict: false,
+    policyApply: false,
   });
   assert.deepEqual(parseLifecycleCliArgs(['policy', '--strict']), {
     command: 'policy',
@@ -673,6 +676,15 @@ test('parseLifecycleCliArgs soporta policy reconcile', () => {
     json: false,
     policyCommand: 'reconcile',
     policyStrict: true,
+    policyApply: false,
+  });
+  assert.deepEqual(parseLifecycleCliArgs(['policy', '--strict', '--apply']), {
+    command: 'policy',
+    purgeArtifacts: false,
+    json: false,
+    policyCommand: 'reconcile',
+    policyStrict: true,
+    policyApply: true,
   });
 });
 
@@ -877,6 +889,15 @@ test('runLifecycleCli watch --json delega en runLifecycleWatch y devuelve payloa
         runLifecycleWatch: async () => ({
           command: 'pumuki watch',
           repoRoot: '/repo',
+          version: {
+            effective: '6.3.45',
+            runtime: '6.3.45',
+            consumerInstalled: '6.3.45',
+            source: 'consumer-node-modules',
+            driftFromRuntime: false,
+            driftWarning: null,
+            alignmentCommand: null,
+          },
           stage: 'PRE_COMMIT',
           scope: 'workingTree',
           intervalMs: 3000,
@@ -900,6 +921,8 @@ test('runLifecycleCli watch --json delega en runLifecycleWatch y devuelve payloa
             totalFindings: 2,
             findingsAtOrAboveThreshold: 1,
             topCodes: ['RULE_BLOCK'],
+            changedFiles: ['src/a.ts'],
+            evaluatedFiles: ['src/a.ts'],
             notification: 'sent',
           },
         }),
@@ -911,15 +934,106 @@ test('runLifecycleCli watch --json delega en runLifecycleWatch y devuelve payloa
       stage?: string;
       ticks?: number;
       notificationsSent?: number;
-      lastTick?: { notification?: string };
+      lastTick?: {
+        notification?: string;
+        changedFiles?: string[];
+        evaluatedFiles?: string[];
+      };
     };
     assert.equal(payload.command, 'pumuki watch');
     assert.equal(payload.stage, 'PRE_COMMIT');
     assert.equal(payload.ticks, 1);
     assert.equal(payload.notificationsSent, 1);
     assert.equal(payload.lastTick?.notification, 'sent');
+    assert.deepEqual(payload.lastTick?.changedFiles, ['src/a.ts']);
+    assert.deepEqual(payload.lastTick?.evaluatedFiles, ['src/a.ts']);
   } finally {
     process.stdout.write = originalStdoutWrite;
+  }
+});
+
+test('runLifecycleCli status imprime remediation de versión cuando detecta drift', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    mkdirSync(join(repo, 'node_modules', getCurrentPumukiPackageName()), { recursive: true });
+    writeFileSync(
+      join(repo, 'node_modules', getCurrentPumukiPackageName(), 'package.json'),
+      JSON.stringify({ name: getCurrentPumukiPackageName(), version: '6.3.47' }, null, 2),
+      'utf8'
+    );
+    runGit(repo, ['config', '--local', PUMUKI_CONFIG_KEYS.installed, 'true']);
+    runGit(repo, ['config', '--local', PUMUKI_CONFIG_KEYS.version, '6.3.46']);
+    runGit(repo, ['config', '--local', PUMUKI_CONFIG_KEYS.hooks, 'pre-commit,pre-push']);
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['status']);
+    assert.equal(code, 0);
+    const output = printed.join('\n');
+    assert.match(output, /version drift:/i);
+    assert.match(output, /version remediation:/i);
+    assert.match(output, new RegExp(`pumuki@${getCurrentPumukiVersion().replace(/\./g, '\\.')}`));
+    assert.match(output, /pumuki install/i);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli status imprime warning y workaround cuando la ruta del repo rompe PATH', async () => {
+  const repo = join(
+    tmpdir(),
+    `pumuki:cli-path-hazard-${Date.now()}-${Math.random().toString(16).slice(2)}`
+  );
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    mkdirSync(repo, { recursive: true });
+    runGit(repo, ['init', '-b', 'main']);
+    runGit(repo, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repo, ['config', 'user.name', 'Pumuki Test']);
+    writeFileSync(join(repo, '.gitignore'), 'node_modules/\n', 'utf8');
+    writeFileSync(join(repo, 'README.md'), '# fixture\n', 'utf8');
+    runGit(repo, ['add', '.']);
+    runGit(repo, ['commit', '-m', 'chore: fixture']);
+    mkdirSync(join(repo, 'node_modules', getCurrentPumukiPackageName()), { recursive: true });
+    writeFileSync(
+      join(repo, 'node_modules', getCurrentPumukiPackageName(), 'package.json'),
+      JSON.stringify({ name: getCurrentPumukiPackageName(), version: getCurrentPumukiVersion() }, null, 2),
+      'utf8'
+    );
+    runGit(repo, ['config', '--local', PUMUKI_CONFIG_KEYS.installed, 'true']);
+    runGit(repo, ['config', '--local', PUMUKI_CONFIG_KEYS.version, getCurrentPumukiVersion()]);
+    runGit(repo, ['config', '--local', PUMUKI_CONFIG_KEYS.hooks, 'pre-commit,pre-push']);
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['status']);
+    assert.equal(code, 0);
+    const output = printed.join('\n');
+    assert.match(output, /execution warning:/i);
+    assert.match(output, /rompe PATH/i);
+    assert.match(output, /execution workaround:/i);
+    assert.match(output, /node .*node_modules.*pumuki.*bin.*pumuki\.js/i);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
   }
 });
 
@@ -1640,6 +1754,379 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
   }
 });
 
+test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile estricto cuando falta regla crítica iOS', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const changeId = 'prewrite-ios-critical-gap';
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-ios-critical-gap']);
+    writeFileSync(
+      join(repo, 'package.json'),
+      JSON.stringify({ name: 'fixture', version: '1.0.0' }, null, 2),
+      'utf8'
+    );
+    mkdirSync(join(repo, 'openspec', 'changes', changeId), { recursive: true });
+    writeFileSync(join(repo, 'openspec', 'changes', changeId, 'proposal.md'), '# proposal\n', 'utf8');
+    openSddSession({ cwd: repo, changeId, ttlMinutes: 60 });
+    writeMcpAiGateReceipt({
+      repoRoot: repo,
+      stage: 'PRE_WRITE',
+      status: 'ALLOWED',
+      allowed: true,
+    });
+
+    const evidence = {
+      version: '2.1' as const,
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_WRITE' as const,
+        outcome: 'PASS' as const,
+        rules_coverage: {
+          stage: 'PRE_WRITE' as const,
+          active_rule_ids: ['skills.ios.no-force-unwrap'],
+          evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      ledger: [],
+      platforms: {
+        ios: {
+          detected: true,
+          confidence: 'HIGH' as const,
+        },
+      },
+      rulesets: [
+        {
+          platform: 'skills' as const,
+          bundle: 'ios-guidelines@1.0.0',
+          hash: 'skills-ios-hash',
+        },
+        {
+          platform: 'skills' as const,
+          bundle: 'ios-concurrency-guidelines@1.0.0',
+          hash: 'skills-ios-concurrency-hash',
+        },
+        {
+          platform: 'skills' as const,
+          bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+          hash: 'skills-ios-swiftui-hash',
+        },
+      ],
+      human_intent: null,
+      ai_gate: {
+        status: 'ALLOWED' as const,
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED' as const,
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      repo_state: {
+        repo_root: repo,
+        git: {
+          available: true,
+          branch: 'feature/prewrite-ios-critical-gap',
+          upstream: null,
+          ahead: 0,
+          behind: 0,
+          dirty: false,
+          staged: 0,
+          unstaged: 0,
+        },
+        lifecycle: {
+          installed: true,
+          package_version: getCurrentPumukiVersion({ repoRoot: repo }),
+          lifecycle_version: getCurrentPumukiVersion({ repoRoot: repo }),
+          hooks: {
+            pre_commit: 'managed' as const,
+            pre_push: 'managed' as const,
+          },
+        },
+      },
+    };
+    const payloadHash = computeEvidencePayloadHash(evidence);
+    const evidenceWithChain = {
+      ...evidence,
+      evidence_chain: {
+        algorithm: 'sha256' as const,
+        previous_payload_hash: null,
+        payload_hash: payloadHash,
+        sequence: 1,
+      },
+    };
+    writeFileSync(join(repo, '.ai_evidence.json'), JSON.stringify(evidenceWithChain, null, 2), 'utf8');
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+        runPlatformGate: async () => 0,
+      })
+    );
+    assert.equal(code, 1);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      sdd?: { decision?: { code?: string; allowed?: boolean } };
+      ai_gate?: { allowed?: boolean; violations?: Array<{ code?: string }> };
+      next_action?: { reason?: string; command?: string };
+    };
+    assert.equal(payload.sdd?.decision?.allowed, true);
+    assert.equal(payload.sdd?.decision?.code, 'ALLOWED');
+    assert.equal(payload.ai_gate?.allowed, false);
+    assert.equal(
+      (payload.ai_gate?.violations ?? []).some(
+        (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+      ),
+      true
+    );
+    assert.equal(payload.next_action?.reason, 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING');
+    assert.equal(
+      payload.next_action?.command,
+      'npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json'
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile cuando active_rule_ids está vacío para código', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const changeId = 'prewrite-active-rule-ids-empty';
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-active-rule-ids-empty']);
+    writeFileSync(
+      join(repo, 'package.json'),
+      JSON.stringify({ name: 'fixture', version: '1.0.0' }, null, 2),
+      'utf8'
+    );
+    mkdirSync(join(repo, 'openspec', 'changes', changeId), { recursive: true });
+    writeFileSync(join(repo, 'openspec', 'changes', changeId, 'proposal.md'), '# proposal\n', 'utf8');
+    openSddSession({ cwd: repo, changeId, ttlMinutes: 60 });
+    writeMcpAiGateReceipt({
+      repoRoot: repo,
+      stage: 'PRE_WRITE',
+      status: 'ALLOWED',
+      allowed: true,
+    });
+
+    const evidence = {
+      version: '2.1' as const,
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_WRITE' as const,
+        outcome: 'PASS' as const,
+        rules_coverage: {
+          stage: 'PRE_WRITE' as const,
+          active_rule_ids: [],
+          evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 0,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      ledger: [],
+      platforms: {},
+      rulesets: [
+        {
+          platform: 'skills' as const,
+          bundle: 'backend-guidelines@1.0.0',
+          hash: 'skills-backend-hash',
+        },
+      ],
+      human_intent: null,
+      ai_gate: {
+        status: 'ALLOWED' as const,
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED' as const,
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      repo_state: {
+        repo_root: repo,
+        git: {
+          available: true,
+          branch: 'feature/prewrite-active-rule-ids-empty',
+          upstream: null,
+          ahead: 0,
+          behind: 0,
+          dirty: false,
+          staged: 0,
+          unstaged: 0,
+        },
+        lifecycle: {
+          installed: true,
+          package_version: getCurrentPumukiVersion({ repoRoot: repo }),
+          lifecycle_version: getCurrentPumukiVersion({ repoRoot: repo }),
+          hooks: {
+            pre_commit: 'managed' as const,
+            pre_push: 'managed' as const,
+          },
+        },
+      },
+    };
+    const payloadHash = computeEvidencePayloadHash(evidence);
+    const evidenceWithChain = {
+      ...evidence,
+      evidence_chain: {
+        algorithm: 'sha256' as const,
+        previous_payload_hash: null,
+        payload_hash: payloadHash,
+        sequence: 1,
+      },
+    };
+    writeFileSync(join(repo, '.ai_evidence.json'), JSON.stringify(evidenceWithChain, null, 2), 'utf8');
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+        runPlatformGate: async () => 0,
+      })
+    );
+    assert.equal(code, 1);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      sdd?: { decision?: { code?: string; allowed?: boolean } };
+      ai_gate?: { allowed?: boolean; violations?: Array<{ code?: string }> };
+      next_action?: { reason?: string; command?: string };
+    };
+    assert.equal(payload.sdd?.decision?.allowed, true);
+    assert.equal(payload.sdd?.decision?.code, 'ALLOWED');
+    assert.equal(payload.ai_gate?.allowed, false);
+    assert.equal(
+      (payload.ai_gate?.violations ?? []).some(
+        (item) => item.code === 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES'
+      ),
+      true
+    );
+    assert.equal(payload.next_action?.reason, 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES');
+    assert.equal(
+      payload.next_action?.command,
+      'npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json'
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE expone next_action con slice atómico cuando el worktree supera el umbral', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const changeId = 'prewrite-worktree-atomic-slice';
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-worktree-atomic-slice']);
+    writeFileSync(
+      join(repo, 'package.json'),
+      JSON.stringify({ name: 'fixture', version: '1.0.0' }, null, 2),
+      'utf8'
+    );
+    mkdirSync(join(repo, 'openspec', 'changes', changeId), { recursive: true });
+    writeFileSync(join(repo, 'openspec', 'changes', changeId, 'proposal.md'), '# proposal\n', 'utf8');
+    openSddSession({ cwd: repo, changeId, ttlMinutes: 60 });
+    writePreWriteEvidence(repo, 'feature/prewrite-worktree-atomic-slice');
+    writeMcpAiGateReceipt({
+      repoRoot: repo,
+      stage: 'PRE_WRITE',
+      status: 'ALLOWED',
+      allowed: true,
+    });
+
+    for (let index = 0; index < 30; index += 1) {
+      writeFileSync(join(repo, `dirty-file-${index}.txt`), `line-${index}`, 'utf8');
+    }
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+        runPlatformGate: async () => 0,
+      })
+    );
+    assert.equal(code, 1);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      ai_gate?: { allowed?: boolean; violations?: Array<{ code?: string }> };
+      next_action?: { reason?: string; command?: string };
+    };
+    assert.equal(payload.ai_gate?.allowed, false);
+    assert.equal(
+      (payload.ai_gate?.violations ?? []).some(
+        (item) => item.code === 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT'
+      ),
+      true
+    );
+    assert.equal(payload.next_action?.reason, 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT');
+    assert.equal((payload.next_action?.command ?? '').startsWith('git add -- '), true);
+    assert.equal(
+      (payload.next_action?.command ?? '').includes(
+        'pumuki sdd validate --stage=PRE_WRITE --json'
+      ),
+      true
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('runLifecycleCli sdd sync-docs dry-run devuelve diff sin modificar el archivo canónico', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
@@ -2048,6 +2535,41 @@ test('runLifecycleCli sdd evidence scaffold genera payload determinista con esce
   }
 });
 
+test('runLifecycleCli sdd evidence sugiere una ruta válida cuando --test-output apunta fuera del repo', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printedErrors: string[] = [];
+  const originalStderrWrite = process.stderr.write.bind(process.stderr);
+
+  try {
+    process.chdir(repo);
+    writePreWriteEvidence(repo, 'main');
+    process.stderr.write = ((chunk: unknown): boolean => {
+      printedErrors.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stderr.write;
+
+    const code = await runLifecycleCli([
+      'sdd',
+      'evidence',
+      '--scenario-id=BDD-001',
+      '--test-command=npm run test:unit -- --grep BDD-001',
+      '--test-status=passed',
+      '--test-output=/tmp/flux-athlete-detail-phase29-test.log',
+      '--json',
+    ]);
+    assert.equal(code, 1);
+    assert.match(
+      printedErrors[printedErrors.length - 1] ?? '',
+      /Try "--test-output=\.pumuki\/runtime\/flux-athlete-detail-phase29-test\.log"/i
+    );
+  } finally {
+    process.stderr.write = originalStderrWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('runLifecycleCli sdd state-sync dry-run proyecta estado desde evidencia y no escribe board', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
@@ -2222,6 +2744,49 @@ test('runLifecycleCli policy reconcile --strict --json devuelve PASS con contrat
     } else {
       delete process.env.PUMUKI_POLICY_STRICT;
     }
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli policy reconcile --strict --apply --json converge a PASS con autofix determinista', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const previousPolicyStrict = process.env.PUMUKI_POLICY_STRICT;
+
+  try {
+    process.chdir(repo);
+    delete process.env.PUMUKI_POLICY_STRICT;
+    writePolicyReconcileInputs(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['policy', 'reconcile', '--strict', '--apply', '--json']);
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      strictRequested?: boolean;
+      applyRequested?: boolean;
+      summary?: { status?: string; blocking?: number };
+      autofix?: { attempted?: boolean; status?: string; actions?: string[] };
+    };
+    assert.equal(payload.strictRequested, true);
+    assert.equal(payload.applyRequested, true);
+    assert.equal(payload.summary?.status, 'PASS');
+    assert.equal(payload.summary?.blocking, 0);
+    assert.equal(payload.autofix?.attempted, true);
+    assert.equal(payload.autofix?.status, 'APPLIED');
+    assert.equal((payload.autofix?.actions ?? []).includes('WRITE_POLICY_AS_CODE_CONTRACT'), true);
+  } finally {
+    if (typeof previousPolicyStrict === 'string') {
+      process.env.PUMUKI_POLICY_STRICT = previousPolicyStrict;
+    } else {
+      delete process.env.PUMUKI_POLICY_STRICT;
+    }
+    process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });
   }

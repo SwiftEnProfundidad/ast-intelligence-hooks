@@ -4,7 +4,7 @@ import { readEvidenceResult } from '../evidence/readEvidence';
 import { resolvePolicyForStage } from '../gate/stagePolicies';
 import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
-import { getCurrentPumukiVersion } from './packageInfo';
+import { buildLifecycleVersionReport, getCurrentPumukiVersion } from './packageInfo';
 import {
   readLifecyclePolicyValidationSnapshot,
   type LifecyclePolicyValidationSnapshot,
@@ -72,6 +72,7 @@ export type DoctorCompatibilityContract = {
 export type LifecycleDoctorReport = {
   repoRoot: string;
   packageVersion: string;
+  version: ReturnType<typeof buildLifecycleVersionReport>;
   lifecycleState: LifecycleState;
   trackedNodeModulesPaths: ReadonlyArray<string>;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
@@ -724,10 +725,15 @@ export const runLifecycleDoctor = (params?: {
       hookStatus,
     })
     : undefined;
+  const version = buildLifecycleVersionReport({
+    repoRoot,
+    lifecycleVersion: lifecycleState.version,
+  });
 
   return {
     repoRoot,
-    packageVersion: getCurrentPumukiVersion({ repoRoot }),
+    packageVersion: version.effective,
+    version,
     lifecycleState,
     trackedNodeModulesPaths,
     hookStatus,

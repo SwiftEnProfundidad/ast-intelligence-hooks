@@ -182,3 +182,21 @@ test('runPolicyReconcile --strict devuelve PASS con contrato firmado + strict ac
     });
   });
 });
+
+test('runPolicyReconcile --strict --apply genera contrato y converge a PASS sin tocar entorno externo', async () => {
+  await withFixtureRepo('pumuki-policy-reconcile-strict-apply-', async (repoRoot) => {
+    writeValidAgentsAndSkillsLock(repoRoot);
+    const report = runPolicyReconcile({
+      repoRoot,
+      strict: true,
+      apply: true,
+    });
+    assert.equal(report.strictRequested, true);
+    assert.equal(report.applyRequested, true);
+    assert.equal(report.autofix.attempted, true);
+    assert.equal(report.autofix.status, 'APPLIED');
+    assert.equal(report.autofix.actions.includes('WRITE_POLICY_AS_CODE_CONTRACT'), true);
+    assert.equal(report.summary.status, 'PASS');
+    assert.equal(report.summary.blocking, 0);
+  });
+});
