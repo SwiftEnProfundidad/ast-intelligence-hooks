@@ -3416,13 +3416,40 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-252: Seguir cerrando `scripts/**` separando `framework-menu-matrix-canary` y `framework-menu-evidence-summary` para que dependan de piezas mas pequeñas y revisables.
+- ✅ PUMUKI-252: Seguir cerrando `scripts/**` separando `framework-menu-matrix-canary` y `framework-menu-evidence-summary` para que dependan de piezas mas pequeñas y revisables.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-matrix-canary-lib.ts` deja de mezclar tipos, resolucion de escenarios y lectura de evidencia, y queda reducido a `136` lineas de orquestacion;
+    - la logica de `matrix-canary` se separa en:
+      - `scripts/framework-menu-matrix-canary-types.ts`
+      - `scripts/framework-menu-matrix-canary-scenario.ts`
+      - `scripts/framework-menu-matrix-canary-evidence.ts`
+      - `scripts/framework-menu-matrix-canary-lib.ts`
+    - `scripts/framework-menu-evidence-summary-lib.ts` deja de concentrar tipos, lectura y formateo, y queda reducido a `7` lineas de fachada publica;
+    - la logica de `evidence-summary` se separa en:
+      - `scripts/framework-menu-evidence-summary-types.ts`
+      - `scripts/framework-menu-evidence-summary-read.ts`
+      - `scripts/framework-menu-evidence-summary-format.ts`
+      - `scripts/framework-menu-evidence-summary-lib.ts`
+    - las suites legacy desaparecen y quedan sustituidas por tests por responsabilidad:
+      - `scripts/__tests__/framework-menu-matrix-canary-scenario.test.ts`
+      - `scripts/__tests__/framework-menu-matrix-canary-runner.test.ts`
+      - `scripts/__tests__/framework-menu-evidence-summary-read.test.ts`
+      - `scripts/__tests__/framework-menu-evidence-summary-format.test.ts`
+    - el corte queda validado con `9` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`14` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-matrix-canary-lib.ts scripts/framework-menu-matrix-canary-types.ts scripts/framework-menu-matrix-canary-scenario.ts scripts/framework-menu-matrix-canary-evidence.ts scripts/framework-menu-evidence-summary-lib.ts scripts/framework-menu-evidence-summary-types.ts scripts/framework-menu-evidence-summary-read.ts scripts/framework-menu-evidence-summary-format.ts scripts/__tests__/framework-menu-matrix-canary-scenario.test.ts scripts/__tests__/framework-menu-matrix-canary-runner.test.ts scripts/__tests__/framework-menu-evidence-summary-read.test.ts scripts/__tests__/framework-menu-evidence-summary-format.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-canary-scenario.test.ts scripts/__tests__/framework-menu-matrix-canary-runner.test.ts scripts/__tests__/framework-menu-evidence-summary-read.test.ts scripts/__tests__/framework-menu-evidence-summary-format.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-253: Seguir cerrando `scripts/**` separando `watch-consumer-backlog-lib` y `reconcile-consumer-backlog-issues-lib` para que el bloque de backlog consumers quede tan revisable como el framework menu.
   - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-matrix-canary-lib.ts` y `scripts/framework-menu-evidence-summary-lib.ts`;
-    - extraer helpers si el corte se mantiene limpio, preservando contratos visibles de canary y resumen de evidencia;
+    - inventariar el peso real de `scripts/watch-consumer-backlog-lib.ts` y `scripts/reconcile-consumer-backlog-issues-lib.ts`;
+    - extraer piezas pequeñas si el corte se mantiene limpio, preservando el contrato visible del watcher y la reconciliacion de issues;
     - mantener el repo limpio y con una sola task activa durante todo el corte.
   - Inventario inicial (2026-03-06):
-    - tras cerrar `PUMUKI-251`, las mayores piezas del framework menu pendientes dentro de `scripts/**` quedan en:
-      - `scripts/framework-menu-matrix-canary-lib.ts` (`260` lineas)
-      - `scripts/framework-menu-evidence-summary-lib.ts` (`258` lineas)
-    - ambas comparten superficie funcional del framework menu y son el siguiente corte logico antes de tocar piezas mas grandes como `watch-consumer-backlog-lib.ts` o `reconcile-consumer-backlog-issues-lib.ts`.
+    - tras cerrar `PUMUKI-252`, las mayores piezas restantes de `scripts/**` quedan en:
+      - `scripts/reconcile-consumer-backlog-issues-lib.ts` (`651` lineas)
+      - `scripts/watch-consumer-backlog-lib.ts` (`465` lineas)
+    - ambas comparten superficie funcional de backlog consumers y forman el siguiente corte logico antes de entrar en utilidades mas pequeñas como `gitflow-cli-lib.ts` o `legacy-parity-report-lib.ts`.
