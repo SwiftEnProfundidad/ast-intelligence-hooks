@@ -3,13 +3,12 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import {
-  applyDialogChoice,
   buildSystemNotificationsConfigFromSelection,
   isMutedAt,
+  normalizeSystemNotificationsConfig,
   persistSystemNotificationsConfig,
   readSystemNotificationsConfig,
-} from '../framework-menu-system-notifications-config';
-import { BLOCKED_DIALOG_DISABLE, BLOCKED_DIALOG_MUTE_30 } from '../framework-menu-system-notifications-types';
+} from '../framework-menu-system-notifications-config-state';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 
 test('buildSystemNotificationsConfigFromSelection construye config macOS habilitada', () => {
@@ -18,6 +17,23 @@ test('buildSystemNotificationsConfigFromSelection construye config macOS habilit
     channel: 'macos',
     blockedDialogEnabled: true,
   });
+});
+
+test('normalizeSystemNotificationsConfig conserva muteUntil y blockedDialogEnabled', () => {
+  assert.deepEqual(
+    normalizeSystemNotificationsConfig({
+      enabled: true,
+      channel: 'linux',
+      muteUntil: '2026-03-05T10:00:00.000Z',
+      blockedDialogEnabled: false,
+    }),
+    {
+      enabled: true,
+      channel: 'macos',
+      muteUntil: '2026-03-05T10:00:00.000Z',
+      blockedDialogEnabled: false,
+    }
+  );
 });
 
 test('readSystemNotificationsConfig habilita notificaciones por defecto cuando no hay config', async () => {
@@ -83,44 +99,4 @@ test('isMutedAt distingue muteUntil válido y expirado', () => {
     ),
     false
   );
-});
-
-test('applyDialogChoice permite silenciar 30 min', async () => {
-  await withTempDir('pumuki-notifications-dialog-mute30-', async (repoRoot) => {
-    const nowMs = Date.parse('2026-03-04T12:00:00.000Z');
-    applyDialogChoice({
-      repoRoot,
-      config: {
-        enabled: true,
-        channel: 'macos',
-        blockedDialogEnabled: true,
-      },
-      button: BLOCKED_DIALOG_MUTE_30,
-      nowMs,
-    });
-
-    const config = readSystemNotificationsConfig(repoRoot);
-    assert.equal(config.enabled, true);
-    assert.ok(config.muteUntil);
-    assert.equal(Date.parse(config.muteUntil ?? ''), nowMs + 30 * 60_000);
-  });
-});
-
-test('applyDialogChoice permite desactivar notificaciones', async () => {
-  await withTempDir('pumuki-notifications-dialog-disable-', async (repoRoot) => {
-    applyDialogChoice({
-      repoRoot,
-      config: {
-        enabled: true,
-        channel: 'macos',
-        blockedDialogEnabled: true,
-      },
-      button: BLOCKED_DIALOG_DISABLE,
-      nowMs: Date.parse('2026-03-04T12:00:00.000Z'),
-    });
-
-    const config = readSystemNotificationsConfig(repoRoot);
-    assert.equal(config.enabled, false);
-    assert.equal(config.muteUntil, undefined);
-  });
 });
