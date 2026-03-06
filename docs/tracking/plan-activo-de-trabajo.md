@@ -3669,20 +3669,44 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-263: Atacar `framework-menu-system-notifications-macos.ts` separando runner Swift, fallback AppleScript y ejecucion de comandos para seguir cerrando `scripts/**` con el repo todavía limpio.
+- ✅ PUMUKI-263: Atacar `framework-menu-system-notifications-macos.ts` separando runner Swift, fallback AppleScript y ejecucion de comandos para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos.ts` deja de mezclar el source Swift flotante, el fallback AppleScript y la ejecución de comandos;
+    - la lógica queda separada en:
+      - `scripts/framework-menu-system-notifications-macos-runner.ts`
+      - `scripts/framework-menu-system-notifications-macos-applescript.ts`
+      - `scripts/framework-menu-system-notifications-macos-swift.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      se mantiene intacta;
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-swift.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - el corte queda validado con `14` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-macos.ts scripts/framework-menu-system-notifications-macos-runner.ts scripts/framework-menu-system-notifications-macos-applescript.ts scripts/framework-menu-system-notifications-macos-swift.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-264: Atacar `framework-menu-system-notifications-config.ts` separando persistencia, estado de mute y aplicación de decisiones para cerrar el bloque de notificaciones extremo a extremo.
   - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos.ts` y de la suite que lo cubre;
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-config.ts` y de la suite que lo cubre;
     - separar, como minimo:
-      - el source/configuración del dialogo Swift flotante,
-      - el fallback AppleScript,
-      - la ejecución de comandos y manejo de outputs;
-    - mantener estable la fachada pública usada por `framework-menu-system-notifications-lib.ts`;
+      - persistencia del fichero de configuración,
+      - lectura/normalización del estado,
+      - cálculo del estado de silencio y aplicación de decisiones del diálogo;
+    - mantener estable la fachada pública usada por `framework-menu-system-notifications-lib.ts` y `framework-menu-system-notifications-macos.ts`;
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
   - Inventario inicial (2026-03-07):
-    - tras cerrar `PUMUKI-262`, `scripts/framework-menu-system-notifications-macos.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
-    - actualmente tiene `537` lineas;
-    - ya convive con:
-      - `scripts/framework-menu-system-notifications-config.ts`
-      - `scripts/framework-menu-system-notifications-payloads.ts`
-      - `scripts/framework-menu-system-notifications-lib.ts`
-      lo que hace viable separar el runner macOS sin romper la interfaz pública.
+    - tras cerrar `PUMUKI-263`, el siguiente bloque natural del sistema de notificaciones es `scripts/framework-menu-system-notifications-config.ts`;
+    - actualmente convive con:
+      - `scripts/framework-menu-system-notifications-lib.ts` (`75` líneas),
+      - `scripts/framework-menu-system-notifications-config.ts` (`101` líneas),
+      - `scripts/framework-menu-system-notifications-macos.ts` (`125` líneas tras el corte),
+      lo que hace viable cerrar la superficie de notificaciones sin romper la interfaz pública.
