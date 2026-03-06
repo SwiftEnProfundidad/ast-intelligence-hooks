@@ -3603,16 +3603,37 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-260: Atacar `framework-menu-consumer-runtime-lib` separando orquestacion de acciones, render del summary legacy y composicion del menu para seguir cerrando `scripts/**` con el repo todavía limpio.
+- ✅ PUMUKI-260: Atacar `framework-menu-consumer-runtime-lib` separando orquestacion de acciones, render del summary legacy y composicion del menu para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-consumer-runtime-lib.ts` queda reducido a una fachada publica estable;
+    - la logica se separa en:
+      - `scripts/framework-menu-consumer-runtime-types.ts`
+      - `scripts/framework-menu-consumer-runtime-audit.ts`
+      - `scripts/framework-menu-consumer-runtime-menu.ts`
+      - `scripts/framework-menu-consumer-runtime-actions.ts`
+      - `scripts/framework-menu-consumer-runtime-lib.ts`
+    - la interfaz publica usada por los entrypoints del menu consumidor se mantiene intacta;
+    - el corte queda validado con `12` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`6` archivos tocados, `2` scopes).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-consumer-runtime-lib.ts scripts/framework-menu-consumer-runtime-types.ts scripts/framework-menu-consumer-runtime-audit.ts scripts/framework-menu-consumer-runtime-menu.ts scripts/framework-menu-consumer-runtime-actions.ts scripts/__tests__/framework-menu-consumer-runtime-actions.test.ts scripts/__tests__/framework-menu-consumer-runtime-notifications.test.ts scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-runtime-actions.test.ts scripts/__tests__/framework-menu-consumer-runtime-notifications.test.ts scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-261: Atacar `framework-menu-evidence-summary-read.ts` separando lectura de fichero, normalizacion del snapshot y extraccion de severidades para seguir cerrando `scripts/**` con el repo todavía limpio.
   - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-consumer-runtime-lib.ts` y de la suite que lo cubre;
+    - inventariar el peso real de `scripts/framework-menu-evidence-summary-read.ts` y de la suite que lo cubre;
     - separar, como minimo:
-      - ejecucion/orquestacion de acciones del menu,
-      - render del summary legacy y notificaciones asociadas,
-      - composicion del menu clasico/moderno;
-    - mantener estable la fachada publica usada por los entrypoints de menu consumidor;
+      - lectura del archivo de evidencia,
+      - normalizacion del payload,
+      - extraccion y reduccion por severidades;
+    - mantener estable la fachada publica usada por `framework-menu-evidence-summary-lib.ts`;
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
-  - Inventario inicial (2026-03-06):
-    - tras cerrar `PUMUKI-259`, `scripts/framework-menu-consumer-runtime-lib.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
-    - actualmente tiene `233` lineas;
-    - ya consume bloques previamente limpiados (`consumer-preflight`, `legacy-audit`, `ui-components`, `layout`, `system-notifications`), lo que hace viable separarlo sin romper su interfaz pública.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-260`, `scripts/framework-menu-evidence-summary-read.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
+    - actualmente tiene `200` lineas;
+    - ya convive con:
+      - `scripts/framework-menu-evidence-summary-format.ts`
+      - `scripts/framework-menu-evidence-summary-lib.ts`
+      lo que hace viable separar el parseo del summary sin romper la interfaz pública.
