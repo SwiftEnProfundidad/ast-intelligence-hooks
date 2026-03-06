@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): `PUMUKI-246` (saneado completo del `worktree` global mediante `11` commits atómicos; el guard `validation:self-worktree-hygiene` vuelve a `changed_files=0` y `changed_scopes=0`).
-- Task activa (`🚧`): `PUMUKI-247` (retomar el bloque de notificaciones operativas sobre un árbol limpio, separando `framework-menu-system-notifications-lib.ts` en payloads, configuración y runner macOS).
+- Última task cerrada (`✅`): `PUMUKI-247` (refactor completo del bloque de notificaciones operativas: `framework-menu-system-notifications-lib.ts` queda reducido a orquestación y se separan `payloads`, `config` y `runner macOS`, manteniendo la suite verde).
+- Task activa (`🚧`): `PUMUKI-248` (alinear la suite de notificaciones con la arquitectura nueva, separando tests por payload/config/runner sin volver a ensuciar el repo).
 - Pendiente priorizado (`⏳`): ninguno externo; los tres backlogs consumidores siguen en `0` abiertos.
 
 ## Historial resumido

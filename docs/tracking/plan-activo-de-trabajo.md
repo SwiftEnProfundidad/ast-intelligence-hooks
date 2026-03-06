@@ -3315,12 +3315,31 @@
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
     - `npm run -s validation:tracking-single-active`
 
-- 🚧 PUMUKI-247: Retomar `Corte G — notificaciones operativas` sobre un árbol limpio, separando `framework-menu-system-notifications-lib.ts` en payloads, configuración y runner macOS.
+- ✅ PUMUKI-247: Retomar `Corte G — notificaciones operativas` sobre un árbol limpio, separando `framework-menu-system-notifications-lib.ts` en payloads, configuración y runner macOS.
+  - Resultado (2026-03-06):
+    - el bloque de notificaciones deja de estar concentrado en un único archivo de `887` líneas;
+    - se separan tres piezas con responsabilidad clara:
+      - `scripts/framework-menu-system-notifications-payloads.ts`
+      - `scripts/framework-menu-system-notifications-config.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+    - `scripts/framework-menu-system-notifications-lib.ts` queda reducido a orquestación y re-export del contrato público;
+    - se mantiene el contrato funcional existente:
+      - payloads de bloqueo/evidencia/gitflow;
+      - configuración `enabled/muteUntil/blockedDialogEnabled`;
+      - diálogo flotante macOS con `Mantener activas`, `Silenciar 30 min` y `Desactivar`;
+      - tests de notificaciones en verde;
+      - `typecheck` en verde.
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-lib.ts scripts/framework-menu-system-notifications-types.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts`
+    - `npm run -s typecheck`
+
+- 🚧 PUMUKI-248: Alinear la suite de notificaciones con la arquitectura nueva, separando tests por payload, config y runner macOS para que acompañen el refactor sin volver a concentrar opacidad en un solo archivo.
   - Alcance:
-    - dividir el bloque de notificaciones en piezas más pequeñas y revisables;
-    - mantener el contrato actual de payload, mute, disable y modal flotante;
-    - reducir el peso del archivo principal sin introducir regresiones en el flujo de notificación.
+    - dividir `scripts/__tests__/framework-menu-system-notifications.test.ts` por responsabilidad;
+    - mantener el contrato público actual sin reintroducir duplicación;
+    - conservar el repo en estado limpio mientras se hace el corte.
   - Inventario inicial (2026-03-06):
-    - el slice de notificaciones ya no compite con `scripts/watch-consumer-backlog-fleet*`;
-    - el mayor peso vivo del área queda concentrado en `scripts/framework-menu-system-notifications-lib.ts`;
-    - el árbol limpio nos permite atacar este refactor sin volver a violar la higiene hard del repo.
+    - la implementación ya está separada en `payloads`, `config` y `runner macOS`;
+    - la suite aún vive en un único archivo y es el siguiente punto natural de limpieza;
+    - el worktree vuelve a estar limpio tras cerrar `PUMUKI-247`, así que podemos atacar este paso sin deuda arrastrada.
