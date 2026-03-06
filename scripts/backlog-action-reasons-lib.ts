@@ -1,32 +1,28 @@
-export type WatchActionReason =
-  | 'needs_issue'
-  | 'drift_closed_issue'
-  | 'heading_drift';
+import type {
+  BuildReconcileActionReasonsInput,
+  BuildWatchActionReasonsInput,
+  ReconcileActionReason,
+  WatchActionReason,
+} from './backlog-action-reasons-types';
 
-export type ReconcileActionReason =
-  | 'reference_changes'
-  | 'issue_changes'
-  | 'heading_changes'
-  | 'summary_updated'
-  | 'next_step_updated';
+export type {
+  BuildReconcileActionReasonsInput,
+  BuildWatchActionReasonsInput,
+  ReconcileActionReason,
+  WatchActionReason,
+} from './backlog-action-reasons-types';
 
-export const buildWatchActionRequiredReasons = (input: {
-  needsIssueCount: number;
-  driftClosedIssueCount: number;
-  headingDriftCount: number;
-}): ReadonlyArray<WatchActionReason> => [
+export const buildWatchActionRequiredReasons = (
+  input: BuildWatchActionReasonsInput
+): ReadonlyArray<WatchActionReason> => [
   ...(input.needsIssueCount > 0 ? (['needs_issue'] as const) : []),
   ...(input.driftClosedIssueCount > 0 ? (['drift_closed_issue'] as const) : []),
   ...(input.headingDriftCount > 0 ? (['heading_drift'] as const) : []),
 ];
 
-export const buildReconcileActionRequiredReasons = (input: {
-  referenceChangesCount: number;
-  issueChangesCount: number;
-  headingChangesCount: number;
-  summaryUpdated: boolean;
-  nextStepUpdated: boolean;
-}): ReadonlyArray<ReconcileActionReason> => [
+export const buildReconcileActionRequiredReasons = (
+  input: BuildReconcileActionReasonsInput
+): ReadonlyArray<ReconcileActionReason> => [
   ...(input.referenceChangesCount > 0 ? (['reference_changes'] as const) : []),
   ...(input.issueChangesCount > 0 ? (['issue_changes'] as const) : []),
   ...(input.headingChangesCount > 0 ? (['heading_changes'] as const) : []),

@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 import {
   mergeIdIssueMapRecords,
   parseIdIssueMapRecord,
+  parseIdIssueMapRecordFile,
   recordToIdIssueMap,
 } from '../backlog-id-issue-map-lib';
 
@@ -66,4 +70,27 @@ test('recordToIdIssueMap convierte record a ReadonlyMap', () => {
   assert.ok(map);
   assert.equal(map?.get('PUMUKI-001'), 100);
   assert.equal(map?.get('PUMUKI-INC-020'), 200);
+});
+
+test('parseIdIssueMapRecordFile lee y normaliza desde fichero', () => {
+  const tempDir = mkdtempSync(join(tmpdir(), 'backlog-id-issue-map-'));
+  const filePath = join(tempDir, 'map.json');
+  writeFileSync(
+    filePath,
+    JSON.stringify({
+      'PUMUKI-001': '101',
+      'FP-002': 202,
+    })
+  );
+
+  try {
+    const record = parseIdIssueMapRecordFile(filePath);
+
+    assert.deepEqual(record, {
+      'PUMUKI-001': 101,
+      'FP-002': 202,
+    });
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
 });
