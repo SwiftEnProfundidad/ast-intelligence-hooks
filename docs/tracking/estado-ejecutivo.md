@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): `PUMUKI-255` (el bloque `legacy-parity-report` ya separa normalización del payload, cálculo de dominancia y render markdown en módulos propios, con `5` tests focales en verde y `typecheck` en verde).
-- Task activa (`🚧`): `PUMUKI-256` (atacar `gitflow-cli-lib` separando parsing de estado Git, render de sugerencias y resolución de comandos para seguir limpiando `scripts/**` con el repo todavía limpio).
+- Última task cerrada (`✅`): `PUMUKI-256` (el bloque `gitflow-cli` ya separa snapshot Git, comandos/render CLI y fachada pública estable, con `14` tests focales en verde y `typecheck` en verde).
+- Task activa (`🚧`): `PUMUKI-257` (atacar `framework-menu-ui-components-lib` separando tokens, layout de panel y helpers de render para seguir cerrando `scripts/**` con el repo todavía limpio).
 - Pendiente priorizado (`⏳`): ninguno externo; los tres backlogs consumidores siguen en `0` abiertos.
 
 ## Historial resumido

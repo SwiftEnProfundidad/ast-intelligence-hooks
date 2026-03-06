@@ -3512,15 +3512,41 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-256: Atacar `gitflow-cli-lib` separando parsing de estado Git, render de sugerencias y resolución de comandos para seguir limpiando `scripts/**` con el repo todavía limpio.
+- ✅ PUMUKI-256: Atacar `gitflow-cli-lib` separando parsing de estado Git, render de sugerencias y resolución de comandos para seguir limpiando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-06):
+    - `scripts/gitflow-cli-lib.ts` deja de concentrar `263` lineas y queda reducido a una fachada publica estable;
+    - la logica de `gitflow-cli` se separa en:
+      - `scripts/gitflow-cli-types.ts`
+      - `scripts/gitflow-cli-snapshot.ts`
+      - `scripts/gitflow-cli-commands.ts`
+      - `scripts/gitflow-cli-lib.ts`
+    - la fachada publica mantiene estables los exports usados por:
+      - `scripts/gitflow.ts`
+      - `bin/gitflow`
+    - se anade cobertura focal por responsabilidad:
+      - `scripts/__tests__/gitflow-cli-commands.test.ts`
+      - `scripts/__tests__/gitflow-cli-snapshot.test.ts`
+      - `scripts/__tests__/gitflow-cli.test.ts` sigue cubriendo el bin end-to-end;
+    - el corte queda validado con `14` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`6` archivos tocados, `1` scope).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/gitflow-cli.test.ts scripts/__tests__/gitflow-cli-commands.test.ts scripts/__tests__/gitflow-cli-snapshot.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-257: Atacar `framework-menu-ui-components-lib` separando tokens, layout de panel y helpers de render para seguir cerrando `scripts/**` con el repo todavía limpio.
   - Alcance:
-    - inventariar el peso real de `scripts/gitflow-cli-lib.ts` y de su suite asociada;
-    - separar, como mínimo:
-      - parseo del estado Git,
-      - construcción de recomendaciones,
-      - render/salida CLI;
-    - mantener estable la fachada pública usada por los entrypoints GitFlow;
+    - inventariar el peso real de `scripts/framework-menu-ui-components-lib.ts` y de su suite asociada;
+    - separar, como minimo:
+      - resolucion de tokens y paleta,
+      - layout/panel width y bordes,
+      - helpers de render (`badge`, `section header`, `hint block`, etc.);
+    - mantener estable la fachada publica usada por:
+      - `scripts/framework-menu-advanced-view-lib.ts`
+      - `scripts/framework-menu-advanced-view-status.ts`
+      - `scripts/framework-menu-consumer-runtime-lib.ts`
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
   - Inventario inicial (2026-03-06):
-    - tras cerrar `PUMUKI-255`, `scripts/gitflow-cli-lib.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ámbito acotado;
-    - actualmente tiene `263` líneas y es el siguiente candidato natural para seguir limpiando el bloque sin abrir frentes nuevos.
+    - tras cerrar `PUMUKI-256`, `scripts/framework-menu-ui-components-lib.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ambito acotado;
+    - actualmente tiene `220` lineas;
+    - su suite asociada visible es `scripts/__tests__/framework-menu-ui-components.test.ts`.
