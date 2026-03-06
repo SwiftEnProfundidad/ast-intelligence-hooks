@@ -742,12 +742,36 @@ const shouldBlockFromFinding = (finding: Finding | undefined): boolean => {
   return finding.severity === 'ERROR' || finding.severity === 'CRITICAL';
 };
 
+const toSoftPreCommitSkillsFinding = (params: {
+  finding: Finding | undefined;
+  enabled: boolean;
+  observedCodePaths: ReadonlyArray<string>;
+}): Finding | undefined => {
+  if (!params.finding) {
+    return undefined;
+  }
+  if (!params.enabled || !shouldBlockFromFinding(params.finding)) {
+    return params.finding;
+  }
+  return {
+    ...params.finding,
+    severity: 'WARN',
+    code: `${params.finding.code}_SOFT_PRECOMMIT`,
+    message:
+      `${params.finding.message} ` +
+      `Soft-enforced at PRE_COMMIT for low-risk scope (observed_code_paths=${params.observedCodePaths.length}). ` +
+      'Strict enforcement remains active at PRE_PUSH/CI.',
+  };
+};
+
 export async function runPlatformGate(params: {
   policy: GatePolicy;
   auditMode?: 'gate' | 'engine';
   policyTrace?: ResolvedStagePolicy['trace'];
   scope: GateScope;
+  silent?: boolean;
   sddShortCircuit?: boolean;
+  sddDecisionOverride?: Pick<SddDecision, 'allowed' | 'code' | 'message'>;
   services?: Partial<GateServices>;
   dependencies?: Partial<GateDependencies>;
 }): Promise<number> {
@@ -770,12 +794,15 @@ export async function runPlatformGate(params: {
     params.policy.stage === 'PRE_PUSH' ||
     params.policy.stage === 'CI'
   ) {
-    sddDecision = dependencies.evaluateSddForStage(
-      params.policy.stage,
-      repoRoot
-    );
+    sddDecision = params.sddDecisionOverride
+      ?? dependencies.evaluateSddForStage(
+        params.policy.stage,
+        repoRoot
+      );
     if (!sddDecision.allowed) {
-      process.stdout.write(`[pumuki][sdd] ${sddDecision.code}: ${sddDecision.message}\n`);
+      if (params.silent !== true) {
+        process.stdout.write(`[pumuki][sdd] ${sddDecision.code}: ${sddDecision.message}\n`);
+      }
       sddBlockingFinding = toSddBlockingFinding(sddDecision);
       if (shouldShortCircuitSdd) {
         const emptyDetectedPlatforms: DetectedPlatforms = {};
@@ -813,6 +840,7 @@ export async function runPlatformGate(params: {
     git,
   });
   const filesScanned = countScannedFilesFromFacts(facts);
+  const observedCodePaths = collectObservedCodePathsFromFacts(facts);
 
   const {
     detectedPlatforms,
@@ -949,16 +977,18 @@ export async function runPlatformGate(params: {
   const astIntelligenceDualFinding = astIntelligenceDualValidation?.finding;
   if (astIntelligenceDualValidation && astIntelligenceDualValidation.mode !== 'off') {
     const summary = astIntelligenceDualValidation.summary;
-    process.stdout.write(
-      `[pumuki][ast-intelligence] mode=${astIntelligenceDualValidation.mode}` +
-      ` mapped_rules=${summary.mapped_rules}` +
-      ` compared_rules=${summary.compared_rules}` +
-      ` divergences=${summary.divergences}` +
-      ` false_positives=${summary.false_positives}` +
-      ` false_negatives=${summary.false_negatives}` +
-      ` latency_ms=${summary.latency_ms}` +
-      ` languages=[${summary.languages.join(',') || 'none'}]\n`
-    );
+    if (params.silent !== true) {
+      process.stdout.write(
+        `[pumuki][ast-intelligence] mode=${astIntelligenceDualValidation.mode}` +
+        ` mapped_rules=${summary.mapped_rules}` +
+        ` compared_rules=${summary.compared_rules}` +
+        ` divergences=${summary.divergences}` +
+        ` false_positives=${summary.false_positives}` +
+        ` false_negatives=${summary.false_negatives}` +
+        ` latency_ms=${summary.latency_ms}` +
+        ` languages=[${summary.languages.join(',') || 'none'}]\n`
+      );
+    }
   }
   const degradedModeBlocks = params.policyTrace?.degraded?.action === 'block';
   const rulesCoverage = coverage
@@ -1002,15 +1032,49 @@ export async function runPlatformGate(params: {
   const hasTddBddBlockingFinding = tddBddEvaluation.findings.some(
     (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
   );
+  const hasNativeBlockingFinding = findings.some(
+    (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
+  );
+  const preCommitSoftSkillsEnabled = process.env.PUMUKI_PRE_COMMIT_SOFT_SKILLS !== '0';
+  const lowRiskPreCommitWindow = observedCodePaths.length > 0 && observedCodePaths.length <= 3;
+  const shouldSoftEnforceSkillsFindings =
+    params.policy.stage === 'PRE_COMMIT'
+    && preCommitSoftSkillsEnabled
+    && lowRiskPreCommitWindow
+    && !sddBlockingFinding
+    && !degradedModeBlocks
+    && !shouldBlockFromFinding(policyAsCodeBlockingFinding)
+    && !shouldBlockFromFinding(unsupportedSkillsMappingFinding)
+    && !shouldBlockFromFinding(coverageBlockingFinding)
+    && !shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding)
+    && !shouldBlockFromFinding(iosTestsQualityFinding)
+    && !shouldBlockFromFinding(astIntelligenceDualFinding)
+    && !hasTddBddBlockingFinding
+    && !hasNativeBlockingFinding;
+  const effectivePlatformSkillsCoverageFinding = toSoftPreCommitSkillsFinding({
+    finding: platformSkillsCoverageFinding,
+    enabled: shouldSoftEnforceSkillsFindings,
+    observedCodePaths,
+  });
+  const effectiveCrossPlatformCriticalFinding = toSoftPreCommitSkillsFinding({
+    finding: crossPlatformCriticalFinding,
+    enabled: shouldSoftEnforceSkillsFindings,
+    observedCodePaths,
+  });
+  const effectiveSkillsScopeComplianceFinding = toSoftPreCommitSkillsFinding({
+    finding: skillsScopeComplianceFinding,
+    enabled: shouldSoftEnforceSkillsFindings,
+    observedCodePaths,
+  });
   const effectiveFindings = sddBlockingFinding
     ? [
       sddBlockingFinding,
       ...(degradedModeFinding ? [degradedModeFinding] : []),
       ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
       ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
-      ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
-      ...(crossPlatformCriticalFinding ? [crossPlatformCriticalFinding] : []),
-      ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
+      ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
+      ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
+      ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
       ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
       ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
       ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
@@ -1019,9 +1083,9 @@ export async function runPlatformGate(params: {
       ...findings,
     ]
     : unsupportedSkillsMappingFinding
-      || platformSkillsCoverageFinding
-      || crossPlatformCriticalFinding
-      || skillsScopeComplianceFinding
+      || effectivePlatformSkillsCoverageFinding
+      || effectiveCrossPlatformCriticalFinding
+      || effectiveSkillsScopeComplianceFinding
       || activeRulesEmptyForCodeChangesFinding
       || iosTestsQualityFinding
       || astIntelligenceDualFinding
@@ -1033,9 +1097,9 @@ export async function runPlatformGate(params: {
         ...(degradedModeFinding ? [degradedModeFinding] : []),
         ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
         ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
-        ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
-        ...(crossPlatformCriticalFinding ? [crossPlatformCriticalFinding] : []),
-        ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
+        ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
+        ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
+        ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
         ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
         ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
         ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
@@ -1049,15 +1113,15 @@ export async function runPlatformGate(params: {
   const baseGateOutcome =
     sddBlockingFinding ||
     degradedModeBlocks ||
-    policyAsCodeBlockingFinding ||
-    unsupportedSkillsMappingFinding ||
-    platformSkillsCoverageFinding ||
-    crossPlatformCriticalFinding ||
-    skillsScopeComplianceFinding ||
-    activeRulesEmptyForCodeChangesFinding ||
-    iosTestsQualityFinding ||
+    shouldBlockFromFinding(policyAsCodeBlockingFinding) ||
+    shouldBlockFromFinding(unsupportedSkillsMappingFinding) ||
+    shouldBlockFromFinding(effectivePlatformSkillsCoverageFinding) ||
+    shouldBlockFromFinding(effectiveCrossPlatformCriticalFinding) ||
+    shouldBlockFromFinding(effectiveSkillsScopeComplianceFinding) ||
+    shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding) ||
+    shouldBlockFromFinding(iosTestsQualityFinding) ||
     hasAstIntelligenceBlockingFinding ||
-    coverageBlockingFinding ||
+    shouldBlockFromFinding(coverageBlockingFinding) ||
     hasTddBddBlockingFinding
       ? 'BLOCK'
       : decision.outcome;
@@ -1113,9 +1177,11 @@ export async function runPlatformGate(params: {
     } catch (error) {
       const rawReason = error instanceof Error ? error.message : String(error);
       const reason = rawReason.trim().replace(/\s+/g, ' ');
-      process.stdout.write(
-        `[pumuki][memory-shadow] unavailable reason=${reason.length > 0 ? reason : 'unknown_error'}\n`
-      );
+      if (params.silent !== true) {
+        process.stdout.write(
+          `[pumuki][memory-shadow] unavailable reason=${reason.length > 0 ? reason : 'unknown_error'}\n`
+        );
+      }
     }
   }
   const memoryShadow:
@@ -1139,11 +1205,13 @@ export async function runPlatformGate(params: {
       : undefined;
 
   if (memoryShadowRecommendation) {
-    process.stdout.write(
-      `[pumuki][memory-shadow] recommended=${memoryShadowRecommendation.recommendedOutcome}` +
-      ` confidence=${memoryShadowRecommendation.confidence.toFixed(2)}` +
-      ` reasons=${memoryShadowRecommendation.reasonCodes.join(',')}\n`
-    );
+    if (params.silent !== true) {
+      process.stdout.write(
+        `[pumuki][memory-shadow] recommended=${memoryShadowRecommendation.recommendedOutcome}` +
+        ` confidence=${memoryShadowRecommendation.confidence.toFixed(2)}` +
+        ` reasons=${memoryShadowRecommendation.reasonCodes.join(',')}\n`
+      );
+    }
   }
 
   dependencies.emitPlatformGateEvidence({
@@ -1167,7 +1235,9 @@ export async function runPlatformGate(params: {
   });
 
   if (gateOutcome === 'BLOCK') {
+    if (params.silent !== true) {
     dependencies.printGateFindings(findingsWithWaiver);
+    }
     return 1;
   }
 
