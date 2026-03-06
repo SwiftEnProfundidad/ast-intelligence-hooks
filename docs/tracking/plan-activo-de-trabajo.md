@@ -3472,14 +3472,42 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-254: Rematar el bloque backlog consumers limpiando helpers compartidos (`backlog-action-reasons`, `backlog-id-issue-map`, `backlog-json-contract`) para que la superficie completa quede consistente y revisable extremo a extremo.
-  - Alcance:
-    - inventariar el peso real de `scripts/backlog-action-reasons-lib.ts`, `scripts/backlog-id-issue-map-lib.ts` y `scripts/backlog-json-contract-lib.ts`;
-    - separar o compactar helpers si siguen mezclando parseo, formato y contrato JSON;
-    - mantener el repo limpio y con una sola task activa durante todo el corte.
-  - Inventario inicial (2026-03-06):
-    - tras cerrar `PUMUKI-253`, el siguiente slice logico del bloque backlog consumers queda en:
-      - `scripts/backlog-id-issue-map-lib.ts`
+- ✅ PUMUKI-254: Rematar el bloque backlog consumers limpiando helpers compartidos (`backlog-action-reasons`, `backlog-id-issue-map`, `backlog-json-contract`) para que la superficie completa quede consistente y revisable extremo a extremo.
+  - Resultado (2026-03-06):
+    - `scripts/backlog-action-reasons-lib.ts` deja de mezclar tipos inline con la lógica y pasa a apoyarse en un contrato tipado explícito en:
+      - `scripts/backlog-action-reasons-types.ts`
       - `scripts/backlog-action-reasons-lib.ts`
-      - `scripts/backlog-json-contract-lib.ts`
-    - estas piezas ya no son grandes, pero cierran el bloque compartido que usan `watch`, `reconcile` y el watcher fleet.
+    - `scripts/backlog-id-issue-map-lib.ts` deja de mezclar contrato, parseo de fichero y helpers de transformación, y queda separado en:
+      - `scripts/backlog-id-issue-map-types.ts`
+      - `scripts/backlog-id-issue-map-parse.ts`
+      - `scripts/backlog-id-issue-map-lib.ts`
+    - `scripts/backlog-json-contract-lib.ts` se mantiene como contrato mínimo canónico porque ya estaba reducido a `3` líneas y no mezclaba responsabilidades;
+    - la cobertura añade regresión real de lectura desde fichero para `id-issue-map`;
+    - el bloque backlog consumers queda ya consistente extremo a extremo sin romper las fachadas públicas usadas por `watch`, `reconcile` y el watcher fleet.
+  - Evidencia:
+    - `wc -l scripts/backlog-action-reasons-lib.ts scripts/backlog-id-issue-map-lib.ts scripts/backlog-json-contract-lib.ts scripts/__tests__/backlog-action-reasons-lib.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/backlog-json-contract-lib.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-action-reasons-lib.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/backlog-json-contract-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-255: Atacar `legacy-parity-report-lib` separando normalización de payload, comparativa por severidad/regla y render markdown para seguir cerrando `scripts/**` con cortes pequeños y revisables.
+  - Alcance:
+    - inventariar el peso real de `scripts/legacy-parity-report-lib.ts` y de su suite `scripts/__tests__/legacy-parity-report-lib.test.ts`;
+    - separar como mínimo:
+      - normalización/parseo del payload,
+      - cálculo de paridad por regla y severidad,
+      - render markdown del informe;
+    - mantener estable la fachada pública usada por `scripts/build-legacy-parity-report.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-06):
+    - `scripts/legacy-parity-report-lib.ts` sigue concentrando `406` líneas;
+    - expone hoy:
+      - `LegacyParityRow`
+      - `LegacyParitySeverityRow`
+      - `LegacyParityReport`
+      - `buildLegacyParityReport`
+      - `formatLegacyParityReportMarkdown`
+    - la superficie tiene ya dos responsabilidades claramente separables:
+      - lectura/normalización/comparativa del JSON
+      - render markdown del informe final.
