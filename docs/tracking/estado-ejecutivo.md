@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): `PUMUKI-245` (cerrado guard hard de higiene del `worktree` propio: el repo ya se autobloquea vía `validation:self-worktree-hygiene`, integrado además en `validation:tracking-single-active`, con tests de regresión y salida accionable por slices).
-- Task activa (`🚧`): `PUMUKI-246` (sanear el `worktree` global actual por slices atómicos antes de continuar con más refactors o fixes funcionales).
+- Última task cerrada (`✅`): `PUMUKI-246` (saneado completo del `worktree` global mediante `11` commits atómicos; el guard `validation:self-worktree-hygiene` vuelve a `changed_files=0` y `changed_scopes=0`).
+- Task activa (`🚧`): `PUMUKI-247` (retomar el bloque de notificaciones operativas sobre un árbol limpio, separando `framework-menu-system-notifications-lib.ts` en payloads, configuración y runner macOS).
 - Pendiente priorizado (`⏳`): ninguno externo; los tres backlogs consumidores siguen en `0` abiertos.
 
 ## Historial resumido

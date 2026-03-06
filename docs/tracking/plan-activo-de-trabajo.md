@@ -3286,13 +3286,41 @@
     - `node --import tsx scripts/check-self-worktree-hygiene.ts --json --no-fail`
     - `npm run -s validation:tracking-single-active` (ahora incluye también el guard de higiene propia)
 
-- 🚧 PUMUKI-246: Sanear el `worktree` global actual por slices atómicos antes de continuar con refactors o fixes funcionales.
+- ✅ PUMUKI-246: Sanear el `worktree` global actual por slices atómicos antes de continuar con refactors o fixes funcionales.
+  - Resultado (2026-03-06):
+    - el saneamiento se ejecuta en `11` commits atómicos y revisables, cada uno aislando un slice real del árbol:
+      - `feat: enforce self worktree hygiene guard`
+      - `refactor: isolate consumer backlog fleet runner`
+      - `refactor: extract git worktree atomic slices`
+      - `refactor: extract sync docs targets`
+      - `docs: reorganize documentation information architecture`
+      - `refactor: isolate scripts notification and backlog helpers`
+      - `fix: harden gate, evidence, and MCP correctness`
+      - `feat: harden lifecycle version and watch flows`
+      - `fix: harden SDD policy and evidence flows`
+      - `fix: tighten git gate and stage runner flows`
+      - `docs: align maintainer contract and root metadata`
+    - el repo pasa del estado bloqueado inicial:
+      - `changed_files=121`
+      - `changed_scopes=5`
+    - al estado limpio actual:
+      - `changed_files=0`
+      - `changed_scopes=0`
+    - `validation:self-worktree-hygiene` vuelve a verde;
+    - `validation:tracking-single-active` vuelve a verde;
+    - el siguiente trabajo ya no se ejecuta sobre deuda acumulada, sino sobre un árbol limpio y controlado.
+  - Evidencia:
+    - `git log --oneline -n 12`
+    - `git status --short --branch`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+    - `npm run -s validation:tracking-single-active`
+
+- 🚧 PUMUKI-247: Retomar `Corte G — notificaciones operativas` sobre un árbol limpio, separando `framework-menu-system-notifications-lib.ts` en payloads, configuración y runner macOS.
   - Alcance:
-    - usar el guard nuevo como fuente de verdad del bloqueo;
-    - recortar el árbol actual en bloques atómicos revisables por ámbito;
-    - no seguir metiendo cambios funcionales mientras el repo siga incumpliendo los límites hard de higiene;
-    - preparar el siguiente corte real sobre un árbol ya saneado.
+    - dividir el bloque de notificaciones en piezas más pequeñas y revisables;
+    - mantener el contrato actual de payload, mute, disable y modal flotante;
+    - reducir el peso del archivo principal sin introducir regresiones en el flujo de notificación.
   - Inventario inicial (2026-03-06):
-    - el guard se diseñó para bloquear cuando el repo supera `max_files=25` o `max_scopes=2`;
-    - el estado actual del repositorio excede ambos límites con holgura;
-    - el siguiente trabajo ya no es “otro refactor”, sino rebajar este árbol a slices profesionales antes de seguir.
+    - el slice de notificaciones ya no compite con `scripts/watch-consumer-backlog-fleet*`;
+    - el mayor peso vivo del área queda concentrado en `scripts/framework-menu-system-notifications-lib.ts`;
+    - el árbol limpio nos permite atacar este refactor sin volver a violar la higiene hard del repo.
