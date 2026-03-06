@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): `PUMUKI-264` (el bloque `framework-menu-system-notifications-config` ya separa persistencia, estado y decisiones del diálogo, con `17` tests focales en verde y `typecheck` en verde).
-- Task activa (`🚧`): `PUMUKI-265` (atacar `framework-menu-layout-lib.ts` separando wrapping de líneas, composición de filas y bordes para seguir limpiando `scripts/**` con el repo limpio).
+- Última task cerrada (`✅`): `PUMUKI-265` (el bloque `framework-menu-layout` ya separa tipos, datos canónicos y resolución/cobertura del menú, con `13` tests focales en verde y `typecheck` en verde).
+- Task activa (`🚧`): `PUMUKI-266` (atacar `framework-menu-legacy-audit-summary.ts` separando parseo del summary, breakdown por plataforma, top violations y métricas para seguir limpiando `scripts/**` con el repo limpio).
 - Pendiente priorizado (`⏳`): ninguno externo; los tres backlogs consumidores siguen en `0` abiertos.
 
 ## Historial resumido

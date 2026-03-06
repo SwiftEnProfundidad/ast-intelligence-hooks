@@ -3717,7 +3717,46 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-265: Atacar `framework-menu-layout-lib.ts` separando wrapping de líneas, composición de filas y bordes para seguir limpiando `scripts/**` con el repo limpio.
+- ✅ PUMUKI-265: Atacar `framework-menu-layout-lib.ts` separando tipos, datos canónicos y resolución/cobertura del menú para seguir limpiando `scripts/**` con el repo limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-layout-lib.ts` queda reducido a una fachada pública estable;
+    - la lógica se separa en:
+      - `scripts/framework-menu-layout-types.ts`
+      - `scripts/framework-menu-layout-data.ts`
+      - `scripts/framework-menu-layout-resolve.ts`
+      - `scripts/framework-menu-layout-lib.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-layout-resolve.test.ts`
+      - `scripts/__tests__/framework-menu-layout-coverage.test.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-advanced-view-lib.ts`
+      - `scripts/framework-menu-consumer-runtime-menu.ts`
+      se mantiene intacta;
+    - el corte queda validado con `13` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `2` scopes).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-layout-lib.ts scripts/framework-menu-layout-types.ts scripts/framework-menu-layout-data.ts scripts/framework-menu-layout-resolve.ts scripts/__tests__/framework-menu-layout-resolve.test.ts scripts/__tests__/framework-menu-layout-coverage.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-layout-resolve.test.ts scripts/__tests__/framework-menu-layout-coverage.test.ts scripts/__tests__/framework-menu-advanced-view-menu.test.ts scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-266: Atacar `framework-menu-legacy-audit-summary.ts` separando parseo del summary, breakdown por plataforma, top violations y métricas para seguir limpiando `scripts/**` con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-legacy-audit-summary.ts` y de su superficie de tests;
+    - separar, como mínimo:
+      - parseo/normalización del summary legacy,
+      - breakdown por plataforma,
+      - top violations/remediaciones,
+      - métricas y score operativo;
+    - mantener estable la fachada pública usada por `framework-menu-legacy-audit-lib.ts` y `framework-menu-legacy-audit-render.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-265`, el siguiente bloque natural y más pesado de `scripts/**` es `scripts/framework-menu-legacy-audit-summary.ts` (`590` líneas);
+    - actualmente convive con:
+      - `scripts/framework-menu-legacy-audit-render.ts` (`505` líneas),
+      - `scripts/framework-menu-gate-lib.ts` (`151` líneas),
+      - `scripts/framework-menu-matrix-canary-lib.ts` (`136` líneas),
+      lo que hace viable seguir limpiando el slice legacy audit sin tocar consumers externos ni romper la fachada pública.
   - Alcance:
     - inventariar el peso real de `scripts/framework-menu-layout-lib.ts` y de los módulos que lo consumen;
     - separar, como mínimo:
