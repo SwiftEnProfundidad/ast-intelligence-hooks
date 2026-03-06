@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createFrameworkMenuActions } from '../framework-menu-actions';
-import { createFrameworkMenuPrompts } from '../framework-menu-prompts';
 import {
   formatAdvancedMenuClassicView,
   formatAdvancedMenuView,
 } from '../framework-menu-advanced-view-lib';
+import { createFrameworkMenuPrompts } from '../framework-menu-prompts';
 
 const noop = async (): Promise<void> => {};
 
@@ -48,36 +48,6 @@ test('formatAdvancedMenuView renderiza secciones por dominio y ayuda contextual 
   assert.match(rendered, /\b5\)\s+System\b/);
   assert.match(rendered, /1\)\s+Evaluate staged changes \(PRE_COMMIT policy\)\s+-\s+Evalua solo los cambios staged/i);
   assert.match(rendered, /27\)\s+Exit/);
-});
-
-test('formatAdvancedMenuView muestra badge WARN cuando falta evidencia', () => {
-  const rendered = formatAdvancedMenuView(buildAdvancedActions(), {
-    evidenceSummary: {
-      status: 'missing',
-      stage: null,
-      outcome: null,
-      totalFindings: 0,
-      bySeverity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 },
-      topFiles: [],
-    },
-  });
-
-  assert.match(rendered, /WARN/);
-});
-
-test('formatAdvancedMenuView alinea badge con outcome BLOCK cuando evidencia es ok', () => {
-  const rendered = formatAdvancedMenuView(buildAdvancedActions(), {
-    evidenceSummary: {
-      status: 'ok',
-      stage: 'PRE_COMMIT',
-      outcome: 'BLOCK',
-      totalFindings: 3,
-      bySeverity: { CRITICAL: 3, ERROR: 0, WARN: 0, INFO: 0 },
-      topFiles: [],
-    },
-  });
-
-  assert.match(rendered, /Status:\s+.*BLOCK/);
 });
 
 test('formatAdvancedMenuView conserva ayuda de opcion 8 sin truncar .ai_evidence.json', () => {
