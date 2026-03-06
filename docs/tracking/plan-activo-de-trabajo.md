@@ -3372,12 +3372,30 @@
     - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-runtime-actions.test.ts scripts/__tests__/framework-menu-consumer-runtime-notifications.test.ts scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts scripts/__tests__/framework-menu-consumer-preflight-run.test.ts scripts/__tests__/framework-menu-consumer-preflight-format.test.ts`
     - `npm run -s typecheck`
 
-- 🚧 PUMUKI-250: Reducir el peso de `framework-menu-legacy-audit-lib` separando lectura, export y formateo para cerrar el bloque `scripts/**` con la misma claridad que `git`, `sdd` y notificaciones.
+- ✅ PUMUKI-250: Reducir el peso de `framework-menu-legacy-audit-lib` separando lectura, export y formateo para cerrar el bloque `scripts/**` con la misma claridad que `git`, `sdd` y notificaciones.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-legacy-audit-lib.ts` deja de concentrar `1229` líneas de implementación y pasa a ser una fachada pública estable;
+    - la implementación queda separada por responsabilidad en:
+      - `scripts/framework-menu-legacy-audit-types.ts`
+      - `scripts/framework-menu-legacy-audit-summary.ts`
+      - `scripts/framework-menu-legacy-audit-render.ts`
+      - `scripts/framework-menu-legacy-audit-markdown.ts`
+    - la suite monolítica `scripts/__tests__/framework-menu-legacy-audit.test.ts` desaparece y se sustituye por:
+      - `scripts/__tests__/framework-menu-legacy-audit-summary.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-render.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-markdown.test.ts`
+    - el contrato público usado por `advanced-view`, `consumer-runtime`, `consumer-preflight` y `matrix-evidence` se mantiene sin cambios;
+    - el corte queda validado con `25` tests focales en verde y `typecheck` en verde.
+  - Evidencia:
+    - `wc -l scripts/framework-menu-legacy-audit-lib.ts scripts/__tests__/framework-menu-legacy-audit.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit-summary.test.ts scripts/__tests__/framework-menu-legacy-audit-render.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown.test.ts scripts/__tests__/framework-menu-matrix-evidence.test.ts`
+    - `npm run -s typecheck`
+
+- 🚧 PUMUKI-251: Cerrar el bloque `scripts/**` separando `framework-menu-matrix-evidence` y `framework-menu-advanced-view` para que dependan de piezas pequeñas, con tests por responsabilidad y sin reintroducir fachadas opacas.
   - Alcance:
-    - inventariar el peso real de `framework-menu-legacy-audit-lib` y sus tests asociados;
-    - separar lectura de summary, export markdown y render helpers si el corte es limpio;
+    - inventariar el peso real de `framework-menu-matrix-evidence-lib.ts` y `framework-menu-advanced-view-lib.ts`;
+    - extraer helpers si el corte es limpio, manteniendo sus contratos visibles;
     - mantener el repo limpio y con una sola task activa durante todo el corte.
   - Inventario inicial (2026-03-06):
-    - `runtime` y `preflight` ya no concentran la opacidad de `scripts/**`;
-    - el siguiente bloque más denso y transversal pasa a ser `framework-menu-legacy-audit-lib`;
-    - con `PUMUKI-249` cerrada, el corte puede hacerse sobre árbol limpio y suites ya estabilizadas.
+    - tras `PUMUKI-250`, la mayor opacidad restante de `scripts/**` ya no está en `legacy-audit`, sino en piezas consumidoras que todavía dependen de esa fachada;
+    - el siguiente corte lógico es compactar `matrix-evidence` y `advanced-view` para cerrar la limpieza estructural de `scripts/**` sin tocar `git`, `sdd` ni `lifecycle`.

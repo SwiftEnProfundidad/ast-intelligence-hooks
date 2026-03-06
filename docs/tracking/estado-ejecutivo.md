@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): `PUMUKI-249` (las suites de `framework-menu-consumer-runtime` y `framework-menu-consumer-preflight` quedan separadas por responsabilidad, manteniendo `15` tests verdes y `typecheck` en verde).
-- Task activa (`🚧`): `PUMUKI-250` (reducir el peso de `framework-menu-legacy-audit-lib` separando lectura/export/formateo para cerrar el bloque `scripts/**` con la misma claridad que `git`, `sdd` y notificaciones).
+- Última task cerrada (`✅`): `PUMUKI-250` (la fachada `framework-menu-legacy-audit-lib` queda estable mientras la implementación se separa en `summary`, `render` y `markdown`, con `25` tests focales en verde y `typecheck` en verde).
+- Task activa (`🚧`): `PUMUKI-251` (cerrar el bloque `scripts/**` separando `framework-menu-matrix-evidence` y `framework-menu-advanced-view` para que dependan de piezas más pequeñas y revisables).
 - Pendiente priorizado (`⏳`): ninguno externo; los tres backlogs consumidores siguen en `0` abiertos.
 
 ## Historial resumido
