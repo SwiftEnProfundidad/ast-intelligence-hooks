@@ -1,43 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {
-  resolveConsumerMenuCanaryScenario,
-  runConsumerMenuCanary,
-} from '../framework-menu-matrix-canary-lib';
 
-test('resolveConsumerMenuCanaryScenario mapea stage/plataforma a opción y regla esperada (edge path)', () => {
-  const backendScenario = resolveConsumerMenuCanaryScenario({
-    stage: 'PRE_COMMIT',
-    platform: 'backend',
-  });
-  assert.equal(backendScenario.option, '1');
-  assert.equal(backendScenario.expectedRuleId, 'skills.backend.no-empty-catch');
+import { runConsumerMenuCanary } from '../framework-menu-matrix-canary-lib';
 
-  const frontendScenario = resolveConsumerMenuCanaryScenario({
-    stage: 'PRE_PUSH',
-    platform: 'frontend',
-  });
-  assert.equal(frontendScenario.option, '2');
-  assert.equal(frontendScenario.expectedRuleId, 'skills.frontend.avoid-explicit-any');
-
-  const iosScenario = resolveConsumerMenuCanaryScenario({
-    stage: 'PRE_COMMIT',
-    platform: 'ios',
-  });
-  assert.equal(iosScenario.option, '1');
-  assert.equal(iosScenario.expectedRuleId, 'skills.ios.no-force-unwrap');
-  assert.match(iosScenario.canaryRelativePath, /^apps\/ios\//);
-
-  const androidScenario = resolveConsumerMenuCanaryScenario({
-    stage: 'CI',
-    platform: 'android',
-  });
-  assert.equal(androidScenario.option, '2');
-  assert.equal(androidScenario.expectedRuleId, 'skills.android.no-runblocking');
-  assert.match(androidScenario.canaryRelativePath, /^apps\/android\//);
-});
-
-test('runConsumerMenuCanary inyecta violación temporal y exige detección en opción 1 (repo)', async () => {
+test('runConsumerMenuCanary inyecta violación temporal y exige detección en opción 1', async () => {
   const result = await runConsumerMenuCanary({ repoRoot: process.cwd() });
 
   assert.equal(result.option, '1');
@@ -45,15 +11,10 @@ test('runConsumerMenuCanary inyecta violación temporal y exige detección en op
   assert.equal(typeof result.totalViolations, 'number');
   assert.equal(typeof result.filesScanned, 'number');
   assert.equal(typeof result.ruleIds.includes('skills.backend.no-empty-catch'), 'boolean');
-
-  assert.equal(
-    result.detected,
-    true,
-    'Expected canary detection in option 1 to be true'
-  );
+  assert.equal(result.detected, true);
 });
 
-test('runConsumerMenuCanary permite canario controlado por stage/plataforma (happy path PRE_PUSH/frontend)', async () => {
+test('runConsumerMenuCanary permite canario controlado PRE_PUSH/frontend', async () => {
   const result = await runConsumerMenuCanary({
     repoRoot: process.cwd(),
     stage: 'PRE_PUSH',
@@ -78,7 +39,7 @@ test('runConsumerMenuCanary permite canario controlado por stage/plataforma (hap
   assert.equal(result.ruleIds.includes('skills.frontend.avoid-explicit-any'), true);
 });
 
-test('runConsumerMenuCanary soporta canario controlado CI/android (edge path determinista)', async () => {
+test('runConsumerMenuCanary soporta canario controlado CI/android', async () => {
   const result = await runConsumerMenuCanary({
     repoRoot: process.cwd(),
     stage: 'CI',

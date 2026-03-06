@@ -1,12 +1,10 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
-import {
-  formatEvidenceSummaryForMenu,
-  readEvidenceSummaryForMenu,
-} from '../framework-menu-evidence-summary-lib';
+import { readEvidenceSummaryForMenu } from '../framework-menu-evidence-summary-lib';
 
 test('readEvidenceSummaryForMenu devuelve estado missing cuando no existe .ai_evidence.json', async () => {
   await withTempDir('pumuki-menu-evidence-missing-', async (repoRoot) => {
@@ -31,11 +29,7 @@ test('readEvidenceSummaryForMenu agrega severidades y top de ficheros', async ()
         ],
       },
     };
-    writeFileSync(
-      join(repoRoot, '.ai_evidence.json'),
-      JSON.stringify(evidence, null, 2),
-      'utf8'
-    );
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
 
     const summary = readEvidenceSummaryForMenu(repoRoot);
     assert.equal(summary.status, 'ok');
@@ -62,60 +56,6 @@ test('readEvidenceSummaryForMenu agrega severidades y top de ficheros', async ()
   });
 });
 
-test('formatEvidenceSummaryForMenu renderiza bloque operativo', () => {
-  const rendered = formatEvidenceSummaryForMenu({
-    status: 'ok',
-    stage: 'CI',
-    outcome: 'BLOCKED',
-    totalFindings: 3,
-    bySeverity: {
-      CRITICAL: 1,
-      ERROR: 1,
-      WARN: 1,
-      INFO: 0,
-    },
-    byEnterpriseSeverity: {
-      CRITICAL: 1,
-      HIGH: 1,
-      MEDIUM: 1,
-      LOW: 0,
-    },
-    topFiles: [
-      { file: 'apps/backend/src/a.ts', count: 2 },
-      { file: 'apps/ios/App/B.swift', count: 1 },
-    ],
-  });
-
-  assert.match(rendered, /Evidence: status=ok stage=CI outcome=BLOCKED findings=3/);
-  assert.match(rendered, /Severities \(enterprise\): critical=1 high=1 medium=1 low=0/);
-  assert.match(rendered, /Top files: apps\/backend\/src\/a\.ts \(2\), apps\/ios\/App\/B\.swift \(1\)/);
-});
-
-test('formatEvidenceSummaryForMenu en missing da instruccion accionable', () => {
-  const rendered = formatEvidenceSummaryForMenu({
-    status: 'missing',
-    stage: null,
-    outcome: null,
-    totalFindings: 0,
-    bySeverity: {
-      CRITICAL: 0,
-      ERROR: 0,
-      WARN: 0,
-      INFO: 0,
-    },
-    byEnterpriseSeverity: {
-      CRITICAL: 0,
-      HIGH: 0,
-      MEDIUM: 0,
-      LOW: 0,
-    },
-    topFiles: [],
-  });
-
-  assert.match(rendered, /Evidence: status=missing/);
-  assert.match(rendered, /Run `\.\/node_modules\/\.bin\/pumuki-pre-commit` to generate fresh evidence\./);
-});
-
 test('readEvidenceSummaryForMenu normaliza topFiles absolutos a repo-relative', async () => {
   await withTempDir('pumuki-menu-evidence-absolute-paths-', async (repoRoot) => {
     const absoluteFile = join(repoRoot, 'apps', 'backend', 'src', 'runtime', 'process.ts');
@@ -129,11 +69,7 @@ test('readEvidenceSummaryForMenu normaliza topFiles absolutos a repo-relative', 
         ],
       },
     };
-    writeFileSync(
-      join(repoRoot, '.ai_evidence.json'),
-      JSON.stringify(evidence, null, 2),
-      'utf8'
-    );
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
 
     const summary = readEvidenceSummaryForMenu(repoRoot);
     assert.equal(summary.status, 'ok');

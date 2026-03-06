@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { chdir, cwd } from 'node:process';
 import { execFileSync as runBinarySync } from 'node:child_process';
@@ -9,145 +9,21 @@ import {
   runWorkingTreePrePushGateSilent,
 } from './framework-menu-gate-lib';
 import { readMatrixOptionReport, type MatrixOptionId } from './framework-menu-matrix-evidence-lib';
+import { extractRuleIdsFromEvidence } from './framework-menu-matrix-canary-evidence';
+import { resolveConsumerMenuCanaryScenario } from './framework-menu-matrix-canary-scenario';
+import type {
+  ConsumerMenuCanaryPlatform,
+  ConsumerMenuCanaryResult,
+  ConsumerMenuCanaryStage,
+} from './framework-menu-matrix-canary-types';
 
-export type ConsumerMenuCanaryStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
-export type ConsumerMenuCanaryPlatform = 'ios' | 'android' | 'backend' | 'frontend';
-
-export type ConsumerMenuCanaryResult = {
-  option: MatrixOptionId;
-  detected: boolean;
-  totalViolations: number;
-  filesScanned: number;
-  ruleIds: string[];
-};
-
-export type ConsumerMenuCanaryScenario = {
-  stage: ConsumerMenuCanaryStage;
-  platform: ConsumerMenuCanaryPlatform;
-  option: MatrixOptionId;
-  expectedRuleId: string;
-  canaryRelativePath: string;
-  canarySource: string;
-};
-
-const buildCanarySuffix = (): string => {
-  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
-  return suffix;
-};
-
-export const resolveConsumerMenuCanaryScenario = (params?: {
-  stage?: ConsumerMenuCanaryStage;
-  platform?: ConsumerMenuCanaryPlatform;
-}): ConsumerMenuCanaryScenario => {
-  const stage = params?.stage ?? 'PRE_COMMIT';
-  const platform = params?.platform ?? 'backend';
-  const suffix = buildCanarySuffix();
-
-  if (platform === 'frontend') {
-    return {
-      stage,
-      platform,
-      option: stage === 'PRE_COMMIT' ? '1' : '2',
-      expectedRuleId: 'skills.frontend.avoid-explicit-any',
-      canaryRelativePath: `apps/frontend/__pumuki_matrix_canary_frontend_${suffix}.ts`,
-      canarySource: [
-        'export const __pumukiMatrixCanaryFrontend = (): void => {',
-        '  const risky: any = {};',
-        '  void risky;',
-        '};',
-        '',
-      ].join('\n'),
-    };
-  }
-
-  if (platform === 'ios') {
-    return {
-      stage,
-      platform,
-      option: stage === 'PRE_COMMIT' ? '1' : '2',
-      expectedRuleId: 'skills.ios.no-force-unwrap',
-      canaryRelativePath: `apps/ios/App/__pumuki_matrix_canary_ios_${suffix}.swift`,
-      canarySource: [
-        'import Foundation',
-        '',
-        'func __pumukiMatrixCanaryIOS() {',
-        '  let value: String? = "canary"',
-        '  _ = value!',
-        '}',
-        '',
-      ].join('\n'),
-    };
-  }
-
-  if (platform === 'android') {
-    return {
-      stage,
-      platform,
-      option: stage === 'PRE_COMMIT' ? '1' : '2',
-      expectedRuleId: 'skills.android.no-runblocking',
-      canaryRelativePath: `apps/android/app/src/main/java/com/pumuki/__pumuki_matrix_canary_android_${suffix}.kt`,
-      canarySource: [
-        'package com.pumuki',
-        '',
-        'import kotlinx.coroutines.runBlocking',
-        '',
-        'fun pumukiMatrixCanaryAndroid() {',
-        '  runBlocking {',
-        '  }',
-        '}',
-        '',
-      ].join('\n'),
-    };
-  }
-
-  return {
-    stage,
-    platform: 'backend',
-    option: stage === 'PRE_COMMIT' ? '1' : '2',
-    expectedRuleId: 'skills.backend.no-empty-catch',
-    canaryRelativePath: `apps/backend/src/__pumuki_matrix_canary_backend_${suffix}.ts`,
-    canarySource: [
-      'export const __pumukiMatrixCanaryBackend = (): void => {',
-      '  try {',
-      "    throw new Error('pumuki-matrix-canary')",
-      '  } catch {}',
-      '};',
-      '',
-    ].join('\n'),
-  };
-};
-
-const extractRuleIdsFromEvidence = (repoRoot: string): string[] => {
-  const evidencePath = join(repoRoot, '.ai_evidence.json');
-  try {
-    const parsed = JSON.parse(readFileSync(evidencePath, 'utf8')) as {
-      snapshot?: {
-        findings?: Array<{ ruleId?: unknown }>;
-        rules_coverage?: { matched_rule_ids?: unknown };
-        evaluation_metrics?: { matched_rule_ids?: unknown };
-      };
-    };
-    const fromFindings = Array.isArray(parsed?.snapshot?.findings)
-      ? parsed.snapshot.findings
-        .map((finding) => (typeof finding.ruleId === 'string' ? finding.ruleId : ''))
-        .filter((ruleId) => ruleId.length > 0)
-      : [];
-    const fromCoverage = Array.isArray(parsed?.snapshot?.rules_coverage?.matched_rule_ids)
-      ? parsed.snapshot.rules_coverage.matched_rule_ids
-        .map((ruleId) => (typeof ruleId === 'string' ? ruleId : ''))
-        .filter((ruleId) => ruleId.length > 0)
-      : [];
-    const fromEvaluation = Array.isArray(parsed?.snapshot?.evaluation_metrics?.matched_rule_ids)
-      ? parsed.snapshot.evaluation_metrics.matched_rule_ids
-        .map((ruleId) => (typeof ruleId === 'string' ? ruleId : ''))
-        .filter((ruleId) => ruleId.length > 0)
-      : [];
-
-    return [...new Set([...fromCoverage, ...fromEvaluation, ...fromFindings])];
-  } catch {
-    return [];
-  }
-};
+export type {
+  ConsumerMenuCanaryPlatform,
+  ConsumerMenuCanaryResult,
+  ConsumerMenuCanaryScenario,
+  ConsumerMenuCanaryStage,
+} from './framework-menu-matrix-canary-types';
+export { resolveConsumerMenuCanaryScenario } from './framework-menu-matrix-canary-scenario';
 
 const stageCanaryPath = (repoRoot: string, relativePath: string): void => {
   runBinarySync('git', ['add', '--', relativePath], {
