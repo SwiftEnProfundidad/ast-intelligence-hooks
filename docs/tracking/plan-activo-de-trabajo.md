@@ -3491,23 +3491,36 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-255: Atacar `legacy-parity-report-lib` separando normalización de payload, comparativa por severidad/regla y render markdown para seguir cerrando `scripts/**` con cortes pequeños y revisables.
+- ✅ PUMUKI-255: Atacar `legacy-parity-report-lib` separando normalización de payload, comparativa por severidad/regla y render markdown para seguir cerrando `scripts/**` con cortes pequeños y revisables.
+  - Resultado (2026-03-06):
+    - `scripts/legacy-parity-report-lib.ts` deja de concentrar `406` líneas y queda reducido a una fachada pública estable;
+    - la lógica se separa en:
+      - `scripts/legacy-parity-report-types.ts`
+      - `scripts/legacy-parity-report-normalize.ts`
+      - `scripts/legacy-parity-report-build.ts`
+      - `scripts/legacy-parity-report-markdown.ts`
+      - `scripts/legacy-parity-report-lib.ts`
+    - la suite monolítica se sustituye por tests por responsabilidad:
+      - `scripts/__tests__/legacy-parity-report-build.test.ts`
+      - `scripts/__tests__/legacy-parity-report-markdown.test.ts`
+    - el contrato visible consumido por `scripts/build-legacy-parity-report.ts` se mantiene intacto;
+    - el corte queda validado con `5` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/legacy-parity-report-lib.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/legacy-parity-report-build.test.ts scripts/__tests__/legacy-parity-report-markdown.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-256: Atacar `gitflow-cli-lib` separando parsing de estado Git, render de sugerencias y resolución de comandos para seguir limpiando `scripts/**` con el repo todavía limpio.
   - Alcance:
-    - inventariar el peso real de `scripts/legacy-parity-report-lib.ts` y de su suite `scripts/__tests__/legacy-parity-report-lib.test.ts`;
-    - separar como mínimo:
-      - normalización/parseo del payload,
-      - cálculo de paridad por regla y severidad,
-      - render markdown del informe;
-    - mantener estable la fachada pública usada por `scripts/build-legacy-parity-report.ts`;
+    - inventariar el peso real de `scripts/gitflow-cli-lib.ts` y de su suite asociada;
+    - separar, como mínimo:
+      - parseo del estado Git,
+      - construcción de recomendaciones,
+      - render/salida CLI;
+    - mantener estable la fachada pública usada por los entrypoints GitFlow;
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
   - Inventario inicial (2026-03-06):
-    - `scripts/legacy-parity-report-lib.ts` sigue concentrando `406` líneas;
-    - expone hoy:
-      - `LegacyParityRow`
-      - `LegacyParitySeverityRow`
-      - `LegacyParityReport`
-      - `buildLegacyParityReport`
-      - `formatLegacyParityReportMarkdown`
-    - la superficie tiene ya dos responsabilidades claramente separables:
-      - lectura/normalización/comparativa del JSON
-      - render markdown del informe final.
+    - tras cerrar `PUMUKI-255`, `scripts/gitflow-cli-lib.ts` queda como el siguiente archivo de `scripts/**` con mayor peso razonable y ámbito acotado;
+    - actualmente tiene `263` líneas y es el siguiente candidato natural para seguir limpiando el bloque sin abrir frentes nuevos.

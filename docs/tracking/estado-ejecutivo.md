@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): `PUMUKI-254` (el slice final del backlog consumers ya separa `backlog-action-reasons` en contrato tipado + builders/formatter, `backlog-id-issue-map` en contrato + parseo + fachada, y mantiene `backlog-json-contract` como contrato mínimo canónico, con `9` tests focales en verde y `typecheck` en verde).
-- Task activa (`🚧`): `PUMUKI-255` (atacar `legacy-parity-report-lib` separando normalización de payload, comparativa por severidad/regla y render markdown para seguir cerrando `scripts/**` con cortes pequeños y revisables).
+- Última task cerrada (`✅`): `PUMUKI-255` (el bloque `legacy-parity-report` ya separa normalización del payload, cálculo de dominancia y render markdown en módulos propios, con `5` tests focales en verde y `typecheck` en verde).
+- Task activa (`🚧`): `PUMUKI-256` (atacar `gitflow-cli-lib` separando parsing de estado Git, render de sugerencias y resolución de comandos para seguir limpiando `scripts/**` con el repo todavía limpio).
 - Pendiente priorizado (`⏳`): ninguno externo; los tres backlogs consumidores siguen en `0` abiertos.
 
 ## Historial resumido
