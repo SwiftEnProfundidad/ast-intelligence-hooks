@@ -6,7 +6,7 @@ export type SddStateSyncStatus = 'todo' | 'in_progress' | 'blocked' | 'done';
 export type SddStateSyncTestStatus = 'passed' | 'failed';
 
 type ScenarioEvidenceArtifact = {
-  version: '1.0';
+  version: '1.0' | '1';
   generated_at?: string;
   scenario_id: string;
   test_run: {
@@ -135,9 +135,9 @@ const readScenarioEvidenceArtifact = (path: string): {
     throw new Error(`[pumuki][sdd] state-sync source evidence has invalid structure: ${path}`);
   }
   const candidate = parsed as Partial<ScenarioEvidenceArtifact>;
-  if (candidate.version !== '1.0') {
+  if (candidate.version !== '1.0' && candidate.version !== '1') {
     throw new Error(
-      `[pumuki][sdd] state-sync source evidence version must be 1.0. Found: ${String(candidate.version ?? 'unknown')}`
+      `[pumuki][sdd] state-sync source evidence version must be 1 or 1.0. Found: ${String(candidate.version ?? 'unknown')}`
     );
   }
   const scenarioId = normalizeRequired(String(candidate.scenario_id ?? ''), 'scenario_id');

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
 import { readEvidenceResult, type EvidenceReadResult } from '../evidence/readEvidence';
 
 export type SddEvidenceScaffoldTestStatus = 'passed' | 'failed';
@@ -22,8 +22,29 @@ export type SddEvidenceScaffoldResult = {
     digest: string;
   };
   artifact: {
-    version: '1.0';
+    version: '1';
     generated_at: string;
+    slices: Array<{
+      id: string;
+      scenario_ref: string;
+      red: {
+        status: 'failed';
+        timestamp: string;
+      };
+      green: {
+        status: SddEvidenceScaffoldTestStatus;
+        timestamp: string;
+      };
+      refactor: {
+        status: SddEvidenceScaffoldTestStatus;
+        timestamp: string;
+      };
+    }>;
+    metadata: {
+      source: 'pumuki-sdd-evidence';
+      stack: 'sdd-evidence-scaffold';
+    };
+    // Legacy fields kept for state-sync compatibility in existing consumers.
     scenario_id: string;
     test_run: {
       command: string;
@@ -59,8 +80,12 @@ const resolveRepoBoundPath = (params: {
     rel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) ||
     isAbsolute(rel)
   ) {
+    const remediation =
+      params.flagName === '--test-output'
+        ? ` Try "${params.flagName}=.pumuki/runtime/${basename(params.candidatePath) || 'test-output.log'}".`
+        : '';
     throw new Error(
-      `[pumuki][sdd] ${params.flagName} must resolve inside repository root: ${params.candidatePath}`
+      `[pumuki][sdd] ${params.flagName} must resolve inside repository root: ${params.candidatePath}.${remediation}`
     );
   }
   return resolved;
@@ -106,6 +131,14 @@ const ensureValidEvidence = (params: {
   throw new Error(
     `[pumuki][sdd] evidence source is invalid (${params.evidenceResult.reason}). Run "pumuki sdd validate --stage=PRE_WRITE --json" to regenerate a valid evidence baseline before scaffolding.`
   );
+};
+
+const resolveScenarioReference = (scenarioId: string): string => {
+  const normalized = scenarioId.trim();
+  if (normalized.includes('.feature')) {
+    return normalized;
+  }
+  return `${normalized}.feature`;
 };
 
 export const runSddEvidenceScaffold = (params?: {
@@ -175,8 +208,30 @@ export const runSddEvidenceScaffold = (params?: {
   const outputRelativePath = relative(repoRoot, outputAbsolutePath).split('\\').join('/');
 
   const artifact: SddEvidenceScaffoldResult['artifact'] = {
-    version: '1.0',
+    version: '1',
     generated_at: generatedAt,
+    slices: [
+      {
+        id: scenarioId,
+        scenario_ref: resolveScenarioReference(scenarioId),
+        red: {
+          status: 'failed',
+          timestamp: generatedAt,
+        },
+        green: {
+          status: testStatus,
+          timestamp: generatedAt,
+        },
+        refactor: {
+          status: testStatus,
+          timestamp: generatedAt,
+        },
+      },
+    ],
+    metadata: {
+      source: 'pumuki-sdd-evidence',
+      stack: 'sdd-evidence-scaffold',
+    },
     scenario_id: scenarioId,
     test_run: {
       command: testCommand,

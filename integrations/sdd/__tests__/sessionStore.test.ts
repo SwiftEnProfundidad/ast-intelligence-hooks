@@ -112,6 +112,49 @@ test('openSddSession falla cuando el changeId no existe en openspec/changes', ()
   }
 });
 
+test('openSddSession permite --change=auto cuando existe un único cambio activo', () => {
+  const repo = createRepoWithOpenSpecChange();
+  const previousCwd = process.cwd();
+  try {
+    process.chdir(repo);
+    const opened = openSddSession({
+      changeId: 'auto',
+    });
+    assert.equal(opened.active, true);
+    assert.equal(opened.changeId, 'add-auth-feature');
+    assert.equal(opened.valid, true);
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('openSddSession con --change=auto falla cuando hay múltiples cambios activos', () => {
+  const repo = createRepoWithOpenSpecChange();
+  const previousCwd = process.cwd();
+  try {
+    process.chdir(repo);
+    mkdirSync(join(repo, 'openspec', 'changes', 'rgo-2000-01'), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(repo, 'openspec', 'changes', 'rgo-2000-01', 'proposal.md'),
+      '# proposal\n',
+      'utf8'
+    );
+    assert.throws(
+      () =>
+        openSddSession({
+          changeId: 'auto',
+        }),
+      /Multiple active OpenSpec changes found/i
+    );
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('openSddSession falla cuando el change activo está archivado', () => {
   const repo = createRepoWithOpenSpecChange();
   const previousCwd = process.cwd();

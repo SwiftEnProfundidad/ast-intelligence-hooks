@@ -30,11 +30,12 @@ const writeScenarioEvidence = (params: {
   scenarioId: string;
   status: 'passed' | 'failed';
   generatedAt: string;
+  version?: '1.0' | '1';
 }): string => {
   const path = join(params.repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json');
   mkdirSync(join(params.repoRoot, '.pumuki', 'artifacts'), { recursive: true });
   const payload = {
-    version: '1.0',
+    version: params.version ?? '1.0',
     generated_at: params.generatedAt,
     scenario_id: params.scenarioId,
     test_run: {
@@ -107,6 +108,27 @@ test('runSddStateSync apply escribe board determinista', async () => {
     };
     assert.equal(board.scenarios?.[0]?.scenario_id, 'BDD-102');
     assert.equal(board.scenarios?.[0]?.status, 'blocked');
+  });
+});
+
+test('runSddStateSync acepta evidencia source con version=1', async () => {
+  await withFixtureRepo('pumuki-sdd-state-sync-version-1-', (repoRoot) => {
+    writeScenarioEvidence({
+      repoRoot,
+      scenarioId: 'BDD-150',
+      status: 'passed',
+      generatedAt: '2026-03-05T12:30:00.000Z',
+      version: '1',
+    });
+
+    const result = runSddStateSync({
+      repoRoot,
+      dryRun: true,
+    });
+
+    assert.equal(result.decision.allowed, true);
+    assert.equal(result.context.scenarioId, 'BDD-150');
+    assert.equal(result.context.desiredStatus, 'done');
   });
 });
 

@@ -7,7 +7,11 @@ import {
   OPENSPEC_VALIDATE_ALL_COMMAND,
   validateOpenSpecChanges,
 } from './openSpecCli';
-import { readSddSession, refreshSddSession } from './sessionStore';
+import {
+  listActiveOpenSpecChangeIds,
+  readSddSession,
+  refreshSddSession,
+} from './sessionStore';
 import { resolveDegradedMode } from '../gate/degradedMode';
 import type {
   SddDecision,
@@ -18,7 +22,49 @@ import type {
 
 const SDD_SESSION_REFRESH_COMMAND =
   'npx --yes --package pumuki@latest pumuki sdd session --refresh --ttl-minutes=90';
+const SDD_SESSION_OPEN_AUTO_COMMAND =
+  'npx --yes --package pumuki@latest pumuki sdd session --open --change=auto';
+const SDD_SESSION_OPEN_EXPLICIT_COMMAND =
+  'npx --yes --package pumuki@latest pumuki sdd session --open --change=<id>';
 const SDD_COMPLETENESS_CONTRACT_VERSION = '1.0';
+
+const resolveMissingSessionGuidance = (repoRoot: string): {
+  message: string;
+  command: string;
+  fallbackCommand: string;
+  suggestedChangeId?: string;
+  availableChangeIds: ReadonlyArray<string>;
+} => {
+  const availableChangeIds = listActiveOpenSpecChangeIds(repoRoot);
+  if (availableChangeIds.length === 1) {
+    const suggestedChangeId = availableChangeIds[0] ?? '';
+    const command =
+      `npx --yes --package pumuki@latest pumuki sdd session --open --change=${suggestedChangeId}`;
+    return {
+      message: `SDD session is not active. Run \`${command}\` and retry.`,
+      command,
+      fallbackCommand: SDD_SESSION_OPEN_AUTO_COMMAND,
+      suggestedChangeId,
+      availableChangeIds,
+    };
+  }
+  if (availableChangeIds.length > 1) {
+    return {
+      message:
+        `SDD session is not active. Run \`${SDD_SESSION_OPEN_EXPLICIT_COMMAND}\` ` +
+        `with one active change id. Active changes: ${availableChangeIds.join(', ')}.`,
+      command: SDD_SESSION_OPEN_EXPLICIT_COMMAND,
+      fallbackCommand: SDD_SESSION_OPEN_EXPLICIT_COMMAND,
+      availableChangeIds,
+    };
+  }
+  return {
+    message: `SDD session is not active. Run \`${SDD_SESSION_OPEN_AUTO_COMMAND}\` and retry.`,
+    command: SDD_SESSION_OPEN_AUTO_COMMAND,
+    fallbackCommand: SDD_SESSION_OPEN_AUTO_COMMAND,
+    availableChangeIds,
+  };
+};
 
 const buildStatus = (repoRoot: string): SddStatusPayload => {
   const openspec = detectOpenSpecInstallation(repoRoot);
@@ -114,9 +160,19 @@ const evaluateSessionRequirements = (params: {
 }): SddDecision | undefined => {
   const { status } = params;
   if (!status.session.active) {
+    const guidance = resolveMissingSessionGuidance(status.repoRoot);
+    const details: Record<string, string | number | boolean | bigint | symbol | null | Date | object> = {
+      command: guidance.command,
+      fallbackCommand: guidance.fallbackCommand,
+      availableChangeIds: [...guidance.availableChangeIds],
+    };
+    if (guidance.suggestedChangeId) {
+      details.suggestedChangeId = guidance.suggestedChangeId;
+    }
     return blocked(
       'SDD_SESSION_MISSING',
-      'SDD session is not active. Run `pumuki sdd session --open --change=<id>`.'
+      guidance.message,
+      details
     );
   }
   if (!status.session.valid || !status.session.changeId) {

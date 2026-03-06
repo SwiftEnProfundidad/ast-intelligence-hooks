@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
 import { getCurrentPumukiVersion } from '../../lifecycle/packageInfo';
+import { readTddBddEvidence } from '../../tdd/contract';
 import { runSddEvidenceScaffold } from '../evidenceScaffold';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
@@ -124,7 +125,13 @@ test('runSddEvidenceScaffold dry-run devuelve payload y no escribe artefacto', a
     assert.equal(result.context.testStatus, 'passed');
     assert.equal(result.output.path, '.pumuki/artifacts/pumuki-evidence-v1.json');
     assert.equal(result.output.written, false);
+    assert.equal(result.artifact.version, '1');
     assert.equal(result.artifact.generated_at, '2026-03-05T10:05:00.000Z');
+    assert.equal(result.artifact.slices.length, 1);
+    assert.equal(result.artifact.slices[0]?.scenario_ref, 'BDD-001.feature');
+    assert.equal(result.artifact.slices[0]?.red.status, 'failed');
+    assert.equal(result.artifact.slices[0]?.green.status, 'passed');
+    assert.equal(result.artifact.slices[0]?.refactor.status, 'passed');
     assert.equal(result.artifact.ai_evidence.status, 'valid');
     assert.equal(
       existsSync(join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json')),
@@ -153,12 +160,29 @@ test('runSddEvidenceScaffold aplica artefacto cuando dry-run=false', async () =>
     assert.equal(result.output.written, true);
     assert.equal(existsSync(outputPath), true);
     const artifact = JSON.parse(readFileSync(outputPath, 'utf8')) as {
+      version?: string;
+      slices?: Array<{
+        scenario_ref?: string;
+        green?: { status?: string };
+        refactor?: { status?: string };
+      }>;
       scenario_id?: string;
       test_run?: { status?: string; output_path?: string | null };
     };
+    assert.equal(artifact.version, '1');
+    assert.equal(artifact.slices?.[0]?.scenario_ref, 'BDD-001.feature');
+    assert.equal(artifact.slices?.[0]?.green?.status, 'failed');
+    assert.equal(artifact.slices?.[0]?.refactor?.status, 'failed');
     assert.equal(artifact.scenario_id, 'BDD-001');
     assert.equal(artifact.test_run?.status, 'failed');
     assert.equal(artifact.test_run?.output_path, '.audit-reports/bdd-001.txt');
+
+    const evidenceRead = readTddBddEvidence(repoRoot);
+    assert.equal(evidenceRead.kind, 'valid');
+    if (evidenceRead.kind === 'valid') {
+      assert.equal(evidenceRead.evidence.version, '1');
+      assert.equal(evidenceRead.evidence.slices.length, 1);
+    }
   });
 });
 
@@ -200,6 +224,23 @@ test('runSddEvidenceScaffold falla cuando .ai_evidence.json no es válida', asyn
           testStatus: 'passed',
         }),
       /source is invalid/i
+    );
+  });
+});
+
+test('runSddEvidenceScaffold sugiere una ruta efímera válida cuando --test-output apunta fuera del repo', async () => {
+  await withFixtureRepo('pumuki-sdd-evidence-test-output-outside-', (repoRoot) => {
+    writeValidEvidence(repoRoot);
+    assert.throws(
+      () =>
+        runSddEvidenceScaffold({
+          repoRoot,
+          scenarioId: 'BDD-001',
+          testCommand: 'npm run test:unit',
+          testStatus: 'passed',
+          testOutputPath: '/tmp/flux-athlete-detail-phase29-test.log',
+        }),
+      /Try "--test-output=\.pumuki\/runtime\/flux-athlete-detail-phase29-test\.log"/i
     );
   });
 });
