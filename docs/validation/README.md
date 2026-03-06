@@ -1,42 +1,37 @@
-# Validation Docs (Enterprise Minimal Set)
+# Validation Docs
 
-Este directorio contiene solo documentación oficial y estable de validación para Pumuki.
+Este directorio contiene solo documentación estable de validación y runbooks oficiales.
 
-## Documentación oficial vigente
+## Documentación vigente
 
-- `adapter-hook-runtime-validation.md`
-- `ast-intelligence-roadmap.md`
-- `c022-phase-acceptance-contract.md`
-- `detection-audit-baseline.md`
+- `adapter-hook-runtime-runbook.md`
+- `ast-intelligence-validation-roadmap.md`
+- `full-repo-detection-audit-baseline.md`
 - `enterprise-consumer-isolation-policy.md`
 - `mock-consumer-integration-runbook.md`
-- `skills-rollout-consumer-repositories.md`
+- `consumer-repositories-skills-rollout-validation.md`
 
-## Estado operativo actual
+## Estado de seguimiento
 
-- Master de seguimiento: `docs/registro-maestro-de-seguimiento.md`.
-- Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`.
-- Suite contractual enterprise (MVP): `npm run -s validation:contract-suite:enterprise`.
-  - Perfiles activos del reporte JSON:
-    - `minimal`
-    - `block`
-    - `minimal-repeat`
-    - `telemetry-rotation`
+- Maestro: `docs/tracking/estado-ejecutivo.md`
+- Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
+- Histórico permitido: `docs/tracking/historico-validacion-ruralgo-03-03-2026.md`
+
+## Histórico técnico conservado
+
+- `docs/tracking/historico-contrato-aceptacion-c022.md`
 
 ## Política de higiene
 
-- Los reportes de ejecución/cierre de ciclos se generan en `.audit_tmp` o `.audit-reports`.
-- No se versionan reportes históricos ad-hoc en `docs/validation/`.
-- Si hace falta conservar evidencia operativa de ejecución, se referencia desde el ciclo temporal activo (si existe) y/o desde reportes en `.audit_tmp` / `.audit-reports`.
-- El cierre oficial de `C022` (`D.T2` + `D.T4`) está consolidado en `c022-phase-acceptance-contract.md`.
-- El cierre de `C023` (incluyendo No-MVP SaaS ingestion diagnostics) está consolidado en documentación estable:
-  - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
-  - `docs/USAGE.md`
-  - `docs/CONFIGURATION.md`
-  - `docs/TESTING.md`
-  - `docs/API_REFERENCE.md`
-  - `docs/evidence-v2.1.md`
-- El cierre de `C025` (auditoría exhaustiva de funcionalidades + reglas) quedó consolidado en:
-  - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md` (estado, evidencia y cierre del bloque P5).
-- El cierre de `P6` (verificación exhaustiva real/mock) quedó consolidado en:
-  - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md` (checklist unificada, veredicto y transición).
+- `docs/validation/` no guarda reportes temporales.
+- Los artefactos efímeros se generan fuera de `docs/` y deben limpiarse antes de cerrar un ciclo:
+  - `.audit-reports/**`
+  - `.coverage/**`
+  - `.ai_evidence.json`
+- La evidencia histórica que sí aporta contexto se consolida en documentación estable o en el histórico permitido.
+
+## Comprobaciones útiles
+
+- Higiene hard del worktree propio: `npm run -s validation:self-worktree-hygiene`
+- Suite contractual enterprise: `npm run -s validation:contract-suite:enterprise`
+- Verificación de plan activo único + higiene hard del worktree propio: `npm run -s validation:tracking-single-active`

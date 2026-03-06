@@ -3,8 +3,14 @@
 This guide covers the active setup for the deterministic framework implementation in this repository.
 From v2.x, SDD with OpenSpec is part of the default enterprise installation path.
 
+This file is only for installation, bootstrap and first verification.
+For daily operation after setup, use:
+
+- `docs/product/USAGE.md`
+- `PUMUKI.md`
+
 For production SaaS operation requirements (SLO/SLA, incident model, alerting), see:
-- `docs/OPERATIONS.md`
+- `docs/operations/production-operations-policy.md`
 
 ## Prerequisites
 
@@ -114,115 +120,17 @@ npm run adapter:install -- --agent=claude
 
 Supported agents: `codex`, `claude`, `cursor`, `windsurf`, `opencode`.
 
-## Run menu from this framework repository
+## After installation
 
-### Interactive menu
+Once bootstrap is complete, move to the operational docs:
 
-```bash
-npm run framework:menu
-```
-
-Menu starts in `Consumer` mode by default (focused options for day-to-day gate usage).
-Use `A` to switch to the full `Advanced` menu and `C` to switch back.
-Each option includes a short inline description.
-
-Consumer repositories do not have the `framework:menu` npm script by default.
-Use the published binary instead:
-
-```bash
-npx --yes --package pumuki@latest pumuki-framework
-```
-
-### Direct stage runners
-
-```bash
-# PRE_WRITE
-npx --yes --package pumuki@latest pumuki-pre-write
-
-# PRE_COMMIT
-npx --yes --package pumuki@latest pumuki-pre-commit
-
-# PRE_PUSH
-npx --yes --package pumuki@latest pumuki-pre-push
-
-# CI
-npx --yes --package pumuki@latest pumuki-ci
-```
-
-## Lifecycle + SDD commands
-
-```bash
-# package level
-npm install --save-exact pumuki
-npm update pumuki
-npm uninstall pumuki
-
-# lifecycle
-npx --yes pumuki install
-npx --yes pumuki update --latest
-npx --yes pumuki doctor
-npx --yes pumuki status
-npx --yes pumuki uninstall --purge-artifacts
-npx --yes pumuki remove
-
-# sdd
-npx --yes pumuki sdd status
-npx --yes pumuki sdd validate --stage=PRE_WRITE
-npx --yes pumuki sdd validate --stage=PRE_COMMIT
-npx --yes pumuki sdd validate --stage=PRE_PUSH
-npx --yes pumuki sdd validate --stage=CI
-npx --yes pumuki sdd session --open --change=<change-id>
-npx --yes pumuki sdd session --refresh
-npx --yes pumuki sdd session --close
-```
-
-Notes:
-- `pumuki remove` is the deterministic teardown path (`hooks + state + managed artifacts + dependency removal`).
-- Plain `npm uninstall pumuki` removes only the dependency entry.
-- `pumuki update --latest` migrates legacy `openspec` package to `@fission-ai/openspec` when required.
-
-## Guardrails
-
-- `pumuki install` / `pumuki update` block when tracked files exist under `node_modules`.
-- `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, and `CI` enforce SDD/OpenSpec policy.
-- `PRE_WRITE` also enforces AI Gate checks (evidence freshness/validity and protected branch guardrail).
-
-Emergency bypass (incident-only):
-
-```bash
-PUMUKI_SDD_BYPASS=1 npx --yes pumuki sdd validate --stage=PRE_COMMIT
-```
-
-Remove bypass immediately after remediation.
-
-## CI workflows
-
-The repository ships reusable and platform workflows:
-
-- `.github/workflows/pumuki-gate-template.yml`
-- `.github/workflows/pumuki-ios.yml`
-- `.github/workflows/pumuki-backend.yml`
-- `.github/workflows/pumuki-frontend.yml`
-- `.github/workflows/pumuki-android.yml`
-
-Each run uploads `.ai_evidence.json` artifact.
-
-## MCP servers
-
-```bash
-npm run mcp:evidence
-npm run mcp:enterprise
-```
-
-References:
-- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
-- `docs/MCP_SERVERS.md`
-
-## Evidence file
-
-Execution writes deterministic state to `.ai_evidence.json`.
-
-Schema reference: `docs/evidence-v2.1.md`.
+- Daily usage and stage gates:
+  - `docs/product/USAGE.md`
+- Short operator playbook:
+  - `PUMUKI.md`
+- MCP references:
+  - `docs/mcp/mcp-servers-overview.md`
+  - `docs/mcp/evidence-context-server.md`
 
 ## Troubleshooting
 

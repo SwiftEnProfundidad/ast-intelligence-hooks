@@ -87,7 +87,7 @@ CI guardrail:
 
 Skills rollout runbook:
 
-- `docs/validation/skills-rollout-consumer-repositories.md`
+- `docs/validation/consumer-repositories-skills-rollout-validation.md`
 
 ## Stage policies
 
@@ -276,7 +276,7 @@ Configuration outcomes are reflected in `.ai_evidence.json`:
 - `snapshot` outcome
 - `ledger` continuity
 
-Schema reference: `docs/evidence-v2.1.md`.
+Schema reference: `docs/mcp/ai-evidence-v2.1-contract.md`.
 
 ## AI Gate skills contract
 

@@ -1,9 +1,215 @@
 # Release Notes (v2.x line)
 
 This file tracks the active deterministic framework line used in this repository.
-Detailed commit history remains available through Git history (`git log` / `git show`).
+Canonical release chronology lives in `CHANGELOG.md`.
+This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
 ## 2026-03 (enterprise hardening updates)
+
+### 2026-03-06 (v6.3.55)
+
+- Safe remediation for consumers whose repository path breaks `PATH` execution:
+  - `status` / `doctor` now detect when the repo root contains the platform `PATH` delimiter,
+  - the JSON contract exposes:
+    - `version.pathExecutionHazard`
+    - `version.pathExecutionWarning`
+    - `version.pathExecutionWorkaroundCommand`
+  - `version.alignmentCommand` now falls back to a safe local-node invocation when `npx/npm exec` would be unsafe.
+- Human-readable lifecycle output now explains the problem directly:
+  - `execution warning: ...`
+  - `execution workaround: node ./node_modules/pumuki/bin/pumuki.js ...`
+- Operational impact:
+  - consumers like `SAAS:APP_SUPERMERCADOS` no longer depend on broken `PATH` rewriting for lifecycle remediation,
+  - the workaround is deterministic and machine-readable instead of tribal knowledge.
+- Validation evidence:
+  - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/packageInfo.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts` (`pass`)
+  - `npm run -s typecheck` (`PASS`)
+
+### 2026-03-06 (v6.3.54)
+
+- Consumer package/runtime correctness:
+  - the npm tarball now includes `docs/codex-skills/*.md`,
+  - core skills can be compiled from `skills.sources.json` inside `node_modules/pumuki` in real consumers.
+- Skills coverage gate no longer loses vendored backend/frontend/iOS/Android bundles just because the published package omitted their markdown sources.
+- Package manifest hardening:
+  - the package manifest guard now treats the vendored codex skill markdown files as required runtime assets,
+  - future releases will fail package validation if those sources disappear from the tarball.
+- Validation evidence:
+  - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-manifest-lib.test.ts scripts/__tests__/check-package-manifest.test.ts` (`12 pass / 0 fail`)
+  - `npm run -s validation:package-manifest` (`PASS`)
+  - `npm pack --json --dry-run` verified all six `docs/codex-skills/*.md` files are present
+  - `npm run -s typecheck` (`PASS`)
+
+### 2026-03-06 (v6.3.53)
+
+- Cross-repo watch correctness:
+  - `pumuki watch` now evaluates the requested `repoRoot` end-to-end, both when collecting facts and when executing the gate.
+  - Avoids false blocks and notifications sourced from the wrong checkout in fleet-style usage.
+- PRE_WRITE hygiene accuracy:
+  - worktree hygiene now uses a deduplicated pending file count when repo state exposes it,
+  - prevents partially staged files (`MM`) from counting twice toward warn/block thresholds.
+- Custom rules drift fidelity:
+  - custom bundle hashes now include `ast_node_ids`,
+  - changing the AST coverage of an `AUTO` custom rule now correctly changes the bundle hash and downstream drift signals.
+- MCP evidence remediation:
+  - `auto_execute_ai_start` now handles `EVIDENCE_CHAIN_INVALID` with the same actionable evidence regeneration guidance as other evidence failures.
+- Validation evidence:
+  - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts integrations/config/__tests__/skillsCustomRules.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts` (`50 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+
+### 2026-03-06 (v6.3.52)
+
+- Version contract clarity in `status` / `doctor`:
+  - `packageVersion` remains for backward compatibility, but both commands now expose a structured `version` block with:
+    - `effective`
+    - `runtime`
+    - `consumerInstalled`
+    - `lifecycleInstalled`
+    - `source`
+    - `driftFromRuntime`
+    - `driftFromLifecycleInstalled`
+    - `driftWarning`
+- Human-readable diagnostics now distinguish clearly between:
+  - the runtime used to execute the command,
+  - the version installed in `node_modules` of the consumer,
+  - the version persisted in lifecycle hook state.
+- Operational impact:
+  - post-release consumer smokes no longer require guesswork when `@latest`, installed dependency and managed hooks are not aligned.
+- Validation evidence:
+  - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/packageInfo.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts` (`66 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+
+### 2026-03-06 (v6.3.51)
+
+- Hook hygiene fix in `PRE_COMMIT`:
+  - `.ai_evidence.json` no longer remains dirty after a successful commit when it was already tracked,
+  - the hook re-stages refreshed evidence deterministically instead of leaving post-commit drift.
+- Historical publish fix in `PRE_PUSH`:
+  - when the hook publishes an exact commit, Pumuki now evaluates the real `remoteOid..localOid` range instead of dragging the whole `upstream..HEAD`,
+  - when that publish targets a historical commit different from current `HEAD`, SDD session enforcement is suspended in a controlled way to avoid false blocks tied to the current workspace session.
+- `pumuki sdd evidence` DX improvement:
+  - `--test-output` remains restricted to paths inside the repo root,
+  - the error now suggests a valid ephemeral destination such as `.pumuki/runtime/<file>.log`.
+- Validation evidence:
+  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/sdd/__tests__/evidenceScaffold.test.ts integrations/lifecycle/__tests__/cli.test.ts` (`125 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+
+### 2026-03-05 (v6.3.50)
+
+- Atomicity remediation clarity (`GIT_ATOMICITY_TOO_MANY_SCOPES`):
+  - blocking message now includes `scope_files=` with per-scope file breakdown,
+  - remediation now includes explicit `Sugerencia split` wording for deterministic staging split.
+- Gate summary `next_action` updated for this code:
+  - explicitly instructs to use `scope_files` before running split commands.
+- Validation evidence:
+  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/gitAtomicity.test.ts integrations/git/__tests__/runPlatformGateOutput.test.ts` (`9 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+
+### 2026-03-05 (v6.3.49)
+
+- Watch JSON contract clarity for staged scope:
+  - `lastTick.changed` now reflects real scoped file delta, not merely tick execution.
+  - In `scope=staged` with no staged files:
+    - `changed=false`
+    - `changedFiles=[]`
+    - `evaluatedFiles=[]`
+- Operational impact:
+  - prevents false interpretation of activity in consumer diagnostics and backlog evidence.
+- Validation evidence:
+  - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts` (`6 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+  - consumer smoke (Flux, local core bin): `watch --once --stage=PRE_COMMIT --scope=staged --json` -> `changed=false` with empty arrays.
+
+### 2026-03-05 (v6.3.48)
+
+- Anti-drift hardening for consumer validation flows:
+  - `pumuki watch` now applies manifest integrity guard and restores unexpected mutations to:
+    - `package.json`
+    - `package-lock.json`
+    - `pnpm-lock.yaml`
+    - `yarn.lock`
+  - If mutation is detected, watch blocks with `MANIFEST_MUTATION_DETECTED`.
+- Hook hardening parity:
+  - `pre-commit` / `pre-push` manifest guard now covers npm + pnpm + yarn lockfiles (not only npm).
+- Operational impact:
+  - avoids silent manifest/lockfile drift in consumers during validation loops unless upgrade is explicitly requested.
+- Validation evidence:
+  - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts integrations/git/__tests__/stageRunners.test.ts` (`38 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+  - consumer smoke (Flux, local core bin): `watch --once --json` with hashes unchanged for `package.json` / `pnpm-lock.yaml`.
+
+### 2026-03-05 (v6.3.47)
+
+- Manifest integrity hardening in hook stages (`PRE_COMMIT` / `PRE_PUSH`):
+  - Pumuki now snapshots `package.json` and `package-lock.json` before hook gate execution.
+  - If an unexpected mutation appears during the hook flow, Pumuki restores both files automatically and blocks with:
+    - `MANIFEST_MUTATION_DETECTED`
+- Operational impact:
+  - avoids silent consumer manifest drift while keeping explicit upgrade flows (`pumuki update --latest`) under developer control.
+- Validation evidence:
+  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` (`32 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+  - consumer check with local bin in RuralGo: hashes of `package.json`/`package-lock.json` unchanged after `PRE_WRITE + pre-commit + pre-push`.
+
+### 2026-03-05 (v6.3.46)
+
+- Paridad hook/watch en auto-remediación de skills coverage:
+  - `pre-commit` y `pre-push` ahora ejecutan `policy reconcile --strict --apply` y reintentan una única vez cuando el bloqueo es de coverage de skills.
+  - elimina recurrencia de bootstrap/reconcile manual entre iteraciones de consumer.
+- Contrato `watch --json` enriquecido para drift de versión:
+  - nuevo bloque `version` con `effective/runtime/consumerInstalled/source`,
+  - incluye `driftFromRuntime` y `driftWarning` cuando el binario del consumer no está alineado con runtime/latest.
+- Evidencia de validación:
+  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` (`30 pass / 0 fail`)
+  - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts integrations/lifecycle/__tests__/cli.test.ts` (`48 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+
+### 2026-03-05 (v6.3.45)
+
+- SDD sync canónico ampliado por defecto en consumer:
+  - `pumuki sdd sync-docs` ahora sincroniza, cuando existen, los 3 documentos base:
+    - `docs/strategy/ruralgo-tracking-hub.md`
+    - `docs/technical/08-validation/refactor/operational-summary.md`
+    - `docs/validation/refactor/last-run.json`
+- Auto-sync OpenSpec integral por cambio:
+  - `pumuki sdd auto-sync` incluye por defecto:
+    - `openspec/changes/<change>/tasks.md`
+    - `openspec/changes/<change>/design.md`
+    - `openspec/changes/<change>/retrospective.md`
+- Consumo automático universal de aprendizaje:
+  - `ai_gate_check`, `pre_flight_check` y `auto_execute_ai_start` exponen `learning_context` cuando existe `openspec/changes/<change>/learning.json`.
+- Evidencia de validación:
+  - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` (`78 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+
+### 2026-03-05 (v6.3.43)
+
+- `pumuki sdd evidence` alinea su salida con el contrato TDD/BDD del gate:
+  - `version: "1"` (antes `1.0`),
+  - `slices[]` generado por defecto con estructura `red/green/refactor`.
+- Compatibilidad de transición mantenida:
+  - el artefacto conserva campos legacy (`scenario_id`, `test_run`, `ai_evidence`) para flujos existentes,
+  - `pumuki sdd state-sync` acepta source evidence `version=1` y `version=1.0`.
+- Evidencia de validación:
+  - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/evidenceScaffold.test.ts integrations/sdd/__tests__/stateSync.test.ts integrations/lifecycle/__tests__/cli.test.ts` (`47 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+  - smoke real en Flux con CLI local: `pumuki sdd evidence ... --json` -> artefacto `version: "1"` con `slices[]`.
+
+### 2026-03-05 (v6.3.42)
+
+- Modal flotante de bloqueo (macOS) ajustado para legibilidad real:
+  - crecimiento preferente en vertical según contenido,
+  - ancho acotado para evitar diálogos excesivamente horizontales,
+  - tipografía más compacta para causa/solución.
+- Remediación por defecto más accionable en bloqueos:
+  - mensajes enriquecidos para `EVIDENCE_*`, `PRE_PUSH_UPSTREAM_MISSING`, `SDD_SESSION_*`,
+  - más contexto operativo sin truncado agresivo.
+- Ajustes de robustez visual:
+  - wrapping explícito multilínea en campos del modal,
+  - pinning bottom-right estable tras recalcular layout.
+- Evidencia de validación:
+  - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/runPlatformGateOutput.test.ts integrations/git/__tests__/gitAtomicity.test.ts integrations/sdd/__tests__/policy.test.ts integrations/sdd/__tests__/sessionStore.test.ts` (`94 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
 
 ### 2026-03-05 (v6.3.41)
 
@@ -36,7 +242,7 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - smoke de instalación local hace fallback cuando `npx --no-install` falla por `MODULE_NOT_FOUND`.
   - `ai_gate_check` unifica hint de precedencia para códigos legacy `EVIDENCE_*` (incluye `EVIDENCE_INTEGRITY_MISSING`).
 - RFC y plan de rollout/rollback:
-  - `docs/validation/ast-intelligence-roadmap.md`.
+  - `docs/validation/ast-intelligence-validation-roadmap.md`.
 - Evidencia de validación:
   - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` (`11 pass / 0 fail`)
   - `npm run -s typecheck` (`PASS`)
@@ -208,7 +414,7 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - Stability and governance:
   - Fixed time-based flake in waiver enforcement test by using stable future expiry.
   - Synced `VERSION` to package release line.
-  - Documentation updated in `README.md` and `docs/USAGE.md`.
+  - Documentation updated in `README.md` and `docs/product/USAGE.md`.
 
 ### 2026-02-27 (v6.3.23)
 
@@ -247,20 +453,20 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - Consumer vs framework-maintainer command surfaces are now explicitly separated.
   - Added collaboration and support/security guidance sections.
 - New stable operations policy:
-  - `docs/OPERATIONS.md` introduces SaaS production operation baseline:
+  - `docs/operations/production-operations-policy.md` introduces SaaS production operation baseline:
     - SLO/SLA minimums
     - incident severity and response windows
     - alerting thresholds and mandatory operational controls
     - go-live and rollback requirements
 - README walkthrough extraction:
-  - detailed menu Option 1 capture narrative moved to `docs/README_MENU_WALKTHROUGH.md`.
+  - detailed menu Option 1 capture narrative moved to `docs/operations/framework-menu-consumer-walkthrough.md`.
   - root README now remains concise while preserving deep visual guidance by reference.
 - Command documentation hardening from end-to-end execution audit:
   - fixed legacy parity command argument format to `--legacy=<path> --enterprise=<path>`.
   - documented required flags and expected non-zero verdict semantics for `validation:*` scripts.
   - documented OpenSpec/SDD session prerequisites (`openspec/changes/<change-id>` required before `sdd session --open`).
 - Documentation index alignment:
-  - `docs/README.md`, `docs/USAGE.md`, and `docs/INSTALLATION.md` updated to include operations and walkthrough references.
+  - `docs/README.md`, `docs/product/USAGE.md`, and `docs/product/INSTALLATION.md` updated to include operations and walkthrough references.
 
 ### 2026-02-20 (v6.3.17)
 
@@ -378,9 +584,9 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 - Primary and secondary docs rewritten to v2.x model:
   - `README.md`
-  - `docs/USAGE.md`
-  - `docs/HOW_IT_WORKS.md`
-  - `docs/API_REFERENCE.md`
+  - `docs/product/USAGE.md`
+  - `docs/product/HOW_IT_WORKS.md`
+  - `docs/product/API_REFERENCE.md`
 
 ### Hardening and validation updates (latest)
 
@@ -400,7 +606,7 @@ Detailed commit history remains available through Git history (`git log` / `git 
     - `npm run validation:adapter-session-status`
     - `npm run validation:adapter-real-session-report`
   - real-session validation checklist:
-    - `docs/validation/adapter-hook-runtime-validation.md`
+    - `docs/validation/adapter-hook-runtime-runbook.md`
 - Consumer startup diagnostics one-shot orchestrator:
   - `npm run validation:consumer-startup-triage`
 - Phase 5 blockers readiness report:

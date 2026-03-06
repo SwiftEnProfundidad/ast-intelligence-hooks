@@ -162,6 +162,8 @@ URI no soportada devuelve `404`.
 ### Catálogo de tools
 
 - `ai_gate_check`
+- `pre_flight_check`
+- `auto_execute_ai_start`
 - `check_sdd_status`
 - `validate_and_fix`
 - `sync_branches`
@@ -198,10 +200,31 @@ URI no soportada devuelve `404`.
 
 - `status`: `ALLOWED|BLOCKED`
 - `stage`
+- `message` (resumen humano corto)
+- `branch`
+- `timestamp`
 - `violations[]`
+- `warnings[]` (por ejemplo rama protegida o upstream ausente)
+- `auto_fixes[]` (remediaciones accionables)
 - `evidence` (kind + age/max-age)
 - `mcp_receipt` (required/kind/path/age para enforcement de PRE_WRITE)
 - `repo_state` (git + lifecycle snapshot)
+
+`pre_flight_check` añade salida de paridad legacy para lectura inmediata:
+
+- `phase`: `GREEN|RED`
+- `message`
+- `instruction`
+- `hints[]`
+
+`auto_execute_ai_start` añade contrato humano estable por iteración:
+
+- `action`: `proceed|ask`
+- `phase`: `GREEN|RED`
+- `message`
+- `instruction`
+- `platforms.force`
+- `confidence_pct`, `reason_code`, `next_action`
 
 Además, cada ejecución de `ai_gate_check` persiste un recibo auditable en:
 
@@ -252,6 +275,6 @@ npm run test:mcp
 
 ## Referencias
 
-- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
-- `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`
-- `docs/evidence-v2.1.md`
+- `docs/mcp/evidence-context-server.md`
+- `docs/mcp/agent-context-consumption.md`
+- `docs/mcp/ai-evidence-v2.1-contract.md`

@@ -139,6 +139,46 @@ Exit code contract:
 - `0` when diagnostics status is `healthy` or `degraded`
 - `1` when diagnostics status is `blocked`
 
+## Lifecycle status / doctor version contract
+
+Files:
+
+- `integrations/lifecycle/packageInfo.ts`
+- `integrations/lifecycle/status.ts`
+- `integrations/lifecycle/doctor.ts`
+
+Machine-readable fields exposed by both `pumuki status --json` and `pumuki doctor --json`:
+
+- `version.effective`
+- `version.runtime`
+- `version.consumerInstalled`
+- `version.lifecycleInstalled`
+- `version.source`
+- `version.driftFromRuntime`
+- `version.driftFromLifecycleInstalled`
+- `version.driftWarning`
+- `version.alignmentCommand`
+- `version.pathExecutionHazard`
+- `version.pathExecutionWarning`
+- `version.pathExecutionWorkaroundCommand`
+
+Compatibility note:
+
+- `packageVersion` is preserved for backward compatibility.
+- `packageVersion` mirrors `version.effective`.
+
+Interpretation contract:
+
+- `effective`: version currently governing the consumer decision path.
+- `runtime`: version of the executing package instance.
+- `consumerInstalled`: version installed in the consumer repository.
+- `lifecycleInstalled`: version recorded in managed lifecycle metadata.
+- `driftWarning`: compact human-readable explanation when those values diverge.
+- `alignmentCommand`: exact remediation command to align dependency and lifecycle state with the current runtime version.
+- `pathExecutionHazard`: boolean flag raised when the repo root contains the platform `PATH` delimiter and `npx/npm exec` can fail to resolve `pumuki`.
+- `pathExecutionWarning`: compact warning explaining why `PATH` resolution is unsafe in that repo.
+- `pathExecutionWorkaroundCommand`: safe local-node entrypoint to use when `pathExecutionHazard=true`.
+
 ## Evidence API
 
 Files:
@@ -252,8 +292,8 @@ Read-only endpoints:
   - deterministic bound: `maxLimit=100`
   - pagination metadata includes `has_more` when `limit` is provided
 
-Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`.
-Consumption: `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`.
+Reference: `docs/mcp/evidence-context-server.md`.
+Consumption: `docs/mcp/agent-context-consumption.md`.
 
 ## Local execution quick refs
 

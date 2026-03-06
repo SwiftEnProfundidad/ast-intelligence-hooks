@@ -3,11 +3,16 @@
 This guide describes the deterministic gate flow implemented in this repository.
 From v2.x, SDD with OpenSpec is mandatory for enterprise gate execution.
 
+If you still need to install or bootstrap the framework first, go to:
+
+- `docs/product/INSTALLATION.md`
+- `PUMUKI.md`
+
 Production operations baseline (SLA/SLO, incident response and alerting):
-- `docs/OPERATIONS.md`
+- `docs/operations/production-operations-policy.md`
 
 Visual walkthrough for menu Option 1 captures:
-- `docs/README_MENU_WALKTHROUGH.md`
+- `docs/operations/framework-menu-consumer-walkthrough.md`
 
 ## Prerequisites
 
@@ -204,6 +209,8 @@ Stage mapping:
 If a scope is empty, the menu prints an explicit operational hint (`Scope vacío`), so `PASS` with zero findings is distinguishable from a clean repository scan.
 
 System notifications (macOS) can be enabled from advanced menu option `31` (persisted in `.pumuki/system-notifications.json`).
+Blocked notifications now use a native Swift floating modal (bottom-right) by default, with AppleScript fallback.
+Override mode with `PUMUKI_MACOS_BLOCKED_DIALOG_MODE=auto|swift-floating|applescript`.
 Custom skills import is available in advanced menu option `33` (writes `/.pumuki/custom-rules.json`).
 Menu-driven audits apply SDD guardrails with the same strict semantics as stage runners (no bypass).
 
@@ -249,6 +256,8 @@ npx --yes pumuki doctor --deep --json
 
 # show lifecycle status
 npx --yes pumuki status
+npx --yes pumuki status --json
+npx --yes pumuki doctor --json
 
 # proactive local watch (worktree + anti-spam notifications)
 npx --yes pumuki watch --stage=PRE_COMMIT --scope=workingTree --severity=high --interval-ms=3000 --notify-cooldown-ms=30000
@@ -313,6 +322,53 @@ npm run skills:import:custom -- --source /abs/path/to/SKILL.md --source ./skills
 When no modules remain, it also prunes orphan `node_modules/.package-lock.json` residue.
 Plain `npm uninstall pumuki` removes only the dependency; it does not remove managed hooks or lifecycle state.
 
+### Lifecycle version contract (`status` / `doctor`)
+
+`pumuki status --json` and `pumuki doctor --json` expose a stable `version` block so the consumer can see which version is really governing the current execution path:
+
+```json
+{
+  "version": {
+    "effective": "6.3.47",
+    "runtime": "6.3.52",
+    "consumerInstalled": "6.3.47",
+    "lifecycleInstalled": "6.3.46",
+    "source": "consumer-node-modules",
+    "driftFromRuntime": true,
+    "driftFromLifecycleInstalled": true,
+    "driftWarning": "Version drift detectado: effective=6.3.47 runtime=6.3.52 lifecycle=6.3.46.",
+    "alignmentCommand": "npm install --save-exact pumuki@6.3.52 && npx --yes --package pumuki@6.3.52 pumuki install",
+    "pathExecutionHazard": false,
+    "pathExecutionWarning": null,
+    "pathExecutionWorkaroundCommand": null
+  }
+}
+```
+
+How to read it:
+
+- `effective`: version currently governing the consumer path.
+- `runtime`: version of the package instance being executed right now.
+- `consumerInstalled`: version installed in the consumer repository.
+- `lifecycleInstalled`: version persisted in managed lifecycle state.
+- `source`: source chosen to compute `effective`.
+- `driftWarning`: compact explanation when those values diverge.
+- `alignmentCommand`: exact command to align consumer dependency and lifecycle state with the current runtime.
+- `pathExecutionHazard`: tells you whether the repo root itself can break `PATH`-based execution.
+- `pathExecutionWarning`: compact explanation of that hazard.
+- `pathExecutionWorkaroundCommand`: safe local-node entrypoint to use when `PATH` execution is unsafe.
+
+Recommended remediation when drift appears:
+
+```bash
+<use version.alignmentCommand>
+npx --yes pumuki status --json
+npx --yes pumuki doctor --json
+```
+
+Use this sequence to align dependency, hooks, and lifecycle metadata in the same consumer.
+If `pathExecutionHazard=true`, use the local workaround printed by Pumuki instead of `npx/npm exec`.
+
 Loop runtime behavior:
 - `pumuki loop run` creates a session in `.pumuki/loop-sessions/`.
 - Each run executes one gate attempt on `workingTree`.
@@ -325,11 +381,15 @@ Watch runtime behavior:
 - `--notify-cooldown-ms` enables anti-spam throttling for repeated alerts with equal signature.
 - `--no-notify` keeps watch output without OS notifications.
 - `--once` or `--iterations=<n>` is recommended for CI/scripts to avoid long-running sessions.
+- `--json` now includes per-tick file traceability: `lastTick.changedFiles[]` and `lastTick.evaluatedFiles[]`.
+- Runtime artifacts hygiene is self-healed in `.git/info/exclude` (`.ai_evidence.json`, `.AI_EVIDENCE.json`, `.pumuki/`) to avoid dirty worktree noise.
 
 <a id="backlog-tooling"></a>
 Backlog tooling behavior (`watch` + `reconcile` scripts):
 - mapping precedence is deterministic: inline `#issue` -> `--id-issue-map-from` -> `--id-issue-map` -> `--resolve-missing-via-gh`.
 - `watch-consumer-backlog` is non-destructive and reports action-required drift.
+- `watch-consumer-backlog-fleet` agrega varios backlogs en una sola ejecución y devuelve resumen consolidado por target.
+- `watch-consumer-backlog-fleet-tick` ejecuta un ciclo canónico SAAS+RuralGo+Flux con overrides opcionales (`--saas/--ruralgo/--flux`).
 - `watch-consumer-backlog` reports heading drift (`heading_drift`) when section headers `### ✅/🚧/⏳/⛔ <ID>` diverge from effective table status.
 - `watch-consumer-backlog --json` exposes `heading_drift_count` for low-friction alerting parsers.
 - `watch-consumer-backlog --json` exposes `classification_counts` (`needs_issue`, `drift_closed_issue`, `active_issue`, `heading_drift`).
@@ -401,13 +461,16 @@ Backlog tooling quick reference:
 |---|---|
 | `npm run -s test:backlog-tooling` | Ejecutar suite focal de regresión del tooling de backlog. |
 | `scripts/watch-consumer-backlog.ts --json` | Detectar drift accionable sin mutar archivos. |
+| `scripts/watch-consumer-backlog-fleet.ts --json` | Vigilar varios backlogs consumidores y consolidar estado global en una sola salida. |
+| `npm run -s validation:backlog-watch:tick` | Ejecutar tick canónico único (SAAS+RuralGo+Flux) para decisión rápida `fix now` vs `no-action`. |
+| `npm run -s validation:backlog-watch:gate` | Gate previo a release: falla con exit code `1` si hay señal neta accionable en cualquier consumer. |
 | `scripts/reconcile-consumer-backlog-issues.ts --json` | Simular reconciliación (dry-run) y revisar cambios planeados. |
 | `scripts/reconcile-consumer-backlog-issues.ts --apply` | Aplicar reconciliación sobre el backlog consumidor. |
 
 Backlog tooling quick nav (terminal):
 
 ```bash
-rg -n "backlog-tooling|backlog-reasons" docs/USAGE.md README.md
+rg -n "backlog-tooling|backlog-reasons" docs/product/USAGE.md README.md
 ```
 
 Backlog tooling quick examples:
@@ -424,6 +487,20 @@ npx --yes tsx@4.21.0 scripts/watch-consumer-backlog.ts \
   --id-issue-map=/abs/path/override.json \
   --resolve-missing-via-gh \
   --json
+
+# watch fleet: varios consumers en una sola pasada (sin mutar, sin fallar pipeline)
+npx --yes tsx@4.21.0 scripts/watch-consumer-backlog-fleet.ts \
+  --target=/abs/path/consumer1/PUMUKI_BUGS_MEJORAS.md::SwiftEnProfundidad/ast-intelligence-hooks \
+  --target=/abs/path/consumer2/pumuki-integration-feedback.md::SwiftEnProfundidad/ast-intelligence-hooks \
+  --target=/abs/path/consumer3/BUGS_Y_MEJORAS_PUMUKI.md \
+  --json \
+  --no-fail
+
+# watch tick canónico (usa rutas por defecto y devuelve JSON consolidado)
+npm run -s validation:backlog-watch:tick
+
+# gate de release (misma señal, pero bloquea con exit code 1 si hay acción requerida)
+npm run -s validation:backlog-watch:gate
 
 # reconcile dry-run: same source chain
 npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts \
@@ -601,7 +678,7 @@ Schema and behavior:
 - `repo_state` captures deterministic git/lifecycle runtime snapshot
 - stable JSON ordering for deterministic diffs
 
-Reference: `docs/evidence-v2.1.md`.
+Reference: `docs/mcp/ai-evidence-v2.1-contract.md`.
 
 ## Rule packs and overrides
 

@@ -169,4 +169,4 @@ Condicionantes no bloqueantes del contrato:
 
 ## NEXT
 
-NEXT: ciclo `C022` cerrado; continuidad operativa en `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.
+NEXT: ciclo `C022` cerrado; continuidad operativa en `docs/tracking/historico-validacion-ruralgo-03-03-2026.md`.

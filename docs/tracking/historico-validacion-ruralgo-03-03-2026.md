@@ -11,8 +11,8 @@
 
 - Objetivo: validar Pumuki end-to-end en `ruralgo-fork` sobre flujo real de desarrollo, sin bypass.
 - Modelo de seguimiento: dual canónico.
-  - Maestro: `docs/registro-maestro-de-seguimiento.md`
-  - Plan operativo detallado (este documento): `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
+  - Maestro: `docs/tracking/estado-ejecutivo.md`
+  - Plan operativo detallado (este documento): `docs/tracking/historico-validacion-ruralgo-03-03-2026.md`
   - Espejo consumidor: `ruralgo-fork/docs/strategy/ruralgo-tracking-hub.md`
 - Cierre exigido:
   - 2 PR reales (`API contacto` + `UX contacto`).
@@ -24,7 +24,7 @@
   - `.audit_tmp/validation-evidence/p9-functionality-matrix.json` (totales actuales: `195` funcionalidades).
   - `.audit_tmp/validation-evidence/p9-rules-matrix.json` (totales actuales: `235` reglas).
 - Registro paralelo de bugs detectados en auditoría real:
-  - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
+  - `docs/tracking/historico-validacion-ruralgo-03-03-2026.md`
   - intake ampliado consolidado (issue-pack + roadmap enterprise 30/60/90, con separación bug/no-bug).
 
 ## Descubrimiento (cerrado)
@@ -58,7 +58,7 @@
   - ✅ `P9.F0.T1.ST1` Leyenda y criterios globales.
   - ✅ `P9.F0.T1.ST2` Fases 0-6 y mapa de escenarios.
 - ✅ `P9.F0.T2` Alinear tracking dual maestro/espejo.
-  - ✅ `P9.F0.T2.ST1` Reflejar referencia activa desde `registro-maestro-de-seguimiento.md`.
+  - ✅ `P9.F0.T2.ST1` Reflejar referencia activa desde `registro-estado-ejecutivo.md`.
   - ✅ `P9.F0.T2.ST2` Definir espejo operativo en runbook para `ruralgo-tracking-hub.md` (aplicacion manual en fork por el usuario).
   - ✅ `P9.F0.T2.ST3` Verificar una sola tarea `🚧` activa con validacion automatica (`npm run -s validation:tracking-single-active`).
 - ⏳ `P9.F0.T3` Preparar ramas de validacion real para PR #1 y PR #2.
@@ -276,7 +276,7 @@ Criterio de salida F5:
     - anexos oficiales y trazabilidad de cierre presentes:
       - `.audit_tmp/validation-evidence/p9-functionality-matrix.json` (`195` funcionalidades)
       - `.audit_tmp/validation-evidence/p9-rules-matrix.json` (`235` reglas)
-      - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md` (bugs + mejoras separadas y priorizadas)
+      - `docs/tracking/historico-validacion-ruralgo-03-03-2026.md` (bugs + mejoras separadas y priorizadas)
 - ✅ `P9.F6.T2` Decidir GO/NO-GO explicito.
   - decisión: **GO** para validación P9 en flujo real `ruralgo-fork`.
   - justificación:
@@ -290,7 +290,7 @@ Criterio de salida F5:
     - diferencias de comportamiento por alcance (`staged/working-tree` vacío) que pueden generar PASS de alcance vacío si no se ejecuta `full audit`.
     - falsos positivos puntuales de reglas (ej. clasificación `ios.no-force-unwrap` sobre código TS) en repos multi-stack.
   - backlog de hardening publicado:
-    - fuente canónica: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.
+    - fuente canónica: `docs/tracking/historico-validacion-ruralgo-03-03-2026.md`.
     - priorización activa: P0 (fiabilidad install/gates/evidence) -> P1 (governance/SDD/docs) -> P2 (security/waivers/telemetry/contracts).
     - criterio de gestión: cada riesgo residual queda ligado a issue/tarea concreta con evidencia reproducible y severidad explícita.
 - ✅ `P9.F6.T4` Cerrar `P9.T2` en tablero maestro y espejo.
@@ -303,23 +303,23 @@ Criterio de salida F5:
       - contenido verificado con:
         - `Veredicto final P9: GO`
         - `Cierre: P9.T2 => ✅`
-  - ✅ `P9.F6.T4.ST3` Sincronizar cierre final de espejo en tablero maestro (`docs/registro-maestro-de-seguimiento.md`).
+  - ✅ `P9.F6.T4.ST3` Sincronizar cierre final de espejo en tablero maestro (`docs/tracking/estado-ejecutivo.md`).
     - evidencia:
-      - `docs/registro-maestro-de-seguimiento.md` actualizado con referencia explícita al cierre de espejo en `ruralgo-fork/docs/strategy/ruralgo-tracking-hub.md`.
+      - `docs/tracking/estado-ejecutivo.md` actualizado con referencia explícita al cierre de espejo en `ruralgo-fork/docs/strategy/ruralgo-tracking-hub.md`.
   - ✅ `P9.F6.T4.ST4` Cerrar administrativamente `P9.T2` en tablero maestro y marcar criterio global `P9.T2 cerrado con GO explícito`.
     - evidencia:
-      - `docs/registro-maestro-de-seguimiento.md` preparado para cierre final de `P9.T2` con veredicto `GO` y sincronía de espejo confirmada.
+      - `docs/tracking/estado-ejecutivo.md` preparado para cierre final de `P9.T2` con veredicto `GO` y sincronía de espejo confirmada.
       - criterio global actualizado en este plan detallado.
 - ✅ `P9.F6.T5` Preparar handoff post-cierre P9 (paquete final de trazabilidad + siguiente bloque).
   - evidencia de handoff:
     - cierre integral P9 consolidado en maestros:
-      - `docs/registro-maestro-de-seguimiento.md`
-      - `docs/registro-maestro-de-seguimiento.md`
+      - `docs/tracking/estado-ejecutivo.md`
+      - `docs/tracking/estado-ejecutivo.md`
     - cierre de espejo consumidor confirmado:
       - `ruralgo-fork/docs/strategy/ruralgo-tracking-hub.md` con `GO` y `P9.T2 => ✅`.
     - paquete de trazabilidad final disponible:
-      - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md` (plan detallado)
-      - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md` (riesgos/backlog)
+      - `docs/tracking/historico-validacion-ruralgo-03-03-2026.md` (plan detallado)
+      - `docs/tracking/historico-validacion-ruralgo-03-03-2026.md` (riesgos/backlog)
       - `.audit_tmp/validation-evidence/p9-functionality-matrix.json`
       - `.audit_tmp/validation-evidence/p9-rules-matrix.json`
 - ✅ `P10.F0.T1` Definir objetivo operativo y criterio de entrada del ciclo post-P9.
@@ -489,7 +489,7 @@ Criterio de salida F5:
 - ✅ `P11.F1.T4` Ejecutar slice S4 de P11: estandarización del cierre en checklist operativa diaria.
   - cierre aplicado:
     - checklist diaria obligatoria incorporada en:
-      - `docs/USAGE.md` (`Minimal daily close checklist (mandatory)`).
+      - `docs/product/USAGE.md` (`Minimal daily close checklist (mandatory)`).
       - `docs/validation/README.md` (`Checklist diaria de cierre (obligatoria)`).
     - condiciones de cierre diario formalizadas:
       - `ready=true`, `snapshot.handoffReady=true`, `snapshot.trackingSingleActiveOk=true`.
@@ -508,7 +508,7 @@ Criterio de salida F5:
   - cierre aplicado:
     - troubleshooting avanzado documentado en:
       - `docs/validation/README.md`
-      - `docs/USAGE.md`
+      - `docs/product/USAGE.md`
       - `docs/validation/real-repo-manual-e2e-ruralgo-fork.md`
     - variantes de ejecución trazables publicadas:
       - `--allow-manifests-fail`
@@ -538,7 +538,7 @@ Criterio de salida F5:
 - ✅ `P11.F1.T9` Ejecutar slice S9 de P11: adopción documental del contrato de error CLI diario.
   - cierre aplicado:
     - runbooks actualizados con contrato de fallo controlado en:
-      - `docs/USAGE.md`
+      - `docs/product/USAGE.md`
       - `docs/validation/README.md`
       - `docs/validation/real-repo-manual-e2e-ruralgo-fork.md`
     - evidencia real:
@@ -1302,7 +1302,7 @@ Criterio de salida F5:
         - `integrations/git/__tests__/runPlatformGateEvidence.test.ts`
       - documentación mínima:
         - `README.md` (sección `Telemetry Export (Enterprise)`).
-        - `docs/CONFIGURATION.md` (env vars de export).
+        - `docs/product/CONFIGURATION.md` (env vars de export).
     - commits técnicos en rama:
       - `bc93dc1` (`feat(telemetry): add structured gate export to JSONL and optional OTel`).
       - `abc0a7d` (`docs(tracking): rotate active task to T43 and sync blocker status`).
@@ -1800,7 +1800,7 @@ Criterio de salida F5:
     - release notes actualizadas con sección `2026-03-04 (v6.3.33)` y comandos de verificación para consumidores.
     - documentación operativa alineada con el release publicado `6.3.33`.
   - evidencia:
-    - `docs/RELEASE_NOTES.md` incluye delta funcional de `doctor --deep` para `compatibility-contract`.
+    - `docs/operations/RELEASE_NOTES.md` incluye delta funcional de `doctor --deep` para `compatibility-contract`.
     - `npm view pumuki version` => `6.3.33`
     - `npm run -s validation:tracking-single-active`
 
@@ -1813,7 +1813,7 @@ Criterio de salida F5:
     - `npx --yes tsx@4.21.0 --test integrations/telemetry/__tests__/gateTelemetry.test.ts`
     - `npm run -s typecheck`
     - `npm run -s validation:tracking-single-active`
-    - `docs/CONFIGURATION.md` actualizado con verificación operativa JSONL y claves esperadas.
+    - `docs/product/CONFIGURATION.md` actualizado con verificación operativa JSONL y claves esperadas.
 
 - ✅ `P12.F2.T58` Ejecutar siguiente mejora estratégica: rotación/guard de tamaño para telemetría JSONL en repos enterprise de larga duración.
   - cierre ejecutado:
@@ -1824,7 +1824,7 @@ Criterio de salida F5:
     - `npx --yes tsx@4.21.0 --test integrations/telemetry/__tests__/gateTelemetry.test.ts`
     - `npm run -s typecheck`
     - `npm run -s validation:tracking-single-active`
-    - `docs/CONFIGURATION.md` actualizado con `PUMUKI_TELEMETRY_JSONL_MAX_BYTES`.
+    - `docs/product/CONFIGURATION.md` actualizado con `PUMUKI_TELEMETRY_JSONL_MAX_BYTES`.
 
 - ✅ `P12.F2.T59` Ejecutar siguiente mejora estratégica: cubrir la rotación JSONL en la suite contractual enterprise.
   - cierre ejecutado:
@@ -1851,7 +1851,7 @@ Criterio de salida F5:
 - ✅ `P12.F2.T61` Publicar documentación de adopción de `6.3.34` (release notes + verificación operativa rápida).
   - cierre ejecutado:
     - issue documental creada y cerrada: `#581`.
-    - `docs/RELEASE_NOTES.md` actualizado con entrada `2026-03-04 (v6.3.34)` y comandos de verificación operativa.
+    - `docs/operations/RELEASE_NOTES.md` actualizado con entrada `2026-03-04 (v6.3.34)` y comandos de verificación operativa.
     - trazabilidad sincronizada en plan activo + registro maestro.
   - evidencia:
     - `npm run -s validation:tracking-single-active`
@@ -1868,7 +1868,7 @@ Criterio de salida F5:
     - SDD integra el contrato:
       - `action=block` -> `SDD_DEGRADED_MODE_BLOCKED`.
       - `action=allow` -> `ALLOWED` con metadata degradada en `decision.details`.
-    - documentación operativa actualizada en `docs/CONFIGURATION.md`.
+    - documentación operativa actualizada en `docs/product/CONFIGURATION.md`.
   - evidencia:
     - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/hookGateSummary.test.ts integrations/sdd/__tests__/policy.test.ts` => `58 passed, 0 failed`.
     - `npx --yes tsx@4.21.0 --test integrations/telemetry/__tests__/gateTelemetry.test.ts` => `4 passed`.
@@ -1903,7 +1903,7 @@ Criterio de salida F5:
       - `--dry-run`: no escribe archivo y retorna payload de aprendizaje.
       - ejecución normal: persiste `openspec/changes/<change>/learning.json`.
     - cobertura de tests ampliada para dry-run y persistencia real del artefacto.
-    - documentación mínima del esquema añadida en `docs/CONFIGURATION.md`.
+    - documentación mínima del esquema añadida en `docs/product/CONFIGURATION.md`.
   - evidencia:
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `34 passed, 0 failed`.
 
@@ -1925,7 +1925,7 @@ Criterio de salida F5:
     - `runSddSyncDocs` ahora deriva `rule_updates` de señales de evidencia/gate (`missing`, `invalid`, `blocked`, `allowed`) de forma determinista.
     - añadidas recomendaciones específicas por familia de señal (`evidence.*`, `ai-gate.*`, `sdd.*`, `snapshot.*`).
     - ampliada cobertura en `syncDocs` para escenarios `invalid` y `allow` además de `blocked`/persistencia.
-    - documentación de contrato actualizada en `docs/CONFIGURATION.md`.
+    - documentación de contrato actualizada en `docs/product/CONFIGURATION.md`.
     - PR mergeada: `#596` (`commit 51d894c8835c9b04cb57dd810197ac7fc3d0cd3e`).
   - evidencia:
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `37 passed, 0 failed`.
@@ -1936,7 +1936,7 @@ Criterio de salida F5:
     - nuevo runtime `runSddLearn` en capa SDD con salida/persistencia de `learning.json` sin depender de `sync-docs`.
     - CLI ampliada con:
       - `pumuki sdd learn --change=<id> --stage=<stage> --task=<task-id> [--dry-run] [--json]`.
-    - cobertura de regresión añadida en parser y ejecución (`cli.test.ts`) y documentación actualizada en `docs/CONFIGURATION.md`.
+    - cobertura de regresión añadida en parser y ejecución (`cli.test.ts`) y documentación actualizada en `docs/product/CONFIGURATION.md`.
     - PR mergeada: `#599` (`commit c971c643883ccce679c0c5cdb3363bdd6e6cace6`).
   - evidencia:
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `38 passed, 0 failed`.
@@ -1945,7 +1945,7 @@ Criterio de salida F5:
 - ✅ `P12.F2.T69` Publicar release `6.3.35` con cierre SDD incremental.
   - cierre ejecutado:
     - versión incrementada a `6.3.35` en `package.json` y `package-lock.json`.
-    - release notes actualizadas con entrada `2026-03-04 (v6.3.35)` en `docs/RELEASE_NOTES.md`.
+    - release notes actualizadas con entrada `2026-03-04 (v6.3.35)` en `docs/operations/RELEASE_NOTES.md`.
     - publicación npm ejecutada con éxito (`npm publish --access public`).
     - propagación validada:
       - `npm view pumuki dist-tags --json` => `"latest": "6.3.35"`.
@@ -1961,7 +1961,7 @@ Criterio de salida F5:
     - nuevo runtime `runSddAutoSync` en capa SDD para orquestar `sync-docs` + `learning` en un único paso determinista.
     - CLI ampliada con:
       - `pumuki sdd auto-sync --change=<id> --stage=<stage> --task=<task-id> [--dry-run] [--json]`.
-    - cobertura de regresión añadida en `syncDocs`/`index`/`cli` y documentación actualizada en `docs/CONFIGURATION.md`.
+    - cobertura de regresión añadida en `syncDocs`/`index`/`cli` y documentación actualizada en `docs/product/CONFIGURATION.md`.
     - issue cerrada: `#600`.
     - PR mergeada: `#602` (`commit 2be34c5`).
   - evidencia:
@@ -1971,7 +1971,7 @@ Criterio de salida F5:
 - ✅ `P12.F2.T71` Publicar release `6.3.36` con `pumuki sdd auto-sync` (`#603`).
   - cierre ejecutado:
     - versionado a `6.3.36` en `package.json`, `package-lock.json` y `VERSION`.
-    - release notes actualizadas con entrada `2026-03-04 (v6.3.36)` en `docs/RELEASE_NOTES.md`.
+    - release notes actualizadas con entrada `2026-03-04 (v6.3.36)` en `docs/operations/RELEASE_NOTES.md`.
     - publicación npm ejecutada con éxito (`npm publish --access public`).
     - propagación validada:
       - `npm view pumuki dist-tags --json` => `"latest": "6.3.36"`.
@@ -2058,7 +2058,7 @@ Criterio de salida F6:
 
 ## Checklist A — Funcionalidades (adaptado a RuralGO)
 
-Referencia: inventario exhaustivo heredado de `registro-maestro-de-seguimiento.md` convertido a estado RuralGO pendiente.
+Referencia: inventario exhaustivo heredado de `registro-estado-ejecutivo.md` convertido a estado RuralGO pendiente.
 
 Totales: bins=12, lifecycle_commands=20, npm_scripts=102, exports=8, menu_options=45, total_items=187.
 
@@ -2266,7 +2266,7 @@ Nota operativa A.3:
 
 ## Checklist B — Reglas AST (adaptado a RuralGO)
 
-Referencia: inventario exhaustivo heredado de `registro-maestro-de-seguimiento.md` convertido a estado RuralGO pendiente.
+Referencia: inventario exhaustivo heredado de `registro-estado-ejecutivo.md` convertido a estado RuralGO pendiente.
 
 Total reglas AST inventariadas: 235.
 

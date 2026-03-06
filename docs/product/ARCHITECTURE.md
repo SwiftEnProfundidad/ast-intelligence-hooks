@@ -95,7 +95,7 @@ Evidence properties:
 - stable JSON ordering
 - platforms and rulesets traceability
 
-Schema reference: `docs/evidence-v2.1.md`.
+Schema reference: `docs/mcp/ai-evidence-v2.1-contract.md`.
 
 ## CI architecture
 

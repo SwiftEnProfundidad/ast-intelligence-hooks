@@ -91,7 +91,7 @@ Output file: `.ai_evidence.json`
 - `rulesets` stores loaded bundles and hashes
 - `ai_gate` mirrors compatibility status (`ALLOWED` | `BLOCKED`)
 
-Full schema: `docs/evidence-v2.1.md`.
+Full schema: `docs/mcp/ai-evidence-v2.1-contract.md`.
 
 ## Interfaces to run it
 

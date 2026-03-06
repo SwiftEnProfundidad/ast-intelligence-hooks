@@ -1,4 +1,4 @@
----
+code---
 name: windsurf-rules-backend
 description: Reglas Backend (NestJS/TypeScript) del proyecto. Usar en cambios backend.
 ---

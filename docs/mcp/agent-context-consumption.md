@@ -183,6 +183,6 @@ Summary facet contract:
 
 ## Related References
 
-- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
-- `docs/MCP_SERVERS.md`
-- `docs/API_REFERENCE.md`
+- `docs/mcp/evidence-context-server.md`
+- `docs/mcp/mcp-servers-overview.md`
+- `docs/product/API_REFERENCE.md`
