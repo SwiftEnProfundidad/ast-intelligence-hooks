@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): `PUMUKI-248` (la suite de notificaciones queda separada en `payloads`, `config`, `runner macOS` y un smoke mínimo de la fachada pública, manteniendo `21` tests verdes y `typecheck` en verde).
-- Task activa (`🚧`): `PUMUKI-249` (separar el bloque de tests `framework-menu-consumer-runtime` y `framework-menu-consumer-preflight` por responsabilidad para que `scripts/**` quede completamente alineado con la arquitectura nueva).
+- Última task cerrada (`✅`): `PUMUKI-249` (las suites de `framework-menu-consumer-runtime` y `framework-menu-consumer-preflight` quedan separadas por responsabilidad, manteniendo `15` tests verdes y `typecheck` en verde).
+- Task activa (`🚧`): `PUMUKI-250` (reducir el peso de `framework-menu-legacy-audit-lib` separando lectura/export/formateo para cerrar el bloque `scripts/**` con la misma claridad que `git`, `sdd` y notificaciones).
 - Pendiente priorizado (`⏳`): ninguno externo; los tres backlogs consumidores siguen en `0` abiertos.
 
 ## Historial resumido

@@ -3351,12 +3351,33 @@
     - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-payloads.test.ts scripts/__tests__/framework-menu-system-notifications-config.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
     - `npm run -s typecheck`
 
-- 🚧 PUMUKI-249: Separar el bloque de tests `framework-menu-consumer-runtime` y `framework-menu-consumer-preflight` por responsabilidad para que `scripts/**` quede completamente alineado con la arquitectura nueva.
+- ✅ PUMUKI-249: Separar el bloque de tests `framework-menu-consumer-runtime` y `framework-menu-consumer-preflight` por responsabilidad para que `scripts/**` quede completamente alineado con la arquitectura nueva.
+  - Resultado (2026-03-06):
+    - la suite monolítica de `runtime` desaparece y se divide en:
+      - `scripts/__tests__/framework-menu-consumer-runtime-actions.test.ts`
+      - `scripts/__tests__/framework-menu-consumer-runtime-notifications.test.ts`
+      - `scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts`
+      - helper compartido `scripts/__tests__/framework-menu-consumer-runtime-test-helpers.ts`
+    - la suite monolítica de `preflight` desaparece y se divide en:
+      - `scripts/__tests__/framework-menu-consumer-preflight-run.test.ts`
+      - `scripts/__tests__/framework-menu-consumer-preflight-format.test.ts`
+    - el corte queda alineado con responsabilidades reales:
+      - `runtime/actions`
+      - `runtime/notifications`
+      - `runtime/menu`
+      - `preflight/run`
+      - `preflight/format`
+    - el contrato público se mantiene y el árbol vuelve a quedar limpio tras el corte.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-runtime-actions.test.ts scripts/__tests__/framework-menu-consumer-runtime-notifications.test.ts scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts scripts/__tests__/framework-menu-consumer-preflight-run.test.ts scripts/__tests__/framework-menu-consumer-preflight-format.test.ts`
+    - `npm run -s typecheck`
+
+- 🚧 PUMUKI-250: Reducir el peso de `framework-menu-legacy-audit-lib` separando lectura, export y formateo para cerrar el bloque `scripts/**` con la misma claridad que `git`, `sdd` y notificaciones.
   - Alcance:
-    - inventariar y dividir los casos de `runtime` y `preflight` por responsabilidad;
-    - extraer helpers compartidos de test si hace falta, sin reintroducir opacidad;
-    - mantener el repo limpio y con una sola task activa durante el corte.
+    - inventariar el peso real de `framework-menu-legacy-audit-lib` y sus tests asociados;
+    - separar lectura de summary, export markdown y render helpers si el corte es limpio;
+    - mantener el repo limpio y con una sola task activa durante todo el corte.
   - Inventario inicial (2026-03-06):
-    - el bloque de notificaciones ya quedó desacoplado en implementación y suite;
-    - el siguiente punto más denso del slice `scripts/**` ahora son los tests de `framework-menu-consumer-runtime` y `framework-menu-consumer-preflight`;
-    - con `PUMUKI-248` cerrada, podemos atacar este corte sobre un árbol limpio y validado.
+    - `runtime` y `preflight` ya no concentran la opacidad de `scripts/**`;
+    - el siguiente bloque más denso y transversal pasa a ser `framework-menu-legacy-audit-lib`;
+    - con `PUMUKI-249` cerrada, el corte puede hacerse sobre árbol limpio y suites ya estabilizadas.
