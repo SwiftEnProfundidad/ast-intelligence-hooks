@@ -7,13 +7,13 @@ import type {
   SystemNotificationsConfig,
 } from './framework-menu-system-notifications-types';
 import {
-  applyDialogChoice,
   buildSystemNotificationsConfigFromSelection,
-  isMutedAt,
   persistSystemNotificationsConfig,
   readSystemNotificationsConfig,
 } from './framework-menu-system-notifications-config';
-import { deliverMacOsNotification } from './framework-menu-system-notifications-macos';
+import { dispatchSystemNotification } from './framework-menu-system-notifications-dispatch';
+import { resolveEffectiveSystemNotificationsConfig } from './framework-menu-system-notifications-effective-config';
+import { resolveSystemNotificationGate } from './framework-menu-system-notifications-gate';
 import { buildSystemNotificationPayload } from './framework-menu-system-notifications-payloads';
 
 export {
@@ -39,29 +39,26 @@ export const emitSystemNotification = (params: {
   env?: NodeJS.ProcessEnv;
   now?: () => number;
 }): SystemNotificationEmitResult => {
-  const config =
-    params.config ??
-    (params.repoRoot
-      ? readSystemNotificationsConfig(params.repoRoot)
-      : buildSystemNotificationsConfigFromSelection(true));
-  if (!config.enabled) {
-    return { delivered: false, reason: 'disabled' };
-  }
+  const config = resolveEffectiveSystemNotificationsConfig({
+    repoRoot: params.repoRoot,
+    config: params.config,
+  });
   const nowMs = (params.now ?? Date.now)();
-  if (isMutedAt(config, nowMs)) {
-    return { delivered: false, reason: 'muted' };
-  }
-
   const platform = params.platform ?? process.platform;
-  if (platform !== 'darwin') {
-    return { delivered: false, reason: 'unsupported-platform' };
+  const gateResult = resolveSystemNotificationGate({
+    config,
+    nowMs,
+    platform,
+  });
+  if (gateResult) {
+    return gateResult;
   }
 
   const payload = buildSystemNotificationPayload(params.event, {
     repoRoot: params.repoRoot,
     projectLabel: params.env?.PUMUKI_PROJECT_LABEL,
   });
-  return deliverMacOsNotification({
+  return dispatchSystemNotification({
     event: params.event,
     payload,
     repoRoot: params.repoRoot,
@@ -70,6 +67,5 @@ export const emitSystemNotification = (params: {
     nowMs,
     runCommand: params.runCommand,
     runCommandWithOutput: params.runCommandWithOutput,
-    applyDialogChoice,
   });
 };
