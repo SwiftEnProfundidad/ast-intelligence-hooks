@@ -4273,19 +4273,41 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-280: Atacar `framework-menu-system-notifications-macos-blocked-dispatch.ts`, separando gate de evento bloqueante y resolución del runner con salida para seguir cerrando el slice macOS con el repo limpio.
+- ✅ PUMUKI-280: Atacar `framework-menu-system-notifications-macos-blocked-dispatch.ts`, separando gate de evento bloqueante y resolución del runner con salida para seguir cerrando el slice macOS con el repo limpio.
+  - Resultado:
+    - `framework-menu-system-notifications-macos-blocked-dispatch.ts` ya quedó como fachada fina y estable.
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-blocked-dispatch-gate.ts`
+      - `scripts/framework-menu-system-notifications-macos-blocked-dispatch-runner.ts`
+      - `scripts/framework-menu-system-notifications-macos-blocked-dispatch.ts` como fachada pública;
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch-gate.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch-runner.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch.test.ts` como smoke de orquestación;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - el corte queda validado con `22` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`5` archivos tocados, `1` scope).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch-gate.test.ts scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-enabled.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-payload.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-effect.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-281: Atacar `framework-menu-system-notifications-macos-dialog-mode.ts`, separando resolución del modo, dispatch Swift y fallback AppleScript para seguir cerrando el slice macOS con el repo limpio.
   - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-blocked-dispatch.ts` y de la suite que lo cubre;
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-dialog-mode.ts` y de la suite que lo cubre;
     - separar, como mínimo:
-      - gate del evento bloqueante,
-      - resolución del runner con salida;
+      - resolución del modo efectivo,
+      - dispatch del helper Swift,
+      - fallback explícito a AppleScript;
     - mantener estable la fachada pública usada por:
-      - `scripts/framework-menu-system-notifications-macos.ts`;
+      - `scripts/framework-menu-system-notifications-macos-dialog.ts`;
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
   - Inventario inicial (2026-03-07):
-    - tras cerrar `PUMUKI-279`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos-blocked-dispatch.ts` (`36` líneas);
+    - tras cerrar `PUMUKI-280`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos-dialog-mode.ts` (`44` líneas);
     - actualmente concentra:
-      - gate del evento `gate.blocked`,
-      - resolución del `runCommandWithOutput` por defecto,
-      - dispatch hacia el diálogo bloqueante,
+      - resolución del modo desde `env`,
+      - dispatch del helper Swift,
+      - fallback a AppleScript cuando Swift falla,
       lo que lo convierte en el siguiente cierre natural del slice macOS.
