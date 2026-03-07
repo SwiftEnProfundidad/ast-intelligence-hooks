@@ -2,81 +2,36 @@ import type {
   PumukiCriticalNotificationEvent,
   SystemNotificationPayload,
 } from './framework-menu-system-notifications-types';
-import { resolveBlockedCauseSummary } from './framework-menu-system-notifications-cause';
-import { resolveBlockedRemediation } from './framework-menu-system-notifications-remediation';
 import {
+  resolveNotificationProjectPrefix,
   resolveProjectLabel,
-  truncateNotificationText,
-} from './framework-menu-system-notifications-text';
+} from './framework-menu-system-notifications-payloads-context';
+import { buildAuditSummaryPayload } from './framework-menu-system-notifications-payloads-audit';
+import {
+  buildGateBlockedPayload,
+  resolveBlockedCauseSummary,
+  resolveBlockedRemediation,
+} from './framework-menu-system-notifications-payloads-blocked';
+import {
+  buildEvidenceStalePayload,
+  buildGitflowViolationPayload,
+} from './framework-menu-system-notifications-payloads-events';
 
+export { resolveProjectLabel } from './framework-menu-system-notifications-payloads-context';
 export {
   resolveBlockedCauseSummary,
-} from './framework-menu-system-notifications-cause';
-export {
   resolveBlockedRemediation,
-} from './framework-menu-system-notifications-remediation';
+} from './framework-menu-system-notifications-payloads-blocked';
 export {
-  resolveProjectLabel,
-} from './framework-menu-system-notifications-text';
-
-const buildAuditSummaryPayload = (
-  event: Extract<PumukiCriticalNotificationEvent, { kind: 'audit.summary' }>
-): SystemNotificationPayload => {
-  if (event.criticalViolations > 0) {
-    return {
-      title: 'AST Audit Complete',
-      message: `🔴 ${event.criticalViolations} CRITICAL, ${event.highViolations} HIGH violations`,
-    };
-  }
-  if (event.highViolations > 0) {
-    return {
-      title: 'AST Audit Complete',
-      message: `🟡 ${event.highViolations} HIGH violations found`,
-    };
-  }
-  if (event.totalViolations > 0) {
-    return {
-      title: 'AST Audit Complete',
-      message: `🔵 ${event.totalViolations} violations (no blockers)`,
-    };
-  }
-  return {
-    title: 'AST Audit Complete',
-    message: '✅ No violations found',
-  };
-};
-
-const buildGateBlockedPayload = (
-  event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>,
-  projectPrefix: string
-): SystemNotificationPayload => {
-  const causeCode = event.causeCode ?? 'GATE_BLOCKED';
-  const causeSummary = truncateNotificationText(
-    resolveBlockedCauseSummary(event, causeCode),
-    72
-  );
-  const remediation = resolveBlockedRemediation(event, causeCode);
-  return {
-    title: '🔴 Pumuki bloqueado',
-    subtitle: `${projectPrefix}${event.stage} · ${causeSummary}`,
-    message: `Solución: ${remediation}`,
-    soundName: 'Basso',
-  };
-};
-
-const buildEvidenceStalePayload = (
-  event: Extract<PumukiCriticalNotificationEvent, { kind: 'evidence.stale' }>
-): SystemNotificationPayload => ({
-  title: '🟡 Pumuki · evidencia desactualizada',
-  message: `Actualiza evidencia (${event.ageMinutes} min): ${event.evidencePath}.`,
-});
-
-const buildGitflowViolationPayload = (
-  event: Extract<PumukiCriticalNotificationEvent, { kind: 'gitflow.violation' }>
-): SystemNotificationPayload => ({
-  title: '🔴 Pumuki · bloqueo GitFlow',
-  message: `La rama ${event.currentBranch} no cumple GitFlow (${event.reason}).`,
-});
+  buildAuditSummaryPayload,
+} from './framework-menu-system-notifications-payloads-audit';
+export {
+  buildGateBlockedPayload,
+} from './framework-menu-system-notifications-payloads-blocked';
+export {
+  buildEvidenceStalePayload,
+  buildGitflowViolationPayload,
+} from './framework-menu-system-notifications-payloads-events';
 
 export const buildSystemNotificationPayload = (
   event: PumukiCriticalNotificationEvent,
@@ -85,11 +40,7 @@ export const buildSystemNotificationPayload = (
     projectLabel?: string;
   }
 ): SystemNotificationPayload => {
-  const projectLabel = resolveProjectLabel({
-    repoRoot: context?.repoRoot,
-    projectLabel: context?.projectLabel,
-  });
-  const projectPrefix = projectLabel ? `${projectLabel} · ` : '';
+  const projectPrefix = resolveNotificationProjectPrefix(context);
 
   if (event.kind === 'audit.summary') {
     return buildAuditSummaryPayload(event);
