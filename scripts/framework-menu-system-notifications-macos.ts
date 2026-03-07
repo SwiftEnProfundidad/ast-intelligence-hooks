@@ -6,15 +6,10 @@ import {
   type SystemNotificationPayload,
   type SystemNotificationsConfig,
 } from './framework-menu-system-notifications-types';
-import { deliverMacOsBanner } from './framework-menu-system-notifications-macos-banner';
-import {
-  maybeHandleBlockedMacOsDialog,
-  resolveBlockedDialogEnabled,
-} from './framework-menu-system-notifications-macos-dialog';
-import {
-  runSystemCommand,
-  runSystemCommandWithOutput,
-} from './framework-menu-system-notifications-macos-runner';
+import { resolveBlockedDialogEnabled } from './framework-menu-system-notifications-macos-dialog';
+import { deliverMacOsNotificationBanner } from './framework-menu-system-notifications-macos-banner-delivery';
+import { maybeDispatchBlockedMacOsDialog } from './framework-menu-system-notifications-macos-blocked-dispatch';
+import { finalizeMacOsNotificationDelivery } from './framework-menu-system-notifications-macos-result';
 
 export { runSystemCommand, runSystemCommandWithOutput } from './framework-menu-system-notifications-macos-runner';
 export { resolveBlockedDialogEnabled } from './framework-menu-system-notifications-macos-dialog';
@@ -35,28 +30,20 @@ export const deliverMacOsNotification = (params: {
     nowMs: number;
   }) => void;
 }): SystemNotificationEmitResult => {
-  const bannerResult = deliverMacOsBanner({
+  const bannerResult = deliverMacOsNotificationBanner({
     payload: params.payload,
-    runCommand: params.runCommand ?? runSystemCommand,
+    runCommand: params.runCommand,
   });
-  if (!bannerResult.delivered) {
-    return bannerResult;
-  }
 
-  if (
-    params.event.kind === 'gate.blocked'
-    && params.repoRoot
-  ) {
-    maybeHandleBlockedMacOsDialog({
-      event: params.event,
-      repoRoot: params.repoRoot,
-      config: params.config,
-      env: params.env,
-      nowMs: params.nowMs,
-      runCommandWithOutput: params.runCommandWithOutput ?? runSystemCommandWithOutput,
-      applyDialogChoice: params.applyDialogChoice,
-    });
-  }
+  maybeDispatchBlockedMacOsDialog({
+    event: params.event,
+    repoRoot: params.repoRoot,
+    config: params.config,
+    env: params.env,
+    nowMs: params.nowMs,
+    runCommandWithOutput: params.runCommandWithOutput,
+    applyDialogChoice: params.applyDialogChoice,
+  });
 
-  return { delivered: true, reason: 'delivered' };
+  return finalizeMacOsNotificationDelivery(bannerResult);
 };
