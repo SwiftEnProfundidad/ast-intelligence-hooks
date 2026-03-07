@@ -4294,20 +4294,41 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-281: Atacar `framework-menu-system-notifications-macos-dialog-mode.ts`, separando resolución del modo, dispatch Swift y fallback AppleScript para seguir cerrando el slice macOS con el repo limpio.
+- ✅ PUMUKI-281: Atacar `framework-menu-system-notifications-macos-dialog-mode.ts`, separando resolución del modo, dispatch Swift y fallback AppleScript para seguir cerrando el slice macOS con el repo limpio.
+  - Resultado:
+    - `framework-menu-system-notifications-macos-dialog-mode.ts` ya quedó como fachada fina y estable.
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-dialog-mode-resolve.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog-mode-dispatch.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog-mode.ts` como fachada pública;
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-dialog-mode-resolve.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-dialog-mode-dispatch.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts` como smoke de orquestación;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos-dialog.ts`
+      se mantiene intacta;
+    - el corte queda validado con `22` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`5` archivos tocados, `1` scope).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-dialog-mode-resolve.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-mode-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-enabled.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-payload.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-effect.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-282: Atacar `framework-menu-system-notifications-macos.ts`, separando orquestación de banner, dispatch del diálogo bloqueante y resultado final de entrega para rematar la fachada macOS con el repo limpio.
   - Alcance:
-    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-dialog-mode.ts` y de la suite que lo cubre;
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos.ts` y de la suite que lo cubre;
     - separar, como mínimo:
-      - resolución del modo efectivo,
-      - dispatch del helper Swift,
-      - fallback explícito a AppleScript;
+      - orquestación de entrega del banner,
+      - dispatch del diálogo bloqueante,
+      - resultado final de emisión;
     - mantener estable la fachada pública usada por:
-      - `scripts/framework-menu-system-notifications-macos-dialog.ts`;
+      - `scripts/framework-menu-system-notifications-lib.ts`;
     - cerrar el corte con tests focales, `typecheck` y repo limpio.
   - Inventario inicial (2026-03-07):
-    - tras cerrar `PUMUKI-280`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos-dialog-mode.ts` (`44` líneas);
+    - tras cerrar `PUMUKI-281`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos.ts` (`49` líneas);
     - actualmente concentra:
-      - resolución del modo desde `env`,
-      - dispatch del helper Swift,
-      - fallback a AppleScript cuando Swift falla,
-      lo que lo convierte en el siguiente cierre natural del slice macOS.
+      - entrega del banner visible,
+      - dispatch del diálogo bloqueante,
+      - traducción del resultado final de emisión,
+      lo que lo convierte en el siguiente cierre natural de la fachada macOS.
