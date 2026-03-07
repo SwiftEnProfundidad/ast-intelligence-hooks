@@ -4238,7 +4238,7 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-279: Atacar `framework-menu-system-notifications-macos-banner-delivery.ts`, separando resolución del runner por defecto y dispatch del banner para seguir cerrando el slice macOS con el repo limpio.
+- ✅ PUMUKI-279: Atacar `framework-menu-system-notifications-macos-banner-delivery.ts`, separando resolución del runner por defecto y dispatch del banner para seguir cerrando el slice macOS con el repo limpio.
   - Alcance:
     - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-banner-delivery.ts` y de la suite que lo cubre;
     - separar, como mínimo:
@@ -4253,3 +4253,39 @@
       - resolución del `runCommand` por defecto,
       - llamada al banner macOS,
       lo que lo convierte en el siguiente cierre natural y pequeño del slice macOS.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos-banner-delivery.ts` queda reducido a una fachada pública más fina;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-banner-delivery-runner.ts`
+      - `scripts/framework-menu-system-notifications-macos-banner-delivery-dispatch.ts`
+      - `scripts/framework-menu-system-notifications-macos-banner-delivery.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery-runner.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery-dispatch.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery.test.ts` como smoke de fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - el corte queda validado con `14` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`5` archivos tocados, `1` scope).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-script.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-result.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-280: Atacar `framework-menu-system-notifications-macos-blocked-dispatch.ts`, separando gate de evento bloqueante y resolución del runner con salida para seguir cerrando el slice macOS con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-blocked-dispatch.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - gate del evento bloqueante,
+      - resolución del runner con salida;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-279`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos-blocked-dispatch.ts` (`36` líneas);
+    - actualmente concentra:
+      - gate del evento `gate.blocked`,
+      - resolución del `runCommandWithOutput` por defecto,
+      - dispatch hacia el diálogo bloqueante,
+      lo que lo convierte en el siguiente cierre natural del slice macOS.
