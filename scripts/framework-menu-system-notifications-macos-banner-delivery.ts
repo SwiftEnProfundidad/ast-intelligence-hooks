@@ -1,16 +1,21 @@
 import type {
-  SystemNotificationCommandRunner,
   SystemNotificationEmitResult,
-  SystemNotificationPayload,
 } from './framework-menu-system-notifications-types';
-import { deliverMacOsBanner } from './framework-menu-system-notifications-macos-banner';
-import { runSystemCommand } from './framework-menu-system-notifications-macos-runner';
+import {
+  dispatchMacOsNotificationBanner,
+} from './framework-menu-system-notifications-macos-banner-delivery-dispatch';
+import type {
+  MacOsBannerDeliveryParams,
+} from './framework-menu-system-notifications-macos-banner-delivery-runner';
+import {
+  resolveMacOsBannerDeliveryRunner,
+} from './framework-menu-system-notifications-macos-banner-delivery-runner';
 
 export const deliverMacOsNotificationBanner = (params: {
-  payload: SystemNotificationPayload;
-  runCommand?: SystemNotificationCommandRunner;
+  payload: MacOsBannerDeliveryParams['payload'];
+  runCommand?: MacOsBannerDeliveryParams['runCommand'];
 }): SystemNotificationEmitResult =>
-  deliverMacOsBanner({
+  dispatchMacOsNotificationBanner({
     payload: params.payload,
-    runCommand: params.runCommand ?? runSystemCommand,
+    runner: resolveMacOsBannerDeliveryRunner(params),
   });
