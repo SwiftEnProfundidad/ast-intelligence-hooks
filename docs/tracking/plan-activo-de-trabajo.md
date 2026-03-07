@@ -3834,7 +3834,7 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-269: Atacar `framework-menu-system-notifications-macos-swift.ts`, separando source Swift, helpers del modal y ensamblado de argumentos para seguir limpiando `scripts/**` con el repo limpio.
+- ✅ PUMUKI-269: Atacar `framework-menu-system-notifications-macos-swift.ts`, separando source Swift, helpers del modal y ensamblado de argumentos para seguir limpiando `scripts/**` con el repo limpio.
   - Alcance:
     - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-swift.ts` y de la suite que lo cubre;
     - separar, como mínimo:
@@ -3851,3 +3851,41 @@
       - `scripts/framework-menu-system-notifications-macos-runner.ts`,
       - `scripts/framework-menu-system-notifications-macos-applescript.ts`,
       lo que hace viable cerrar el bloque macOS extremo a extremo sin romper la fachada pública de notificaciones.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos-swift.ts` queda reducido a una fachada pública estable de `6` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-swift-source.ts`
+      - `scripts/framework-menu-system-notifications-macos-swift-args.ts`
+      - `scripts/framework-menu-system-notifications-macos-swift-run.ts`
+      - `scripts/framework-menu-system-notifications-macos-swift.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - el corte queda validado con `17` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-macos-swift.ts scripts/framework-menu-system-notifications-macos-swift-source.ts scripts/framework-menu-system-notifications-macos-swift-args.ts scripts/framework-menu-system-notifications-macos-swift-run.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-270: Atacar `framework-menu-system-notifications-macos.ts`, separando entrega del banner, flujo de diálogo bloqueante y fallback por modo para cerrar el bloque macOS extremo a extremo con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - envío de la notificación banner,
+      - orquestación del diálogo bloqueante,
+      - selección de modo y fallback AppleScript/Swift;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-269`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos.ts` (`125` líneas);
+    - actualmente convive con:
+      - `scripts/framework-menu-system-notifications-macos-runner.ts` (`49` líneas),
+      - `scripts/framework-menu-system-notifications-macos-applescript.ts` (`62` líneas),
+      - `scripts/framework-menu-system-notifications-macos-swift.ts` (`6` líneas tras este corte),
+      lo que hace viable cerrar el bloque macOS extremo a extremo sin romper la fachada pública del canal `macos`.
