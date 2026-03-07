@@ -5,30 +5,11 @@ import type {
 } from './framework-menu-system-notifications-types';
 import { runSystemCommandWithOutput } from './framework-menu-system-notifications-macos-runner';
 import { runBlockedDialogByMode } from './framework-menu-system-notifications-macos-dialog-mode';
-import {
-  resolveBlockedCauseSummary,
-  resolveBlockedRemediation,
-  resolveProjectLabel,
-} from './framework-menu-system-notifications-payloads';
+import { resolveBlockedDialogEnabled } from './framework-menu-system-notifications-macos-dialog-enabled';
+import { buildBlockedDialogPayload } from './framework-menu-system-notifications-macos-dialog-payload';
+import { applyBlockedDialogSelection } from './framework-menu-system-notifications-macos-dialog-effect';
 
-const isTruthyFlag = (value?: string): boolean => {
-  if (!value) {
-    return false;
-  }
-  const normalized = value.trim().toLowerCase();
-  return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on';
-};
-
-export const resolveBlockedDialogEnabled = (params: {
-  env: NodeJS.ProcessEnv;
-  config: SystemNotificationsConfig;
-}): boolean => {
-  const raw = params.env.PUMUKI_MACOS_BLOCKED_DIALOG;
-  if (typeof raw === 'string' && raw.trim().length > 0) {
-    return isTruthyFlag(raw);
-  }
-  return params.config.blockedDialogEnabled !== false;
-};
+export { resolveBlockedDialogEnabled } from './framework-menu-system-notifications-macos-dialog-enabled';
 
 export const maybeHandleBlockedMacOsDialog = (params: {
   event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>;
@@ -48,34 +29,26 @@ export const maybeHandleBlockedMacOsDialog = (params: {
     return;
   }
 
-  const causeCode = params.event.causeCode ?? 'GATE_BLOCKED';
-  const cause = resolveBlockedCauseSummary(params.event, causeCode);
-  const remediation = resolveBlockedRemediation(params.event, causeCode);
-  const projectLabel = resolveProjectLabel({
+  const dialogPayload = buildBlockedDialogPayload({
+    event: params.event,
     repoRoot: params.repoRoot,
-    projectLabel: params.env.PUMUKI_PROJECT_LABEL,
+    env: params.env,
   });
-  const dialogTitle = projectLabel
-    ? `🔴 Pumuki bloqueado · ${projectLabel}`
-    : '🔴 Pumuki bloqueado';
   const dialogRunner = params.runCommandWithOutput ?? runSystemCommandWithOutput;
   const selectedButton = runBlockedDialogByMode({
     env: params.env,
     repoRoot: params.repoRoot,
-    title: dialogTitle,
-    cause,
-    remediation,
+    title: dialogPayload.title,
+    cause: dialogPayload.cause,
+    remediation: dialogPayload.remediation,
     runner: dialogRunner,
   });
 
-  if (!selectedButton) {
-    return;
-  }
-
-  params.applyDialogChoice({
+  applyBlockedDialogSelection({
     repoRoot: params.repoRoot,
     config: params.config,
-    button: selectedButton,
+    selectedButton,
     nowMs: params.nowMs,
+    applyDialogChoice: params.applyDialogChoice,
   });
 };

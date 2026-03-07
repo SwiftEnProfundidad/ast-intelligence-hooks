@@ -4,10 +4,7 @@ import {
   applyDialogChoice,
   readSystemNotificationsConfig,
 } from '../framework-menu-system-notifications-config';
-import {
-  maybeHandleBlockedMacOsDialog,
-  resolveBlockedDialogEnabled,
-} from '../framework-menu-system-notifications-macos-dialog';
+import { maybeHandleBlockedMacOsDialog } from '../framework-menu-system-notifications-macos-dialog';
 import type { PumukiCriticalNotificationEvent } from '../framework-menu-system-notifications-types';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 
@@ -19,23 +16,6 @@ const blockedEvent = (
   totalViolations: 1,
   causeCode: 'EVIDENCE_STALE',
   ...overrides,
-});
-
-test('resolveBlockedDialogEnabled respeta override explícito del entorno', () => {
-  assert.equal(
-    resolveBlockedDialogEnabled({
-      env: { PUMUKI_MACOS_BLOCKED_DIALOG: '0' } as NodeJS.ProcessEnv,
-      config: { enabled: true, channel: 'macos', blockedDialogEnabled: true },
-    }),
-    false
-  );
-  assert.equal(
-    resolveBlockedDialogEnabled({
-      env: { PUMUKI_MACOS_BLOCKED_DIALOG: 'true' } as NodeJS.ProcessEnv,
-      config: { enabled: true, channel: 'macos', blockedDialogEnabled: false },
-    }),
-    true
-  );
 });
 
 test('maybeHandleBlockedMacOsDialog en macOS abre diálogo swift por defecto', async () => {
