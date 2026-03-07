@@ -1,10 +1,13 @@
 import type {
   PumukiCriticalNotificationEvent,
-  SystemNotificationCommandRunnerWithOutput,
   SystemNotificationsConfig,
 } from './framework-menu-system-notifications-types';
+import { shouldDispatchBlockedMacOsDialog } from './framework-menu-system-notifications-macos-blocked-dispatch-gate';
+import { resolveBlockedMacOsDialogRunner } from './framework-menu-system-notifications-macos-blocked-dispatch-runner';
 import { maybeHandleBlockedMacOsDialog } from './framework-menu-system-notifications-macos-dialog';
-import { runSystemCommandWithOutput } from './framework-menu-system-notifications-macos-runner';
+import type {
+  SystemNotificationCommandRunnerWithOutput,
+} from './framework-menu-system-notifications-types';
 
 export const maybeDispatchBlockedMacOsDialog = (params: {
   event: PumukiCriticalNotificationEvent;
@@ -20,7 +23,7 @@ export const maybeDispatchBlockedMacOsDialog = (params: {
     nowMs: number;
   }) => void;
 }): void => {
-  if (params.event.kind !== 'gate.blocked' || !params.repoRoot) {
+  if (!shouldDispatchBlockedMacOsDialog(params)) {
     return;
   }
 
@@ -30,7 +33,7 @@ export const maybeDispatchBlockedMacOsDialog = (params: {
     config: params.config,
     env: params.env,
     nowMs: params.nowMs,
-    runCommandWithOutput: params.runCommandWithOutput ?? runSystemCommandWithOutput,
+    runCommandWithOutput: resolveBlockedMacOsDialogRunner(params.runCommandWithOutput),
     applyDialogChoice: params.applyDialogChoice,
   });
 };
