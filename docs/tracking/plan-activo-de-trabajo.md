@@ -3996,7 +3996,7 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-273: Atacar `framework-menu-system-notifications-macos-applescript.ts`, separando script de banner, script de diálogo y parseo de salida para rematar el bloque de notificaciones macOS con el repo limpio.
+- ✅ PUMUKI-273: Atacar `framework-menu-system-notifications-macos-applescript.ts`, separando script de banner, script de diálogo y parseo de salida para rematar el bloque de notificaciones macOS con el repo limpio.
   - Alcance:
     - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-applescript.ts` y de la suite que lo cubre;
     - separar, como mínimo:
@@ -4014,3 +4014,44 @@
       - script del diálogo,
       - extracción del botón seleccionado desde stdout,
       lo que lo convierte en el siguiente cierre natural del slice macOS.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos-applescript.ts` queda reducido a una fachada pública estable de `38` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-applescript-banner.ts`
+      - `scripts/framework-menu-system-notifications-macos-applescript-dialog.ts`
+      - `scripts/framework-menu-system-notifications-macos-applescript-parse.ts`
+      - `scripts/framework-menu-system-notifications-macos-applescript.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-applescript-banner.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-applescript-dialog.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-applescript-parse.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts` como smoke de fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos-banner.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog-mode.ts`
+      se mantiene intacta;
+    - el corte queda validado con `24` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-macos-applescript.ts scripts/framework-menu-system-notifications-macos-applescript-banner.ts scripts/framework-menu-system-notifications-macos-applescript-dialog.ts scripts/framework-menu-system-notifications-macos-applescript-parse.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-parse.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-applescript-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-parse.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-274: Atacar `framework-menu-system-notifications-types.ts`, separando unions de eventos, payloads, config y contratos de runner para seguir cerrando el bloque de notificaciones con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-types.ts` y de los módulos/tests que dependen de él;
+    - separar, como mínimo:
+      - unions de eventos (`audit.summary`, `gate.blocked`, `evidence.stale`, `gitflow.violation`),
+      - contratos de payload y configuración,
+      - contratos de runner/command execution;
+    - mantener estable la fachada pública usada por el resto del bloque de notificaciones;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-273`, el siguiente fichero todavía mezclado del bloque notificaciones es `scripts/framework-menu-system-notifications-types.ts` (`67` líneas);
+    - actualmente concentra:
+      - tipos de eventos críticos,
+      - payloads de notificación,
+      - config persistida,
+      - contratos de runners de comandos,
+      lo que lo convierte en el siguiente cierre natural del slice de notificaciones.
