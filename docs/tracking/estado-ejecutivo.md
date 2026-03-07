@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): `PUMUKI-269` (el bloque `framework-menu-system-notifications-macos-swift` ya separa source Swift, argumentos y ejecución del helper, con `17` tests focales en verde y `typecheck` en verde).
-- Task activa (`🚧`): `PUMUKI-270` (atacar `framework-menu-system-notifications-macos.ts`, separando entrega del banner, flujo de diálogo bloqueante y fallback por modo para cerrar el bloque macOS extremo a extremo con el repo limpio).
+- Última task cerrada (`✅`): `PUMUKI-270` (el bloque `framework-menu-system-notifications-macos` ya separa entrega del banner, flujo de diálogo bloqueante y fallback por modo, con `20` tests focales en verde y `typecheck` en verde).
+- Task activa (`🚧`): `PUMUKI-271` (atacar `framework-menu-system-notifications-lib.ts`, separando resolución de configuración, gating por plataforma y dispatch de canal para cerrar el bloque de notificaciones extremo a extremo con el repo limpio).
 - Pendiente priorizado (`⏳`): ninguno externo; los tres backlogs consumidores siguen en `0` abiertos.
 
 ## Historial resumido
