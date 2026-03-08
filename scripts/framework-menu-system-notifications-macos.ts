@@ -3,12 +3,11 @@ import {
   type SystemNotificationEmitResult,
   type SystemNotificationCommandRunner,
   type SystemNotificationCommandRunnerWithOutput,
-  type SystemNotificationPayload,
   type SystemNotificationsConfig,
 } from './framework-menu-system-notifications-types';
 import { resolveBlockedDialogEnabled } from './framework-menu-system-notifications-macos-dialog';
-import { deliverMacOsNotificationBanner } from './framework-menu-system-notifications-macos-banner-delivery';
-import { maybeDispatchBlockedMacOsDialog } from './framework-menu-system-notifications-macos-blocked-dispatch';
+import { emitMacOsBannerStage } from './framework-menu-system-notifications-macos-banner-stage';
+import { emitMacOsBlockedDialogStage } from './framework-menu-system-notifications-macos-blocked-stage';
 import { finalizeMacOsNotificationDelivery } from './framework-menu-system-notifications-macos-result';
 
 export { runSystemCommand, runSystemCommandWithOutput } from './framework-menu-system-notifications-macos-runner';
@@ -16,7 +15,7 @@ export { resolveBlockedDialogEnabled } from './framework-menu-system-notificatio
 
 export const deliverMacOsNotification = (params: {
   event: PumukiCriticalNotificationEvent;
-  payload: SystemNotificationPayload;
+  payload: Parameters<typeof emitMacOsBannerStage>[0]['payload'];
   repoRoot?: string;
   config: SystemNotificationsConfig;
   env: NodeJS.ProcessEnv;
@@ -30,12 +29,12 @@ export const deliverMacOsNotification = (params: {
     nowMs: number;
   }) => void;
 }): SystemNotificationEmitResult => {
-  const bannerResult = deliverMacOsNotificationBanner({
+  const bannerResult = emitMacOsBannerStage({
     payload: params.payload,
     runCommand: params.runCommand,
   });
 
-  maybeDispatchBlockedMacOsDialog({
+  emitMacOsBlockedDialogStage({
     event: params.event,
     repoRoot: params.repoRoot,
     config: params.config,

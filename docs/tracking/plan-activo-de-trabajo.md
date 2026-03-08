@@ -4315,7 +4315,7 @@
     - `npm run -s validation:tracking-single-active`
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
-- 🚧 PUMUKI-282: Atacar `framework-menu-system-notifications-macos.ts`, separando orquestación de banner, dispatch del diálogo bloqueante y resultado final de entrega para rematar la fachada macOS con el repo limpio.
+- ✅ PUMUKI-282: Atacar `framework-menu-system-notifications-macos.ts`, separando orquestación de banner, dispatch del diálogo bloqueante y resultado final de entrega para rematar la fachada macOS con el repo limpio.
   - Alcance:
     - inventariar el peso real de `scripts/framework-menu-system-notifications-macos.ts` y de la suite que lo cubre;
     - separar, como mínimo:
@@ -4332,3 +4332,52 @@
       - dispatch del diálogo bloqueante,
       - traducción del resultado final de emisión,
       lo que lo convierte en el siguiente cierre natural de la fachada macOS.
+  - Resultado (2026-03-08):
+    - `scripts/framework-menu-system-notifications-macos.ts` queda reducido a una fachada pública más fina;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-banner-stage.ts`
+      - `scripts/framework-menu-system-notifications-macos-blocked-stage.ts`
+      - `scripts/framework-menu-system-notifications-macos-result.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+    - la suite se amplía con smoke por responsabilidad:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-stage.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-blocked-stage.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos.test.ts` como smoke de la fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      se mantiene intacta;
+    - el corte queda validado con `11` tests focales en verde, `typecheck` en verde y la higiene operativa sigue en verde.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-banner-stage.test.ts scripts/__tests__/framework-menu-system-notifications-macos-blocked-stage.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery.test.ts scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-macos-result.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-283: Atacar el problema principal de Pumuki en consumer real, cerrando `PUMUKI-019` en `SAAS` para que el gate detecte plataformas activas, materialice skills requeridas del repo y bloquee con findings semánticos reales.
+  - Alcance:
+    - retomar los cambios abiertos en:
+      - `integrations/config/skillsCustomRules.ts`
+      - `integrations/config/skillsEffectiveLock.ts`
+      - `integrations/gate/evaluateAiGate.ts`
+      - `integrations/gate/__tests__/evaluateAiGate.test.ts`
+    - cerrar el pipeline:
+      - `repo skills -> required lock -> required platforms -> enforced skills contract -> findings`;
+    - forzar que:
+      - `required skills present + detected_platforms empty`
+        se trate como hallazgo bloqueante;
+    - alinear el naming de skills importadas iOS con los bundles que espera el gate;
+    - incluir `ast_node_ids` en hashing/lock efectivo donde aplique para no perder drift real;
+    - validar el caso consumer real de `SAAS` con tests de regresión en rojo/verde;
+    - no cerrar la tarea hasta dejar el tracking y el worktree coherentes.
+  - Inventario inicial (2026-03-08):
+    - quedan abiertos y sin commitear `4` archivos del fix crítico:
+      - `integrations/config/skillsCustomRules.ts`
+      - `integrations/config/skillsEffectiveLock.ts`
+      - `integrations/gate/evaluateAiGate.ts`
+      - `integrations/gate/__tests__/evaluateAiGate.test.ts`
+    - el problema reproducible sigue siendo:
+      - `PUMUKI-019` en `SAAS`
+      - `skills_contract.enforced=false`
+      - `skills_contract.status=NOT_APPLICABLE`
+      - `detected_platforms=[]`
+      cuando el consumer sí tiene skills requeridas y violaciones estructurales graves.
