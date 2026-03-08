@@ -124,6 +124,66 @@ test('resolveSkillImportSources discovers SKILL.md paths from AGENTS.md', async 
   });
 });
 
+test('resolveSkillImportSources discovers REQUIRED SKILL names via vendor manifest', async () => {
+  await withTempDir('pumuki-skills-custom-required-skill-', async (tempRoot) => {
+    const backendSkillPath = join(
+      tempRoot,
+      'vendor/skills/windsurf-rules-backend/SKILL.md'
+    );
+    const concurrencySkillPath = join(
+      tempRoot,
+      'vendor/skills/swift-concurrency/SKILL.md'
+    );
+
+    mkdirSync(join(tempRoot, 'vendor/skills/windsurf-rules-backend'), {
+      recursive: true,
+    });
+    mkdirSync(join(tempRoot, 'vendor/skills/swift-concurrency'), {
+      recursive: true,
+    });
+
+    writeFileSync(
+      backendSkillPath,
+      '- ❌ Avoid empty catch blocks in backend runtime code.\n'
+    );
+    writeFileSync(
+      concurrencySkillPath,
+      '- Prefer actor isolation for mutable shared state.\n'
+    );
+    writeFileSync(
+      join(tempRoot, 'vendor/skills/MANIFEST.json'),
+      JSON.stringify(
+        {
+          version: 1,
+          skills: [
+            {
+              name: 'windsurf-rules-backend',
+              file: 'vendor/skills/windsurf-rules-backend/SKILL.md',
+            },
+            {
+              name: 'swift-concurrency',
+              file: 'vendor/skills/swift-concurrency/SKILL.md',
+            },
+          ],
+        },
+        null,
+        2
+      )
+    );
+    writeFileSync(
+      join(tempRoot, 'AGENTS.md'),
+      [
+        '# Skills',
+        "REQUIRED SKILL: 'windsurf-rules-backend'",
+        "REQUIRED SKILL: 'swift-concurrency'",
+      ].join('\n')
+    );
+
+    const sources = resolveSkillImportSources({ repoRoot: tempRoot }).sort();
+    assert.deepEqual(sources, [backendSkillPath, concurrencySkillPath].sort());
+  });
+});
+
 test('importCustomSkillsRules writes .pumuki/custom-rules.json preserving AUTO canonicas y DECLARATIVE no canonicas', async () => {
   await withTempDir('pumuki-skills-custom-import-', async (tempRoot) => {
     const backendSkillPath = join(tempRoot, 'skills/backend/SKILL.md');

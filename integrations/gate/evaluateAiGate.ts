@@ -5,7 +5,11 @@ import type { RepoState } from '../evidence/schema';
 import { resolvePolicyForStage } from './stagePolicies';
 import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { SkillsStage } from '../config/skillsLock';
+import type { SkillsLockV1, SkillsStage } from '../config/skillsLock';
+import {
+  loadEffectiveSkillsLock,
+  loadRequiredSkillsLock,
+} from '../config/skillsEffectiveLock';
 import {
   readMcpAiGateReceipt,
   resolveMcpAiGateReceiptPath,
@@ -93,6 +97,8 @@ type AiGateDependencies = {
   readMcpAiGateReceipt: (repoRoot: string) => McpAiGateReceiptReadResult;
   captureRepoState: (repoRoot: string) => RepoState;
   resolvePolicyForStage: (stage: SkillsStage, repoRoot: string) => ReturnType<typeof resolvePolicyForStage>;
+  loadEffectiveSkillsLock: (repoRoot: string) => SkillsLockV1 | undefined;
+  loadRequiredSkillsLock: (repoRoot: string) => SkillsLockV1 | undefined;
 };
 
 const defaultDependencies: AiGateDependencies = {
@@ -101,6 +107,8 @@ const defaultDependencies: AiGateDependencies = {
   readMcpAiGateReceipt,
   captureRepoState,
   resolvePolicyForStage,
+  loadEffectiveSkillsLock,
+  loadRequiredSkillsLock,
 };
 
 const DEFAULT_MAX_AGE_SECONDS: Readonly<Record<AiGateStage, number>> = {
@@ -308,15 +316,46 @@ const toCoverageInferredPlatforms = (
   return PREWRITE_SKILLS_PLATFORMS.filter((platform) => inferred.has(platform));
 };
 
+const toLockRequiredPlatforms = (
+  requiredLock: SkillsLockV1 | undefined
+): ReadonlyArray<PreWriteSkillsPlatform> => {
+  if (!requiredLock) {
+    return [];
+  }
+
+  const requiredBundles = new Set(
+    requiredLock.bundles.map((bundle) => toNormalizedSkillsBundleName(bundle.name))
+  );
+  const required = new Set<PreWriteSkillsPlatform>();
+
+  for (const platform of PREWRITE_SKILLS_PLATFORMS) {
+    const requiredByBundle = PLATFORM_REQUIRED_SKILLS_BUNDLES[platform].some((bundleName) =>
+      requiredBundles.has(bundleName)
+    );
+    const requiredByRules = requiredLock.bundles.some((bundle) =>
+      bundle.rules.some(
+        (rule) => PREWRITE_SKILLS_PLATFORMS.includes(rule.platform as PreWriteSkillsPlatform)
+          && rule.platform === platform
+      )
+    );
+
+    if (requiredByBundle || requiredByRules) {
+      required.add(platform);
+    }
+  }
+
+  return PREWRITE_SKILLS_PLATFORMS.filter((platform) => required.has(platform));
+};
+
 const toEffectiveSkillsPlatforms = (params: {
   platforms: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['platforms'] | undefined;
   coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']> | undefined;
 }): ReadonlyArray<PreWriteSkillsPlatform> => {
   const detectedPlatforms = toDetectedSkillsPlatforms(params.platforms);
-  if (detectedPlatforms.length === 0) {
-    return [];
-  }
   const inferredFromCoverage = toCoverageInferredPlatforms(params.coverage);
+  if (detectedPlatforms.length === 0) {
+    return inferredFromCoverage;
+  }
   if (inferredFromCoverage.length === 0) {
     return detectedPlatforms;
   }
@@ -328,6 +367,17 @@ const toEffectiveSkillsPlatforms = (params: {
   return detectedPlatforms;
 };
 
+const toPreWriteDetectedSkillsPlatforms = (params: {
+  platforms: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['platforms'] | undefined;
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']> | undefined;
+}): ReadonlyArray<PreWriteSkillsPlatform> => {
+  const explicitlyDetectedPlatforms = toDetectedSkillsPlatforms(params.platforms);
+  if (explicitlyDetectedPlatforms.length === 0) {
+    return [];
+  }
+  return toEffectiveSkillsPlatforms(params);
+};
+
 const collectActiveRuleIdsCoverageViolations = (params: {
   stage: AiGateStage;
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
@@ -336,19 +386,19 @@ const collectActiveRuleIdsCoverageViolations = (params: {
   if (params.coverage.active_rule_ids.length > 0) {
     return [];
   }
+  const explicitlyDetectedPlatforms = toDetectedSkillsPlatforms(params.evidence.platforms);
   const effectivePlatforms = toEffectiveSkillsPlatforms({
     platforms: params.evidence.platforms,
     coverage: params.coverage,
   });
-  const inferredPlatforms =
-    effectivePlatforms.length > 0 ? [] : toCoverageInferredPlatforms(params.coverage);
+  const inferredPlatforms = toCoverageInferredPlatforms(params.coverage);
   const blockedPlatforms = effectivePlatforms.length > 0
     ? effectivePlatforms
     : inferredPlatforms;
   if (blockedPlatforms.length === 0) {
     return [];
   }
-  const detectionMode = effectivePlatforms.length > 0 ? 'detected' : 'inferred';
+  const detectionMode = explicitlyDetectedPlatforms.length > 0 ? 'detected' : 'inferred';
   return [
     toErrorViolation(
       'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES',
@@ -361,7 +411,7 @@ const collectPreWritePlatformSkillsViolations = (params: {
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
   coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
 }): AiGateViolation[] => {
-  const detectedPlatforms = toEffectiveSkillsPlatforms({
+  const detectedPlatforms = toPreWriteDetectedSkillsPlatforms({
     platforms: params.evidence.platforms,
     coverage: params.coverage,
   });
@@ -402,7 +452,7 @@ const collectPreWritePlatformSkillsViolations = (params: {
   }
 
   const activeSkillsBundles = new Set(
-    params.evidence.rulesets
+    (params.evidence.rulesets ?? [])
       .filter((ruleset) => ruleset.platform === 'skills')
       .map((ruleset) => toNormalizedSkillsBundleName(ruleset.bundle))
       .filter((bundle) => bundle.length > 0)
@@ -461,7 +511,7 @@ const collectPreWriteCrossPlatformCriticalViolations = (params: {
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
   coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
 }): AiGateViolation[] => {
-  const detectedPlatforms = toEffectiveSkillsPlatforms({
+  const detectedPlatforms = toPreWriteDetectedSkillsPlatforms({
     platforms: params.evidence.platforms,
     coverage: params.coverage,
   });
@@ -505,24 +555,98 @@ const collectPreWriteCrossPlatformCriticalViolations = (params: {
 const toSkillsContractAssessment = (params: {
   stage: AiGateStage;
   evidenceResult: EvidenceReadResult;
+  requiredLock?: SkillsLockV1;
 }): AiGateSkillsContractAssessment => {
+  const requiredPlatforms = toLockRequiredPlatforms(params.requiredLock);
+
   if (params.evidenceResult.kind !== 'valid') {
     return {
       stage: params.stage,
-      enforced: false,
-      status: 'NOT_APPLICABLE',
+      enforced: requiredPlatforms.length > 0,
+      status: requiredPlatforms.length > 0 ? 'FAIL' : 'NOT_APPLICABLE',
       detected_platforms: [],
-      requirements: [],
-      violations: [],
+      requirements: requiredPlatforms.map((platform) => ({
+        platform,
+        required_rule_prefix: PLATFORM_SKILLS_RULE_PREFIXES[platform],
+        required_bundles: [...PLATFORM_REQUIRED_SKILLS_BUNDLES[platform]],
+        required_critical_rule_ids: [...PREWRITE_CRITICAL_SKILLS_RULES[platform]],
+        required_any_transversal_critical_rule_ids: [
+          ...PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES[platform],
+        ],
+        active_prefix_covered: false,
+        evaluated_prefix_covered: false,
+        missing_bundles: [...PLATFORM_REQUIRED_SKILLS_BUNDLES[platform]],
+        missing_critical_rule_ids: [...PREWRITE_CRITICAL_SKILLS_RULES[platform]],
+        transversal_critical_covered: false,
+        missing_any_transversal_critical_rule_ids: [
+          ...PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES[platform],
+        ],
+      })),
+      violations:
+        requiredPlatforms.length > 0
+          ? [
+              toErrorViolation(
+                'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED',
+                `Required repo skills exist, but active platforms could not be detected for ${params.stage}.`
+              ),
+            ]
+          : [],
     };
   }
 
   const coverage = params.evidenceResult.evidence.snapshot.rules_coverage;
-  const detectedPlatforms = toEffectiveSkillsPlatforms({
-    platforms: params.evidenceResult.evidence.platforms,
-    coverage,
-  });
-  if (detectedPlatforms.length === 0) {
+  const explicitlyDetectedPlatforms = toDetectedSkillsPlatforms(params.evidenceResult.evidence.platforms);
+  const inferredPlatforms = toCoverageInferredPlatforms(coverage);
+  const explicitlyDetectedEffectivePlatforms =
+    explicitlyDetectedPlatforms.length > 0
+      ? toEffectiveSkillsPlatforms({
+          platforms: params.evidenceResult.evidence.platforms,
+          coverage,
+        })
+      : [];
+  const detectedPlatforms =
+    explicitlyDetectedEffectivePlatforms.length > 0
+      ? explicitlyDetectedEffectivePlatforms
+      : inferredPlatforms;
+  const assessmentPlatforms =
+    requiredPlatforms.length > 0
+      ? requiredPlatforms
+      : detectedPlatforms;
+
+  if (requiredPlatforms.length > 0 && explicitlyDetectedEffectivePlatforms.length === 0) {
+    const requirements: AiGateSkillsContractPlatformRequirement[] = requiredPlatforms.map((platform) => ({
+      platform,
+      required_rule_prefix: PLATFORM_SKILLS_RULE_PREFIXES[platform],
+      required_bundles: [...PLATFORM_REQUIRED_SKILLS_BUNDLES[platform]],
+      required_critical_rule_ids: [...PREWRITE_CRITICAL_SKILLS_RULES[platform]],
+      required_any_transversal_critical_rule_ids: [
+        ...PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES[platform],
+      ],
+      active_prefix_covered: false,
+      evaluated_prefix_covered: false,
+      missing_bundles: [...PLATFORM_REQUIRED_SKILLS_BUNDLES[platform]],
+      missing_critical_rule_ids: [...PREWRITE_CRITICAL_SKILLS_RULES[platform]],
+      transversal_critical_covered: false,
+      missing_any_transversal_critical_rule_ids: [
+        ...PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES[platform],
+      ],
+    }));
+
+    return {
+      stage: params.stage,
+      enforced: true,
+      status: 'FAIL',
+      detected_platforms: [],
+      requirements,
+      violations: [
+        toErrorViolation(
+          'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED',
+          `Required repo skills exist, but active platforms could not be detected for ${params.stage}.`
+        ),
+      ],
+    };
+  }
+  if (assessmentPlatforms.length === 0) {
     return {
       stage: params.stage,
       enforced: false,
@@ -534,7 +658,7 @@ const toSkillsContractAssessment = (params: {
   }
 
   const activeSkillsBundles = new Set(
-    params.evidenceResult.evidence.rulesets
+    (params.evidenceResult.evidence.rulesets ?? [])
       .filter((ruleset) => ruleset.platform === 'skills')
       .map((ruleset) => toNormalizedSkillsBundleName(ruleset.bundle))
       .filter((bundle) => bundle.length > 0)
@@ -542,7 +666,15 @@ const toSkillsContractAssessment = (params: {
 
   const requirements: AiGateSkillsContractPlatformRequirement[] = [];
   const violations: AiGateViolation[] = [];
-  for (const platform of detectedPlatforms) {
+  if (requiredPlatforms.length > 0 && detectedPlatforms.length === 0) {
+    violations.push(
+      toErrorViolation(
+        'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED',
+        `Required repo skills exist, but active platforms could not be detected for ${params.stage}.`
+      )
+    );
+  }
+  for (const platform of assessmentPlatforms) {
     const requiredRulePrefix = PLATFORM_SKILLS_RULE_PREFIXES[platform];
     const requiredBundles = [...PLATFORM_REQUIRED_SKILLS_BUNDLES[platform]];
     const requiredCriticalRuleIds = [...PREWRITE_CRITICAL_SKILLS_RULES[platform]];
@@ -1056,6 +1188,9 @@ export const evaluateAiGate = (
   const repoState = normalizeRepoStateLifecycleVersions(
     activeDependencies.captureRepoState(params.repoRoot)
   );
+  const effectiveSkillsLock = activeDependencies.loadEffectiveSkillsLock(params.repoRoot);
+  const requiredSkillsLock = activeDependencies.loadRequiredSkillsLock(params.repoRoot);
+  const requiredSkillsPlatforms = toLockRequiredPlatforms(requiredSkillsLock);
   const policyStage = toPolicyStage(params.stage);
   const resolvedPolicy = activeDependencies.resolvePolicyForStage(
     policyStage,
@@ -1082,9 +1217,11 @@ export const evaluateAiGate = (
   const skillsContract = toSkillsContractAssessment({
     stage: params.stage,
     evidenceResult,
+    requiredLock: requiredSkillsLock,
   });
   const stageSkillsContractViolations =
-    params.stage === 'PRE_WRITE' || skillsContract.status !== 'FAIL'
+    skillsContract.status !== 'FAIL'
+    || (params.stage === 'PRE_WRITE' && requiredSkillsPlatforms.length === 0)
       ? []
       : [
           toErrorViolation(

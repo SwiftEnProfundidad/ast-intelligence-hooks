@@ -4,7 +4,10 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { __resetCoreSkillsLockCacheForTests } from '../coreSkillsLock';
-import { loadEffectiveSkillsLock } from '../skillsEffectiveLock';
+import {
+  loadEffectiveSkillsLock,
+  loadRequiredSkillsLock,
+} from '../skillsEffectiveLock';
 
 const withCoreSkillsEnv = async (
   value: string | undefined,
@@ -77,6 +80,85 @@ const createCustomRulesFixture = (repoRoot: string): void => {
   writeFileSync(join(repoRoot, '.pumuki/custom-rules.json'), JSON.stringify(customRules, null, 2));
 };
 
+const createVendoredBackendSkillFixture = (repoRoot: string): void => {
+  mkdirSync(join(repoRoot, 'docs/codex-skills'), { recursive: true });
+  writeFileSync(
+    join(repoRoot, 'docs/codex-skills/windsurf-rules-backend.md'),
+    ['- ❌ Avoid empty catch blocks in backend runtime code.'].join('\n')
+  );
+  writeFileSync(
+    join(repoRoot, 'AGENTS.md'),
+    ['# Skills', '- `windsurf-rules-backend`: `docs/codex-skills/windsurf-rules-backend.md`'].join('\n')
+  );
+};
+
+const createRequiredSkillsManifestFixture = (repoRoot: string): void => {
+  const skills = [
+    {
+      name: 'windsurf-rules-ios',
+      file: 'vendor/skills/windsurf-rules-ios/SKILL.md',
+      content: '- Keep ViewModels focused on a single feature boundary.\n',
+    },
+    {
+      name: 'swift-concurrency',
+      file: 'vendor/skills/swift-concurrency/SKILL.md',
+      content: '- Prefer actor isolation for mutable shared state.\n',
+    },
+    {
+      name: 'swiftui-expert-skill',
+      file: 'vendor/skills/swiftui-expert-skill/SKILL.md',
+      content: '- Use focused presentation state per view boundary.\n',
+    },
+    {
+      name: 'windsurf-rules-android',
+      file: 'vendor/skills/windsurf-rules-android/SKILL.md',
+      content: '- Keep Compose screens aligned with feature boundaries.\n',
+    },
+    {
+      name: 'windsurf-rules-backend',
+      file: 'vendor/skills/windsurf-rules-backend/SKILL.md',
+      content: '- ❌ Avoid empty catch blocks in backend runtime code.\n',
+    },
+    {
+      name: 'windsurf-rules-frontend',
+      file: 'vendor/skills/windsurf-rules-frontend/SKILL.md',
+      content: '- ❌ Avoid explicit any in frontend runtime code.\n',
+    },
+  ];
+
+  for (const skill of skills) {
+    mkdirSync(join(repoRoot, skill.file.replace(/\/SKILL\.md$/i, '')), {
+      recursive: true,
+    });
+    writeFileSync(join(repoRoot, skill.file), skill.content);
+  }
+
+  writeFileSync(
+    join(repoRoot, 'vendor/skills/MANIFEST.json'),
+    JSON.stringify(
+      {
+        version: 1,
+        skills: skills.map(({ name, file }) => ({ name, file })),
+      },
+      null,
+      2
+    )
+  );
+
+  writeFileSync(
+    join(repoRoot, 'AGENTS.md'),
+    [
+      '# Required skills',
+      "REQUIRED SKILL: 'windsurf-rules-ios'",
+      "REQUIRED SKILL: 'swift-concurrency'",
+      "REQUIRED SKILL: 'swiftui-expert-skill'",
+      "REQUIRED SKILL: 'windsurf-rules-android'",
+      "REQUIRED SKILL: 'windsurf-rules-backend'",
+      "REQUIRED SKILL: 'windsurf-rules-frontend'",
+    ].join('\n')
+  );
+};
+
 test('falls back to core lock when repo does not provide local lock files', async () => {
   await withCoreSkillsEnv(undefined, async () => withTempDir('pumuki-skills-effective-core-', async (tempRoot) => {
     __resetCoreSkillsLockCacheForTests();
@@ -113,4 +195,78 @@ test('merges repo lock and custom rules when both are present', async () => {
     const bundleNames = lock.bundles.map((bundle) => bundle.name).sort();
     assert.deepEqual(bundleNames, ['custom-guidelines', 'repo-local-guidelines']);
   }));
+});
+
+test('loads imported vendored skills into effective lock when AGENTS references repo skills', async () => {
+  await withCoreSkillsEnv('1', async () => withTempDir('pumuki-skills-effective-imported-', async (tempRoot) => {
+    createVendoredBackendSkillFixture(tempRoot);
+
+    const lock = loadEffectiveSkillsLock(tempRoot);
+    assert.ok(lock);
+
+    const backendBundle = lock.bundles.find((bundle) => bundle.name === 'backend-guidelines');
+    assert.ok(backendBundle);
+    assert.equal(
+      backendBundle.rules.some((rule) => rule.id === 'skills.backend.no-empty-catch'),
+      true
+    );
+  }));
+});
+
+test('loads imported vendored skills into required lock when AGENTS references repo skills', async () => {
+  await withCoreSkillsEnv('1', async () => withTempDir('pumuki-skills-required-imported-', async (tempRoot) => {
+    createVendoredBackendSkillFixture(tempRoot);
+
+    const lock = loadRequiredSkillsLock(tempRoot);
+    assert.ok(lock);
+
+    const backendBundle = lock.bundles.find((bundle) => bundle.name === 'backend-guidelines');
+    assert.ok(backendBundle);
+    assert.equal(
+      backendBundle.rules.some((rule) => rule.id === 'skills.backend.no-empty-catch'),
+      true
+    );
+  }));
+});
+
+test('loads required vendored skills from AGENTS required names and vendor manifest', async () => {
+  await withCoreSkillsEnv('1', async () =>
+    withTempDir('pumuki-skills-required-manifest-', async (tempRoot) => {
+      createRequiredSkillsManifestFixture(tempRoot);
+
+      const lock = loadRequiredSkillsLock(tempRoot);
+      assert.ok(lock);
+
+      const bundleNames = lock.bundles.map((bundle) => bundle.name).sort();
+      assert.deepEqual(bundleNames, [
+        'android-guidelines',
+        'backend-guidelines',
+        'frontend-guidelines',
+        'ios-concurrency-guidelines',
+        'ios-guidelines',
+        'ios-swiftui-expert-guidelines',
+      ]);
+    })
+  );
+});
+
+test('loads effective vendored skills from AGENTS required names and vendor manifest', async () => {
+  await withCoreSkillsEnv('1', async () =>
+    withTempDir('pumuki-skills-effective-manifest-', async (tempRoot) => {
+      createRequiredSkillsManifestFixture(tempRoot);
+
+      const lock = loadEffectiveSkillsLock(tempRoot);
+      assert.ok(lock);
+
+      const bundleNames = lock.bundles.map((bundle) => bundle.name).sort();
+      assert.deepEqual(bundleNames, [
+        'android-guidelines',
+        'backend-guidelines',
+        'frontend-guidelines',
+        'ios-concurrency-guidelines',
+        'ios-guidelines',
+        'ios-swiftui-expert-guidelines',
+      ]);
+    })
+  );
 });
