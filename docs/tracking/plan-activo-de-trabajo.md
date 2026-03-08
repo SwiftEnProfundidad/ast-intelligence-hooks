@@ -4370,10 +4370,12 @@
     - validar el caso consumer real de `SAAS` con tests de regresión en rojo/verde;
     - no cerrar la tarea hasta dejar el tracking y el worktree coherentes.
   - Inventario inicial (2026-03-08):
-    - quedan abiertos y sin commitear `4` archivos del fix crítico:
+    - quedan abiertos y sin commitear `6` archivos del fix crítico:
       - `integrations/config/skillsCustomRules.ts`
       - `integrations/config/skillsEffectiveLock.ts`
       - `integrations/gate/evaluateAiGate.ts`
+      - `integrations/config/__tests__/skillsCustomRules.test.ts`
+      - `integrations/config/__tests__/skillsEffectiveLock.test.ts`
       - `integrations/gate/__tests__/evaluateAiGate.test.ts`
     - el problema reproducible sigue siendo:
       - `PUMUKI-019` en `SAAS`
@@ -4381,3 +4383,42 @@
       - `skills_contract.status=NOT_APPLICABLE`
       - `detected_platforms=[]`
       cuando el consumer sí tiene skills requeridas y violaciones estructurales graves.
+  - Avance actual (2026-03-08):
+    - ya quedó respondido formalmente el paquete del hub en:
+      - `/Users/juancarlosmerlosalbarracin/Developer/Projects/engineering-operating-system/rollout/42_PAQUETE_ACTUAL_PARA_PUMUKI.md`
+    - esa respuesta deja explícito que:
+      - ya existe avance real en `skills reconciliation`, `effective lock` y endurecimiento de `evaluateAiGate`,
+      - pero `IOS-CANARY-001` sigue en `STOP`,
+      - y todavía no existe finding semántico bloqueante, repetible, con `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`.
+    - por tanto, esta task sigue abierta y la siguiente acción útil ya no es más refactor interno, sino cerrar el primer corte semántico real del canario.
+  - Progreso técnico de este corte (2026-03-08):
+    - `integrations/config/skillsCustomRules.ts` ya resuelve skills requeridas importadas desde:
+      - `AGENTS.md`
+      - `vendor/skills/MANIFEST.json`
+      - `vendor/skills/<skill>/SKILL.md`
+    - `integrations/config/skillsEffectiveLock.ts` ya construye:
+      - `effective lock`
+      - `required lock`
+      consumiendo también skills vendorizadas/importadas del repo consumer;
+    - `integrations/gate/evaluateAiGate.ts` ya bloquea cuando:
+      - el repo exige skills/plataformas,
+      - pero no se detectan plataformas activas explícitas,
+      - aunque exista cobertura inferida por rules coverage;
+    - el gate ya no trata las skills core efectivas como contrato obligatorio del consumer;
+    - los tests focales del corte ya están en verde:
+      - `48 pass / 0 fail`
+      - comando:
+        - `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsEffectiveLock.test.ts integrations/config/__tests__/skillsCustomRules.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts`
+    - este corte mejora el contrato de enforcement previo al finding, pero no cierra aún el canario semántico.
+  - Lo que sigue pendiente antes de salir de `STOP`:
+    - emitir el primer finding semántico real y repetible para `IOS-CANARY-001`;
+    - producir:
+      - `matched_rules > 0`
+      - `findings[]`
+      - `rule_id`
+      - `primary_node`
+      - `related_nodes`
+      - `why`
+      - `impact`
+      - `expected_fix`
+    - revalidarlo en una segunda ejecución con el mismo resultado estructural.

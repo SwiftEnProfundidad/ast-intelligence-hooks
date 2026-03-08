@@ -10,6 +10,13 @@
 - Última task cerrada (`✅`): `PUMUKI-282` (la fachada `framework-menu-system-notifications-macos.ts` ya separa orquestación de banner, dispatch del diálogo bloqueante y resultado final de entrega, con `11` tests focales en verde y `typecheck` en verde).
 - Task activa (`🚧`): `PUMUKI-283` (retomar el problema principal de Pumuki: cerrar `PUMUKI-019` en `SAAS`, forzando detección real de plataformas/skills requeridas y bloqueo semántico en consumers).
 - Pendiente priorizado (`⏳`): `SAAS · PUMUKI-019` (bug crítico de enforcement real de skills/reglas en consumer).
+- Progreso crítico actual:
+  - el paquete del hub `42_PAQUETE_ACTUAL_PARA_PUMUKI.md` ya tiene respuesta formal de Pumuki;
+  - ya hay avance real en:
+    - `skills reconciliation`
+    - `required/effective lock`
+    - endurecimiento de `evaluateAiGate` para skills requeridas sin plataformas activas;
+  - `IOS-CANARY-001` sigue en `STOP` hasta que exista un finding semántico bloqueante, repetible y con shape completo.
 
 ## Historial resumido
 - Bloque RuralGO cerrado: `docs/tracking/historico-validacion-ruralgo-03-03-2026.md`.
