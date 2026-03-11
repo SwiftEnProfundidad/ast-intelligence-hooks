@@ -38,7 +38,7 @@
 
 ## Estado operativo actual
 
-- ✅ Última task cerrada: `Release útil + rollout consumers a pumuki@6.3.56`
+- ✅ Última task cerrada: `Release útil + rollout consumers a pumuki@6.3.57`
 - 🚧 Task actual: `Pausa operativa` (sin bugs externos abiertos; esperar orden explícita del usuario)
 - ⏳ Siguiente paso: decidir un nuevo frente de trabajo explícito antes de tocar código funcional
 

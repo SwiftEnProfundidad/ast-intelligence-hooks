@@ -7,13 +7,13 @@
 ## Estado actual
 - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
 - Estado del plan: PAUSA OPERATIVA
-- Última task cerrada (`✅`): `Release útil + rollout consumers a pumuki@6.3.56` (SAAS, RuralGo y Flux actualizados; `status --json` alineado en `effective/runtime/consumerInstalled/lifecycleInstalled=6.3.56`).
+- Última task cerrada (`✅`): `Release útil + rollout consumers a pumuki@6.3.57` (SAAS, RuralGo y Flux actualizados; `status --json` alineado en `effective/runtime/consumerInstalled/lifecycleInstalled=6.3.57`).
 - Task activa (`🚧`): `Pausa operativa` (sin bugs externos abiertos; esperar orden explícita del usuario antes de abrir un frente nuevo).
 - Pendientes priorizados (`⏳`):
   - Ninguno. Los MDs externos de `SAAS`, `RuralGo` y `Flux` están cerrados.
 - Progreso crítico actual:
   - Los tres MDs externos quedaron cerrados y alineados con leyenda de backlog externo resuelto.
-  - `pumuki@6.3.56` ya está verificado en `SAAS`, `RuralGo` y `Flux`.
+  - `pumuki@6.3.57` ya está publicado en npm y verificado en `SAAS`, `RuralGo` y `Flux`.
   - Los tres consumers quedaron alineados en runtime, lifecycle y manifest sin drift.
 
 ## Regla hard anti-bucle
