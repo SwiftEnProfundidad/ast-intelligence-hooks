@@ -1,5 +1,5 @@
 ---
-name: windsurf-rules-ios
+name: ios-enterprise-rules
 description: Reglas iOS/Swift/SwiftUI del proyecto (Swift 6.2, async/await, Clean Architecture, accesibilidad). Usar en cambios iOS.
 ---
 ---

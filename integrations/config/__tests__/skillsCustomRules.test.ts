@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import {
+  canonicalImportedSkillNameFromPath,
   importCustomSkillsRules,
   loadCustomSkillsLock,
   loadCustomSkillsRulesFile,
@@ -181,6 +182,161 @@ test('resolveSkillImportSources discovers REQUIRED SKILL names via vendor manife
 
     const sources = resolveSkillImportSources({ repoRoot: tempRoot }).sort();
     assert.deepEqual(sources, [backendSkillPath, concurrencySkillPath].sort());
+  });
+});
+
+test('canonicalImportedSkillNameFromPath canoniza nombres enterprise del consumer a bundles runtime', () => {
+  assert.equal(
+    canonicalImportedSkillNameFromPath(
+      '/repo/vendor/skills/ios-enterprise-rules/SKILL.md'
+    ),
+    'ios-guidelines'
+  );
+  assert.equal(
+    canonicalImportedSkillNameFromPath(
+      '/repo/vendor/skills/backend-enterprise-rules/SKILL.md'
+    ),
+    'backend-guidelines'
+  );
+  assert.equal(
+    canonicalImportedSkillNameFromPath(
+      '/repo/vendor/skills/frontend-enterprise-rules/SKILL.md'
+    ),
+    'frontend-guidelines'
+  );
+  assert.equal(
+    canonicalImportedSkillNameFromPath(
+      '/repo/vendor/skills/android-enterprise-rules/SKILL.md'
+    ),
+    'android-guidelines'
+  );
+});
+
+test('resolveSkillImportSources discovers enterprise REQUIRED SKILL names via vendor manifest', async () => {
+  await withTempDir('pumuki-skills-custom-enterprise-required-skill-', async (tempRoot) => {
+    const iosSkillPath = join(
+      tempRoot,
+      'vendor/skills/ios-enterprise-rules/SKILL.md'
+    );
+    const backendSkillPath = join(
+      tempRoot,
+      'vendor/skills/backend-enterprise-rules/SKILL.md'
+    );
+    const frontendSkillPath = join(
+      tempRoot,
+      'vendor/skills/frontend-enterprise-rules/SKILL.md'
+    );
+    const androidSkillPath = join(
+      tempRoot,
+      'vendor/skills/android-enterprise-rules/SKILL.md'
+    );
+    const concurrencySkillPath = join(
+      tempRoot,
+      'vendor/skills/swift-concurrency/SKILL.md'
+    );
+    const swiftUiSkillPath = join(
+      tempRoot,
+      'vendor/skills/swiftui-expert-skill/SKILL.md'
+    );
+
+    for (const skillPath of [
+      iosSkillPath,
+      backendSkillPath,
+      frontendSkillPath,
+      androidSkillPath,
+      concurrencySkillPath,
+      swiftUiSkillPath,
+    ]) {
+      mkdirSync(join(skillPath, '..'), { recursive: true });
+    }
+
+    writeFileSync(
+      iosSkillPath,
+      '- Keep ViewModels focused on a single feature boundary.\n'
+    );
+    writeFileSync(
+      backendSkillPath,
+      '- Avoid empty catch blocks in backend runtime code.\n'
+    );
+    writeFileSync(
+      frontendSkillPath,
+      '- Avoid explicit any in frontend runtime code.\n'
+    );
+    writeFileSync(
+      androidSkillPath,
+      '- Keep Compose screens aligned with feature boundaries.\n'
+    );
+    writeFileSync(
+      concurrencySkillPath,
+      '- Prefer actor isolation for mutable shared state.\n'
+    );
+    writeFileSync(
+      swiftUiSkillPath,
+      '- Use focused presentation state per view boundary.\n'
+    );
+
+    writeFileSync(
+      join(tempRoot, 'vendor/skills/MANIFEST.json'),
+      JSON.stringify(
+        {
+          version: 1,
+          skills: [
+            {
+              name: 'ios-enterprise-rules',
+              file: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+            },
+            {
+              name: 'backend-enterprise-rules',
+              file: 'vendor/skills/backend-enterprise-rules/SKILL.md',
+            },
+            {
+              name: 'frontend-enterprise-rules',
+              file: 'vendor/skills/frontend-enterprise-rules/SKILL.md',
+            },
+            {
+              name: 'android-enterprise-rules',
+              file: 'vendor/skills/android-enterprise-rules/SKILL.md',
+            },
+            {
+              name: 'swift-concurrency',
+              file: 'vendor/skills/swift-concurrency/SKILL.md',
+            },
+            {
+              name: 'swiftui-expert-skill',
+              file: 'vendor/skills/swiftui-expert-skill/SKILL.md',
+            },
+          ],
+        },
+        null,
+        2
+      )
+    );
+
+    writeFileSync(
+      join(tempRoot, 'AGENTS.md'),
+      [
+        '# Required skills',
+        "REQUIRED SKILL: 'ios-enterprise-rules'",
+        "REQUIRED SKILL: 'swift-concurrency'",
+        "REQUIRED SKILL: 'swiftui-expert-skill'",
+        "REQUIRED SKILL: 'android-enterprise-rules'",
+        "REQUIRED SKILL: 'backend-enterprise-rules'",
+        "REQUIRED SKILL: 'frontend-enterprise-rules'",
+      ].join('\n')
+    );
+
+    const sources = resolveSkillImportSources({ repoRoot: tempRoot }).sort();
+    assert.deepEqual(
+      sources,
+      [
+        androidSkillPath,
+        backendSkillPath,
+        concurrencySkillPath,
+        frontendSkillPath,
+        iosSkillPath,
+        swiftUiSkillPath,
+      ].sort()
+    );
   });
 });
 

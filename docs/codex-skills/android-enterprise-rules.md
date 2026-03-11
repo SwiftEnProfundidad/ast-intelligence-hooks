@@ -1,5 +1,5 @@
 ---
-name: windsurf-rules-android
+name: android-enterprise-rules
 description: Reglas Android/Kotlin/Compose del proyecto. Usar en cambios Android.
 ---
 ---

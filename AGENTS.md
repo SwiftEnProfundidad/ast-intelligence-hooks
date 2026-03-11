@@ -8,6 +8,15 @@
 ## Project mode
 - PROJECT MODE: brownfield
 
+## Skills requeridos
+- REQUIRED SKILL: enterprise-operating-system
+- REQUIRED SKILL: ios-enterprise-rules
+- REQUIRED SKILL: swift-concurrency
+- REQUIRED SKILL: swiftui-expert-skill
+- REQUIRED SKILL: android-enterprise-rules
+- REQUIRED SKILL: backend-enterprise-rules
+- REQUIRED SKILL: frontend-enterprise-rules
+
 ## Cadena de skills
 - La cadena canónica es:
   1. `AGENTS.md`
@@ -111,6 +120,55 @@ Antes de realizar cualquier accion:
 - Prohibido cerrar una tarea si hay violaciones conocidas de skills pendientes de corregir.
 - Prohibido asumir permiso implicito del usuario para saltar reglas.
 - Prohibido ejecutar `merge`, `rebase`, `cherry-pick` o `push --force` sin instruccion explicita del usuario.
+
+## Contrato hard anti-bucle y prioridad de bugs externos (no negociable)
+- Los bugs reportados por repos consumidores son prioridad absoluta sobre cualquier task interna del repo.
+- Las fuentes canonicas externas son:
+  - `/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md`
+  - `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
+  - `/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md`
+- Los MDs internos `docs/tracking/plan-activo-de-trabajo.md` y `docs/tracking/estado-ejecutivo.md` NO son backlog principal.
+  - Solo pueden actuar como espejo subordinado del estado real de los MDs externos.
+  - Si se desalinean con los MDs externos, los MDs externos mandan automaticamente.
+- El bucle previo se produjo exactamente por convertir `docs/tracking/plan-activo-de-trabajo.md` en backlog principal y dar prioridad a tasks `PUMUKI-2xx` sobre bugs externos abiertos.
+- `docs/tracking/estado-ejecutivo.md` contribuyo al mismo bucle al resumir y legitimar esas prioridades internas como si fueran el trabajo principal.
+- Desde este punto, ambos documentos quedan marcados como:
+  - espejo operativo subordinado,
+  - nunca backlog fuente,
+  - nunca criterio para abrir una task interna mientras exista un bug externo abierto.
+- Regla hard nueva:
+  - si existe aunque sea un bug abierto en cualquiera de los MDs externos,
+  - la unica task `🚧` permitida en el tracking interno debe corresponder a uno de esos bugs externos,
+  - y queda prohibido arrancar, continuar o cerrar cualquier `PUMUKI-2xx` de refactor interno salvo que sea estrictamente necesaria para cerrar ese bug externo.
+- Si el tracking interno muestra una `🚧` distinta de un bug externo mientras haya bugs externos abiertos:
+  - eso cuenta como violacion hard del proceso,
+  - el estado correcto pasa a ser `STATUS: BLOCKED`,
+  - y la unica accion permitida es corregir el tracking y volver al bug externo prioritario.
+- Si cualquiera de esos MDs contiene items abiertos (`🚧`, `⏳`, `⛔`, `OPEN`, `REPORTED`, `STOP`), quedan congeladas todas las tasks internas `PUMUKI-2xx` que no sean estrictamente necesarias para resolver ese bug externo.
+- Esta prohibido abrir, continuar o cerrar tareas internas de refactor, docs, tracking o modularizacion mientras exista un bug externo abierto que aun no tenga:
+  - reproduccion,
+  - fix,
+  - tests/regresion,
+  - release util si aplica,
+  - y actualizacion del MD externo correspondiente.
+- Antes de iniciar cualquier task interna nueva, comprobar explicitamente el estado de los tres MDs externos.
+- Si los MDs externos y el tracking interno entran en conflicto:
+  - los MDs externos ganan automaticamente,
+  - el tracking interno se considera incorrecto,
+  - y debe corregirse en el mismo turno antes de tocar codigo funcional.
+- Si el modelo detecta que se esta desviando a trabajo interno con bugs externos abiertos:
+  - debe parar,
+  - declarar el desvio en la respuesta,
+  - corregir `docs/tracking/plan-activo-de-trabajo.md` y `docs/tracking/estado-ejecutivo.md` en ese mismo turno,
+  - corregir el tracking interno,
+  - y volver en ese mismo turno al bug externo prioritario.
+- El plan interno (`docs/tracking/plan-activo-de-trabajo.md`) nunca puede volver a convertirse en backlog principal mientras haya bugs externos abiertos.
+- Si el modelo vuelve a abrir una task interna no alineada con bugs externos abiertos:
+  - declarar `STATUS: BLOCKED`,
+  - no editar mas codigo funcional,
+  - reparar primero el tracking,
+  - y solo despues continuar con el bug externo prioritario.
+- Queda explicitamente prohibido usar el cierre de tasks internas `PUMUKI-2xx` como prueba de avance del producto mientras `SAAS`, `RuralGo` o `Flux` mantengan bugs abiertos.
 
 ## Contrato hard de release y adopcion en consumers
 - Si un cambio ya aporta valor real a repos consumidores, tiene tests verdes y no introduce regresiones conocidas, preparar y ejecutar una nueva publicacion de `pumuki`.

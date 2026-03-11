@@ -1,6 +1,6 @@
 ---
-name: windsurf-rules-frontend
-description: Reglas Frontend (React/Next.js/TypeScript) del proyecto. Usar en cambios web.
+name: frontend-enterprise-rules
+description: Reglas frontend enterprise (React/Next.js/TypeScript) del proyecto. Alias canónico neutro.
 ---
 ---
 alwaysApply: true

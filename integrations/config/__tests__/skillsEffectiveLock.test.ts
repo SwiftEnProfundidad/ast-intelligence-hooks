@@ -159,6 +159,73 @@ const createRequiredSkillsManifestFixture = (repoRoot: string): void => {
   );
 };
 
+const createEnterpriseRequiredSkillsManifestFixture = (repoRoot: string): void => {
+  const skills = [
+    {
+      name: 'ios-enterprise-rules',
+      file: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      content: '- Keep ViewModels focused on a single feature boundary.\n',
+    },
+    {
+      name: 'swift-concurrency',
+      file: 'vendor/skills/swift-concurrency/SKILL.md',
+      content: '- Prefer actor isolation for mutable shared state.\n',
+    },
+    {
+      name: 'swiftui-expert-skill',
+      file: 'vendor/skills/swiftui-expert-skill/SKILL.md',
+      content: '- Use focused presentation state per view boundary.\n',
+    },
+    {
+      name: 'android-enterprise-rules',
+      file: 'vendor/skills/android-enterprise-rules/SKILL.md',
+      content: '- Keep Compose screens aligned with feature boundaries.\n',
+    },
+    {
+      name: 'backend-enterprise-rules',
+      file: 'vendor/skills/backend-enterprise-rules/SKILL.md',
+      content: '- ❌ Avoid empty catch blocks in backend runtime code.\n',
+    },
+    {
+      name: 'frontend-enterprise-rules',
+      file: 'vendor/skills/frontend-enterprise-rules/SKILL.md',
+      content: '- ❌ Avoid explicit any in frontend runtime code.\n',
+    },
+  ];
+
+  for (const skill of skills) {
+    mkdirSync(join(repoRoot, skill.file.replace(/\/SKILL\.md$/i, '')), {
+      recursive: true,
+    });
+    writeFileSync(join(repoRoot, skill.file), skill.content);
+  }
+
+  writeFileSync(
+    join(repoRoot, 'vendor/skills/MANIFEST.json'),
+    JSON.stringify(
+      {
+        version: 1,
+        skills: skills.map(({ name, file }) => ({ name, file })),
+      },
+      null,
+      2
+    )
+  );
+
+  writeFileSync(
+    join(repoRoot, 'AGENTS.md'),
+    [
+      '# Required skills',
+      "REQUIRED SKILL: 'ios-enterprise-rules'",
+      "REQUIRED SKILL: 'swift-concurrency'",
+      "REQUIRED SKILL: 'swiftui-expert-skill'",
+      "REQUIRED SKILL: 'android-enterprise-rules'",
+      "REQUIRED SKILL: 'backend-enterprise-rules'",
+      "REQUIRED SKILL: 'frontend-enterprise-rules'",
+    ].join('\n')
+  );
+};
+
 test('falls back to core lock when repo does not provide local lock files', async () => {
   await withCoreSkillsEnv(undefined, async () => withTempDir('pumuki-skills-effective-core-', async (tempRoot) => {
     __resetCoreSkillsLockCacheForTests();
@@ -254,6 +321,48 @@ test('loads effective vendored skills from AGENTS required names and vendor mani
   await withCoreSkillsEnv('1', async () =>
     withTempDir('pumuki-skills-effective-manifest-', async (tempRoot) => {
       createRequiredSkillsManifestFixture(tempRoot);
+
+      const lock = loadEffectiveSkillsLock(tempRoot);
+      assert.ok(lock);
+
+      const bundleNames = lock.bundles.map((bundle) => bundle.name).sort();
+      assert.deepEqual(bundleNames, [
+        'android-guidelines',
+        'backend-guidelines',
+        'frontend-guidelines',
+        'ios-concurrency-guidelines',
+        'ios-guidelines',
+        'ios-swiftui-expert-guidelines',
+      ]);
+    })
+  );
+});
+
+test('loads required vendored enterprise skills into canonical bundles when AGENTS uses consumer naming', async () => {
+  await withCoreSkillsEnv('1', async () =>
+    withTempDir('pumuki-skills-required-enterprise-manifest-', async (tempRoot) => {
+      createEnterpriseRequiredSkillsManifestFixture(tempRoot);
+
+      const lock = loadRequiredSkillsLock(tempRoot);
+      assert.ok(lock);
+
+      const bundleNames = lock.bundles.map((bundle) => bundle.name).sort();
+      assert.deepEqual(bundleNames, [
+        'android-guidelines',
+        'backend-guidelines',
+        'frontend-guidelines',
+        'ios-concurrency-guidelines',
+        'ios-guidelines',
+        'ios-swiftui-expert-guidelines',
+      ]);
+    })
+  );
+});
+
+test('loads effective vendored enterprise skills into canonical bundles when AGENTS uses consumer naming', async () => {
+  await withCoreSkillsEnv('1', async () =>
+    withTempDir('pumuki-skills-effective-enterprise-manifest-', async (tempRoot) => {
+      createEnterpriseRequiredSkillsManifestFixture(tempRoot);
 
       const lock = loadEffectiveSkillsLock(tempRoot);
       assert.ok(lock);

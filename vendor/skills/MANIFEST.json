@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "updated_at": "2026-03-09",
+  "policy": {
+    "precedence": "repo_vendor_over_global_agents",
+    "sync_mode": "generated_from_agents_md"
+  },
+  "skills": [
+    {
+      "name": "enterprise-operating-system",
+      "source": "/Users/juancarlosmerlosalbarracin/.agents/skills/enterprise-operating-system/SKILL.md",
+      "file": "vendor/skills/enterprise-operating-system/SKILL.md",
+      "sha256": "1991fc9c4fe08c1c3f125a88095e060cb623c94e143961ddc21cf75916f51615"
+    },
+    {
+      "name": "ios-enterprise-rules",
+      "source": "/Users/juancarlosmerlosalbarracin/.agents/skills/ios-enterprise-rules/SKILL.md",
+      "file": "vendor/skills/ios-enterprise-rules/SKILL.md",
+      "sha256": "71e2aa4945d4ba962fb78031d9255ab06c6b9b2dcdc1cecba6754b38cf95aaa9"
+    },
+    {
+      "name": "swift-concurrency",
+      "source": "/Users/juancarlosmerlosalbarracin/.agents/skills/swift-concurrency/SKILL.md",
+      "file": "vendor/skills/swift-concurrency/SKILL.md",
+      "sha256": "62e81a46dc206ab6c4b3c5e7555e6007bb4d40db063f135eab263a4a0b9060b3"
+    },
+    {
+      "name": "swiftui-expert-skill",
+      "source": "/Users/juancarlosmerlosalbarracin/.agents/skills/swiftui-expert-skill/SKILL.md",
+      "file": "vendor/skills/swiftui-expert-skill/SKILL.md",
+      "sha256": "dc785e71742a9c215c0d70b2e7bfb1c4dd41553061663f7cf0a748018664b141"
+    },
+    {
+      "name": "android-enterprise-rules",
+      "source": "/Users/juancarlosmerlosalbarracin/.agents/skills/android-enterprise-rules/SKILL.md",
+      "file": "vendor/skills/android-enterprise-rules/SKILL.md",
+      "sha256": "60734682048669a9a410cdcc10da8ecb47b2602124bc7227b31112fde595aed0"
+    },
+    {
+      "name": "backend-enterprise-rules",
+      "source": "/Users/juancarlosmerlosalbarracin/.agents/skills/backend-enterprise-rules/SKILL.md",
+      "file": "vendor/skills/backend-enterprise-rules/SKILL.md",
+      "sha256": "701ca839433c3168f93e7363759717463b7fbfa4500b7ad67811deefed39ad31"
+    },
+    {
+      "name": "frontend-enterprise-rules",
+      "source": "/Users/juancarlosmerlosalbarracin/.agents/skills/frontend-enterprise-rules/SKILL.md",
+      "file": "vendor/skills/frontend-enterprise-rules/SKILL.md",
+      "sha256": "7c37986e51a7b06438c0071bca96e18015a8e382bacfa6864e1e2f9ac222553c"
+    }
+  ]
+}
