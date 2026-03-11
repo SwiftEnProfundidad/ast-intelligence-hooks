@@ -12,7 +12,7 @@
 
 - `core/rules/presets/iosEnterpriseRuleSet.ts`
 - `integrations/config/skillsCompilerTemplates.ts`
-- `docs/codex-skills/windsurf-rules-ios.md`
+- `docs/codex-skills/ios-enterprise-rules.md`
 - `docs/codex-skills/swift-concurrency.md`
 - `docs/codex-skills/swiftui-expert-skill.md`
 

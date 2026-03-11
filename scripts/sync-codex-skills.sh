@@ -24,10 +24,10 @@ sync_one() {
   printf 'TODO: sincronizar desde %s\n' "$source_path" > "$dest_path"
 }
 
-sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-android/SKILL.md" "$DEST_DIR/windsurf-rules-android.md"
-sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-backend/SKILL.md" "$DEST_DIR/windsurf-rules-backend.md"
-sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-frontend/SKILL.md" "$DEST_DIR/windsurf-rules-frontend.md"
-sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-ios/SKILL.md" "$DEST_DIR/windsurf-rules-ios.md"
+sync_one "/Users/juancarlosmerlosalbarracin/.agents/skills/android-enterprise-rules/SKILL.md" "$DEST_DIR/android-enterprise-rules.md"
+sync_one "/Users/juancarlosmerlosalbarracin/.agents/skills/backend-enterprise-rules/SKILL.md" "$DEST_DIR/backend-enterprise-rules.md"
+sync_one "/Users/juancarlosmerlosalbarracin/.agents/skills/frontend-enterprise-rules/SKILL.md" "$DEST_DIR/frontend-enterprise-rules.md"
+sync_one "/Users/juancarlosmerlosalbarracin/.agents/skills/ios-enterprise-rules/SKILL.md" "$DEST_DIR/ios-enterprise-rules.md"
 sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/swift-concurrency/SKILL.md" "$DEST_DIR/swift-concurrency.md"
 sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/swiftui-expert-skill/SKILL.md" "$DEST_DIR/swiftui-expert-skill.md"
 
