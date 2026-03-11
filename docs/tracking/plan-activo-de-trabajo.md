@@ -13,6 +13,40 @@
   - `/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md`
 - Mantener trazabilidad: hallazgo -> fix -> test -> release notes.
 
+## Regla hard de prioridad (anti-bucle)
+
+- ESTE MD fue el que nos metio en el bucle cuando se uso como backlog principal.
+- Este documento no puede volver a mandar sobre el backlog real del producto.
+- Desde ahora queda subordinado por contrato a los bugs externos reportados en:
+  - `/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md`
+  - `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
+  - `/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md`
+- Mientras exista cualquier bug abierto en esos MDs:
+  - queda congelada cualquier task interna `PUMUKI-2xx` no estrictamente necesaria para cerrar ese bug;
+  - la unica task `🚧` permitida aqui debe corresponder a un bug externo real;
+  - si este MD se desalinease con los MDs externos, mandan los MDs externos.
+- Si este MD vuelve a mostrar una `🚧` interna mientras `SAAS`, `RuralGo` o `Flux` tengan bugs abiertos:
+  - eso se considera violacion hard del proceso,
+  - el estado correcto pasa a `BLOCKED`,
+  - y la unica accion permitida es corregir este tracking y volver al bug externo prioritario.
+
+## Cola real externa (prioridad absoluta)
+
+- ✅ `SAAS · backlog externo cerrado`
+- ✅ `RuralGo · backlog externo cerrado`
+- ✅ `Flux · backlog externo cerrado`
+
+## Estado operativo actual
+
+- ✅ Última task cerrada: `Release útil + rollout consumers a pumuki@6.3.56`
+- 🚧 Task actual: `Pausa operativa` (sin bugs externos abiertos; esperar orden explícita del usuario)
+- ⏳ Siguiente paso: decidir un nuevo frente de trabajo explícito antes de tocar código funcional
+
+## Congelacion del plan interno
+
+- Todas las tasks internas `PUMUKI-2xx` de refactor, modularizacion, docs o tracking quedan congeladas hasta que el usuario abra explícitamente un nuevo frente.
+- Solo se permite trabajo interno si vuelve a aparecer un bug externo abierto o si el usuario ordena un frente interno concreto.
+
 ## Fase 0. Intake y priorizacion
 
 - ✅ Consolidar hallazgos y deduplicar causas raiz del MD canónico.
@@ -4354,6 +4388,9 @@
     - `npm run -s validation:self-worktree-hygiene -- --no-fail`
 
 - 🚧 PUMUKI-283: Atacar el problema principal de Pumuki en consumer real, cerrando `PUMUKI-019` en `SAAS` para que el gate detecte plataformas activas, materialice skills requeridas del repo y bloquee con findings semánticos reales.
+  - Regla hard vigente:
+    - mientras `SAAS`, `RuralGo` o `Flux` tengan bugs abiertos, quedan congeladas todas las tasks internas `PUMUKI-2xx` que no sean estrictamente necesarias para cerrar esos MDs externos;
+    - este plan ya no puede volver a priorizar refactor interno por encima de `PUMUKI-019` y `PUMUKI-020`.
   - Alcance:
     - retomar los cambios abiertos en:
       - `integrations/config/skillsCustomRules.ts`
@@ -4422,3 +4459,287 @@
       - `impact`
       - `expected_fix`
     - revalidarlo en una segunda ejecución con el mismo resultado estructural.
+
+- ✅ SAAS · SOLID SRP AST: cerrar la última milla semántica de `skills.backend.no-solid-violations` y revalidarla en consumer.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/typescript/index.ts` ya extrae match semántico para `heuristics.ts.solid.srp.class-command-query-mix.ast`.
+    - `integrations/git/findingTraceability.ts` ya hereda `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` cuando la skill entra por `Any(...)`.
+    - `integrations/config/skillsRuleSet.ts` ya promociona `*.no-solid-violations` a `ERROR` en `PRE_PUSH/CI` aunque la fuente vendorizada llegue como `WARN`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y `extensions=['.ts']`:
+      - `backend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.backend.no-solid-violations"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json`
+      - bloqueo primario real: `SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/typescript/index.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts integrations/git/__tests__/findingTraceability.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts integrations/config/__tests__/skillsRuleSet.test.ts` -> `76 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `./node_modules/.bin/tsx -e "<runPlatformGate PRE_PUSH workingTree .ts>"` -> `exitCode=1`, `primary=SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`.
+
+- 🚧 SAAS · Validación SOLID AST: mantener la secuencia por principios sin mezclar scopes.
+  - Estado actual (2026-03-11):
+    - `SRP` ya está validado y persistido en consumer.
+    - `DIP` ya está validado y persistido en consumer.
+    - `OCP-Backend` ya está validado y persistido en consumer.
+    - `ISP-Backend` ya está validado y persistido en consumer.
+    - `LSP-Backend` ya está validado y persistido en consumer.
+    - `SRP-iOS` ya está validado y persistido en consumer.
+    - `DIP-iOS` ya está validado y persistido en consumer.
+    - `OCP-iOS` ya está validado y persistido en consumer.
+    - `ISP-iOS` ya está validado y persistido en consumer.
+    - `LSP-iOS` ya está validado y persistido en consumer.
+    - `SRP-Android` ya está validado y persistido en consumer.
+    - `DIP-Android` ya está validado y persistido en consumer.
+    - `OCP-Android` ya está validado y persistido en consumer.
+    - `ISP-Android` ya está validado y persistido en consumer.
+    - `LSP-Android` ya está validado y persistido en consumer.
+    - `SRP-Frontend` ya está validado y persistido en consumer.
+    - `DIP-Frontend` ya está validado y persistido en consumer.
+    - `OCP-Frontend`, `ISP-Frontend` y `LSP-Frontend` siguen congelados hasta nueva orden explícita del usuario.
+
+- ✅ SAAS · SOLID OCP Backend AST: materializar una violación `OCP` semántica, enriquecida y bloqueante en consumer backend.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/typescript/index.ts` ya extrae match semántico para `heuristics.ts.solid.ocp.discriminator-switch.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `OCP-Backend`.
+    - `skills.backend.no-solid-violations` ya hereda esa traza semántica y bloquea en `PRE_PUSH` cuando el caso aplica.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y facts aislados del canario `apps/backend/src/delivery/application/use-cases/pumuki-ocp-backend-canary-use-case.ts`:
+      - `platforms.backend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.backend.no-solid-violations"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `skills.backend.no-solid-violations`
+      - el bloqueo primario real lo provoca `SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/typescript/index.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `76 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_PUSH con facts aislados del canario backend OCP ... EOF` -> `exitCode=1`, `matched_rule_ids=["skills.backend.no-solid-violations"]`.
+
+- ✅ SAAS · SOLID ISP Backend AST: materializar una violación `ISP` semántica, enriquecida y bloqueante en consumer backend.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/typescript/index.ts` ya extrae match semántico para `heuristics.ts.solid.isp.interface-command-query-mix.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `ISP-Backend`.
+    - `skills.backend.no-solid-violations` ya hereda esa traza semántica y bloquea en `PRE_PUSH` cuando el caso aplica.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y facts aislados del canario `apps/backend/src/delivery/application/use-cases/pumuki-isp-backend-canary-use-case.ts`:
+      - `platforms.backend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.backend.no-solid-violations"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `level="ERROR"`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `skills.backend.no-solid-violations`
+      - el bloqueo primario real lo provoca `SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/typescript/index.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `79 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_PUSH con facts aislados del canario backend ISP ... EOF` -> `exitCode=1`, `matched_rule_ids=["skills.backend.no-solid-violations"]`, `primary=SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`.
+
+- ✅ SAAS · SOLID LSP Backend AST: materializar una violación `LSP` semántica, enriquecida y bloqueante en consumer backend.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/typescript/index.ts` ya extrae match semántico para `heuristics.ts.solid.lsp.override-not-implemented.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `LSP-Backend`.
+    - `skills.backend.no-solid-violations` ya hereda esa traza semántica y bloquea en `PRE_PUSH` cuando el caso aplica.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y facts aislados del canario `apps/backend/src/delivery/application/use-cases/pumuki-lsp-backend-canary-use-case.ts`:
+      - `platforms.backend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.backend.no-solid-violations"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `level="ERROR"`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `skills.backend.no-solid-violations`
+      - el bloqueo primario real lo provoca `SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/typescript/index.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `82 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_PUSH con facts aislados del canario backend LSP ... EOF` -> `exitCode=1`, `matched_rule_ids=["skills.backend.no-solid-violations"]`, `primary=SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`.
+
+- ✅ SAAS · SOLID SRP iOS AST: materializar una violación `SRP` semántica, enriquecida y bloqueante en consumer iOS.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/text/ios.ts` ya extrae match semántico para `heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `SRP-iOS`.
+    - `core/rules/presets/iosEnterpriseRuleSet.ts` ya materializa `ios.solid.srp.presentation-mixed-responsibilities` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Swift:
+      - `platforms.ios.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["ios.solid.srp.presentation-mixed-responsibilities"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json`
+      - `ai_gate.violations` contiene solo `ios.solid.srp.presentation-mixed-responsibilities`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `49 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx -e "<runPlatformGate PRE_COMMIT con facts aislados del canario iOS>"` -> `exitCode=1`, `violations=["ios.solid.srp.presentation-mixed-responsibilities"]`.
+
+- ✅ SAAS · SOLID DIP iOS AST: materializar una violación `DIP` semántica, enriquecida y bloqueante en consumer iOS.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/text/ios.ts` ya extrae match semántico para `heuristics.ios.solid.dip.concrete-framework-dependency.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `DIP-iOS`.
+    - `core/rules/presets/iosEnterpriseRuleSet.ts` ya materializa `ios.solid.dip.concrete-framework-dependency` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Swift:
+      - `platforms.ios.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["ios.solid.dip.concrete-framework-dependency"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json`
+      - `ai_gate.violations` contiene solo `ios.solid.dip.concrete-framework-dependency`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `54 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx -e "<runPlatformGate PRE_COMMIT con facts aislados del canario iOS DIP>"` -> `exitCode=1`, `violations=["ios.solid.dip.concrete-framework-dependency"]`.
+
+- ✅ SAAS · SOLID SRP Android AST: materializar una violación `SRP` semántica, enriquecida y bloqueante en consumer Android.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/text/android.ts` ya extrae match semántico para `heuristics.android.solid.srp.presentation-mixed-responsibilities.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `SRP-Android`.
+    - `core/rules/presets/androidRuleSet.ts` ya materializa `android.solid.srp.presentation-mixed-responsibilities` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Kotlin:
+      - `platforms.android.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["android.solid.srp.presentation-mixed-responsibilities"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `android.solid.srp.presentation-mixed-responsibilities`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/android.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/androidRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `42 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx -e "<runPlatformGate PRE_COMMIT con facts aislados del canario Android SRP>"` -> `exitCode=1`, `violations=["android.solid.srp.presentation-mixed-responsibilities"]`.
+
+- ✅ SAAS · SOLID DIP Android AST: materializar una violación `DIP` semántica, enriquecida y bloqueante en consumer Android.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/text/android.ts` ya extrae match semántico para `heuristics.android.solid.dip.concrete-framework-dependency.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `DIP-Android`.
+    - `core/rules/presets/androidRuleSet.ts` ya materializa `android.solid.dip.concrete-framework-dependency` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Kotlin:
+      - `platforms.android.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["android.solid.dip.concrete-framework-dependency"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `android.solid.dip.concrete-framework-dependency`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/android.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/androidRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `45 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx -e "<runPlatformGate PRE_COMMIT con facts aislados del canario Android DIP>"` -> `exitCode=1`, `violations=["android.solid.dip.concrete-framework-dependency"]`.
+
+- ✅ SAAS · SOLID OCP Android AST: materializar una violación `OCP` semántica, enriquecida y bloqueante en consumer Android.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/android.ts` ya extrae match semántico para `heuristics.android.solid.ocp.discriminator-branching.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `OCP-Android`.
+    - `core/rules/presets/androidRuleSet.ts` ya materializa `android.solid.ocp.discriminator-branching` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Kotlin:
+      - `platforms.android.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["android.solid.ocp.discriminator-branching"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `android.solid.ocp.discriminator-branching`
+      - `block-summary` marca como primario `ANDROID_SOLID_OCP_DISCRIMINATOR_BRANCHING`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/android.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/androidRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `60 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario Android OCP ... EOF` -> `exitCode=1`, `matched_rule_ids=["android.solid.ocp.discriminator-branching"]`, `primary=ANDROID_SOLID_OCP_DISCRIMINATOR_BRANCHING`.
+
+- ✅ SAAS · SOLID ISP Android AST: materializar una violación `ISP` semántica, enriquecida y bloqueante en consumer Android.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/android.ts` ya extrae match semántico para `heuristics.android.solid.isp.fat-interface-dependency.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `ISP-Android`.
+    - `core/rules/presets/androidRuleSet.ts` ya materializa `android.solid.isp.fat-interface-dependency` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Kotlin:
+      - `platforms.android.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["android.solid.isp.fat-interface-dependency"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `android.solid.isp.fat-interface-dependency`
+      - `block-summary` marca como primario `ANDROID_SOLID_ISP_FAT_INTERFACE_DEPENDENCY`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/android.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/androidRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `63 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario Android ISP ... EOF` -> `exitCode=1`, `matched_rule_ids=["android.solid.isp.fat-interface-dependency"]`, `primary=ANDROID_SOLID_ISP_FAT_INTERFACE_DEPENDENCY`.
+
+- ✅ SAAS · SOLID LSP Android AST: materializar una violación `LSP` semántica, enriquecida y bloqueante en consumer Android.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/android.ts` ya extrae match semántico para `heuristics.android.solid.lsp.narrowed-precondition.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `LSP-Android`.
+    - `core/rules/presets/androidRuleSet.ts` ya materializa `android.solid.lsp.narrowed-precondition-substitution` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Kotlin:
+      - `platforms.android.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["android.solid.lsp.narrowed-precondition-substitution"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `android.solid.lsp.narrowed-precondition-substitution`
+      - `block-summary` marca como primario `ANDROID_SOLID_LSP_NARROWED_PRECONDITION_SUBSTITUTION`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/android.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/androidRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `66 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario Android LSP ... EOF` -> `exitCode=1`, `matched_rule_ids=["android.solid.lsp.narrowed-precondition-substitution"]`, `primary=ANDROID_SOLID_LSP_NARROWED_PRECONDITION_SUBSTITUTION`.
+
+- ✅ SAAS · SOLID SRP Frontend AST: materializar una violación `SRP` semántica, enriquecida y bloqueante en consumer Frontend.
+  - Resultado (2026-03-10):
+    - el motor TypeScript ya materializa `heuristics.ts.solid.srp.class-command-query-mix.ast` con payload semántico enriquecido reutilizable en Frontend.
+    - `skills.frontend.no-solid-violations` ya hereda `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` desde la traza heurística.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y facts aislados del canario `apps/web/src/presentation/PumukiSrpFrontendCanary.tsx`:
+      - `platforms.frontend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.frontend.no-solid-violations"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `skills.frontend.no-solid-violations`
+  - Evidencia:
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_PUSH con facts aislados del canario Frontend SRP ... EOF` -> `exitCode=1`, `violations=["skills.frontend.no-solid-violations"]`.
+    - `SAAS`: parse de `.ai_evidence.json` -> `snapshot.outcome="BLOCK"`, `aiGateStatus="BLOCKED"`, `matched_rule_ids=["skills.frontend.no-solid-violations"]`.
+
+- ✅ SAAS · SOLID DIP Frontend AST: materializar una violación `DIP` semántica, enriquecida y bloqueante en consumer Frontend.
+  - Resultado (2026-03-11):
+    - el motor TypeScript ya materializa `heuristics.ts.solid.dip.framework-import.ast` y `heuristics.ts.solid.dip.concrete-instantiation.ast` con payload semántico enriquecido reutilizable en Frontend.
+    - `skills.frontend.no-solid-violations` ya hereda `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` desde la traza heurística `DIP`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y facts aislados del canario `apps/web/src/application/PumukiDipFrontendCanaryUseCase.ts`:
+      - `platforms.frontend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.frontend.no-solid-violations"]`
+      - `.ai_evidence.json` persiste `skills.frontend.enforce-clean-architecture` como `WARN` lateral y `skills.frontend.no-solid-violations` como único blocking real
+      - `block-summary` marca como primario `SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `SAAS`: `node --import tsx <<'EOF' ... evaluatePlatformGateFindings PRE_PUSH con el canario Frontend DIP ... EOF` -> `matchedRuleIds=["skills.frontend.enforce-clean-architecture","skills.frontend.no-solid-violations"]`, con payload semántico completo en ambos findings.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_PUSH con facts aislados del canario Frontend DIP ... EOF` -> `exitCode=1`, `block-summary primary=SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS`.
+    - `SAAS`: parse de `.ai_evidence.json` -> `snapshot.outcome="BLOCK"`, `aiGateStatus="BLOCKED"`, `blockingViolations=["skills.frontend.no-solid-violations"]`.
+
+- ✅ SAAS · SOLID OCP iOS AST: materializar una violación `OCP` semántica, enriquecida y bloqueante en consumer iOS.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/ios.ts` ya extrae match semántico para `heuristics.ios.solid.ocp.discriminator-switch.ast` sobre branching por discriminador en `application/presentation`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `OCP-iOS`.
+    - `core/rules/presets/iosEnterpriseRuleSet.ts` ya materializa `ios.solid.ocp.discriminator-switch-branching` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario `apps/ios/Sources/Validation/Application/PumukiOcpIosCanaryUseCase.swift`:
+      - `platforms.ios.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["ios.solid.ocp.discriminator-switch-branching"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `ios.solid.ocp.discriminator-switch-branching`
+      - `block-summary` marca como primario `IOS_SOLID_OCP_DISCRIMINATOR_SWITCH_BRANCHING`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `62 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario iOS OCP ... EOF` -> `exitCode=1`, `block-summary primary=IOS_SOLID_OCP_DISCRIMINATOR_SWITCH_BRANCHING`.
+    - `SAAS`: parse de `.ai_evidence.json` -> `snapshot.outcome="BLOCK"`, `matched_rule_ids=["ios.solid.ocp.discriminator-switch-branching"]`, `blocking_rule_ids=["ios.solid.ocp.discriminator-switch-branching"]`.
+
+- ✅ SAAS · SOLID ISP iOS AST: materializar una violación `ISP` semántica, enriquecida y bloqueante en consumer iOS.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/ios.ts` ya extrae match semántico para `heuristics.ios.solid.isp.fat-protocol-dependency.ast` sobre consumidores de `application/presentation` que dependen de un protocolo demasiado ancho y usan solo un subconjunto mínimo.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `ISP-iOS`.
+    - `core/rules/presets/iosEnterpriseRuleSet.ts` ya materializa `ios.solid.isp.fat-protocol-dependency` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario `apps/ios/Sources/Validation/Application/PumukiIspIosCanaryUseCase.swift`:
+      - `platforms.ios.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["ios.solid.isp.fat-protocol-dependency"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `ios.solid.isp.fat-protocol-dependency`
+      - `block-summary` marca como primario `IOS_SOLID_ISP_FAT_PROTOCOL_DEPENDENCY`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `66 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario iOS ISP ... EOF` -> `exitCode=1`, `block-summary primary=IOS_SOLID_ISP_FAT_PROTOCOL_DEPENDENCY`.
+    - `SAAS`: parse de `.ai_evidence.json` -> `snapshot.outcome="BLOCK"`, `matched_rule_ids=["ios.solid.isp.fat-protocol-dependency"]`, `blocking=true` en `ai_gate.violations[0]`.
+
+- ✅ SAAS · SOLID LSP iOS AST: materializar una violación `LSP` semántica, enriquecida y bloqueante en consumer iOS.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/ios.ts` ya extrae match semántico para `heuristics.ios.solid.lsp.narrowed-precondition.ast` sobre sustitución insegura de un contrato base por endurecimiento de precondiciones en un subtipo de `application/presentation`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `LSP-iOS`.
+    - `core/rules/presets/iosEnterpriseRuleSet.ts` ya materializa `ios.solid.lsp.narrowed-precondition-substitution` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario `apps/ios/Sources/Validation/Application/PumukiLspIosCanaryDiscount.swift`:
+      - `platforms.ios.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["ios.solid.lsp.narrowed-precondition-substitution"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `ios.solid.lsp.narrowed-precondition-substitution`
+      - `block-summary` marca como primario `IOS_SOLID_LSP_NARROWED_PRECONDITION_SUBSTITUTION`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `70 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario iOS LSP ... EOF` -> `exitCode=1`, `block-summary primary=IOS_SOLID_LSP_NARROWED_PRECONDITION_SUBSTITUTION`.
+    - `SAAS`: parse de `.ai_evidence.json` -> `snapshot.outcome="BLOCK"`, `matched_rule_ids=["ios.solid.lsp.narrowed-precondition-substitution"]`, `blocking=true` en `ai_gate.violations[0]`.
+
+- ✅ SAAS · SOLID DIP AST: materializar una violación `DIP` semántica, enriquecida y bloqueante en consumer.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/typescript/index.ts` ya extrae match semántico para `heuristics.ts.solid.dip.framework-import.ast` y `heuristics.ts.solid.dip.concrete-instantiation.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para ambas heurísticas `DIP`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y `extensions=['.ts']`:
+      - `backend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.backend.enforce-clean-architecture","skills.backend.no-solid-violations"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json`
+      - bloqueo primario real: `SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/typescript/index.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts integrations/git/__tests__/findingTraceability.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts integrations/config/__tests__/skillsRuleSet.test.ts` -> `80 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx -e "<runPlatformGate PRE_PUSH workingTree extensions=['.ts']>"` -> `exitCode=1`, `primary=SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`.

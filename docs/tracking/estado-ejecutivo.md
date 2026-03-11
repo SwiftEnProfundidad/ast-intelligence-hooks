@@ -6,17 +6,26 @@
 
 ## Estado actual
 - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
-- Estado del plan: EJECUCION
-- Última task cerrada (`✅`): `PUMUKI-282` (la fachada `framework-menu-system-notifications-macos.ts` ya separa orquestación de banner, dispatch del diálogo bloqueante y resultado final de entrega, con `11` tests focales en verde y `typecheck` en verde).
-- Task activa (`🚧`): `PUMUKI-283` (retomar el problema principal de Pumuki: cerrar `PUMUKI-019` en `SAAS`, forzando detección real de plataformas/skills requeridas y bloqueo semántico en consumers).
-- Pendiente priorizado (`⏳`): `SAAS · PUMUKI-019` (bug crítico de enforcement real de skills/reglas en consumer).
+- Estado del plan: PAUSA OPERATIVA
+- Última task cerrada (`✅`): `Release útil + rollout consumers a pumuki@6.3.56` (SAAS, RuralGo y Flux actualizados; `status --json` alineado en `effective/runtime/consumerInstalled/lifecycleInstalled=6.3.56`).
+- Task activa (`🚧`): `Pausa operativa` (sin bugs externos abiertos; esperar orden explícita del usuario antes de abrir un frente nuevo).
+- Pendientes priorizados (`⏳`):
+  - Ninguno. Los MDs externos de `SAAS`, `RuralGo` y `Flux` están cerrados.
 - Progreso crítico actual:
-  - el paquete del hub `42_PAQUETE_ACTUAL_PARA_PUMUKI.md` ya tiene respuesta formal de Pumuki;
-  - ya hay avance real en:
-    - `skills reconciliation`
-    - `required/effective lock`
-    - endurecimiento de `evaluateAiGate` para skills requeridas sin plataformas activas;
-  - `IOS-CANARY-001` sigue en `STOP` hasta que exista un finding semántico bloqueante, repetible y con shape completo.
+  - Los tres MDs externos quedaron cerrados y alineados con leyenda de backlog externo resuelto.
+  - `pumuki@6.3.56` ya está verificado en `SAAS`, `RuralGo` y `Flux`.
+  - Los tres consumers quedaron alineados en runtime, lifecycle y manifest sin drift.
+
+## Regla hard anti-bucle
+- El MD interno que nos metio en el bucle fue `docs/tracking/plan-activo-de-trabajo.md` cuando se uso como backlog principal.
+- Este `estado-ejecutivo.md` reforzo ese mismo bucle al resumir y legitimar prioridades internas que no eran el trabajo principal.
+- Desde este punto:
+  - `docs/tracking/plan-activo-de-trabajo.md` y este `estado-ejecutivo.md` solo pueden reflejar la prioridad de los bugs externos;
+  - no pueden volver a introducir prioridades internas `PUMUKI-2xx` mientras `SAAS`, `RuralGo` o `Flux` tengan bugs abiertos;
+  - si se desalinean con los MDs externos, manda el backlog externo.
+- Regla dura adicional:
+  - si aqui aparece una `🚧` distinta de un bug externo real o de la pausa operativa cuando no haya bugs externos abiertos,
+  - este documento se considera incorrecto y debe corregirse antes de continuar con cualquier cambio funcional.
 
 ## Historial resumido
 - Bloque RuralGO cerrado: `docs/tracking/historico-validacion-ruralgo-03-03-2026.md`.
@@ -26,3 +35,4 @@
 - Debe existir exactamente una task `🚧` en el plan activo.
 - No se crean nuevos MDs de seguimiento salvo instrucción explícita.
 - `docs/README.md` es la fuente de verdad para distinguir documentación oficial, seguimiento permitido y artefactos efímeros.
+- Mientras cualquiera de los MDs externos (`SAAS`, `RuralGo`, `Flux`) tenga bugs abiertos, el plan interno queda subordinado a esos bugs y se congelan todas las tasks internas no alineadas con su cierre.
