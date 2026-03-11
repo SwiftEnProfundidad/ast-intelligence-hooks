@@ -32,3 +32,31 @@ test('HeuristicFact permite omitir filePath', () => {
   assert.equal(factWithoutPath.filePath, undefined);
   assert.equal(factWithoutPath.severity, 'INFO');
 });
+
+test('HeuristicFact conserva metadata semantica opcional del canario iOS', () => {
+  const fact: HeuristicFact = {
+    kind: 'Heuristic',
+    ruleId: 'heuristics.ios.canary-001.presentation-mixed-responsibilities.ast',
+    severity: 'CRITICAL',
+    code: 'HEURISTICS_IOS_CANARY_001_PRESENTATION_MIXED_RESPONSIBILITIES_AST',
+    message: 'Semantic iOS canary triggered.',
+    filePath: 'apps/ios/Sources/AppShell/Application/AppShellViewModel.swift',
+    lines: [1, 2, 3, 4],
+    primary_node: {
+      kind: 'class',
+      name: 'AppShellViewModel',
+      lines: [1],
+    },
+    related_nodes: [
+      { kind: 'property', name: 'shared singleton', lines: [2] },
+      { kind: 'call', name: 'URLSession.shared', lines: [3] },
+    ],
+    why: 'Mezcla responsabilidades incompatibles.',
+    impact: 'Complica tests y cambios.',
+    expected_fix: 'Extraer collaborators.',
+  };
+
+  assert.equal(fact.primary_node?.name, 'AppShellViewModel');
+  assert.equal(fact.related_nodes?.length, 2);
+  assert.equal(fact.expected_fix, 'Extraer collaborators.');
+});

@@ -11,6 +11,11 @@ type Trace = {
   lines?: readonly number[];
   matchedBy?: string;
   source?: string;
+  primary_node?: Finding['primary_node'];
+  related_nodes?: Finding['related_nodes'];
+  why?: string;
+  impact?: string;
+  expected_fix?: string;
 };
 
 type RuleScope = RuleDefinition['scope'];
@@ -202,6 +207,11 @@ const traceHeuristic = (
     lines: sortedUniqueLines(selected.lines ?? []),
     matchedBy: 'Heuristic',
     source: selected.source,
+    primary_node: selected.primary_node,
+    related_nodes: selected.related_nodes,
+    why: selected.why,
+    impact: selected.impact,
+    expected_fix: selected.expected_fix,
   };
 };
 
@@ -298,6 +308,11 @@ export const attachFindingTraceability = (params: {
       lines: finding.lines ?? trace.lines,
       matchedBy: finding.matchedBy ?? trace.matchedBy,
       source: finding.source ?? trace.source,
+      primary_node: finding.primary_node ?? trace.primary_node,
+      related_nodes: finding.related_nodes ?? trace.related_nodes,
+      why: finding.why ?? trace.why,
+      impact: finding.impact ?? trace.impact,
+      expected_fix: finding.expected_fix ?? trace.expected_fix,
     };
   });
 };

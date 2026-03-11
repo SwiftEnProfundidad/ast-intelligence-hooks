@@ -257,6 +257,152 @@ test('runPlatformGate usa sddDecisionOverride y evita reevaluar SDD cuando llega
   assert.equal(evaluateSddCalls, 0);
 });
 
+test('runPlatformGate complementa staged con repo cuando el delta solo cambia carriers del skills_contract', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const git = buildGitStub('/repo/root');
+  git.runGit = (args) => {
+    if (args.join(' ') === 'diff --cached --name-only') {
+      return ['skills.lock.json', 'skills.sources.json'].join('\n');
+    }
+    return '';
+  };
+  const evidence = buildEvidenceStub();
+
+  const stagedFacts: ReadonlyArray<Fact> = [];
+  const repoFacts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileChange',
+      source: 'git:repo:working-tree',
+      path: 'apps/ios/Sources/AppShell/Application/AppShellViewModel.swift',
+      changeType: 'modified',
+    },
+    {
+      kind: 'FileContent',
+      source: 'git:repo:working-tree',
+      path: 'apps/ios/Sources/AppShell/Application/AppShellViewModel.swift',
+      content: 'public final class AppShellViewModel { public func restorePersistedSessionIfNeeded() async {} }',
+    },
+  ];
+
+  let evaluateFacts: ReadonlyArray<Fact> = [];
+  let tddFacts: ReadonlyArray<Fact> = [];
+
+  const result = await runPlatformGate({
+    policy,
+    scope: { kind: 'staged' },
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      resolveFactsForGateScope: async ({ scope }) => {
+        if (scope.kind === 'repo') {
+          return repoFacts;
+        }
+        return stagedFacts;
+      },
+      evaluatePlatformGateFindings: ({ facts }) => {
+        evaluateFacts = facts;
+        return {
+          detectedPlatforms: {
+            ios: { detected: true, confidence: 'HIGH' },
+          },
+          skillsRuleSet: {
+            rules: [createSkillRule({
+              id: 'skills.ios.no-force-unwrap',
+              severity: 'CRITICAL',
+              platform: 'ios',
+            })],
+            activeBundles: [
+              { name: 'ios-guidelines', version: '1.0.0', source: 'test', hash: 'a'.repeat(64), rules: [] },
+              { name: 'ios-concurrency-guidelines', version: '1.0.0', source: 'test', hash: 'b'.repeat(64), rules: [] },
+              { name: 'ios-swiftui-expert-guidelines', version: '1.0.0', source: 'test', hash: 'c'.repeat(64), rules: [] },
+            ],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: true,
+            unsupportedAutoRuleIds: [],
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: facts.length,
+            filesScanned: 1,
+            rulesTotal: 2,
+            baselineRules: 1,
+            heuristicRules: 0,
+            skillsRules: 1,
+            projectRules: 0,
+            matchedRules: 1,
+            unmatchedRules: 1,
+            unevaluatedRules: 0,
+            activeRuleIds: [
+              'ios.canary-001.presentation-mixed-responsibilities',
+              'skills.ios.no-force-unwrap',
+            ],
+            evaluatedRuleIds: [
+              'ios.canary-001.presentation-mixed-responsibilities',
+              'skills.ios.no-force-unwrap',
+            ],
+            matchedRuleIds: ['ios.canary-001.presentation-mixed-responsibilities'],
+            unmatchedRuleIds: ['skills.ios.no-force-unwrap'],
+            unevaluatedRuleIds: [],
+          },
+          findings: [
+            {
+              ruleId: 'ios.canary-001.presentation-mixed-responsibilities',
+              severity: 'CRITICAL',
+              code: 'IOS_CANARY_001_PRESENTATION_MIXED_RESPONSIBILITIES',
+              message: 'semantic canary',
+              filePath: 'apps/ios/Sources/AppShell/Application/AppShellViewModel.swift',
+              blocking: true,
+              primary_node: {
+                kind: 'class',
+                name: 'AppShellViewModel',
+                lines: [1],
+              },
+              related_nodes: [
+                { kind: 'member', name: 'session bootstrap/restoration', lines: [1] },
+              ],
+              why: 'why',
+              impact: 'impact',
+              expected_fix: 'fix',
+            },
+          ],
+        };
+      },
+      evaluateGate: () => ({ outcome: 'BLOCK' }),
+      emitPlatformGateEvidence: () => {},
+      printGateFindings: () => {},
+      enforceTddBddPolicy: ({ facts }) => {
+        tddFacts = facts;
+        return buildOutOfScopeTddBddResult();
+      },
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveActiveGateWaiver: () => ({
+        kind: 'none',
+        path: '.pumuki/waivers/gate.json',
+      }),
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(evaluateFacts.some((fact) => {
+    return (
+      (fact.kind === 'FileChange' || fact.kind === 'FileContent') &&
+      fact.path === 'apps/ios/Sources/AppShell/Application/AppShellViewModel.swift'
+    );
+  }), true);
+  assert.deepEqual(tddFacts, stagedFacts);
+});
+
 test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna BLOCK', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_PUSH',

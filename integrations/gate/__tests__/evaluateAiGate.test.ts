@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 import type { SkillsLockV1 } from '../../config/skillsLock';
 import type { AiEvidenceV2_1 } from '../../evidence/schema';
@@ -1429,65 +1432,145 @@ test('evaluateAiGate bloquea PRE_WRITE cuando el repo exige skills y no se detec
 });
 
 test('evaluateAiGate bloquea PRE_COMMIT cuando el repo exige skills pero solo hay plataforma inferida por coverage', () => {
-  const base = sampleEvidence();
-  const result = evaluateAiGate(
-    {
-      repoRoot: '/repo',
-      stage: 'PRE_COMMIT',
-    },
-    {
-      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
-      readEvidenceResult: () =>
-        validEvidenceResult({
-          ...base,
-          platforms: {},
-          rulesets: [
-            {
-              platform: 'skills',
-              bundle: 'backend-guidelines@1.0.0',
-              hash: 'skills-backend-hash',
-            },
-          ],
-          snapshot: {
-            ...base.snapshot,
-            stage: 'PRE_COMMIT',
-            rules_coverage: {
-              ...base.snapshot.rules_coverage!,
-              stage: 'PRE_COMMIT',
-              active_rule_ids: ['skills.backend.no-empty-catch'],
-              evaluated_rule_ids: ['skills.backend.no-empty-catch'],
-              matched_rule_ids: [],
-              unevaluated_rule_ids: [],
-              counts: {
-                active: 1,
-                evaluated: 1,
-                matched: 0,
-                unevaluated: 0,
-              },
-              coverage_ratio: 1,
-            },
-          },
-        }),
-      captureRepoState: () => sampleEvidence().repo_state!,
-      loadRequiredSkillsLock: () => sampleBackendSkillsLock(),
-    }
-  );
+  const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-precommit-'));
+  mkdirSync(join(tmpRoot, 'apps/backend'), { recursive: true });
 
-  assert.equal(result.status, 'BLOCKED');
-  assert.equal(result.allowed, false);
-  assert.equal(result.skills_contract?.enforced, true);
-  assert.equal(result.skills_contract?.status, 'FAIL');
-  assert.deepEqual(result.skills_contract?.detected_platforms, []);
-  assert.equal(
-    result.skills_contract?.violations.some(
-      (item) => item.code === 'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED'
-    ),
-    true
-  );
-  assert.equal(
-    result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
-    true
-  );
+  try {
+    const base = sampleEvidence();
+    const result = evaluateAiGate(
+      {
+        repoRoot: tmpRoot,
+        stage: 'PRE_COMMIT',
+      },
+      {
+        now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+        readEvidenceResult: () =>
+          validEvidenceResult({
+            ...base,
+            platforms: {},
+            rulesets: [
+              {
+                platform: 'skills',
+                bundle: 'backend-guidelines@1.0.0',
+                hash: 'skills-backend-hash',
+              },
+            ],
+            snapshot: {
+              ...base.snapshot,
+              stage: 'PRE_COMMIT',
+              rules_coverage: {
+                ...base.snapshot.rules_coverage!,
+                stage: 'PRE_COMMIT',
+                active_rule_ids: ['skills.backend.no-empty-catch'],
+                evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+                matched_rule_ids: [],
+                unevaluated_rule_ids: [],
+                counts: {
+                  active: 1,
+                  evaluated: 1,
+                  matched: 0,
+                  unevaluated: 0,
+                },
+                coverage_ratio: 1,
+              },
+            },
+          }),
+        captureRepoState: () => ({
+          ...sampleEvidence().repo_state!,
+          repo_root: tmpRoot,
+        }),
+        loadRequiredSkillsLock: () => sampleBackendSkillsLock(),
+      }
+    );
+
+    assert.equal(result.status, 'ALLOWED');
+    assert.equal(result.allowed, true);
+    assert.equal(result.skills_contract?.enforced, true);
+    assert.equal(result.skills_contract?.status, 'PASS');
+    assert.deepEqual(result.skills_contract?.detected_platforms, ['backend']);
+    assert.equal(
+      result.skills_contract?.violations.some(
+        (item) => item.code === 'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED'
+      ),
+      false
+    );
+    assert.equal(
+      result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
+      false
+    );
+  } finally {
+    rmSync(tmpRoot, { recursive: true, force: true });
+  }
+});
+
+test('evaluateAiGate detecta plataformas requeridas desde el árbol del repo cuando coverage no las materializa', () => {
+  const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-'));
+  mkdirSync(join(tmpRoot, 'apps/backend'), { recursive: true });
+
+  try {
+    const base = sampleEvidence();
+    const result = evaluateAiGate(
+      {
+        repoRoot: tmpRoot,
+        stage: 'PRE_WRITE',
+      },
+      {
+        now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+        readEvidenceResult: () =>
+          validEvidenceResult({
+            ...base,
+            platforms: {},
+            rulesets: [
+              {
+                platform: 'skills',
+                bundle: 'backend-guidelines@1.0.0',
+                hash: 'skills-backend-hash',
+              },
+            ],
+            snapshot: {
+              ...base.snapshot,
+              stage: 'PRE_WRITE',
+              rules_coverage: {
+                ...base.snapshot.rules_coverage!,
+                stage: 'PRE_WRITE',
+                active_rule_ids: ['skills.backend.no-empty-catch'],
+                evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+                matched_rule_ids: [],
+                unevaluated_rule_ids: [],
+                counts: {
+                  active: 1,
+                  evaluated: 1,
+                  matched: 0,
+                  unevaluated: 0,
+                },
+                coverage_ratio: 1,
+              },
+            },
+          }),
+        captureRepoState: () => ({
+          ...sampleEvidence().repo_state!,
+          repo_root: tmpRoot,
+        }),
+        loadRequiredSkillsLock: () => sampleBackendSkillsLock(),
+      }
+    );
+
+    assert.equal(result.skills_contract?.enforced, true);
+    assert.equal(result.skills_contract?.status, 'PASS');
+    assert.deepEqual(result.skills_contract?.detected_platforms, ['backend']);
+    assert.equal(
+      result.skills_contract?.violations.some(
+        (item) => item.code === 'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED'
+      ),
+      false
+    );
+    assert.equal(
+      result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
+      false
+    );
+  } finally {
+    rmSync(tmpRoot, { recursive: true, force: true });
+  }
 });
 
 test('evaluateAiGate no trata skills core efectivas como contrato obligatorio del consumer', () => {

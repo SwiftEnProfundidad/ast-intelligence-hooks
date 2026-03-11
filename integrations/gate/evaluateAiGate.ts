@@ -3,7 +3,7 @@ import { readEvidenceResult } from '../evidence/readEvidence';
 import { captureRepoState } from '../evidence/repoState';
 import type { RepoState } from '../evidence/schema';
 import { resolvePolicyForStage } from './stagePolicies';
-import { realpathSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { SkillsLockV1, SkillsStage } from '../config/skillsLock';
 import {
@@ -156,6 +156,12 @@ const PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES: Readonly<Record<PreWriteSkills
   android: ['skills.android.no-runblocking', 'skills.android.no-thread-sleep'],
   backend: ['skills.backend.no-empty-catch', 'skills.backend.avoid-explicit-any'],
   frontend: ['skills.frontend.no-empty-catch', 'skills.frontend.avoid-explicit-any'],
+};
+const PREWRITE_PLATFORM_REPO_TREE_PREFIXES: Readonly<Record<PreWriteSkillsPlatform, ReadonlyArray<string>>> = {
+  ios: ['apps/ios/', 'ios/'],
+  android: ['apps/android/', 'android/'],
+  backend: ['apps/backend/'],
+  frontend: ['apps/frontend/', 'apps/web/'],
 };
 const MCP_RECEIPT_STAGE_ORDER: Readonly<Record<AiGateStage, number>> = {
   PRE_WRITE: 0,
@@ -314,6 +320,16 @@ const toCoverageInferredPlatforms = (
     }
   }
   return PREWRITE_SKILLS_PLATFORMS.filter((platform) => inferred.has(platform));
+};
+
+const toRepoTreeDetectedPlatforms = (params: {
+  repoRoot: string;
+  platforms: ReadonlyArray<PreWriteSkillsPlatform>;
+}): ReadonlyArray<PreWriteSkillsPlatform> => {
+  return params.platforms.filter((platform) => {
+    const prefixes = PREWRITE_PLATFORM_REPO_TREE_PREFIXES[platform] ?? [];
+    return prefixes.some((prefix) => existsSync(resolve(params.repoRoot, prefix)));
+  });
 };
 
 const toLockRequiredPlatforms = (
@@ -554,6 +570,7 @@ const collectPreWriteCrossPlatformCriticalViolations = (params: {
 
 const toSkillsContractAssessment = (params: {
   stage: AiGateStage;
+  repoRoot: string;
   evidenceResult: EvidenceReadResult;
   requiredLock?: SkillsLockV1;
 }): AiGateSkillsContractAssessment => {
@@ -597,6 +614,13 @@ const toSkillsContractAssessment = (params: {
   const coverage = params.evidenceResult.evidence.snapshot.rules_coverage;
   const explicitlyDetectedPlatforms = toDetectedSkillsPlatforms(params.evidenceResult.evidence.platforms);
   const inferredPlatforms = toCoverageInferredPlatforms(coverage);
+  const repoTreeDetectedPlatforms =
+    requiredPlatforms.length > 0
+      ? toRepoTreeDetectedPlatforms({
+          repoRoot: params.repoRoot,
+          platforms: requiredPlatforms,
+        })
+      : [];
   const explicitlyDetectedEffectivePlatforms =
     explicitlyDetectedPlatforms.length > 0
       ? toEffectiveSkillsPlatforms({
@@ -607,13 +631,15 @@ const toSkillsContractAssessment = (params: {
   const detectedPlatforms =
     explicitlyDetectedEffectivePlatforms.length > 0
       ? explicitlyDetectedEffectivePlatforms
-      : inferredPlatforms;
+      : inferredPlatforms.length > 0
+        ? inferredPlatforms
+        : repoTreeDetectedPlatforms;
   const assessmentPlatforms =
     requiredPlatforms.length > 0
       ? requiredPlatforms
       : detectedPlatforms;
 
-  if (requiredPlatforms.length > 0 && explicitlyDetectedEffectivePlatforms.length === 0) {
+  if (requiredPlatforms.length > 0 && detectedPlatforms.length === 0) {
     const requirements: AiGateSkillsContractPlatformRequirement[] = requiredPlatforms.map((platform) => ({
       platform,
       required_rule_prefix: PLATFORM_SKILLS_RULE_PREFIXES[platform],
@@ -1216,6 +1242,7 @@ export const evaluateAiGate = (
   const gitflowViolations = collectGitflowViolations(repoState, protectedBranches);
   const skillsContract = toSkillsContractAssessment({
     stage: params.stage,
+    repoRoot: params.repoRoot,
     evidenceResult,
     requiredLock: requiredSkillsLock,
   });

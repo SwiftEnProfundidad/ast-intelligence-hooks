@@ -76,8 +76,23 @@ const isIOSSwiftPath = (path: string): boolean => {
   return path.endsWith('.swift') && path.startsWith('apps/ios/');
 };
 
+const isIOSApplicationOrPresentationPath = (path: string): boolean => {
+  return (
+    isIOSSwiftPath(path) &&
+    (path.includes('/Application/') || path.includes('/Presentation/'))
+  );
+};
+
 const isAndroidKotlinPath = (path: string): boolean => {
   return (path.endsWith('.kt') || path.endsWith('.kts')) && path.startsWith('apps/android/');
+};
+
+const isAndroidPresentationPath = (path: string): boolean => {
+  return isAndroidKotlinPath(path) && path.includes('/presentation/');
+};
+
+const isAndroidApplicationOrPresentationPath = (path: string): boolean => {
+  return isAndroidKotlinPath(path) && (path.includes('/application/') || path.includes('/presentation/'));
 };
 
 const isApprovedIOSBridgePath = (path: string): boolean => {
@@ -191,6 +206,11 @@ const createHeuristicFact = (params: {
   filePath?: string;
   lines?: readonly number[];
   severity?: HeuristicFact['severity'];
+  primary_node?: HeuristicFact['primary_node'];
+  related_nodes?: HeuristicFact['related_nodes'];
+  why?: string;
+  impact?: string;
+  expected_fix?: string;
 }): ExtractedHeuristicFact => {
   return {
     kind: 'Heuristic',
@@ -201,6 +221,11 @@ const createHeuristicFact = (params: {
     message: params.message,
     filePath: params.filePath,
     lines: params.lines,
+    primary_node: params.primary_node,
+    related_nodes: params.related_nodes,
+    why: params.why,
+    impact: params.impact,
+    expected_fix: params.expected_fix,
   };
 };
 
@@ -660,6 +685,246 @@ export const extractHeuristicFacts = (
       }
     }
 
+    if (
+      params.detectedPlatforms.ios?.detected &&
+      isIOSSwiftPath(fileFact.path) &&
+      !isSwiftTestPath(fileFact.path)
+    ) {
+      if (isIOSApplicationOrPresentationPath(fileFact.path)) {
+        const semanticOcpMatch = TextIOS.findSwiftOpenClosedSwitchMatch(fileFact.content);
+        if (semanticOcpMatch) {
+          heuristicFacts.push(
+            createHeuristicFact({
+              ruleId: 'heuristics.ios.solid.ocp.discriminator-switch.ast',
+              code: 'HEURISTICS_IOS_SOLID_OCP_DISCRIMINATOR_SWITCH_AST',
+              message:
+                'Semantic iOS OCP heuristic detected application/presentation branching that must be modified to support new cases.',
+              filePath: fileFact.path,
+              lines: semanticOcpMatch.lines,
+              severity: 'CRITICAL',
+              primary_node: semanticOcpMatch.primary_node,
+              related_nodes: semanticOcpMatch.related_nodes,
+              why: semanticOcpMatch.why,
+              impact: semanticOcpMatch.impact,
+              expected_fix: semanticOcpMatch.expected_fix,
+            })
+          );
+        }
+
+        const semanticDipMatch = TextIOS.findSwiftConcreteDependencyDipMatch(fileFact.content);
+        if (semanticDipMatch) {
+          heuristicFacts.push(
+            createHeuristicFact({
+              ruleId: 'heuristics.ios.solid.dip.concrete-framework-dependency.ast',
+              code: 'HEURISTICS_IOS_SOLID_DIP_CONCRETE_FRAMEWORK_DEPENDENCY_AST',
+              message:
+                'Semantic iOS DIP heuristic detected application/presentation code depending on concrete framework services.',
+              filePath: fileFact.path,
+              lines: semanticDipMatch.lines,
+              severity: 'CRITICAL',
+              primary_node: semanticDipMatch.primary_node,
+              related_nodes: semanticDipMatch.related_nodes,
+              why: semanticDipMatch.why,
+              impact: semanticDipMatch.impact,
+              expected_fix: semanticDipMatch.expected_fix,
+            })
+          );
+        }
+
+        const semanticIspMatch = TextIOS.findSwiftInterfaceSegregationMatch(fileFact.content);
+        if (semanticIspMatch) {
+          heuristicFacts.push(
+            createHeuristicFact({
+              ruleId: 'heuristics.ios.solid.isp.fat-protocol-dependency.ast',
+              code: 'HEURISTICS_IOS_SOLID_ISP_FAT_PROTOCOL_DEPENDENCY_AST',
+              message:
+                'Semantic iOS ISP heuristic detected application/presentation code depending on a protocol broader than the members it actually uses.',
+              filePath: fileFact.path,
+              lines: semanticIspMatch.lines,
+              severity: 'CRITICAL',
+              primary_node: semanticIspMatch.primary_node,
+              related_nodes: semanticIspMatch.related_nodes,
+              why: semanticIspMatch.why,
+              impact: semanticIspMatch.impact,
+              expected_fix: semanticIspMatch.expected_fix,
+            })
+          );
+        }
+
+        const semanticLspMatch = TextIOS.findSwiftLiskovSubstitutionMatch(fileFact.content);
+        if (semanticLspMatch) {
+          heuristicFacts.push(
+            createHeuristicFact({
+              ruleId: 'heuristics.ios.solid.lsp.narrowed-precondition.ast',
+              code: 'HEURISTICS_IOS_SOLID_LSP_NARROWED_PRECONDITION_AST',
+              message:
+                'Semantic iOS LSP heuristic detected an application/presentation subtype that narrows the contract preconditions and breaks safe substitution.',
+              filePath: fileFact.path,
+              lines: semanticLspMatch.lines,
+              severity: 'CRITICAL',
+              primary_node: semanticLspMatch.primary_node,
+              related_nodes: semanticLspMatch.related_nodes,
+              why: semanticLspMatch.why,
+              impact: semanticLspMatch.impact,
+              expected_fix: semanticLspMatch.expected_fix,
+            })
+          );
+        }
+      }
+
+      const semanticSrpMatch = TextIOS.findSwiftPresentationSrpMatch(fileFact.content);
+      if (semanticSrpMatch) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast',
+            code: 'HEURISTICS_IOS_SOLID_SRP_PRESENTATION_MIXED_RESPONSIBILITIES_AST',
+            message:
+              'Semantic iOS SRP heuristic detected a presentation type mixing session, networking, persistence and navigation responsibilities.',
+            filePath: fileFact.path,
+            lines: semanticSrpMatch.lines,
+            severity: 'CRITICAL',
+            primary_node: semanticSrpMatch.primary_node,
+            related_nodes: semanticSrpMatch.related_nodes,
+            why: semanticSrpMatch.why,
+            impact: semanticSrpMatch.impact,
+            expected_fix: semanticSrpMatch.expected_fix,
+          })
+        );
+      }
+
+      const semanticCanaryMatch = TextIOS.findSwiftIOSCanary001Match(fileFact.content);
+      if (semanticCanaryMatch) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ios.canary-001.presentation-mixed-responsibilities.ast',
+            code: 'HEURISTICS_IOS_CANARY_001_PRESENTATION_MIXED_RESPONSIBILITIES_AST',
+            message:
+              'Semantic iOS canary detected a ViewModel mixing singleton, network, persistence and navigation responsibilities.',
+            filePath: fileFact.path,
+            lines: semanticCanaryMatch.lines,
+            severity: 'CRITICAL',
+            primary_node: semanticCanaryMatch.primary_node,
+            related_nodes: semanticCanaryMatch.related_nodes,
+            why: semanticCanaryMatch.why,
+            impact: semanticCanaryMatch.impact,
+            expected_fix: semanticCanaryMatch.expected_fix,
+          })
+        );
+      }
+    }
+
+    if (
+      params.detectedPlatforms.android?.detected &&
+      isAndroidPresentationPath(fileFact.path) &&
+      !isKotlinTestPath(fileFact.path)
+    ) {
+      const semanticSrpMatch = TextAndroid.findKotlinPresentationSrpMatch(fileFact.content);
+      if (semanticSrpMatch) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
+            code: 'HEURISTICS_ANDROID_SOLID_SRP_PRESENTATION_MIXED_RESPONSIBILITIES_AST',
+            message:
+              'Semantic Android SRP heuristic detected a presentation type mixing session, networking, persistence and navigation responsibilities.',
+            filePath: fileFact.path,
+            lines: semanticSrpMatch.lines,
+            severity: 'CRITICAL',
+            primary_node: semanticSrpMatch.primary_node,
+            related_nodes: semanticSrpMatch.related_nodes,
+            why: semanticSrpMatch.why,
+            impact: semanticSrpMatch.impact,
+            expected_fix: semanticSrpMatch.expected_fix,
+          })
+        );
+      }
+    }
+
+    if (
+      params.detectedPlatforms.android?.detected &&
+      isAndroidApplicationOrPresentationPath(fileFact.path) &&
+      !isKotlinTestPath(fileFact.path)
+    ) {
+      const semanticOcpMatch = TextAndroid.findKotlinOpenClosedWhenMatch(fileFact.content);
+      if (semanticOcpMatch) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.android.solid.ocp.discriminator-branching.ast',
+            code: 'HEURISTICS_ANDROID_SOLID_OCP_DISCRIMINATOR_BRANCHING_AST',
+            message:
+              'Semantic Android OCP heuristic detected application/presentation code branching on a discriminator instead of extending behavior via abstractions.',
+            filePath: fileFact.path,
+            lines: semanticOcpMatch.lines,
+            severity: 'CRITICAL',
+            primary_node: semanticOcpMatch.primary_node,
+            related_nodes: semanticOcpMatch.related_nodes,
+            why: semanticOcpMatch.why,
+            impact: semanticOcpMatch.impact,
+            expected_fix: semanticOcpMatch.expected_fix,
+          })
+        );
+      }
+
+      const semanticDipMatch = TextAndroid.findKotlinConcreteDependencyDipMatch(fileFact.content);
+      if (semanticDipMatch) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.android.solid.dip.concrete-framework-dependency.ast',
+            code: 'HEURISTICS_ANDROID_SOLID_DIP_CONCRETE_FRAMEWORK_DEPENDENCY_AST',
+            message:
+              'Semantic Android DIP heuristic detected application/presentation code depending on concrete framework services.',
+            filePath: fileFact.path,
+            lines: semanticDipMatch.lines,
+            severity: 'CRITICAL',
+            primary_node: semanticDipMatch.primary_node,
+            related_nodes: semanticDipMatch.related_nodes,
+            why: semanticDipMatch.why,
+            impact: semanticDipMatch.impact,
+            expected_fix: semanticDipMatch.expected_fix,
+          })
+        );
+      }
+
+      const semanticIspMatch = TextAndroid.findKotlinInterfaceSegregationMatch(fileFact.content);
+      if (semanticIspMatch) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.android.solid.isp.fat-interface-dependency.ast',
+            code: 'HEURISTICS_ANDROID_SOLID_ISP_FAT_INTERFACE_DEPENDENCY_AST',
+            message:
+              'Semantic Android ISP heuristic detected application/presentation code depending on an interface broader than the members it actually uses.',
+            filePath: fileFact.path,
+            lines: semanticIspMatch.lines,
+            severity: 'CRITICAL',
+            primary_node: semanticIspMatch.primary_node,
+            related_nodes: semanticIspMatch.related_nodes,
+            why: semanticIspMatch.why,
+            impact: semanticIspMatch.impact,
+            expected_fix: semanticIspMatch.expected_fix,
+          })
+        );
+      }
+
+      const semanticLspMatch = TextAndroid.findKotlinLiskovSubstitutionMatch(fileFact.content);
+      if (semanticLspMatch) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.android.solid.lsp.narrowed-precondition.ast',
+            code: 'HEURISTICS_ANDROID_SOLID_LSP_NARROWED_PRECONDITION_AST',
+            message:
+              'Semantic Android LSP heuristic detected an application/presentation subtype that narrows preconditions and breaks safe substitution.',
+            filePath: fileFact.path,
+            lines: semanticLspMatch.lines,
+            severity: 'CRITICAL',
+            primary_node: semanticLspMatch.primary_node,
+            related_nodes: semanticLspMatch.related_nodes,
+            why: semanticLspMatch.why,
+            impact: semanticLspMatch.impact,
+            expected_fix: semanticLspMatch.expected_fix,
+          })
+        );
+      }
+    }
+
     // AST-based heuristics
     const hasTypeScriptPlatform =
       params.detectedPlatforms.frontend?.detected ||
@@ -684,8 +949,22 @@ export const extractHeuristicFacts = (
           continue;
         }
         if (entry.detect(ast)) {
+          const semanticMatch =
+            entry.ruleId === 'heuristics.ts.solid.srp.class-command-query-mix.ast'
+              ? TS.findMixedCommandQueryClassMatch(ast)
+              : entry.ruleId === 'heuristics.ts.solid.isp.interface-command-query-mix.ast'
+                ? TS.findMixedCommandQueryInterfaceMatch(ast)
+              : entry.ruleId === 'heuristics.ts.solid.ocp.discriminator-switch.ast'
+                ? TS.findTypeDiscriminatorSwitchMatch(ast)
+              : entry.ruleId === 'heuristics.ts.solid.lsp.override-not-implemented.ast'
+                ? TS.findOverrideMethodThrowingNotImplementedMatch(ast)
+              : entry.ruleId === 'heuristics.ts.solid.dip.framework-import.ast'
+                ? TS.findFrameworkDependencyImportMatch(ast)
+                : entry.ruleId === 'heuristics.ts.solid.dip.concrete-instantiation.ast'
+                  ? TS.findConcreteDependencyInstantiationMatch(ast)
+                  : undefined;
           const lineLocator = entry.locateLines ?? astDetectorLineLocatorRegistry.get(entry.detect);
-          const lines = lineLocator?.(ast);
+          const lines = semanticMatch?.lines ?? lineLocator?.(ast);
           heuristicFacts.push(
             createHeuristicFact({
               ruleId: entry.ruleId,
@@ -693,6 +972,11 @@ export const extractHeuristicFacts = (
               message: entry.message,
               filePath: fileFact.path,
               lines,
+              primary_node: semanticMatch?.primary_node,
+              related_nodes: semanticMatch?.related_nodes,
+              why: semanticMatch?.why,
+              impact: semanticMatch?.impact,
+              expected_fix: semanticMatch?.expected_fix,
             })
           );
         }

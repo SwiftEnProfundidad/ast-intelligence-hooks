@@ -488,6 +488,598 @@ test('does not detect iOS force-unwrap heuristic for safe nil comparisons', () =
   assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.force-unwrap.ast'), false);
 });
 
+test('detects IOS-CANARY-001 semantic heuristic with primary_node and related_nodes', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Sources/AppShell/Application/AppShellViewModel.swift',
+        [
+          'final class AppShellViewModel {',
+          '  static let shared = AppShellViewModel()',
+          '  func refresh() async throws {',
+          '    let (_, _) = try await URLSession.shared.data(from: endpoint)',
+          '  }',
+          '  func persist() {',
+          '    _ = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)',
+          '  }',
+          '  func navigateToStore() {',
+          '    router.navigate(to: .storeMap)',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.canary-001.presentation-mixed-responsibilities.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.severity, 'CRITICAL');
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'AppShellViewModel',
+    lines: [1],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'property', name: 'shared singleton', lines: [2] },
+    { kind: 'call', name: 'URLSession.shared', lines: [4] },
+    { kind: 'call', name: 'FileManager.default', lines: [7] },
+    { kind: 'member', name: 'navigation flow', lines: [10] },
+  ]);
+  assert.match(finding.why ?? '', /SRP/);
+  assert.match(finding.impact ?? '', /Presentation/);
+  assert.match(finding.expected_fix ?? '', /ViewModel limitado a estado/);
+});
+
+test('detects semantic SRP heuristic for TypeScript command/query mix with AST nodes', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/runtime/pumuki-srp-canary.ts',
+        [
+          'export class PumukiSrpCommandQueryCanary {',
+          '  getById(id: string): { id: string; status: "draft" } {',
+          '    return { id, status: "draft" };',
+          '  }',
+          '',
+          '  save(id: string): void {',
+          '    void id;',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.solid.srp.class-command-query-mix.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiSrpCommandQueryCanary',
+    lines: [1],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'query:getById', lines: [2] },
+    { kind: 'member', name: 'command:save', lines: [6] },
+  ]);
+  assert.match(finding.why ?? '', /SRP/i);
+  assert.match(finding.impact ?? '', /testeo aislado/i);
+  assert.match(finding.expected_fix ?? '', /lectura y escritura/i);
+});
+
+test('detects semantic DIP heuristics for TypeScript framework import and concrete instantiation', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/application/pumuki-dip-canary.ts',
+        [
+          "import { PrismaClient } from '@prisma/client';",
+          '',
+          'export class PumukiDipCanaryUseCase {',
+          '  private readonly prisma = new PrismaClient();',
+          '',
+          '  async execute(orderId: string): Promise<void> {',
+          '    await this.prisma.order.update({',
+          '      where: { id: orderId },',
+          "      data: { status: 'draft' },",
+          '    });',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const importFinding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.solid.dip.framework-import.ast'
+  );
+  const concreteFinding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.solid.dip.concrete-instantiation.ast'
+  );
+
+  assert.ok(importFinding);
+  assert.ok(concreteFinding);
+  assert.deepEqual(importFinding.primary_node, {
+    kind: 'class',
+    name: 'PumukiDipCanaryUseCase',
+    lines: [3],
+  });
+  assert.deepEqual(importFinding.related_nodes, [
+    { kind: 'member', name: 'import:@prisma/client', lines: [1] },
+    { kind: 'call', name: 'new PrismaClient', lines: [4] },
+  ]);
+  assert.match(importFinding.why ?? '', /DIP/i);
+  assert.match(importFinding.impact ?? '', /infraestructura concreta/i);
+  assert.match(importFinding.expected_fix ?? '', /puerto|abstracci/i);
+  assert.deepEqual(concreteFinding.primary_node, importFinding.primary_node);
+  assert.deepEqual(concreteFinding.related_nodes, importFinding.related_nodes);
+});
+
+test('detects semantic SRP heuristic for iOS presentation types with multiple reasons of change', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Sources/Validation/Presentation/PumukiSrpIosCanaryViewModel.swift',
+        [
+          '@MainActor',
+          'final class PumukiSrpIosCanaryViewModel {',
+          '  private let coordinator: StoreMapCoordinator',
+          '',
+          '  func restoreSessionSnapshot() async {}',
+          '',
+          '  func fetchRemoteCatalog() async throws {',
+          '    _ = URLSession.shared',
+          '  }',
+          '',
+          '  func cacheLastStoreID(_ storeID: String) {',
+          '    UserDefaults.standard.set(storeID, forKey: "last-store-id")',
+          '  }',
+          '',
+          '  func openStoreMap() {',
+          '    coordinator.navigate(to: .storeMap)',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiSrpIosCanaryViewModel',
+    lines: [2],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'session/auth flow', lines: [5] },
+    { kind: 'call', name: 'remote networking', lines: [8] },
+    { kind: 'call', name: 'local persistence', lines: [12] },
+    { kind: 'member', name: 'navigation flow', lines: [16] },
+  ]);
+  assert.match(finding.why ?? '', /SRP/i);
+  assert.match(finding.impact ?? '', /múltiples razones de cambio/i);
+  assert.match(finding.expected_fix ?? '', /estado|coordinador|casos de uso/i);
+});
+
+test('detects semantic DIP heuristic for iOS application types with concrete framework dependencies', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Sources/Validation/Application/PumukiDipIosCanaryUseCase.swift',
+        [
+          'import Foundation',
+          '',
+          'final class PumukiDipIosCanaryUseCase {',
+          '  private let session: URLSession',
+          '  private let preferences: UserDefaults',
+          '',
+          '  init() {',
+          '    self.session = URLSession.shared',
+          '    self.preferences = UserDefaults.standard',
+          '  }',
+          '',
+          '  func execute() async throws {',
+          '    guard let url = URL(string: "https://example.com/catalog.json") else {',
+          '      return',
+          '    }',
+          '',
+          '    _ = try await session.data(from: url)',
+          '    preferences.set(Date().timeIntervalSince1970, forKey: "last-sync")',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.solid.dip.concrete-framework-dependency.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiDipIosCanaryUseCase',
+    lines: [3],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'property', name: 'concrete dependency: URLSession', lines: [4] },
+    { kind: 'call', name: 'URLSession.shared', lines: [8] },
+    { kind: 'property', name: 'concrete dependency: UserDefaults', lines: [5] },
+    { kind: 'call', name: 'UserDefaults.standard', lines: [9] },
+  ]);
+  assert.match(finding.why ?? '', /DIP/i);
+  assert.match(finding.impact ?? '', /alto nivel|coste de sustituir|infraestructura/i);
+  assert.match(finding.expected_fix ?? '', /puertos|infrastructure/i);
+});
+
+test('detects semantic OCP heuristic for iOS application types with discriminator branching', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Sources/Validation/Application/PumukiOcpIosCanaryUseCase.swift',
+        [
+          'enum PumukiOcpIosCanaryChannel {',
+          '  case groceryPickup',
+          '  case homeDelivery',
+          '}',
+          '',
+          'final class PumukiOcpIosCanaryUseCase {',
+          '  func makeBanner(for channel: PumukiOcpIosCanaryChannel) -> String {',
+          '    switch channel {',
+          '    case .groceryPickup:',
+          '      return "pickup"',
+          '    case .homeDelivery:',
+          '      return "delivery"',
+          '    }',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.solid.ocp.discriminator-switch.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiOcpIosCanaryUseCase',
+    lines: [6],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'discriminator switch: channel', lines: [8] },
+    { kind: 'member', name: 'case .groceryPickup', lines: [9] },
+    { kind: 'member', name: 'case .homeDelivery', lines: [11] },
+  ]);
+  assert.match(finding.why ?? '', /OCP/i);
+  assert.match(finding.impact ?? '', /nuevo caso|nuevo comportamiento/i);
+  assert.match(finding.expected_fix ?? '', /estrategia|protocolo|registry/i);
+});
+
+test('detects semantic OCP heuristic for backend application types with discriminator branching', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/application/pumuki-ocp-canary-use-case.ts',
+        [
+          'export class PumukiOcpBackendCanaryUseCase {',
+          '  resolveChannel(request: { kind: string }): string {',
+          '    switch (request.kind) {',
+          "      case 'pickup':",
+          "        return 'pickup-banner';",
+          "      case 'delivery':",
+          "        return 'delivery-banner';",
+          '      default:',
+          "        return 'generic-banner';",
+          '    }',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true, confidence: 'HIGH' },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.solid.ocp.discriminator-switch.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiOcpBackendCanaryUseCase',
+    lines: [1],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'discriminator switch: kind', lines: [3] },
+    { kind: 'member', name: 'case:pickup', lines: [4] },
+    { kind: 'member', name: 'case:delivery', lines: [6] },
+  ]);
+  assert.match(finding.why ?? '', /OCP/i);
+  assert.match(finding.impact ?? '', /nuevo caso|modificar/i);
+  assert.match(finding.expected_fix ?? '', /estrategia|polimorfismo|mapa/i);
+});
+
+test('detects semantic ISP heuristic for backend application types with fat contracts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/application/pumuki-isp-canary-use-case.ts',
+        [
+          'export interface PumukiIspBackendCatalogPort {',
+          '  findById(id: string): Promise<string>;',
+          '  saveSnapshot(snapshot: unknown): Promise<void>;',
+          '}',
+          '',
+          'export class PumukiIspBackendCanaryUseCase {',
+          '  private readonly catalogPort: PumukiIspBackendCatalogPort;',
+          '',
+          '  async execute(id: string): Promise<string> {',
+          '    return this.catalogPort.findById(id);',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true, confidence: 'HIGH' },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.solid.isp.interface-command-query-mix.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiIspBackendCanaryUseCase',
+    lines: [6],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'fat interface: PumukiIspBackendCatalogPort', lines: [1] },
+    { kind: 'member', name: 'used member: findById', lines: [10] },
+    { kind: 'member', name: 'unused contract member: saveSnapshot', lines: [3] },
+  ]);
+  assert.match(finding.why ?? '', /ISP/i);
+  assert.match(finding.impact ?? '', /contrato|acopla|test/i);
+  assert.match(finding.expected_fix ?? '', /puertos|separa|split/i);
+});
+
+test('detects semantic LSP heuristic for backend application types with unsafe substitution', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/application/pumuki-lsp-canary-use-case.ts',
+        [
+          'export abstract class PumukiLspBackendCanaryDiscountPolicy {',
+          '  abstract apply(amount: number): number;',
+          '}',
+          '',
+          'export class PumukiLspBackendStandardDiscountPolicy extends PumukiLspBackendCanaryDiscountPolicy {',
+          '  override apply(amount: number): number {',
+          '    return amount * 0.9;',
+          '  }',
+          '}',
+          '',
+          'export class PumukiLspBackendPremiumDiscountPolicy extends PumukiLspBackendCanaryDiscountPolicy {',
+          '  override apply(amount: number): number {',
+          '    throw new Error("Not implemented for low amount");',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true, confidence: 'HIGH' },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.solid.lsp.override-not-implemented.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiLspBackendPremiumDiscountPolicy',
+    lines: [11],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'base contract: PumukiLspBackendCanaryDiscountPolicy', lines: [1] },
+    { kind: 'member', name: 'safe substitute: PumukiLspBackendStandardDiscountPolicy', lines: [5] },
+    { kind: 'member', name: 'unsafe override: apply', lines: [12] },
+    { kind: 'call', name: 'throw not implemented', lines: [13] },
+  ]);
+  assert.match(finding.why ?? '', /LSP/i);
+  assert.match(finding.impact ?? '', /sustituci|regresion|crash/i);
+  assert.match(finding.expected_fix ?? '', /contrato|estrategia|subtipo/i);
+});
+
+test('detects semantic ISP heuristic for iOS application types with fat protocol dependencies', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Sources/Validation/Application/PumukiIspIosCanaryUseCase.swift',
+        [
+          'protocol PumukiIspIosCanarySessionManaging {',
+          '  func restoreSession() async throws',
+          '  func persistSessionID(_ id: String) async',
+          '  func clearSession() async',
+          '  func refreshToken() async throws -> String',
+          '}',
+          '',
+          'final class PumukiIspIosCanaryUseCase {',
+          '  private let sessionManager: PumukiIspIosCanarySessionManaging',
+          '',
+          '  init(sessionManager: PumukiIspIosCanarySessionManaging) {',
+          '    self.sessionManager = sessionManager',
+          '  }',
+          '',
+          '  func execute() async throws {',
+          '    try await sessionManager.restoreSession()',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.solid.isp.fat-protocol-dependency.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiIspIosCanaryUseCase',
+    lines: [8],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'fat protocol: PumukiIspIosCanarySessionManaging', lines: [1] },
+    { kind: 'call', name: 'used member: restoreSession', lines: [16] },
+    { kind: 'member', name: 'unused contract member: persistSessionID', lines: [3] },
+    { kind: 'member', name: 'unused contract member: clearSession', lines: [4] },
+  ]);
+  assert.match(finding.why ?? '', /ISP/i);
+  assert.match(finding.impact ?? '', /contrato demasiado ancho|cambios ajenos/i);
+  assert.match(finding.expected_fix ?? '', /protocolos pequeños|puerto mínimo/i);
+});
+
+test('detects semantic LSP heuristic for iOS application types with unsafe substitution', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Sources/Validation/Application/PumukiLspIosCanaryDiscount.swift',
+        [
+          'protocol PumukiLspIosCanaryDiscountApplying {',
+          '  func apply(to amount: Decimal) -> Decimal',
+          '}',
+          '',
+          'final class PumukiLspIosCanaryStandardDiscount: PumukiLspIosCanaryDiscountApplying {',
+          '  func apply(to amount: Decimal) -> Decimal {',
+          '    amount * 0.9',
+          '  }',
+          '}',
+          '',
+          'final class PumukiLspIosCanaryPremiumDiscount: PumukiLspIosCanaryDiscountApplying {',
+          '  func apply(to amount: Decimal) -> Decimal {',
+          '    guard amount >= 100 else {',
+          '      fatalError("premium-only")',
+          '    }',
+          '    return amount * 0.8',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.solid.lsp.narrowed-precondition.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiLspIosCanaryPremiumDiscount',
+    lines: [11],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'base contract: PumukiLspIosCanaryDiscountApplying', lines: [1] },
+    { kind: 'member', name: 'safe substitute: PumukiLspIosCanaryStandardDiscount', lines: [5] },
+    { kind: 'member', name: 'narrowed precondition: apply', lines: [13] },
+    { kind: 'call', name: 'fatalError', lines: [14] },
+  ]);
+  assert.match(finding.why ?? '', /LSP/i);
+  assert.match(finding.impact ?? '', /sustitución|precondiciones|regresiones/i);
+  assert.match(finding.expected_fix ?? '', /contrato base|adaptador|estrategia/i);
+});
+
+test('detects IOS-CANARY-001 against AppShell-style mixed responsibilities in a real iOS ViewModel', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Sources/AppShell/Application/AppShellViewModel.swift',
+        [
+          'public final class AppShellViewModel {',
+          '  public func restorePersistedSessionIfNeeded() async {}',
+          '  public func continueAsGuest() async {}',
+          '  public func bootstrapAuthenticatedSession(idToken: String) async {}',
+          '  public func selectStore(_ store: StoreDescriptor) async throws {}',
+          '  public func syncShoppingList() async {}',
+          '  public func markNextStopCompleted() {}',
+          '  public func scanCheckpoint(_ checkpointCode: String) async {}',
+          '  public func flushOfflineQueue() async {}',
+          '  public func openDeepLink(_ rawURL: String) throws {}',
+          '  private func rebuildRouteStatus() {}',
+          '  private func enqueueOfflineCheckpoint(_ checkpointCode: String, storeID: String) async {}',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.canary-001.presentation-mixed-responsibilities.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.primary_node?.name, 'AppShellViewModel');
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'session bootstrap/restoration', lines: [2, 3, 4] },
+    { kind: 'member', name: 'store selection orchestration', lines: [5] },
+    { kind: 'member', name: 'shopping list synchronization', lines: [6] },
+    { kind: 'member', name: 'route progression', lines: [7, 8, 11] },
+    { kind: 'member', name: 'offline queue coordination', lines: [9, 12] },
+    { kind: 'member', name: 'deep link/navigation flow', lines: [10] },
+  ]);
+  assert.match(finding.why ?? '', /múltiples razones de cambio/i);
+  assert.match(finding.impact ?? '', /cola offline/i);
+  assert.match(finding.expected_fix ?? '', /coordinadores dedicados/i);
+});
+
 test('skips iOS force-try heuristic in comments and strings', () => {
   const extracted = extractHeuristicFacts({
     facts: [
@@ -534,6 +1126,268 @@ test('detects Android heuristics in production path and skips tests', () => {
     'heuristics.android.run-blocking.ast',
     'heuristics.android.thread-sleep.ast',
   ]);
+});
+
+test('detects semantic Android SRP heuristic in presentation path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/validation/presentation/PumukiSrpAndroidCanaryViewModel.kt',
+        [
+          'import android.content.SharedPreferences',
+          'import androidx.lifecycle.ViewModel',
+          'import androidx.navigation.NavController',
+          'import okhttp3.OkHttpClient',
+          '',
+          'class PumukiSrpAndroidCanaryViewModel(',
+          '  private val navController: NavController,',
+          ') : ViewModel() {',
+          '  fun restoreSessionSnapshot() {}',
+          '',
+          '  suspend fun fetchRemoteCatalog() {',
+          '    val client = OkHttpClient()',
+          '    client.newCall(request)',
+          '  }',
+          '',
+          '  fun cacheLastStore(preferences: SharedPreferences, storeId: String) {',
+          '    preferences.edit().putString("last-store-id", storeId).apply()',
+          '  }',
+          '',
+          '  fun openStoreMap() {',
+          '    navController.navigate("store-map")',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.severity, 'CRITICAL');
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiSrpAndroidCanaryViewModel',
+    lines: [6],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'session/auth flow', lines: [9] },
+    { kind: 'call', name: 'remote networking', lines: [12] },
+    { kind: 'call', name: 'local persistence', lines: [16] },
+    { kind: 'member', name: 'navigation flow', lines: [21] },
+  ]);
+  assert.match(finding.why ?? '', /SRP/i);
+  assert.match(finding.impact ?? '', /múltiples razones de cambio/i);
+  assert.match(finding.expected_fix ?? '', /coordinadores|casos de uso/i);
+});
+
+test('detects semantic Android DIP heuristic in application path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/validation/application/PumukiDipAndroidCanaryUseCase.kt',
+        [
+          'import android.content.SharedPreferences',
+          'import okhttp3.OkHttpClient',
+          'import okhttp3.Request',
+          '',
+          'class PumukiDipAndroidCanaryUseCase(',
+          '  private val preferences: SharedPreferences,',
+          ') {',
+          '  private val client: OkHttpClient = OkHttpClient()',
+          '',
+          '  suspend fun execute() {',
+          '    val request = Request.Builder()',
+          '      .url("https://example.com/catalog.json")',
+          '      .build()',
+          '',
+          '    client.newCall(request)',
+          '    preferences.edit().putLong("last-sync", 1L).apply()',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.android.solid.dip.concrete-framework-dependency.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.severity, 'CRITICAL');
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiDipAndroidCanaryUseCase',
+    lines: [5],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'property', name: 'concrete dependency: SharedPreferences', lines: [6] },
+    { kind: 'property', name: 'concrete dependency: OkHttpClient', lines: [8] },
+    { kind: 'call', name: 'OkHttpClient()', lines: [8] },
+  ]);
+  assert.match(finding.why ?? '', /DIP/i);
+  assert.match(finding.impact ?? '', /infraestructura|alto nivel|coste de sustituir/i);
+  assert.match(finding.expected_fix ?? '', /puertos|abstracciones|gateways/i);
+});
+
+test('detects semantic Android OCP heuristic in application path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/validation/application/PumukiOcpAndroidCanaryUseCase.kt',
+        [
+          'enum class PumukiOcpAndroidCanaryChannel {',
+          '  GroceryPickup,',
+          '  HomeDelivery,',
+          '}',
+          '',
+          'class PumukiOcpAndroidCanaryUseCase {',
+          '  fun resolve(channel: PumukiOcpAndroidCanaryChannel): String {',
+          '    return when (channel) {',
+          '      PumukiOcpAndroidCanaryChannel.GroceryPickup -> "pickup"',
+          '      PumukiOcpAndroidCanaryChannel.HomeDelivery -> "delivery"',
+          '    }',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.android.solid.ocp.discriminator-branching.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.severity, 'CRITICAL');
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiOcpAndroidCanaryUseCase',
+    lines: [6],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'discriminator switch: channel', lines: [8] },
+    { kind: 'member', name: 'branch GroceryPickup', lines: [9] },
+    { kind: 'member', name: 'branch HomeDelivery', lines: [10] },
+  ]);
+  assert.match(finding.why ?? '', /OCP/i);
+  assert.match(finding.impact ?? '', /nuevo caso|modificar/i);
+  assert.match(finding.expected_fix ?? '', /estrategia|interfaz|registry/i);
+});
+
+test('detects semantic Android ISP heuristic in application path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/validation/application/PumukiIspAndroidCanaryUseCase.kt',
+        [
+          'interface PumukiIspAndroidCanarySessionPort {',
+          '  suspend fun restoreSession()',
+          '  suspend fun persistSessionID(id: String)',
+          '  suspend fun clearSession()',
+          '  suspend fun refreshToken(): String',
+          '}',
+          '',
+          'class PumukiIspAndroidCanaryUseCase(',
+          '  private val sessionPort: PumukiIspAndroidCanarySessionPort,',
+          ') {',
+          '  suspend fun execute() {',
+          '    sessionPort.restoreSession()',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.android.solid.isp.fat-interface-dependency.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.severity, 'CRITICAL');
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiIspAndroidCanaryUseCase',
+    lines: [8],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'fat interface: PumukiIspAndroidCanarySessionPort', lines: [1] },
+    { kind: 'call', name: 'used member: restoreSession', lines: [12] },
+    { kind: 'member', name: 'unused contract member: persistSessionID', lines: [3] },
+    { kind: 'member', name: 'unused contract member: clearSession', lines: [4] },
+  ]);
+  assert.match(finding.why ?? '', /ISP/i);
+  assert.match(finding.impact ?? '', /contrato demasiado ancho|cambios ajenos/i);
+  assert.match(finding.expected_fix ?? '', /interfaces pequeñas|puerto mínimo/i);
+});
+
+test('detects semantic Android LSP heuristic in application path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/validation/application/PumukiLspAndroidCanaryDiscountPolicy.kt',
+        [
+          'interface PumukiLspAndroidCanaryDiscountPolicy {',
+          '  fun apply(amount: Double): Double',
+          '}',
+          '',
+          'class PumukiLspAndroidCanaryStandardDiscountPolicy : PumukiLspAndroidCanaryDiscountPolicy {',
+          '  override fun apply(amount: Double): Double {',
+          '    return amount * 0.9',
+          '  }',
+          '}',
+          '',
+          'class PumukiLspAndroidCanaryPremiumDiscountPolicy : PumukiLspAndroidCanaryDiscountPolicy {',
+          '  override fun apply(amount: Double): Double {',
+          '    require(amount >= 100.0)',
+          '    error("premium-only")',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.android.solid.lsp.narrowed-precondition.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.severity, 'CRITICAL');
+  assert.deepEqual(finding.primary_node, {
+    kind: 'class',
+    name: 'PumukiLspAndroidCanaryPremiumDiscountPolicy',
+    lines: [11],
+  });
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'base contract: PumukiLspAndroidCanaryDiscountPolicy', lines: [1] },
+    { kind: 'member', name: 'safe substitute: PumukiLspAndroidCanaryStandardDiscountPolicy', lines: [5] },
+    { kind: 'member', name: 'narrowed precondition: apply', lines: [13] },
+    { kind: 'call', name: 'error', lines: [14] },
+  ]);
+  assert.match(finding.why ?? '', /LSP/i);
+  assert.match(finding.impact ?? '', /sustituci|regresion|crash/i);
+  assert.match(finding.expected_fix ?? '', /contrato base|estrategia|subtipo/i);
 });
 
 test('returns empty when no heuristic platform is detected', () => {

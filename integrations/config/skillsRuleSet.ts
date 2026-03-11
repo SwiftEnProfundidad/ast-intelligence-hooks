@@ -353,7 +353,11 @@ const resolveRuleSeverity = (params: {
   stage: Exclude<GateStage, 'STAGED'>;
 }): Severity => {
   const promotedRuleIds = params.bundlePolicy?.promoteToErrorRuleIds ?? [];
-  const shouldPromote = promotedRuleIds.includes(params.rule.id);
+  const shouldPromoteBySolidContract =
+    params.rule.id.endsWith('.no-solid-violations') &&
+    (params.stage === 'PRE_PUSH' || params.stage === 'CI');
+  const shouldPromote =
+    shouldPromoteBySolidContract || promotedRuleIds.includes(params.rule.id);
 
   if (!shouldPromote) {
     return params.rule.severity;

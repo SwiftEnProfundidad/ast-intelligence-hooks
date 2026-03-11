@@ -518,6 +518,66 @@ test('enriquce mensaje de no-solid-violations con criterios accionables y métri
   );
 });
 
+test('promueve no-solid-violations a ERROR en PRE_PUSH aunque la skill fuente llegue como WARN', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-solid-promotion-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend/src/runtime'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-03-10T19:00:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:vendor/skills/backend-enterprise-rules/SKILL.md',
+            hash: 'b'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.no-solid-violations',
+                description: 'Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)',
+                severity: 'WARN',
+                platform: 'backend',
+                confidence: 'MEDIUM',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'vendor/skills/backend-enterprise-rules/SKILL.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const preCommit = loadSkillsRuleSetForStage(
+        'PRE_COMMIT',
+        tempRoot,
+        undefined,
+        ['apps/backend/src/runtime/pumuki-srp-canary.ts']
+      );
+      const prePush = loadSkillsRuleSetForStage(
+        'PRE_PUSH',
+        tempRoot,
+        undefined,
+        ['apps/backend/src/runtime/pumuki-srp-canary.ts']
+      );
+
+      const preCommitRule = preCommit.rules.find(
+        (rule) => rule.id === 'skills.backend.no-solid-violations'
+      );
+      const prePushRule = prePush.rules.find(
+        (rule) => rule.id === 'skills.backend.no-solid-violations'
+      );
+
+      assert.equal(preCommitRule?.severity, 'WARN');
+      assert.equal(prePushRule?.severity, 'ERROR');
+    })
+  );
+});
+
 test('falls back to unscoped heuristic conditions when platform folders are not present', async () => {
   await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-framework-fallback-', async (tempRoot) => {
     const lock = {

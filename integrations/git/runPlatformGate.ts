@@ -311,6 +311,43 @@ const collectObservedCodePathsFromFacts = (
   return [...new Set(codePaths)].sort();
 };
 
+const isSkillsContractCarrierPath = (path: string): boolean => {
+  const normalized = toNormalizedPath(path).toLowerCase();
+  return (
+    normalized === 'agents.md' ||
+    normalized === 'skills.lock.json' ||
+    normalized === 'skills.sources.json' ||
+    normalized.startsWith('vendor/skills/') ||
+    normalized.startsWith('docs/codex-skills/') ||
+    normalized === '.pumuki/policy-as-code.json'
+  );
+};
+
+const collectStagedPaths = (git: IGitService, repoRoot: string): ReadonlyArray<string> => {
+  try {
+    return git.runGit(['diff', '--cached', '--name-only'], repoRoot)
+      .split('\n')
+      .map((line) => toNormalizedPath(line))
+      .filter((line) => line.length > 0);
+  } catch {
+    return [];
+  }
+};
+
+const shouldAugmentStagedSkillsContractFactsWithRepoFacts = (params: {
+  scope: GateScope;
+  facts: ReadonlyArray<Fact>;
+  stagedPaths: ReadonlyArray<string>;
+}): boolean => {
+  if (params.scope.kind !== 'staged') {
+    return false;
+  }
+  if (collectObservedCodePathsFromFacts(params.facts).length > 0) {
+    return false;
+  }
+  return params.stagedPaths.some((path) => isSkillsContractCarrierPath(path));
+};
+
 type IosTestFileContent = {
   path: string;
   content: string;
@@ -839,7 +876,23 @@ export async function runPlatformGate(params: {
     scope: params.scope,
     git,
   });
-  const filesScanned = countScannedFilesFromFacts(facts);
+  const stagedPaths = collectStagedPaths(git, repoRoot);
+  const factsForPlatformEvaluation = shouldAugmentStagedSkillsContractFactsWithRepoFacts({
+    scope: params.scope,
+    facts,
+    stagedPaths,
+  })
+    ? [
+      ...facts,
+      ...(await dependencies.resolveFactsForGateScope({
+        scope: {
+          kind: 'repo',
+        },
+        git,
+      })),
+    ]
+    : facts;
+  const filesScanned = countScannedFilesFromFacts(factsForPlatformEvaluation);
   const observedCodePaths = collectObservedCodePathsFromFacts(facts);
 
   const {
@@ -848,10 +901,10 @@ export async function runPlatformGate(params: {
     projectRules,
     heuristicRules,
     coverage,
-    evaluationFacts = facts,
+    evaluationFacts = factsForPlatformEvaluation,
     findings,
   } = dependencies.evaluatePlatformGateFindings({
-    facts,
+    facts: factsForPlatformEvaluation,
     stage: params.policy.stage,
     repoRoot,
   });
