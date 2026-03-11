@@ -6,6 +6,29 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-11 (v6.3.57)
+
+- AST intelligence and gate payload enrichment:
+  - heuristic extraction now contributes richer semantic context for TypeScript, iOS and Android findings,
+  - downstream evidence and gate evaluation preserve that traceability for consumers, receipts and diagnostics.
+- Canonical enterprise skill packaging:
+  - vendored `vendor/skills/*` and `docs/codex-skills/*-enterprise-rules.md` are now treated as the canonical packaged skill surface,
+  - release tooling and manifest validation no longer point to legacy `windsurf-rules-*` markdown names.
+- Operational impact:
+  - published tarballs and runtime validation now agree on the same enterprise skill chain,
+  - consumers receive richer semantic findings without relying on ad-hoc local rule metadata.
+- Validation evidence:
+  - `npm run -s typecheck` (`PASS`)
+  - `npx --yes tsx@4.21.0 --test core/facts/HeuristicFact.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/facts/detectors/text/android.test.ts core/facts/detectors/text/ios.test.ts core/facts/detectors/typescript/index.test.ts core/gate/Finding.test.ts core/rules/presets/androidRuleSet.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/config/__tests__/skillsCustomRules.test.ts integrations/config/__tests__/skillsEffectiveLock.test.ts integrations/config/__tests__/skillsRuleSet.test.ts integrations/evidence/generateEvidence.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts integrations/git/__tests__/findingTraceability.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` (`250 pass / 0 fail`)
+  - `npm run -s validation:package-manifest` (`PASS`)
+
+### 2026-03-11 (v6.3.56)
+
+- Hook hygiene hotfix:
+  - `PRE_COMMIT` stops re-staging `.ai_evidence.json` when the file is tracked but was not part of the original staged set.
+- Operational impact:
+  - consumers no longer get accidental evidence churn in otherwise unrelated commits.
+
 ### 2026-03-06 (v6.3.55)
 
 - Safe remediation for consumers whose repository path breaks `PATH` execution:

@@ -10,6 +10,24 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.57] - 2026-03-11
+
+### Changed
+
+- Semantic findings now carry richer AST-driven payloads across the gate/evidence pipeline.
+  - TypeScript, iOS and Android heuristic extraction adds structured context such as semantic node coverage and platform-specific signal enrichment.
+  - Evidence/gate evaluation now preserves that richer traceability for downstream consumers and diagnostics.
+- The vendored enterprise skill chain is now canonical in the published package.
+  - `vendor/skills/*` and `docs/codex-skills/*-enterprise-rules.md` stay aligned with the runtime package manifest and release tooling.
+  - Package validation and sync scripts now follow the canonical `*-enterprise-rules` naming instead of legacy `windsurf-rules-*` paths.
+
+## [6.3.56] - 2026-03-11
+
+### Fixed
+
+- `PRE_COMMIT` no longer reintroduces `.ai_evidence.json` into the index when that file is tracked in the repo but was not staged before the gate started.
+  - Successful commit flows now restore tracked evidence deterministically instead of contaminating unrelated commits with refreshed evidence.
+
 ## [6.3.55] - 2026-03-06
 
 ### Fixed
