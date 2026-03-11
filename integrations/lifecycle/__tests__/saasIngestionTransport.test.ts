@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { getCurrentPumukiVersion } from '../packageInfo';
 import { createHotspotsSaasIngestionPayload } from '../saasIngestionContract';
 import { createHotspotsSaasIngestionIdempotencyKey } from '../saasIngestionIdempotency';
 import {
@@ -7,11 +8,13 @@ import {
   type HotspotsSaasIngestionTransportFetch,
 } from '../saasIngestionTransport';
 
+const producerVersion = getCurrentPumukiVersion();
+
 const payload = createHotspotsSaasIngestionPayload({
   tenantId: 'tenant-transport',
   repositoryId: 'repo-transport',
   repositoryName: 'ast-intelligence-hooks',
-  producerVersion: '6.3.17',
+  producerVersion,
   generatedAt: '2026-02-26T11:30:00+00:00',
   report: {
     generatedAt: '2026-02-26T11:30:00+00:00',

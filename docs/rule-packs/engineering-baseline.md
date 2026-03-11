@@ -47,7 +47,7 @@ These signals are stage-promoted to `ERROR` in `PRE_PUSH` and `CI`.
 
 iOS baseline is fed by:
 
-- `docs/codex-skills/windsurf-rules-ios.md`
+- `docs/codex-skills/ios-enterprise-rules.md`
 - `docs/codex-skills/swift-concurrency.md`
 - `docs/codex-skills/swiftui-expert-skill.md`
 

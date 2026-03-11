@@ -1,35 +1,21 @@
-import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { readEvidenceResult, type EvidenceReadResult } from '../evidence/readEvidence';
 import { readSddStatus } from './policy';
+import {
+  applyManagedSection,
+  buildSectionDiffMarkdown,
+  buildFileDiffMarkdown,
+  buildOpenSpecAutoSyncTargets,
+  computeSyncDocsDigest,
+  normalizeSectionBody,
+  resolveSyncDocsTargets,
+  SDD_SYNC_DOCS_CANONICAL_FILES,
+  type ManagedSectionSyncResult,
+  type SddSyncDocsManagedSection,
+  type SddSyncDocsTarget,
+} from './syncDocsTargets';
 import type { SddStage } from './types';
-
-const SDD_STATUS_SECTION = {
-  id: 'sdd-status',
-  begin: '<!-- PUMUKI:BEGIN SDD_STATUS -->',
-  end: '<!-- PUMUKI:END SDD_STATUS -->',
-} as const;
-
-type ManagedSectionSyncResult = {
-  sectionId: string;
-  updated: boolean;
-  before: string;
-  after: string;
-  diffMarkdown: string;
-};
-
-export type SddSyncDocsManagedSection = {
-  id: string;
-  beginMarker: string;
-  endMarker: string;
-  renderBody: (repoRoot: string) => string;
-};
-
-export type SddSyncDocsTarget = {
-  path: string;
-  sections: ReadonlyArray<SddSyncDocsManagedSection>;
-};
 
 export type SddSyncDocsFileResult = {
   path: string;
@@ -48,6 +34,7 @@ export type SddSyncDocsResult = {
     change: string | null;
     stage: SddStage | null;
     task: string | null;
+    fromEvidencePath: string | null;
   };
   updated: boolean;
   files: ReadonlyArray<SddSyncDocsFileResult>;
@@ -65,6 +52,14 @@ export type SddSyncDocsResult = {
       successful_patterns: string[];
       rule_updates: string[];
       gate_anomalies: string[];
+      scoring: {
+        profile: 'heuristic-v1';
+        score: number;
+        successful_count: number;
+        failed_count: number;
+        anomaly_count: number;
+        rule_update_count: number;
+      };
       sync_docs: {
         updated: boolean;
         file_paths: string[];
@@ -81,6 +76,7 @@ export type SddLearnResult = {
     change: string;
     stage: SddStage | null;
     task: string | null;
+    fromEvidencePath: string | null;
   };
   learning: NonNullable<SddSyncDocsResult['learning']>;
 };
@@ -93,6 +89,7 @@ export type SddAutoSyncResult = {
     change: string;
     stage: SddStage | null;
     task: string | null;
+    fromEvidencePath: string | null;
   };
   syncDocs: {
     updated: boolean;
@@ -101,116 +98,26 @@ export type SddAutoSyncResult = {
   learning: NonNullable<SddSyncDocsResult['learning']>;
 };
 
-const normalizeSectionBody = (value: string): string => value.trim().replace(/\r\n/g, '\n');
-
-const computeDigest = (value: string): string =>
-  createHash('sha256').update(value, 'utf8').digest('hex');
-
-const prefixLines = (value: string, marker: '-' | '+'): string =>
-  value
-    .split('\n')
-    .map((line) => `${marker} ${line}`)
-    .join('\n');
-
-const buildSectionDiffMarkdown = (params: { sectionId: string; before: string; after: string }): string => {
-  if (params.before === params.after) {
-    return `### ${params.sectionId}\nNo changes.\n`;
-  }
-  return [
-    `### ${params.sectionId}`,
-    '```diff',
-    prefixLines(params.before, '-'),
-    prefixLines(params.after, '+'),
-    '```',
-    '',
-  ].join('\n');
-};
-
-const buildFileDiffMarkdown = (params: {
-  path: string;
-  sections: ReadonlyArray<ManagedSectionSyncResult>;
-}): string =>
-  [
-    `## ${params.path}`,
-    ...params.sections.map((section) => section.diffMarkdown),
-  ].join('\n');
-
-const formatSddStatusManagedBody = (repoRoot: string): string => {
-  const status = readSddStatus(repoRoot);
-  return [
-    `- repo_root: ${status.repoRoot}`,
-    `- openspec_installed: ${status.openspec.installed ? 'yes' : 'no'}`,
-    `- openspec_version: ${status.openspec.version ?? 'unknown'}`,
-    `- openspec_project_initialized: ${status.openspec.projectInitialized ? 'yes' : 'no'}`,
-    `- openspec_compatible: ${status.openspec.compatible ? 'yes' : 'no'}`,
-    `- sdd_session_active: ${status.session.active ? 'yes' : 'no'}`,
-    `- sdd_session_valid: ${status.session.valid ? 'yes' : 'no'}`,
-    `- sdd_session_change: ${status.session.changeId ?? 'none'}`,
-  ].join('\n');
-};
-
-const DEFAULT_SYNC_DOCS_TARGETS: ReadonlyArray<SddSyncDocsTarget> = [
-  {
-    path: 'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
-    sections: [
-      {
-        id: SDD_STATUS_SECTION.id,
-        beginMarker: SDD_STATUS_SECTION.begin,
-        endMarker: SDD_STATUS_SECTION.end,
-        renderBody: formatSddStatusManagedBody,
-      },
-    ],
-  },
-];
-
-export const SDD_SYNC_DOCS_CANONICAL_FILES = DEFAULT_SYNC_DOCS_TARGETS.map(
-  (target) => target.path
-);
-
-const applyManagedSection = (params: {
-  filePath: string;
-  source: string;
-  beginMarker: string;
-  endMarker: string;
-  renderedBody: string;
-  sectionId: string;
-}): {
-  nextSource: string;
-  result: ManagedSectionSyncResult;
-} => {
-  const beginIndex = params.source.indexOf(params.beginMarker);
-  const endIndex = params.source.indexOf(params.endMarker);
-
-  if (beginIndex === -1 || endIndex === -1 || endIndex < beginIndex) {
+const resolveRepoBoundPath = (params: {
+  repoRoot: string;
+  candidatePath: string;
+  flagName: '--from-evidence';
+}): string => {
+  const repoRootAbsolute = resolve(params.repoRoot);
+  const resolved = isAbsolute(params.candidatePath)
+    ? resolve(params.candidatePath)
+    : resolve(repoRootAbsolute, params.candidatePath);
+  const rel = relative(repoRootAbsolute, resolved);
+  if (
+    rel === '..' ||
+    rel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) ||
+    isAbsolute(rel)
+  ) {
     throw new Error(
-      `[pumuki][sdd] sync-docs conflict in ${params.filePath}: expected managed markers ${params.beginMarker} ... ${params.endMarker}`
+      `[pumuki][sdd] ${params.flagName} must resolve inside repository root: ${params.candidatePath}`
     );
   }
-
-  const bodyStart = beginIndex + params.beginMarker.length;
-  const bodyEnd = endIndex;
-  const beforeBody = normalizeSectionBody(params.source.slice(bodyStart, bodyEnd));
-  const afterBody = normalizeSectionBody(params.renderedBody);
-  const updated = beforeBody !== afterBody;
-  const replacement = `${params.beginMarker}\n${params.renderedBody}\n${params.endMarker}`;
-  const nextSource = updated
-    ? `${params.source.slice(0, beginIndex)}${replacement}${params.source.slice(
-      endIndex + params.endMarker.length
-    )}`
-    : params.source;
-
-  const result: ManagedSectionSyncResult = {
-    sectionId: params.sectionId,
-    updated,
-    before: beforeBody,
-    after: afterBody,
-    diffMarkdown: buildSectionDiffMarkdown({
-      sectionId: params.sectionId,
-      before: beforeBody,
-      after: afterBody,
-    }),
-  };
-  return { nextSource, result };
+  return resolved;
 };
 
 const toSortedArray = (set: Set<string>): string[] => {
@@ -281,12 +188,42 @@ const collectLearningSignals = (params: {
   };
 };
 
+const toLearningScore = (params: {
+  successfulPatterns: string[];
+  failedPatterns: string[];
+  gateAnomalies: string[];
+  ruleUpdates: string[];
+}): {
+  profile: 'heuristic-v1';
+  score: number;
+  successful_count: number;
+  failed_count: number;
+  anomaly_count: number;
+  rule_update_count: number;
+} => {
+  const successfulCount = params.successfulPatterns.length;
+  const failedCount = params.failedPatterns.length;
+  const anomalyCount = params.gateAnomalies.length;
+  const ruleUpdateCount = params.ruleUpdates.length;
+  const rawScore = 100 + successfulCount * 4 - failedCount * 25 - anomalyCount * 10 - ruleUpdateCount * 5;
+  const score = Math.max(0, Math.min(100, rawScore));
+  return {
+    profile: 'heuristic-v1',
+    score,
+    successful_count: successfulCount,
+    failed_count: failedCount,
+    anomaly_count: anomalyCount,
+    rule_update_count: ruleUpdateCount,
+  };
+};
+
 export const runSddSyncDocs = (params?: {
   repoRoot?: string;
   dryRun?: boolean;
   change?: string;
   stage?: SddStage;
   task?: string;
+  fromEvidencePath?: string;
   targets?: ReadonlyArray<SddSyncDocsTarget>;
   now?: () => Date;
   evidenceReader?: (repoRoot: string) => EvidenceReadResult;
@@ -296,49 +233,110 @@ export const runSddSyncDocs = (params?: {
   const change = params?.change?.trim() ? params.change.trim() : null;
   const stage = params?.stage ?? null;
   const task = params?.task?.trim() ? params.task.trim() : null;
-  const targets = params?.targets ?? DEFAULT_SYNC_DOCS_TARGETS;
+  const fromEvidencePath = params?.fromEvidencePath?.trim()
+    ? params.fromEvidencePath.trim()
+    : null;
+  const fromEvidenceAbsolutePath = fromEvidencePath
+    ? resolveRepoBoundPath({
+      repoRoot,
+      candidatePath: fromEvidencePath,
+      flagName: '--from-evidence',
+    })
+    : null;
+  const targets = resolveSyncDocsTargets(repoRoot, params?.targets);
   const now = params?.now ?? (() => new Date());
-  const evidenceReader = params?.evidenceReader ?? readEvidenceResult;
+  const evidenceReader =
+    params?.evidenceReader ??
+    ((candidateRepoRoot: string) =>
+      readEvidenceResult(
+        candidateRepoRoot,
+        fromEvidenceAbsolutePath
+          ? { evidencePath: fromEvidenceAbsolutePath }
+          : undefined
+      ));
 
-  const updates = targets.map((target) => {
+  const updates: Array<{
+    relativePath: string;
+    absolutePath: string;
+    currentSource: string;
+    nextSource: string;
+    sections: ManagedSectionSyncResult[];
+  }> = [];
+
+  for (const target of targets) {
     const absolutePath = resolve(repoRoot, target.path);
-    if (!existsSync(absolutePath)) {
-      throw new Error(
-        `[pumuki][sdd] sync-docs missing canonical file: ${target.path}`
-      );
+    const exists = existsSync(absolutePath);
+    let currentSource = '';
+
+    if (!exists) {
+      if (target.bootstrapIfMissing !== undefined) {
+        currentSource =
+          typeof target.bootstrapIfMissing === 'function'
+            ? target.bootstrapIfMissing(repoRoot)
+            : target.bootstrapIfMissing;
+      } else if (target.optional) {
+        continue;
+      } else {
+        throw new Error(
+          `[pumuki][sdd] sync-docs missing canonical file: ${target.path}`
+        );
+      }
+    } else {
+      currentSource = readFileSync(absolutePath, 'utf8');
     }
 
-    const currentSource = readFileSync(absolutePath, 'utf8');
     let nextSource = currentSource;
     const sectionUpdates: ManagedSectionSyncResult[] = [];
 
-    for (const section of target.sections) {
-      const update = applyManagedSection({
-        filePath: target.path,
-        source: nextSource,
-        beginMarker: section.beginMarker,
-        endMarker: section.endMarker,
-        renderedBody: section.renderBody(repoRoot),
-        sectionId: section.id,
+    if (target.renderWholeFile) {
+      nextSource = target.renderWholeFile(repoRoot, nextSource);
+      sectionUpdates.push({
+        sectionId: 'file-content',
+        updated: normalizeSectionBody(currentSource) !== normalizeSectionBody(nextSource),
+        before: normalizeSectionBody(currentSource),
+        after: normalizeSectionBody(nextSource),
+        diffMarkdown: buildSectionDiffMarkdown({
+          sectionId: 'file-content',
+          before: normalizeSectionBody(currentSource),
+          after: normalizeSectionBody(nextSource),
+        }),
       });
-      nextSource = update.nextSource;
-      sectionUpdates.push(update.result);
+    } else {
+      if (!target.sections || target.sections.length === 0) {
+        throw new Error(
+          `[pumuki][sdd] sync-docs invalid target configuration for ${target.path}: expected sections or renderWholeFile`
+        );
+      }
+      for (const section of target.sections) {
+        const update = applyManagedSection({
+          filePath: target.path,
+          source: nextSource,
+          beginMarker: section.beginMarker,
+          endMarker: section.endMarker,
+          renderedBody: section.renderBody(repoRoot),
+          sectionId: section.id,
+          createIfMissing: section.createIfMissing,
+        });
+        nextSource = update.nextSource;
+        sectionUpdates.push(update.result);
+      }
     }
 
-    return {
+    updates.push({
       relativePath: target.path,
       absolutePath,
       currentSource,
       nextSource,
       sections: sectionUpdates,
-    };
-  });
+    });
+  }
 
   if (!dryRun) {
     for (const update of updates) {
-      if (update.currentSource === update.nextSource) {
+      if (update.currentSource === update.nextSource && existsSync(update.absolutePath)) {
         continue;
       }
+      mkdirSync(dirname(update.absolutePath), { recursive: true });
       writeFileSync(update.absolutePath, update.nextSource, 'utf8');
     }
   }
@@ -346,8 +344,8 @@ export const runSddSyncDocs = (params?: {
   const files: ReadonlyArray<SddSyncDocsFileResult> = updates.map((update) => ({
     path: update.relativePath,
     updated: update.currentSource !== update.nextSource,
-    beforeDigest: computeDigest(update.currentSource),
-    afterDigest: computeDigest(update.nextSource),
+    beforeDigest: computeSyncDocsDigest(update.currentSource),
+    afterDigest: computeSyncDocsDigest(update.nextSource),
     sections: update.sections,
     diffMarkdown: buildFileDiffMarkdown({
       path: update.relativePath,
@@ -362,6 +360,12 @@ export const runSddSyncDocs = (params?: {
       updated,
       evidenceResult: evidenceReader(repoRoot),
     });
+    const scoring = toLearningScore({
+      successfulPatterns: signals.successfulPatterns,
+      failedPatterns: signals.failedPatterns,
+      gateAnomalies: signals.gateAnomalies,
+      ruleUpdates: signals.ruleUpdates,
+    });
     const artifact = {
       version: '1.0' as const,
       change_id: change,
@@ -372,6 +376,7 @@ export const runSddSyncDocs = (params?: {
       successful_patterns: signals.successfulPatterns,
       rule_updates: signals.ruleUpdates,
       gate_anomalies: signals.gateAnomalies,
+      scoring,
       sync_docs: {
         updated,
         file_paths: files.map((file) => file.path),
@@ -380,7 +385,7 @@ export const runSddSyncDocs = (params?: {
     const relativePath = `openspec/changes/${change}/learning.json`;
     const absolutePath = resolve(repoRoot, relativePath);
     const serialized = `${JSON.stringify(artifact, null, 2)}\n`;
-    const digest = computeDigest(serialized);
+    const digest = computeSyncDocsDigest(serialized);
     if (!dryRun) {
       mkdirSync(dirname(absolutePath), { recursive: true });
       writeFileSync(absolutePath, serialized, 'utf8');
@@ -401,6 +406,7 @@ export const runSddSyncDocs = (params?: {
       change,
       stage,
       task,
+      fromEvidencePath,
     },
     updated,
     files,
@@ -414,6 +420,7 @@ export const runSddLearn = (params?: {
   change?: string;
   stage?: SddStage;
   task?: string;
+  fromEvidencePath?: string;
   now?: () => Date;
   evidenceReader?: (repoRoot: string) => EvidenceReadResult;
 }): SddLearnResult => {
@@ -428,6 +435,7 @@ export const runSddLearn = (params?: {
     change,
     stage: params?.stage,
     task: params?.task,
+    fromEvidencePath: params?.fromEvidencePath,
     now: params?.now,
     evidenceReader: params?.evidenceReader,
     targets: [],
@@ -445,6 +453,7 @@ export const runSddLearn = (params?: {
       change,
       stage: result.context.stage,
       task: result.context.task,
+      fromEvidencePath: result.context.fromEvidencePath,
     },
     learning: result.learning,
   };
@@ -456,6 +465,7 @@ export const runSddAutoSync = (params?: {
   change?: string;
   stage?: SddStage;
   task?: string;
+  fromEvidencePath?: string;
   now?: () => Date;
   evidenceReader?: (repoRoot: string) => EvidenceReadResult;
   targets?: ReadonlyArray<SddSyncDocsTarget>;
@@ -464,16 +474,30 @@ export const runSddAutoSync = (params?: {
   if (!change) {
     throw new Error('[pumuki][sdd] auto-sync requires --change=<change-id>.');
   }
+  const repoRoot = resolve(params?.repoRoot ?? process.cwd());
+  const now = params?.now ?? (() => new Date());
+  const targets =
+    params?.targets ??
+    [
+      ...resolveSyncDocsTargets(repoRoot),
+      ...buildOpenSpecAutoSyncTargets({
+        change,
+        stage: params?.stage ?? null,
+        task: params?.task?.trim() ? params.task.trim() : null,
+        now,
+      }),
+    ];
 
   const syncResult = runSddSyncDocs({
-    repoRoot: params?.repoRoot,
+    repoRoot,
     dryRun: params?.dryRun,
     change,
     stage: params?.stage,
     task: params?.task,
-    now: params?.now,
+    fromEvidencePath: params?.fromEvidencePath,
+    now,
     evidenceReader: params?.evidenceReader,
-    targets: params?.targets,
+    targets,
   });
 
   if (!syncResult.learning) {
@@ -488,6 +512,7 @@ export const runSddAutoSync = (params?: {
       change,
       stage: syncResult.context.stage,
       task: syncResult.context.task,
+      fromEvidencePath: syncResult.context.fromEvidencePath,
     },
     syncDocs: {
       updated: syncResult.updated,

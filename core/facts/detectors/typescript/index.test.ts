@@ -2,6 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   findEmptyCatchClauseLines,
+  findConcreteDependencyInstantiationMatch,
+  findFrameworkDependencyImportMatch,
+  findMixedCommandQueryClassMatch,
+  findMixedCommandQueryInterfaceMatch,
+  findOverrideMethodThrowingNotImplementedMatch,
+  findTypeDiscriminatorSwitchMatch,
   findNetworkCallWithoutErrorHandlingLines,
   findRecordStringUnknownTypeLines,
   findUndefinedInBaseTypeUnionLines,
@@ -291,6 +297,51 @@ test('hasMixedCommandQueryClass detecta mezcla command/query en la misma clase',
   assert.equal(hasMixedCommandQueryClass(queryOnlyClassAst), false);
 });
 
+test('findMixedCommandQueryClassMatch devuelve payload semantico para SRP/CQS', () => {
+  const mixedClassAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'PumukiSrpCommandQueryCanary' },
+        loc: { start: { line: 1 }, end: { line: 10 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'getById' },
+              loc: { start: { line: 2 }, end: { line: 4 } },
+            },
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'save' },
+              loc: { start: { line: 6 }, end: { line: 8 } },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findMixedCommandQueryClassMatch(mixedClassAst);
+
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'PumukiSrpCommandQueryCanary',
+    lines: [1],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'query:getById', lines: [2] },
+    { kind: 'member', name: 'command:save', lines: [6] },
+  ]);
+  assert.deepEqual(match.lines, [1, 2, 6]);
+  assert.match(match.why, /SRP/i);
+  assert.match(match.impact, /testeo aislado/i);
+  assert.match(match.expected_fix, /lectura y escritura/i);
+});
+
 test('hasMixedCommandQueryInterface detecta mezcla command/query en la misma interfaz', () => {
   const mixedInterfaceAst = {
     type: 'TSInterfaceDeclaration',
@@ -312,6 +363,103 @@ test('hasMixedCommandQueryInterface detecta mezcla command/query en la misma int
 
   assert.equal(hasMixedCommandQueryInterface(mixedInterfaceAst), true);
   assert.equal(hasMixedCommandQueryInterface(queryOnlyInterfaceAst), false);
+});
+
+test('findMixedCommandQueryInterfaceMatch devuelve payload semantico para ISP backend', () => {
+  const mixedInterfaceAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'TSInterfaceDeclaration',
+        id: { type: 'Identifier', name: 'PumukiIspBackendCatalogPort' },
+        loc: { start: { line: 1 }, end: { line: 4 } },
+        body: {
+          type: 'TSInterfaceBody',
+          body: [
+            {
+              type: 'TSMethodSignature',
+              key: { type: 'Identifier', name: 'findById' },
+              loc: { start: { line: 2 }, end: { line: 2 } },
+            },
+            {
+              type: 'TSMethodSignature',
+              key: { type: 'Identifier', name: 'saveSnapshot' },
+              loc: { start: { line: 3 }, end: { line: 3 } },
+            },
+          ],
+        },
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'PumukiIspBackendCanaryUseCase' },
+        loc: { start: { line: 6 }, end: { line: 17 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'catalogPort' },
+              loc: { start: { line: 7 }, end: { line: 7 } },
+              typeAnnotation: {
+                type: 'TSTypeAnnotation',
+                typeAnnotation: {
+                  type: 'TSTypeReference',
+                  typeName: { type: 'Identifier', name: 'PumukiIspBackendCatalogPort' },
+                },
+              },
+            },
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'execute' },
+              loc: { start: { line: 9 }, end: { line: 15 } },
+              body: {
+                type: 'BlockStatement',
+                body: [
+                  {
+                    type: 'ExpressionStatement',
+                    expression: {
+                      type: 'CallExpression',
+                      loc: { start: { line: 10 }, end: { line: 10 } },
+                      callee: {
+                        type: 'MemberExpression',
+                        computed: false,
+                        object: {
+                          type: 'MemberExpression',
+                          computed: false,
+                          object: { type: 'ThisExpression' },
+                          property: { type: 'Identifier', name: 'catalogPort' },
+                        },
+                        property: { type: 'Identifier', name: 'findById' },
+                      },
+                      arguments: [{ type: 'Identifier', name: 'id' }],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findMixedCommandQueryInterfaceMatch(mixedInterfaceAst);
+
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'PumukiIspBackendCanaryUseCase',
+    lines: [6],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'fat interface: PumukiIspBackendCatalogPort', lines: [1] },
+    { kind: 'member', name: 'used member: findById', lines: [10] },
+    { kind: 'member', name: 'unused contract member: saveSnapshot', lines: [3] },
+  ]);
+  assert.deepEqual(match.lines, [1, 3, 6, 10]);
+  assert.match(match.why, /ISP/i);
+  assert.match(match.impact, /contrato|acopla|test/i);
+  assert.match(match.expected_fix, /puertos|separa|split/i);
 });
 
 test('hasTypeDiscriminatorSwitch detecta switch por tipo/kind con multiples cases', () => {
@@ -339,6 +487,74 @@ test('hasTypeDiscriminatorSwitch detecta switch por tipo/kind con multiples case
 
   assert.equal(hasTypeDiscriminatorSwitch(switchAst), true);
   assert.equal(hasTypeDiscriminatorSwitch(nonDiscriminatorAst), false);
+});
+
+test('findTypeDiscriminatorSwitchMatch devuelve payload semantico para OCP backend', () => {
+  const switchAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'PumukiOcpBackendCanaryUseCase' },
+        loc: { start: { line: 1 }, end: { line: 14 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'resolveChannel' },
+              loc: { start: { line: 2 }, end: { line: 13 } },
+              body: {
+                type: 'BlockStatement',
+                body: [
+                  {
+                    type: 'SwitchStatement',
+                    loc: { start: { line: 3 }, end: { line: 11 } },
+                    discriminant: {
+                      type: 'MemberExpression',
+                      computed: false,
+                      object: { type: 'Identifier', name: 'request' },
+                      property: { type: 'Identifier', name: 'kind' },
+                    },
+                    cases: [
+                      {
+                        type: 'SwitchCase',
+                        loc: { start: { line: 4 }, end: { line: 5 } },
+                        test: { type: 'StringLiteral', value: 'pickup' },
+                      },
+                      {
+                        type: 'SwitchCase',
+                        loc: { start: { line: 6 }, end: { line: 7 } },
+                        test: { type: 'StringLiteral', value: 'delivery' },
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findTypeDiscriminatorSwitchMatch(switchAst);
+
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'PumukiOcpBackendCanaryUseCase',
+    lines: [1],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'discriminator switch: kind', lines: [3] },
+    { kind: 'member', name: 'case:pickup', lines: [4] },
+    { kind: 'member', name: 'case:delivery', lines: [6] },
+  ]);
+  assert.deepEqual(match.lines, [1, 3, 4, 6]);
+  assert.match(match.why, /OCP/i);
+  assert.match(match.impact, /nuevo caso|modificar/i);
+  assert.match(match.expected_fix, /estrategia|polimorfismo|mapa/i);
 });
 
 test('hasOverrideMethodThrowingNotImplemented detecta override con throw not implemented', () => {
@@ -372,6 +588,135 @@ test('hasOverrideMethodThrowingNotImplemented detecta override con throw not imp
   assert.equal(hasOverrideMethodThrowingNotImplemented(overrideValidAst), false);
 });
 
+test('findOverrideMethodThrowingNotImplementedMatch devuelve payload semantico para LSP backend', () => {
+  const lspAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'PumukiLspBackendCanaryDiscountPolicy' },
+        loc: { start: { line: 1 }, end: { line: 4 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'apply' },
+              loc: { start: { line: 2 }, end: { line: 3 } },
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'PumukiLspBackendStandardDiscountPolicy' },
+        superClass: {
+          type: 'Identifier',
+          name: 'PumukiLspBackendCanaryDiscountPolicy',
+          loc: { start: { line: 5 }, end: { line: 5 } },
+        },
+        loc: { start: { line: 5 }, end: { line: 10 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              override: true,
+              key: { type: 'Identifier', name: 'apply' },
+              loc: { start: { line: 6 }, end: { line: 8 } },
+              body: {
+                type: 'BlockStatement',
+                body: [
+                  {
+                    type: 'ReturnStatement',
+                    argument: { type: 'NumericLiteral', value: 10 },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'PumukiLspBackendPremiumDiscountPolicy' },
+        superClass: {
+          type: 'Identifier',
+          name: 'PumukiLspBackendCanaryDiscountPolicy',
+          loc: { start: { line: 12 }, end: { line: 12 } },
+        },
+        loc: { start: { line: 12 }, end: { line: 19 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              override: true,
+              key: { type: 'Identifier', name: 'apply' },
+              loc: { start: { line: 13 }, end: { line: 18 } },
+              body: {
+                type: 'BlockStatement',
+                body: [
+                  {
+                    type: 'ThrowStatement',
+                    loc: { start: { line: 14 }, end: { line: 14 } },
+                    argument: {
+                      type: 'NewExpression',
+                      callee: { type: 'Identifier', name: 'Error' },
+                      arguments: [
+                        {
+                          type: 'StringLiteral',
+                          value: 'Not implemented for low amount',
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findOverrideMethodThrowingNotImplementedMatch(lspAst);
+
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'PumukiLspBackendPremiumDiscountPolicy',
+    lines: [12],
+  });
+  assert.deepEqual(match.related_nodes, [
+    {
+      kind: 'member',
+      name: 'base contract: PumukiLspBackendCanaryDiscountPolicy',
+      lines: [1],
+    },
+    {
+      kind: 'member',
+      name: 'safe substitute: PumukiLspBackendStandardDiscountPolicy',
+      lines: [5],
+    },
+    {
+      kind: 'member',
+      name: 'unsafe override: apply',
+      lines: [13],
+    },
+    {
+      kind: 'call',
+      name: 'throw not implemented',
+      lines: [14],
+    },
+  ]);
+  assert.deepEqual(match.lines, [1, 5, 12, 13, 14]);
+  assert.match(match.why, /LSP/i);
+  assert.match(match.impact, /sustituci|regresion|crash/i);
+  assert.match(match.expected_fix, /contrato|estrategia|subtipo/i);
+});
+
 test('hasFrameworkDependencyImport detecta import/require de frameworks concretos', () => {
   const importAst = {
     type: 'ImportDeclaration',
@@ -393,6 +738,57 @@ test('hasFrameworkDependencyImport detecta import/require de frameworks concreto
   assert.equal(hasFrameworkDependencyImport(localRequireAst), false);
 });
 
+test('findFrameworkDependencyImportMatch devuelve payload semantico para DIP', () => {
+  const importAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ImportDeclaration',
+        loc: { start: { line: 1 }, end: { line: 1 } },
+        source: { type: 'StringLiteral', value: '@prisma/client' },
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'PumukiDipFrameworkImportCanary' },
+        loc: { start: { line: 3 }, end: { line: 12 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'client' },
+              loc: { start: { line: 4 }, end: { line: 4 } },
+              value: {
+                type: 'NewExpression',
+                loc: { start: { line: 4 }, end: { line: 4 } },
+                callee: { type: 'Identifier', name: 'PrismaClient' },
+                arguments: [],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findFrameworkDependencyImportMatch(importAst);
+
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'PumukiDipFrameworkImportCanary',
+    lines: [3],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'import:@prisma/client', lines: [1] },
+    { kind: 'call', name: 'new PrismaClient', lines: [4] },
+  ]);
+  assert.deepEqual(match.lines, [1, 3, 4]);
+  assert.match(match.why, /DIP/i);
+  assert.match(match.impact, /infraestructura concreta/i);
+  assert.match(match.expected_fix, /puerto|abstracci/i);
+});
+
 test('hasConcreteDependencyInstantiation detecta instanciacion directa de dependencias concretas', () => {
   const concreteAst = {
     type: 'NewExpression',
@@ -407,6 +803,57 @@ test('hasConcreteDependencyInstantiation detecta instanciacion directa de depend
 
   assert.equal(hasConcreteDependencyInstantiation(concreteAst), true);
   assert.equal(hasConcreteDependencyInstantiation(localAst), false);
+});
+
+test('findConcreteDependencyInstantiationMatch devuelve payload semantico para DIP', () => {
+  const concreteAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ImportDeclaration',
+        loc: { start: { line: 1 }, end: { line: 1 } },
+        source: { type: 'StringLiteral', value: '@prisma/client' },
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'PumukiDipConcreteInstantiationCanary' },
+        loc: { start: { line: 3 }, end: { line: 12 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'client' },
+              loc: { start: { line: 4 }, end: { line: 4 } },
+              value: {
+                type: 'NewExpression',
+                loc: { start: { line: 4 }, end: { line: 4 } },
+                callee: { type: 'Identifier', name: 'PrismaClient' },
+                arguments: [],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findConcreteDependencyInstantiationMatch(concreteAst);
+
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'PumukiDipConcreteInstantiationCanary',
+    lines: [3],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'import:@prisma/client', lines: [1] },
+    { kind: 'call', name: 'new PrismaClient', lines: [4] },
+  ]);
+  assert.deepEqual(match.lines, [1, 3, 4]);
+  assert.match(match.why, /DIP/i);
+  assert.match(match.impact, /tests aislados/i);
+  assert.match(match.expected_fix, /adapter|puerto|abstracci/i);
 });
 
 test('hasLargeClassDeclaration detecta clases con 300 lineas o mas', () => {

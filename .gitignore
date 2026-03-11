@@ -68,6 +68,9 @@ scripts/hooks-system/.hook-system/
 **/*PLAN*.md
 **/*RESUMEN*.md
 **/*CORRECCIONES*.md
+!docs/tracking/estado-ejecutivo.md
+!docs/tracking/plan-activo-de-trabajo.md
+!docs/tracking/historico-*.md
 ast-summary.json
 .AI_EVIDENCE_SUMMARY.md
 

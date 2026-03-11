@@ -32,6 +32,31 @@ test('normaliza regla frontend SOLID a id canonico', () => {
   assert.deepEqual(rules.map((rule) => rule.id), ['skills.frontend.no-solid-violations']);
 });
 
+test('aplica stage canónico PRE_PUSH para no-solid-violations cuando markdown no define stage', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+    sourceContent: '✅ Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(rules[0]?.id, 'skills.backend.no-solid-violations');
+  assert.equal(rules[0]?.stage, 'PRE_PUSH');
+});
+
+test('respeta stage explícito en markdown para no-solid-violations', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+    sourceContent:
+      '✅ PRE_COMMIT: Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(rules[0]?.id, 'skills.backend.no-solid-violations');
+  assert.equal(rules[0]?.stage, 'PRE_COMMIT');
+});
+
 test('reglas no canonicas extraidas desde markdown se degradan a DECLARATIVE para evitar AUTO no mapeado', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'backend-guidelines',
@@ -42,4 +67,20 @@ test('reglas no canonicas extraidas desde markdown se degradan a DECLARATIVE par
   assert.equal(rules.length, 1);
   assert.equal(rules[0]?.id.startsWith('skills.backend.guideline.'), true);
   assert.equal(rules[0]?.evaluationMode, 'DECLARATIVE');
+});
+
+test('reglas no canonicas con nodos AST explicitos se compilan como AUTO con astNodeIds dinámicos', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+    sourceContent:
+      '- Must enforce complex transaction boundary safety with AST nodes (`heuristics.ts.explicit-any.ast`) and (`heuristics.ts.empty-catch.ast`).',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.deepEqual(rules[0]?.astNodeIds, [
+    'heuristics.ts.empty-catch.ast',
+    'heuristics.ts.explicit-any.ast',
+  ]);
 });

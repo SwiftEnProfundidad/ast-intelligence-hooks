@@ -32,9 +32,16 @@ Install and bootstrap:
 
 ```bash
 npm install --save-exact pumuki
-npx --yes pumuki install
-npx --yes pumuki doctor
+npx --yes pumuki bootstrap --enterprise --agent=codex
 npx --yes pumuki status
+npx --yes pumuki doctor --json
+```
+
+Fallback (equivalent in pasos separados):
+
+```bash
+npx --yes pumuki install --with-mcp --agent=codex
+npx --yes pumuki doctor --deep --json
 ```
 
 OpenSpec/SDD baseline:
@@ -56,16 +63,16 @@ npx --yes pumuki loop list --json
 Run local gates:
 
 ```bash
-npx --yes pumuki-pre-write
-npx --yes pumuki-pre-commit
+npx --yes --package pumuki@latest pumuki-pre-write
+npx --yes --package pumuki@latest pumuki-pre-commit
 ```
 
 Run push/CI gates (requires proper git context):
 
 ```bash
 git push --set-upstream origin <branch>
-npx --yes pumuki-pre-push
-npx --yes pumuki-ci
+npx --yes --package pumuki@latest pumuki-pre-push
+npx --yes --package pumuki@latest pumuki-ci
 ```
 
 Expected behavior:
@@ -73,6 +80,16 @@ Expected behavior:
 - `PRE_WRITE` and `PRE_COMMIT`: should pass when SDD session is valid and rules are satisfied.
 - `PRE_PUSH`: blocks if branch has no upstream tracking reference.
 - `CI`: requires a valid diff range context (not `HEAD..HEAD` with ambiguous range).
+
+Version drift quick check:
+
+- `status --json` and `doctor --json` expose `version.effective`, `version.runtime`, `version.consumerInstalled`, `version.lifecycleInstalled`, `version.driftWarning`, `version.alignmentCommand`, `version.pathExecutionHazard`, `version.pathExecutionWarning`, and `version.pathExecutionWorkaroundCommand`.
+- If `driftWarning` is not `null`, prefer the exact command already exposed in `version.alignmentCommand`.
+- If `pathExecutionHazard` is `true`, avoid `npx/npm exec` for the install step and use the safe local workaround reported by Pumuki, for example:
+
+```bash
+node ./node_modules/pumuki/bin/pumuki.js install
+```
 
 ## Why Pumuki
 
@@ -176,7 +193,7 @@ Example:
 export PUMUKI_TELEMETRY_JSONL_PATH=".pumuki/artifacts/gate-telemetry.jsonl"
 export PUMUKI_TELEMETRY_OTEL_ENDPOINT="https://otel.example/v1/logs"
 export PUMUKI_TELEMETRY_OTEL_SERVICE_NAME="pumuki-enterprise"
-npx --yes pumuki-pre-commit
+npx --yes --package pumuki@latest pumuki-pre-commit
 ```
 
 Each event captures deterministic stage/outcome/policy/repo context per gate execution.
@@ -221,87 +238,18 @@ Legacy parity report (strict comparator):
 node --import tsx scripts/build-legacy-parity-report.ts --legacy=<legacy-evidence-path> --enterprise=<enterprise-evidence-path> --out=<output-path>
 ```
 
-## Command Reference
+## Command Paths
 
-### Lifecycle (Consumer)
+Use these docs instead of treating `README.md` as the full command manual:
 
-```bash
-npx --yes pumuki install
-npx --yes pumuki update --latest
-npx --yes pumuki uninstall --purge-artifacts
-npx --yes pumuki remove
-npx --yes pumuki doctor
-npx --yes pumuki status
-```
-
-### SDD / OpenSpec (Consumer)
-
-```bash
-npx --yes pumuki sdd status
-npx --yes pumuki sdd session --open --change=<change-id>
-npx --yes pumuki sdd session --refresh
-npx --yes pumuki sdd session --close
-npx --yes pumuki sdd validate --stage=PRE_COMMIT
-```
-
-### Loop Runner (Consumer)
-
-```bash
-npx --yes pumuki loop run --objective="stabilize gate before commit" --max-attempts=3 --json
-npx --yes pumuki loop status --session=<session-id> --json
-npx --yes pumuki loop stop --session=<session-id> --json
-npx --yes pumuki loop resume --session=<session-id> --json
-npx --yes pumuki loop list --json
-npx --yes pumuki loop export --session=<session-id> --output-json=.audit-reports/loop-session.json
-```
-
-### Stage Gates (Consumer)
-
-```bash
-npx --yes pumuki-pre-write
-npx --yes pumuki-pre-commit
-npx --yes pumuki-pre-push
-npx --yes pumuki-ci
-```
-
-### MCP Servers (Optional, Long-Running)
-
-```bash
-npx --yes pumuki-mcp-evidence
-npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio
-npx --yes --package pumuki@latest pumuki-mcp-enterprise
-npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio
-```
-
-## Validation and Diagnostics (Framework-Only)
-
-These commands are for maintainers and may require additional arguments, external repo context, or authenticated GitHub access.
-
-```bash
-npm run validation:consumer-ci-artifacts -- --repo <owner/repo>
-npm run validation:consumer-ci-auth-check -- --repo <owner/repo>
-npm run validation:consumer-workflow-lint -- --repo-path <absolute-path-to-consumer-repo>
-npm run validation:consumer-support-bundle -- --repo <owner/repo>
-npm run validation:consumer-support-ticket-draft
-npm run validation:consumer-startup-unblock-status
-npm run validation:consumer-startup-triage -- --repo <owner/repo> --skip-workflow-lint
-npm run validation:mock-consumer-ab-report
-npm run validation:adapter-readiness
-npm run validation:adapter-session-status
-npm run validation:adapter-real-session-report
-npm run validation:phase5-blockers-readiness
-npm run validation:phase5-execution-closure-status
-npm run validation:phase5-execution-closure -- --repo <owner/repo> --skip-workflow-lint
-npm run validation:phase5-external-handoff
-npm run validation:clean-artifacts
-```
-
-Important:
-
-- Several validation scripts intentionally return non-zero when verdict is `BLOCKED`, `PENDING`, or `MISSING_INPUTS`.
-- Non-zero in these scripts is often diagnostic output, not a runtime crash.
-- `validation:consumer-support-ticket-draft` expects an existing support bundle generated by `validation:consumer-support-bundle`.
-- If workflow lint is required in your flow, provide `--repo-path` and `--actionlint-bin`; otherwise use `--skip-workflow-lint`.
+- Installation and bootstrap:
+  - `docs/product/INSTALLATION.md`
+- Daily usage, gates, menu, lifecycle, SDD and troubleshooting:
+  - `docs/product/USAGE.md`
+- Operator-focused short playbook:
+  - `PUMUKI.md`
+- Validation runbooks and framework-only diagnostics:
+  - `docs/validation/README.md`
 
 ## Menu Walkthrough and Screenshots
 
@@ -331,13 +279,13 @@ Important:
 
 Extended annotated walkthrough:
 
-- `docs/README_MENU_WALKTHROUGH.md`
+- `docs/operations/framework-menu-consumer-walkthrough.md`
 
 ## Enterprise Operations Baseline
 
 Pumuki production SaaS operation baseline is defined in:
 
-- `docs/OPERATIONS.md`
+- `docs/operations/production-operations-policy.md`
 
 Highlights:
 
@@ -357,31 +305,34 @@ Highlights:
 
 ## Documentation Index
 
-- Installation: `docs/INSTALLATION.md`
-- Usage: `docs/USAGE.md`
-- Testing: `docs/TESTING.md`
-- API reference: `docs/API_REFERENCE.md`
-- Architecture: `docs/ARCHITECTURE.md`
-- Configuration: `docs/CONFIGURATION.md`
-- Code standards: `docs/CODE_STANDARDS.md`
-- Branch protection: `docs/BRANCH_PROTECTION_GUIDE.md`
-- MCP servers: `docs/MCP_SERVERS.md`
-- MCP evidence server: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
-- MCP consumption: `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`
-- Evidence schema v2.1: `docs/evidence-v2.1.md`
-- Operations policy (SLA/SLO): `docs/OPERATIONS.md`
-- Release notes: `docs/RELEASE_NOTES.md`
+- Installation: `docs/product/INSTALLATION.md`
+- Usage: `docs/product/USAGE.md`
+- Backlog tooling quick nav (incluye snippet terminal): `docs/product/USAGE.md#backlog-tooling`
+- Backlog reasons shared module: `docs/product/USAGE.md#backlog-reasons`
+- Testing: `docs/product/TESTING.md`
+- API reference: `docs/product/API_REFERENCE.md`
+- Architecture: `docs/product/ARCHITECTURE.md`
+- Configuration: `docs/product/CONFIGURATION.md`
+- Code standards: `docs/governance/CODE_STANDARDS.md`
+- Branch protection: `docs/governance/BRANCH_PROTECTION_GUIDE.md`
+- MCP servers: `docs/mcp/mcp-servers-overview.md`
+- MCP evidence server: `docs/mcp/evidence-context-server.md`
+- MCP consumption: `docs/mcp/agent-context-consumption.md`
+- Evidence schema v2.1: `docs/mcp/ai-evidence-v2.1-contract.md`
+- Operations policy (SLA/SLO): `docs/operations/production-operations-policy.md`
+- Release notes: `docs/operations/RELEASE_NOTES.md`
 - Changelog: `CHANGELOG.md`
 
 ## Collaboration
 
 Contributions are welcome. For high-quality collaboration:
 
-1. Read `docs/CONTRIBUTING.md` and `docs/CODE_STANDARDS.md`.
+1. Read `docs/governance/CONTRIBUTING.md` and `docs/governance/CODE_STANDARDS.md`.
 2. Create a dedicated branch per change.
 3. Keep scope focused and include deterministic evidence when relevant.
 4. Before opening a PR, run at least:
    - `npm run typecheck`
+   - `npm run -s test:backlog-tooling`
    - `npm run test:operational-memory`
    - `npm run test:saas-ingestion`
 5. Open a PR with clear problem statement, approach, and validation evidence.

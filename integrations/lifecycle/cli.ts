@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
 import { runPlatformGate } from '../git/runPlatformGate';
+import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
 import {
   doctorHasBlockingIssues,
   runLifecycleDoctor,
@@ -32,17 +33,30 @@ import {
   readSddStatus,
   refreshSddSession,
   runSddAutoSync,
+  runSddEvidenceScaffold,
   runSddLearn,
+  runSddStateSync,
   runSddSyncDocs,
+  type SddEvidenceScaffoldTestStatus,
+  type SddStateSyncStatus,
   type SddStage,
 } from '../sdd';
 import { evaluateAiGate } from '../gate/evaluateAiGate';
 import { runEnterpriseAiGateCheck } from '../mcp/aiGateCheck';
-import { emitAuditSummaryNotificationFromAiGate } from '../notifications/emitAuditSummaryNotification';
+import {
+  emitAuditSummaryNotificationFromAiGate,
+  emitGateBlockedNotification,
+} from '../notifications/emitAuditSummaryNotification';
 import {
   buildPreWriteAutomationTrace,
   type PreWriteAutomationTrace,
 } from './preWriteAutomation';
+import {
+  runLifecycleWatch,
+  type LifecycleWatchScope,
+  type LifecycleWatchSeverityThreshold,
+  type LifecycleWatchStage,
+} from './watch';
 import { buildLocalHotspotsReport, type LocalHotspotsReport } from './analyticsHotspots';
 import { resolveHotspotsSaasIngestionAuditPath } from './saasIngestionAudit';
 import { readHotspotsSaasIngestionPayload } from './saasIngestionContract';
@@ -55,23 +69,36 @@ import {
   collectRemoteCiDiagnostics,
   type RemoteCiDiagnostics,
 } from './remoteCiDiagnostics';
+import { runPolicyReconcile } from './policyReconcile';
 
 type LifecycleCommand =
+  | 'bootstrap'
   | 'install'
   | 'uninstall'
   | 'remove'
   | 'update'
   | 'doctor'
   | 'status'
+  | 'watch'
   | 'loop'
   | 'sdd'
   | 'adapter'
-  | 'analytics';
+  | 'analytics'
+  | 'policy';
 
-type SddCommand = 'status' | 'validate' | 'session' | 'sync-docs' | 'learn' | 'auto-sync';
+type SddCommand =
+  | 'status'
+  | 'validate'
+  | 'session'
+  | 'sync-docs'
+  | 'learn'
+  | 'auto-sync'
+  | 'evidence'
+  | 'state-sync';
 type LoopCommand = 'run' | 'status' | 'stop' | 'resume' | 'list' | 'export';
 type AnalyticsCommand = 'hotspots';
 type AnalyticsHotspotsCommand = 'report' | 'diagnose';
+type PolicyCommand = 'reconcile';
 
 type SddSessionAction = 'open' | 'refresh' | 'close';
 
@@ -80,6 +107,10 @@ type ParsedArgs = {
   purgeArtifacts: boolean;
   updateSpec?: string;
   json: boolean;
+  bootstrapEnterprise?: boolean;
+  bootstrapAgent?: AdapterAgent;
+  installWithMcp?: boolean;
+  installMcpAgent?: AdapterAgent;
   remoteChecks?: boolean;
   doctorDeep?: boolean;
   sddCommand?: SddCommand;
@@ -96,14 +127,36 @@ type ParsedArgs = {
   sddSyncDocsChange?: string;
   sddSyncDocsStage?: SddStage;
   sddSyncDocsTask?: string;
+  sddSyncDocsFromEvidence?: string;
   sddLearnDryRun?: boolean;
   sddLearnChange?: string;
   sddLearnStage?: SddStage;
   sddLearnTask?: string;
+  sddLearnFromEvidence?: string;
   sddAutoSyncDryRun?: boolean;
   sddAutoSyncChange?: string;
   sddAutoSyncStage?: SddStage;
   sddAutoSyncTask?: string;
+  sddAutoSyncFromEvidence?: string;
+  sddEvidenceDryRun?: boolean;
+  sddEvidenceScenarioId?: string;
+  sddEvidenceTestCommand?: string;
+  sddEvidenceTestStatus?: SddEvidenceScaffoldTestStatus;
+  sddEvidenceTestOutput?: string;
+  sddEvidenceFromEvidence?: string;
+  sddStateSyncDryRun?: boolean;
+  sddStateSyncScenarioId?: string;
+  sddStateSyncStatus?: SddStateSyncStatus;
+  sddStateSyncFromEvidence?: string;
+  sddStateSyncBoardPath?: string;
+  sddStateSyncForce?: boolean;
+  watchStage?: LifecycleWatchStage;
+  watchScope?: LifecycleWatchScope;
+  watchIntervalMs?: number;
+  watchNotifyCooldownMs?: number;
+  watchSeverityThreshold?: LifecycleWatchSeverityThreshold;
+  watchNotifyEnabled?: boolean;
+  watchIterations?: number;
   adapterCommand?: 'install';
   adapterAgent?: AdapterAgent;
   adapterDryRun?: boolean;
@@ -113,16 +166,21 @@ type ParsedArgs = {
   analyticsSinceDays?: number;
   analyticsJsonOutputPath?: string;
   analyticsMarkdownOutputPath?: string;
+  policyCommand?: PolicyCommand;
+  policyStrict?: boolean;
+  policyApply?: boolean;
 };
 
 const HELP_TEXT = `
 Pumuki lifecycle commands:
-  pumuki install
+  pumuki bootstrap [--enterprise] [--agent=<name>] [--json]
+  pumuki install [--with-mcp] [--agent=<name>]
   pumuki uninstall [--purge-artifacts]
   pumuki remove
   pumuki update [--latest|--spec=<package-spec>]
   pumuki doctor [--remote-checks] [--deep] [--json]
   pumuki status [--json] [--remote-checks]
+  pumuki watch [--stage=PRE_COMMIT|PRE_PUSH|CI] [--scope=workingTree|staged|repoAndStaged|repo] [--severity=critical|high|medium|low] [--interval-ms=<n>] [--notify-cooldown-ms=<n>] [--no-notify] [--once|--iterations=<n>] [--json]
   pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]
   pumuki loop status --session=<session-id> [--json]
   pumuki loop stop --session=<session-id> [--json]
@@ -132,14 +190,19 @@ Pumuki lifecycle commands:
   pumuki adapter install --agent=<name> [--dry-run] [--json]
   pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]
   pumuki analytics hotspots diagnose [--json]
+  pumuki policy reconcile [--strict] [--apply] [--json]
   pumuki sdd status [--json]
   pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]
-  pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]
+  pumuki sdd session --open --change=<change-id|auto> [--ttl-minutes=<n>] [--json]
   pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]
   pumuki sdd session --close [--json]
-  pumuki sdd sync-docs [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json]
-  pumuki sdd learn --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json]
-  pumuki sdd auto-sync --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json]
+  pumuki sdd sync-docs [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
+  pumuki sdd sync [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
+  pumuki sdd learn --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
+  pumuki sdd auto-sync --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
+  pumuki sdd evidence --scenario-id=<id> --test-command=<command> --test-status=passed|failed [--test-output=<path>] [--from-evidence=<path>] [--dry-run] [--json]
+  pumuki sdd state-sync [--scenario-id=<id>] [--status=todo|in_progress|blocked|done] [--from-evidence=<path>] [--board-path=<path>] [--force] [--dry-run] [--json]
+  aliases de --stage: RED=PRE_WRITE, GREEN=PRE_COMMIT, REFACTOR=PRE_PUSH, CLOSE=CI
 `.trim();
 
 const LOOP_RUN_POLICY: GatePolicy = {
@@ -164,16 +227,19 @@ const withOptionalLocation = (message: string, location?: string): string => {
 };
 
 const isLifecycleCommand = (value: string): value is LifecycleCommand =>
+  value === 'bootstrap' ||
   value === 'install' ||
   value === 'uninstall' ||
   value === 'remove' ||
   value === 'update' ||
   value === 'doctor' ||
   value === 'status' ||
+  value === 'watch' ||
   value === 'loop' ||
   value === 'sdd' ||
   value === 'adapter' ||
-  value === 'analytics';
+  value === 'analytics' ||
+  value === 'policy';
 
 const parseAdapterAgent = (value?: string): AdapterAgent => {
   const normalized = (value ?? '').trim();
@@ -185,15 +251,94 @@ const parseAdapterAgent = (value?: string): AdapterAgent => {
 
 const parseSddStage = (value?: string): SddStage => {
   const normalized = (value ?? 'PRE_COMMIT').trim().toUpperCase();
+  const aliases: Record<string, SddStage> = {
+    RED: 'PRE_WRITE',
+    GREEN: 'PRE_COMMIT',
+    REFACTOR: 'PRE_PUSH',
+    CLOSE: 'CI',
+  };
+  const mapped = aliases[normalized] ?? normalized;
   if (
-    normalized === 'PRE_WRITE' ||
-    normalized === 'PRE_COMMIT' ||
-    normalized === 'PRE_PUSH' ||
-    normalized === 'CI'
+    mapped === 'PRE_WRITE' ||
+    mapped === 'PRE_COMMIT' ||
+    mapped === 'PRE_PUSH' ||
+    mapped === 'CI'
+  ) {
+    return mapped;
+  }
+  throw new Error(`Unsupported SDD stage "${value}". Use PRE_WRITE, PRE_COMMIT, PRE_PUSH or CI.`);
+};
+
+const parseSddEvidencePath = (value: string): string => {
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    throw new Error(`Invalid --from-evidence value "${value}".`);
+  }
+  return normalized;
+};
+
+const parseSddEvidenceTestStatus = (value: string): SddEvidenceScaffoldTestStatus => {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'passed') {
+    return 'passed';
+  }
+  if (normalized === 'failed') {
+    return 'failed';
+  }
+  throw new Error(`Invalid --test-status value "${value}". Use passed|failed.`);
+};
+
+const parseSddStateSyncStatus = (value: string): SddStateSyncStatus => {
+  const normalized = value.trim().toLowerCase();
+  if (
+    normalized === 'todo' ||
+    normalized === 'in_progress' ||
+    normalized === 'blocked' ||
+    normalized === 'done'
   ) {
     return normalized;
   }
-  throw new Error(`Unsupported SDD stage "${value}". Use PRE_WRITE, PRE_COMMIT, PRE_PUSH or CI.`);
+  throw new Error(
+    `Invalid --status value "${value}". Use todo|in_progress|blocked|done for "pumuki sdd state-sync".`
+  );
+};
+
+const parseWatchStage = (value?: string): LifecycleWatchStage => {
+  const normalized = (value ?? 'PRE_COMMIT').trim().toUpperCase();
+  if (normalized === 'PRE_COMMIT' || normalized === 'PRE_PUSH' || normalized === 'CI') {
+    return normalized;
+  }
+  throw new Error(`Unsupported watch stage "${value}". Use PRE_COMMIT, PRE_PUSH or CI.`);
+};
+
+const parseWatchScope = (value?: string): LifecycleWatchScope => {
+  const normalized = (value ?? 'workingTree').trim();
+  if (
+    normalized === 'workingTree' ||
+    normalized === 'staged' ||
+    normalized === 'repoAndStaged' ||
+    normalized === 'repo'
+  ) {
+    return normalized;
+  }
+  throw new Error(
+    `Unsupported watch scope "${value}". Use workingTree, staged, repoAndStaged or repo.`
+  );
+};
+
+const parseWatchSeverityThreshold = (value?: string): LifecycleWatchSeverityThreshold => {
+  const normalized = (value ?? 'high').trim().toLowerCase();
+  if (
+    normalized === 'critical' ||
+    normalized === 'high' ||
+    normalized === 'medium' ||
+    normalized === 'low'
+  ) {
+    return normalized;
+  }
+  throw new Error(
+    `Unsupported watch severity threshold "${value}". Use critical, high, medium or low.`
+  );
 };
 
 const parseOutputPathFlag = (value: string, flagName: '--output-json' | '--output-markdown'): string => {
@@ -426,8 +571,19 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let purgeArtifacts = false;
   let updateSpec: ParsedArgs['updateSpec'];
   let json = false;
+  let bootstrapEnterprise = false;
+  let bootstrapAgent: ParsedArgs['bootstrapAgent'];
+  let installWithMcp = false;
+  let installMcpAgent: ParsedArgs['installMcpAgent'];
   let remoteChecks = false;
   let doctorDeep = false;
+  let watchStage: ParsedArgs['watchStage'];
+  let watchScope: ParsedArgs['watchScope'];
+  let watchIntervalMs: ParsedArgs['watchIntervalMs'];
+  let watchNotifyCooldownMs: ParsedArgs['watchNotifyCooldownMs'];
+  let watchSeverityThreshold: ParsedArgs['watchSeverityThreshold'];
+  let watchNotifyEnabled: ParsedArgs['watchNotifyEnabled'];
+  let watchIterations: ParsedArgs['watchIterations'];
   let sddCommand: ParsedArgs['sddCommand'];
   let loopCommand: ParsedArgs['loopCommand'];
   let loopSessionId: ParsedArgs['loopSessionId'];
@@ -442,14 +598,29 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let sddSyncDocsChange: ParsedArgs['sddSyncDocsChange'];
   let sddSyncDocsStage: ParsedArgs['sddSyncDocsStage'];
   let sddSyncDocsTask: ParsedArgs['sddSyncDocsTask'];
+  let sddSyncDocsFromEvidence: ParsedArgs['sddSyncDocsFromEvidence'];
   let sddLearnDryRun = false;
   let sddLearnChange: ParsedArgs['sddLearnChange'];
   let sddLearnStage: ParsedArgs['sddLearnStage'];
   let sddLearnTask: ParsedArgs['sddLearnTask'];
+  let sddLearnFromEvidence: ParsedArgs['sddLearnFromEvidence'];
   let sddAutoSyncDryRun = false;
   let sddAutoSyncChange: ParsedArgs['sddAutoSyncChange'];
   let sddAutoSyncStage: ParsedArgs['sddAutoSyncStage'];
   let sddAutoSyncTask: ParsedArgs['sddAutoSyncTask'];
+  let sddAutoSyncFromEvidence: ParsedArgs['sddAutoSyncFromEvidence'];
+  let sddEvidenceDryRun = false;
+  let sddEvidenceScenarioId: ParsedArgs['sddEvidenceScenarioId'];
+  let sddEvidenceTestCommand: ParsedArgs['sddEvidenceTestCommand'];
+  let sddEvidenceTestStatus: ParsedArgs['sddEvidenceTestStatus'];
+  let sddEvidenceTestOutput: ParsedArgs['sddEvidenceTestOutput'];
+  let sddEvidenceFromEvidence: ParsedArgs['sddEvidenceFromEvidence'];
+  let sddStateSyncDryRun = false;
+  let sddStateSyncScenarioId: ParsedArgs['sddStateSyncScenarioId'];
+  let sddStateSyncStatus: ParsedArgs['sddStateSyncStatus'];
+  let sddStateSyncFromEvidence: ParsedArgs['sddStateSyncFromEvidence'];
+  let sddStateSyncBoardPath: ParsedArgs['sddStateSyncBoardPath'];
+  let sddStateSyncForce = false;
   let adapterCommand: ParsedArgs['adapterCommand'];
   let adapterAgent: ParsedArgs['adapterAgent'];
   let adapterDryRun = false;
@@ -459,6 +630,78 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let analyticsSinceDays: ParsedArgs['analyticsSinceDays'];
   let analyticsJsonOutputPath: ParsedArgs['analyticsJsonOutputPath'];
   let analyticsMarkdownOutputPath: ParsedArgs['analyticsMarkdownOutputPath'];
+
+  if (commandRaw === 'watch') {
+    for (const arg of argv.slice(1)) {
+      if (arg === '--json') {
+        json = true;
+        continue;
+      }
+      if (arg === '--no-notify') {
+        watchNotifyEnabled = false;
+        continue;
+      }
+      if (arg === '--once') {
+        watchIterations = 1;
+        continue;
+      }
+      if (arg.startsWith('--stage=')) {
+        watchStage = parseWatchStage(arg.slice('--stage='.length));
+        continue;
+      }
+      if (arg.startsWith('--scope=')) {
+        watchScope = parseWatchScope(arg.slice('--scope='.length));
+        continue;
+      }
+      if (arg.startsWith('--severity=')) {
+        watchSeverityThreshold = parseWatchSeverityThreshold(
+          arg.slice('--severity='.length)
+        );
+        continue;
+      }
+      if (arg.startsWith('--interval-ms=')) {
+        const parsedInterval = Number.parseInt(arg.slice('--interval-ms='.length), 10);
+        if (!Number.isInteger(parsedInterval) || parsedInterval <= 0) {
+          throw new Error(`Invalid --interval-ms value "${arg}".`);
+        }
+        watchIntervalMs = parsedInterval;
+        continue;
+      }
+      if (arg.startsWith('--notify-cooldown-ms=')) {
+        const parsedCooldown = Number.parseInt(
+          arg.slice('--notify-cooldown-ms='.length),
+          10
+        );
+        if (!Number.isInteger(parsedCooldown) || parsedCooldown < 0) {
+          throw new Error(`Invalid --notify-cooldown-ms value "${arg}".`);
+        }
+        watchNotifyCooldownMs = parsedCooldown;
+        continue;
+      }
+      if (arg.startsWith('--iterations=')) {
+        const parsedIterations = Number.parseInt(arg.slice('--iterations='.length), 10);
+        if (!Number.isInteger(parsedIterations) || parsedIterations <= 0) {
+          throw new Error(`Invalid --iterations value "${arg}".`);
+        }
+        watchIterations = parsedIterations;
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    }
+
+    return {
+      command: commandRaw,
+      purgeArtifacts: false,
+      json,
+      watchStage: watchStage ?? 'PRE_COMMIT',
+      watchScope: watchScope ?? 'workingTree',
+      watchIntervalMs: watchIntervalMs ?? 3000,
+      watchNotifyCooldownMs: watchNotifyCooldownMs ?? 30_000,
+      watchSeverityThreshold: watchSeverityThreshold ?? 'high',
+      watchNotifyEnabled: watchNotifyEnabled !== false,
+      ...(typeof watchIterations === 'number' ? { watchIterations } : {}),
+    };
+  }
 
   if (commandRaw === 'analytics') {
     const subcommandRaw = argv[1] ?? '';
@@ -530,6 +773,44 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       }
     }
     return parsedAnalyticsArgs;
+  }
+
+  if (commandRaw === 'policy') {
+    const firstArg = argv[1];
+    const subcommandRaw =
+      typeof firstArg === 'string' && !firstArg.startsWith('--')
+        ? firstArg
+        : 'reconcile';
+    if (subcommandRaw !== 'reconcile') {
+      throw new Error(`Unsupported policy subcommand "${subcommandRaw}".\n\n${HELP_TEXT}`);
+    }
+    let policyStrict = false;
+    let policyApply = false;
+    const policyFlagsOffset =
+      typeof firstArg === 'string' && !firstArg.startsWith('--') ? 2 : 1;
+    for (const arg of argv.slice(policyFlagsOffset)) {
+      if (arg === '--json') {
+        json = true;
+        continue;
+      }
+      if (arg === '--strict') {
+        policyStrict = true;
+        continue;
+      }
+      if (arg === '--apply') {
+        policyApply = true;
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    }
+    return {
+      command: commandRaw,
+      purgeArtifacts: false,
+      json,
+      policyCommand: 'reconcile',
+      policyStrict,
+      policyApply,
+    };
   }
 
   if (commandRaw === 'loop') {
@@ -629,12 +910,15 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       subcommandRaw !== 'validate' &&
       subcommandRaw !== 'session' &&
       subcommandRaw !== 'sync-docs' &&
+      subcommandRaw !== 'sync' &&
       subcommandRaw !== 'learn' &&
-      subcommandRaw !== 'auto-sync'
+      subcommandRaw !== 'auto-sync' &&
+      subcommandRaw !== 'evidence' &&
+      subcommandRaw !== 'state-sync'
     ) {
       throw new Error(`Unsupported SDD subcommand "${subcommandRaw}".\n\n${HELP_TEXT}`);
     }
-    sddCommand = subcommandRaw;
+    sddCommand = subcommandRaw === 'sync' ? 'sync-docs' : subcommandRaw;
 
     for (const arg of argv.slice(2)) {
       if (arg === '--json') {
@@ -654,7 +938,15 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
           sddAutoSyncDryRun = true;
           continue;
         }
-        throw new Error(`--dry-run is only supported with "pumuki sdd sync-docs", "pumuki sdd learn" or "pumuki sdd auto-sync".\n\n${HELP_TEXT}`);
+        if (sddCommand === 'evidence') {
+          sddEvidenceDryRun = true;
+          continue;
+        }
+        if (sddCommand === 'state-sync') {
+          sddStateSyncDryRun = true;
+          continue;
+        }
+        throw new Error(`--dry-run is only supported with "pumuki sdd sync-docs", "pumuki sdd learn", "pumuki sdd auto-sync", "pumuki sdd evidence" or "pumuki sdd state-sync".\n\n${HELP_TEXT}`);
       }
       if (arg.startsWith('--stage=')) {
         if (sddCommand === 'validate') {
@@ -674,6 +966,13 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
           continue;
         }
         throw new Error(`--stage is only supported with "pumuki sdd validate", "pumuki sdd sync-docs", "pumuki sdd learn" or "pumuki sdd auto-sync".\n\n${HELP_TEXT}`);
+      }
+      if (arg.startsWith('--status=')) {
+        if (sddCommand !== 'state-sync') {
+          throw new Error(`--status is only supported with "pumuki sdd state-sync".\n\n${HELP_TEXT}`);
+        }
+        sddStateSyncStatus = parseSddStateSyncStatus(arg.slice('--status='.length));
+        continue;
       }
       if (arg === '--open') {
         if (sddCommand !== 'session') {
@@ -754,6 +1053,104 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         }
         throw new Error(`--task is only supported with "pumuki sdd sync-docs", "pumuki sdd learn" or "pumuki sdd auto-sync".\n\n${HELP_TEXT}`);
       }
+      if (arg.startsWith('--scenario-id=')) {
+        const scenarioId = arg.slice('--scenario-id='.length).trim();
+        if (scenarioId.length === 0) {
+          throw new Error(`Invalid --scenario-id value "${arg}".`);
+        }
+        if (sddCommand === 'evidence') {
+          sddEvidenceScenarioId = scenarioId;
+          continue;
+        }
+        if (sddCommand === 'state-sync') {
+          sddStateSyncScenarioId = scenarioId;
+          continue;
+        }
+        throw new Error(`--scenario-id is only supported with "pumuki sdd evidence" or "pumuki sdd state-sync".\n\n${HELP_TEXT}`);
+        continue;
+      }
+      if (arg.startsWith('--test-command=')) {
+        if (sddCommand !== 'evidence') {
+          throw new Error(`--test-command is only supported with "pumuki sdd evidence".\n\n${HELP_TEXT}`);
+        }
+        const testCommand = arg.slice('--test-command='.length).trim();
+        if (testCommand.length === 0) {
+          throw new Error(`Invalid --test-command value "${arg}".`);
+        }
+        sddEvidenceTestCommand = testCommand;
+        continue;
+      }
+      if (arg.startsWith('--test-status=')) {
+        if (sddCommand !== 'evidence') {
+          throw new Error(`--test-status is only supported with "pumuki sdd evidence".\n\n${HELP_TEXT}`);
+        }
+        sddEvidenceTestStatus = parseSddEvidenceTestStatus(arg.slice('--test-status='.length));
+        continue;
+      }
+      if (arg.startsWith('--test-output=')) {
+        if (sddCommand !== 'evidence') {
+          throw new Error(`--test-output is only supported with "pumuki sdd evidence".\n\n${HELP_TEXT}`);
+        }
+        const testOutputPath = arg.slice('--test-output='.length).trim();
+        if (testOutputPath.length === 0) {
+          throw new Error(`Invalid --test-output value "${arg}".`);
+        }
+        sddEvidenceTestOutput = testOutputPath;
+        continue;
+      }
+      if (arg.startsWith('--from-evidence=')) {
+        if (sddCommand === 'sync-docs') {
+          sddSyncDocsFromEvidence = parseSddEvidencePath(
+            arg.slice('--from-evidence='.length)
+          );
+          continue;
+        }
+        if (sddCommand === 'learn') {
+          sddLearnFromEvidence = parseSddEvidencePath(
+            arg.slice('--from-evidence='.length)
+          );
+          continue;
+        }
+        if (sddCommand === 'auto-sync') {
+          sddAutoSyncFromEvidence = parseSddEvidencePath(
+            arg.slice('--from-evidence='.length)
+          );
+          continue;
+        }
+        if (sddCommand === 'evidence') {
+          sddEvidenceFromEvidence = parseSddEvidencePath(
+            arg.slice('--from-evidence='.length)
+          );
+          continue;
+        }
+        if (sddCommand === 'state-sync') {
+          sddStateSyncFromEvidence = parseSddEvidencePath(
+            arg.slice('--from-evidence='.length)
+          );
+          continue;
+        }
+        throw new Error(
+          `--from-evidence is only supported with "pumuki sdd sync-docs", "pumuki sdd sync", "pumuki sdd learn", "pumuki sdd auto-sync", "pumuki sdd evidence" or "pumuki sdd state-sync".\n\n${HELP_TEXT}`
+        );
+      }
+      if (arg.startsWith('--board-path=')) {
+        if (sddCommand !== 'state-sync') {
+          throw new Error(`--board-path is only supported with "pumuki sdd state-sync".\n\n${HELP_TEXT}`);
+        }
+        const boardPath = arg.slice('--board-path='.length).trim();
+        if (boardPath.length === 0) {
+          throw new Error(`Invalid --board-path value "${arg}".`);
+        }
+        sddStateSyncBoardPath = boardPath;
+        continue;
+      }
+      if (arg === '--force') {
+        if (sddCommand !== 'state-sync') {
+          throw new Error(`--force is only supported with "pumuki sdd state-sync".\n\n${HELP_TEXT}`);
+        }
+        sddStateSyncForce = true;
+        continue;
+      }
       if (arg.startsWith('--ttl-minutes=')) {
         if (sddCommand !== 'session') {
           throw new Error(`--ttl-minutes is only supported with "pumuki sdd session".\n\n${HELP_TEXT}`);
@@ -786,9 +1183,13 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       };
     }
     if (sddCommand === 'sync-docs') {
-      if (sddSessionAction || sddChangeId || typeof sddTtlMinutes === 'number') {
+      if (
+        sddSessionAction ||
+        sddChangeId ||
+        typeof sddTtlMinutes === 'number'
+      ) {
         throw new Error(
-          `"pumuki sdd sync-docs" only supports [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json].\n\n${HELP_TEXT}`
+          `"pumuki sdd sync-docs" only supports [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json].\n\n${HELP_TEXT}`
         );
       }
       return {
@@ -800,12 +1201,15 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         ...(sddSyncDocsChange ? { sddSyncDocsChange } : {}),
         ...(sddSyncDocsStage ? { sddSyncDocsStage } : {}),
         ...(sddSyncDocsTask ? { sddSyncDocsTask } : {}),
+        ...(sddSyncDocsFromEvidence
+          ? { sddSyncDocsFromEvidence }
+          : {}),
       };
     }
     if (sddCommand === 'learn') {
       if (sddSessionAction || sddChangeId || typeof sddTtlMinutes === 'number') {
         throw new Error(
-          `"pumuki sdd learn" only supports --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json].\n\n${HELP_TEXT}`
+          `"pumuki sdd learn" only supports --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json].\n\n${HELP_TEXT}`
         );
       }
       if (!sddLearnChange || sddLearnChange.length === 0) {
@@ -820,12 +1224,13 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         sddLearnChange,
         ...(sddLearnStage ? { sddLearnStage } : {}),
         ...(sddLearnTask ? { sddLearnTask } : {}),
+        ...(sddLearnFromEvidence ? { sddLearnFromEvidence } : {}),
       };
     }
     if (sddCommand === 'auto-sync') {
       if (sddSessionAction || sddChangeId || typeof sddTtlMinutes === 'number') {
         throw new Error(
-          `"pumuki sdd auto-sync" only supports --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json].\n\n${HELP_TEXT}`
+          `"pumuki sdd auto-sync" only supports --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json].\n\n${HELP_TEXT}`
         );
       }
       if (!sddAutoSyncChange || sddAutoSyncChange.length === 0) {
@@ -840,6 +1245,68 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         sddAutoSyncChange,
         ...(sddAutoSyncStage ? { sddAutoSyncStage } : {}),
         ...(sddAutoSyncTask ? { sddAutoSyncTask } : {}),
+        ...(sddAutoSyncFromEvidence ? { sddAutoSyncFromEvidence } : {}),
+      };
+    }
+    if (sddCommand === 'evidence') {
+      if (
+        sddSessionAction ||
+        sddChangeId ||
+        typeof sddTtlMinutes === 'number' ||
+        sddSyncDocsChange ||
+        sddLearnChange ||
+        sddAutoSyncChange
+      ) {
+        throw new Error(
+          `"pumuki sdd evidence" only supports --scenario-id=<id> --test-command=<command> --test-status=passed|failed [--test-output=<path>] [--from-evidence=<path>] [--dry-run] [--json].\n\n${HELP_TEXT}`
+        );
+      }
+      if (!sddEvidenceScenarioId) {
+        throw new Error(`Missing --scenario-id=<id> for "pumuki sdd evidence".\n\n${HELP_TEXT}`);
+      }
+      if (!sddEvidenceTestCommand) {
+        throw new Error(`Missing --test-command=<command> for "pumuki sdd evidence".\n\n${HELP_TEXT}`);
+      }
+      if (!sddEvidenceTestStatus) {
+        throw new Error(`Missing --test-status=passed|failed for "pumuki sdd evidence".\n\n${HELP_TEXT}`);
+      }
+      return {
+        command: commandRaw,
+        purgeArtifacts: false,
+        json,
+        sddCommand,
+        sddEvidenceDryRun,
+        sddEvidenceScenarioId,
+        sddEvidenceTestCommand,
+        sddEvidenceTestStatus,
+        ...(sddEvidenceTestOutput ? { sddEvidenceTestOutput } : {}),
+        ...(sddEvidenceFromEvidence ? { sddEvidenceFromEvidence } : {}),
+      };
+    }
+    if (sddCommand === 'state-sync') {
+      if (
+        sddSessionAction ||
+        sddChangeId ||
+        typeof sddTtlMinutes === 'number' ||
+        sddSyncDocsChange ||
+        sddLearnChange ||
+        sddAutoSyncChange
+      ) {
+        throw new Error(
+          `"pumuki sdd state-sync" only supports [--scenario-id=<id>] [--status=todo|in_progress|blocked|done] [--from-evidence=<path>] [--board-path=<path>] [--force] [--dry-run] [--json].\n\n${HELP_TEXT}`
+        );
+      }
+      return {
+        command: commandRaw,
+        purgeArtifacts: false,
+        json,
+        sddCommand,
+        sddStateSyncDryRun,
+        ...(sddStateSyncScenarioId ? { sddStateSyncScenarioId } : {}),
+        ...(sddStateSyncStatus ? { sddStateSyncStatus } : {}),
+        ...(sddStateSyncFromEvidence ? { sddStateSyncFromEvidence } : {}),
+        ...(sddStateSyncBoardPath ? { sddStateSyncBoardPath } : {}),
+        ...(sddStateSyncForce ? { sddStateSyncForce: true } : {}),
       };
     }
 
@@ -905,6 +1372,31 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       json = true;
       continue;
     }
+    if (arg === '--with-mcp') {
+      if (commandRaw !== 'install') {
+        throw new Error(`--with-mcp is only supported with "pumuki install".\n\n${HELP_TEXT}`);
+      }
+      installWithMcp = true;
+      continue;
+    }
+    if (arg === '--enterprise') {
+      if (commandRaw !== 'bootstrap') {
+        throw new Error(`--enterprise is only supported with "pumuki bootstrap".\n\n${HELP_TEXT}`);
+      }
+      bootstrapEnterprise = true;
+      continue;
+    }
+    if (arg.startsWith('--agent=')) {
+      if (commandRaw === 'install') {
+        installMcpAgent = parseAdapterAgent(arg.slice('--agent='.length).trim());
+        continue;
+      }
+      if (commandRaw === 'bootstrap') {
+        bootstrapAgent = parseAdapterAgent(arg.slice('--agent='.length).trim());
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    }
     if (arg === '--remote-checks') {
       remoteChecks = true;
       continue;
@@ -935,12 +1427,31 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   if (doctorDeep && commandRaw !== 'doctor') {
     throw new Error(`--deep is only supported with "pumuki doctor".\n\n${HELP_TEXT}`);
   }
+  if (commandRaw !== 'bootstrap' && bootstrapEnterprise) {
+    throw new Error(`--enterprise is only supported with "pumuki bootstrap".\n\n${HELP_TEXT}`);
+  }
+  if (commandRaw !== 'bootstrap' && bootstrapAgent) {
+    throw new Error(`--agent is only supported with "pumuki bootstrap" or "pumuki install --with-mcp".\n\n${HELP_TEXT}`);
+  }
+  if (commandRaw !== 'install' && installWithMcp) {
+    throw new Error(`--with-mcp is only supported with "pumuki install".\n\n${HELP_TEXT}`);
+  }
+  if (commandRaw !== 'install' && installMcpAgent) {
+    throw new Error(`--agent is only supported with "pumuki install --with-mcp".\n\n${HELP_TEXT}`);
+  }
+  if (commandRaw === 'install' && installMcpAgent && !installWithMcp) {
+    throw new Error(`--agent is only supported with "pumuki install --with-mcp".\n\n${HELP_TEXT}`);
+  }
 
   return {
     command: commandRaw,
     purgeArtifacts,
     updateSpec,
     json,
+    ...(commandRaw === 'bootstrap' ? { bootstrapEnterprise: true } : {}),
+    ...(bootstrapAgent ? { bootstrapAgent } : {}),
+    ...(installWithMcp ? { installWithMcp: true } : {}),
+    ...(installMcpAgent ? { installMcpAgent } : {}),
     ...(remoteChecks ? { remoteChecks: true } : {}),
     ...(doctorDeep ? { doctorDeep: true } : {}),
   };
@@ -971,7 +1482,31 @@ const printDoctorReport = (
   remoteCiDiagnostics?: RemoteCiDiagnostics
 ): void => {
   writeInfo(`[pumuki] repo: ${report.repoRoot}`);
-  writeInfo(`[pumuki] package version: ${report.packageVersion}`);
+  writeInfo(`[pumuki] effective version: ${report.version.effective}`);
+  writeInfo(`[pumuki] runtime version: ${report.version.runtime}`);
+  writeInfo(
+    `[pumuki] consumer installed version: ${report.version.consumerInstalled ?? 'unknown'}`
+  );
+  writeInfo(
+    `[pumuki] lifecycle installed version: ${report.version.lifecycleInstalled ?? 'unknown'}`
+  );
+  if (report.version.driftWarning) {
+    writeInfo(`[pumuki] version drift: ${report.version.driftWarning}`);
+    if (report.version.alignmentCommand) {
+      writeInfo(`[pumuki] version remediation: ${report.version.alignmentCommand}`);
+    }
+  }
+  if (report.version.pathExecutionWarning) {
+    writeInfo(`[pumuki] execution warning: ${report.version.pathExecutionWarning}`);
+    if (report.version.pathExecutionWorkaroundCommand) {
+      writeInfo(
+        `[pumuki] execution workaround: ${report.version.pathExecutionWorkaroundCommand} <command>`
+      );
+    }
+  }
+  writeInfo(
+    `[pumuki] hooks path: ${report.hooksDirectory} (${report.hooksDirectoryResolution})`
+  );
   writeInfo(
     `[pumuki] tracked node_modules paths: ${report.trackedNodeModulesPaths.length}`
   );
@@ -1021,6 +1556,8 @@ const printDoctorReport = (
 const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->mcp->ai_gate->ai_evidence';
 const PRE_WRITE_INSTALL_REMEDIATION_COMMAND =
   'npx --yes --package pumuki@latest pumuki install';
+const PRE_WRITE_POLICY_RECONCILE_COMMAND =
+  'npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json';
 
 type PreWriteValidationEnvelope = {
   sdd: ReturnType<typeof evaluateSddPolicy>;
@@ -1055,25 +1592,42 @@ type PreWriteOpenSpecBootstrapTrace = {
 
 type LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate: typeof emitAuditSummaryNotificationFromAiGate;
+  emitGateBlockedNotification: typeof emitGateBlockedNotification;
   runPlatformGate: typeof runPlatformGate;
+  runLifecycleWatch: typeof runLifecycleWatch;
   collectRemoteCiDiagnostics: typeof collectRemoteCiDiagnostics;
 };
 
 const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate,
+  emitGateBlockedNotification,
   runPlatformGate,
+  runLifecycleWatch,
   collectRemoteCiDiagnostics,
 };
 
 const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_MISSING: 'Regenera evidencia ejecutando una auditoría completa antes de continuar.',
   EVIDENCE_INVALID: 'Corrige el contrato de .ai_evidence.json y vuelve a ejecutar el gate.',
+  EVIDENCE_INTEGRITY_MISSING: 'Refresca evidencia para regenerar metadatos de integridad.',
   EVIDENCE_CHAIN_INVALID: 'Regenera evidencia para restablecer la cadena criptográfica íntegra.',
   EVIDENCE_STALE: 'Refresca evidencia para este repo y rama.',
   EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera evidencia desde este repositorio.',
   EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual.',
   EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
   EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura unevaluated=0 y coverage_ratio=1.',
+  EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
+    'No hay active_rule_ids para plataforma de código detectada. Reconcilia policy/skills en modo estricto y revalida PRE_WRITE.',
+  EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING:
+    'Reconcilia policy/skills en modo estricto y materializa reglas críticas (p.ej. skills.ios.critical-test-quality).',
+  EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE:
+    'Reconcilia policy/skills en modo estricto para completar enforcement crítico transversal.',
+  EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
+    'Completa contrato skills/policy para el stage actual y vuelve a validar.',
+  EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
+    'Reduce el worktree pendiente en slices atómicos antes de continuar.',
+  EVIDENCE_PREWRITE_WORKTREE_WARN:
+    'Particiona cambios ahora para evitar bloqueos tardíos en commit/push.',
   GITFLOW_PROTECTED_BRANCH: 'Trabaja en feature/* y evita ramas protegidas.',
   MCP_ENTERPRISE_RECEIPT_MISSING: 'Invoca ai_gate_check desde pumuki-enterprise MCP antes de PRE_WRITE.',
   MCP_ENTERPRISE_RECEIPT_INVALID: 'Corrige recibo MCP y vuelve a invocar ai_gate_check.',
@@ -1082,10 +1636,22 @@ const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   MCP_ENTERPRISE_RECEIPT_REPO_ROOT_MISMATCH: 'Genera el recibo MCP en este mismo repositorio.',
 };
 
+const PRE_WRITE_DEFAULT_REMEDIATION =
+  'Corrige la causa bloqueante y vuelve a ejecutar: npx --yes --package pumuki@latest pumuki-pre-write';
+
 const PRE_WRITE_OPENSPEC_AUTOREMEDIABLE_CODES = new Set<string>([
   'OPENSPEC_MISSING',
   'OPENSPEC_VERSION_UNSUPPORTED',
   'OPENSPEC_PROJECT_MISSING',
+]);
+const PRE_WRITE_POLICY_RECONCILE_CODES = new Set<string>([
+  'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES',
+  'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+  'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE',
+]);
+const PRE_WRITE_ATOMIC_SLICE_CODES = new Set<string>([
+  'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT',
+  'EVIDENCE_PREWRITE_WORKTREE_WARN',
 ]);
 
 const resolvePreWriteNextAction = (params: {
@@ -1101,6 +1667,31 @@ const resolvePreWriteNextAction = (params: {
   if (!params.aiGate || params.aiGate.allowed) {
     return undefined;
   }
+  const policyReconcileViolation = params.aiGate.violations.find((violation) =>
+    PRE_WRITE_POLICY_RECONCILE_CODES.has(violation.code)
+  );
+  if (policyReconcileViolation) {
+    return {
+      reason: policyReconcileViolation.code,
+      command: PRE_WRITE_POLICY_RECONCILE_COMMAND,
+    };
+  }
+  const atomicSliceViolation = params.aiGate.violations.find((violation) =>
+    PRE_WRITE_ATOMIC_SLICE_CODES.has(violation.code)
+  );
+  if (atomicSliceViolation) {
+    const plan = collectWorktreeAtomicSlices({
+      repoRoot: params.aiGate.repo_state.repo_root,
+      maxSlices: 3,
+      maxFilesPerSlice: 4,
+    });
+    const firstSliceCommand = plan.slices[0]?.staged_command ?? 'git add -p';
+    return {
+      reason: atomicSliceViolation.code,
+      command:
+        `${firstSliceCommand} && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json`,
+    };
+  }
   const hasMcpViolation = params.aiGate.violations.some((violation) =>
     violation.code.startsWith('MCP_ENTERPRISE_RECEIPT_')
   );
@@ -1111,6 +1702,16 @@ const resolvePreWriteNextAction = (params: {
     reason: 'MCP_ENTERPRISE_RECEIPT',
     command: 'npx --yes --package pumuki@latest pumuki-pre-write',
   };
+};
+
+const resolvePreWriteBlockedRemediation = (params: {
+  causeCode: string;
+  nextAction?: PreWriteValidationEnvelope['next_action'];
+}): string => {
+  if (params.nextAction?.command) {
+    return params.nextAction.command;
+  }
+  return PRE_WRITE_HINTS_BY_CODE[params.causeCode] ?? PRE_WRITE_DEFAULT_REMEDIATION;
 };
 
 const wrapPreWritePanelLine = (value: string, width: number): string[] => {
@@ -1166,6 +1767,7 @@ const buildPreWriteValidationPanel = (params: {
     `Evidence: kind=${params.aiGate.evidence.kind} age=${params.aiGate.evidence.age_seconds ?? 'n/a'}s max=${params.aiGate.evidence.max_age_seconds}s`,
     `Evidence source: source=${params.aiGate.evidence.source.source} path=${params.aiGate.evidence.source.path} digest=${params.aiGate.evidence.source.digest ?? 'null'} generated_at=${params.aiGate.evidence.source.generated_at ?? 'null'}`,
     `MCP receipt: required=${receipt.required ? 'yes' : 'no'} kind=${receipt.kind} age=${receipt.age_seconds ?? 'n/a'}s max=${receipt.max_age_seconds ?? 'n/a'}s`,
+    `Skills contract: enforced=${params.aiGate.skills_contract?.enforced ? 'yes' : 'no'} status=${params.aiGate.skills_contract?.status ?? 'n/a'} platforms=${params.aiGate.skills_contract?.detected_platforms.join(',') ?? 'none'}`,
     `Auto-heal: attempted=${params.automation.attempted ? 'yes' : 'no'} actions=${params.automation.actions.length}`,
     `Violations: ${params.aiGate.violations.length}`,
   ];
@@ -1301,6 +1903,98 @@ export const runLifecycleCli = async (
     const parsed = parseLifecycleCliArgs(argv);
 
     switch (parsed.command) {
+      case 'bootstrap': {
+        const installResult = runLifecycleInstall();
+        const agent = parsed.bootstrapAgent ?? 'codex';
+        const adapterResult = runLifecycleAdapterInstall({
+          agent,
+        });
+        const doctorReport = runLifecycleDoctor({
+          deep: true,
+        });
+        const adapterCheck = doctorReport.deep?.checks.find(
+          (check) => check.id === 'adapter-wiring'
+        );
+        const blocking = doctorHasBlockingIssues(doctorReport);
+
+        if (parsed.json) {
+          writeInfo(
+            JSON.stringify(
+              {
+                command: 'bootstrap',
+                enterprise: parsed.bootstrapEnterprise === true,
+                install: {
+                  repo_root: installResult.repoRoot,
+                  version: installResult.version,
+                  hooks_changed: installResult.changedHooks,
+                  openspec: installResult.openSpecBootstrap
+                    ? {
+                        installed: installResult.openSpecBootstrap.packageInstalled,
+                        project_initialized: installResult.openSpecBootstrap.projectInitialized,
+                        actions: installResult.openSpecBootstrap.actions,
+                        skipped_reason: installResult.openSpecBootstrap.skippedReason ?? null,
+                      }
+                    : null,
+                },
+                mcp: {
+                  agent: adapterResult.agent,
+                  changed_files: adapterResult.changedFiles,
+                  adapter_health: adapterCheck
+                    ? {
+                        status: adapterCheck.status,
+                        severity: adapterCheck.severity,
+                        message: adapterCheck.message,
+                        remediation: adapterCheck.remediation ?? null,
+                      }
+                    : null,
+                },
+                doctor: {
+                  blocking,
+                  issues: doctorReport.issues,
+                  deep: doctorReport.deep ?? null,
+                },
+              },
+              null,
+              2
+            )
+          );
+        } else {
+          writeInfo(
+            `[pumuki] bootstrap enterprise: repo=${installResult.repoRoot} version=${installResult.version}`
+          );
+          writeInfo(
+            `[pumuki] bootstrap install: hooks changed=${installResult.changedHooks.join(', ') || 'none'}`
+          );
+          if (installResult.openSpecBootstrap) {
+            writeInfo(
+              `[pumuki] bootstrap openspec: installed=${installResult.openSpecBootstrap.packageInstalled ? 'yes' : 'no'} project=${installResult.openSpecBootstrap.projectInitialized ? 'yes' : 'no'} actions=${installResult.openSpecBootstrap.actions.join(', ') || 'none'}`
+            );
+            if (installResult.openSpecBootstrap.skippedReason === 'NO_PACKAGE_JSON') {
+              writeInfo('[pumuki] bootstrap openspec skipped npm install (package.json not found)');
+            }
+          }
+          writeInfo(
+            `[pumuki] bootstrap mcp: agent=${adapterResult.agent} changed=${adapterResult.changedFiles.length}`
+          );
+          if (adapterResult.changedFiles.length > 0) {
+            writeInfo(`[pumuki] bootstrap mcp files: ${adapterResult.changedFiles.join(', ')}`);
+          }
+          if (adapterCheck) {
+            writeInfo(
+              `[pumuki] bootstrap doctor deep adapter-wiring: status=${adapterCheck.status.toUpperCase()} severity=${adapterCheck.severity.toUpperCase()} message=${adapterCheck.message}`
+            );
+            if (adapterCheck.remediation) {
+              writeInfo(`[pumuki] bootstrap doctor remediation: ${adapterCheck.remediation}`);
+            }
+          }
+        }
+
+        if (blocking) {
+          writeError('[pumuki] bootstrap enterprise detected blocking issues. Review doctor output.');
+          return 1;
+        }
+        return 0;
+      }
       case 'install': {
         const result = runLifecycleInstall();
         writeInfo(
@@ -1312,6 +2006,31 @@ export const runLifecycleCli = async (
           );
           if (result.openSpecBootstrap.skippedReason === 'NO_PACKAGE_JSON') {
             writeInfo('[pumuki] openspec bootstrap skipped npm install (package.json not found)');
+          }
+        }
+        if (parsed.installWithMcp) {
+          const adapterResult = runLifecycleAdapterInstall({
+            agent: parsed.installMcpAgent ?? 'codex',
+          });
+          writeInfo(
+            `[pumuki] mcp wiring: agent=${adapterResult.agent} changed=${adapterResult.changedFiles.length}`
+          );
+          if (adapterResult.changedFiles.length > 0) {
+            writeInfo(`[pumuki] mcp files: ${adapterResult.changedFiles.join(', ')}`);
+          }
+          const deepReport = runLifecycleDoctor({
+            deep: true,
+          });
+          const adapterCheck = deepReport.deep?.checks.find(
+            (check) => check.id === 'adapter-wiring'
+          );
+          if (adapterCheck) {
+            writeInfo(
+              `[pumuki] mcp health: status=${adapterCheck.status.toUpperCase()} severity=${adapterCheck.severity.toUpperCase()} message=${adapterCheck.message}`
+            );
+            if (adapterCheck.remediation) {
+              writeInfo(`[pumuki] mcp health remediation: ${adapterCheck.remediation}`);
+            }
           }
         }
         return 0;
@@ -1401,9 +2120,32 @@ export const runLifecycleCli = async (
           );
         } else {
           writeInfo(`[pumuki] repo: ${status.repoRoot}`);
-          writeInfo(`[pumuki] package version: ${status.packageVersion}`);
+          writeInfo(`[pumuki] effective version: ${status.version.effective}`);
+          writeInfo(`[pumuki] runtime version: ${status.version.runtime}`);
+          writeInfo(
+            `[pumuki] consumer installed version: ${status.version.consumerInstalled ?? 'unknown'}`
+          );
+          writeInfo(
+            `[pumuki] lifecycle installed version: ${status.version.lifecycleInstalled ?? 'unknown'}`
+          );
+          if (status.version.driftWarning) {
+            writeInfo(`[pumuki] version drift: ${status.version.driftWarning}`);
+            if (status.version.alignmentCommand) {
+              writeInfo(`[pumuki] version remediation: ${status.version.alignmentCommand}`);
+            }
+          }
+          if (status.version.pathExecutionWarning) {
+            writeInfo(`[pumuki] execution warning: ${status.version.pathExecutionWarning}`);
+            if (status.version.pathExecutionWorkaroundCommand) {
+              writeInfo(
+                `[pumuki] execution workaround: ${status.version.pathExecutionWorkaroundCommand} <command>`
+              );
+            }
+          }
           writeInfo(`[pumuki] lifecycle installed: ${status.lifecycleState.installed ?? 'false'}`);
-          writeInfo(`[pumuki] lifecycle version: ${status.lifecycleState.version ?? 'unknown'}`);
+          writeInfo(
+            `[pumuki] hooks path: ${status.hooksDirectory} (${status.hooksDirectoryResolution})`
+          );
           writeInfo(
             `[pumuki] hooks: pre-commit=${status.hookStatus['pre-commit'].managedBlockPresent ? 'managed' : 'missing'}, pre-push=${status.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
           );
@@ -1418,6 +2160,35 @@ export const runLifecycleCli = async (
           if (remoteCiDiagnostics) {
             printRemoteCiDiagnostics(remoteCiDiagnostics);
           }
+        }
+        return 0;
+      }
+      case 'watch': {
+        const watchResult = await activeDependencies.runLifecycleWatch(
+          {
+            repoRoot: process.cwd(),
+            stage: parsed.watchStage,
+            scope: parsed.watchScope,
+            intervalMs: parsed.watchIntervalMs,
+            notifyCooldownMs: parsed.watchNotifyCooldownMs,
+            severityThreshold: parsed.watchSeverityThreshold,
+            notifyEnabled: parsed.watchNotifyEnabled,
+            maxIterations: parsed.watchIterations,
+            onTick: parsed.json
+              ? undefined
+              : (tick) => {
+                  writeInfo(
+                    `[pumuki][watch] tick=${tick.tick} stage=${tick.stage} scope=${tick.scope} changed=${tick.changed ? 'yes' : 'no'} evaluated=${tick.evaluated ? 'yes' : 'no'} exit=${tick.gateExitCode ?? 'n/a'} threshold=${tick.threshold} matched=${tick.findingsAtOrAboveThreshold} notification=${tick.notification}`
+                  );
+                },
+          }
+        );
+        if (parsed.json) {
+          writeInfo(JSON.stringify(watchResult, null, 2));
+        } else {
+          writeInfo(
+            `[pumuki][watch] done ticks=${watchResult.ticks} evaluations=${watchResult.evaluations} sent=${watchResult.notificationsSent} suppressed=${watchResult.notificationsSuppressed}`
+          );
         }
         return 0;
       }
@@ -1642,6 +2413,35 @@ export const runLifecycleCli = async (
         }
         return 1;
       }
+      case 'policy': {
+        if (parsed.policyCommand === 'reconcile') {
+          const report = runPolicyReconcile({
+            repoRoot: process.cwd(),
+            strict: parsed.policyStrict === true,
+            apply: parsed.policyApply === true,
+          });
+          if (parsed.json) {
+            writeInfo(JSON.stringify(report, null, 2));
+          } else {
+            writeInfo(
+              `[pumuki][policy] reconcile status=${report.summary.status} total=${report.summary.total} blocking=${report.summary.blocking} warnings=${report.summary.warnings} strict_requested=${report.strictRequested ? 'yes' : 'no'} apply_requested=${report.applyRequested ? 'yes' : 'no'}`
+            );
+            writeInfo(
+              `[pumuki][policy] autofix status=${report.autofix.status} attempted=${report.autofix.attempted ? 'yes' : 'no'} actions=${report.autofix.actions.length} details=${report.autofix.details}`
+            );
+            for (const drift of report.drifts) {
+              writeInfo(
+                `[pumuki][policy] ${drift.code} severity=${drift.severity} blocking=${drift.blocking ? 'yes' : 'no'} message=${drift.message}`
+              );
+              if (drift.remediation) {
+                writeInfo(`[pumuki][policy] remediation: ${drift.remediation}`);
+              }
+            }
+          }
+          return report.summary.blocking > 0 ? 1 : 0;
+        }
+        return 1;
+      }
       case 'sdd': {
         if (parsed.sddCommand === 'status') {
           const sddStatus = readSddStatus();
@@ -1712,7 +2512,7 @@ export const runLifecycleCli = async (
             }
           }
           const shouldEvaluateAiGate = result.stage === 'PRE_WRITE';
-          let aiGate = shouldEvaluateAiGate
+          let aiGate: ReturnType<typeof evaluateAiGate> | null = shouldEvaluateAiGate
             ? runEnterpriseAiGateCheck({
               repoRoot: process.cwd(),
               stage: result.stage,
@@ -1818,9 +2618,34 @@ export const runLifecycleCli = async (
             });
           }
           if (!result.decision.allowed) {
+            activeDependencies.emitGateBlockedNotification({
+              repoRoot: process.cwd(),
+              stage: result.stage,
+              totalViolations: aiGate?.violations.length ?? 0,
+              causeCode: result.decision.code,
+              causeMessage: result.decision.message,
+              remediation: resolvePreWriteBlockedRemediation({
+                causeCode: result.decision.code,
+                nextAction,
+              }),
+            });
             return 1;
           }
           if (aiGate && !aiGate.allowed) {
+            const firstViolation = aiGate.violations[0];
+            const causeCode = firstViolation?.code ?? 'AI_GATE_BLOCKED';
+            const causeMessage = firstViolation?.message ?? 'AI gate blocked PRE_WRITE stage.';
+            activeDependencies.emitGateBlockedNotification({
+              repoRoot: process.cwd(),
+              stage: result.stage,
+              totalViolations: aiGate.violations.length,
+              causeCode,
+              causeMessage,
+              remediation: resolvePreWriteBlockedRemediation({
+                causeCode,
+                nextAction,
+              }),
+            });
             return 1;
           }
           return 0;
@@ -1868,12 +2693,13 @@ export const runLifecycleCli = async (
             change: parsed.sddSyncDocsChange,
             stage: parsed.sddSyncDocsStage,
             task: parsed.sddSyncDocsTask,
+            fromEvidencePath: parsed.sddSyncDocsFromEvidence,
           });
           if (parsed.json) {
             writeInfo(JSON.stringify(syncResult, null, 2));
           } else {
             writeInfo(
-              `[pumuki][sdd] sync-docs dry_run=${syncResult.dryRun ? 'yes' : 'no'} updated=${syncResult.updated ? 'yes' : 'no'} files=${syncResult.files.length} change=${syncResult.context.change ?? 'none'} stage=${syncResult.context.stage ?? 'none'} task=${syncResult.context.task ?? 'none'}`
+              `[pumuki][sdd] sync-docs dry_run=${syncResult.dryRun ? 'yes' : 'no'} updated=${syncResult.updated ? 'yes' : 'no'} files=${syncResult.files.length} change=${syncResult.context.change ?? 'none'} stage=${syncResult.context.stage ?? 'none'} task=${syncResult.context.task ?? 'none'} from_evidence=${syncResult.context.fromEvidencePath ?? 'default'}`
             );
             for (const file of syncResult.files) {
               writeInfo(
@@ -1893,12 +2719,13 @@ export const runLifecycleCli = async (
             change: parsed.sddLearnChange,
             stage: parsed.sddLearnStage,
             task: parsed.sddLearnTask,
+            fromEvidencePath: parsed.sddLearnFromEvidence,
           });
           if (parsed.json) {
             writeInfo(JSON.stringify(learnResult, null, 2));
           } else {
             writeInfo(
-              `[pumuki][sdd] learn dry_run=${learnResult.dryRun ? 'yes' : 'no'} change=${learnResult.context.change} stage=${learnResult.context.stage ?? 'none'} task=${learnResult.context.task ?? 'none'} written=${learnResult.learning.written ? 'yes' : 'no'} digest=${learnResult.learning.digest}`
+              `[pumuki][sdd] learn dry_run=${learnResult.dryRun ? 'yes' : 'no'} change=${learnResult.context.change} stage=${learnResult.context.stage ?? 'none'} task=${learnResult.context.task ?? 'none'} from_evidence=${learnResult.context.fromEvidencePath ?? 'default'} written=${learnResult.learning.written ? 'yes' : 'no'} digest=${learnResult.learning.digest}`
             );
             writeInfo(
               `[pumuki][sdd] learning_path=${learnResult.learning.path} failed=${learnResult.learning.artifact.failed_patterns.length} successful=${learnResult.learning.artifact.successful_patterns.length} anomalies=${learnResult.learning.artifact.gate_anomalies.length} updates=${learnResult.learning.artifact.rule_updates.length}`
@@ -1913,12 +2740,13 @@ export const runLifecycleCli = async (
             change: parsed.sddAutoSyncChange,
             stage: parsed.sddAutoSyncStage,
             task: parsed.sddAutoSyncTask,
+            fromEvidencePath: parsed.sddAutoSyncFromEvidence,
           });
           if (parsed.json) {
             writeInfo(JSON.stringify(autoSyncResult, null, 2));
           } else {
             writeInfo(
-              `[pumuki][sdd] auto-sync dry_run=${autoSyncResult.dryRun ? 'yes' : 'no'} change=${autoSyncResult.context.change} stage=${autoSyncResult.context.stage ?? 'none'} task=${autoSyncResult.context.task ?? 'none'} updated=${autoSyncResult.syncDocs.updated ? 'yes' : 'no'} files=${autoSyncResult.syncDocs.files.length} learning_written=${autoSyncResult.learning.written ? 'yes' : 'no'}`
+              `[pumuki][sdd] auto-sync dry_run=${autoSyncResult.dryRun ? 'yes' : 'no'} change=${autoSyncResult.context.change} stage=${autoSyncResult.context.stage ?? 'none'} task=${autoSyncResult.context.task ?? 'none'} from_evidence=${autoSyncResult.context.fromEvidencePath ?? 'default'} updated=${autoSyncResult.syncDocs.updated ? 'yes' : 'no'} files=${autoSyncResult.syncDocs.files.length} learning_written=${autoSyncResult.learning.written ? 'yes' : 'no'}`
             );
             writeInfo(
               `[pumuki][sdd] learning_path=${autoSyncResult.learning.path} digest=${autoSyncResult.learning.digest}`
@@ -1928,6 +2756,59 @@ export const runLifecycleCli = async (
                 `[pumuki][sdd] file=${file.path} updated=${file.updated ? 'yes' : 'no'} before=${file.beforeDigest} after=${file.afterDigest}`
               );
             }
+          }
+          return 0;
+        }
+        if (parsed.sddCommand === 'evidence') {
+          const evidenceResult = runSddEvidenceScaffold({
+            repoRoot: process.cwd(),
+            dryRun: parsed.sddEvidenceDryRun === true,
+            scenarioId: parsed.sddEvidenceScenarioId,
+            testCommand: parsed.sddEvidenceTestCommand,
+            testStatus: parsed.sddEvidenceTestStatus,
+            testOutputPath: parsed.sddEvidenceTestOutput,
+            fromEvidencePath: parsed.sddEvidenceFromEvidence,
+          });
+          if (parsed.json) {
+            writeInfo(JSON.stringify(evidenceResult, null, 2));
+          } else {
+            writeInfo(
+              `[pumuki][sdd] evidence dry_run=${evidenceResult.dryRun ? 'yes' : 'no'} scenario=${evidenceResult.context.scenarioId} status=${evidenceResult.context.testStatus} output=${evidenceResult.output.path} written=${evidenceResult.output.written ? 'yes' : 'no'}`
+            );
+            writeInfo(
+              `[pumuki][sdd] test_command=${evidenceResult.context.testCommand} test_output=${evidenceResult.context.testOutputPath ?? 'none'} from_evidence=${evidenceResult.context.fromEvidencePath ?? 'default'}`
+            );
+            writeInfo(
+              `[pumuki][sdd] source_digest=${evidenceResult.artifact.ai_evidence.digest} generated_at=${evidenceResult.artifact.generated_at}`
+            );
+          }
+          return 0;
+        }
+        if (parsed.sddCommand === 'state-sync') {
+          const stateSyncResult = runSddStateSync({
+            repoRoot: process.cwd(),
+            dryRun: parsed.sddStateSyncDryRun === true,
+            scenarioId: parsed.sddStateSyncScenarioId,
+            status: parsed.sddStateSyncStatus,
+            fromEvidencePath: parsed.sddStateSyncFromEvidence,
+            boardPath: parsed.sddStateSyncBoardPath,
+            force: parsed.sddStateSyncForce === true,
+          });
+          if (parsed.json) {
+            writeInfo(JSON.stringify(stateSyncResult, null, 2));
+          } else {
+            writeInfo(
+              `[pumuki][sdd] state-sync dry_run=${stateSyncResult.dryRun ? 'yes' : 'no'} scenario=${stateSyncResult.context.scenarioId} status=${stateSyncResult.context.desiredStatus} updated=${stateSyncResult.board.updated ? 'yes' : 'no'} conflict=${stateSyncResult.board.conflict ? 'yes' : 'no'} written=${stateSyncResult.board.written ? 'yes' : 'no'}`
+            );
+            writeInfo(
+              `[pumuki][sdd] state-sync source=${stateSyncResult.context.fromEvidencePath ?? 'default'} board=${stateSyncResult.context.boardPath} entries=${stateSyncResult.board.entries} decision=${stateSyncResult.decision.code}`
+            );
+            if (stateSyncResult.decision.nextAction) {
+              writeInfo(`[pumuki][sdd] state-sync next action: ${stateSyncResult.decision.nextAction}`);
+            }
+          }
+          if (!stateSyncResult.decision.allowed) {
+            return 1;
           }
           return 0;
         }

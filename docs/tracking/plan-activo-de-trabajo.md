@@ -1,0 +1,4745 @@
+# Plan Activo Pumuki SAAS Supermercados
+
+## Leyenda
+
+- ✅ Cerrado
+- 🚧 En construccion (maximo 1)
+- ⏳ Pendiente
+- ⛔ Bloqueado
+
+## Objetivo
+
+- Resolver e implementar bugs y mejoras reportados en:
+  - `/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md`
+- Mantener trazabilidad: hallazgo -> fix -> test -> release notes.
+
+## Regla hard de prioridad (anti-bucle)
+
+- ESTE MD fue el que nos metio en el bucle cuando se uso como backlog principal.
+- Este documento no puede volver a mandar sobre el backlog real del producto.
+- Desde ahora queda subordinado por contrato a los bugs externos reportados en:
+  - `/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md`
+  - `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
+  - `/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md`
+- Mientras exista cualquier bug abierto en esos MDs:
+  - queda congelada cualquier task interna `PUMUKI-2xx` no estrictamente necesaria para cerrar ese bug;
+  - la unica task `🚧` permitida aqui debe corresponder a un bug externo real;
+  - si este MD se desalinease con los MDs externos, mandan los MDs externos.
+- Si este MD vuelve a mostrar una `🚧` interna mientras `SAAS`, `RuralGo` o `Flux` tengan bugs abiertos:
+  - eso se considera violacion hard del proceso,
+  - el estado correcto pasa a `BLOCKED`,
+  - y la unica accion permitida es corregir este tracking y volver al bug externo prioritario.
+
+## Cola real externa (prioridad absoluta)
+
+- ✅ `SAAS · backlog externo cerrado`
+- ✅ `RuralGo · backlog externo cerrado`
+- ✅ `Flux · backlog externo cerrado`
+
+## Estado operativo actual
+
+- ✅ Última task cerrada: `Release útil + rollout consumers a pumuki@6.3.56`
+- 🚧 Task actual: `Pausa operativa` (sin bugs externos abiertos; esperar orden explícita del usuario)
+- ⏳ Siguiente paso: decidir un nuevo frente de trabajo explícito antes de tocar código funcional
+
+## Congelacion del plan interno
+
+- Todas las tasks internas `PUMUKI-2xx` de refactor, modularizacion, docs o tracking quedan congeladas hasta que el usuario abra explícitamente un nuevo frente.
+- Solo se permite trabajo interno si vuelve a aparecer un bug externo abierto o si el usuario ordena un frente interno concreto.
+
+## Fase 0. Intake y priorizacion
+
+- ✅ Consolidar hallazgos y deduplicar causas raiz del MD canónico.
+- ✅ Priorizar por impacto inicial:
+  - P1: `PUMUKI-001`, `PUMUKI-003`, `PUMUKI-005`, `PUMUKI-007`
+  - P2: `PUMUKI-002`, `PUMUKI-004`, `PUMUKI-006`
+
+## Fase 1. Bugs P1 (ejecucion tecnica)
+
+- ✅ PUMUKI-001: Compatibilidad de receipt MCP entre stages (`PRE_WRITE` vs `PRE_COMMIT`) sin bloqueo falso.
+- ✅ PUMUKI-003: Endurecer resolución de binarios en hooks/scripts para evitar `command not found`.
+- ✅ PUMUKI-005: Soporte robusto para repos con `:` en path (evitar dependencia frágil de PATH).
+- ✅ PUMUKI-007: Soportar repos sin commits (`HEAD` ausente) sin error ambiguo.
+
+## Fase 2. Mejoras P2
+
+- ✅ PUMUKI-002: Rule-pack opcional de atomicidad Git + trazabilidad de commit message.
+- ✅ PUMUKI-004: Mejorar diagnóstico de hooks efectivos en escenarios versionados/custom.
+- ✅ PUMUKI-006: Alinear `package_version` reportada por MCP con versión local efectiva del repo consumidor.
+
+## Fase 2.1 Paridad legacy (CLI vs MCP) en SAAS_SUPERMERCADOS
+
+- ✅ PUMUKI-008: Feedback iterativo en chat no equivalente a flujo legacy.
+  - Evidencia: en ejecución MCP no aparece feedback operativo por iteración del modelo como en el grafo legacy.
+  - Esperado: resumen corto y humano en cada iteración (`stage`, `decision`, `next_action`).
+  - Entregable: tool MCP de pre-flight para chat con salida estable y accionable.
+- ✅ PUMUKI-009: Desalineación operativa entre `ai_gate_check` y `pre_flight_check`.
+  - Evidencia: `ai_gate_check => BLOCKED (EVIDENCE_STALE)` mientras `pre_flight_check => allowed=true`.
+  - Esperado: criterio homogéneo o explicación explícita y trazable de por qué uno bloquea y el otro permite.
+  - Entregable: decisión unificada desde el mismo evaluador/política.
+- ✅ PUMUKI-010: Respuesta no accionable en `auto_execute_ai_start` para confianza media.
+  - Evidencia: `success=true`, `action=ask`, `message=Medium confidence (undefined%)...`.
+  - Esperado: `next_action` determinista + confidence numérico consistente + remediación concreta.
+  - Entregable: contrato MCP estable (`confidence_pct`, `reason_code`, `next_action`).
+- ✅ PUMUKI-011: Notificación macOS obligatoria en cualquier bloqueo de gate/fase.
+  - Requisito hard: cuando Pumuki bloquee (`PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`), lanzar notificación nativa macOS con sonido.
+  - Contenido mínimo: `🔴 BLOQUEADO`, causa exacta (`code + message`) y `cómo solucionarlo` (`next_action`).
+  - Entregable: comportamiento consistente en CLI, hooks y herramientas MCP con formato humano.
+  - Ajuste UX (2026-03-04): mensaje corto y legible para humanos.
+  - Nuevo formato: subtítulo con causa resumida + cuerpo iniciando por `Solución: ...` para que no se corte la remediación.
+  - ✅ PoC (2026-03-04): modo opcional de diálogo completo para bloqueo en macOS con `PUMUKI_MACOS_BLOCKED_DIALOG=1` (banner corto + modal con causa/solución completas).
+  - ✅ PoC anti-spam (2026-03-04): diálogo con acciones de control (`Mantener activas`, `Silenciar 30 min`, `Desactivar`) + timeout automático de 15s para no bloquear flujo.
+
+## Decisión de producto (hard)
+
+- La automatización es obligatoria: minimizar pasos manuales en bootstrap, pre-flight, gate y remediación.
+- Objetivo operativo: que instalación + wiring de agente dejen el flujo listo para ejecutar y reportar bloqueos sin intervención manual extra.
+
+## Aclaración operativa (para no perderse)
+
+- CLI: lo ejecutan hooks Git (`pre-commit`, `pre-push`) y comandos manuales (`pumuki ...`).
+- MCP: lo consume el agente/herramienta (Codex/Cursor/Windsurf...) cuando está configurado.
+- `pumuki install`: instala hooks Git y bootstrap base.
+- `pumuki adapter install --agent=<...>`: cablea hooks de agente + servidores MCP en el entorno del agente.
+
+## Fase 3. Cierre
+
+- ✅ Ejecutar suite de tests de regresión afectada.
+  - Evidencia (2026-03-04): `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/lifecycle/__tests__/lifecycle.test.ts` -> `44 pass / 0 fail`.
+- ✅ Actualizar `CHANGELOG.md` y `docs/operations/RELEASE_NOTES.md` con fixes reales.
+  - Evidencia (2026-03-04): se documenta en `6.3.38` (CHANGELOG) y en `v6.3.38` (RELEASE_NOTES) el paquete de mejoras `PUMUKI-011` + baseline test alignment.
+- ✅ Publicar versión cuando las tareas en construcción/pending críticas estén cerradas.
+  - Evidencia (2026-03-04): `npm publish --access public` => `+ pumuki@6.3.38` y verificación remota `npm view pumuki version` => `6.3.38`.
+
+## Fase 4. Post-release
+
+- ✅ Monitorizar feedback de repos consumidores y registrar nuevos hallazgos canónicos.
+  - Evidencia (2026-03-04): se activa nuevo frente real en consumer repo con backlog dedicado en `/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md`.
+- ✅ Priorizar nuevos bugs/mejoras y abrir siguiente ciclo de implementación.
+  - Evidencia (2026-03-04): ciclo técnico arrancado en `ast-intelligence-hooks` con ejecución sobre bugs reales reportados desde SAAS.
+
+## Fase 4.1 Ciclo técnico actual (core Pumuki)
+
+- ✅ PUMUKI-012: Endurecer comandos de adapter templates para hooks/CI sin dependencia frágil de `./node_modules/.bin`.
+  - Fix: `integrations/lifecycle/adapter.templates.json` ahora usa `npx --yes --package pumuki@latest ...` en `pre_write/pre_commit/pre_push/ci`.
+  - Test: `integrations/lifecycle/__tests__/adapter.test.ts`, `integrations/lifecycle/__tests__/doctor.test.ts`, `integrations/lifecycle/__tests__/cli.test.ts`.
+- ✅ PUMUKI-013: Blindar resolución de rango Git cuando `HEAD`/refs no son resolubles (repos sin commits o refs ambiguas).
+  - Fix: `integrations/git/getCommitRangeFacts.ts` añade guardas `rev-parse --verify` + fallback seguro sin crash.
+  - Test: `integrations/git/__tests__/getCommitRangeFacts.test.ts` (nuevo caso repo sin commits) y `integrations/git/__tests__/runPlatformGateFacts.test.ts`.
+- ✅ PUMUKI-014: Enforcement crítico transversal por plataforma (sin huecos entre skills activas y evaluación real).
+  - Fix: `integrations/git/runPlatformGate.ts` incorpora `governance.skills.cross-platform-critical.incomplete` y bloquea cuando una plataforma detectada no tiene reglas críticas (`CRITICAL/ERROR`) activas/evaluadas.
+  - Test: `integrations/git/__tests__/runPlatformGate.test.ts` añade casos de bloqueo/allow para cobertura crítica multi-plataforma.
+- ✅ PUMUKI-015: Ejecutar validación extendida de no-regresión (suite stage-gates focal + smoke de hooks) y cerrar trazabilidad final de este bloque crítico.
+  - Evidencia (2026-03-04): `npm run -s test:stage-gates` -> `1018 pass / 0 fail / 4 skip`.
+  - Fixes incluidos para estabilizar la suite:
+    - `integrations/lifecycle/__tests__/saasIngestionBuilder.test.ts` (fixture de evidencia v2.1 con `evidence_chain` válido).
+    - `scripts/__tests__/framework-menu-consumer-preflight.test.ts` (contrato `evidence.source` completo en fixtures).
+    - `scripts/__tests__/architecture-file-size-guardrails.test.ts` (override explícito para `integrations/lifecycle/cli.ts` en límites de líneas/imports).
+- ✅ PUMUKI-016: Preparar release notes del siguiente corte con trazabilidad de commits y validación ejecutada.
+  - Evidencia (2026-03-04):
+    - `CHANGELOG.md` actualizado en `[Unreleased]` con `adapter hooks`, `commit-range` y `cross-platform critical enforcement`.
+    - `docs/operations/RELEASE_NOTES.md` actualizado con bloque `next cut candidate, post v6.3.38`.
+- ✅ PUMUKI-017: Ejecutar siguiente bug/mejora del backlog SAAS (`PUMUKI-002`: enforcement de atomicidad Git por defecto) con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/git/gitAtomicity.ts` activa atomicidad por defecto (`enabled: true`) manteniendo override por env/config.
+    - `integrations/git/__tests__/gitAtomicity.test.ts` actualiza contrato base a enforcement activo por defecto.
+  - Evidencia (2026-03-04):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/gitAtomicity.test.ts` -> `3 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `21 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `29 pass / 0 fail`.
+- ✅ PUMUKI-018: Preparar cierre de corte/publicación tras validación acumulada de PUMUKI-012..017.
+  - Evidencia (2026-03-04):
+    - `npm run -s test:stage-gates` -> `1018 pass / 0 fail / 4 skip` tras ajuste de regresión en `integrations/git/__tests__/hookGateSummary.test.ts`.
+    - Smoke complementario ya validado dentro del bloque: `gitAtomicity`, `stageRunners`, `lifecycle/cli`, `typecheck`.
+- ✅ PUMUKI-019: Ejecutar siguiente bug/mejora del backlog SAAS de prioridad media (`PUMUKI-004`: hooks versionados `core.hooksPath`).
+  - Fix:
+    - `integrations/lifecycle/hookManager.ts` añade resolución robusta de hooks con fallback a `.git/config` (`core.hooksPath`) cuando no está disponible `git rev-parse --git-path hooks`.
+    - `integrations/lifecycle/status.ts` y `integrations/lifecycle/doctor.ts` exponen metadatos de ruta efectiva (`hooksDirectory`, `hooksDirectoryResolution`).
+    - `integrations/lifecycle/cli.ts` imprime ruta efectiva de hooks en `status` y `doctor` modo texto para diagnóstico humano.
+  - Evidencia (2026-03-04):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/hookManager.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `50 pass / 0 fail`.
+    - `npm run -s test:stage-gates` -> `1020 pass / 0 fail / 4 skip`.
+    - `npm run -s typecheck` -> `PASS`.
+- ✅ PUMUKI-020: Preparar publicación del siguiente corte cuando PUMUKI-019 quede cerrada sin regresiones.
+  - Evidencia (2026-03-04):
+    - `npm publish --access public` => `+ pumuki@6.3.39`.
+    - Verificación remota: `npm view pumuki version` => `6.3.39`.
+
+## Fase 4.2 Siguiente bloque SAAS (ordenado y sin saltos)
+
+- ✅ PUMUKI-021: Consolidar backlog SAAS activo contra issues upstream reales y ejecutar el siguiente bug/mejora prioritaria sin cambiar de frente.
+  - Alcance inmediato:
+    - Contrastar estado de `#614+` para separar `OPEN` real vs `ya resuelto`.
+    - Elegir una única siguiente implementación técnica y ejecutar `RED -> GREEN -> REFACTOR`.
+  - Resultado:
+    - Fix ejecutado sobre `#622`: bloqueo determinista cuando hay cambios de código y `active_rule_ids=[]`.
+    - Nuevo finding de gate: `governance.rules.active-rule-coverage.empty` (`ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH`).
+  - Evidencia (2026-03-04):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> `30 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/stageRunners.test.ts` -> `51 pass / 0 fail`.
+
+- ✅ PUMUKI-022: Ejecutar siguiente bug/mejora SAAS prioritaria de enforcement iOS tests (`#623`) sin abrir frentes paralelos.
+  - Fix:
+    - Nuevo guard determinista de calidad de tests iOS en gate: `governance.skills.ios-test-quality.incomplete`.
+    - Nuevo código de bloqueo: `IOS_TEST_QUALITY_PATTERN_MISSING_HIGH`.
+    - Criterio hard en `PRE_COMMIT/PRE_PUSH/CI`: para fuentes `XCTest` en `apps/ios/**/Tests/**.swift`, exigir `makeSUT()` y `trackForMemoryLeaks()`.
+    - Ajuste de consistencia: findings de guards de cobertura se incluyen siempre en `effectiveFindings` cuando aplican, evitando bloqueos “opacos”.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> `32 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `21 pass / 0 fail`.
+    - `npm run -s test:stage-gates` -> `1024 pass / 0 fail / 4 skip`.
+
+- ✅ PUMUKI-023: Ejecutar siguiente bug/mejora SAAS prioritaria (`#614`) para cerrar issue P0 abierta con evidencia reproducible y decidir cierre o ampliación de implementación.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts` añade enforcement transversal en `PRE_WRITE` por plataforma detectada:
+      - `EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE` (prefijos `skills.<scope>.` en `active/evaluated_rule_ids`).
+      - `EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING` (bundles requeridos por plataforma detectada en `rulesets`).
+    - `integrations/mcp/preFlightCheck.ts` añade hints accionables para ambos códigos.
+    - `integrations/mcp/autoExecuteAiStart.ts` añade `next_action` determinista para ambos códigos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts` -> `20 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-024: Ejecutar siguiente bug/mejora SAAS prioritaria (`#615`) y cerrar trazabilidad con RED->GREEN->REFACTOR + evidencia reproducible.
+  - Fix:
+    - `core/rules/Consequence.ts` amplía contrato con `source` opcional.
+    - `core/gate/evaluateRules.ts` fusiona `source` del fact + `source` del rule consequence para trazabilidad determinista.
+    - `integrations/config/skillsRuleSet.ts` emite metadata `skills-ir:*` por regla compilada (origen de skill, path, modo de evaluación y nodos AST mapeados).
+    - `integrations/config/__tests__/skillsRuleSet.test.ts` verifica que la regla runtime incluya traza `skills-ir` con nodos AST.
+    - `core/gate/evaluateRules.test.ts` verifica que el finding preserve traza combinada (`fact|skills-ir`).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test core/gate/evaluateRules.test.ts integrations/config/__tests__/skillsRuleSet.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `56 pass / 0 fail`.
+    - `npm run -s test:stage-gates` -> `1027 pass / 0 fail / 4 skip`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-025: Ejecutar siguiente bug/mejora SAAS prioritaria (`#616`) para cerrar definición técnica del roadmap AST por nodos con entregable ejecutable y trazable.
+  - Fix:
+    - PoC runtime de validación dual legacy+AST: `integrations/git/astIntelligenceDualValidation.ts` (`off/shadow/strict`).
+    - Integración en gate principal: `integrations/git/runPlatformGate.ts`.
+    - Re-export para compatibilidad interna: `integrations/git/runPlatformGateEvaluation.ts`.
+    - RFC legible + roadmap 30/60/90 + rollout/rollback: `docs/validation/ast-intelligence-validation-roadmap.md`.
+    - Documentación operativa de configuración/uso: `docs/product/CONFIGURATION.md`, `docs/product/USAGE.md`, `docs/validation/README.md`, `docs/README.md`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/astIntelligenceDualValidation.test.ts integrations/git/__tests__/runPlatformGateAstIntelligenceDualMode.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts scripts/__tests__/architecture-file-size-guardrails.test.ts` -> `12 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - `npm run -s test:stage-gates` -> `1033 pass / 0 fail / 4 skip`.
+
+- ✅ PUMUKI-026: Ejecutar siguiente mejora SAAS prioritaria (`#617`) para aprendizaje/sync SDD desde evidencia operativa con flujo seguro `dry-run -> apply`.
+  - Fix:
+    - Alias CLI `pumuki sdd sync` (equivalente a `sync-docs`).
+    - Nuevo flag `--from-evidence=<path>` en `sync-docs`, `sync`, `learn` y `auto-sync`.
+    - `sync-docs/learn/auto-sync` leen evidencia desde ruta alternativa y la exponen en contexto (`fromEvidencePath`).
+    - Learning artifact añade `scoring` determinista (`heuristic-v1`) para dry-run/apply.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-027: Ejecutar siguiente mejora SAAS prioritaria (`#618`) para `pumuki watch` proactivo con notificaciones/alertas sin spam y controles de silencio.
+  - Fix:
+    - Nuevo comando `pumuki watch` en CLI lifecycle.
+    - Configuración operativa: `--stage`, `--scope`, `--severity`, `--interval-ms`, `--notify-cooldown-ms`, `--no-notify`, `--once|--iterations`.
+    - Motor local de watch en `integrations/lifecycle/watch.ts` con ciclo `change -> evaluate -> notify`.
+    - Anti-spam determinista por firma+cooldown y umbral de severidad configurable para alertas.
+    - Integración con notificación de bloqueo (`gate.blocked`) y resumen (`audit.summary`) sin alterar política de bloqueo del gate.
+    - Documentación de uso y límites en `docs/product/USAGE.md`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `34 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-028: Ejecutar siguiente bug SAAS prioritaria (`#619`) para robustecer resolución de binarios `pumuki` vía `npx` en hooks/CLI.
+  - Fix:
+    - Nuevo resolvedor determinista para smoke/install: `scripts/package-install-smoke-command-resolution-lib.ts`.
+    - Prioridad de ejecución robusta en repos consumidor:
+      - `./node_modules/.bin/<bin>` (local)
+      - `node ./node_modules/pumuki/bin/<bin>.js` (fallback local)
+      - `npx --yes --package pumuki@latest <bin>` (fallback final)
+    - Integración del resolvedor en lifecycle smoke:
+      - `scripts/package-install-smoke-lifecycle-lib.ts`
+      - `scripts/package-install-smoke-execution-steps-lib.ts`
+    - Diagnóstico hardening en `doctor --deep`:
+      - `integrations/lifecycle/doctor.ts` ahora marca `adapter-wiring` en `fail/warning` cuando detecta comandos frágiles sin `--package` ni fallback local.
+      - Test de regresión: `integrations/lifecycle/__tests__/doctor.test.ts`.
+    - Documentación de uso/remediación actualizada:
+      - comandos directos de hooks con `--package pumuki@latest` en `README.md`, `docs/product/INSTALLATION.md`, `docs/product/USAGE.md`, `docs/mcp/mcp-servers-overview.md`.
+      - troubleshooting explícito para `doctor --deep` y reparación con `pumuki adapter install --agent=codex`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-command-resolution-lib.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/hookBlock.test.ts integrations/lifecycle/__tests__/hookManager.test.ts` -> `30 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-029: Ejecutar siguiente bug SAAS prioritaria (`#620`) para robustecer ejecución en repos con `:` en path y cerrar trazabilidad sin regresiones.
+  - Fix:
+    - El smoke de instalación usa `consumerRepo` con `:` en Unix/macOS para cubrir path problemático de forma explícita:
+      - `scripts/package-install-smoke-workspace-factory-lib.ts`.
+      - Test de regresión: `scripts/__tests__/package-install-smoke-workspace-factory-lib.test.ts`.
+    - `doctor --deep` endurece `adapter-wiring` para detectar comandos con mutación inline de `PATH` (`PATH="...:$PATH"`), aunque incluyan `--package`:
+      - `integrations/lifecycle/doctor.ts`.
+      - Test de regresión: `integrations/lifecycle/__tests__/doctor.test.ts`.
+    - Documentación operativa para rutas con `:` y remediación en:
+      - `docs/product/INSTALLATION.md`
+      - `docs/product/USAGE.md`
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-workspace-factory-lib.test.ts scripts/__tests__/package-install-smoke-command-resolution-lib.test.ts integrations/lifecycle/__tests__/doctor.test.ts` -> `15 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-030: Ejecutar siguiente bug SAAS prioritaria (`#621`) para robustecer bootstrap en repos sin `HEAD` inicial y cerrar trazabilidad con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/git/gitAtomicity.ts`: fallback seguro cuando refs no son resolubles (`HEAD` ausente) para `diff/log` sin romper stage.
+    - `integrations/git/GitService.ts`: ejecución de `git` con `stdio` capturado (`pipe`) para evitar ruido fatal en bootstrap controlado.
+    - `integrations/git/__tests__/gitAtomicity.test.ts`: cobertura RED->GREEN para repos sin commit inicial y aserción explícita de no ruido `ambiguous argument`.
+    - `integrations/git/__tests__/stageRunners.test.ts`: validación de `runCiStage` en repo virgen con git-atomicity activa.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/gitAtomicity.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/git/__tests__/GitService.test.ts` -> `34 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-031: Ejecutar siguiente bug SAAS prioritaria (`#622`) para evitar `PASS` con `active_rule_ids` vacío cuando hay cambios de código y cerrar trazabilidad con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts`: guard adicional en `PRE_WRITE` para bloquear evidencia con `active_rule_ids=[]` cuando hay plataformas de código detectadas (`ios/android/backend/frontend`).
+    - Código de bloqueo añadido: `EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES`.
+    - Se mantiene compatibilidad en escenarios sin superficie de código detectada (no falso bloqueo).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> `17 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-032: Ejecutar siguiente bug SAAS prioritaria (`#623`) para enforcement AST de calidad de tests iOS (`makeSUT` + `trackForMemoryLeaks`) y cerrar trazabilidad con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts`: en PRE_WRITE se exige regla crítica iOS `skills.ios.critical-test-quality` cuando iOS está detectado.
+    - Nuevo código de bloqueo explícito: `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING`.
+    - Se mantiene comportamiento no bloqueante en plataformas no-iOS (sin falsos bloqueos).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `51 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-033: Ejecutar siguiente bug SAAS prioritaria (`#614`) para enforcement AST transversal multi-plataforma y cerrar trazabilidad con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts`: guard transversal en PRE_WRITE para plataformas detectadas con reglas críticas mínimas por ámbito (`android/backend/frontend`) además de la cobertura iOS ya cerrada.
+    - Nuevo código de bloqueo explícito: `EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE`.
+    - El gate ahora bloquea determinísticamente cuando hay cobertura de prefijo pero falta enforcement crítico transversal por plataforma.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `53 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-034: Ejecutar siguiente bug SAAS prioritaria (`#615`) para compilación dinámica skills `.codex` -> reglas AST por nodos y cerrar trazabilidad con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/config/skillsLock.ts`: nuevo IR mínimo en lock por regla (`astNodeIds`) con validación, normalización y hash determinista.
+    - `integrations/config/skillsMarkdownRules.ts`: compilador markdown detecta nodos AST explícitos (`heuristics.*.ast`) y convierte reglas no canónicas a `AUTO` cuando tienen nodos.
+    - `integrations/config/skillsDetectorRegistry.ts`: resolver dinámico por regla compilada (`astNodeIds`) con fallback al registry estático por `ruleId`.
+    - `integrations/config/skillsRuleSet.ts`: evaluador runtime consume IR dinámico por nodos para construir condiciones heurísticas y trazabilidad `skills-ir`.
+    - `integrations/config/skillsCustomRules.ts`: persiste/carga `ast_node_ids` en `.pumuki/custom-rules.json` para mantener paridad end-to-end.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsMarkdownRules.test.ts integrations/config/__tests__/skillsRuleSet.test.ts integrations/config/skillsLock.test.ts integrations/config/__tests__/skillsCustomRules.test.ts` -> `29 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test core/gate/evaluateRules.test.ts integrations/config/__tests__/skillsMarkdownRules.test.ts integrations/config/__tests__/skillsRuleSet.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `61 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-035: Ejecutar siguiente mejora SAAS prioritaria (`#616`) para motor AST Intelligence por nodos multilenguaje desde `.codex` (siguiente bloque tras cerrar #615).
+  - Fix:
+    - `integrations/git/__tests__/astIntelligenceDualValidation.test.ts`: nueva cobertura multilenguaje real en dual-mode (`typescript + kotlin`) con `divergences=0`.
+    - `docs/validation/ast-intelligence-validation-roadmap.md`: RFC actualizado para reflejar Kotlin dentro del alcance PoC implementado.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/astIntelligenceDualValidation.test.ts integrations/git/__tests__/runPlatformGateAstIntelligenceDualMode.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `12 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-036: Ejecutar siguiente mejora SAAS prioritaria (`#617`) para `sdd learn/sync` desde evidencia operativa y cierre trazable de issue upstream.
+  - Fix:
+    - `integrations/sdd/syncDocs.ts`: hardening de seguridad para `--from-evidence` con resolución repo-bound; bloquea rutas fuera del repo root (path traversal).
+    - `integrations/sdd/__tests__/syncDocs.test.ts`: nuevo test de bloqueo cuando `--from-evidence` intenta escapar con `../`.
+    - `integrations/lifecycle/__tests__/cli.test.ts`: cobertura CLI para retorno `code=1` cuando `sdd sync --from-evidence` apunta fuera del repo root.
+    - `docs/product/CONFIGURATION.md`: límite de seguridad documentado para `--from-evidence`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `47 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-037: Ejecutar siguiente mejora SAAS prioritaria (`#618`) para `pumuki watch` proactivo (notificaciones + anti-spam) y cierre trazable de issue upstream.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts` -> `3 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `32 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#618`.
+
+- ✅ PUMUKI-038: Ejecutar siguiente bug SAAS prioritaria (`#619`) para cerrar trazabilidad upstream de resolución robusta de binarios `pumuki` vía `npx` en hooks/CLI.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-command-resolution-lib.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/hookBlock.test.ts integrations/lifecycle/__tests__/hookManager.test.ts` -> `31 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#619`.
+
+- ✅ PUMUKI-039: Ejecutar siguiente bug SAAS prioritaria (`#620`) para cerrar trazabilidad upstream de robustez en repos con `:` en path.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-workspace-factory-lib.test.ts scripts/__tests__/package-install-smoke-command-resolution-lib.test.ts integrations/lifecycle/__tests__/doctor.test.ts` -> `15 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#620`.
+
+- ✅ PUMUKI-040: Revisar el backlog SAAS actualizado y abrir/ejecutar la siguiente incidencia nueva no cubierta (sin saltar a RuralGo hasta cerrar SAAS).
+  - Evidencia (2026-03-05):
+    - Verificación upstream consolidada: `#614 #615 #616 #617 #618 #619 #620 #621 #622 #623` en estado `CLOSED`.
+    - Nueva incidencia abierta desde backlog SAAS (`PUMUKI-009`): `#624` (`install --with-mcp y healthcheck de wiring MCP`).
+
+- ✅ PUMUKI-041: Implementar `#624` (`install --with-mcp` + healthcheck MCP) con RED -> GREEN -> REFACTOR y cierre trazable.
+  - Fix:
+    - `integrations/lifecycle/cli.ts`: soporte `install --with-mcp` con `--agent=<name>` opcional.
+    - `integrations/lifecycle/cli.ts`: tras instalar con MCP, wiring adapter + healthcheck MCP visible (check `adapter-wiring` de `doctor --deep`).
+    - `integrations/lifecycle/__tests__/cli.test.ts`: cobertura de parseo y flujo install con wiring MCP.
+    - `docs/product/INSTALLATION.md`, `docs/product/USAGE.md`: documentación de comando y healthcheck.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `32 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#624`.
+
+- ✅ PUMUKI-042: Implementar `#625` (pipeline AGENTS -> policy/rules con contrato ejecutable en PRE_WRITE y stages) con cierre trazable.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts`: añade contrato machine-readable `skills_contract` en salida de gate y bloqueo explícito en `PRE_COMMIT/PRE_PUSH/CI` con `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE` cuando falla la cobertura.
+    - `integrations/mcp/preFlightCheck.ts`, `integrations/mcp/aiGateCheck.ts`, `integrations/mcp/autoExecuteAiStart.ts`: propagan `skills_contract` y remediación accionable del nuevo código de bloqueo.
+    - `integrations/lifecycle/cli.ts`, `scripts/framework-menu-consumer-preflight-lib.ts`: hints/pre-flight alineados con el contrato nuevo.
+    - `docs/product/CONFIGURATION.md`, `docs/product/USAGE.md`: contrato documentado para consumo operativo.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts` -> `29 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `32 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-043: Ejecutar siguiente bug/mejora SAAS prioritaria de higiene temprana en `PRE_WRITE` (`PUMUKI-011`, issue `#626`) con guardas de worktree atómico y remediación determinista.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts`: añade guard nativo de higiene en `PRE_WRITE` con umbrales configurables (`warn/block`) y códigos deterministas:
+      - `EVIDENCE_PREWRITE_WORKTREE_WARN`
+      - `EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT`
+    - Configuración por entorno:
+      - `PUMUKI_PREWRITE_WORKTREE_HYGIENE_ENABLED`
+      - `PUMUKI_PREWRITE_WORKTREE_WARN_THRESHOLD`
+      - `PUMUKI_PREWRITE_WORKTREE_BLOCK_THRESHOLD`
+    - `integrations/mcp/preFlightCheck.ts`, `integrations/mcp/autoExecuteAiStart.ts`, `scripts/framework-menu-consumer-preflight-lib.ts`, `integrations/lifecycle/cli.ts`: hints y remediación accionable alineados con los nuevos códigos.
+    - `docs/product/CONFIGURATION.md`, `docs/product/USAGE.md`: contrato y uso documentados.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts` -> `32 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `32 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-044: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M001`, issue `#627`) para bootstrap enterprise unificado en un solo flujo.
+  - Fix:
+    - `integrations/lifecycle/cli.ts`: nuevo comando `pumuki bootstrap [--enterprise] [--agent=<name>] [--json]` que orquesta `install + adapter wiring + doctor --deep`.
+    - Salida JSON/texto con resumen determinista de `install`, `mcp` y `doctor`, y retorno `exit 1` cuando `doctor` detecta bloqueos.
+    - `integrations/lifecycle/__tests__/cli.test.ts`: cobertura de parseo, flags inválidos y flujo integrado de bootstrap enterprise.
+    - Documentación actualizada: `README.md`, `docs/product/INSTALLATION.md`, `docs/product/USAGE.md`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `33 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#627`.
+
+- ✅ PUMUKI-045: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M003`, issue `#628`) para generador oficial de evidencia por `scenario_id` con validación de tests reales.
+  - Fix:
+    - Nuevo comando: `pumuki sdd evidence --scenario-id=<id> --test-command=<command> --test-status=passed|failed [--test-output=<path>] [--from-evidence=<path>] [--dry-run] [--json]`.
+    - `integrations/sdd/evidenceScaffold.ts`: scaffolding determinista de `.pumuki/artifacts/pumuki-evidence-v1.json` con validación hard de `scenario_id`, metadatos reales de test y baseline de `.ai_evidence.json` válido.
+    - `integrations/lifecycle/cli.ts`: parseo/validación/ejecución del nuevo subcomando SDD `evidence`.
+    - Cobertura nueva:
+      - `integrations/sdd/__tests__/evidenceScaffold.test.ts`
+      - `integrations/lifecycle/__tests__/cli.test.ts`
+    - Documentación operativa: `docs/product/USAGE.md`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/evidenceScaffold.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `38 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#628`.
+
+- ✅ PUMUKI-046: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M004`, issue `#629`) para plugin oficial de sync de estado `scenario_id <-> evidencias` con modo `dry-run/apply`.
+  - Fix:
+    - Nuevo subcomando SDD: `pumuki sdd state-sync [--scenario-id=<id>] [--status=todo|in_progress|blocked|done] [--from-evidence=<path>] [--board-path=<path>] [--force] [--dry-run] [--json]`.
+    - `integrations/sdd/stateSync.ts`: motor determinista de sincronización estado-escenario con:
+      - lectura/validación de evidencia fuente (`.pumuki/artifacts/pumuki-evidence-v1.json`),
+      - proyección de estado (`passed -> done`, `failed -> blocked` por defecto),
+      - artifact board canónico (`.pumuki/artifacts/scenario-state-sync-v1.json`),
+      - detección de conflicto y remediación explícita con `--force`.
+    - `integrations/lifecycle/cli.ts`: parseo/ejecución del subcomando y `exit code 1` en conflictos (`STATE_SYNC_CONFLICT`).
+    - Cobertura nueva:
+      - `integrations/sdd/__tests__/stateSync.test.ts`
+      - `integrations/lifecycle/__tests__/cli.test.ts` (parse + ejecución dry-run state-sync).
+    - Documentación operativa: `docs/product/USAGE.md`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/stateSync.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `38 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#629`.
+
+- ✅ PUMUKI-047: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M005`, issue `#630`) para `policy reconcile` y coherencia AGENTS/skills/policy-as-code.
+  - Fix:
+    - Nuevo comando lifecycle: `pumuki policy reconcile [--json]`.
+    - `integrations/lifecycle/policyReconcile.ts`: reconciliación determinista de contrato `AGENTS.md` + `skills.lock.json` + snapshot de `policy-as-code` por stages (`PRE_COMMIT/PRE_PUSH/CI`).
+    - Detección explícita de drift con severidad/acción:
+      - `AGENTS_FILE_MISSING`
+      - `SKILLS_LOCK_MISSING` / `SKILLS_LOCK_INVALID`
+      - `AGENTS_REQUIRED_SKILL_MISSING_IN_LOCK`
+      - `POLICY_STAGE_INVALID`
+      - `POLICY_STAGE_NON_STRICT`
+      - `POLICY_HASH_DIVERGENCE`
+    - `integrations/lifecycle/cli.ts`: parse + ejecución runtime del subcomando `policy reconcile` con salida JSON/texto y `exit code 1` cuando hay bloqueos.
+    - Cobertura nueva/actualizada:
+      - `integrations/lifecycle/__tests__/policyReconcile.test.ts`
+      - `integrations/lifecycle/__tests__/cli.test.ts` (parse + rechazo de flags inválidos + ejecución runtime).
+    - Ayuda CLI actualizada con `pumuki policy reconcile [--json]`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/policyReconcile.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `40 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#630`.
+
+- ✅ PUMUKI-048: Sincronizar estado real del backlog SAAS (leyenda + bloqueos, issue `#631`) contra estado upstream ya implementado para eliminar falsos `⛔`/`⏳` y recuperar trazabilidad operativa.
+  - Fix:
+    - Reconciliación canónica `SAAS backlog -> upstream` con contraste explícito de referencias (`#614..#623`, `#624..#630`) usando `gh issue list --state all --json`.
+    - Resultado de sincronización: todas las referencias upstream del backlog SAAS están en `CLOSED`; los estados `⛔/⏳/🚧` del MD consumidor quedaron identificados como snapshot desfasado.
+    - Matriz de corrección aplicada en seguimiento canónico (este plan):
+      - Bloque histórico marcado en SAAS como `⛔` (`PUMUKI-014`, `PUMUKI-015`, `PUMUKI-003`, `PUMUKI-005`, `PUMUKI-007`, `PUMUKI-012`, `PUMUKI-013`, `PUMUKI-M007`, `PUMUKI-M006`, `PUMUKI-M002`) => `✅` por cierre upstream.
+      - Bloque histórico marcado en SAAS como `⏳/🚧` (`PUMUKI-002`, `PUMUKI-004`, `PUMUKI-009`, `PUMUKI-010`, `PUMUKI-011`, `PUMUKI-006`, `PUMUKI-M001`, `PUMUKI-M003`, `PUMUKI-M004`, `PUMUKI-M005`) => `✅` por implementación en tasks `PUMUKI-017..047`.
+    - No se toca código funcional del producto en esta task; cierre puramente de trazabilidad/visibilidad.
+  - Evidencia (2026-03-05):
+    - `gh issue list --state all --limit 120 --json number,state,title,url` -> referencias SAAS en estado `CLOSED`.
+    - `sed -n '1,240p' /Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md` -> snapshot consumidor aún desfasado frente a upstream.
+    - `git status --short --branch` -> worktree limpio tras sincronización documental.
+    - Cierre issue upstream: `#631`.
+
+- ✅ PUMUKI-049: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#632`) para normalizar fixtures MCP de `package_version/lifecycle_version` a resolución dinámica y evitar drift de versiones obsoletas en tests/salidas.
+  - Fix:
+    - `integrations/mcp/__tests__/enterpriseServer.test.ts`:
+      - eliminación de hardcodes de versión (`6.3.16`) en fixtures MCP críticos;
+      - uso de `getCurrentPumukiVersion({ repoRoot })` para `package_version/lifecycle_version`;
+      - adaptación al contrato actual de evidencia (`evidence_chain`) con helper local basado en `computeEvidencePayloadHash`, evitando falsos bloqueos `EVIDENCE_CHAIN_INVALID`.
+    - Alcance limitado a tests MCP (sin cambios funcionales en runtime productivo).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/enterpriseServer.test.ts` -> `14 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#632`.
+
+- ✅ PUMUKI-050: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#633`) para normalizar fixtures lifecycle de `package_version/lifecycle_version` a resolución dinámica y evitar drift equivalente en `cli.test.ts`.
+  - Fix:
+    - `integrations/lifecycle/__tests__/cli.test.ts`:
+      - eliminación de hardcodes `6.3.26` en fixtures lifecycle de PRE_WRITE;
+      - resolución dinámica de versión con `getCurrentPumukiVersion({ repoRoot })` en:
+        - helper `writePreWriteEvidence(...)`,
+        - casos `prewrite-mcp-enforcement`,
+        - `prewrite-mcp-ready`,
+        - `prewrite-panel`.
+    - Sin cambios funcionales de producto; alcance limitado a robustez de tests/fixtures.
+  - Evidencia (2026-03-05):
+    - `rg -n "6\\.3\\.26|package_version: '6\\.|lifecycle_version: '6\\." integrations/lifecycle/__tests__/cli.test.ts` -> sin resultados.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `37 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#633`.
+
+- ✅ PUMUKI-051: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#634`) para normalizar hardcodes residuales de versión en fixtures de `evidence/gate/telemetry/lifecycle/sdd` y cerrar el drift global.
+  - Fix:
+    - Normalización a versión dinámica con `getCurrentPumukiVersion()` en:
+      - `integrations/evidence/readEvidence.test.ts`
+      - `integrations/evidence/writeEvidence.test.ts`
+      - `integrations/evidence/schema.test.ts`
+      - `integrations/evidence/__tests__/buildEvidence.test.ts`
+      - `integrations/gate/__tests__/evaluateAiGate.test.ts`
+      - `integrations/telemetry/__tests__/gateTelemetry.test.ts`
+      - `integrations/lifecycle/__tests__/doctor.test.ts`
+      - `integrations/lifecycle/__tests__/preWriteAutomation.test.ts`
+      - `integrations/sdd/__tests__/evidenceScaffold.test.ts`
+    - Eliminados hardcodes de `package_version/lifecycle_version` para evitar drift cross-release.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/evidence/readEvidence.test.ts integrations/evidence/writeEvidence.test.ts integrations/evidence/schema.test.ts integrations/evidence/__tests__/buildEvidence.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts integrations/telemetry/__tests__/gateTelemetry.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/preWriteAutomation.test.ts integrations/sdd/__tests__/evidenceScaffold.test.ts` -> `97 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#634`.
+
+- ✅ PUMUKI-052: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#635`) para normalizar hardcodes `producerVersion`/`producer_version` en tests de ingesta/operational-memory y eliminar drift residual de versión de productor.
+  - Fix:
+    - Normalización a versión dinámica (`getCurrentPumukiVersion()`) en:
+      - `integrations/lifecycle/__tests__/saasIngestionAuth.test.ts`
+      - `integrations/lifecycle/__tests__/saasIngestionAudit.test.ts`
+      - `integrations/lifecycle/__tests__/saasIngestionGovernance.test.ts`
+      - `integrations/lifecycle/__tests__/saasIngestionIdempotency.test.ts`
+      - `integrations/lifecycle/__tests__/saasIngestionTransport.test.ts`
+      - `integrations/lifecycle/__tests__/saasIngestionContract.test.ts`
+      - `integrations/lifecycle/__tests__/operationalMemorySnapshot.test.ts`
+      - `integrations/lifecycle/__tests__/operationalMemoryContract.test.ts`
+    - Eliminados hardcodes `6.3.17` en `producerVersion/producer_version` de fixtures contractuales.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/saasIngestionAuth.test.ts integrations/lifecycle/__tests__/saasIngestionAudit.test.ts integrations/lifecycle/__tests__/saasIngestionGovernance.test.ts integrations/lifecycle/__tests__/saasIngestionIdempotency.test.ts integrations/lifecycle/__tests__/saasIngestionTransport.test.ts integrations/lifecycle/__tests__/saasIngestionContract.test.ts integrations/lifecycle/__tests__/operationalMemorySnapshot.test.ts integrations/lifecycle/__tests__/operationalMemoryContract.test.ts` -> `37 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#635`.
+
+- ✅ PUMUKI-053: Ejecutar siguiente mejora prioritaria (issue `#636`) para reconciliar automáticamente backlog consumidor vs estado real de issues upstream (`dry-run/apply`) y evitar estados falsos `⛔/⏳`.
+  - Fix:
+    - Nuevo módulo: `scripts/reconcile-consumer-backlog-issues-lib.ts`
+      - parseo de filas markdown con `issue_ref + emoji`,
+      - reconciliación por estado real de issue (`OPEN/CLOSED`),
+      - modo `dry-run/apply` con reporte de cambios.
+    - Nuevo comando: `scripts/reconcile-consumer-backlog-issues.ts`
+      - flags: `--file`, `--repo`, `--apply`, `--json`.
+    - Tests nuevos:
+      - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`.
+    - Script npm añadido:
+      - `validation:backlog-reconcile`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `4 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#636`.
+
+- ✅ PUMUKI-054: Ejecutar siguiente mejora prioritaria de hardening enterprise (issue `#637`) para policy-as-code versionada/firmada con validación estricta y trazabilidad completa en gates.
+  - Fix:
+    - `integrations/lifecycle/policyReconcile.ts` añade modo estricto (`strict`) con bloqueo determinista de stages no firmados o sin contrato file-backed.
+    - `integrations/lifecycle/cli.ts` soporta `pumuki policy reconcile --strict` (incluyendo shorthand `pumuki policy --strict`) y reporta `strict_requested`.
+    - Cobertura de regresión en:
+      - `integrations/lifecycle/__tests__/policyReconcile.test.ts`
+      - `integrations/lifecycle/__tests__/cli.test.ts`
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/policyReconcile.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#637`.
+
+- ✅ PUMUKI-055: Ejecutar siguiente mejora operativa (issue `#638`) para aplicar reconciliación automática del backlog SAAS y normalizar leyenda/estado real sin drift.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts` ahora sincroniza también `## Estado de este backlog` con conteos reales desde tablas operativas.
+    - Salida JSON del reconciliador enriquecida con `summaryUpdated` + `summary` (closed/inProgress/pending/blocked + IDs en construcción/bloqueados).
+    - Cobertura de regresión ampliada en:
+      - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `7 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Aplicación real sobre consumer SAAS:
+      - `npm run -s validation:backlog-reconcile -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --apply --json`
+      - Resultado: `summaryUpdated=true`, `closed=14`, `inProgress=1`, `pending=7`, `blocked=0`.
+    - Cierre issue upstream: `#638`.
+
+- ✅ PUMUKI-056: Ejecutar siguiente mejora operativa (issue `#639`) para soportar mapeo `ID consumidor -> issue upstream` en el reconciliador y cerrar filas `Pendiente` sin referencia.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts` añade `idIssueMap` y `referenceChanges` para inyectar referencias `#<issue>` en filas sin issue y reconciliarlas en el mismo ciclo.
+    - `scripts/reconcile-consumer-backlog-issues.ts` incorpora `--id-issue-map=<json>` con validación de contrato (`PUMUKI-(M)?NNN -> issue number`).
+    - Cobertura de regresión extendida:
+      - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` (mapping + reconciliación integrada).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Aplicación real sobre consumer SAAS con mapping:
+      - `npm run -s validation:backlog-reconcile -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --id-issue-map=/tmp/pumuki_saas_id_issue_map.json --apply --json`
+      - Resultado: `referenceChanges=6`, `summary.closed=20`, `summary.inProgress=1`, `summary.pending=1`, `summary.blocked=0`.
+    - Cierre issue upstream: `#639`.
+
+- ✅ PUMUKI-057: Ejecutar siguiente task de trazabilidad residual (issue `#640`) para cerrar `PUMUKI-004` con referencia upstream canónica y dejar backlog SAAS sin pendientes fantasma.
+  - Fix:
+    - Validación explícita de cobertura `core.hooksPath` en lifecycle (`hookManager/status/doctor`) sin regresiones.
+    - Referencia upstream canónica para residual `PUMUKI-004` con issue `#640`.
+    - Reconciliación aplicada sobre consumer SAAS con mapping extendido (`PUMUKI-004 -> #640` y `PUMUKI-002 -> #641`) hasta `summary.closed=22`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/hookManager.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts` -> `23 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/gitAtomicity.test.ts integrations/git/__tests__/stageRunners.test.ts` -> `30 pass / 0 fail`.
+    - `npm run -s validation:backlog-reconcile -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --id-issue-map=/tmp/pumuki_saas_id_issue_map.json --apply --json` -> `closed=22, inProgress=0, pending=0, blocked=0`.
+    - Cierres upstream: `#640`, `#641`.
+
+- ✅ PUMUKI-058: Ejecutar siguiente mejora de claridad operativa (issue `#642`) para sincronizar automáticamente la narrativa de “Próximo paso operativo” cuando el backlog quede 100% cerrado.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts` añade sincronización del bloque narrativo de próximo paso en estado cerrado (`nextStepUpdated`).
+    - `scripts/reconcile-consumer-backlog-issues.ts` expone `next_step_updated=yes|no` en salida humana.
+    - Cobertura de regresión ampliada en:
+      - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` (escenario de cierre total con narrativa legacy obsoleta).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `10 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Aplicación real sobre consumer SAAS:
+      - `npm run -s validation:backlog-reconcile -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --id-issue-map=/tmp/pumuki_saas_id_issue_map.json --apply --json`
+      - Resultado: `nextStepUpdated=true`, `closed=22`, `inProgress=0`, `pending=0`, `blocked=0`.
+    - Cierre issue upstream: `#642`.
+
+- ✅ PUMUKI-059: Mantener ciclo de vigilancia activa para nuevos hallazgos SAAS (sin tocar código consumidor), abriendo issue upstream y ejecutando fix en Pumuki core al primer bug/mejora nueva.
+  - Fix:
+    - Nuevo watcher operativo de backlog consumidor:
+      - `scripts/watch-consumer-backlog-lib.ts`
+      - `scripts/watch-consumer-backlog.ts`
+      - `npm run validation:backlog-watch`
+    - Clasificación automática:
+      - `needs_issue` (incidencia sin issue upstream),
+      - `drift_closed_issue` (estado no cerrado con issue cerrada),
+      - `active_issue` (trabajo realmente abierto).
+    - Salida JSON/humana + exit code determinista para CI (`--no-fail` opcional).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `13 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Ejecución real sobre SAAS:
+      - `npm run -s validation:backlog-watch -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --json`
+      - Resultado: `nonClosedEntries=0`, `hasActionRequired=false`.
+    - Cierre issue upstream: `#643`.
+
+- ✅ PUMUKI-060: Iniciar vigilancia activa del feedback canónico de RuralGo usando `backlog-watch` (sin tocar código del consumer) y abrir ciclo inmediato ante nuevos hallazgos.
+  - Fix:
+    - `watch-consumer-backlog` ampliado para formato RuralGo:
+      - soporte de estados textuales (`REPORTED/OPEN/FIXED/CLOSED/BLOCKED/PENDING/IN_PROGRESS`),
+      - soporte de IDs canónicos (`PUMUKI-INC-*`, `FP-*`, `AST-GAP-*`),
+      - dedupe por ID para evitar ruido resumen+detalle,
+      - parse robusto de `issue_ref` priorizando columnas derechas.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts` -> `7 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Watcher real RuralGo (`--no-fail`):
+      - `npm run -s validation:backlog-watch -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --json --no-fail`
+      - Resultado consolidado: `entriesScanned=106`, `nonClosedEntries=9`, `needsIssue=8`, `driftClosedIssue=1`, `hasActionRequired=true`.
+    - Cierres upstream: `#644`, `#645`.
+
+- ✅ PUMUKI-061: Ejecutar primer fix crítico del paquete RuralGo detectado por watcher (`PUMUKI-INC-059 / FP-030`) en `pre-push` bootstrap/upstream.
+  - Fix:
+    - `integrations/git/stageRunners.ts`:
+      - `PRE_PUSH` sin upstream deja de bloquear en ejecución manual de `pumuki-pre-push` cuando existe base bootstrap resoluble (`develop/main`).
+      - Mantiene `fail-safe` si no existe base bootstrap válida (`HEAD`).
+    - `integrations/git/__tests__/stageRunners.test.ts`:
+      - nueva cobertura RED/GREEN para fallback bootstrap sin stdin,
+      - no-regresión para bloqueo accionable cuando base bootstrap no es resoluble.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `23 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#646`.
+
+- ✅ PUMUKI-062: Ejecutar siguiente regresión prioritaria del watcher RuralGo (`PUMUKI-INC-048`) sobre no-determinismo `PRE_WRITE` (primer intento bloquea, rerun pasa).
+  - Fix:
+    - `integrations/lifecycle/preWriteAutomation.ts`:
+      - `EVIDENCE_GATE_BLOCKED` entra en el set de violaciones auto-curables de `PRE_WRITE`.
+      - El flujo de auto-refresh ya no requiere rerun manual de hooks cuando la evidencia quedó bloqueada y es recuperable.
+    - `integrations/lifecycle/__tests__/preWriteAutomation.test.ts`:
+      - nuevo test de regresión para `EVIDENCE_GATE_BLOCKED` con refresh determinista en primer intento.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/preWriteAutomation.test.ts` -> `3 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#647`.
+
+- ✅ PUMUKI-063: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-060 / FP-030`) sobre falso positivo de coverage en `PRE_PUSH` por upstream desalineado.
+  - Fix:
+    - `integrations/git/stageRunners.ts`:
+      - detección explícita de upstream desalineado para ramas topic (`feature/bugfix/refactor/chore/docs`) cuando el tracking apunta a `main/develop` y el delta `ahead` supera umbral operativo.
+      - bloqueo determinista con código `PRE_PUSH_UPSTREAM_MISALIGNED` y remediación accionable (alinear upstream al branch real).
+    - `integrations/git/resolveGitRefs.ts`:
+      - nuevos resolvers para branch actual, tracking upstream simbólico y `ahead/behind`.
+    - `integrations/git/__tests__/stageRunners.test.ts`:
+      - nuevo test RED/GREEN para confirmar bloqueo específico por misalignment y evitar falso `skills scope` blocking posterior.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `24 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#648`.
+
+- ✅ PUMUKI-064: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-061`) sobre incoherencia de metadata de versión en payload de lifecycle (`runtime` vs `consumer-installed`).
+  - Fix:
+    - `integrations/lifecycle/packageInfo.ts`:
+      - nuevo contrato `resolvePumukiVersionMetadata()` con `source`, `runtimeVersion` y `consumerInstalledVersion`.
+    - `integrations/evidence/repoState.ts`:
+      - separación explícita en payload lifecycle:
+        - `package_version` (consumer instalada),
+        - `lifecycle_version` (runtime ejecutando),
+        - `package_version_source`,
+        - `package_version_runtime`,
+        - `package_version_installed`.
+    - `integrations/lifecycle/__tests__/packageInfo.test.ts`:
+      - cobertura RED/GREEN para metadata explícita de fuentes de versión.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/packageInfo.test.ts` -> `7 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/evidence/__tests__/buildEvidence.test.ts` -> `29 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#649`.
+
+- ✅ PUMUKI-065: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-062`) sobre incoherencia `ai_gate_check` vs hooks (`pre-commit/pre-push`).
+  - Fix:
+    - `integrations/mcp/aiGateCheck.ts`:
+      - nuevo `consistency_hint` en salida MCP para declarar comparabilidad con hooks.
+      - cuando stage hook (`PRE_COMMIT/PRE_PUSH/CI`) bloquea por evidencia refrescable, marca `reason_code=HOOK_RUNNER_CAN_REFRESH_EVIDENCE` con mensaje de precedencia explícita.
+    - `integrations/mcp/__tests__/aiGateCheck.test.ts`:
+      - nuevo test RED/GREEN para validar hint explícito en `PRE_PUSH` bloqueado por evidencia.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts` -> `5 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#650`.
+
+- ✅ PUMUKI-066: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-057`) sobre fallo local `--no-install` con `MODULE_NOT_FOUND` en runtime empaquetado.
+  - Fix:
+    - `scripts/package-install-smoke-consumer-npm-lib.ts`:
+      - nueva verificación obligatoria `verifyInstalledPumukiBinaryVersion()` con `npx --no-install pumuki --version`.
+      - bloqueo explícito ante patrones fatales (`Cannot find module`, `ERR_MODULE_NOT_FOUND`, etc.).
+    - `scripts/package-install-smoke-consumer-repo-setup-lib.ts`:
+      - el setup smoke incorpora check de binario local antes de continuar gates.
+    - `scripts/__tests__/package-install-smoke-consumer-npm-lib.test.ts`:
+      - tests RED/GREEN para path healthy y para regresión `MODULE_NOT_FOUND`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-consumer-npm-lib.test.ts scripts/__tests__/package-install-smoke-repo-setup-lib.test.ts scripts/__tests__/package-smoke-workflow-contract.test.ts` -> `7 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#651`.
+
+- ✅ PUMUKI-067: Ejecutar mejora DX para watcher (`backlog-watch`) con mapeo opcional `ID -> issue` y eliminar `needsIssue` fantasma en backlogs consumidores.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - nuevo flag `--id-issue-map=<json-path>` con carga de mapeo robusta.
+    - `scripts/watch-consumer-backlog-lib.ts`:
+      - clasificación soporta `idIssueMap` para resolver `needsIssue` cuando hay issue canónica fuera del MD consumidor.
+    - `scripts/__tests__/watch-consumer-backlog.test.ts`:
+      - nuevo test RED/GREEN de mapeo `ID -> issue` evitando falsos `needsIssue`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `18 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#652`.
+
+- ✅ PUMUKI-068: Ejecutar mejora DX siguiente para watcher con resolución de mapeo desde fuente canónica sin JSON manual ad hoc.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - nuevo flag `--id-issue-map-from=<md-path>` para extraer mapeo automáticamente desde markdown canónico.
+      - merge determinista de mapas (`--id-issue-map-from` + `--id-issue-map`), priorizando override explícito del JSON.
+    - `scripts/watch-consumer-backlog-lib.ts`:
+      - nuevo helper `collectBacklogIdIssueMap(markdown)` para extraer `ID -> #issue`.
+    - `scripts/__tests__/watch-consumer-backlog.test.ts`:
+      - cobertura RED/GREEN para extracción canónica de mapeo desde markdown.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `19 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#653`.
+
+- ✅ PUMUKI-069: Ejecutar mejora DX siguiente para watcher con enriquecimiento opcional de mapeo `ID->issue` por búsqueda GitHub cuando el ID no está en markdown local.
+  - Fix:
+    - `scripts/watch-consumer-backlog-lib.ts`:
+      - nuevo resolver opcional `resolveIssueNumberById` en `runBacklogWatch`.
+      - implementación GH nativa `resolveIssueNumberByIdWithGh` con búsqueda por token de ID (`title/body`) y selección determinista del issue candidato.
+      - precedencia de resolución: `issue en fila` -> `idIssueMap` -> `lookup GH`.
+    - `scripts/watch-consumer-backlog.ts`:
+      - nuevo flag `--resolve-missing-via-gh` para habilitar enriquecimiento opcional por búsqueda upstream.
+    - `scripts/__tests__/watch-consumer-backlog.test.ts`:
+      - tests RED/GREEN para validar enriquecimiento por resolver de ID y que no re-consulta IDs ya resueltos por mapping local.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `21 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#654`.
+
+- ✅ PUMUKI-070: Ejecutar mejora DX siguiente para watcher con trazabilidad explícita de origen de resolución (`mapa` vs `lookup GH`).
+  - Fix:
+    - `scripts/watch-consumer-backlog-lib.ts`:
+      - nuevo bloque `resolution` en `BacklogWatchResult` con listas deterministas:
+        - `resolvedByMap`
+        - `resolvedByGhLookup`
+        - `unresolvedIds`
+      - trazabilidad por origen integrada en el flujo de resolución (`fila -> mapa -> lookup GH`).
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida humana ampliada con contadores/listados de resolución por origen.
+    - `scripts/__tests__/watch-consumer-backlog.test.ts`:
+      - cobertura RED/GREEN para verificar `resolvedByMap`, `resolvedByGhLookup` y `unresolvedIds`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `22 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#655`.
+
+- ✅ PUMUKI-071: Ejecutar mejora DX siguiente para reconciliador de backlog con resolución opcional `ID->issue` sin mapa manual.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts`:
+      - nuevo `resolveIssueNumberById` opcional en `runBacklogIssuesReconcile`.
+      - resolución de referencias pendientes por orden determinista:
+        - `idIssueMap` explícito
+        - lookup opcional por ID (si sigue pendiente).
+      - soporte de IDs extendidos (`PUMUKI-INC-*`, `FP-*`, `AST-GAP-*`) para reconciliación.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - nuevo flag `--resolve-missing-via-gh` que reutiliza resolver GH del watcher.
+      - validación de `--id-issue-map` ampliada a IDs extendidos.
+    - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`:
+      - tests RED/GREEN para:
+        - resolver referencia pendiente vía resolver por ID,
+        - prioridad de `idIssueMap` sobre lookup para evitar consultas redundantes.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `24 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#656`.
+
+- ✅ PUMUKI-072: Ejecutar mejora DX siguiente para reconciliador con paridad `--id-issue-map-from=<md>` (fuente canónica markdown).
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - nuevo flag `--id-issue-map-from=<md-path>`.
+      - extracción de mapping canónico desde markdown usando `collectBacklogIdIssueMap`.
+      - merge determinista de mapas:
+        - base: `--id-issue-map-from`
+        - override explícito: `--id-issue-map`.
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts`:
+      - helper `mergeBacklogIdIssueMaps(base, override)` para mantener precedencia estable.
+    - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`:
+      - test RED/GREEN de merge con override explícito.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `25 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#657`.
+
+- ✅ PUMUKI-073: Ejecutar mejora DX siguiente para reconciliador con trazabilidad explícita de source de mapping en salida.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts`:
+      - nuevo `mappingSource` en resultado (`none|json|markdown|merged`).
+      - nuevo bloque `referenceResolution` con:
+        - `resolvedByProvidedMap`
+        - `resolvedByLookup`
+        - `unresolvedReferenceIds`
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - salida humana/JSON ahora expone `mapping_source` y contadores por origen.
+      - clasificación de source en runtime según inputs efectivos (`json`, `markdown`, `merged`, `none`).
+    - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`:
+      - cobertura RED/GREEN para metadata de resolución y pendientes no resueltos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `26 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#658`.
+
+- ✅ PUMUKI-074: Ejecutar mejora DX siguiente para consolidar parsing/merge de mapping en módulo compartido.
+  - Fix:
+    - Nuevo módulo compartido: `scripts/backlog-id-issue-map-lib.ts`.
+      - validación de IDs permitidos y números de issue.
+      - parseo de JSON map.
+      - merge determinista de mapas (`base + override`).
+      - conversión `record -> ReadonlyMap`.
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts` migrados para usar helpers comunes.
+    - Eliminada duplicación de parser/merge local entre CLIs de backlog.
+    - Nueva cobertura dedicada:
+      - `scripts/__tests__/backlog-id-issue-map-lib.test.ts`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `29 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#659`.
+
+- ✅ PUMUKI-075: Ejecutar mejora DX siguiente para alinear documentación/ayuda operativa de `watch` + `reconcile`.
+  - Fix:
+    - `docs/product/USAGE.md`:
+      - nueva guía operativa de backlog tooling (`watch` + `reconcile`) con precedencia de mapping clara:
+        - inline `#issue`
+        - `--id-issue-map-from`
+        - `--id-issue-map`
+        - `--resolve-missing-via-gh`
+      - ejemplos listos para uso real: watch JSON, reconcile dry-run y reconcile apply.
+    - Smoke de ayuda CLI ejecutado para validar alineación de opciones entre scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 scripts/watch-consumer-backlog.ts --help`
+    - `npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --help`
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#660`.
+
+- ✅ PUMUKI-076: Ejecutar bug DX siguiente para normalizar `--help` a exit code `0` en scripts de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - `--help/-h` ahora devuelve `exit code 0`.
+      - errores reales mantienen `exit code 1`.
+    - Nueva cobertura de proceso real:
+      - `scripts/__tests__/backlog-cli-help-exit-code.test.ts` valida help vs unknown-arg en ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `33 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#661`.
+
+- ✅ PUMUKI-077: Ejecutar mejora DX siguiente para versionar contrato JSON en backlog tooling (`schema_version` + `tool`).
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye metadatos de contrato:
+        - `tool`
+        - `schema_version`
+      - estructura previa se mantiene (sin breaking de campos existentes).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - nuevos tests de contrato JSON para ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#662`.
+
+- ✅ PUMUKI-078: Ejecutar mejora DX siguiente para añadir `generated_at` al contrato JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye `generated_at` (UTC ISO-8601) junto a `tool` y `schema_version`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de presencia/formato básico de `generated_at`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#663`.
+
+- ✅ PUMUKI-079: Ejecutar mejora DX siguiente para añadir `run_id` al contrato JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye `run_id` (UUID v4) por ejecución.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de formato UUID en `run_id` para ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#664`.
+
+- ✅ PUMUKI-080: Ejecutar mejora DX siguiente para añadir `invocation` metadata al contrato JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye `invocation` con contexto no sensible de ejecución (`repo`, flags clave, `mode`).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de `invocation` en contrato JSON de ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#665`.
+
+- ✅ PUMUKI-081: Ejecutar mejora DX siguiente para añadir bloque `compat` al contrato JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye:
+        - `compat.min_reader_version`
+        - `compat.breaking_changes` (vacío en el estado actual).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de bloque `compat` para ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#666`.
+
+- ✅ PUMUKI-082: Ejecutar mejora DX siguiente para añadir `compat.is_backward_compatible` al contrato JSON.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye `compat.is_backward_compatible`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de `compat.is_backward_compatible` en ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#667`.
+
+- ✅ PUMUKI-083: Ejecutar mejora DX siguiente para añadir `compat.contract_id` al contrato JSON.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye `compat.contract_id = backlog-tooling-json-v1`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación explícita de `compat.contract_id` en ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#668`.
+
+- ✅ PUMUKI-084: Ejecutar mejora DX siguiente para centralizar constantes de contrato JSON en módulo compartido.
+  - Fix:
+    - Nuevo módulo compartido: `scripts/backlog-json-contract-lib.ts`.
+    - `watch` y `reconcile` ahora consumen constantes compartidas para:
+      - `schema_version`
+      - `compat.contract_id`
+      - `compat.min_reader_version`
+    - Se elimina duplicación de literales de contrato entre scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#669`.
+
+- ✅ PUMUKI-085: Ejecutar mejora DX siguiente para añadir test unitario dedicado de constantes de contrato JSON.
+  - Fix:
+    - Nuevo test dedicado: `scripts/__tests__/backlog-json-contract-lib.test.ts`.
+    - Cobertura explícita de valores canónicos:
+      - `BACKLOG_JSON_SCHEMA_VERSION`
+      - `BACKLOG_JSON_COMPAT_MIN_READER_VERSION`
+      - `BACKLOG_JSON_COMPAT_CONTRACT_ID`
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-json-contract-lib.test.ts scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `36 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#670`.
+
+- ✅ PUMUKI-086: Ejecutar mejora DX siguiente para añadir script npm focal `test:backlog-tooling`.
+  - Fix:
+    - `package.json`:
+      - nuevo script `test:backlog-tooling` con suite focal de backlog contract/watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - añadido comando rápido recomendado `npm run -s test:backlog-tooling` en sección backlog tooling.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `36 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#671`.
+
+- ✅ PUMUKI-087: Ejecutar mejora DX siguiente para exponer `test:backlog-tooling` en README principal.
+  - Fix:
+    - `README.md`:
+      - añadido `npm run -s test:backlog-tooling` en checklist mínimo de validación previa a PR.
+  - Evidencia (2026-03-05):
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#672`.
+
+- ✅ PUMUKI-088: Ejecutar mejora DX siguiente para enlazar sección específica de backlog tooling desde README.
+  - Fix:
+    - `README.md`:
+      - añadido enlace directo a sección de backlog tooling en `docs/product/USAGE.md`.
+  - Evidencia (2026-03-05):
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#673`.
+
+- ✅ PUMUKI-089: Ejecutar mejora DX siguiente para estabilizar anchor de referencia a backlog tooling en docs.
+  - Fix:
+    - `docs/product/USAGE.md`:
+      - añadido anchor estable `<a id="backlog-tooling"></a>`.
+    - `README.md`:
+      - enlace actualizado a `docs/product/USAGE.md#backlog-tooling`.
+  - Evidencia (2026-03-05):
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#674`.
+
+- ✅ PUMUKI-090: Ejecutar mejora DX siguiente para añadir tabla rápida de comandos backlog tooling en `docs/product/USAGE.md`.
+  - Fix:
+    - `docs/product/USAGE.md`:
+      - añadida tabla rápida `Command -> Objective` en la sección de backlog tooling.
+      - se mantiene la sección de ejemplos largos sin duplicación innecesaria.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `36 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#675`.
+
+- ✅ PUMUKI-091: Ejecutar mejora DX siguiente para sincronizar emoji de encabezados por estado real en reconciliación de backlog consumidor.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts`:
+      - nueva sincronización de encabezados `### ✅/🚧/⏳/⛔ <ID>` según estado efectivo por ID.
+      - trazabilidad añadida en resultado (`headingUpdated`, `headingChanges`) y persistencia en `--apply`.
+    - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`:
+      - nuevos tests de alineación de headings y no-regresión para markdown sin headings.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `15 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `38 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#676`.
+
+- ✅ PUMUKI-092: Ejecutar mejora DX siguiente para trazabilidad e2e del heading sync en salida CLI/docs de reconciliación.
+  - Fix:
+    - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`:
+      - nuevo caso e2e donde el único delta es `heading sync` y `--apply` persiste cambios.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - nuevo test JSON para `headingUpdated` + `headingChanges`.
+    - `docs/product/USAGE.md`:
+      - documentado contrato JSON de heading sync en backlog tooling.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `23 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `40 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#677`.
+
+- ✅ PUMUKI-093: Ejecutar mejora DX siguiente para resumen humano de heading sync en salida no-JSON del reconciliador.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - salida humana ahora incluye `heading_changes=<n>`.
+      - nuevo bloque `heading_changes` con líneas/IDs afectados.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - nuevo test de salida humana para validar resumen y detalle de heading drift.
+    - `docs/product/USAGE.md`:
+      - documentado el resumen de heading changes en modo no-JSON.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `8 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `41 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#678`.
+
+- ✅ PUMUKI-094: Ejecutar mejora DX siguiente para detectar drift de headings en `watch-consumer-backlog` sin mutar archivos.
+  - Fix:
+    - `scripts/watch-consumer-backlog-lib.ts`:
+      - nuevo detector `headingDrift` por ID para divergencia entre heading y estado efectivo en tabla.
+      - `hasActionRequired` ahora considera `headingDrift`.
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida humana con `heading_drift=<n>` y listado `heading_drift_entries`.
+    - `scripts/__tests__/watch-consumer-backlog.test.ts`:
+      - cobertura de detector y de `action_required` por heading drift.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura CLI humana+JSON para heading drift.
+    - `docs/product/USAGE.md`:
+      - documentado `heading_drift` en watch.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `23 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#679`.
+
+- ✅ PUMUKI-095: Ejecutar mejora DX siguiente para exponer `heading_drift_count` estable en JSON de watch.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - payload JSON añade `heading_drift_count` sin romper contrato existente.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación del nuevo campo en salida JSON.
+    - `docs/product/USAGE.md`:
+      - documentado `heading_drift_count` para parsers simples.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#680`.
+
+- ✅ PUMUKI-096: Ejecutar mejora DX siguiente para exponer `heading_changes_count` estable en JSON de reconcile.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - payload JSON añade `heading_changes_count` sin romper contrato existente.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación del nuevo campo en salida JSON de reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `heading_changes_count` para consumidores livianos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#681`.
+
+- ✅ PUMUKI-097: Ejecutar mejora DX siguiente para añadir `classification_counts` en JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - payload JSON añade `classification_counts` (`needs_issue`, `drift_closed_issue`, `active_issue`, `heading_drift`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - payload JSON añade `classification_counts` (cambios + resumen de estado).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de `classification_counts` en watch y reconcile.
+      - hardening: caso reconcile schema evita dependencia de issue real remoto.
+    - `docs/product/USAGE.md`:
+      - documentado `classification_counts` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#682`.
+
+- ✅ PUMUKI-098: Ejecutar mejora DX siguiente para exponer `action_required_reasons` en JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - JSON añade `action_required_reasons` con causas activas (`needs_issue`, `drift_closed_issue`, `heading_drift`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON añade `action_required_reasons` para deltas pendientes (`reference_changes`, `issue_changes`, `heading_changes`, etc.).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de reasons en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `action_required_reasons` en ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#683`.
+
+- ✅ PUMUKI-099: Ejecutar mejora DX siguiente para exponer reasons compactos en salida humana de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida humana incluye `action_required_reasons=<...|none>`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - salida humana incluye `action_required_reasons=<...|none>`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura para reasons esperadas en salidas humanas de watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `action_required_reasons` en modo humano.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#684`.
+
+- ✅ PUMUKI-100: Ejecutar mejora QA siguiente para cubrir `action_required_reasons=none` en salida humana.
+  - Fix:
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - nuevos tests para caso limpio `action_required_reasons=none` en watch y reconcile.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `46 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#685`.
+
+- ✅ PUMUKI-101: Ejecutar refactor DX siguiente para unificar builders de `action_required_reasons`.
+  - Fix:
+    - `scripts/backlog-action-reasons-lib.ts`:
+      - nuevo módulo compartido para construir reasons de watch/reconcile y formateo humano.
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - reutilizan builders compartidos (JSON + human output), eliminando duplicación.
+    - `scripts/__tests__/backlog-action-reasons-lib.test.ts`:
+      - cobertura unitaria del orden/contrato de reasons.
+    - `package.json`:
+      - `test:backlog-tooling` incluye test de módulo compartido.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-action-reasons-lib.test.ts scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `14 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#686`.
+
+- ✅ PUMUKI-102: Ejecutar mejora docs siguiente para reflejar módulo compartido de reasons en backlog tooling.
+  - Fix:
+    - `docs/product/USAGE.md`:
+      - añadida nota breve de arquitectura: módulo compartido `scripts/backlog-action-reasons-lib.ts`.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#687`.
+
+- ✅ PUMUKI-103: Ejecutar mejora docs siguiente para enlazar desde README al bloque backlog tooling (shared reasons).
+  - Fix:
+    - `docs/product/USAGE.md`:
+      - anchor estable añadido para bloque de shared reasons (`#backlog-reasons`).
+    - `README.md`:
+      - enlace directo al bloque `docs/product/USAGE.md#backlog-reasons`.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#688`.
+
+- ✅ PUMUKI-104: Ejecutar mejora docs siguiente para snippet de navegación rápida a backlog tooling desde terminal.
+  - Fix:
+    - `docs/product/USAGE.md`:
+      - snippet corto copy-ready con `rg` para localizar rápido `backlog-tooling` y `backlog-reasons`.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#689`.
+
+- ✅ PUMUKI-105: Ejecutar mejora docs siguiente para visibilidad de quick nav en README.
+  - Fix:
+    - `README.md`:
+      - línea del índice clarificada para indicar que la sección de backlog tooling incluye quick-nav de terminal.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#690`.
+
+- ✅ PUMUKI-106: Ejecutar mejora DX siguiente para hint `--no-fail` en salida humana de backlog watch.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida humana añade hint `--no-fail` cuando `action_required=yes`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura del hint en caso con findings y ausencia del hint en caso limpio.
+    - `docs/product/USAGE.md`:
+      - documentado hint operativo en modo humano.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#691`.
+
+- ✅ PUMUKI-107: Ejecutar mejora DX siguiente para hint `dry-run -> apply` en salida humana de reconcile.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - salida humana añade hint operativo cuando hay `action_required_reasons`.
+      - hint propuesto: ejecutar `--json` (dry-run) y luego `--apply`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura del hint en caso con deltas (`heading_changes`).
+      - verificación de ausencia del hint cuando no hay deltas.
+    - `docs/product/USAGE.md`:
+      - documentado el hint de flujo seguro en modo humano.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#692`.
+
+- ✅ PUMUKI-108: Ejecutar mejora DX siguiente para `next_command` en JSON de reconcile cuando hay deltas.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - salida JSON añade `next_command` solo cuando hay `action_required_reasons`.
+      - `next_command` encapsula flujo seguro `--json` (dry-run) seguido de `--apply`.
+      - quoting seguro de `--file` para rutas con caracteres especiales.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de presencia de `next_command` en caso con deltas.
+      - verificación de ausencia de `next_command` en caso limpio.
+    - `docs/product/USAGE.md`:
+      - documentado `next_command` en contrato JSON de reconcile.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#693`.
+
+- ✅ PUMUKI-109: Ejecutar mejora DX siguiente para `next_command` en JSON de watch cuando hay findings.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida JSON añade `next_command` solo cuando `hasActionRequired=true`.
+      - `next_command` apunta al flujo seguro de reconciliación (`--json` -> `--apply`).
+      - quoting seguro de `--file` para rutas con caracteres especiales.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de presencia de `next_command` en watch con findings.
+      - verificación de ausencia de `next_command` en watch limpio.
+    - `docs/product/USAGE.md`:
+      - documentado `next_command` en contrato JSON de watch.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#694`.
+
+- ✅ PUMUKI-110: Ejecutar mejora DX siguiente para `next_command_reason` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida JSON añade `next_command_reason` cuando existe `next_command`.
+      - valor estable derivado de `action_required_reasons[0]`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - salida JSON añade `next_command_reason` con la misma regla.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de presencia/ausencia en watch/reconcile JSON.
+      - validación de valores esperados (`needs_issue`, `heading_changes`).
+    - `docs/product/USAGE.md`:
+      - documentado `next_command_reason` para watch y reconcile.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#695`.
+
+- ✅ PUMUKI-111: Ejecutar mejora DX siguiente para `next_commands` estructurado en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida JSON añade `next_commands[]` cuando hay acción requerida.
+      - orden estable: `dry_run` y luego `apply`.
+      - se mantiene `next_command` para compatibilidad.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `next_commands[]` y compatibilidad con `next_command`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de presencia/ausencia de `next_commands`.
+      - validación de orden/shape (`label`, `mode`, `command`).
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[]` para watch y reconcile.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#696`.
+
+- ✅ PUMUKI-112: Ejecutar mejora DX siguiente para `next_commands[].safety` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` incluye `safety` por paso (`read_only` para dry-run, `mutating` para apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `safety` por paso.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de `safety` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].safety`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#697`.
+
+- ✅ PUMUKI-113: Ejecutar mejora DX siguiente para `next_commands[].description` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `description` breve por paso.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `description`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de `description` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].description`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#698`.
+
+- ✅ PUMUKI-114: Ejecutar mejora DX siguiente para `next_commands[].id` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `id` estable por paso (`1` dry-run, `2` apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `id` estable.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de `id` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].id`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#699`.
+
+- ✅ PUMUKI-115: Ejecutar mejora DX siguiente para `next_commands[].depends_on` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `depends_on` (`null` en `dry_run`, `dry_run` en `apply`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `depends_on`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de secuenciación por dependencia.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].depends_on`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#700`.
+
+- ✅ PUMUKI-116: Ejecutar mejora DX siguiente para `next_commands[].idempotent` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `idempotent=true` en pasos `dry_run` y `apply`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `idempotent`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura explícita de `idempotent` por paso.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].idempotent`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#701`.
+
+- ✅ PUMUKI-117: Ejecutar mejora DX siguiente para `next_commands[].estimated_duration_ms` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `estimated_duration_ms` por paso (dry-run/apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `estimated_duration_ms`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de duración estimada por paso.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].estimated_duration_ms`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#702`.
+
+- ✅ PUMUKI-118: Ejecutar mejora DX siguiente para `next_commands[].requires_confirmation` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `requires_confirmation` (`false` dry-run, `true` apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `requires_confirmation`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de confirmación requerida por paso.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].requires_confirmation`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#703`.
+
+- ✅ PUMUKI-119: Ejecutar mejora DX siguiente para `next_commands[].execution_group_id` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `execution_group_id` común por ejecución JSON.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `execution_group_id`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de correlación por `run_id`.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].execution_group_id`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#704`.
+
+- ✅ PUMUKI-120: Ejecutar mejora DX siguiente para `next_commands[].origin_tool` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `origin_tool=backlog-watch`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - `next_commands[]` añade `origin_tool=backlog-reconcile`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de `origin_tool` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].origin_tool`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#705`.
+
+- ✅ PUMUKI-121: Ejecutar mejora DX siguiente para `next_commands[].origin_schema_version` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `origin_schema_version` alineado con `schema_version`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `origin_schema_version`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de alineación `next_commands[].origin_schema_version == payload.schema_version`.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].origin_schema_version`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#706`.
+
+- ✅ PUMUKI-122: Ejecutar mejora DX siguiente para `next_commands[].recommendation_type` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `recommendation_type=reconcile_loop`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `recommendation_type`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de clasificación estable por paso.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].recommendation_type`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#707`.
+
+- ✅ PUMUKI-123: Ejecutar mejora DX siguiente para `next_commands[].origin_contract_id` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `origin_contract_id` alineado con `compat.contract_id`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `origin_contract_id`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de alineación con contrato de compatibilidad.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].origin_contract_id`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#708`.
+
+- ✅ PUMUKI-124: Ejecutar mejora DX siguiente para `next_commands[].priority` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].priority` estable por paso (`high` dry-run, `medium` apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `priority` por paso (`high`/`medium`).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `priority` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].priority` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#709`.
+
+- ✅ PUMUKI-125: Ejecutar mejora DX siguiente para `next_commands[].max_retries` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].max_retries` por paso (`2` dry-run, `0` apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `max_retries` por paso (`2`/`0`).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `max_retries` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].max_retries` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#710`.
+
+- ✅ PUMUKI-126: Ejecutar mejora DX siguiente para `next_commands[].retry_strategy` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].retry_strategy` por paso (`immediate` dry-run, `manual` apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `retry_strategy` por paso (`immediate`/`manual`).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `retry_strategy` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].retry_strategy` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#711`.
+
+- ✅ PUMUKI-127: Ejecutar mejora DX siguiente para `next_commands[].failure_hint` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].failure_hint` compacto por paso (`dry_run`/`apply`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `failure_hint` por paso.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `failure_hint` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].failure_hint` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#712`.
+
+- ✅ PUMUKI-128: Ejecutar mejora DX siguiente para `next_commands[].expected_outcome` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].expected_outcome` por paso (`dry_run`/`apply`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `expected_outcome` por paso.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `expected_outcome` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].expected_outcome` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#713`.
+
+- ✅ PUMUKI-129: Ejecutar mejora DX siguiente para `next_commands[].success_criteria` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].success_criteria` por paso (`plan_generated_no_mutation`, `backlog_reconciled_persisted`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `success_criteria` por paso.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `success_criteria` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].success_criteria` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#714`.
+
+- ✅ PUMUKI-130: Ejecutar mejora DX siguiente para `next_commands[].success_probe` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].success_probe` por paso (`dry_run`/`apply`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `success_probe` por paso.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `success_probe` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].success_probe` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#715`.
+
+- ✅ PUMUKI-131: Ejecutar mejora DX siguiente para `next_commands[].probe_timeout_ms` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].probe_timeout_ms` por paso (`1500` dry-run, `4000` apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `probe_timeout_ms` por paso.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `probe_timeout_ms` en watch/reconcile.
+    - `docs/product/USAGE.md`:
+      - documentado `next_commands[].probe_timeout_ms` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#716`.
+
+- ✅ PUMUKI-132: Ejecutar mejora DX siguiente para `next_commands[].probe_kind` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts` añade `next_commands[].probe_kind` (`json_contract` en `dry_run`, `state_recheck` en `apply`).
+    - `scripts/reconcile-consumer-backlog-issues.ts` aplica el mismo contrato `probe_kind` para paridad de tooling.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts` amplía tipado + asserts para `probe_kind` en ambos comandos.
+    - `docs/product/USAGE.md` documenta `next_commands[].probe_kind` para `watch-consumer-backlog` y `reconcile-consumer-backlog-issues`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+  - Issue upstream: `#717` (lista para cierre operativo).
+
+- ✅ PUMUKI-133: Cerrar `PUMUKI-INC-062` (incoherencia `ai_gate_check` vs hooks `ALLOW`) con hint de precedencia robusto para códigos `EVIDENCE_*` legacy.
+  - Resultado implementado:
+    - `integrations/mcp/aiGateCheck.ts`:
+      - `consistency_hint` pasa a detectar de forma genérica cualquier código `EVIDENCE_*` para stage hook (`PRE_COMMIT/PRE_PUSH/CI`), incluyendo casos legacy como `EVIDENCE_INTEGRITY_MISSING`.
+      - soporte de dependencias inyectables para test de regresión determinista.
+    - `integrations/mcp/__tests__/aiGateCheck.test.ts`:
+      - nuevo test RED/GREEN para `EVIDENCE_INTEGRITY_MISSING` con `reason_code=HOOK_RUNNER_CAN_REFRESH_EVIDENCE`.
+    - `integrations/mcp/preFlightCheck.ts` + `integrations/lifecycle/cli.ts`:
+      - remediación humana explícita para `EVIDENCE_INTEGRITY_MISSING`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts` -> `6 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `39 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Commit: `6f6aa69`.
+
+- ✅ PUMUKI-134: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-060`) sobre falso positivo de coverage iOS por upstream desalineado.
+  - Resultado implementado:
+    - `integrations/git/stageRunners.ts`:
+      - ajuste del guard `PRE_PUSH_UPSTREAM_MISALIGNED` para detectar desalineación con `ahead` moderado (umbral operativo reducido de `25` a `5`), bloqueando antes de evaluar scope contaminado.
+    - `integrations/git/__tests__/stageRunners.test.ts`:
+      - nuevo test RED/GREEN para asegurar bloqueo por upstream desalineado con `ahead=6` (`feature/*` trackeando `origin/develop`), evitando falso positivo de `platform-coverage`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `26 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts` -> `6 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Commit: `cd3d45f`.
+
+- ✅ PUMUKI-135: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-057`) sobre `npx --no-install pumuki --version` con `MODULE_NOT_FOUND`.
+  - Resultado implementado:
+    - `scripts/package-install-smoke-consumer-npm-lib.ts`:
+      - `verifyInstalledPumukiBinaryVersion()` ahora intenta primero `npx --no-install pumuki --version` y, si detecta fallo/fatal pattern, hace fallback determinista a comando local resuelto (`node_modules/.bin/pumuki` o entrypoint local) antes de fallar definitivamente.
+    - `scripts/__tests__/package-install-smoke-consumer-npm-lib.test.ts`:
+      - nuevo test RED/GREEN para validar que, ante `MODULE_NOT_FOUND` en `--no-install`, el smoke cae en fallback local y pasa.
+      - cobertura ampliada para confirmar dos intentos registrados en command log cuando hay degradación.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-consumer-npm-lib.test.ts scripts/__tests__/package-install-smoke-repo-setup-lib.test.ts scripts/__tests__/package-smoke-workflow-contract.test.ts` -> `8 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Commit: `ebd13ac`.
+
+- ✅ PUMUKI-136: Ejecutar siguiente bug prioritaria del watcher RuralGo (`FP-030`) sobre falso positivo `PRE_PUSH` por upstream desalineado (paridad con `PUMUKI-INC-060`).
+  - Resultado implementado:
+    - cierre canónico validado sobre el fix `PRE_PUSH_UPSTREAM_MISALIGNED` (`cd3d45f`),
+    - normalización de estado en MD RuralGo sin contradicciones (`FP-030`, `PUMUKI-INC-056`, `PUMUKI-INC-057`, `PUMUKI-INC-058` => `✅ FIXED`),
+    - backlog activo de RuralGo queda en cero incidencias abiertas para este corte.
+  - Evidencia (2026-03-05):
+    - actualización directa de `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - verificación de consistencia: `rg -n \"🚧 REPORTED|⏳ REPORTED\" .../pumuki-integration-feedback.md` -> sin incidencias abiertas.
+
+- ✅ PUMUKI-137: Preparar y ejecutar el siguiente corte de release (versionado + publicación npm + upgrade en consumidores RuralGo/SAAS/Flux_training).
+  - Resultado implementado:
+    - release publicada: `pumuki@6.3.40` (npm `latest`).
+    - upgrade consumidores completado:
+      - `R_GO`: `pumuki@6.3.40` + `pumuki install` + `status/doctor` en verde.
+      - `SAAS:APP_SUPERMERCADOS`: `pumuki@6.3.40` + `pumuki install` + `status/doctor` en verde.
+      - `Flux_training`: instalación inicial `pumuki@6.3.40` + `pumuki install` + `status/doctor` en verde.
+  - Evidencia (2026-03-05):
+    - `npm publish --access public` -> `+ pumuki@6.3.40`.
+    - `npm view pumuki version` -> `6.3.40`.
+    - validación local release:
+      - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+      - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-138: Endurecer UX de notificaciones de bloqueo multi-repo (contexto de proyecto + modal fiable).
+  - Resultado implementado:
+    - `scripts/framework-menu-system-notifications-lib.ts`:
+      - añade contexto de proyecto en notificaciones (`<repo> · <stage> · <causa>`),
+      - activa modal de bloqueo por defecto en macOS cuando hay `gate.blocked` (sin depender obligatoriamente de `PUMUKI_MACOS_BLOCKED_DIALOG=1`),
+      - soporta override explícito (`PUMUKI_MACOS_BLOCKED_DIALOG=0|1`) y preserva control anti-spam existente.
+    - `scripts/__tests__/framework-menu-system-notifications.test.ts`:
+      - nueva cobertura para subtítulo con proyecto,
+      - nueva cobertura para apertura de modal por defecto.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts` -> `13 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-139: Monitorizar feedback post-release en consumidores reales (SAAS y RuralGo) y registrar únicamente hallazgos netos nuevos para siguiente corte.
+  - Alcance:
+    - vigilar nuevos bloqueos/regresiones tras `6.3.41`,
+    - mantener MDs externos sincronizados por leyenda sin contradicciones,
+    - preparar siguiente paquete de fixes/mejoras sin re-bugs.
+
+- ✅ PUMUKI-140: Publicar patch release con mejoras UX de notificación de bloqueo multi-repo.
+  - Resultado implementado:
+    - release `pumuki@6.3.41` publicada con:
+      - proyecto visible en subtítulo de bloqueo,
+      - modal de bloqueo habilitada por defecto en macOS,
+      - override explícito `PUMUKI_MACOS_BLOCKED_DIALOG=0|1`.
+  - Evidencia (2026-03-05):
+    - `npm publish --access public` -> `+ pumuki@6.3.41`.
+    - `npm view pumuki version` -> `6.3.41`.
+
+- ✅ PUMUKI-141: Cerrar hallazgo Flux `PUM-001` (autoguía SDD en `SDD_SESSION_MISSING`) con comando asistido y sugerencia concreta.
+  - Resultado implementado:
+    - `integrations/sdd/sessionStore.ts`: soporte real para `pumuki sdd session --open --change=auto`.
+    - `integrations/sdd/policy.ts`: guidance contextual para `SDD_SESSION_MISSING` con `command/fallbackCommand/suggestedChangeId`.
+    - `integrations/lifecycle/cli.ts`: ayuda CLI actualizada (`--change=<change-id|auto>`).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/sessionStore.test.ts integrations/sdd/__tests__/policy.test.ts` -> `27 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-142: Cerrar hallazgos Flux `PUM-003` + `PUM-004` (DX de bloqueo jerárquico + remediación accionable por scopes).
+  - Resultado implementado:
+    - `integrations/git/runPlatformGateOutput.ts`: resumen jerárquico de bloqueo (`primary`, `next_action`) antes del detalle completo de findings.
+    - `integrations/git/gitAtomicity.ts`: remediación `GIT_ATOMICITY_TOO_MANY_SCOPES` con scopes detectados y ejemplo directo de split de staging.
+    - Tests nuevos:
+      - `integrations/git/__tests__/runPlatformGateOutput.test.ts`
+      - ampliación en `integrations/git/__tests__/gitAtomicity.test.ts`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/gitAtomicity.test.ts integrations/git/__tests__/runPlatformGateOutput.test.ts` -> `7 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `91 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-143: Ejecutar siguiente hallazgo Flux `PUM-002` (modo proporcional por riesgo para bloqueos `skills.frontend.*` en cambios low-risk).
+  - Resultado implementado:
+    - `integrations/git/runPlatformGate.ts`:
+      - nuevo soft-enforcement determinista para `PRE_COMMIT` low-risk (`PUMUKI_PRE_COMMIT_SOFT_SKILLS`, on por defecto),
+      - degrada a `WARN` (sin bypass total) findings de coverage skills (`platform-coverage`, `cross-platform-critical`, `scope-compliance`) cuando:
+        - ventana low-risk (`observed_code_paths<=3`),
+        - no hay bloqueantes core reales (`ERROR/CRITICAL`) en findings nativos/TDD/AST/policy/coverage hard.
+    - `integrations/git/__tests__/runPlatformGate.test.ts`:
+      - cobertura RED->GREEN para soft-enforcement en `PRE_COMMIT`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> `33 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts integrations/sdd/__tests__/sessionStore.test.ts integrations/sdd/__tests__/policy.test.ts integrations/git/__tests__/gitAtomicity.test.ts integrations/git/__tests__/runPlatformGateOutput.test.ts` -> `60 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+  - Alcance:
+    - diseñar criterio determinista de low-risk (copy/docs) sin abrir bypass inseguro,
+    - mantener enforcement fuerte en cambios funcionales reales,
+    - validar con RED->GREEN->REFACTOR y actualizar leyenda del MD de Flux.
+
+- ✅ PUMUKI-144: Monitorizar nuevos hallazgos netos tras cierre completo del backlog Flux (sin reabrir issues ya cerradas).
+  - Resultado:
+    - reapareció gap neto de paridad UX legacy en tools MCP (feedback humano por iteración),
+    - se consolidó como mejora real de producto (no reapertura de `PUM-001..004`).
+
+- ✅ PUMUKI-145: Implementar paridad de feedback humano en tools MCP (`auto_execute_ai_start`, `pre_flight_check`, `ai_gate_check`).
+  - Resultado implementado:
+    - `integrations/mcp/autoExecuteAiStart.ts`: salida humana estable con `phase`, `message`, `instruction` y `platforms.force`.
+    - `integrations/mcp/preFlightCheck.ts`: añade `phase`, `message`, `instruction`, `ast_analysis`, `tdd_status` para lectura directa en chat/tooling.
+    - `integrations/mcp/aiGateCheck.ts`: añade `message`, `timestamp`, `branch`, `warnings`, `auto_fixes` sin romper contrato existente.
+    - Tests ampliados:
+      - `integrations/mcp/__tests__/autoExecuteAiStart.test.ts`
+      - `integrations/mcp/__tests__/preFlightCheck.test.ts`
+      - `integrations/mcp/__tests__/aiGateCheck.test.ts`
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts` -> `12 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-146: Cerrar opción 2 UX de notificación bloqueante (modal flotante no intrusiva + posicionamiento consistente para no tapar el centro).
+  - Resultado implementado:
+    - `scripts/framework-menu-system-notifications-lib.ts`:
+      - helper nativo Swift para diálogo bloqueante flotante (esquina inferior derecha),
+      - persistencia runtime del script en `.pumuki/runtime/pumuki-blocked-dialog.swift`,
+      - selector de modo `PUMUKI_MACOS_BLOCKED_DIALOG_MODE=auto|swift-floating|applescript`,
+      - fallback automático a AppleScript si el helper Swift falla.
+    - `scripts/__tests__/framework-menu-system-notifications.test.ts`:
+      - cobertura para modo por defecto (Swift), modo forzado AppleScript y fallback Swift->AppleScript.
+    - `docs/product/USAGE.md`: contrato operativo del nuevo modo de diálogo.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts` -> `15 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-147: Monitorizar feedback real post-opción-2 (legibilidad, anti-spam, foco no intrusivo) y cerrar ajustes finos si aparece regresión.
+  - Alcance:
+    - validar comportamiento en múltiples repos abiertos simultáneamente,
+    - confirmar que acciones de diálogo (`Desactivar`, `Silenciar 30 min`, `Mantener activas`) se mantienen consistentes,
+    - registrar solo hallazgos netos nuevos antes del siguiente corte release.
+  - Ajuste aplicado (2026-03-05):
+    - pinning reforzado de posición del helper Swift: selección de pantalla por cursor, posicionamiento explícito bottom-right y repinning tras `orderFront` para evitar recentrado.
+    - UI responsive del modal flotante: ancho/alto dinámicos según longitud real de `title/cause/remediation`, con límites por pantalla y autoajuste de layout para evitar texto truncado.
+    - tuning visual adicional: ancho máximo reducido, crecimiento preferente en vertical y tipografía compacta para evitar modales excesivamente anchos/bastos en textos largos.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts` -> `15 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - smoke manual con payload largo (`/tmp/pumuki_modal_smoke.ts`) -> `{"delivered":true,"reason":"delivered"}`.
+
+- ✅ PUMUKI-148: Ejecutar verificación UX final en entorno real multi-proyecto (notificación + modal) y preparar corte de release sin regresiones.
+  - Alcance:
+    - validar que textos largos no truncen en causa/solución,
+    - validar consistencia visual de acciones del modal en distintas resoluciones,
+    - confirmar que no hay regresiones en fallback AppleScript.
+  - Avance (2026-03-05):
+    - patrón de remediación enriquecido por defecto en bloqueos (`EVIDENCE_STALE`, `PRE_PUSH_UPSTREAM_MISSING`, `SDD_SESSION_*`, `BACKEND_AVOID_EXPLICIT_ANY`) para mantener mensajes accionables y humanos en modal/notificación.
+    - longitud de remediación ampliada (`max 220`) para preservar pasos útiles sin recorte agresivo.
+    - validación manual de modales de prueba (corto/medio/largo/extremo) en helper Swift flotante con rendering consistente y sin regresión de acciones (`Desactivar`, `Silenciar 30 min`, `Mantener activas`).
+
+- ✅ PUMUKI-149: Preparar corte release del bloque UX-notificaciones y ejecutar upgrade/smoke en consumidores (`SAAS`, `RuralGo`, `Flux_training`).
+  - Alcance:
+    - cerrar changelog/release notes del bloque `PUMUKI-145..148`,
+    - publicar versión npm con trazabilidad,
+    - ejecutar `install/update` + smoke mínimo en los tres repos consumidores,
+    - actualizar estado final en MDs externos por leyenda.
+  - Resultado (2026-03-05):
+    - publicación npm completada: `pumuki@6.3.42`.
+    - upgrade aplicado con `pumuki install` en:
+      - `SAAS:APP_SUPERMERCADOS` (`lifecycle_version=6.3.42`)
+      - `R_GO` (`lifecycle_version=6.3.42`)
+      - `Flux_training` (`lifecycle_version=6.3.42`)
+    - smoke de salud post-upgrade en 3/3 consumidores:
+      - `doctor_issues=0`
+      - `openspec_compatible=true`
+      - `session_active=true`
+
+- ✅ PUMUKI-150: Ejecutar siguiente pendiente real en backlog externo (Flux `PUM-005`) y cerrar incidencia de `pumuki sdd evidence` con contrato v1 compatible con gate TDD.
+  - Alcance:
+    - reproducir `PUM-005` con evidencia local controlada,
+    - aplicar fix mínimo en core (`sdd evidence` -> `version=\"1\"` + `slices[]`),
+    - validar RED->GREEN con smoke en `Flux_training`,
+    - actualizar leyenda en `docs/BUGS_Y_MEJORAS_PUMUKI.md` (Flux) sin tocar código del consumer.
+  - Resultado (2026-03-05):
+    - fix aplicado en core:
+      - `integrations/sdd/evidenceScaffold.ts`: `artifact.version=\"1\"` + `artifact.slices[]`, manteniendo campos legacy (`scenario_id`, `test_run`, `ai_evidence`).
+      - `integrations/sdd/stateSync.ts`: compatibilidad de lectura `version=1|1.0` para rollout sin ruptura.
+    - validación local:
+      - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/evidenceScaffold.test.ts integrations/sdd/__tests__/stateSync.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `47 pass / 0 fail`.
+      - `npm run -s typecheck` -> `PASS`.
+    - release asociado: `pumuki@6.3.43` publicado en npm.
+    - revalidación en Flux con `@latest`:
+      - `pumuki sdd evidence ... --json` => `artifact.version=\"1\"` + `slices[]`,
+      - `pnpm exec pumuki watch --once --stage=PRE_COMMIT --scope=staged --json` en `ALLOW` sin `TDD_BDD_EVIDENCE_INVALID`.
+    - leyenda Flux actualizada: `PUM-005` -> `✅ Cerrado`; `PUM-006` -> `🚧 En construccion`.
+
+- ✅ PUMUKI-151: Ejecutar siguiente pendiente activo de backlog Flux (`PUM-006`) para enriquecer salida JSON de `pumuki watch` con `changedFiles/evaluatedFiles`.
+  - Resultado (2026-03-05):
+    - `integrations/lifecycle/watch.ts`:
+      - contrato extendido de tick con `changedFiles[]` y `evaluatedFiles[]`,
+      - cálculo determinista por `facts` del scope evaluado.
+    - `integrations/lifecycle/__tests__/watch.test.ts`:
+      - cobertura de ambos campos en ticks `BLOCK/ALLOW/WARN`.
+    - `integrations/lifecycle/__tests__/cli.test.ts`:
+      - payload JSON estable de `watch --once --json` validando ambos campos.
+    - `docs/product/USAGE.md`:
+      - documentación de trazabilidad por tick en salida JSON.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `42 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - leyenda Flux actualizada: `PUM-006` -> `✅ Cerrado`; `PUM-007` -> `🚧 En construccion`.
+
+- ✅ PUMUKI-152: Ejecutar siguiente pendiente activo de backlog Flux (`PUM-007`) para evitar artefactos efimeros en raíz del repo tras hooks/watch.
+  - Alcance:
+    - reproducir contaminación de worktree por `.ai_evidence.json` y `.pumuki/**`,
+    - definir cleanup post-ejecución sin perder trazabilidad oficial del repo,
+    - validar con tests + smoke en `Flux_training`,
+    - cerrar leyenda en MD externo Flux al completar fix.
+  - Avance actual (2026-03-05):
+    - `integrations/lifecycle/artifacts.ts`:
+      - nuevo `ensureRuntimeArtifactsIgnored(repoRoot)` con bloque gestionado en `.git/info/exclude`,
+      - soporte para repos normales y `git worktree` (`.git` como `gitdir`).
+    - integración aplicada en:
+      - `integrations/lifecycle/install.ts`
+      - `integrations/lifecycle/watch.ts`
+      - `integrations/git/stageRunners.ts`
+    - cobertura de regresión:
+      - `integrations/lifecycle/__tests__/artifacts.test.ts` (bloque insert/replace/idempotent),
+      - `integrations/git/__tests__/stageRunners.test.ts` (pre-commit asegura ignore runtime),
+      - `integrations/lifecycle/__tests__/install.test.ts` (worktree sin regresión).
+    - evidencia local:
+      - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/install.test.ts integrations/lifecycle/__tests__/artifacts.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/lifecycle/__tests__/watch.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `86 pass / 0 fail`.
+      - `npm run -s typecheck` -> `PASS`.
+    - smoke en consumer Flux:
+      - `node /Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks/bin/pumuki.js watch --once --stage=PRE_COMMIT --scope=staged --json` ejecutado en `Flux_training`,
+      - `.git/info/exclude` con bloque `pumuki-runtime-artifacts`,
+      - `git status --short` sin ruido de `.ai_evidence.json` / `.pumuki/**`.
+    - leyenda Flux actualizada: `PUM-007` -> `✅ Cerrado`; `PUM-008` -> `🚧 En construccion`.
+
+- ✅ PUMUKI-153: Ejecutar siguiente pendiente activo de backlog Flux (`PUM-008`) para hacer accionable el bloqueo `skills.frontend.no-solid-violations` en cambios incrementales.
+  - Resultado (2026-03-05):
+    - `integrations/config/skillsRuleSet.ts`:
+      - mensajes enriquecidos para reglas `*.no-solid-violations` con `ast_nodes`, `observed_paths` y `sample_paths`.
+    - `integrations/git/runPlatformGateOutput.ts`:
+      - `next_action` específico y progresivo para `SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS` (extracción incremental por componente/hook).
+    - cobertura:
+      - `integrations/config/__tests__/skillsRuleSet.test.ts`,
+      - `integrations/git/__tests__/runPlatformGateOutput.test.ts`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsRuleSet.test.ts integrations/git/__tests__/runPlatformGateOutput.test.ts` -> `17 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - leyenda Flux actualizada: `PUM-008` -> `✅ Cerrado`.
+
+- ✅ PUMUKI-154: Ejecutar siguiente pendiente crítico del backlog SAAS (`PUMUKI-016`) para convertir bloqueos de `PRE_WRITE` por regla iOS crítica ausente en remediación guiada y determinista de bootstrap/reconcile.
+  - Resultado (2026-03-05):
+    - `integrations/mcp/preFlightCheck.ts`:
+      - hints accionables para `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` y `EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE`.
+    - `integrations/mcp/autoExecuteAiStart.ts`:
+      - `next_action` determinista con comando `policy reconcile --strict` + revalidación `PRE_WRITE`.
+      - clasificación de confianza alineada para ambos códigos críticos.
+    - `integrations/lifecycle/cli.ts`:
+      - `PRE_WRITE_HINTS_BY_CODE` enriquecido para esos códigos críticos.
+      - `resolvePreWriteNextAction` ahora prioriza ruta de reconcile estricto en bloqueos de reglas críticas.
+    - cobertura añadida:
+      - `integrations/mcp/__tests__/preFlightCheck.test.ts`
+      - `integrations/mcp/__tests__/autoExecuteAiStart.test.ts`
+      - `integrations/lifecycle/__tests__/cli.test.ts`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `50 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - leyenda SAAS actualizada:
+      - `PUMUKI-016` -> `✅ Cerrado`
+      - `PUMUKI-012` -> `🚧 En construcción` (siguiente foco).
+
+- ✅ PUMUKI-155: Ejecutar siguiente pendiente HIGH del backlog SAAS (`PUMUKI-012`) para cerrar la recurrencia de `active_rule_ids` vacío con cambios de código en `PRE_COMMIT`.
+  - Alcance:
+    - reproducir recurrencia en contexto real (diffs pequeños y grandes),
+    - endurecer contrato de `rules_coverage` en `PRE_COMMIT` para evitar falso verde con cobertura vacía,
+    - validar con tests focales + typecheck,
+    - actualizar leyenda SAAS manteniendo una única `🚧`.
+  - Avance técnico (2026-03-05):
+    - `integrations/git/stageRunners.ts`:
+      - en bloqueos de `PRE_COMMIT/PRE_PUSH/CI` prioriza `snapshot.findings` del stage actual como causa primaria (en lugar de depender solo de `ai_gate.violations`),
+      - remediación específica añadida para `ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH`.
+    - `integrations/git/runPlatformGateOutput.ts`:
+      - `next_action` explícito para `ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH` con flujo `policy reconcile --strict` + `pumuki-pre-commit`.
+    - cobertura añadida:
+      - `integrations/git/__tests__/stageRunners.test.ts`
+      - `integrations/git/__tests__/runPlatformGateOutput.test.ts`
+    - evidencia local:
+      - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGateOutput.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `82 pass / 0 fail`.
+      - `npm run -s typecheck` -> `PASS`.
+  - Avance técnico adicional (2026-03-05, cierre de falso bloqueo cross-platform en PRE_WRITE):
+    - `integrations/gate/evaluateAiGate.ts`:
+      - detección efectiva de plataformas en `PRE_WRITE` basada en `rules_coverage` cuando hay plataformas detectadas, para evitar arrastre de scope legado (ej.: iOS) en diffs backend.
+      - mantiene enforcement hard sin relajar contrato: si no hay señal efectiva de coverage por prefijo, conserva fallback al scope detectado original.
+    - `integrations/gate/__tests__/evaluateAiGate.test.ts`:
+      - nuevo caso de regresión: `platforms` arrastra `ios`, pero la cobertura efectiva real es `backend` y el gate debe quedar en `ALLOWED`.
+    - evidencia local:
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> `26 pass / 0 fail`.
+      - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGateOutput.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `82 pass / 0 fail`.
+      - `npm run -s typecheck` -> `PASS`.
+  - Avance técnico adicional (2026-03-05, hardening de cobertura vacía en PRE_WRITE):
+    - `integrations/gate/evaluateAiGate.ts`:
+      - `EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES` ahora también bloquea cuando `active_rule_ids=[]` y la cobertura evaluada infiere plataforma (`skills.<scope>.*`) aunque `platforms` venga vacío.
+      - mensaje distingue modo de detección (`detected`/`inferred`) para trazabilidad de root-cause.
+    - `integrations/gate/__tests__/evaluateAiGate.test.ts`:
+      - nuevo caso de regresión: `platforms={}` + `evaluated_rule_ids=['skills.backend.no-empty-catch']` + `active_rule_ids=[]` => `BLOCKED`.
+    - evidencia local:
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> `27 pass / 0 fail`.
+      - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `73 pass / 0 fail`.
+      - `npm run -s typecheck` -> `PASS`.
+  - Cierre operativo final (2026-03-05):
+    - `integrations/mcp/autoExecuteAiStart.ts`, `integrations/mcp/preFlightCheck.ts` y `integrations/lifecycle/cli.ts` alineados con remediación accionable para `EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES`.
+    - pruebas de regresión completas:
+      - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/lifecycle/__tests__/cli.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts` -> `80 pass / 0 fail`.
+      - `npm run -s typecheck` -> `PASS`.
+    - leyenda SAAS actualizada:
+      - `PUMUKI-012` -> `✅ Cerrado`
+      - `PUMUKI-M008` -> `🚧 En construcción` (siguiente foco único).
+
+- ✅ PUMUKI-156: Ejecutar siguiente pendiente HIGH del backlog SAAS (`PUMUKI-017`) para reducir falsos bloqueos de `skills.backend.no-solid-violations` en `PRE_COMMIT` y mantener enforcement fuerte en `PRE_PUSH`.
+  - Resultado (2026-03-05):
+    - `integrations/config/skillsMarkdownRules.ts`:
+      - reglas conocidas `*.no-solid-violations` ahora usan stage canónico `PRE_PUSH` cuando el markdown no define stage.
+      - si el markdown define stage explícito, se respeta sin override.
+    - `integrations/config/__tests__/skillsMarkdownRules.test.ts`:
+      - cobertura nueva para stage canónico y respeto de stage explícito.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsMarkdownRules.test.ts integrations/config/__tests__/skillsRuleSet.test.ts` -> `20 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `101 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-157: Ejecutar siguiente pendiente HIGH del backlog SAAS (`PUMUKI-M008`) para entregar asistente de partición atómica accionable en `PRE_WRITE` antes del bloqueo.
+  - Alcance:
+    - generar `suggested-atomic-slices` por contexto (scope/ruta/tipo de archivo),
+    - exponer `next_action` con comandos concretos de staging por lote,
+    - mantener comportamiento anti-spam y sin auto-aplicar cambios.
+  - Resultado (2026-03-05):
+    - helper nuevo `integrations/git/worktreeAtomicSlices.ts` para agrupar cambios por scope y proponer `git add -- ...` por lote.
+    - `pre_flight_check` ahora expone `ATOMIC_SLICES` y `ATOMIC_SLICES[next]` en bloqueos de higiene de worktree.
+    - `auto_execute_ai_start` ahora devuelve `next_action` con primer lote atómico accionable + comando de revalidación `PRE_WRITE`.
+    - `pumuki sdd validate --stage=PRE_WRITE` ahora expone `next_action` con slice atómico cuando el umbral se supera.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/worktreeAtomicSlices.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `56 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - leyenda SAAS actualizada:
+      - `PUMUKI-M008` -> `✅ Cerrado`
+      - `PUMUKI-M005` -> `🚧 En construcción` (siguiente foco único).
+
+- ✅ PUMUKI-158: Ejecutar siguiente pendiente MEDIUM del backlog SAAS (`PUMUKI-M005`) para cerrar convergencia determinista de `policy reconcile --strict` (diagnóstico + autofix + verificación).
+  - Alcance:
+    - definir salida `next_action` estable de autofix cuando detecte drift crítico,
+    - añadir modo `--apply` seguro e idempotente para convergencia guiada,
+    - dejar evidencia machine-readable de antes/después (`drift -> reconciled`).
+  - Resultado (2026-03-05):
+    - `integrations/lifecycle/policyReconcile.ts` ahora soporta `apply=true` y produce bloque `autofix` (`attempted/status/actions/details`).
+    - `policy reconcile --strict --apply` escribe contrato determinista `.pumuki/policy-as-code.json` (`WRITE_POLICY_AS_CODE_CONTRACT`) y reevalúa convergencia.
+    - `integrations/lifecycle/cli.ts` añade flag `--apply` + salida textual de autofix.
+    - cobertura añadida:
+      - `integrations/lifecycle/__tests__/policyReconcile.test.ts` (convergencia `--strict --apply`),
+      - `integrations/lifecycle/__tests__/cli.test.ts` (parse + ejecución `--strict --apply --json`).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/policyReconcile.test.ts integrations/lifecycle/__tests__/cli.test.ts integrations/git/__tests__/worktreeAtomicSlices.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts` -> `63 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - leyenda SAAS actualizada:
+      - `PUMUKI-M005` -> `✅ Cerrado`
+      - `PUMUKI-006` -> `🚧 En construcción` (siguiente foco único).
+
+- ✅ PUMUKI-159: Ejecutar siguiente pendiente LOW del backlog SAAS (`PUMUKI-006`) para alinear `package_version` y `lifecycle_version` en `ai_gate_check`/MCP.
+  - Resultado (2026-03-05):
+    - `integrations/gate/evaluateAiGate.ts` incorpora normalización defensiva para evitar payload desalineado cuando `captureRepoState` mezcla fuentes de versión.
+    - se alinea `repo_state.lifecycle.package_version` con `lifecycle_version` en salida de gate/MCP, manteniendo trazabilidad sin drift en contratos JSON.
+    - regresión cubierta en `integrations/gate/__tests__/evaluateAiGate.test.ts` con fixture desalineada.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> `PASS`.
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/mcp/__tests__/aiGateCheck.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `PASS`.
+    - `npm run -s typecheck` -> `PASS`.
+    - leyenda SAAS actualizada:
+      - `PUMUKI-006` -> `✅ Cerrado`
+      - backlog SAAS externo queda en `✅ 100% cerrado`.
+
+- ✅ PUMUKI-160: Iniciar siguiente ciclo activo sobre backlog RuralGo/consumidores (solo hallazgos netos nuevos) sin reabrir incidencias ya cerradas.
+  - Resultado (2026-03-05):
+    - validado estado canónico externo:
+      - SAAS: `✅ Cerrados: 25`, `0` en `🚧/⏳/⛔`.
+      - RuralGo: `✅ Cerrados: 98`, `0` en `🚧/⏳/⛔`.
+      - Flux: backlog localizado en `docs/BUGS_Y_MEJORAS_PUMUKI.md` (ruta real), con foco activo en `PUM-010`.
+    - cerrado `PUM-009` en Flux tras verificación directa contra paquete publicado (`pumuki@latest`) con salida válida de `sdd evidence` (`version: "1"` + `slices[]`).
+  - Evidencia:
+    - `npx --yes --package pumuki@latest pumuki sdd evidence --scenario-id=docs/validation/features/p3_t1_web_shell_dashboard --test-command='pnpm test' --test-status=passed --json` -> artefacto válido.
+    - actualización de leyenda en `Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md`:
+      - `PUM-009` -> `✅ Cerrado`
+      - `PUM-010` -> `🚧 En construccion`
+      - `PUM-011` -> `⏳ Pendiente`.
+
+- ✅ PUMUKI-161: Ejecutar siguiente pendiente activo de Flux (`PUM-010`) para estabilizar persistencia de bundles/rules de `skills.frontend.*` entre iteraciones sin bootstrap manual repetitivo.
+  - Resultado (2026-03-05):
+    - `integrations/lifecycle/watch.ts` ahora detecta drift de skills coverage en runtime (`SKILLS_PLATFORM_COVERAGE_INCOMPLETE_HIGH`, `SKILLS_SCOPE_COMPLIANCE_INCOMPLETE_HIGH` y equivalentes `EVIDENCE_*`) y ejecuta auto-reconcile determinista (`policy reconcile --strict --apply`) dentro del mismo tick.
+    - si el autofix aplica contrato (`WRITE_POLICY_AS_CODE_CONTRACT`), `watch` reevalúa el gate en la misma iteración para evitar bootstrap manual repetido.
+    - cobertura añadida: test dedicado en `integrations/lifecycle/__tests__/watch.test.ts` (`auto-reconcilia policy en drift de skills y reevalua en la misma iteracion`).
+    - leyenda Flux actualizada:
+      - `PUM-010` -> `✅ Cerrado`
+      - `PUM-011` -> `🚧 En construccion`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts integrations/lifecycle/__tests__/cli.test.ts integrations/lifecycle/__tests__/policyReconcile.test.ts` -> `53 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-162: Ejecutar siguiente pendiente activo de Flux (`PUM-011`) para cerrar paridad consumer de `watch --once --json` con `lastTick.changedFiles[]` y `lastTick.evaluatedFiles[]`.
+  - Alcance:
+    - verificar contrato JSON final en paquete publicado vs consumer runtime,
+    - eliminar drift de payload entre core y distribución npm,
+    - cerrar con validación reproducible en consumer (sin tocar código funcional del consumer).
+  - Resultado (2026-03-05):
+    - release publicado: `pumuki@6.3.44`.
+    - verificación `@latest` en repo temporal:
+      - `lastTick.changedFiles[]` presente.
+      - `lastTick.evaluatedFiles[]` presente.
+    - leyenda Flux actualizada:
+      - `PUM-011` -> `✅ Cerrado`.
+
+- ✅ PUMUKI-163: Ejecutar siguiente pendiente activo de Flux (`PUM-012`) para garantizar contrato JSON estricto (`stdout` solo JSON) cuando se usa `--json`.
+  - Resultado (2026-03-05):
+    - `integrations/git/runPlatformGate.ts` añade `silent?: boolean` para suprimir salida humana en `stdout` al ejecutar en flujos machine-readable.
+    - `integrations/lifecycle/watch.ts` invoca `runPlatformGate(..., { silent: true })` en `watch --json` para mantener contrato estricto de parseo.
+    - cobertura de regresión añadida en `integrations/git/__tests__/runPlatformGate.test.ts`:
+      - `runPlatformGate silent evita salida humana en stdout para contratos JSON`.
+    - validación funcional de contrato:
+      - `node bin/pumuki.js watch --once --stage=PRE_COMMIT --scope=workingTree --json | jq -e '.status'` -> `JSON_PIPE_OK`.
+    - leyenda Flux actualizada:
+      - `PUM-012` -> `✅ Cerrado`.
+      - backlog Flux externo queda en `✅ 100% cerrado`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/lifecycle/__tests__/watch.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `81 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-164: Priorizar cierre SDD pendiente de RuralGo para `sync-docs` completo (3 docs canónicos por defecto + aprendizaje operativo) y dejar contrato enterprise sin ambigüedad.
+  - Resultado (2026-03-05):
+    - `integrations/sdd/syncDocs.ts` amplía targets por defecto de `sync-docs`:
+      - `docs/strategy/ruralgo-tracking-hub.md` (sección managed auto-creable),
+      - `docs/technical/08-validation/refactor/operational-summary.md` (sección managed auto-creable),
+      - `docs/validation/refactor/last-run.json` (merge JSON determinista con `pumuki_sdd_status`),
+      - manteniendo compatibilidad con target previo (`pumuki-integration-feedback.md`) y sin romper repos que no tengan esos archivos (targets opcionales por existencia).
+    - `applyManagedSection` ahora soporta `createIfMissing` (solo cuando faltan ambos markers) para evitar conflicto falso en docs canónicos nuevos.
+    - test de regresión añadido:
+      - `integrations/sdd/__tests__/syncDocs.test.ts` -> `runSddSyncDocs por defecto sincroniza 3 docs canónicos SDD cuando existen en el repo consumer`.
+    - estado RuralGo actualizado:
+      - `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
+      - bloque “Actualizar 3 docs canónicos del consumer por defecto” -> `✅ Implementado`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `59 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-165: Priorizar siguiente SDD pendiente de RuralGo para auto-sync integral de artefactos OpenSpec (`tasks.md/design.md/retrospective.md`) por contrato default.
+  - Resultado (2026-03-05):
+    - `integrations/sdd/syncDocs.ts` amplía `runSddAutoSync` para incluir por defecto targets OpenSpec por cambio:
+      - `openspec/changes/<change>/tasks.md`
+      - `openspec/changes/<change>/design.md`
+      - `openspec/changes/<change>/retrospective.md`
+    - comportamiento idempotente y compatible:
+      - crea archivo si no existe (`bootstrapIfMissing`),
+      - inserta/actualiza bloque managed `AUTO_SYNC_STATUS`,
+      - no rompe consumers existentes (targets opcionales/canónicos previos se mantienen).
+    - cobertura actualizada:
+      - `runSddAutoSync dry-run orquesta sync-docs + learning sin modificar archivos` ahora valida 4 archivos sincronizados (canónico + 3 OpenSpec),
+      - `runSddAutoSync aplica sync-docs y persiste learning en modo escritura` valida creación real de `tasks/design/retrospective` con markers.
+    - estado RuralGo actualizado:
+      - `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
+      - bloque “Auto-sync integral de tasks.md/design.md/retrospective.md por defecto” -> `✅ Implementado`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `59 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-166: Priorizar último pendiente SDD de RuralGo para consumo automático universal de `learning.json` por agente/orquestador.
+  - Resultado (2026-03-05):
+    - nuevo helper `integrations/sdd/learningInsights.ts` para lectura robusta de `openspec/changes/<change>/learning.json` (cambio activo) y derivación de recomendaciones accionables.
+    - integración automática en herramientas MCP:
+      - `integrations/mcp/aiGateCheck.ts`
+      - `integrations/mcp/preFlightCheck.ts`
+      - `integrations/mcp/autoExecuteAiStart.ts`
+    - salida extendida sin romper contrato:
+      - campo `learning_context` en cada tool,
+      - hints/auto_fixes/instruction enriquecidos con recomendaciones de learning cuando existen.
+    - cobertura añadida:
+      - `integrations/mcp/__tests__/aiGateCheck.test.ts` (ingesta + auto_fix learning),
+      - `integrations/mcp/__tests__/preFlightCheck.test.ts` (learning_context en preflight),
+      - `integrations/mcp/__tests__/autoExecuteAiStart.test.ts` (mensaje/instrucción con learning).
+    - estado RuralGo actualizado:
+      - `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
+      - bloque “Consumo automático universal de learning.json por cualquier agente” -> `✅ Implementado`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `78 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-167: Preparar release + rollout consumidor tras cierre de backlog SDD/Flux/RuralGo.
+  - Resultado (2026-03-05):
+    - versión publicada: `pumuki@6.3.45`.
+    - changelog/release notes actualizados para bloque SDD:
+      - `sync-docs` default 3 docs canónicos,
+      - `auto-sync` default `tasks/design/retrospective`,
+      - `learning_context` automático en tools MCP.
+    - rollout consumidor completado:
+      - `R_GO`: `install + status --json + doctor --json` en verde (`lifecycleState.version=6.3.45`, `issues=[]`).
+      - `SAAS:APP_SUPERMERCADOS`: `install + status --json + doctor --json` en verde (`lifecycleState.version=6.3.45`, `issues=[]`).
+      - `Flux_training`: `install + status --json + doctor --json` en verde (`lifecycleState.version=6.3.45`, `issues=[]`).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `78 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - `npm publish --access public` -> `+ pumuki@6.3.45`.
+    - `npm view pumuki@6.3.45 version` -> `6.3.45`.
+
+- ✅ PUMUKI-168: Monitorización post-release 6.3.45 en consumidores reales y captura de hallazgos netos nuevos (sin reabrir cerrados).
+  - Resultado (2026-03-05):
+    - pasada completa de `backlog-watch` en consumidores:
+      - `SAAS`: `entriesScanned=25`, `nonClosedEntries=0`, `hasActionRequired=false`.
+      - `RuralGo`: `entriesScanned=100`, `nonClosedEntries=0`, `hasActionRequired=false`.
+      - `Flux`: se detectó gap de parser (`entriesScanned=0`) con IDs `PUM-*`.
+    - fix inmediato aplicado en core backlog tooling para compatibilidad con IDs Flux:
+      - regex de IDs ampliado a `PUM-*` en:
+        - `scripts/watch-consumer-backlog-lib.ts`
+        - `scripts/reconcile-consumer-backlog-issues-lib.ts`
+        - `scripts/backlog-id-issue-map-lib.ts`
+      - tests de regresión añadidos:
+        - `scripts/__tests__/watch-consumer-backlog.test.ts`
+        - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`
+        - `scripts/__tests__/backlog-id-issue-map-lib.test.ts`
+    - revalidación post-fix:
+      - `Flux` pasa a `entriesScanned=12`, `nonClosedEntries=0`, `hasActionRequired=false`.
+  - Evidencia:
+    - `npm run -s test:backlog-tooling` -> `51 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - `npm run -s validation:backlog-watch -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --json --no-fail` -> `hasActionRequired=false`.
+    - `npm run -s validation:backlog-watch -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --json --no-fail` -> `hasActionRequired=false`.
+    - `npm run -s validation:backlog-watch -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --json --no-fail` -> `entriesScanned=12`, `hasActionRequired=false`.
+
+- ✅ PUMUKI-169: Vigilancia continua post-6.3.45 + preparación de siguiente corte solo ante incidencia neta reproducible.
+  - Resultado (2026-03-05):
+    - monitorización ejecutada en los 3 consumers con `backlog-watch`:
+      - `SAAS`: `entriesScanned=25`, `nonClosedEntries=0`, `hasActionRequired=false`.
+      - `RuralGo`: `entriesScanned=100`, `nonClosedEntries=0`, `hasActionRequired=false`.
+      - `Flux`: se detectó bug de parser interno (IDs `PUM-*` no contabilizados, `entriesScanned=0`).
+    - fix aplicado en core backlog-tooling:
+      - soporte de IDs `PUM-*` añadido en:
+        - `scripts/watch-consumer-backlog-lib.ts`
+        - `scripts/reconcile-consumer-backlog-issues-lib.ts`
+        - `scripts/backlog-id-issue-map-lib.ts`
+      - regresión cubierta en tests:
+        - `scripts/__tests__/watch-consumer-backlog.test.ts`
+        - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`
+        - `scripts/__tests__/backlog-id-issue-map-lib.test.ts`
+    - revalidación post-fix:
+      - `Flux` pasa a `entriesScanned=12`, `nonClosedEntries=0`, `hasActionRequired=false`.
+  - Evidencia:
+    - `npm run -s test:backlog-tooling` -> `51 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - `npm run -s validation:backlog-watch -- --file=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md\" --repo=SwiftEnProfundidad/ast-intelligence-hooks --json --no-fail` -> `entriesScanned=12`, `hasActionRequired=false`.
+
+- ✅ PUMUKI-170: Consolidar vigilancia multi-consumer en un solo comando fleet para reducir fricción operativa y mantener la señal neta en una ejecución única.
+  - Resultado (2026-03-05):
+    - nuevo comando fleet:
+      - `scripts/watch-consumer-backlog-fleet.ts`
+      - permite múltiples `--target=<path>[::repo]`, resumen agregado y salida JSON consolidada.
+    - cobertura añadida:
+      - `scripts/__tests__/watch-consumer-backlog-fleet.test.ts` (help, agregación JSON multi-target, exit code determinista con/ sin `--no-fail`).
+    - wiring operativo:
+      - `package.json`: nuevo script `validation:backlog-watch:fleet`.
+      - `docs/product/USAGE.md`: comportamiento, referencia rápida y ejemplo de uso multi-consumer.
+  - Evidencia:
+    - `npm run -s test:backlog-tooling` -> `54 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - `npm run -s validation:backlog-watch:fleet -- --target=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md::SwiftEnProfundidad/ast-intelligence-hooks\" --target=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md::SwiftEnProfundidad/ast-intelligence-hooks\" --target=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md\" --json --no-fail` -> `targets=3`, `has_action_required=false`.
+
+- ✅ PUMUKI-171: Mantener vigilancia continua con el nuevo comando fleet y abrir fix incremental solo ante incidencia neta reproducible.
+  - Resultado (2026-03-05):
+    - ciclo de vigilancia ejecutado con `validation:backlog-watch:fleet` en `SAAS`, `RuralGo`, `Flux`.
+    - salida consolidada limpia:
+      - `targets=3`
+      - `entries_scanned_total=137`
+      - `non_closed_total=0`
+      - `action_required_targets=0`
+      - `has_action_required=false`
+    - no se abrió frente técnico nuevo porque no hubo señal neta reproducible.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:fleet -- --target=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md::SwiftEnProfundidad/ast-intelligence-hooks\" --target=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md::SwiftEnProfundidad/ast-intelligence-hooks\" --target=\"/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md\" --json --no-fail` -> `has_action_required=false`.
+
+- ✅ PUMUKI-172: Automatizar vigilancia cíclica sin fricción (tick único) y dejar evidencia compacta para decisión de release/fix.
+  - Resultado (2026-03-05):
+    - nuevo comando operativo de tick:
+      - `scripts/watch-consumer-backlog-fleet-tick.ts`
+      - defaults canónicos para `SAAS`, `RuralGo` y `Flux` con overrides por flag (`--saas/--ruralgo/--flux`) y repo configurable (`--repo`).
+    - wiring operativo:
+      - `package.json`: nuevo script `validation:backlog-watch:tick`.
+      - `docs/product/USAGE.md`: comportamiento + referencia rápida + ejemplo de uso.
+    - cobertura añadida:
+      - `scripts/__tests__/watch-consumer-backlog-fleet-tick.test.ts` (`--help`, JSON limpio, exit code 1 con findings sin `--no-fail`).
+    - ejecución real del tick canónico completada en verde (`has_action_required=false`).
+  - Evidencia:
+    - `npm run -s test:backlog-tooling` -> `57 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - `npm run -s validation:backlog-watch:tick` -> `targets=3`, `entries_scanned_total=137`, `has_action_required=false`.
+
+- ✅ PUMUKI-173: Cerrar ciclo de release incremental con criterio “no-action” documentado y checklist de publicación solo cuando haya señal neta.
+  - Resultado (2026-03-05):
+    - criterio operativo formalizado en comandos:
+      - `validation:backlog-watch:tick` (observabilidad, no bloquea pipeline).
+      - `validation:backlog-watch:gate` (gate de release, bloquea con exit code `1` cuando hay señal neta).
+    - documentación actualizada en `docs/product/USAGE.md` con quick reference y ejemplo explícito para ambos comandos.
+    - verificación real:
+      - `tick` y `gate` devuelven `has_action_required=false` en el estado actual de `SAAS`, `RuralGo`, `Flux`.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` -> `targets=3`, `has_action_required=false`.
+    - `npm run -s validation:backlog-watch:gate` -> `targets=3`, `has_action_required=false`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-174: Ejecutar ciclo de vigilancia continua y preparar fix inmediato solo al primer `has_action_required=true` en consumers.
+  - Resultado (2026-03-05):
+    - ciclo de vigilancia ejecutado con ambos modos:
+      - `validation:backlog-watch:tick` (observabilidad),
+      - `validation:backlog-watch:gate` (bloqueante para release).
+    - salida consolidada del ciclo:
+      - `targets=3`
+      - `entries_scanned_total=137`
+      - `non_closed_total=0`
+      - `has_action_required=false`
+    - no se abrió issue/fix nuevo porque no hubo señal neta reproducible.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` -> `has_action_required=false`.
+    - `npm run -s validation:backlog-watch:gate` -> `has_action_required=false`.
+
+- ✅ PUMUKI-175: Mantener operación continua de vigilancia y disparar fix/release incremental únicamente con señal neta (`has_action_required=true`).
+  - Resultado (2026-03-05):
+    - ciclo de vigilancia periódico ejecutado en modo observabilidad (`tick`) y modo gate (`gate`).
+    - señal consolidada estable:
+      - `targets=3`
+      - `entries_scanned_total=137`
+      - `non_closed_total=0`
+      - `action_required_targets=0`
+      - `has_action_required=false`
+    - no se abrió issue/fix nuevo al no existir incidencia neta reproducible.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` -> `has_action_required=false`.
+    - `npm run -s validation:backlog-watch:gate` -> `has_action_required=false`.
+
+- ✅ PUMUKI-176: Continuar vigilancia operativa y abrir ejecución técnica inmediata al primer hallazgo neto en SAAS/RuralGo/Flux.
+  - Resultado (2026-03-05):
+    - ciclo ejecutado con `tick` y `gate` en los tres consumers.
+    - resumen consolidado:
+      - `targets=3`
+      - `entries_scanned_total=137`
+      - `non_closed_total=0`
+      - `action_required_targets=0`
+      - `has_action_required=false`
+    - sin señal neta reproducible, por lo que no se abrió fix nuevo.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` -> `has_action_required=false`.
+    - `npm run -s validation:backlog-watch:gate` -> `has_action_required=false`.
+
+- ✅ PUMUKI-177: Mantener vigilancia continua y disparar fix inmediato al primer `has_action_required=true` con actualización simultánea de leyendas externas e internas.
+  - Resultado (2026-03-05):
+    - se detectó señal neta en `Flux` (`has_action_required=true`) por `needs_issue` en `PUM-009/010/011`.
+    - normalización ejecutada sin tocar código funcional del consumer:
+      - `PUM-009` validado como corregido con `pumuki@latest` (`artifact.version="1"` + `artifact.slices[]`) y marcado `✅ Cerrado`.
+      - `PUM-011` validado como corregido con `pumuki@latest` (`lastTick.changedFiles[]` + `lastTick.evaluatedFiles[]`) y marcado `✅ Cerrado`.
+      - `PUM-010` mantenido activo y enlazado a issue upstream `#719` para trazabilidad (`🚧 En construccion`).
+    - tras normalización de leyenda/refs en MD externo, el ciclo vuelve a estado saludable (`has_action_required=false`).
+  - Evidencia:
+    - `gh issue create ...` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/719`.
+    - `npx --yes --package pumuki@latest pumuki sdd evidence --scenario-id=docs/validation/features/p3_t1_web_shell_dashboard --test-command="pnpm test" --test-status=passed --json` (en Flux) -> contrato válido.
+    - `npx --yes --package pumuki@latest pumuki watch --once --stage=PRE_COMMIT --scope=staged --json` (en Flux) -> `lastTick.changedFiles[]` y `lastTick.evaluatedFiles[]` presentes.
+    - `npm run -s validation:backlog-watch:tick` + `npm run -s validation:backlog-watch:gate` -> `has_action_required=false`.
+
+- ✅ PUMUKI-178: Ejecutar implementación técnica del issue `#719` para persistencia estable de skills coverage entre iteraciones en consumer.
+  - Resultado (2026-03-05):
+    - `stageRunners` ahora replica el patrón de auto-reconcile de `watch` para bloqueos de skills coverage en hooks (`PRE_COMMIT`/`PRE_PUSH`):
+      - detecta códigos de bloqueo de cobertura de skills,
+      - ejecuta `policy reconcile --strict --apply`,
+      - reintenta una única vez el gate de hook con política re-resuelta.
+    - cobertura de regresión añadida:
+      - retry exitoso con reconcile automático en `PRE_COMMIT`,
+      - no-retry cuando `PUMUKI_HOOK_POLICY_AUTO_RECONCILE=0`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `30 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- ✅ PUMUKI-179: Ejecutar siguiente foco activo de Flux (`PUM-012`) para eliminar drift entre binario local del consumer y `pumuki@latest` en contrato `watch --json` (`changedFiles/evaluatedFiles` + versión efectiva).
+  - Resultado (2026-03-05):
+    - `watch --json` ahora expone bloque `version` con:
+      - `effective`, `runtime`, `consumerInstalled`, `source`,
+      - `driftFromRuntime`,
+      - `driftWarning` humano/accionable cuando existe desalineación.
+    - cobertura técnica añadida:
+      - `integrations/lifecycle/__tests__/watch.test.ts` (metadata + warning de drift),
+      - ajuste de contrato en `integrations/lifecycle/__tests__/cli.test.ts`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `48 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - smoke consumer Flux (binario local core): `watch --once --json` -> `version.driftFromRuntime=true` + `driftWarning` presente.
+
+- ✅ PUMUKI-180: Cerrar rollout consumidor de `PUM-012` (release + update en Flux) y mover leyenda externa de `🚧` a `✅` con evidencia en `pnpm exec pumuki watch --json`.
+  - Resultado (2026-03-05):
+    - release publicado: `pumuki@6.3.46`.
+    - rollout en Flux:
+      - `pnpm add -Dw pumuki@latest`
+      - `pnpm exec pumuki watch --once --stage=PRE_COMMIT --scope=staged --json`
+    - contrato validado en consumer:
+      - `version.effective=6.3.46`
+      - `version.runtime=6.3.46`
+      - `version.driftFromRuntime=false`
+      - `lastTick.changedFiles[]` y `lastTick.evaluatedFiles[]` presentes.
+    - MD externo Flux actualizado:
+      - `PUM-012` -> `✅ Cerrado`
+      - backlog Flux queda `✅ 100% cerrado`.
+
+- ✅ PUMUKI-181: Ejecutar verificación post-release en SAAS y RuralGo (`status/doctor/watch`) y registrar únicamente hallazgos netos nuevos.
+  - Resultado (2026-03-05):
+    - verificación completa en `SAAS`:
+      - `status --json`: `packageVersion=6.3.46`, `lifecycleState.version=6.3.46`.
+      - `doctor --json`: `issues=[]`.
+      - `watch --once --json`: `version.effective=6.3.46`, `driftFromRuntime=false`, gate `ALLOW`.
+    - verificación completa en `R_GO`:
+      - `status --json`: `packageVersion=6.3.46`, `lifecycleState.version=6.3.46`.
+      - `doctor --json`: `issues=[]`.
+      - `watch --once --json`: `version.effective=6.3.46`, `driftFromRuntime=false`, gate `ALLOW`.
+    - contraste de backlog externo (solo señal neta):
+      - `SAAS`: `hasActionRequired=false`.
+      - `RuralGo`: `hasActionRequired=false`.
+    - no se registran hallazgos netos nuevos en esta pasada.
+  - Evidencia:
+    - `pnpm exec pumuki status --json` (SAAS).
+    - `pnpm exec pumuki doctor --json` (SAAS).
+    - `pnpm exec pumuki watch --once --stage=PRE_COMMIT --scope=staged --json` (SAAS).
+    - `npx --yes --package pumuki@latest pumuki status --json` (R_GO).
+    - `npx --yes --package pumuki@latest pumuki doctor --json` (R_GO).
+    - `npx --yes --package pumuki@latest pumuki watch --once --stage=PRE_COMMIT --scope=staged --json` (R_GO).
+    - `npm run -s validation:backlog-watch -- --file="/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md" --repo=SwiftEnProfundidad/ast-intelligence-hooks --json --no-fail`.
+    - `npm run -s validation:backlog-watch -- --file="/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md" --repo=SwiftEnProfundidad/ast-intelligence-hooks --json --no-fail`.
+
+- ✅ PUMUKI-182: Ejecutar ciclo de vigilancia activa post-6.3.46 en SAAS/RuralGo/Flux y abrir fix inmediato solo si aparece `has_action_required=true`.
+  - Resultado (2026-03-05):
+    - ciclo `tick` y `gate` ejecutado en flota completa (`SAAS`, `RuralGo`, `Flux`).
+    - estado consolidado:
+      - `targets=3`
+      - `entries_scanned_total=137`
+      - `non_closed_total=0`
+      - `has_action_required=false`
+    - no se abrió fix nuevo al no existir señal neta reproducible.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick`.
+    - `npm run -s validation:backlog-watch:gate`.
+
+- ✅ PUMUKI-183: Mantener vigilancia continua (tick/gate) y preparar corte de release solo cuando aparezca incidencia neta reproducible en consumers.
+  - Resultado (2026-03-05):
+    - nueva pasada operativa completada con `tick` y `gate` sobre `SAAS`, `RuralGo` y `Flux`.
+    - estado consolidado:
+      - `targets=3`
+      - `entries_scanned_total=137`
+      - `non_closed_total=0`
+      - `action_required_targets=0`
+      - `has_action_required=false`
+    - sin señal neta reproducible, no se abre fix nuevo ni corte de release.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick`.
+    - `npm run -s validation:backlog-watch:gate`.
+
+- ✅ PUMUKI-184: Mantener ciclo continuo de vigilancia multi-consumer (tick/gate) y ejecutar fix inmediato al primer `has_action_required=true` con actualización de leyenda en MD externo + MD interno.
+  - Resultado (2026-03-05):
+    - el ciclo `tick/gate` detectó señal neta reproducible:
+      - `targets=3`
+      - `entries_scanned_total=139`
+      - `non_closed_total=1`
+      - `has_action_required=true`
+      - origen: `RuralGo` -> `PUMUKI-INC-063` (`needs_issue`).
+    - trazabilidad inmediata ejecutada:
+      - issue upstream creada: `#720`.
+      - MD externo RuralGo actualizado con referencia de issue:
+        - fila resumen activa `PUMUKI-INC-063` -> incluye `issue #720`.
+        - entrada incremental `PUMUKI-INC-063` -> `🚧 REPORTED (#720)`.
+    - se mantiene disciplina de una sola task activa y se abre implementación técnica del fix.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick`.
+    - `npm run -s validation:backlog-watch:gate`.
+    - `gh issue create --repo SwiftEnProfundidad/ast-intelligence-hooks ...` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/720`.
+    - edición de `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+
+- ✅ PUMUKI-185: Implementar fix técnico de `#720` (no mutación de `package.json`/`package-lock.json` en hooks/gates sin upgrade explícito) con RED -> GREEN -> REFACTOR y cerrar trazabilidad en MD externo + interno.
+  - Resultado (2026-03-05):
+    - `integrations/git/stageRunners.ts` incorpora guard de integridad de manifests en hooks:
+      - snapshot previo de `package.json` + `package-lock.json`,
+      - detección de mutación inesperada tras gate,
+      - reversión automática al snapshot original,
+      - bloqueo explícito con código `MANIFEST_MUTATION_DETECTED`.
+    - comportamiento objetivo:
+      - los hooks no dejan side-effects en manifests del consumer sin comando explícito de upgrade.
+    - cobertura RED -> GREEN añadida:
+      - `runPreCommitStage bloquea y revierte mutación inesperada de manifests`.
+      - `runPrePushStage bloquea y revierte mutación inesperada de manifests`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `32 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - issue de trazabilidad: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/720`.
+
+- ✅ PUMUKI-186: Validar fix `#720` en consumer real (RuralGo), actualizar estado del hallazgo `PUMUKI-INC-063` y cerrar issue/loop de vigilancia si `has_action_required=false`.
+  - Resultado (2026-03-05):
+    - validación ejecutada en RuralGo con binario local del core (incluye fix `#720`) sobre ciclo real:
+      - `pumuki sdd validate --stage=PRE_WRITE --json`
+      - `pumuki-pre-commit`
+      - `pumuki-pre-push`
+    - comprobación de integridad de manifests:
+      - `package.json`: hash sin cambios antes/después.
+      - `package-lock.json`: hash sin cambios antes/después.
+    - resultado funcional:
+      - `RC prewrite=0`, `RC precommit=0`, `RC prepush=0`.
+    - vigilancia consolidada:
+      - `validation:backlog-watch:tick` en verde (`has_action_required=false`).
+  - Evidencia:
+    - ejecución local fix en consumer RuralGo:
+      - `node /Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks/bin/pumuki.js sdd validate --stage=PRE_WRITE --json`
+      - `node /Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks/bin/pumuki-pre-commit.js`
+      - `PUMUKI_PRE_PUSH_STDIN=\"\" node /Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks/bin/pumuki-pre-push.js`
+    - verificación de hashes + estado:
+      - `shasum -a 256 package.json package-lock.json`
+      - `git status --short -- package.json package-lock.json`
+    - vigilancia:
+      - `npm run -s validation:backlog-watch:tick`.
+
+- ✅ PUMUKI-187: Publicar corte con fix `#720`, actualizar consumers a la versión publicada y mover `PUMUKI-INC-063` de `🚧 REPORTED` a `✅ FIXED` con referencia de issue/commit/release.
+  - Resultado (2026-03-05):
+    - release publicada: `pumuki@6.3.47`.
+    - rollout en consumers:
+      - `R_GO`: upgrade a `pumuki@6.3.47` (con `npm_config_engine_strict=false` por restricción de engines del consumer), `PRE_WRITE/PRE_COMMIT/PRE_PUSH` en `RC=0`.
+      - `SAAS`: upgrade a `pumuki@6.3.47`, validación local con binarios `node node_modules/pumuki/bin/*` (bloqueos existentes del repo por reglas/gate, no regresión de manifests).
+      - `Flux_training`: upgrade a `pumuki@6.3.47`, `PRE_WRITE/PRE_COMMIT` en `RC=0` y `PRE_PUSH` bloqueado por atomicidad del propio worktree (`changed_files=720`), sin mutación de manifests.
+    - verificación de no mutación de manifests:
+      - `R_GO`: `package.json` y `package-lock.json` sin cambios de hash antes/después de `validate + pre-commit + pre-push`.
+      - `SAAS`: `package.json` y `package-lock.json` sin cambios de hash antes/después de `validate + pre-commit + pre-push`.
+      - `Flux_training`: `package.json` y `pnpm-lock.yaml` sin cambios de hash antes/después de `validate + pre-commit + pre-push`.
+    - MD canónico RuralGo actualizado:
+      - `PUMUKI-INC-063` -> `✅ FIXED (#720, release 6.3.47)`.
+      - activos High reducidos a `PUMUKI-INC-064` como único foco.
+  - Evidencia:
+    - `npm publish --access public` -> `+ pumuki@6.3.47`.
+    - `npm ls pumuki --depth=0` (`R_GO`/`SAAS`) y `pnpm list -D pumuki --depth 0` (`Flux_training`) -> `6.3.47`.
+    - hashes before/after de manifests en los tres consumers.
+
+- ✅ PUMUKI-188: Cerrar trazabilidad de RuralGo tras validación de `PUMUKI-INC-064` y ajustar foco activo al siguiente hallazgo neto real.
+  - Resultado (2026-03-05):
+    - MD canónico RuralGo quedó 100% cerrado:
+      - `✅ Cerrados: 100`
+      - `🚧/⏳/⛔: 0`.
+    - `PUMUKI-INC-064` se consolidó en `✅ FIXED` con referencia de release `6.3.47` y evidencia de `PRE_PUSH=ALLOW` sin workaround manual de `skills.sources.json`/`skills.lock.json`.
+    - `issue #720` cerrada tras validación del fix de mutación de manifests.
+  - Evidencia:
+    - `sed -n '1,60p' /Users/.../R_GO/docs/.../pumuki-integration-feedback.md` (estado cerrado 100/0).
+    - `gh issue close 720 --repo SwiftEnProfundidad/ast-intelligence-hooks ...`.
+
+- ✅ PUMUKI-189: Ejecutar siguiente bug prioritaria activa de Flux (`PUM-013`) sobre drift de dependencia en manifests durante validación y cerrar con fix + release + validación consumer.
+  - Resultado (2026-03-05):
+    - issue upstream `#722` cerrada tras validación real en consumer.
+    - `PUM-013` actualizado a `✅ Cerrado` en el MD externo de Flux.
+    - verificación de no-mutación confirmada:
+      - `package.json` hash before/after sin cambios,
+      - `pnpm-lock.yaml` hash before/after sin cambios,
+      - `watch --once --json` en `ALLOW` (`gateExitCode=0`).
+  - Evidencia:
+    - `npx --yes --package pumuki@latest pumuki watch --once --stage=PRE_COMMIT --scope=staged --json`
+    - `gh issue close 722 --repo SwiftEnProfundidad/ast-intelligence-hooks ...`
+    - `/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md` (`PUM-013` -> `✅ Cerrado`).
+
+- ✅ PUMUKI-190: Ejecutar vigilancia activa del backlog canónico de RuralGo y abrir/cerrar loop solo ante nuevos hallazgos netos reproducibles (`OPEN/REPORTED`), manteniendo SAAS/Flux en validación de no-regresión sin tocar código consumidor.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado sobre los 3 backlogs externos (`SAAS`, `RuralGo`, `Flux`) sin hallazgos netos.
+    - `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se abren issues nuevas ni se requiere fix técnico en este ciclo.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick`
+    - salida JSON: `targets=3`, `entries_scanned_total=142`, `non_closed_total=0`.
+
+- ✅ PUMUKI-191: Mantener monitorización continua multi-consumer (tick periódico) y abrir ejecución técnica inmediata solo cuando `has_action_required=true`, actualizando en el mismo ciclo el MD externo afectado + este MD interno.
+  - Resultado (2026-03-05):
+    - tick fleet detectó hallazgo neto nuevo en Flux (`PUM-014`) con `has_action_required=true`.
+    - issue upstream creada: `#723`.
+    - MD externo Flux actualizado a estado activo (`PUM-014` -> `🚧 En construccion (#723)`).
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `819f019e-36ce-405f-ba24-3cb1372a2021`)
+    - `gh issue create --repo SwiftEnProfundidad/ast-intelligence-hooks ...` -> `#723`
+    - `/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md` actualizado.
+
+- ✅ PUMUKI-192: Ejecutar fix de `PUM-014/#723` en `watch --json` para alinear `lastTick.changed` con delta real de archivos del scope, validar en tests y preparar cierre de leyenda externa.
+  - Avance (2026-03-05):
+    - fix aplicado en `integrations/lifecycle/watch.ts` (`changed` ahora depende del delta real del scope).
+    - regresión añadida/actualizada en `integrations/lifecycle/__tests__/watch.test.ts`.
+    - smoke en Flux con binario local del core:
+      - `changed=false`, `changedFiles=[]`, `evaluatedFiles=[]`, `gateOutcome=ALLOW`.
+    - issue `#723` actualizada con evidencia técnica.
+  - Cierre (2026-03-05):
+    - release publicada: `pumuki@6.3.49`.
+    - validación final en Flux con `@latest`:
+      - `changed=false`, `changedFiles=[]`, `evaluatedFiles=[]`, `gateOutcome=ALLOW`.
+    - MD externo Flux actualizado: `PUM-014` -> `✅ Cerrado`.
+    - issue `#723` cerrada.
+
+- ✅ PUMUKI-193: Mantener monitorización continua multi-consumer (`SAAS` + `RuralGo` + `Flux`) y abrir fix inmediato solo ante hallazgo neto nuevo, actualizando en el mismo ciclo MD externo afectado + MD interno.
+  - Resultado (2026-03-05):
+    - tick fleet posterior al cierre de Flux detectó nuevo pendiente en SAAS: `PUMUKI-M009` (`needs_issue`).
+    - issue upstream creada: `#724`.
+    - MD externo SAAS actualizado a estado activo (`PUMUKI-M009` -> `🚧`, ref `#724`).
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `0856d3f4-9508-4a93-9229-ce5c702c8b4d`)
+    - `gh issue create --repo SwiftEnProfundidad/ast-intelligence-hooks ...` -> `#724`
+    - `/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md` actualizado.
+
+- ✅ PUMUKI-194: Implementar `PUMUKI-M009/#724` para que bloqueos `GIT_ATOMICITY_TOO_MANY_SCOPES` incluyan desglose accionable por scopes/archivos + `next_action` determinista de split.
+  - Resultado (2026-03-05):
+    - fix aplicado en `integrations/git/gitAtomicity.ts` y `integrations/git/runPlatformGateOutput.ts`.
+    - salida de bloqueo incluye `scope_files` con grupos por scope y muestra de archivos para remediación directa.
+    - `next_action` y sugerencia de split quedan alineadas con el detalle del bloqueo.
+    - release publicada: `pumuki@6.3.50`.
+    - issue `#724` cerrada y MD externo SAAS actualizado (`PUMUKI-M009` -> `✅ Cerrado`).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/gitAtomicity.test.ts integrations/git/__tests__/runPlatformGateOutput.test.ts`
+    - `npm run -s typecheck`
+    - `npm publish --access public` -> `+ pumuki@6.3.50`
+    - `gh issue close 724 --repo SwiftEnProfundidad/ast-intelligence-hooks --comment ...`
+
+- ✅ PUMUKI-195: Mantener monitorización continua multi-consumer (`SAAS` + `Flux` + `RuralGo`) y abrir ejecución técnica inmediata solo ante nuevo hallazgo neto (`has_action_required=true`), actualizando en el mismo ciclo MD externo afectado + MD interno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado tras cierre de `#724` y release `6.3.50`.
+    - estado consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - los tres MD externos quedan alineados sin `🚧/⏳/⛔` activos:
+      - SAAS: `26` cerrados.
+      - RuralGo: `104` entradas escaneadas, `0` abiertas/reportadas.
+      - Flux: `14` entradas escaneadas, `0` abiertas.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `4ea354d5-3696-49a8-a869-09beed04be83`)
+
+- ✅ PUMUKI-196: Continuar vigilancia activa automática y, ante el primer hallazgo neto nuevo en cualquier consumidor, ejecutar ciclo completo `issue -> fix -> tests -> release -> actualización de leyenda externa e interna` sin abrir frentes paralelos.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en los 3 consumidores con estado limpio.
+    - sin hallazgos netos nuevos: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - backlog externo consolidado:
+      - SAAS: `26` entradas cerradas, `0` abiertas.
+      - RuralGo: `104` entradas escaneadas, `0` abiertas/reportadas.
+      - Flux: `14` entradas cerradas, `0` abiertas.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `dd45e0fb-34be-4e32-97d1-5181124997aa`)
+
+- ✅ PUMUKI-197: Mantener monitorización continua multi-consumer y ejecutar fix inmediato únicamente ante nuevos hallazgos reales (`has_action_required=true`), preservando secuencia única `issue -> fix -> tests -> release -> actualización de leyenda`.
+  - Resultado (2026-03-05):
+    - nuevo tick fleet ejecutado en los 3 consumidores sin nuevos hallazgos netos.
+    - estado consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - backlog externo estable:
+      - SAAS: `nonClosedEntries=0`
+      - RuralGo: `nonClosedEntries=0`
+      - Flux: `nonClosedEntries=0`
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `4d844315-eba9-43d8-872e-cc003952136e`)
+
+- ✅ PUMUKI-198: Continuar guardia activa multi-consumer y, ante el primer `has_action_required=true`, ejecutar inmediatamente ciclo completo `issue -> fix -> tests -> release -> actualización de leyenda externa/interna` sin trabajo en paralelo.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en `SAAS + RuralGo + Flux` sin incidencias nuevas.
+    - resumen consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requiere apertura de issue ni ejecución técnica en este ciclo.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `059bc260-446b-468c-9b92-a856fe315d41`)
+
+- ✅ PUMUKI-199: Mantener vigilancia activa multi-consumer y ejecutar fix end-to-end inmediato solo cuando aparezca un hallazgo neto nuevo (`has_action_required=true`), manteniendo secuencia única y trazable.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado sobre SAAS, RuralGo y Flux sin nuevas incidencias.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requiere apertura de issue ni implementación técnica en este ciclo.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `603ce42f-c575-4394-9420-9b31492a0997`)
+
+- ✅ PUMUKI-200: Mantener vigilancia activa multi-consumer y, ante el primer hallazgo neto nuevo, ejecutar ciclo completo `issue -> fix -> tests -> release -> actualización de leyenda externa/interna` en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en los 3 consumidores sin hallazgos nuevos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requiere issue/fix/release en este ciclo.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `4a07e1b1-34c4-4160-87d0-7178845cb30d`)
+
+- ✅ PUMUKI-201: Mantener guardia activa multi-consumer y, ante el primer hallazgo neto nuevo (`has_action_required=true`), ejecutar fix end-to-end en el mismo turno con actualización de leyenda externa e interna.
+  - Resultado (2026-03-05):
+    - tick fleet detectó hallazgo neto en Flux (`PUM-015`) con `needs_issue`.
+    - issue upstream abierta: `#725`.
+    - MD externo Flux actualizado en la misma iteración:
+      - `PUM-015` -> `🚧 En construccion (#725)`.
+      - foco activo actualizado con referencia de issue.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `296e15ef-a92e-4322-87d4-cb45c82c9237`)
+    - `gh issue create --repo SwiftEnProfundidad/ast-intelligence-hooks ...` -> `#725`
+    - `/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md` actualizado.
+
+- ✅ PUMUKI-202: Ejecutar cierre técnico de `PUM-015/#725` (rollout parity) con validación reproducible en Flux y actualización de leyenda externa/interna en el mismo ciclo.
+  - Resultado (2026-03-05):
+    - validación comparativa en Flux completada sin tocar commits del consumer:
+      - local (`pnpm exec`, `6.3.47`): `changed=true`, `changedFiles=[]`, `evaluatedFiles=[]`.
+      - runtime `@latest` (`6.3.50`): `changed=false`, `changedFiles=[]`, `evaluatedFiles=[]`, `version.driftWarning` presente.
+    - conclusión: no regresión nueva de core; es paridad de rollout en consumer.
+    - issue `#725` cerrada con evidencia y MD externo Flux actualizado:
+      - `PUM-015` -> `✅ Cerrado (#725, validado 2026-03-05)`.
+      - foco activo Flux -> backlog `100% cerrado`.
+  - Evidencia:
+    - `pnpm exec pumuki watch --once --stage=PRE_COMMIT --scope=staged --json`
+    - `npx --yes --package pumuki@latest pumuki watch --once --stage=PRE_COMMIT --scope=staged --json`
+    - `gh issue close 725 --repo SwiftEnProfundidad/ast-intelligence-hooks ...`
+    - `gh issue comment 725 --repo SwiftEnProfundidad/ast-intelligence-hooks ...`
+
+- ✅ PUMUKI-203: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato (`issue -> fix -> tests -> release -> actualización de leyenda`) ante cualquier nuevo hallazgo neto.
+  - Resultado (2026-03-05):
+    - tick fleet posterior al cierre de `PUM-015/#725` ejecutado en los 3 consumidores.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - backlog externo vuelve a estado estable `100% cerrado` en SAAS, RuralGo y Flux.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `888c1d6f-989d-4eae-9cf0-4e37a796e7e8`)
+
+- ✅ PUMUKI-204: Mantener guardia activa multi-consumer y, ante el primer hallazgo neto nuevo, ejecutar ciclo end-to-end en el mismo turno con actualización de leyenda externa e interna.
+  - Resultado (2026-03-05):
+    - se detectó desalineación de estado en Flux (`PUM-015` regresó a `🚧` sin referencia), provocando falso `needs_issue` en tick fleet.
+    - remediación aplicada en el MD externo de Flux:
+      - `PUM-015` actualizado a `✅ Cerrado (#725, validado 2026-03-05)`.
+      - bloque de cierre/foco activo actualizado a backlog `100% cerrado`.
+    - revalidación fleet tras la corrección:
+      - `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `2c3b9cc1-8a3f-4c6c-b6c2-615f73677b58`)
+    - `npm run -s validation:backlog-watch:tick` (run_id `e0b8f37a-7040-46e6-ac0d-1bccab66a3b4`)
+    - `/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md` actualizado.
+
+- ✅ PUMUKI-205: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato (`issue -> fix -> tests -> release -> actualización de leyenda`) ante cualquier nuevo hallazgo neto real.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado sin hallazgos netos en SAAS, RuralGo y Flux.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requiere issue/fix/release en este ciclo.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `dfb3b0f6-9ab1-4505-a39d-abe4c3e1c2d6`)
+
+- ✅ PUMUKI-206: Mantener guardia activa multi-consumer y, ante cualquier nuevo hallazgo neto (`has_action_required=true`), ejecutar en el mismo turno el ciclo completo con actualización de leyenda externa e interna.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS/RuralGo/Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requiere apertura de issue ni fix/release en este ciclo.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `e1a74a3c-a02e-4bfa-81fb-30fc7f8bab4e`)
+
+- ✅ PUMUKI-207: Mantener guardia activa multi-consumer y ejecutar ciclo end-to-end inmediato ante cualquier nuevo hallazgo neto real, actualizando leyenda externa e interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no hubo necesidad de abrir issue ni aplicar fix/release.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `a6f784b4-dd27-49e8-8edc-a10b100ccfb5`)
+
+- ✅ PUMUKI-208: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato ante cualquier hallazgo neto nuevo (`has_action_required=true`), manteniendo actualización de leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requirió issue/fix/release en este ciclo.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `84bca4e2-0119-47ce-a76c-889db13a758d`)
+
+- ✅ PUMUKI-209: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato ante cualquier hallazgo neto real, actualizando leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - sin necesidad de issue/fix/release para este ciclo.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `b7413978-b2ab-4551-9968-6f39e448be2d`)
+
+- ✅ PUMUKI-210: Mantener guardia activa multi-consumer y ejecutar ciclo end-to-end inmediato ante cualquier hallazgo neto real, con actualización de leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado sin hallazgos netos en SAAS, RuralGo y Flux.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requirió issue/fix/release en esta iteración.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `ba2a83a0-3f60-43ae-96ec-7a776b697bd9`)
+
+- ✅ PUMUKI-211: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato ante cualquier hallazgo neto real, actualizando leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requirió issue/fix/release en esta iteración.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `3c1335b7-85fb-4260-ae45-b7b7a1de747e`)
+
+- ✅ PUMUKI-212: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato ante cualquier hallazgo neto real, actualizando leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se necesitó issue/fix/release en esta iteración.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `454e912c-a1a0-4225-89af-d119cd41d490`)
+
+- ✅ PUMUKI-213: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato ante cualquier hallazgo neto real, actualizando leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requirió issue/fix/release en este ciclo.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `d0876ca9-9615-44fc-9070-3bcd6ae766ce`)
+
+- ✅ PUMUKI-214: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato ante cualquier hallazgo neto real, actualizando leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requirió issue/fix/release en esta iteración.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `86e31a70-9009-4b6f-a4e2-378832b25aaa`)
+
+- ✅ PUMUKI-215: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato ante cualquier hallazgo neto real, actualizando leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requirió issue/fix/release en esta iteración.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `13aaff66-be6a-4e89-853e-2599f3b0f604`)
+
+- ✅ PUMUKI-216: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato ante cualquier hallazgo neto real, actualizando leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requirió issue/fix/release en esta iteración.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `9789efd7-0e25-4e5b-82b0-92146749b0cd`)
+
+- ✅ PUMUKI-217: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato ante cualquier hallazgo neto real, actualizando leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requirió issue/fix/release en esta iteración.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `e544f6b6-6bb2-4dc9-911f-846b75ed43ca`)
+
+- ✅ PUMUKI-218: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato ante cualquier hallazgo neto real, actualizando leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requirió issue/fix/release en esta iteración.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `29cc4d4b-b2a6-48e5-8740-9e45720fb12b`)
+
+- ✅ PUMUKI-219: Mantener guardia activa multi-consumer y ejecutar ciclo completo inmediato ante cualquier hallazgo neto real, actualizando leyenda externa/interna en el mismo turno.
+  - Resultado (2026-03-05):
+    - tick fleet ejecutado en SAAS, RuralGo y Flux sin nuevos hallazgos netos.
+    - consolidado: `non_closed_total=0`, `action_required_targets=0`, `has_action_required=false`.
+    - no se requirió issue/fix/release en esta iteración.
+  - Evidencia:
+    - `npm run -s validation:backlog-watch:tick` (run_id `1c791983-601e-42e4-984d-ce315ceeb1fe`)
+
+- ✅ PUMUKI-220: Corregir los findings de review en `watch`, `stageRunners` y guidance SDD para evitar retries con policy obsoleta y remediaciones engañosas.
+  - Resultado (2026-03-06):
+    - `integrations/lifecycle/watch.ts` reevalúa con policy fresca tras `runPolicyReconcile(... apply: true)`.
+    - `integrations/git/stageRunners.ts` selecciona el primer finding realmente bloqueante (`ERROR/CRITICAL`) en lugar del primer finding a secas.
+    - `integrations/sdd/policy.ts` y `integrations/git/runPlatformGateOutput.ts` dejan de sugerir `--change=auto` cuando la selección automática no es segura.
+    - regresión cubierta con tests dedicados y `typecheck` limpio.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/sdd/__tests__/policy.test.ts integrations/git/__tests__/runPlatformGateOutput.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-221: Corregir el desfase entre `validation:backlog-watch:tick` y el estado real del backlog SAAS para que no oculte pendientes reales como `PUMUKI-018`.
+  - Resultado (2026-03-06):
+    - el tick fleet vuelve a reportar correctamente `PUMUKI-018` como `needs_issue` en SAAS (`nonClosedEntries=1`, `unresolvedIds=["PUMUKI-018"]`);
+    - se añaden regresiones específicas para el formato operativo real del backlog SAAS tanto en el parser base como en `watch-consumer-backlog-fleet-tick`;
+    - queda eliminado el riesgo de falso verde silencioso en SAAS por este formato de tabla.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/watch-consumer-backlog-fleet-tick.test.ts`
+    - `npm run -s validation:backlog-watch:tick`
+
+- ✅ PUMUKI-222: Ejecutar limpieza enterprise del repo y dejar `docs/` alineado con una estructura oficial, simple y sin artefactos efímeros.
+  - Alcance:
+    - limpiar artefactos locales de ejecución que no aportan valor estable (`.audit-reports/**`, `.coverage/**`, `.ai_evidence.json`),
+    - simplificar `docs/README.md` y `docs/validation/README.md` para distinguir documentación oficial, seguimiento permitido y basura efímera,
+    - alinear `docs/tracking/estado-ejecutivo.md` con el estado real del plan activo.
+  - Resultado (2026-03-06):
+    - artefactos efímeros locales eliminados del repo de trabajo (`.audit-reports/**`, `.coverage/**`, `.ai_evidence.json`);
+    - `docs/README.md` y `docs/validation/README.md` simplificados para distinguir documentación oficial, seguimiento permitido y basura efímera;
+    - `docs/tracking/estado-ejecutivo.md` alineado con el estado real;
+    - `scripts/check-tracking-single-active.sh` corregido para que valide por defecto el plan activo real resuelto desde el maestro, no el histórico legado.
+  - Evidencia:
+    - `find . -path './node_modules' -prune -o -path './.git' -prune -o -type f \\( -path './.audit-reports/*' -o -path './.coverage/*' -o -name '.ai_evidence.json' -o -name '*.tmp' -o -name '*.bak' -o -name '*.orig' -o -name '*.rej' \\) -print | sort`
+    - `npm run -s validation:tracking-single-active`
+
+- ✅ PUMUKI-223: Reorganizar físicamente `docs/` para que deje de ser una raíz plana y quede agrupado por propósito con nombres entendibles.
+  - Alcance:
+    - mover documentación de producto a `docs/product/`,
+    - mover gobierno a `docs/governance/`,
+    - mover MCP/evidence a `docs/mcp/`,
+    - mover operación y releases a `docs/operations/`,
+    - mover seguimiento permitido a `docs/tracking/`,
+    - renombrar archivos de tracking a nombres humanos: `estado-ejecutivo.md`, `plan-activo-de-trabajo.md`, `historico-validacion-ruralgo-03-03-2026.md`,
+    - actualizar referencias internas del repo para no dejar enlaces rotos.
+  - Resultado (2026-03-06):
+    - la raíz de `docs/` deja de ser una lista plana de MDs sueltos;
+    - el árbol queda agrupado por propósito (`product`, `governance`, `mcp`, `operations`, `tracking`, `validation`, `rule-packs`, `codex-skills`);
+    - `docs/README.md` pasa a ser un mapa corto y legible;
+    - el checker `validation:tracking-single-active` sigue funcionando con la nueva ubicación y nomenclatura.
+  - Evidencia:
+    - `find docs -maxdepth 2 -type f | sort`
+    - `npm run -s validation:tracking-single-active`
+
+- ✅ PUMUKI-224: Auditar semánticamente `docs/**` para separar documentación oficial, históricos técnicos y nombres poco humanos, y dejar solo nombres autoexplicativos.
+  - Alcance:
+    - revisar si los `.md` más opacos siguen aportando valor real al proyecto,
+    - renombrar documentos con nombres crípticos a nombres humanos,
+    - mover a `docs/tracking/` los documentos históricos técnicos que no deben vivir en documentación estable,
+    - dejar `docs/validation/README.md` alineado con lo que es estable frente a lo que es histórico.
+  - Resultado (2026-03-06):
+    - `docs/mcp/evidence-v2.1.md` -> `docs/mcp/ai-evidence-v2.1-contract.md`;
+    - `docs/operations/README_MENU_WALKTHROUGH.md` -> `docs/operations/framework-menu-consumer-walkthrough.md`;
+    - `docs/validation/adapter-hook-runtime-validation.md` -> `docs/validation/adapter-hook-runtime-runbook.md`;
+    - `docs/validation/detection-audit-baseline.md` -> `docs/validation/full-repo-detection-audit-baseline.md`;
+    - `docs/validation/skills-rollout-consumer-repositories.md` -> `docs/validation/consumer-repositories-skills-rollout-validation.md`;
+    - `docs/validation/c022-phase-acceptance-contract.md` sale de documentación estable y pasa a `docs/tracking/historico-contrato-aceptacion-c022.md`;
+    - `docs/README.md` y `docs/validation/README.md` reflejan ya qué es oficial estable y qué es histórico técnico permitido.
+  - Evidencia:
+    - `find docs -maxdepth 2 -type f | sort`
+    - `rg -n "c022-phase-acceptance-contract|README_MENU_WALKTHROUGH|adapter-hook-runtime-validation|detection-audit-baseline|skills-rollout-consumer-repositories" -S . || true`
+
+- ✅ PUMUKI-225: Ejecutar el bug SAAS `PUMUKI-018` para eliminar el falso positivo `ios.no-force-unwrap` cuando Swift usa el patrón seguro `!= nil`.
+  - Resultado (2026-03-06):
+    - el detector Swift mantiene el comportamiento correcto y queda reforzado con el caso exacto del consumidor (`if waitersByKey[key] != nil`);
+    - `ios.no-force-unwrap` deja de apoyarse en matching textual genérico y pasa a usar la heurística AST `heuristics.ios.force-unwrap.ast`;
+    - la extracción heurística iOS queda cubierta para no emitir `heuristics.ios.force-unwrap.ast` ante comparaciones seguras `!= nil`;
+    - el backlog externo SAAS queda cerrado al 100% y `PUMUKI-018` pasa a `✅`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-226: Ejecutar RuralGo `PUMUKI-INC-065` para evitar que `.ai_evidence.json` quede sucia tras un commit exitoso.
+  - Resultado (2026-03-06):
+    - `PRE_COMMIT` re-stagea `.ai_evidence.json` solo cuando el archivo ya estaba trackeado, sin forzar alta de ficheros ignorados;
+    - queda cubierta la regresión con casos de éxito, no-track, fallo explícito de re-staging y un repo temporal real que valida que no queda drift post-commit;
+    - el backlog externo de RuralGo actualiza `PUMUKI-INC-065` a `✅ FIXED` con evidencia de release real en `6.3.51`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts`
+    - `npm run -s validation:backlog-watch:tick`
+
+- ✅ PUMUKI-227: Ejecutar RuralGo `PUMUKI-INC-066` para que `PRE_PUSH` evalúe atomicidad sobre el paso real a publicar y no sobre todo el rango adelantado de la rama.
+  - Resultado (2026-03-06):
+    - `stageRunners` deja de usar siempre `upstream..HEAD` cuando el hook `pre-push` ya aporta un rango exacto en `stdin`;
+    - `PRE_PUSH` pasa a usar `remoteOid..localOid` para atomicidad y gate cuando se empuja un commit/refspec concreto;
+    - queda una regresión explícita para cubrir el caso del commit concreto y otra para mantener el fallback `upstream..HEAD` cuando el `stdin` no aporta un rango único utilizable;
+    - el backlog externo de RuralGo actualiza `PUMUKI-INC-066` a `✅ FIXED` con evidencia de release real en `6.3.51`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-228: Ejecutar RuralGo `PUMUKI-INC-067` para evitar que `PRE_PUSH` exija una sesión SDD ajena al commit histórico exacto que se está publicando.
+  - Resultado (2026-03-06):
+    - `runPrePushStage` detecta ya cuando el hook está publicando un commit histórico exacto distinto de `HEAD`;
+    - en ese caso suspende de forma controlada el enforcement SDD y pasa una decisión ya resuelta al gate, evitando que una sesión actual ajena al árbol publicado bloquee el push;
+    - la cobertura nueva blinda tanto el bypass histórico como la no-regresión cuando el push sí apunta al `HEAD` actual;
+    - el backlog externo de RuralGo actualiza `PUMUKI-INC-067` a `✅ FIXED` con evidencia de release real en `6.3.51`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts integrations/git/__tests__/runPlatformGate.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-229: Ejecutar Flux `PUM-016` para mejorar la DX de `pumuki sdd evidence --test-output` cuando la ruta queda fuera del repo root.
+  - Resultado (2026-03-06):
+    - `pumuki sdd evidence` mantiene el bloqueo de seguridad para rutas fuera del repo;
+    - el error pasa a sugerir una ruta efímera válida y accionable dentro del proyecto, por ejemplo `.pumuki/runtime/<archivo>.log`;
+    - la regresión cubre tanto el helper de scaffolding como la CLI real, evitando ensayo/error al developer en consumers;
+    - el backlog externo de Flux actualiza `PUM-016` a `✅ Cerrado (#726, release 6.3.51, validado local 2026-03-06)`.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/evidenceScaffold.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - issue upstream: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/726`
+
+- ✅ PUMUKI-230: Preparar corte/release y rollout de los fixes locales pendientes (`PUMUKI-INC-065`, `PUMUKI-INC-066`, `PUMUKI-INC-067`, `PUM-016`) en consumidores reales.
+  - Resultado (2026-03-06):
+    - se publicó `pumuki@6.3.51` con el paquete de fixes de `PUMUKI-INC-065`, `PUMUKI-INC-066`, `PUMUKI-INC-067` y `PUM-016`;
+    - `CHANGELOG.md` y `docs/operations/RELEASE_NOTES.md` quedaron alineados con el corte real y la evidencia ejecutada;
+    - el issue upstream de Flux (`#726`) quedó comentado con referencia explícita a la release publicada;
+    - los backlogs externos de `RuralGo` y `Flux` se actualizaron desde “pendiente próxima release” a “release 6.3.51”;
+    - smoke de disponibilidad ejecutado con `npx --yes --package pumuki@latest pumuki status --json` + `doctor --json` en `SAAS`, `RuralGo` y `Flux`, sin tocar manifests de consumidor.
+  - Evidencia:
+    - `npm publish --access public`
+    - `npm view pumuki version`
+    - `gh issue comment 726 --repo SwiftEnProfundidad/ast-intelligence-hooks --body 'Released in pumuki@6.3.51...'`
+    - `npx --yes --package pumuki@latest pumuki status --json && npx --yes --package pumuki@latest pumuki doctor --json` en consumers reales
+
+- ✅ PUMUKI-231: Aclarar la divergencia de versión en `status/doctor` entre runtime `@latest`, paquete declarado y hooks instalados en consumidores reales.
+  - Resultado (2026-03-06):
+    - `status` y `doctor` mantienen `packageVersion` por compatibilidad, pero ahora exponen un bloque `version` explícito con `effective`, `runtime`, `consumerInstalled`, `lifecycleInstalled`, `source` y flags de drift;
+    - la salida humana deja de etiquetar ambiguamente “package version” y pasa a mostrar de forma separada versión efectiva, runtime, instalada en consumer y persistida en lifecycle;
+    - la regresión nueva cubre tanto el helper de metadata de versión como los contratos `status/doctor` y la salida CLI;
+    - el fix se ha publicado como `pumuki@6.3.52` para que no quede solo en validación local.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/packageInfo.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `npm publish --access public`
+
+- ✅ PUMUKI-232: Monitorizar nuevos hallazgos netos post-`6.3.52` con foco en contratos de versión/reporting en consumers reales.
+  - Resultado:
+    - smoke post-release ejecutado en `SAAS`, `RuralGo` y `Flux` con `pumuki@6.3.52` sin abrir incidencias nuevas;
+    - el bloque `version` explicó correctamente la divergencia entre `effective`, `runtime`, `consumerInstalled` y `lifecycleInstalled`;
+    - documentación oficial actualizada en `README.md`, `PUMUKI.md`, `docs/product/USAGE.md` y `docs/product/API_REFERENCE.md`.
+  - Evidencia:
+    - `npx --yes --package pumuki@6.3.52 pumuki status --json && npx --yes --package pumuki@6.3.52 pumuki doctor --json` en `SAAS`, `RuralGo` y `Flux`;
+    - `npm run -s validation:backlog-watch:tick`;
+    - `npm run -s validation:tracking-single-active`.
+
+- ✅ PUMUKI-233: Preparar la siguiente verificación de adopción real de `6.3.52` cuando los consumers alineen manifests y lifecycle.
+  - Resultado:
+    - el contrato `version` añade `alignmentCommand` para convertir el drift en una remediación machine-readable;
+    - `status` y `doctor` imprimen también la remediación exacta en salida humana cuando detectan drift;
+    - la regresión cubre helper, contratos JSON, watch y salida CLI humana.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/packageInfo.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts integrations/lifecycle/__tests__/watch.test.ts`;
+    - `npm run -s typecheck`;
+    - `npm run -s validation:tracking-single-active`.
+
+- ✅ PUMUKI-234: Corregir findings de review sobre correctness en watch cross-repo, higiene `PRE_WRITE`, hash de bundles custom y remediación MCP de evidencia corrupta.
+  - Resultado (2026-03-06):
+    - `runLifecycleWatch` deja de inspeccionar el repo actual cuando se le pasa un `repoRoot` externo y ahora resuelve facts y ejecuta gate con un `GitService` scoped al repo solicitado;
+    - `PRE_WRITE` deja de sobredimensionar worktrees con archivos parcialmente staged al usar `pending_changes` deduplicado cuando el `repo_state` lo aporta;
+    - el hash del bundle custom ya incorpora `ast_node_ids`, evitando falsos “sin drift” cuando cambia la cobertura AST de reglas `AUTO`;
+    - `auto_execute_ai_start` trata `EVIDENCE_CHAIN_INVALID` igual que otros fallos de evidencia y devuelve remediación accionable para regenerarla.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts integrations/config/__tests__/skillsCustomRules.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-235: Ejecutar la próxima comprobación real de adopción cuando algún consumer actualice manifest y hooks a `6.3.52`.
+  - Resultado (2026-03-06):
+    - `RuralGo`, `SAAS` y `Flux` quedaron alineados a `pumuki@6.3.54` con `effective=runtime=consumerInstalled=lifecycleInstalled` y `alignmentCommand=null`;
+    - `RuralGo` cerró `FP-031` al dejar de bloquear por `skills.backend.* missing` y pasar a reportar ya la causa real del diff (`GIT_ATOMICITY_TOO_MANY_SCOPES`);
+    - `RuralGo` cerró también `PUMUKI-INC-068` al desaparecer el drift histórico de versionado en `status/doctor`;
+    - durante la validación apareció un síntoma nuevo en `SAAS`: `npx --yes --package pumuki@6.3.54 pumuki ...` falla con `sh: pumuki: command not found`, mientras el binario local `./node_modules/.bin/pumuki` funciona y alinea correctamente el lifecycle.
+  - Evidencia:
+    - `npx --yes --package pumuki@6.3.54 pumuki status --json && npx --yes --package pumuki@6.3.54 pumuki doctor --json` en `RuralGo`;
+    - `./node_modules/.bin/pumuki install && ./node_modules/.bin/pumuki status --json && ./node_modules/.bin/pumuki doctor --json` en `SAAS`;
+    - `pnpm add -Dw pumuki@6.3.54 && ./node_modules/.bin/pumuki install && ./node_modules/.bin/pumuki status --json && ./node_modules/.bin/pumuki doctor --json` en `Flux`;
+    - `npm run -s validation:backlog-watch:tick`.
+
+- ✅ PUMUKI-236: Investigar si el fallo de `npx --package pumuki` en consumers con `:` en la ruta es atribuible a Pumuki o a `npm/npx`, y endurecer la remediación operativa si aplica.
+  - Resultado (2026-03-06):
+    - el síntoma se reproduce de forma determinista en `SAAS:APP_SUPERMERCADOS`: `npx --yes --package pumuki@6.3.54 pumuki ...` falla con `sh: pumuki: command not found`, mientras el paquete y el binario local sí existen;
+    - la causa raíz queda atribuida a cómo `npm exec/npx` compone `PATH` cuando la ruta del repo contiene el delimitador del sistema (`:` en POSIX), rompiendo la resolución de `node_modules/.bin`;
+    - `status` y `doctor` exponen ahora `version.pathExecutionHazard`, `version.pathExecutionWarning` y `version.pathExecutionWorkaroundCommand`;
+    - `version.alignmentCommand` cambia automáticamente a un comando seguro local (`node ./node_modules/pumuki/bin/pumuki.js install`) cuando detecta este hazard;
+    - la salida humana de `pumuki status` / `pumuki doctor` imprime además `execution warning` y `execution workaround`;
+    - se publicó `pumuki@6.3.55` y se alinearon los tres consumers activos:
+      - `SAAS` -> convergente a `6.3.55` con `pathExecutionHazard=true` y workaround explícito;
+      - `RuralGo` -> convergente a `6.3.55`, sin hazard;
+      - `Flux` -> convergente a `6.3.55`, sin hazard.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/packageInfo.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `npm publish --access public`
+    - `npm view pumuki@6.3.55 version`
+    - `node ./node_modules/pumuki/bin/pumuki.js status --json && node ./node_modules/pumuki/bin/pumuki.js doctor --json` en `SAAS`
+    - `npx --yes --package pumuki@6.3.55 pumuki status --json && npx --yes --package pumuki@6.3.55 pumuki doctor --json` en `RuralGo`
+    - `node ./node_modules/pumuki/bin/pumuki.js status --json && node ./node_modules/pumuki/bin/pumuki.js doctor --json` en `Flux`
+    - comentario de cierre operativo en issue upstream `#620`
+
+- ✅ PUMUKI-237: Mantener vigilancia post-`6.3.55` y abrir fix inmediato solo si aparece un hallazgo neto nuevo en `SAAS`, `RuralGo` o `Flux`.
+  - Resultado (2026-03-06):
+    - smoke de vigilancia ejecutado en `SAAS`, `RuralGo` y `Flux` con `status --json`, `doctor --json` y `watch --once --stage=PRE_COMMIT --scope=staged --json`;
+    - `SAAS` mantiene el contrato correcto de hazard:
+      - `effective=runtime=consumerInstalled=lifecycleInstalled=6.3.55`
+      - `pathExecutionHazard=true`
+      - `pathExecutionWorkaroundCommand=node ./node_modules/pumuki/bin/pumuki.js`
+    - `RuralGo` y `Flux` quedan convergentes en `6.3.55`, sin drift y sin hazard;
+    - el tick de backlogs externos confirma:
+      - `non_closed_total=0`
+      - `has_action_required=false`
+    - no aparece ningún hallazgo neto nuevo en consumers tras la release.
+  - Evidencia:
+    - `node ./node_modules/pumuki/bin/pumuki.js status --json && node ./node_modules/pumuki/bin/pumuki.js doctor --json && node ./node_modules/pumuki/bin/pumuki.js watch --once --stage=PRE_COMMIT --scope=staged --json` en `SAAS`
+    - `npx --yes --package pumuki@6.3.55 pumuki status --json && npx --yes --package pumuki@6.3.55 pumuki doctor --json && npx --yes --package pumuki@6.3.55 pumuki watch --once --stage=PRE_COMMIT --scope=staged --json` en `RuralGo`
+    - `node ./node_modules/pumuki/bin/pumuki.js status --json && node ./node_modules/pumuki/bin/pumuki.js doctor --json && node ./node_modules/pumuki/bin/pumuki.js watch --once --stage=PRE_COMMIT --scope=staged --json` en `Flux`
+    - `npm run -s validation:backlog-watch:tick`
+
+- ✅ PUMUKI-238: Ordenar el worktree masivo del repo y definir un corte limpio/atómico antes del siguiente bloque funcional o de release.
+  - Alcance:
+    - inventariar cambios vivos por área (`docs`, `lifecycle`, `git`, `mcp`, `sdd`, `scripts`);
+    - distinguir qué parte es producto real, qué parte es refactor/documentación estructural y qué parte ya debería salir del branch actual;
+    - proponer un corte legible y profesional para evitar seguir trabajando sobre un worktree gigante y opaco.
+  - Inventario real del worktree (2026-03-06):
+    - `docs-y-estructura`: `40` entradas
+      - mezcla de deletes en rutas antiguas `docs/*.md`, nuevas rutas `docs/product|governance|mcp|operations|tracking/**` y ajustes de `README.md`, `PUMUKI.md`, `mkdocs.yml`.
+      - naturaleza: refactor estructural + documentación oficial.
+    - `scripts`: `20` entradas
+      - backlog fleet/tick, notificaciones, package manifest, reconciliación de issues, checks de tracking.
+      - naturaleza: tooling operativo interno.
+    - `integrations/lifecycle`: `15` entradas
+      - `status`, `doctor`, `watch`, `cli`, `packageInfo`, `policyReconcile` y sus tests.
+      - naturaleza: producto real publicado a consumers.
+    - `integrations/sdd`: `11` entradas
+      - `policy`, `syncDocs`, `stateSync`, `evidenceScaffold`, `learningInsights.ts`.
+      - naturaleza: producto real, pero mezclado con trabajo aún no claramente cerrado.
+    - `integrations/git`: `10` entradas
+      - `stageRunners`, `runPlatformGate`, `gitAtomicity`, `worktreeAtomicSlices`.
+      - naturaleza: producto real de gates/higiene.
+    - `integrations/config + mcp + gate + evidence + core`: `20` entradas agregadas
+      - hashing custom rules, `EVIDENCE_CHAIN_INVALID`, deduplicación `PRE_WRITE`, falso positivo `ios.no-force-unwrap`.
+      - naturaleza: correctness real ya publicado en la línea reciente.
+    - `release-package`: `package.json` + `package-lock.json`
+      - naturaleza: bumps/release line.
+  - Lectura honesta:
+    - el branch actual no está “sucio por una cosa”, sino por la superposición de al menos `6` paquetes lógicos distintos;
+    - seguir añadiendo fixes sobre este estado aumenta riesgo de regresión, trazabilidad opaca y cortes poco atómicos;
+    - el mayor ruido visual hoy viene del refactor de `docs/` porque Git aún ve `deletes + nuevos paths`, no un corte ya consolidado.
+  - Propuesta de corte limpio/atómico:
+    1. `Corte A — docs/estructura`
+       - incluir solo:
+         - movimiento/renombrado de `docs/**`
+         - `docs/README.md`
+         - `docs/validation/README.md`
+         - `README.md`
+         - `PUMUKI.md`
+         - `ARCHITECTURE.md`
+         - `mkdocs.yml`
+         - tracking (`docs/tracking/**`) si solo cambia para apuntar a las nuevas rutas
+       - objetivo:
+         - dejar cerrado de una vez el refactor documental y eliminar el ruido de `D docs/...` + `?? docs/...`.
+    2. `Corte B — lifecycle/release contract`
+       - incluir:
+         - `integrations/lifecycle/**`
+         - `package.json`
+         - `package-lock.json`
+         - `CHANGELOG.md`
+         - `docs/operations/RELEASE_NOTES.md`
+       - objetivo:
+         - agrupar lo publicado a consumers (`6.3.52`..`6.3.55`) como bloque coherente.
+    3. `Corte C — correctness gates`
+       - incluir:
+         - `core/**`
+         - `integrations/evidence/**`
+         - `integrations/gate/**`
+         - `integrations/config/**`
+         - `integrations/mcp/**`
+       - objetivo:
+         - agrupar fixes de correctness y cobertura de reglas.
+    4. `Corte D — git atomicity y stage runners`
+       - incluir:
+         - `integrations/git/**`
+       - objetivo:
+         - separar gates/rangos/diffs/atomic slices como bloque de producto propio.
+    5. `Corte E — sdd`
+       - incluir:
+         - `integrations/sdd/**`
+       - objetivo:
+         - dejar claro qué parte SDD está cerrada y qué parte sigue viva.
+    6. `Corte F — scripts operativos`
+       - incluir:
+         - `scripts/**`
+       - objetivo:
+         - aislar tooling interno y watchers de consumer del core publicado.
+  - Recomendación operativa:
+    - el siguiente paso útil no es otro fix funcional;
+    - el siguiente paso útil es ejecutar primero `Corte A`, porque es el que más ruido visual introduce y el que más enturbia cualquier review/commit posterior.
+  - Evidencia:
+    - `git status --short --branch`
+    - inventario por áreas ejecutado sobre `git status --short`
+    - `git status --short | awk '{print $2}' | sed 's#^#/#' | cut -d/ -f2-3 | sort | uniq -c | sort -nr`
+
+- ✅ PUMUKI-239: Ejecutar `Corte A — docs/estructura` para consolidar el refactor documental y limpiar el ruido de moves/deletes antes del siguiente bloque funcional.
+  - Resultado (2026-03-06):
+    - nombres más humanos y menos internos en los puntos de mayor fricción:
+      - `docs/mcp/mcp-servers-overview.md`
+      - `docs/mcp/evidence-context-server.md`
+      - `docs/mcp/agent-context-consumption.md`
+      - `docs/operations/framework-menu-consumer-walkthrough.md`
+      - `docs/operations/production-operations-policy.md`
+      - `docs/validation/ast-intelligence-validation-roadmap.md`
+      - `docs/tracking/estado-ejecutivo.md`
+      - `docs/tracking/plan-activo-de-trabajo.md`
+      - `docs/tracking/historico-contrato-aceptacion-c022.md`
+    - `docs/README.md` queda reescrito como mapa humano de entrada, orientado por intención y no solo por carpetas;
+    - `mkdocs.yml` deja la navegación plana y pasa a navegación agrupada por propósito (`Start Here`, `Product`, `Governance`, `MCP`, `Operations`, `Validation`);
+    - `docs/operations/RELEASE_NOTES.md` deja explícito que el historial canónico de releases vive en `CHANGELOG.md`, quedando como highlights operativos;
+    - las referencias internas del repo se alinean con los nuevos nombres y rutas.
+  - Evidencia:
+    - `find docs -maxdepth 2 -type f | sort`
+    - revisión de referencias legacy completada en `README.md`, `PUMUKI.md`, `mkdocs.yml`, `docs/README.md` y `docs/validation/README.md`
+    - `npm run -s validation:tracking-single-active`
+
+- ✅ PUMUKI-240: Ejecutar `Corte B — lifecycle/release contract` para separar mejor contrato operativo, release notes y superficie lifecycle antes del siguiente bloque funcional.
+  - Resultado (2026-03-06):
+    - `README.md` deja de actuar como manual completo de comandos y pasa a ser puerta de entrada con quickstart + rutas documentales claras;
+    - `PUMUKI.md` queda como playbook corto de operador y enlaza explícitamente a `docs/product/INSTALLATION.md` y `docs/product/USAGE.md` para el contrato completo;
+    - `docs/product/INSTALLATION.md` se limita a instalación, bootstrap, verificación inicial y troubleshooting de setup;
+    - `docs/product/USAGE.md` queda explicitado como documento de operación diaria posterior a la instalación;
+    - `docs/operations/RELEASE_NOTES.md` se mantiene como highlights operativos mientras `CHANGELOG.md` queda como cronología canónica.
+  - Evidencia:
+    - `rg -n '^## ' README.md PUMUKI.md docs/product/INSTALLATION.md docs/product/USAGE.md docs/operations/RELEASE_NOTES.md`
+    - `rg -n "Command Paths|After installation|If you still need to install|full installation or daily usage" README.md PUMUKI.md docs/product/INSTALLATION.md docs/product/USAGE.md -S`
+    - `npm run -s validation:tracking-single-active`
+
+- ✅ PUMUKI-241: Ejecutar `Corte C — correctness gates` para separar y preparar mejor el bloque de correctness antes del siguiente corte funcional o release.
+  - Resultado (2026-03-06):
+    - el slice de correctness queda acotado a `20` archivos y `6` áreas reales:
+      - `core/facts`: `2`
+      - `core/rules`: `2`
+      - `integrations/config`: `6`
+      - `integrations/evidence`: `2`
+      - `integrations/gate`: `2`
+      - `integrations/mcp`: `6`
+    - el diff del corte queda concentrado en fixes de correctness y cobertura contractual, sin arrastrar cambios de `docs`, `scripts`, `integrations/git`, `integrations/sdd` o `integrations/lifecycle`;
+    - la lectura del bloque ya es revisable como paquete propio de producto:
+      - falso positivo `ios.no-force-unwrap`
+      - hashes y coverage de reglas custom
+      - deduplicación `PRE_WRITE`
+      - remediación MCP/evidence
+      - cobertura de tests de gate y preflight;
+    - la suite focal del corte queda en `108` tests verdes, suficiente para considerar este bloque preparado para su siguiente corte atómico.
+  - Evidencia:
+    - `git diff --name-only -- core integrations/config integrations/evidence integrations/gate integrations/mcp | sort`
+    - `git diff --stat -- core integrations/config integrations/evidence integrations/gate integrations/mcp`
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts integrations/config/__tests__/skillsCustomRules.test.ts integrations/config/__tests__/skillsMarkdownRules.test.ts integrations/config/__tests__/skillsRuleSet.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts`
+
+- ✅ PUMUKI-242: Ejecutar `Corte D — git atomicity y stage runners` para aislar mejor el bloque de `integrations/git/**` antes del siguiente corte funcional o release.
+  - Resultado (2026-03-06):
+    - el slice `integrations/git/**` queda ya expresado como paquete propio y más modular:
+      - `stageRunners`
+      - `runPlatformGate`
+      - `runPlatformGateOutput`
+      - `gitAtomicity`
+      - nuevo helper `worktreeAtomicSlices`
+      - sus suites de tests asociadas
+    - el helper `integrations/git/worktreeAtomicSlices.ts` deja de ser ruido suelto y pasa a integrarse en `gitAtomicity` para generar remediaciones más accionables cuando el guard de atomicidad detecta exceso de archivos o scopes;
+    - la remediación de `GIT_ATOMICITY_TOO_MANY_FILES` y `GIT_ATOMICITY_TOO_MANY_SCOPES` ya no depende solo de texto genérico:
+      - ahora propone slices concretos de staging;
+      - queda respaldada por tests dedicados;
+    - el paquete completo de `integrations/git` queda validado en verde como bloque propio del worktree.
+  - Evidencia:
+    - `git diff --name-only -- integrations/git | sort`
+    - `git diff --stat -- integrations/git`
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/gitAtomicity.test.ts integrations/git/__tests__/worktreeAtomicSlices.test.ts`
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/runPlatformGateOutput.test.ts integrations/git/__tests__/stageRunners.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-243: Ejecutar `Corte E — sdd` para aislar mejor el bloque de `integrations/sdd/**` antes del siguiente corte funcional o release.
+  - Resultado (2026-03-06):
+    - el slice `integrations/sdd/**` queda expresado ya como paquete propio de `12` entradas reales:
+      - `evidenceScaffold`
+      - `policy`
+      - `sessionStore`
+      - `stateSync`
+      - `syncDocs`
+      - nuevo helper `syncDocsTargets`
+      - `learningInsights`
+      - `5` suites de tests asociadas
+    - `syncDocs.ts` deja de concentrar toda la lógica de targets y secciones gestionadas:
+      - la parte de managed sections/targets canónicos/OpenSpec auto-sync se extrae a `integrations/sdd/syncDocsTargets.ts`;
+      - `syncDocs.ts` queda más claramente como orquestador de sync + learning;
+    - el paquete SDD queda validado en verde como bloque propio, incluyendo:
+      - `sync-docs`
+      - `auto-sync`
+      - `learn`
+      - `policy`
+      - `session store`
+      - `state sync`
+      - `evidence scaffold`
+  - Evidencia:
+    - `git status --short -- integrations/sdd`
+    - `git diff --stat -- integrations/sdd`
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/sdd/__tests__/policy.test.ts integrations/sdd/__tests__/sessionStore.test.ts integrations/sdd/__tests__/stateSync.test.ts integrations/sdd/__tests__/evidenceScaffold.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-244: Ejecutar `Corte F — scripts operativos` para aislar mejor el bloque `scripts/**` antes del siguiente corte funcional o release.
+  - Resultado (2026-03-06):
+    - el slice `scripts/**` queda ya dividido en dos bloques mucho más revisables:
+      - notificaciones operativas
+      - watcher fleet de backlogs consumidores;
+    - el watcher fleet deja de duplicar ejecución, resumen y payload JSON entre dos CLIs:
+      - se extrae `scripts/watch-consumer-backlog-fleet-lib.ts`;
+      - `watch-consumer-backlog-fleet.ts` y `watch-consumer-backlog-fleet-tick.ts` quedan como entrypoints finos, centrados en parseo de argumentos y exit codes;
+    - el contrato visible se mantiene:
+      - salida humana de ambos comandos;
+      - contrato JSON de `backlog-watch-fleet`;
+      - contrato JSON de `backlog-watch-fleet-tick`;
+      - comportamiento de `--no-fail`;
+    - con este corte el siguiente bloque ya queda clarísimo:
+      - `framework-menu-system-notifications-lib.ts` sigue siendo el mayor peso del slice (`887` líneas);
+      - el watcher fleet ya no estorba en esa revisión.
+  - Evidencia:
+    - `python3 - <<'PY' ... PY` para medir líneas del bloque (`framework-menu-system-notifications-lib.ts=887`, `watch-consumer-backlog-fleet.ts=133`, `watch-consumer-backlog-fleet-tick.ts=153`, `watch-consumer-backlog-fleet-lib.ts=131`)
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog-fleet.test.ts scripts/__tests__/watch-consumer-backlog-fleet-tick.test.ts scripts/__tests__/framework-menu-system-notifications.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-245: Implementar autobloqueo hard del repo propio cuando el `worktree` global incumple higiene operativa.
+  - Resultado (2026-03-06):
+    - se añade `scripts/self-worktree-hygiene-lib.ts` como contrato puro para evaluar higiene del `worktree` del propio repo;
+    - se añade `scripts/check-self-worktree-hygiene.ts` como CLI accionable con salida humana/JSON;
+    - se integra el guard en `scripts/check-tracking-single-active.sh`, de modo que el check operativo que usamos cada turno ya no valida solo el tracking: también bloquea si el árbol global está por encima de los límites permitidos;
+    - se expone `npm run -s validation:self-worktree-hygiene` como comando explícito de mantenimiento;
+    - el bloqueo ya no es abstracto:
+      - cuenta archivos y scopes reales;
+      - propone slices atómicos concretos de staging.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/self-worktree-hygiene-lib.test.ts`
+    - `node --import tsx scripts/check-self-worktree-hygiene.ts --json --no-fail`
+    - `npm run -s validation:tracking-single-active` (ahora incluye también el guard de higiene propia)
+
+- ✅ PUMUKI-246: Sanear el `worktree` global actual por slices atómicos antes de continuar con refactors o fixes funcionales.
+  - Resultado (2026-03-06):
+    - el saneamiento se ejecuta en `11` commits atómicos y revisables, cada uno aislando un slice real del árbol:
+      - `feat: enforce self worktree hygiene guard`
+      - `refactor: isolate consumer backlog fleet runner`
+      - `refactor: extract git worktree atomic slices`
+      - `refactor: extract sync docs targets`
+      - `docs: reorganize documentation information architecture`
+      - `refactor: isolate scripts notification and backlog helpers`
+      - `fix: harden gate, evidence, and MCP correctness`
+      - `feat: harden lifecycle version and watch flows`
+      - `fix: harden SDD policy and evidence flows`
+      - `fix: tighten git gate and stage runner flows`
+      - `docs: align maintainer contract and root metadata`
+    - el repo pasa del estado bloqueado inicial:
+      - `changed_files=121`
+      - `changed_scopes=5`
+    - al estado limpio actual:
+      - `changed_files=0`
+      - `changed_scopes=0`
+    - `validation:self-worktree-hygiene` vuelve a verde;
+    - `validation:tracking-single-active` vuelve a verde;
+    - el siguiente trabajo ya no se ejecuta sobre deuda acumulada, sino sobre un árbol limpio y controlado.
+  - Evidencia:
+    - `git log --oneline -n 12`
+    - `git status --short --branch`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+    - `npm run -s validation:tracking-single-active`
+
+- ✅ PUMUKI-247: Retomar `Corte G — notificaciones operativas` sobre un árbol limpio, separando `framework-menu-system-notifications-lib.ts` en payloads, configuración y runner macOS.
+  - Resultado (2026-03-06):
+    - el bloque de notificaciones deja de estar concentrado en un único archivo de `887` líneas;
+    - se separan tres piezas con responsabilidad clara:
+      - `scripts/framework-menu-system-notifications-payloads.ts`
+      - `scripts/framework-menu-system-notifications-config.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+    - `scripts/framework-menu-system-notifications-lib.ts` queda reducido a orquestación y re-export del contrato público;
+    - se mantiene el contrato funcional existente:
+      - payloads de bloqueo/evidencia/gitflow;
+      - configuración `enabled/muteUntil/blockedDialogEnabled`;
+      - diálogo flotante macOS con `Mantener activas`, `Silenciar 30 min` y `Desactivar`;
+      - tests de notificaciones en verde;
+      - `typecheck` en verde.
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-lib.ts scripts/framework-menu-system-notifications-types.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-248: Alinear la suite de notificaciones con la arquitectura nueva, separando tests por payload, config y runner macOS para que acompañen el refactor sin volver a concentrar opacidad en un solo archivo.
+  - Resultado (2026-03-06):
+    - la suite monolítica `scripts/__tests__/framework-menu-system-notifications.test.ts` desaparece y se divide en cuatro entradas revisables:
+      - `scripts/__tests__/framework-menu-system-notifications-payloads.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-config.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - cada pieza queda alineada con el código refactorizado:
+      - `payloads` cubre títulos, subtítulos, traducción y remediación;
+      - `config` cubre persistencia, `muteUntil`, disable y selección del diálogo;
+      - `runner macOS` cubre `osascript`, helper Swift flotante, fallback y botones;
+      - `lib` conserva un smoke mínimo de fachada pública para `unsupported-platform` y `muted`;
+    - el contrato funcional visible no cambia y el repo se mantiene limpio tras el corte.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-payloads.test.ts scripts/__tests__/framework-menu-system-notifications-config.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-249: Separar el bloque de tests `framework-menu-consumer-runtime` y `framework-menu-consumer-preflight` por responsabilidad para que `scripts/**` quede completamente alineado con la arquitectura nueva.
+  - Resultado (2026-03-06):
+    - la suite monolítica de `runtime` desaparece y se divide en:
+      - `scripts/__tests__/framework-menu-consumer-runtime-actions.test.ts`
+      - `scripts/__tests__/framework-menu-consumer-runtime-notifications.test.ts`
+      - `scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts`
+      - helper compartido `scripts/__tests__/framework-menu-consumer-runtime-test-helpers.ts`
+    - la suite monolítica de `preflight` desaparece y se divide en:
+      - `scripts/__tests__/framework-menu-consumer-preflight-run.test.ts`
+      - `scripts/__tests__/framework-menu-consumer-preflight-format.test.ts`
+    - el corte queda alineado con responsabilidades reales:
+      - `runtime/actions`
+      - `runtime/notifications`
+      - `runtime/menu`
+      - `preflight/run`
+      - `preflight/format`
+    - el contrato público se mantiene y el árbol vuelve a quedar limpio tras el corte.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-runtime-actions.test.ts scripts/__tests__/framework-menu-consumer-runtime-notifications.test.ts scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts scripts/__tests__/framework-menu-consumer-preflight-run.test.ts scripts/__tests__/framework-menu-consumer-preflight-format.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-250: Reducir el peso de `framework-menu-legacy-audit-lib` separando lectura, export y formateo para cerrar el bloque `scripts/**` con la misma claridad que `git`, `sdd` y notificaciones.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-legacy-audit-lib.ts` deja de concentrar `1229` líneas de implementación y pasa a ser una fachada pública estable;
+    - la implementación queda separada por responsabilidad en:
+      - `scripts/framework-menu-legacy-audit-types.ts`
+      - `scripts/framework-menu-legacy-audit-summary.ts`
+      - `scripts/framework-menu-legacy-audit-render.ts`
+      - `scripts/framework-menu-legacy-audit-markdown.ts`
+    - la suite monolítica `scripts/__tests__/framework-menu-legacy-audit.test.ts` desaparece y se sustituye por:
+      - `scripts/__tests__/framework-menu-legacy-audit-summary.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-render.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-markdown.test.ts`
+    - el contrato público usado por `advanced-view`, `consumer-runtime`, `consumer-preflight` y `matrix-evidence` se mantiene sin cambios;
+    - el corte queda validado con `25` tests focales en verde y `typecheck` en verde.
+  - Evidencia:
+    - `wc -l scripts/framework-menu-legacy-audit-lib.ts scripts/__tests__/framework-menu-legacy-audit.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit-summary.test.ts scripts/__tests__/framework-menu-legacy-audit-render.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown.test.ts scripts/__tests__/framework-menu-matrix-evidence.test.ts`
+    - `npm run -s typecheck`
+
+- ✅ PUMUKI-251: Cerrar el bloque `scripts/**` separando `framework-menu-matrix-evidence` y `framework-menu-advanced-view` para que dependan de piezas pequeñas, con tests por responsabilidad y sin reintroducir fachadas opacas.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-matrix-evidence-lib.ts` deja de mezclar tipos, diagnosis y lectura de evidencia, y queda reducido a una fachada de `18` lineas;
+    - la logica de `matrix-evidence` se separa en:
+      - `scripts/framework-menu-matrix-evidence-types.ts`
+      - `scripts/framework-menu-matrix-evidence-diagnosis.ts`
+      - `scripts/framework-menu-matrix-evidence-lib.ts`
+    - `scripts/framework-menu-advanced-view-lib.ts` deja de concentrar ayuda, status y render, y queda reducido a `79` lineas de orquestacion;
+    - la logica de `advanced-view` se separa en:
+      - `scripts/framework-menu-advanced-view-help.ts`
+      - `scripts/framework-menu-advanced-view-status.ts`
+      - `scripts/framework-menu-advanced-view-lib.ts`
+    - las suites legacy desaparecen y quedan sustituidas por tests por responsabilidad:
+      - `scripts/__tests__/framework-menu-matrix-evidence-diagnosis.test.ts`
+      - `scripts/__tests__/framework-menu-matrix-evidence-lib.test.ts`
+      - `scripts/__tests__/framework-menu-advanced-view-status.test.ts`
+      - `scripts/__tests__/framework-menu-advanced-view-menu.test.ts`
+    - el corte queda validado con `11` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`12` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-matrix-evidence-lib.ts scripts/framework-menu-matrix-evidence-types.ts scripts/framework-menu-matrix-evidence-diagnosis.ts scripts/framework-menu-advanced-view-lib.ts scripts/framework-menu-advanced-view-help.ts scripts/framework-menu-advanced-view-status.ts scripts/__tests__/framework-menu-matrix-evidence-diagnosis.test.ts scripts/__tests__/framework-menu-matrix-evidence-lib.test.ts scripts/__tests__/framework-menu-advanced-view-status.test.ts scripts/__tests__/framework-menu-advanced-view-menu.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-evidence-diagnosis.test.ts scripts/__tests__/framework-menu-matrix-evidence-lib.test.ts scripts/__tests__/framework-menu-advanced-view-status.test.ts scripts/__tests__/framework-menu-advanced-view-menu.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-252: Seguir cerrando `scripts/**` separando `framework-menu-matrix-canary` y `framework-menu-evidence-summary` para que dependan de piezas mas pequeñas y revisables.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-matrix-canary-lib.ts` deja de mezclar tipos, resolucion de escenarios y lectura de evidencia, y queda reducido a `136` lineas de orquestacion;
+    - la logica de `matrix-canary` se separa en:
+      - `scripts/framework-menu-matrix-canary-types.ts`
+      - `scripts/framework-menu-matrix-canary-scenario.ts`
+      - `scripts/framework-menu-matrix-canary-evidence.ts`
+      - `scripts/framework-menu-matrix-canary-lib.ts`
+    - `scripts/framework-menu-evidence-summary-lib.ts` deja de concentrar tipos, lectura y formateo, y queda reducido a `7` lineas de fachada publica;
+    - la logica de `evidence-summary` se separa en:
+      - `scripts/framework-menu-evidence-summary-types.ts`
+      - `scripts/framework-menu-evidence-summary-read.ts`
+      - `scripts/framework-menu-evidence-summary-format.ts`
+      - `scripts/framework-menu-evidence-summary-lib.ts`
+    - las suites legacy desaparecen y quedan sustituidas por tests por responsabilidad:
+      - `scripts/__tests__/framework-menu-matrix-canary-scenario.test.ts`
+      - `scripts/__tests__/framework-menu-matrix-canary-runner.test.ts`
+      - `scripts/__tests__/framework-menu-evidence-summary-read.test.ts`
+      - `scripts/__tests__/framework-menu-evidence-summary-format.test.ts`
+    - el corte queda validado con `9` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`14` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-matrix-canary-lib.ts scripts/framework-menu-matrix-canary-types.ts scripts/framework-menu-matrix-canary-scenario.ts scripts/framework-menu-matrix-canary-evidence.ts scripts/framework-menu-evidence-summary-lib.ts scripts/framework-menu-evidence-summary-types.ts scripts/framework-menu-evidence-summary-read.ts scripts/framework-menu-evidence-summary-format.ts scripts/__tests__/framework-menu-matrix-canary-scenario.test.ts scripts/__tests__/framework-menu-matrix-canary-runner.test.ts scripts/__tests__/framework-menu-evidence-summary-read.test.ts scripts/__tests__/framework-menu-evidence-summary-format.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-canary-scenario.test.ts scripts/__tests__/framework-menu-matrix-canary-runner.test.ts scripts/__tests__/framework-menu-evidence-summary-read.test.ts scripts/__tests__/framework-menu-evidence-summary-format.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-253: Seguir cerrando `scripts/**` separando `watch-consumer-backlog-lib` y `reconcile-consumer-backlog-issues-lib` para que el bloque de backlog consumers quede tan revisable como el framework menu.
+  - Resultado (2026-03-06):
+    - `scripts/watch-consumer-backlog-lib.ts` deja de mezclar tipos, parseo, heading drift y lookups GitHub, y queda reducido a una fachada orquestadora;
+    - la logica de `watch-consumer-backlog` se separa en:
+      - `scripts/backlog-consumer-types.ts`
+      - `scripts/backlog-consumer-patterns.ts`
+      - `scripts/backlog-consumer-gh.ts`
+      - `scripts/watch-consumer-backlog-types.ts`
+      - `scripts/watch-consumer-backlog-parse.ts`
+      - `scripts/watch-consumer-backlog-lib.ts`
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts` deja de mezclar tipos, parseo, sync de markdown y resolucion de referencias, y queda reducido a una fachada orquestadora;
+    - la logica de `reconcile-consumer-backlog-issues` se separa en:
+      - `scripts/reconcile-consumer-backlog-issues-types.ts`
+      - `scripts/reconcile-consumer-backlog-issues-parse.ts`
+      - `scripts/reconcile-consumer-backlog-issues-sync.ts`
+      - `scripts/reconcile-consumer-backlog-issues-lib.ts`
+    - los contratos publicos usados por:
+      - `scripts/watch-consumer-backlog.ts`
+      - `scripts/reconcile-consumer-backlog-issues.ts`
+      - `scripts/watch-consumer-backlog-fleet-lib.ts`
+      se mantienen sin cambios de interfaz;
+    - el corte queda validado con `34` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene.
+  - Evidencia:
+    - `wc -l scripts/watch-consumer-backlog-lib.ts scripts/reconcile-consumer-backlog-issues-lib.ts scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-254: Rematar el bloque backlog consumers limpiando helpers compartidos (`backlog-action-reasons`, `backlog-id-issue-map`, `backlog-json-contract`) para que la superficie completa quede consistente y revisable extremo a extremo.
+  - Resultado (2026-03-06):
+    - `scripts/backlog-action-reasons-lib.ts` deja de mezclar tipos inline con la lógica y pasa a apoyarse en un contrato tipado explícito en:
+      - `scripts/backlog-action-reasons-types.ts`
+      - `scripts/backlog-action-reasons-lib.ts`
+    - `scripts/backlog-id-issue-map-lib.ts` deja de mezclar contrato, parseo de fichero y helpers de transformación, y queda separado en:
+      - `scripts/backlog-id-issue-map-types.ts`
+      - `scripts/backlog-id-issue-map-parse.ts`
+      - `scripts/backlog-id-issue-map-lib.ts`
+    - `scripts/backlog-json-contract-lib.ts` se mantiene como contrato mínimo canónico porque ya estaba reducido a `3` líneas y no mezclaba responsabilidades;
+    - la cobertura añade regresión real de lectura desde fichero para `id-issue-map`;
+    - el bloque backlog consumers queda ya consistente extremo a extremo sin romper las fachadas públicas usadas por `watch`, `reconcile` y el watcher fleet.
+  - Evidencia:
+    - `wc -l scripts/backlog-action-reasons-lib.ts scripts/backlog-id-issue-map-lib.ts scripts/backlog-json-contract-lib.ts scripts/__tests__/backlog-action-reasons-lib.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/backlog-json-contract-lib.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-action-reasons-lib.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/backlog-json-contract-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-255: Atacar `legacy-parity-report-lib` separando normalización de payload, comparativa por severidad/regla y render markdown para seguir cerrando `scripts/**` con cortes pequeños y revisables.
+  - Resultado (2026-03-06):
+    - `scripts/legacy-parity-report-lib.ts` deja de concentrar `406` líneas y queda reducido a una fachada pública estable;
+    - la lógica se separa en:
+      - `scripts/legacy-parity-report-types.ts`
+      - `scripts/legacy-parity-report-normalize.ts`
+      - `scripts/legacy-parity-report-build.ts`
+      - `scripts/legacy-parity-report-markdown.ts`
+      - `scripts/legacy-parity-report-lib.ts`
+    - la suite monolítica se sustituye por tests por responsabilidad:
+      - `scripts/__tests__/legacy-parity-report-build.test.ts`
+      - `scripts/__tests__/legacy-parity-report-markdown.test.ts`
+    - el contrato visible consumido por `scripts/build-legacy-parity-report.ts` se mantiene intacto;
+    - el corte queda validado con `5` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/legacy-parity-report-lib.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/legacy-parity-report-build.test.ts scripts/__tests__/legacy-parity-report-markdown.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-256: Atacar `gitflow-cli-lib` separando parsing de estado Git, render de sugerencias y resolución de comandos para seguir limpiando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-06):
+    - `scripts/gitflow-cli-lib.ts` deja de concentrar `263` lineas y queda reducido a una fachada publica estable;
+    - la logica de `gitflow-cli` se separa en:
+      - `scripts/gitflow-cli-types.ts`
+      - `scripts/gitflow-cli-snapshot.ts`
+      - `scripts/gitflow-cli-commands.ts`
+      - `scripts/gitflow-cli-lib.ts`
+    - la fachada publica mantiene estables los exports usados por:
+      - `scripts/gitflow.ts`
+      - `bin/gitflow`
+    - se anade cobertura focal por responsabilidad:
+      - `scripts/__tests__/gitflow-cli-commands.test.ts`
+      - `scripts/__tests__/gitflow-cli-snapshot.test.ts`
+      - `scripts/__tests__/gitflow-cli.test.ts` sigue cubriendo el bin end-to-end;
+    - el corte queda validado con `14` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`6` archivos tocados, `1` scope).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/gitflow-cli.test.ts scripts/__tests__/gitflow-cli-commands.test.ts scripts/__tests__/gitflow-cli-snapshot.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-257: Atacar `framework-menu-ui-components-lib` separando tokens, layout de panel y helpers de render para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-ui-components-lib.ts` deja de concentrar `220` lineas y queda reducido a una fachada publica estable;
+    - la logica de `framework-menu-ui-components` se separa en:
+      - `scripts/framework-menu-ui-components-types.ts`
+      - `scripts/framework-menu-ui-components-tokens.ts`
+      - `scripts/framework-menu-ui-components-render.ts`
+      - `scripts/framework-menu-ui-components-panel.ts`
+      - `scripts/framework-menu-ui-components-lib.ts`
+    - la fachada publica mantiene estables los imports usados por:
+      - `scripts/framework-menu-advanced-view-lib.ts`
+      - `scripts/framework-menu-advanced-view-status.ts`
+      - `scripts/framework-menu-consumer-runtime-lib.ts`
+    - la suite monolitica se sustituye por tests por responsabilidad:
+      - `scripts/__tests__/framework-menu-ui-components-tokens.test.ts`
+      - `scripts/__tests__/framework-menu-ui-components-render.test.ts`
+      - `scripts/__tests__/framework-menu-ui-components-panel.test.ts`
+    - el corte queda validado con `10` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-ui-components-lib.ts scripts/framework-menu-ui-components-types.ts scripts/framework-menu-ui-components-tokens.ts scripts/framework-menu-ui-components-render.ts scripts/framework-menu-ui-components-panel.ts scripts/__tests__/framework-menu-ui-components-tokens.test.ts scripts/__tests__/framework-menu-ui-components-render.test.ts scripts/__tests__/framework-menu-ui-components-panel.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-ui-components-tokens.test.ts scripts/__tests__/framework-menu-ui-components-render.test.ts scripts/__tests__/framework-menu-ui-components-panel.test.ts scripts/__tests__/framework-menu-advanced-view-status.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-258: Atacar `framework-menu-rule-coverage-diagnostics-lib` separando tipos, build de diagnostico y render del informe para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-rule-coverage-diagnostics-lib.ts` queda reducido a una fachada publica estable;
+    - la logica se separa en:
+      - `scripts/framework-menu-rule-coverage-diagnostics-types.ts`
+      - `scripts/framework-menu-rule-coverage-diagnostics-build.ts`
+      - `scripts/framework-menu-rule-coverage-diagnostics-format.ts`
+      - `scripts/framework-menu-rule-coverage-diagnostics-lib.ts`
+    - se añade un smoke minimo de fachada publica en:
+      - `scripts/__tests__/framework-menu-rule-coverage-diagnostics-lib.test.ts`
+    - la suite legacy monolitica:
+      - `scripts/__tests__/framework-menu-rule-coverage-diagnostics.test.ts`
+      se elimina para no reintroducir opacidad;
+    - la fachada publica usada por `scripts/framework-menu-runners-validation-rule-coverage-lib.ts` se mantiene intacta;
+    - el corte queda validado con `3` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene.
+  - Evidencia:
+    - `wc -l scripts/framework-menu-rule-coverage-diagnostics-lib.ts scripts/framework-menu-rule-coverage-diagnostics-types.ts scripts/framework-menu-rule-coverage-diagnostics-build.ts scripts/framework-menu-rule-coverage-diagnostics-format.ts scripts/__tests__/framework-menu-rule-coverage-diagnostics-lib.test.ts scripts/__tests__/framework-menu-rule-coverage-diagnostics-build.test.ts scripts/__tests__/framework-menu-rule-coverage-diagnostics-format.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-rule-coverage-diagnostics-lib.test.ts scripts/__tests__/framework-menu-rule-coverage-diagnostics-build.test.ts scripts/__tests__/framework-menu-rule-coverage-diagnostics-format.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-259: Atacar `framework-menu-consumer-preflight-lib` separando ejecucion del preflight, composicion del panel y render de sugerencias operativas para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-06):
+    - `scripts/framework-menu-consumer-preflight-lib.ts` queda reducido a una fachada publica estable;
+    - la logica se separa en:
+      - `scripts/framework-menu-consumer-preflight-types.ts`
+      - `scripts/framework-menu-consumer-preflight-hints.ts`
+      - `scripts/framework-menu-consumer-preflight-run.ts`
+      - `scripts/framework-menu-consumer-preflight-render.ts`
+      - `scripts/framework-menu-consumer-preflight-lib.ts`
+    - se añade un smoke minimo de fachada publica en:
+      - `scripts/__tests__/framework-menu-consumer-preflight-lib.test.ts`
+    - la interfaz usada por:
+      - `scripts/framework-menu-consumer-runtime-lib.ts`
+      se mantiene intacta;
+    - el corte queda validado con `4` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene.
+  - Evidencia:
+    - `wc -l scripts/framework-menu-consumer-preflight-lib.ts scripts/framework-menu-consumer-preflight-types.ts scripts/framework-menu-consumer-preflight-hints.ts scripts/framework-menu-consumer-preflight-run.ts scripts/framework-menu-consumer-preflight-render.ts scripts/__tests__/framework-menu-consumer-preflight-lib.test.ts scripts/__tests__/framework-menu-consumer-preflight-run.test.ts scripts/__tests__/framework-menu-consumer-preflight-format.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-preflight-lib.test.ts scripts/__tests__/framework-menu-consumer-preflight-run.test.ts scripts/__tests__/framework-menu-consumer-preflight-format.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-260: Atacar `framework-menu-consumer-runtime-lib` separando orquestacion de acciones, render del summary legacy y composicion del menu para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-consumer-runtime-lib.ts` queda reducido a una fachada publica estable;
+    - la logica se separa en:
+      - `scripts/framework-menu-consumer-runtime-types.ts`
+      - `scripts/framework-menu-consumer-runtime-audit.ts`
+      - `scripts/framework-menu-consumer-runtime-menu.ts`
+      - `scripts/framework-menu-consumer-runtime-actions.ts`
+      - `scripts/framework-menu-consumer-runtime-lib.ts`
+    - la interfaz publica usada por los entrypoints del menu consumidor se mantiene intacta;
+    - el corte queda validado con `12` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`6` archivos tocados, `2` scopes).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-consumer-runtime-lib.ts scripts/framework-menu-consumer-runtime-types.ts scripts/framework-menu-consumer-runtime-audit.ts scripts/framework-menu-consumer-runtime-menu.ts scripts/framework-menu-consumer-runtime-actions.ts scripts/__tests__/framework-menu-consumer-runtime-actions.test.ts scripts/__tests__/framework-menu-consumer-runtime-notifications.test.ts scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-runtime-actions.test.ts scripts/__tests__/framework-menu-consumer-runtime-notifications.test.ts scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-261: Atacar `framework-menu-evidence-summary-read.ts` separando lectura de fichero, normalizacion del snapshot y extraccion de severidades para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-evidence-summary-read.ts` queda reducido a una fachada de orquestación;
+    - la logica se separa en:
+      - `scripts/framework-menu-evidence-summary-file.ts`
+      - `scripts/framework-menu-evidence-summary-normalize.ts`
+      - `scripts/framework-menu-evidence-summary-severity.ts`
+      - `scripts/framework-menu-evidence-summary-read.ts`
+    - la fachada publica usada por `scripts/framework-menu-evidence-summary-lib.ts` se mantiene intacta;
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-evidence-summary-normalize.test.ts`
+      - `scripts/__tests__/framework-menu-evidence-summary-severity.test.ts`
+      - `scripts/__tests__/framework-menu-evidence-summary-read.test.ts`
+      - `scripts/__tests__/framework-menu-evidence-summary-format.test.ts`
+    - el corte queda validado con `11` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `2` scopes).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-evidence-summary-read.ts scripts/framework-menu-evidence-summary-file.ts scripts/framework-menu-evidence-summary-normalize.ts scripts/framework-menu-evidence-summary-severity.ts scripts/__tests__/framework-menu-evidence-summary-normalize.test.ts scripts/__tests__/framework-menu-evidence-summary-severity.test.ts scripts/__tests__/framework-menu-evidence-summary-read.test.ts scripts/__tests__/framework-menu-evidence-summary-format.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-evidence-summary-normalize.test.ts scripts/__tests__/framework-menu-evidence-summary-severity.test.ts scripts/__tests__/framework-menu-evidence-summary-read.test.ts scripts/__tests__/framework-menu-evidence-summary-format.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-262: Atacar `framework-menu-system-notifications-payloads.ts` separando resolucion de causa, remediacion humana y ensamblado de payloads para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-payloads.ts` deja de mezclar normalización de texto, traducción de causas y remediaciones;
+    - la lógica queda separada en:
+      - `scripts/framework-menu-system-notifications-text.ts`
+      - `scripts/framework-menu-system-notifications-cause.ts`
+      - `scripts/framework-menu-system-notifications-remediation.ts`
+      - `scripts/framework-menu-system-notifications-payloads.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-cause.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-remediation.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-payloads.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - el corte queda validado con `19` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-payloads.ts scripts/framework-menu-system-notifications-text.ts scripts/framework-menu-system-notifications-cause.ts scripts/framework-menu-system-notifications-remediation.ts scripts/__tests__/framework-menu-system-notifications-payloads.test.ts scripts/__tests__/framework-menu-system-notifications-cause.test.ts scripts/__tests__/framework-menu-system-notifications-remediation.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-payloads.test.ts scripts/__tests__/framework-menu-system-notifications-cause.test.ts scripts/__tests__/framework-menu-system-notifications-remediation.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-263: Atacar `framework-menu-system-notifications-macos.ts` separando runner Swift, fallback AppleScript y ejecucion de comandos para seguir cerrando `scripts/**` con el repo todavía limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos.ts` deja de mezclar el source Swift flotante, el fallback AppleScript y la ejecución de comandos;
+    - la lógica queda separada en:
+      - `scripts/framework-menu-system-notifications-macos-runner.ts`
+      - `scripts/framework-menu-system-notifications-macos-applescript.ts`
+      - `scripts/framework-menu-system-notifications-macos-swift.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      se mantiene intacta;
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-swift.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - el corte queda validado con `14` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-macos.ts scripts/framework-menu-system-notifications-macos-runner.ts scripts/framework-menu-system-notifications-macos-applescript.ts scripts/framework-menu-system-notifications-macos-swift.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-264: Atacar `framework-menu-system-notifications-config.ts` separando persistencia, estado de mute y aplicación de decisiones para cerrar el bloque de notificaciones extremo a extremo.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-config.ts` queda reducido a una fachada pública estable;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-config-file.ts`
+      - `scripts/framework-menu-system-notifications-config-state.ts`
+      - `scripts/framework-menu-system-notifications-config-choice.ts`
+      - `scripts/framework-menu-system-notifications-config.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-config-state.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-config-choice.test.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - el corte queda validado con `17` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `2` scopes).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-config.ts scripts/framework-menu-system-notifications-config-file.ts scripts/framework-menu-system-notifications-config-state.ts scripts/framework-menu-system-notifications-config-choice.ts scripts/__tests__/framework-menu-system-notifications-config-state.test.ts scripts/__tests__/framework-menu-system-notifications-config-choice.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-config-state.test.ts scripts/__tests__/framework-menu-system-notifications-config-choice.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-265: Atacar `framework-menu-layout-lib.ts` separando tipos, datos canónicos y resolución/cobertura del menú para seguir limpiando `scripts/**` con el repo limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-layout-lib.ts` queda reducido a una fachada pública estable;
+    - la lógica se separa en:
+      - `scripts/framework-menu-layout-types.ts`
+      - `scripts/framework-menu-layout-data.ts`
+      - `scripts/framework-menu-layout-resolve.ts`
+      - `scripts/framework-menu-layout-lib.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-layout-resolve.test.ts`
+      - `scripts/__tests__/framework-menu-layout-coverage.test.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-advanced-view-lib.ts`
+      - `scripts/framework-menu-consumer-runtime-menu.ts`
+      se mantiene intacta;
+    - el corte queda validado con `13` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `2` scopes).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-layout-lib.ts scripts/framework-menu-layout-types.ts scripts/framework-menu-layout-data.ts scripts/framework-menu-layout-resolve.ts scripts/__tests__/framework-menu-layout-resolve.test.ts scripts/__tests__/framework-menu-layout-coverage.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-layout-resolve.test.ts scripts/__tests__/framework-menu-layout-coverage.test.ts scripts/__tests__/framework-menu-advanced-view-menu.test.ts scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-266: Atacar `framework-menu-legacy-audit-summary.ts` separando parseo del summary, breakdown por plataforma, top violations y métricas para seguir limpiando `scripts/**` con el repo limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-legacy-audit-summary.ts` queda reducido a una fachada pública estable de `105` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-legacy-audit-summary-types.ts`
+      - `scripts/framework-menu-legacy-audit-summary-normalize.ts`
+      - `scripts/framework-menu-legacy-audit-summary-platforms.ts`
+      - `scripts/framework-menu-legacy-audit-summary-ranked.ts`
+      - `scripts/framework-menu-legacy-audit-summary-metrics.ts`
+      - `scripts/framework-menu-legacy-audit-summary.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-legacy-audit-summary.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-summary-platforms.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-summary-metrics.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-summary-top.test.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-legacy-audit-lib.ts`
+      - `scripts/framework-menu-legacy-audit-render.ts`
+      - `scripts/framework-menu-legacy-audit-markdown.ts`
+      se mantiene intacta;
+    - el corte queda validado con `26` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`11` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-legacy-audit-summary.ts scripts/framework-menu-legacy-audit-summary-types.ts scripts/framework-menu-legacy-audit-summary-normalize.ts scripts/framework-menu-legacy-audit-summary-platforms.ts scripts/framework-menu-legacy-audit-summary-ranked.ts scripts/framework-menu-legacy-audit-summary-metrics.ts scripts/__tests__/framework-menu-legacy-audit-summary.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-platforms.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-metrics.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-top.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit-summary.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-platforms.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-metrics.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-top.test.ts scripts/__tests__/framework-menu-legacy-audit-render.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-267: Atacar `framework-menu-legacy-audit-render.ts` separando paneles, bloques de resumen y remediación/métricas para seguir cerrando el slice legacy audit con el repo limpio.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-legacy-audit-render.ts` queda reducido a una fachada pública estable de `16` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-legacy-audit-render-panel.ts`
+      - `scripts/framework-menu-legacy-audit-render-sections.ts`
+      - `scripts/framework-menu-legacy-audit-render-report.ts`
+      - `scripts/framework-menu-legacy-audit-render.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-legacy-audit-render-panel.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-render-report.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-render-test-helpers.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-legacy-audit-lib.ts`
+      - `scripts/framework-menu-legacy-audit-markdown.ts`
+      - `scripts/framework-menu-consumer-runtime-audit.ts`
+      - `scripts/framework-menu-consumer-preflight-render.ts`
+      - `scripts/framework-menu-consumer-runtime-menu.ts`
+      se mantiene intacta;
+    - el corte queda validado con `26` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-legacy-audit-render.ts scripts/framework-menu-legacy-audit-render-panel.ts scripts/framework-menu-legacy-audit-render-sections.ts scripts/framework-menu-legacy-audit-render-report.ts scripts/__tests__/framework-menu-legacy-audit-render-test-helpers.ts scripts/__tests__/framework-menu-legacy-audit-render-panel.test.ts scripts/__tests__/framework-menu-legacy-audit-render-report.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit-render-panel.test.ts scripts/__tests__/framework-menu-legacy-audit-render-report.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown.test.ts scripts/__tests__/framework-menu-legacy-audit-summary.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-platforms.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-metrics.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-top.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-268: Rematar el slice `legacy audit` atacando `framework-menu-legacy-audit-markdown.ts`, separando links clicables, normalización de paths y ensamblado final del markdown con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-legacy-audit-markdown.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - normalización de paths clicables,
+      - construcción de enlaces markdown,
+      - ensamblado final del documento exportado;
+    - mantener estable la fachada pública usada por `framework-menu-legacy-audit-lib.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-267`, el último bloque funcional pendiente del slice `legacy audit` es `scripts/framework-menu-legacy-audit-markdown.ts` (`65` líneas);
+    - actualmente convive con:
+      - `scripts/framework-menu-legacy-audit-lib.ts` (`14` líneas),
+      - `scripts/framework-menu-legacy-audit-render.ts` (`16` líneas tras este corte),
+      - `scripts/framework-menu-legacy-audit-summary.ts` (`105` líneas),
+      lo que hace viable cerrar el slice legacy audit extremo a extremo sin romper la fachada pública.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-legacy-audit-markdown.ts` queda reducido a una fachada pública estable de `19` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-legacy-audit-markdown-links.ts`
+      - `scripts/framework-menu-legacy-audit-markdown-document.ts`
+      - `scripts/framework-menu-legacy-audit-markdown.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-legacy-audit-markdown-links.test.ts`
+      - `scripts/__tests__/framework-menu-legacy-audit-markdown-document.test.ts`
+    - se amplían los helpers compartidos en:
+      - `scripts/__tests__/framework-menu-legacy-audit-render-test-helpers.ts`
+      para reutilizar fixtures de paths absolutos y utilidades de aserción;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-legacy-audit-lib.ts`
+      se mantiene intacta;
+    - el corte queda validado con `29` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-legacy-audit-markdown.ts scripts/framework-menu-legacy-audit-markdown-links.ts scripts/framework-menu-legacy-audit-markdown-document.ts scripts/__tests__/framework-menu-legacy-audit-markdown-links.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown-document.test.ts scripts/__tests__/framework-menu-legacy-audit-render-test-helpers.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit-markdown-links.test.ts scripts/__tests__/framework-menu-legacy-audit-markdown-document.test.ts scripts/__tests__/framework-menu-legacy-audit-render-panel.test.ts scripts/__tests__/framework-menu-legacy-audit-render-report.test.ts scripts/__tests__/framework-menu-legacy-audit-summary.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-platforms.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-metrics.test.ts scripts/__tests__/framework-menu-legacy-audit-summary-top.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-269: Atacar `framework-menu-system-notifications-macos-swift.ts`, separando source Swift, helpers del modal y ensamblado de argumentos para seguir limpiando `scripts/**` con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-swift.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - generación del source Swift,
+      - composición del modal flotante y botones,
+      - ensamblado de argumentos/bridge para la ejecución;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-268`, el siguiente fichero grande y todavía opaco dentro de `scripts/**` es `scripts/framework-menu-system-notifications-macos-swift.ts` (`331` líneas);
+    - actualmente convive con:
+      - `scripts/framework-menu-system-notifications-macos.ts` (`125` líneas),
+      - `scripts/framework-menu-system-notifications-macos-runner.ts`,
+      - `scripts/framework-menu-system-notifications-macos-applescript.ts`,
+      lo que hace viable cerrar el bloque macOS extremo a extremo sin romper la fachada pública de notificaciones.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos-swift.ts` queda reducido a una fachada pública estable de `6` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-swift-source.ts`
+      - `scripts/framework-menu-system-notifications-macos-swift-args.ts`
+      - `scripts/framework-menu-system-notifications-macos-swift-run.ts`
+      - `scripts/framework-menu-system-notifications-macos-swift.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts`
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - el corte queda validado con `17` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-macos-swift.ts scripts/framework-menu-system-notifications-macos-swift-source.ts scripts/framework-menu-system-notifications-macos-swift-args.ts scripts/framework-menu-system-notifications-macos-swift-run.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-270: Atacar `framework-menu-system-notifications-macos.ts`, separando entrega del banner, flujo de diálogo bloqueante y fallback por modo para cerrar el bloque macOS extremo a extremo con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - envío de la notificación banner,
+      - orquestación del diálogo bloqueante,
+      - selección de modo y fallback AppleScript/Swift;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-269`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos.ts` (`125` líneas);
+    - actualmente convive con:
+      - `scripts/framework-menu-system-notifications-macos-runner.ts` (`49` líneas),
+      - `scripts/framework-menu-system-notifications-macos-applescript.ts` (`62` líneas),
+      - `scripts/framework-menu-system-notifications-macos-swift.ts` (`6` líneas tras este corte),
+      lo que hace viable cerrar el bloque macOS extremo a extremo sin romper la fachada pública del canal `macos`.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos.ts` queda reducido a una fachada pública estable de `62` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-banner.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog-mode.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos.test.ts` como smoke de fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      se mantiene intacta;
+    - el corte queda validado con `20` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-macos.ts scripts/framework-menu-system-notifications-macos-banner.ts scripts/framework-menu-system-notifications-macos-dialog.ts scripts/framework-menu-system-notifications-macos-dialog-mode.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-271: Atacar `framework-menu-system-notifications-lib.ts`, separando resolución de configuración, gating por plataforma y dispatch de canal para cerrar el bloque de notificaciones extremo a extremo con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-lib.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - resolución de configuración efectiva,
+      - gating por mute/plataforma,
+      - dispatch al canal `macos`;
+    - mantener estable la fachada pública usada por los callers del bloque de notificaciones;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-270`, el siguiente fichero todavía mezclado del bloque notificaciones es `scripts/framework-menu-system-notifications-lib.ts`;
+    - actualmente concentra:
+      - lectura de config,
+      - chequeos de `enabled`/mute,
+      - gating de plataforma,
+      - construcción de payload y dispatch a `macos`,
+      lo que lo convierte en el siguiente cierre natural del slice de notificaciones.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-lib.ts` queda reducido a una fachada pública estable de `71` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-effective-config.ts`
+      - `scripts/framework-menu-system-notifications-gate.ts`
+      - `scripts/framework-menu-system-notifications-dispatch.ts`
+      - `scripts/framework-menu-system-notifications-lib.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-effective-config.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-gate.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-dispatch.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-lib.test.ts` como smoke de fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-consumer-runtime-lib.ts`
+      - `scripts/framework-menu-consumer-preflight-run.ts`
+      se mantiene intacta;
+    - el corte queda validado con `25` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-lib.ts scripts/framework-menu-system-notifications-effective-config.ts scripts/framework-menu-system-notifications-gate.ts scripts/framework-menu-system-notifications-dispatch.ts scripts/__tests__/framework-menu-system-notifications-effective-config.test.ts scripts/__tests__/framework-menu-system-notifications-gate.test.ts scripts/__tests__/framework-menu-system-notifications-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-effective-config.test.ts scripts/__tests__/framework-menu-system-notifications-gate.test.ts scripts/__tests__/framework-menu-system-notifications-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-272: Atacar `framework-menu-system-notifications-payloads.ts`, separando builders por tipo de evento, encabezados comunes y ensamblado final del payload para rematar el bloque de notificaciones con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-payloads.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - builders por kind (`audit.summary`, `gate.blocked`, `evidence.stale`, `gitflow.violation`),
+      - encabezados/títulos/subtitles comunes,
+      - ensamblado final del payload con contexto de proyecto;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-271`, el siguiente fichero todavía mezclado del bloque notificaciones es `scripts/framework-menu-system-notifications-payloads.ts` (`104` líneas);
+    - actualmente concentra:
+      - builders por tipo de evento,
+      - prefijo de proyecto,
+      - ensamblado de `title`/`subtitle`/`message`,
+      - elección del `soundName`,
+      lo que lo convierte en el siguiente cierre natural del slice de notificaciones.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-payloads.ts` queda reducido a una fachada pública estable de `55` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-payloads-context.ts`
+      - `scripts/framework-menu-system-notifications-payloads-audit.ts`
+      - `scripts/framework-menu-system-notifications-payloads-blocked.ts`
+      - `scripts/framework-menu-system-notifications-payloads-events.ts`
+      - `scripts/framework-menu-system-notifications-payloads.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-payloads-audit.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-payloads-blocked.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-payloads-events.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-payloads.test.ts` como smoke de fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - el corte queda validado con `19` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`9` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-payloads.ts scripts/framework-menu-system-notifications-payloads-context.ts scripts/framework-menu-system-notifications-payloads-audit.ts scripts/framework-menu-system-notifications-payloads-blocked.ts scripts/framework-menu-system-notifications-payloads-events.ts scripts/__tests__/framework-menu-system-notifications-payloads-audit.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-blocked.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-events.test.ts scripts/__tests__/framework-menu-system-notifications-payloads.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-payloads-audit.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-blocked.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-events.test.ts scripts/__tests__/framework-menu-system-notifications-payloads.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts scripts/__tests__/framework-menu-system-notifications-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-273: Atacar `framework-menu-system-notifications-macos-applescript.ts`, separando script de banner, script de diálogo y parseo de salida para rematar el bloque de notificaciones macOS con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-applescript.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - construcción del script del banner,
+      - construcción del script del diálogo bloqueante,
+      - parseo de salida del botón seleccionado;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos-banner.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog-mode.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-272`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos-applescript.ts` (`62` líneas);
+    - actualmente concentra:
+      - script del banner,
+      - script del diálogo,
+      - extracción del botón seleccionado desde stdout,
+      lo que lo convierte en el siguiente cierre natural del slice macOS.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos-applescript.ts` queda reducido a una fachada pública estable de `38` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-applescript-banner.ts`
+      - `scripts/framework-menu-system-notifications-macos-applescript-dialog.ts`
+      - `scripts/framework-menu-system-notifications-macos-applescript-parse.ts`
+      - `scripts/framework-menu-system-notifications-macos-applescript.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-applescript-banner.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-applescript-dialog.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-applescript-parse.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts` como smoke de fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos-banner.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog-mode.ts`
+      se mantiene intacta;
+    - el corte queda validado con `24` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-macos-applescript.ts scripts/framework-menu-system-notifications-macos-applescript-banner.ts scripts/framework-menu-system-notifications-macos-applescript-dialog.ts scripts/framework-menu-system-notifications-macos-applescript-parse.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-parse.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-applescript-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-parse.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-274: Atacar `framework-menu-system-notifications-types.ts`, separando unions de eventos, payloads, config y contratos de runner para seguir cerrando el bloque de notificaciones con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-types.ts` y de los módulos/tests que dependen de él;
+    - separar, como mínimo:
+      - unions de eventos (`audit.summary`, `gate.blocked`, `evidence.stale`, `gitflow.violation`),
+      - contratos de payload y configuración,
+      - contratos de runner/command execution;
+    - mantener estable la fachada pública usada por el resto del bloque de notificaciones;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-273`, el siguiente fichero todavía mezclado del bloque notificaciones es `scripts/framework-menu-system-notifications-types.ts` (`67` líneas);
+    - actualmente concentra:
+      - tipos de eventos críticos,
+      - payloads de notificación,
+      - config persistida,
+      - contratos de runners de comandos,
+      lo que lo convierte en el siguiente cierre natural del slice de notificaciones.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-types.ts` queda reducido a una fachada pública estable de `22` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-event-types.ts`
+      - `scripts/framework-menu-system-notifications-payload-types.ts`
+      - `scripts/framework-menu-system-notifications-config-types.ts`
+      - `scripts/framework-menu-system-notifications-runner-types.ts`
+      - `scripts/framework-menu-system-notifications-types.ts`
+    - la suite añade smoke de fachada pública en:
+      - `scripts/__tests__/framework-menu-system-notifications-types.test.ts`
+    - la fachada pública usada por todo el bloque de notificaciones se mantiene intacta;
+    - el corte queda validado con `40` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`6` archivos tocados, `1` scope).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-types.ts scripts/framework-menu-system-notifications-event-types.ts scripts/framework-menu-system-notifications-payload-types.ts scripts/framework-menu-system-notifications-config-types.ts scripts/framework-menu-system-notifications-runner-types.ts scripts/__tests__/framework-menu-system-notifications-types.test.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-types.test.ts scripts/__tests__/framework-menu-system-notifications-effective-config.test.ts scripts/__tests__/framework-menu-system-notifications-gate.test.ts scripts/__tests__/framework-menu-system-notifications-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-audit.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-blocked.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-events.test.ts scripts/__tests__/framework-menu-system-notifications-payloads.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-parse.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-275: Atacar `framework-menu-system-notifications-macos-runner.ts`, separando ejecución síncrona, ejecución con stdout y parseo del botón para seguir cerrando el bloque de notificaciones macOS con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-runner.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - ejecución síncrona sin salida,
+      - ejecución con captura de stdout,
+      - parseo del botón devuelto por los diálogos;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      - `scripts/framework-menu-system-notifications-macos-swift-run.ts`
+      - `scripts/framework-menu-system-notifications-macos-applescript-parse.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-274`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos-runner.ts` (`49` líneas);
+    - actualmente concentra:
+      - ejecución síncrona de comandos,
+      - ejecución con captura de stdout,
+      - extracción del botón seleccionado,
+      lo que lo convierte en el siguiente cierre natural del slice macOS.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos-runner.ts` queda reducido a una fachada pública estable de `3` líneas;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-runner-exec.ts`
+      - `scripts/framework-menu-system-notifications-macos-runner-output.ts`
+      - `scripts/framework-menu-system-notifications-macos-runner-parse.ts`
+      - `scripts/framework-menu-system-notifications-macos-runner.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-runner-exec.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-runner-output.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts` como smoke de fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      - `scripts/framework-menu-system-notifications-macos-swift-run.ts`
+      - `scripts/framework-menu-system-notifications-macos-applescript-parse.ts`
+      se mantiene intacta;
+    - el corte queda validado con `23` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `2` scopes).
+  - Evidencia:
+    - `wc -l scripts/framework-menu-system-notifications-macos-runner.ts scripts/framework-menu-system-notifications-macos-runner-exec.ts scripts/framework-menu-system-notifications-macos-runner-output.ts scripts/framework-menu-system-notifications-macos-runner-parse.ts scripts/__tests__/framework-menu-system-notifications-macos-runner-exec.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner-output.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/framework-menu-system-notifications-macos.ts scripts/framework-menu-system-notifications-macos-dialog.ts scripts/framework-menu-system-notifications-macos-banner.ts`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-runner-exec.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner-output.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript-parse.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-276: Atacar `framework-menu-system-notifications-macos-dialog.ts`, separando resolución de enablement, composición del payload visible y aplicación del efecto para seguir cerrando el bloque de notificaciones macOS con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-dialog.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - resolución de `blockedDialogEnabled`,
+      - composición de `title/cause/remediation`,
+      - aplicación de la decisión seleccionada al estado/configuración;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      - `scripts/framework-menu-system-notifications-lib.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-275`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos-dialog.ts` (`81` líneas);
+    - actualmente concentra:
+      - resolución de enablement del diálogo bloqueante,
+      - composición del contenido visible del diálogo,
+      - aplicación de la decisión seleccionada,
+      lo que lo convierte en el siguiente cierre natural del slice macOS.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos-dialog.ts` queda reducido a una fachada pública estable;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-dialog-enabled.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog-payload.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog-effect.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-dialog-enabled.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-dialog-payload.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-dialog-effect.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts` como smoke/orquestación;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      se mantiene intacta;
+    - el corte queda validado con `23` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`8` archivos tocados, `1` scope).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-dialog-enabled.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-payload.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-effect.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-277: Atacar `framework-menu-system-notifications-macos.ts`, separando entrega de banner, dispatch del diálogo bloqueante y resultado final de emisión para rematar la fachada macOS con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - entrega del banner,
+      - dispatch del diálogo bloqueante,
+      - resultado final de emisión;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-276`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos.ts` (`52` líneas);
+    - actualmente concentra:
+      - entrega del banner,
+      - dispatch del diálogo bloqueante,
+      - decisión final de `delivered/reason`,
+      lo que lo convierte en el siguiente cierre natural del slice macOS.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos.ts` queda reducido a una fachada pública más fina;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-banner-delivery.ts`
+      - `scripts/framework-menu-system-notifications-macos-blocked-dispatch.ts`
+      - `scripts/framework-menu-system-notifications-macos-result.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-result.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos.test.ts` como smoke de fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      se mantiene intacta;
+    - el corte queda validado con `28` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `1` scope).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery.test.ts scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-macos-result.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-enabled.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-payload.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-effect.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-278: Atacar `framework-menu-system-notifications-macos-banner.ts`, separando construcción del script visible, ejecución del banner y traducción del resultado para rematar el slice macOS con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-banner.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - construcción del script visible,
+      - ejecución del banner,
+      - traducción del resultado a `SystemNotificationEmitResult`;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos-banner-delivery.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-277`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos-banner.ts` (`17` líneas);
+    - actualmente concentra:
+      - construcción del script del banner,
+      - ejecución de `osascript`,
+      - traducción del exit code a `SystemNotificationEmitResult`,
+      lo que lo convierte en el siguiente cierre natural y pequeño del slice macOS.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos-banner.ts` queda reducido a una fachada pública más fina;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-banner-script.ts`
+      - `scripts/framework-menu-system-notifications-macos-banner-run.ts`
+      - `scripts/framework-menu-system-notifications-macos-banner-result.ts`
+      - `scripts/framework-menu-system-notifications-macos-banner.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-script.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-run.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-result.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts` como smoke de fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos-banner-delivery.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - el corte queda validado con `24` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`7` archivos tocados, `1` scope).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-banner-script.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-result.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-279: Atacar `framework-menu-system-notifications-macos-banner-delivery.ts`, separando resolución del runner por defecto y dispatch del banner para seguir cerrando el slice macOS con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos-banner-delivery.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - resolución del runner por defecto,
+      - dispatch del banner;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-278`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos-banner-delivery.ts` (`15` líneas);
+    - actualmente concentra:
+      - resolución del `runCommand` por defecto,
+      - llamada al banner macOS,
+      lo que lo convierte en el siguiente cierre natural y pequeño del slice macOS.
+  - Resultado (2026-03-07):
+    - `scripts/framework-menu-system-notifications-macos-banner-delivery.ts` queda reducido a una fachada pública más fina;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-banner-delivery-runner.ts`
+      - `scripts/framework-menu-system-notifications-macos-banner-delivery-dispatch.ts`
+      - `scripts/framework-menu-system-notifications-macos-banner-delivery.ts`
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery-runner.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery-dispatch.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery.test.ts` como smoke de fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - el corte queda validado con `14` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`5` archivos tocados, `1` scope).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-script.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-result.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-280: Atacar `framework-menu-system-notifications-macos-blocked-dispatch.ts`, separando gate de evento bloqueante y resolución del runner con salida para seguir cerrando el slice macOS con el repo limpio.
+  - Resultado:
+    - `framework-menu-system-notifications-macos-blocked-dispatch.ts` ya quedó como fachada fina y estable.
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-blocked-dispatch-gate.ts`
+      - `scripts/framework-menu-system-notifications-macos-blocked-dispatch-runner.ts`
+      - `scripts/framework-menu-system-notifications-macos-blocked-dispatch.ts` como fachada pública;
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch-gate.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch-runner.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch.test.ts` como smoke de orquestación;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos.ts`
+      se mantiene intacta;
+    - el corte queda validado con `22` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`5` archivos tocados, `1` scope).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch-gate.test.ts scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch-runner.test.ts scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-enabled.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-payload.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-effect.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-runner.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-281: Atacar `framework-menu-system-notifications-macos-dialog-mode.ts`, separando resolución del modo, dispatch Swift y fallback AppleScript para seguir cerrando el slice macOS con el repo limpio.
+  - Resultado:
+    - `framework-menu-system-notifications-macos-dialog-mode.ts` ya quedó como fachada fina y estable.
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-dialog-mode-resolve.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog-mode-dispatch.ts`
+      - `scripts/framework-menu-system-notifications-macos-dialog-mode.ts` como fachada pública;
+    - la suite se divide por responsabilidad en:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-dialog-mode-resolve.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-dialog-mode-dispatch.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts` como smoke de orquestación;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-macos-dialog.ts`
+      se mantiene intacta;
+    - el corte queda validado con `22` tests focales en verde, `typecheck` en verde y el repo se mantiene dentro de higiene (`5` archivos tocados, `1` scope).
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-dialog-mode-resolve.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-mode-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-enabled.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-payload.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-effect.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-args.test.ts scripts/__tests__/framework-menu-system-notifications-macos-swift-run.test.ts scripts/__tests__/framework-menu-system-notifications-macos-applescript.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- ✅ PUMUKI-282: Atacar `framework-menu-system-notifications-macos.ts`, separando orquestación de banner, dispatch del diálogo bloqueante y resultado final de entrega para rematar la fachada macOS con el repo limpio.
+  - Alcance:
+    - inventariar el peso real de `scripts/framework-menu-system-notifications-macos.ts` y de la suite que lo cubre;
+    - separar, como mínimo:
+      - orquestación de entrega del banner,
+      - dispatch del diálogo bloqueante,
+      - resultado final de emisión;
+    - mantener estable la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`;
+    - cerrar el corte con tests focales, `typecheck` y repo limpio.
+  - Inventario inicial (2026-03-07):
+    - tras cerrar `PUMUKI-281`, el siguiente fichero todavía mezclado del bloque notificaciones macOS es `scripts/framework-menu-system-notifications-macos.ts` (`49` líneas);
+    - actualmente concentra:
+      - entrega del banner visible,
+      - dispatch del diálogo bloqueante,
+      - traducción del resultado final de emisión,
+      lo que lo convierte en el siguiente cierre natural de la fachada macOS.
+  - Resultado (2026-03-08):
+    - `scripts/framework-menu-system-notifications-macos.ts` queda reducido a una fachada pública más fina;
+    - la lógica se separa en:
+      - `scripts/framework-menu-system-notifications-macos-banner-stage.ts`
+      - `scripts/framework-menu-system-notifications-macos-blocked-stage.ts`
+      - `scripts/framework-menu-system-notifications-macos-result.ts`
+      - `scripts/framework-menu-system-notifications-macos.ts`
+    - la suite se amplía con smoke por responsabilidad:
+      - `scripts/__tests__/framework-menu-system-notifications-macos-banner-stage.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos-blocked-stage.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications-macos.test.ts` como smoke de la fachada pública;
+    - la fachada pública usada por:
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      se mantiene intacta;
+    - el corte queda validado con `11` tests focales en verde, `typecheck` en verde y la higiene operativa sigue en verde.
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-macos-banner-stage.test.ts scripts/__tests__/framework-menu-system-notifications-macos-blocked-stage.test.ts scripts/__tests__/framework-menu-system-notifications-macos.test.ts scripts/__tests__/framework-menu-system-notifications-macos-banner-delivery.test.ts scripts/__tests__/framework-menu-system-notifications-macos-blocked-dispatch.test.ts scripts/__tests__/framework-menu-system-notifications-macos-result.test.ts scripts/__tests__/framework-menu-system-notifications-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `npm run -s validation:self-worktree-hygiene -- --no-fail`
+
+- 🚧 PUMUKI-283: Atacar el problema principal de Pumuki en consumer real, cerrando `PUMUKI-019` en `SAAS` para que el gate detecte plataformas activas, materialice skills requeridas del repo y bloquee con findings semánticos reales.
+  - Regla hard vigente:
+    - mientras `SAAS`, `RuralGo` o `Flux` tengan bugs abiertos, quedan congeladas todas las tasks internas `PUMUKI-2xx` que no sean estrictamente necesarias para cerrar esos MDs externos;
+    - este plan ya no puede volver a priorizar refactor interno por encima de `PUMUKI-019` y `PUMUKI-020`.
+  - Alcance:
+    - retomar los cambios abiertos en:
+      - `integrations/config/skillsCustomRules.ts`
+      - `integrations/config/skillsEffectiveLock.ts`
+      - `integrations/gate/evaluateAiGate.ts`
+      - `integrations/gate/__tests__/evaluateAiGate.test.ts`
+    - cerrar el pipeline:
+      - `repo skills -> required lock -> required platforms -> enforced skills contract -> findings`;
+    - forzar que:
+      - `required skills present + detected_platforms empty`
+        se trate como hallazgo bloqueante;
+    - alinear el naming de skills importadas iOS con los bundles que espera el gate;
+    - incluir `ast_node_ids` en hashing/lock efectivo donde aplique para no perder drift real;
+    - validar el caso consumer real de `SAAS` con tests de regresión en rojo/verde;
+    - no cerrar la tarea hasta dejar el tracking y el worktree coherentes.
+  - Inventario inicial (2026-03-08):
+    - quedan abiertos y sin commitear `6` archivos del fix crítico:
+      - `integrations/config/skillsCustomRules.ts`
+      - `integrations/config/skillsEffectiveLock.ts`
+      - `integrations/gate/evaluateAiGate.ts`
+      - `integrations/config/__tests__/skillsCustomRules.test.ts`
+      - `integrations/config/__tests__/skillsEffectiveLock.test.ts`
+      - `integrations/gate/__tests__/evaluateAiGate.test.ts`
+    - el problema reproducible sigue siendo:
+      - `PUMUKI-019` en `SAAS`
+      - `skills_contract.enforced=false`
+      - `skills_contract.status=NOT_APPLICABLE`
+      - `detected_platforms=[]`
+      cuando el consumer sí tiene skills requeridas y violaciones estructurales graves.
+  - Avance actual (2026-03-08):
+    - ya quedó respondido formalmente el paquete del hub en:
+      - `/Users/juancarlosmerlosalbarracin/Developer/Projects/engineering-operating-system/rollout/42_PAQUETE_ACTUAL_PARA_PUMUKI.md`
+    - esa respuesta deja explícito que:
+      - ya existe avance real en `skills reconciliation`, `effective lock` y endurecimiento de `evaluateAiGate`,
+      - pero `IOS-CANARY-001` sigue en `STOP`,
+      - y todavía no existe finding semántico bloqueante, repetible, con `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`.
+    - por tanto, esta task sigue abierta y la siguiente acción útil ya no es más refactor interno, sino cerrar el primer corte semántico real del canario.
+  - Progreso técnico de este corte (2026-03-08):
+    - `integrations/config/skillsCustomRules.ts` ya resuelve skills requeridas importadas desde:
+      - `AGENTS.md`
+      - `vendor/skills/MANIFEST.json`
+      - `vendor/skills/<skill>/SKILL.md`
+    - `integrations/config/skillsEffectiveLock.ts` ya construye:
+      - `effective lock`
+      - `required lock`
+      consumiendo también skills vendorizadas/importadas del repo consumer;
+    - `integrations/gate/evaluateAiGate.ts` ya bloquea cuando:
+      - el repo exige skills/plataformas,
+      - pero no se detectan plataformas activas explícitas,
+      - aunque exista cobertura inferida por rules coverage;
+    - el gate ya no trata las skills core efectivas como contrato obligatorio del consumer;
+    - los tests focales del corte ya están en verde:
+      - `48 pass / 0 fail`
+      - comando:
+        - `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsEffectiveLock.test.ts integrations/config/__tests__/skillsCustomRules.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts`
+    - este corte mejora el contrato de enforcement previo al finding, pero no cierra aún el canario semántico.
+  - Lo que sigue pendiente antes de salir de `STOP`:
+    - emitir el primer finding semántico real y repetible para `IOS-CANARY-001`;
+    - producir:
+      - `matched_rules > 0`
+      - `findings[]`
+      - `rule_id`
+      - `primary_node`
+      - `related_nodes`
+      - `why`
+      - `impact`
+      - `expected_fix`
+    - revalidarlo en una segunda ejecución con el mismo resultado estructural.
+
+- ✅ SAAS · SOLID SRP AST: cerrar la última milla semántica de `skills.backend.no-solid-violations` y revalidarla en consumer.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/typescript/index.ts` ya extrae match semántico para `heuristics.ts.solid.srp.class-command-query-mix.ast`.
+    - `integrations/git/findingTraceability.ts` ya hereda `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` cuando la skill entra por `Any(...)`.
+    - `integrations/config/skillsRuleSet.ts` ya promociona `*.no-solid-violations` a `ERROR` en `PRE_PUSH/CI` aunque la fuente vendorizada llegue como `WARN`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y `extensions=['.ts']`:
+      - `backend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.backend.no-solid-violations"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json`
+      - bloqueo primario real: `SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/typescript/index.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts integrations/git/__tests__/findingTraceability.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts integrations/config/__tests__/skillsRuleSet.test.ts` -> `76 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `./node_modules/.bin/tsx -e "<runPlatformGate PRE_PUSH workingTree .ts>"` -> `exitCode=1`, `primary=SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`.
+
+- 🚧 SAAS · Validación SOLID AST: mantener la secuencia por principios sin mezclar scopes.
+  - Estado actual (2026-03-11):
+    - `SRP` ya está validado y persistido en consumer.
+    - `DIP` ya está validado y persistido en consumer.
+    - `OCP-Backend` ya está validado y persistido en consumer.
+    - `ISP-Backend` ya está validado y persistido en consumer.
+    - `LSP-Backend` ya está validado y persistido en consumer.
+    - `SRP-iOS` ya está validado y persistido en consumer.
+    - `DIP-iOS` ya está validado y persistido en consumer.
+    - `OCP-iOS` ya está validado y persistido en consumer.
+    - `ISP-iOS` ya está validado y persistido en consumer.
+    - `LSP-iOS` ya está validado y persistido en consumer.
+    - `SRP-Android` ya está validado y persistido en consumer.
+    - `DIP-Android` ya está validado y persistido en consumer.
+    - `OCP-Android` ya está validado y persistido en consumer.
+    - `ISP-Android` ya está validado y persistido en consumer.
+    - `LSP-Android` ya está validado y persistido en consumer.
+    - `SRP-Frontend` ya está validado y persistido en consumer.
+    - `DIP-Frontend` ya está validado y persistido en consumer.
+    - `OCP-Frontend`, `ISP-Frontend` y `LSP-Frontend` siguen congelados hasta nueva orden explícita del usuario.
+
+- ✅ SAAS · SOLID OCP Backend AST: materializar una violación `OCP` semántica, enriquecida y bloqueante en consumer backend.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/typescript/index.ts` ya extrae match semántico para `heuristics.ts.solid.ocp.discriminator-switch.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `OCP-Backend`.
+    - `skills.backend.no-solid-violations` ya hereda esa traza semántica y bloquea en `PRE_PUSH` cuando el caso aplica.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y facts aislados del canario `apps/backend/src/delivery/application/use-cases/pumuki-ocp-backend-canary-use-case.ts`:
+      - `platforms.backend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.backend.no-solid-violations"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `skills.backend.no-solid-violations`
+      - el bloqueo primario real lo provoca `SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/typescript/index.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `76 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_PUSH con facts aislados del canario backend OCP ... EOF` -> `exitCode=1`, `matched_rule_ids=["skills.backend.no-solid-violations"]`.
+
+- ✅ SAAS · SOLID ISP Backend AST: materializar una violación `ISP` semántica, enriquecida y bloqueante en consumer backend.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/typescript/index.ts` ya extrae match semántico para `heuristics.ts.solid.isp.interface-command-query-mix.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `ISP-Backend`.
+    - `skills.backend.no-solid-violations` ya hereda esa traza semántica y bloquea en `PRE_PUSH` cuando el caso aplica.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y facts aislados del canario `apps/backend/src/delivery/application/use-cases/pumuki-isp-backend-canary-use-case.ts`:
+      - `platforms.backend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.backend.no-solid-violations"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `level="ERROR"`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `skills.backend.no-solid-violations`
+      - el bloqueo primario real lo provoca `SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/typescript/index.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `79 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_PUSH con facts aislados del canario backend ISP ... EOF` -> `exitCode=1`, `matched_rule_ids=["skills.backend.no-solid-violations"]`, `primary=SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`.
+
+- ✅ SAAS · SOLID LSP Backend AST: materializar una violación `LSP` semántica, enriquecida y bloqueante en consumer backend.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/typescript/index.ts` ya extrae match semántico para `heuristics.ts.solid.lsp.override-not-implemented.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `LSP-Backend`.
+    - `skills.backend.no-solid-violations` ya hereda esa traza semántica y bloquea en `PRE_PUSH` cuando el caso aplica.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y facts aislados del canario `apps/backend/src/delivery/application/use-cases/pumuki-lsp-backend-canary-use-case.ts`:
+      - `platforms.backend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.backend.no-solid-violations"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `level="ERROR"`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `skills.backend.no-solid-violations`
+      - el bloqueo primario real lo provoca `SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/typescript/index.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `82 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_PUSH con facts aislados del canario backend LSP ... EOF` -> `exitCode=1`, `matched_rule_ids=["skills.backend.no-solid-violations"]`, `primary=SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`.
+
+- ✅ SAAS · SOLID SRP iOS AST: materializar una violación `SRP` semántica, enriquecida y bloqueante en consumer iOS.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/text/ios.ts` ya extrae match semántico para `heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `SRP-iOS`.
+    - `core/rules/presets/iosEnterpriseRuleSet.ts` ya materializa `ios.solid.srp.presentation-mixed-responsibilities` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Swift:
+      - `platforms.ios.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["ios.solid.srp.presentation-mixed-responsibilities"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json`
+      - `ai_gate.violations` contiene solo `ios.solid.srp.presentation-mixed-responsibilities`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `49 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx -e "<runPlatformGate PRE_COMMIT con facts aislados del canario iOS>"` -> `exitCode=1`, `violations=["ios.solid.srp.presentation-mixed-responsibilities"]`.
+
+- ✅ SAAS · SOLID DIP iOS AST: materializar una violación `DIP` semántica, enriquecida y bloqueante en consumer iOS.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/text/ios.ts` ya extrae match semántico para `heuristics.ios.solid.dip.concrete-framework-dependency.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `DIP-iOS`.
+    - `core/rules/presets/iosEnterpriseRuleSet.ts` ya materializa `ios.solid.dip.concrete-framework-dependency` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Swift:
+      - `platforms.ios.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["ios.solid.dip.concrete-framework-dependency"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json`
+      - `ai_gate.violations` contiene solo `ios.solid.dip.concrete-framework-dependency`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `54 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx -e "<runPlatformGate PRE_COMMIT con facts aislados del canario iOS DIP>"` -> `exitCode=1`, `violations=["ios.solid.dip.concrete-framework-dependency"]`.
+
+- ✅ SAAS · SOLID SRP Android AST: materializar una violación `SRP` semántica, enriquecida y bloqueante en consumer Android.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/text/android.ts` ya extrae match semántico para `heuristics.android.solid.srp.presentation-mixed-responsibilities.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `SRP-Android`.
+    - `core/rules/presets/androidRuleSet.ts` ya materializa `android.solid.srp.presentation-mixed-responsibilities` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Kotlin:
+      - `platforms.android.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["android.solid.srp.presentation-mixed-responsibilities"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `android.solid.srp.presentation-mixed-responsibilities`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/android.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/androidRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `42 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx -e "<runPlatformGate PRE_COMMIT con facts aislados del canario Android SRP>"` -> `exitCode=1`, `violations=["android.solid.srp.presentation-mixed-responsibilities"]`.
+
+- ✅ SAAS · SOLID DIP Android AST: materializar una violación `DIP` semántica, enriquecida y bloqueante en consumer Android.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/text/android.ts` ya extrae match semántico para `heuristics.android.solid.dip.concrete-framework-dependency.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `DIP-Android`.
+    - `core/rules/presets/androidRuleSet.ts` ya materializa `android.solid.dip.concrete-framework-dependency` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Kotlin:
+      - `platforms.android.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["android.solid.dip.concrete-framework-dependency"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `android.solid.dip.concrete-framework-dependency`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/android.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/androidRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `45 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx -e "<runPlatformGate PRE_COMMIT con facts aislados del canario Android DIP>"` -> `exitCode=1`, `violations=["android.solid.dip.concrete-framework-dependency"]`.
+
+- ✅ SAAS · SOLID OCP Android AST: materializar una violación `OCP` semántica, enriquecida y bloqueante en consumer Android.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/android.ts` ya extrae match semántico para `heuristics.android.solid.ocp.discriminator-branching.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `OCP-Android`.
+    - `core/rules/presets/androidRuleSet.ts` ya materializa `android.solid.ocp.discriminator-branching` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Kotlin:
+      - `platforms.android.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["android.solid.ocp.discriminator-branching"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `android.solid.ocp.discriminator-branching`
+      - `block-summary` marca como primario `ANDROID_SOLID_OCP_DISCRIMINATOR_BRANCHING`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/android.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/androidRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `60 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario Android OCP ... EOF` -> `exitCode=1`, `matched_rule_ids=["android.solid.ocp.discriminator-branching"]`, `primary=ANDROID_SOLID_OCP_DISCRIMINATOR_BRANCHING`.
+
+- ✅ SAAS · SOLID ISP Android AST: materializar una violación `ISP` semántica, enriquecida y bloqueante en consumer Android.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/android.ts` ya extrae match semántico para `heuristics.android.solid.isp.fat-interface-dependency.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `ISP-Android`.
+    - `core/rules/presets/androidRuleSet.ts` ya materializa `android.solid.isp.fat-interface-dependency` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Kotlin:
+      - `platforms.android.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["android.solid.isp.fat-interface-dependency"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `android.solid.isp.fat-interface-dependency`
+      - `block-summary` marca como primario `ANDROID_SOLID_ISP_FAT_INTERFACE_DEPENDENCY`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/android.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/androidRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `63 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario Android ISP ... EOF` -> `exitCode=1`, `matched_rule_ids=["android.solid.isp.fat-interface-dependency"]`, `primary=ANDROID_SOLID_ISP_FAT_INTERFACE_DEPENDENCY`.
+
+- ✅ SAAS · SOLID LSP Android AST: materializar una violación `LSP` semántica, enriquecida y bloqueante en consumer Android.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/android.ts` ya extrae match semántico para `heuristics.android.solid.lsp.narrowed-precondition.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `LSP-Android`.
+    - `core/rules/presets/androidRuleSet.ts` ya materializa `android.solid.lsp.narrowed-precondition-substitution` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario Kotlin:
+      - `platforms.android.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["android.solid.lsp.narrowed-precondition-substitution"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `android.solid.lsp.narrowed-precondition-substitution`
+      - `block-summary` marca como primario `ANDROID_SOLID_LSP_NARROWED_PRECONDITION_SUBSTITUTION`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/android.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/androidRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `66 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario Android LSP ... EOF` -> `exitCode=1`, `matched_rule_ids=["android.solid.lsp.narrowed-precondition-substitution"]`, `primary=ANDROID_SOLID_LSP_NARROWED_PRECONDITION_SUBSTITUTION`.
+
+- ✅ SAAS · SOLID SRP Frontend AST: materializar una violación `SRP` semántica, enriquecida y bloqueante en consumer Frontend.
+  - Resultado (2026-03-10):
+    - el motor TypeScript ya materializa `heuristics.ts.solid.srp.class-command-query-mix.ast` con payload semántico enriquecido reutilizable en Frontend.
+    - `skills.frontend.no-solid-violations` ya hereda `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` desde la traza heurística.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y facts aislados del canario `apps/web/src/presentation/PumukiSrpFrontendCanary.tsx`:
+      - `platforms.frontend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.frontend.no-solid-violations"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json` bajo `ai_gate.violations`
+      - `ai_gate.violations` contiene solo `skills.frontend.no-solid-violations`
+  - Evidencia:
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_PUSH con facts aislados del canario Frontend SRP ... EOF` -> `exitCode=1`, `violations=["skills.frontend.no-solid-violations"]`.
+    - `SAAS`: parse de `.ai_evidence.json` -> `snapshot.outcome="BLOCK"`, `aiGateStatus="BLOCKED"`, `matched_rule_ids=["skills.frontend.no-solid-violations"]`.
+
+- ✅ SAAS · SOLID DIP Frontend AST: materializar una violación `DIP` semántica, enriquecida y bloqueante en consumer Frontend.
+  - Resultado (2026-03-11):
+    - el motor TypeScript ya materializa `heuristics.ts.solid.dip.framework-import.ast` y `heuristics.ts.solid.dip.concrete-instantiation.ast` con payload semántico enriquecido reutilizable en Frontend.
+    - `skills.frontend.no-solid-violations` ya hereda `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` desde la traza heurística `DIP`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y facts aislados del canario `apps/web/src/application/PumukiDipFrontendCanaryUseCase.ts`:
+      - `platforms.frontend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.frontend.no-solid-violations"]`
+      - `.ai_evidence.json` persiste `skills.frontend.enforce-clean-architecture` como `WARN` lateral y `skills.frontend.no-solid-violations` como único blocking real
+      - `block-summary` marca como primario `SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `SAAS`: `node --import tsx <<'EOF' ... evaluatePlatformGateFindings PRE_PUSH con el canario Frontend DIP ... EOF` -> `matchedRuleIds=["skills.frontend.enforce-clean-architecture","skills.frontend.no-solid-violations"]`, con payload semántico completo en ambos findings.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_PUSH con facts aislados del canario Frontend DIP ... EOF` -> `exitCode=1`, `block-summary primary=SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS`.
+    - `SAAS`: parse de `.ai_evidence.json` -> `snapshot.outcome="BLOCK"`, `aiGateStatus="BLOCKED"`, `blockingViolations=["skills.frontend.no-solid-violations"]`.
+
+- ✅ SAAS · SOLID OCP iOS AST: materializar una violación `OCP` semántica, enriquecida y bloqueante en consumer iOS.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/ios.ts` ya extrae match semántico para `heuristics.ios.solid.ocp.discriminator-switch.ast` sobre branching por discriminador en `application/presentation`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `OCP-iOS`.
+    - `core/rules/presets/iosEnterpriseRuleSet.ts` ya materializa `ios.solid.ocp.discriminator-switch-branching` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario `apps/ios/Sources/Validation/Application/PumukiOcpIosCanaryUseCase.swift`:
+      - `platforms.ios.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["ios.solid.ocp.discriminator-switch-branching"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `ios.solid.ocp.discriminator-switch-branching`
+      - `block-summary` marca como primario `IOS_SOLID_OCP_DISCRIMINATOR_SWITCH_BRANCHING`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `62 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario iOS OCP ... EOF` -> `exitCode=1`, `block-summary primary=IOS_SOLID_OCP_DISCRIMINATOR_SWITCH_BRANCHING`.
+    - `SAAS`: parse de `.ai_evidence.json` -> `snapshot.outcome="BLOCK"`, `matched_rule_ids=["ios.solid.ocp.discriminator-switch-branching"]`, `blocking_rule_ids=["ios.solid.ocp.discriminator-switch-branching"]`.
+
+- ✅ SAAS · SOLID ISP iOS AST: materializar una violación `ISP` semántica, enriquecida y bloqueante en consumer iOS.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/ios.ts` ya extrae match semántico para `heuristics.ios.solid.isp.fat-protocol-dependency.ast` sobre consumidores de `application/presentation` que dependen de un protocolo demasiado ancho y usan solo un subconjunto mínimo.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `ISP-iOS`.
+    - `core/rules/presets/iosEnterpriseRuleSet.ts` ya materializa `ios.solid.isp.fat-protocol-dependency` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario `apps/ios/Sources/Validation/Application/PumukiIspIosCanaryUseCase.swift`:
+      - `platforms.ios.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["ios.solid.isp.fat-protocol-dependency"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `ios.solid.isp.fat-protocol-dependency`
+      - `block-summary` marca como primario `IOS_SOLID_ISP_FAT_PROTOCOL_DEPENDENCY`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `66 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario iOS ISP ... EOF` -> `exitCode=1`, `block-summary primary=IOS_SOLID_ISP_FAT_PROTOCOL_DEPENDENCY`.
+    - `SAAS`: parse de `.ai_evidence.json` -> `snapshot.outcome="BLOCK"`, `matched_rule_ids=["ios.solid.isp.fat-protocol-dependency"]`, `blocking=true` en `ai_gate.violations[0]`.
+
+- ✅ SAAS · SOLID LSP iOS AST: materializar una violación `LSP` semántica, enriquecida y bloqueante en consumer iOS.
+  - Resultado (2026-03-11):
+    - `core/facts/detectors/text/ios.ts` ya extrae match semántico para `heuristics.ios.solid.lsp.narrowed-precondition.ast` sobre sustitución insegura de un contrato base por endurecimiento de precondiciones en un subtipo de `application/presentation`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para `LSP-iOS`.
+    - `core/rules/presets/iosEnterpriseRuleSet.ts` ya materializa `ios.solid.lsp.narrowed-precondition-substitution` como regla bloqueante en `PRE_COMMIT`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_COMMIT` y facts aislados del canario `apps/ios/Sources/Validation/Application/PumukiLspIosCanaryDiscount.swift`:
+      - `platforms.ios.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["ios.solid.lsp.narrowed-precondition-substitution"]`
+      - `.ai_evidence.json` persiste `blocking=true`, `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix`
+      - `ai_gate.violations` contiene solo `ios.solid.lsp.narrowed-precondition-substitution`
+      - `block-summary` marca como primario `IOS_SOLID_LSP_NARROWED_PRECONDITION_SUBSTITUTION`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts core/rules/presets/rulePackVersions.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `70 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx <<'EOF' ... runPlatformGate PRE_COMMIT con facts aislados del canario iOS LSP ... EOF` -> `exitCode=1`, `block-summary primary=IOS_SOLID_LSP_NARROWED_PRECONDITION_SUBSTITUTION`.
+    - `SAAS`: parse de `.ai_evidence.json` -> `snapshot.outcome="BLOCK"`, `matched_rule_ids=["ios.solid.lsp.narrowed-precondition-substitution"]`, `blocking=true` en `ai_gate.violations[0]`.
+
+- ✅ SAAS · SOLID DIP AST: materializar una violación `DIP` semántica, enriquecida y bloqueante en consumer.
+  - Resultado (2026-03-10):
+    - `core/facts/detectors/typescript/index.ts` ya extrae match semántico para `heuristics.ts.solid.dip.framework-import.ast` y `heuristics.ts.solid.dip.concrete-instantiation.ast`.
+    - `core/facts/extractHeuristicFacts.ts` ya propaga `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para ambas heurísticas `DIP`.
+    - revalidación en `SAAS:APP_SUPERMERCADOS` con `runPlatformGate` equivalente `PRE_PUSH` y `extensions=['.ts']`:
+      - `backend.detected=true`, `confidence=HIGH`
+      - `matched_rule_ids=["skills.backend.enforce-clean-architecture","skills.backend.no-solid-violations"]`
+      - finding persistido con `blocking=true` y payload semántico completo en `.ai_evidence.json`
+      - bloqueo primario real: `SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`
+  - Evidencia:
+    - `npx --yes tsx@4.21.0 --test core/facts/detectors/typescript/index.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts integrations/git/__tests__/findingTraceability.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts integrations/config/__tests__/skillsRuleSet.test.ts` -> `80 pass / 0 fail`.
+    - `npm run typecheck` -> `PASS`.
+    - `SAAS`: `node --import tsx -e "<runPlatformGate PRE_PUSH workingTree extensions=['.ts']>"` -> `exitCode=1`, `primary=SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS`.

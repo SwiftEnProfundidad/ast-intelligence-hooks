@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  findKotlinConcreteDependencyDipMatch,
+  findKotlinInterfaceSegregationMatch,
+  findKotlinLiskovSubstitutionMatch,
+  findKotlinOpenClosedWhenMatch,
+  findKotlinPresentationSrpMatch,
   hasKotlinGlobalScopeUsage,
   hasKotlinRunBlockingUsage,
   hasKotlinThreadSleepCall,
@@ -84,4 +89,206 @@ fun main() {
 `;
   assert.equal(hasKotlinRunBlockingUsage(commentedSource), false);
   assert.equal(hasKotlinRunBlockingUsage(partialSource), false);
+});
+
+test('findKotlinPresentationSrpMatch devuelve payload semantico para SRP-Android en presentation', () => {
+  const source = `
+import android.content.SharedPreferences
+import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import okhttp3.OkHttpClient
+import okhttp3.Request
+
+class PumukiSrpAndroidCanaryViewModel(
+  private val navController: NavController,
+) : ViewModel() {
+  fun restoreSessionSnapshot() {}
+
+  suspend fun fetchRemoteCatalog() {
+    val client = OkHttpClient()
+    client.newCall(
+      Request.Builder()
+        .url("https://example.com/catalog.json")
+        .build()
+    )
+  }
+
+  fun cacheLastStore(preferences: SharedPreferences, storeId: String) {
+    preferences.edit().putString("last-store-id", storeId).apply()
+  }
+
+  fun openStoreMap() {
+    navController.navigate("store-map")
+  }
+}
+`;
+
+  const match = findKotlinPresentationSrpMatch(source);
+
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'PumukiSrpAndroidCanaryViewModel',
+    lines: [8],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'session/auth flow', lines: [11] },
+    { kind: 'call', name: 'remote networking', lines: [14] },
+    { kind: 'call', name: 'local persistence', lines: [22] },
+    { kind: 'member', name: 'navigation flow', lines: [27] },
+  ]);
+  assert.match(match.why, /SRP/i);
+  assert.match(match.impact, /múltiples razones de cambio/i);
+  assert.match(match.expected_fix, /casos de uso|coordinadores/i);
+});
+
+test('findKotlinConcreteDependencyDipMatch devuelve payload semantico para DIP-Android en application', () => {
+  const source = `
+import android.content.SharedPreferences
+import okhttp3.OkHttpClient
+import okhttp3.Request
+
+class PumukiDipAndroidCanaryUseCase(
+  private val preferences: SharedPreferences,
+) {
+  private val client: OkHttpClient = OkHttpClient()
+
+  suspend fun execute() {
+    val request = Request.Builder()
+      .url("https://example.com/catalog.json")
+      .build()
+
+    client.newCall(request)
+    preferences.edit().putLong("last-sync", 1L).apply()
+  }
+}
+`;
+
+  const match = findKotlinConcreteDependencyDipMatch(source);
+
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'PumukiDipAndroidCanaryUseCase',
+    lines: [6],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'property', name: 'concrete dependency: SharedPreferences', lines: [7] },
+    { kind: 'property', name: 'concrete dependency: OkHttpClient', lines: [9] },
+    { kind: 'call', name: 'OkHttpClient()', lines: [9] },
+  ]);
+  assert.match(match.why, /DIP/i);
+  assert.match(match.impact, /infraestructura|alto nivel|coste de sustituir/i);
+  assert.match(match.expected_fix, /puertos|abstracciones|gateways/i);
+});
+
+test('findKotlinOpenClosedWhenMatch devuelve payload semantico para OCP-Android en application', () => {
+  const source = `
+enum class PumukiOcpAndroidCanaryChannel {
+  GroceryPickup,
+  HomeDelivery,
+}
+
+class PumukiOcpAndroidCanaryUseCase {
+  fun resolve(channel: PumukiOcpAndroidCanaryChannel): String {
+    return when (channel) {
+      PumukiOcpAndroidCanaryChannel.GroceryPickup -> "pickup"
+      PumukiOcpAndroidCanaryChannel.HomeDelivery -> "delivery"
+    }
+  }
+}
+`;
+
+  const match = findKotlinOpenClosedWhenMatch(source);
+
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'PumukiOcpAndroidCanaryUseCase',
+    lines: [7],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'discriminator switch: channel', lines: [9] },
+    { kind: 'member', name: 'branch GroceryPickup', lines: [10] },
+    { kind: 'member', name: 'branch HomeDelivery', lines: [11] },
+  ]);
+  assert.match(match.why, /OCP/i);
+  assert.match(match.impact, /nuevo caso|modificar/i);
+  assert.match(match.expected_fix, /estrategia|interfaz|registry/i);
+});
+
+test('findKotlinInterfaceSegregationMatch devuelve payload semantico para ISP-Android en application', () => {
+  const source = `
+interface PumukiIspAndroidCanarySessionPort {
+  suspend fun restoreSession()
+  suspend fun persistSessionID(id: String)
+  suspend fun clearSession()
+  suspend fun refreshToken(): String
+}
+
+class PumukiIspAndroidCanaryUseCase(
+  private val sessionPort: PumukiIspAndroidCanarySessionPort,
+) {
+  suspend fun execute() {
+    sessionPort.restoreSession()
+  }
+}
+`;
+
+  const match = findKotlinInterfaceSegregationMatch(source);
+
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'PumukiIspAndroidCanaryUseCase',
+    lines: [9],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'fat interface: PumukiIspAndroidCanarySessionPort', lines: [2] },
+    { kind: 'call', name: 'used member: restoreSession', lines: [13] },
+    { kind: 'member', name: 'unused contract member: persistSessionID', lines: [4] },
+    { kind: 'member', name: 'unused contract member: clearSession', lines: [5] },
+  ]);
+  assert.match(match.why, /ISP/i);
+  assert.match(match.impact, /contrato demasiado ancho|cambios ajenos/i);
+  assert.match(match.expected_fix, /interfaces pequeñas|puerto mínimo/i);
+});
+
+test('findKotlinLiskovSubstitutionMatch devuelve payload semantico para LSP-Android en application', () => {
+  const source = `
+interface PumukiLspAndroidCanaryDiscountPolicy {
+  fun apply(amount: Double): Double
+}
+
+class PumukiLspAndroidCanaryStandardDiscountPolicy : PumukiLspAndroidCanaryDiscountPolicy {
+  override fun apply(amount: Double): Double {
+    return amount * 0.9
+  }
+}
+
+class PumukiLspAndroidCanaryPremiumDiscountPolicy : PumukiLspAndroidCanaryDiscountPolicy {
+  override fun apply(amount: Double): Double {
+    require(amount >= 100.0)
+    error("premium-only")
+  }
+}
+`;
+
+  const match = findKotlinLiskovSubstitutionMatch(source);
+
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'PumukiLspAndroidCanaryPremiumDiscountPolicy',
+    lines: [12],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'base contract: PumukiLspAndroidCanaryDiscountPolicy', lines: [2] },
+    { kind: 'member', name: 'safe substitute: PumukiLspAndroidCanaryStandardDiscountPolicy', lines: [6] },
+    { kind: 'member', name: 'narrowed precondition: apply', lines: [14] },
+    { kind: 'call', name: 'error', lines: [15] },
+  ]);
+  assert.match(match.why, /LSP/i);
+  assert.match(match.impact, /sustituci|regresion|crash/i);
+  assert.match(match.expected_fix, /contrato base|estrategia|subtipo/i);
 });

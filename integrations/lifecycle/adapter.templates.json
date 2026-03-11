@@ -5,16 +5,16 @@
       "payload": {
         "hooks": {
           "pre_write": {
-            "command": "npx --yes pumuki-pre-write"
+            "command": "npx --yes --package pumuki@latest pumuki-pre-write"
           },
           "pre_commit": {
-            "command": "npx --yes pumuki-pre-commit"
+            "command": "npx --yes --package pumuki@latest pumuki-pre-commit"
           },
           "pre_push": {
-            "command": "npx --yes pumuki-pre-push"
+            "command": "npx --yes --package pumuki@latest pumuki-pre-push"
           },
           "ci": {
-            "command": "npx --yes pumuki-ci"
+            "command": "npx --yes --package pumuki@latest pumuki-ci"
           }
         },
         "mcp": {
@@ -35,16 +35,16 @@
         "pumuki": {
           "hooks": {
             "pre_write": {
-              "command": "npx --yes pumuki-pre-write"
+              "command": "npx --yes --package pumuki@latest pumuki-pre-write"
             },
             "pre_commit": {
-              "command": "npx --yes pumuki-pre-commit"
+              "command": "npx --yes --package pumuki@latest pumuki-pre-commit"
             },
             "pre_push": {
-              "command": "npx --yes pumuki-pre-push"
+              "command": "npx --yes --package pumuki@latest pumuki-pre-push"
             },
             "ci": {
-              "command": "npx --yes pumuki-ci"
+              "command": "npx --yes --package pumuki@latest pumuki-ci"
             }
           }
         },
@@ -97,16 +97,16 @@
         },
         "pumukiHooks": {
           "pre_write": {
-            "command": "npx --yes pumuki-pre-write"
+            "command": "npx --yes --package pumuki@latest pumuki-pre-write"
           },
           "pre_commit": {
-            "command": "npx --yes pumuki-pre-commit"
+            "command": "npx --yes --package pumuki@latest pumuki-pre-commit"
           },
           "pre_push": {
-            "command": "npx --yes pumuki-pre-push"
+            "command": "npx --yes --package pumuki@latest pumuki-pre-push"
           },
           "ci": {
-            "command": "npx --yes pumuki-ci"
+            "command": "npx --yes --package pumuki@latest pumuki-ci"
           }
         }
       }
@@ -116,10 +116,10 @@
     {
       "path": ".codeium/adapter/hooks.json",
       "payload": {
-        "preCommand": "npx --yes pumuki-pre-write",
-        "postCommand": "npx --yes pumuki-pre-commit",
-        "pushCommand": "npx --yes pumuki-pre-push",
-        "ciCommand": "npx --yes pumuki-ci",
+        "preCommand": "npx --yes --package pumuki@latest pumuki-pre-write",
+        "postCommand": "npx --yes --package pumuki@latest pumuki-pre-commit",
+        "pushCommand": "npx --yes --package pumuki@latest pumuki-pre-push",
+        "ciCommand": "npx --yes --package pumuki@latest pumuki-ci",
         "mcpCommand": "npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio"
       }
     },
@@ -169,16 +169,16 @@
       "payload": {
         "hooks": {
           "pre_write": {
-            "command": "npx --yes pumuki-pre-write"
+            "command": "npx --yes --package pumuki@latest pumuki-pre-write"
           },
           "pre_commit": {
-            "command": "npx --yes pumuki-pre-commit"
+            "command": "npx --yes --package pumuki@latest pumuki-pre-commit"
           },
           "pre_push": {
-            "command": "npx --yes pumuki-pre-push"
+            "command": "npx --yes --package pumuki@latest pumuki-pre-push"
           },
           "ci": {
-            "command": "npx --yes pumuki-ci"
+            "command": "npx --yes --package pumuki@latest pumuki-ci"
           }
         },
         "mcp": {

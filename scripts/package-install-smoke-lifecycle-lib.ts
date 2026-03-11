@@ -3,6 +3,7 @@ import {
   assertSuccess,
   runCommand,
 } from './package-install-smoke-runner-common';
+import { resolveConsumerPumukiCommand } from './package-install-smoke-command-resolution-lib';
 import { pushCommandLog, type SmokeWorkspace } from './package-install-smoke-workspace-lib';
 
 const normalizeStatus = (value: string): string =>
@@ -27,10 +28,15 @@ export const captureLifecycleStatusSnapshot = (workspace: SmokeWorkspace): strin
   getShortStatus(workspace);
 
 export const runLifecycleInstallStep = (workspace: SmokeWorkspace): void => {
+  const command = resolveConsumerPumukiCommand({
+    consumerRepo: workspace.consumerRepo,
+    binary: 'pumuki',
+    args: ['install'],
+  });
   const result = runCommand({
     cwd: workspace.consumerRepo,
-    executable: 'npx',
-    args: ['--yes', 'pumuki', 'install'],
+    executable: command.executable,
+    args: command.args,
     env: {
       PUMUKI_SKIP_OPENSPEC_BOOTSTRAP: '1',
     },
@@ -41,10 +47,15 @@ export const runLifecycleInstallStep = (workspace: SmokeWorkspace): void => {
 };
 
 export const runLifecycleUninstallStep = (workspace: SmokeWorkspace): void => {
+  const command = resolveConsumerPumukiCommand({
+    consumerRepo: workspace.consumerRepo,
+    binary: 'pumuki',
+    args: ['uninstall', '--purge-artifacts'],
+  });
   const result = runCommand({
     cwd: workspace.consumerRepo,
-    executable: 'npx',
-    args: ['--yes', 'pumuki', 'uninstall', '--purge-artifacts'],
+    executable: command.executable,
+    args: command.args,
   });
   pushCommandLog(workspace.commandLog, result);
   assertNoFatalOutput(result, 'pumuki lifecycle uninstall');

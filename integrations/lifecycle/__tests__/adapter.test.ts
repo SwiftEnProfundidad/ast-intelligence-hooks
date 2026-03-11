@@ -46,7 +46,10 @@ test('runLifecycleAdapterInstall genera scaffolding para codex', () => {
       hooks?: { pre_write?: { command?: string } };
       mcp?: { enterprise?: { command?: string }; evidence?: { command?: string } };
     };
-    assert.equal(payload.hooks?.pre_write?.command, 'npx --yes pumuki-pre-write');
+    assert.equal(
+      payload.hooks?.pre_write?.command,
+      'npx --yes --package pumuki@latest pumuki-pre-write'
+    );
     assert.equal(
       payload.mcp?.enterprise?.command,
       'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio'

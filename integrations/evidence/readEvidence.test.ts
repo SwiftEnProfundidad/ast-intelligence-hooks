@@ -3,6 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../__tests__/helpers/tempDir';
+import { getCurrentPumukiVersion } from '../lifecycle/packageInfo';
 import type { AiEvidenceV2_1 } from './schema';
 import { readEvidence, readEvidenceResult } from './readEvidence';
 import { buildEvidenceChain } from './evidenceChain';
@@ -49,8 +50,8 @@ const sampleEvidence = (): AiEvidenceV2_1 => {
       },
       lifecycle: {
         installed: true,
-        package_version: '6.3.16',
-        lifecycle_version: '6.3.16',
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
         hooks: {
           pre_commit: 'managed',
           pre_push: 'managed',

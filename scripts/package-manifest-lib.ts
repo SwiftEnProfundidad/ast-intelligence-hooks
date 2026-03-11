@@ -14,6 +14,13 @@ export const REQUIRED_PACKAGE_PATHS = [
   'integrations/lifecycle/cli.ts',
   'integrations/notifications/emitAuditSummaryNotification.ts',
   'integrations/evidence/buildEvidence.ts',
+  'skills.sources.json',
+  'docs/codex-skills/android-enterprise-rules.md',
+  'docs/codex-skills/backend-enterprise-rules.md',
+  'docs/codex-skills/frontend-enterprise-rules.md',
+  'docs/codex-skills/ios-enterprise-rules.md',
+  'docs/codex-skills/swift-concurrency.md',
+  'docs/codex-skills/swiftui-expert-skill.md',
 ];
 
 export const CANONICAL_ALLOWED_LEGACY_PATHS = new Set([

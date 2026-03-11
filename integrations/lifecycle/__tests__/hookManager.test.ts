@@ -1,16 +1,25 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { hasPumukiManagedBlock, upsertPumukiManagedBlock } from '../hookBlock';
-import { getPumukiHooksStatus, installPumukiHooks, uninstallPumukiHooks } from '../hookManager';
+import {
+  getPumukiHooksStatus,
+  installPumukiHooks,
+  resolvePumukiHooksDirectory,
+  uninstallPumukiHooks,
+} from '../hookManager';
 
 const ensureGitHooksDir = (repoRoot: string): string => {
   const hooksDir = join(repoRoot, '.git', 'hooks');
   mkdirSync(hooksDir, { recursive: true });
   return hooksDir;
 };
+
+const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
+  execFileSync('git', args, { cwd, encoding: 'utf8' });
 
 test('installPumukiHooks instala hooks gestionados y es idempotente', async () => {
   await withTempDir('pumuki-hook-manager-install-', async (repoRoot) => {
@@ -122,6 +131,52 @@ test('getPumukiHooksStatus refleja estado mixto entre hooks existentes y gestion
     assert.deepEqual(status, {
       'pre-commit': { exists: true, managedBlockPresent: false },
       'pre-push': { exists: false, managedBlockPresent: false },
+    });
+  });
+});
+
+test('installPumukiHooks instala y diagnostica hooks versionados con core.hooksPath', async () => {
+  await withTempDir('pumuki-hook-manager-versioned-hooks-', async (repoRoot) => {
+    runGit(repoRoot, ['init', '-b', 'main']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    writeFileSync(join(repoRoot, 'README.md'), '# fixture\n', 'utf8');
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: fixture']);
+    runGit(repoRoot, ['config', 'core.hooksPath', 'tools/git-hooks']);
+
+    const installResult = installPumukiHooks(repoRoot);
+    assert.deepEqual(installResult.changedHooks, ['pre-commit', 'pre-push']);
+    assert.equal(existsSync(join(repoRoot, 'tools', 'git-hooks', 'pre-commit')), true);
+    assert.equal(existsSync(join(repoRoot, 'tools', 'git-hooks', 'pre-push')), true);
+
+    const resolution = resolvePumukiHooksDirectory(repoRoot);
+    assert.deepEqual(resolution, {
+      path: resolve(repoRoot, 'tools/git-hooks'),
+      source: 'git-rev-parse',
+    });
+
+    const status = getPumukiHooksStatus(repoRoot);
+    assert.deepEqual(status, {
+      'pre-commit': { exists: true, managedBlockPresent: true },
+      'pre-push': { exists: true, managedBlockPresent: true },
+    });
+  });
+});
+
+test('resolvePumukiHooksDirectory usa fallback de git-config cuando rev-parse no está disponible', async () => {
+  await withTempDir('pumuki-hook-manager-hooks-fallback-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.git', 'config'),
+      ['[core]', '\thooksPath = tools/git-hooks', ''].join('\n'),
+      'utf8'
+    );
+
+    const resolution = resolvePumukiHooksDirectory(repoRoot);
+    assert.deepEqual(resolution, {
+      path: resolve(repoRoot, 'tools/git-hooks'),
+      source: 'git-config',
     });
   });
 });

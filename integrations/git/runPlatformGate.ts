@@ -13,7 +13,11 @@ import {
   resolveActiveGateWaiver,
   type GateWaiverResult,
 } from './gateWaiver';
-import { evaluatePlatformGateFindings } from './runPlatformGateEvaluation';
+import {
+  evaluateAstIntelligenceDualValidation,
+  evaluatePlatformGateFindings,
+  type AstIntelligenceDualValidationResult,
+} from './runPlatformGateEvaluation';
 import {
   countScannedFilesFromFacts,
   resolveFactsForGateScope,
@@ -46,6 +50,7 @@ export type GateDependencies = {
   emitPlatformGateEvidence: typeof emitPlatformGateEvidence;
   printGateFindings: typeof printGateFindings;
   enforceTddBddPolicy: typeof enforceTddBddPolicy;
+  evaluateAstIntelligenceDualValidation: typeof evaluateAstIntelligenceDualValidation;
   buildMemoryShadowRecommendation: (params: {
     findings: ReadonlyArray<Finding>;
     tddBddSnapshot?: TddBddSnapshot;
@@ -117,6 +122,7 @@ const defaultDependencies: GateDependencies = {
   emitPlatformGateEvidence,
   printGateFindings,
   enforceTddBddPolicy,
+  evaluateAstIntelligenceDualValidation,
   buildMemoryShadowRecommendation: buildDefaultMemoryShadowRecommendation,
   evaluateSddForStage: (stage, repoRoot) =>
     evaluateSddPolicy({
@@ -132,6 +138,13 @@ const defaultDependencies: GateDependencies = {
 };
 
 const resolveCurrentBranch = (git: IGitService, repoRoot: string): string | null => {
+  try {
+    const symbolicBranch = git.runGit(['symbolic-ref', '--short', 'HEAD'], repoRoot).trim();
+    if (symbolicBranch.length > 0) {
+      return symbolicBranch;
+    }
+  } catch {
+  }
   try {
     const branch = git.runGit(['rev-parse', '--abbrev-ref', 'HEAD'], repoRoot).trim();
     if (branch.length === 0 || branch === 'HEAD') {
@@ -228,7 +241,46 @@ const PLATFORM_REQUIRED_SKILLS_BUNDLES: Record<
   frontend: ['frontend-guidelines'],
 };
 
+const isCriticalProfileSeverity = (severity: string): boolean => {
+  return severity === 'CRITICAL' || severity === 'ERROR';
+};
+
 const toNormalizedPath = (value: string): string => value.replace(/\\/g, '/').trim();
+
+const CODE_FILE_EXTENSIONS = new Set<string>([
+  '.js',
+  '.jsx',
+  '.ts',
+  '.tsx',
+  '.mjs',
+  '.cjs',
+  '.swift',
+  '.kt',
+  '.kts',
+]);
+
+const isObservedCodePath = (path: string): boolean => {
+  const normalized = toNormalizedPath(path).toLowerCase();
+  if (normalized.length === 0) {
+    return false;
+  }
+  if (
+    normalized.startsWith('apps/backend/')
+    || normalized.startsWith('apps/frontend/')
+    || normalized.startsWith('apps/web/')
+    || normalized.startsWith('apps/admin-dashboard/')
+    || normalized.startsWith('apps/ios/')
+    || normalized.startsWith('apps/android/')
+  ) {
+    return true;
+  }
+  for (const extension of CODE_FILE_EXTENSIONS) {
+    if (normalized.endsWith(extension)) {
+      return true;
+    }
+  }
+  return false;
+};
 
 const collectObservedPathsFromFacts = (
   facts: ReadonlyArray<Fact>
@@ -250,6 +302,162 @@ const collectObservedPathsFromFacts = (
     }
   }
   return [...observedPaths].sort();
+};
+
+const collectObservedCodePathsFromFacts = (
+  facts: ReadonlyArray<Fact>
+): ReadonlyArray<string> => {
+  const codePaths = collectObservedPathsFromFacts(facts).filter((path) => isObservedCodePath(path));
+  return [...new Set(codePaths)].sort();
+};
+
+const isSkillsContractCarrierPath = (path: string): boolean => {
+  const normalized = toNormalizedPath(path).toLowerCase();
+  return (
+    normalized === 'agents.md' ||
+    normalized === 'skills.lock.json' ||
+    normalized === 'skills.sources.json' ||
+    normalized.startsWith('vendor/skills/') ||
+    normalized.startsWith('docs/codex-skills/') ||
+    normalized === '.pumuki/policy-as-code.json'
+  );
+};
+
+const collectStagedPaths = (git: IGitService, repoRoot: string): ReadonlyArray<string> => {
+  try {
+    return git.runGit(['diff', '--cached', '--name-only'], repoRoot)
+      .split('\n')
+      .map((line) => toNormalizedPath(line))
+      .filter((line) => line.length > 0);
+  } catch {
+    return [];
+  }
+};
+
+const shouldAugmentStagedSkillsContractFactsWithRepoFacts = (params: {
+  scope: GateScope;
+  facts: ReadonlyArray<Fact>;
+  stagedPaths: ReadonlyArray<string>;
+}): boolean => {
+  if (params.scope.kind !== 'staged') {
+    return false;
+  }
+  if (collectObservedCodePathsFromFacts(params.facts).length > 0) {
+    return false;
+  }
+  return params.stagedPaths.some((path) => isSkillsContractCarrierPath(path));
+};
+
+type IosTestFileContent = {
+  path: string;
+  content: string;
+};
+
+const isIosSwiftTestPath = (path: string): boolean => {
+  const normalized = toNormalizedPath(path).toLowerCase();
+  if (!normalized.endsWith('.swift')) {
+    return false;
+  }
+  return normalized.includes('/tests/') || normalized.includes('/uitests/');
+};
+
+const collectIosTestFileContents = (
+  facts: ReadonlyArray<Fact>
+): ReadonlyArray<IosTestFileContent> => {
+  const filesByPath = new Map<string, string>();
+  for (const fact of facts) {
+    if (fact.kind !== 'FileContent') {
+      continue;
+    }
+    if (!isIosSwiftTestPath(fact.path)) {
+      continue;
+    }
+    const normalizedPath = toNormalizedPath(fact.path);
+    filesByPath.set(normalizedPath, fact.content);
+  }
+  return [...filesByPath.entries()]
+    .sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))
+    .map(([path, content]) => ({ path, content }));
+};
+
+const isXCTestSource = (content: string): boolean => {
+  return /\bimport\s+XCTest\b/.test(content) || /\bXCTestCase\b/.test(content);
+};
+
+const hasMakeSUTPattern = (content: string): boolean => /\bmakeSUT\s*\(/.test(content);
+
+const hasTrackForMemoryLeaksPattern = (content: string): boolean =>
+  /\btrackForMemoryLeaks\s*\(/.test(content);
+
+const toIosTestsQualityBlockingFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  facts: ReadonlyArray<Fact>;
+}): Finding | undefined => {
+  const testFiles = collectIosTestFileContents(params.facts);
+  if (testFiles.length === 0) {
+    return undefined;
+  }
+
+  const invalidFiles: string[] = [];
+  for (const testFile of testFiles) {
+    if (!isXCTestSource(testFile.content)) {
+      continue;
+    }
+    const missingMarkers: string[] = [];
+    if (!hasMakeSUTPattern(testFile.content)) {
+      missingMarkers.push('makeSUT()');
+    }
+    if (!hasTrackForMemoryLeaksPattern(testFile.content)) {
+      missingMarkers.push('trackForMemoryLeaks()');
+    }
+    if (missingMarkers.length === 0) {
+      continue;
+    }
+    invalidFiles.push(`${testFile.path}{missing=[${missingMarkers.join(', ')}]}`);
+  }
+
+  if (invalidFiles.length === 0) {
+    return undefined;
+  }
+
+  const sampleFiles = invalidFiles.slice(0, 3).join(' | ');
+  return {
+    ruleId: 'governance.skills.ios-test-quality.incomplete',
+    severity: 'ERROR',
+    code: 'IOS_TEST_QUALITY_PATTERN_MISSING_HIGH',
+    message:
+      `iOS test quality enforcement incomplete at ${params.stage}: ${sampleFiles}. ` +
+      'Use makeSUT() factory pattern and trackForMemoryLeaks() in XCTest sources.',
+    filePath: '.ai_evidence.json',
+    matchedBy: 'IosTestsQualityGuard',
+    source: 'skills-ios-test-quality',
+  };
+};
+
+const toActiveRulesEmptyForCodeChangesBlockingFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  facts: ReadonlyArray<Fact>;
+  activeRuleIds: ReadonlyArray<string>;
+}): Finding | undefined => {
+  if (params.activeRuleIds.length > 0) {
+    return undefined;
+  }
+  const codePaths = collectObservedCodePathsFromFacts(params.facts);
+  if (codePaths.length === 0) {
+    return undefined;
+  }
+  const samplePaths = codePaths.slice(0, 5).join(', ');
+  return {
+    ruleId: 'governance.rules.active-rule-coverage.empty',
+    severity: 'ERROR',
+    code: 'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH',
+    message:
+      `Active rules coverage is empty at ${params.stage} while code changes were detected. ` +
+      `sample_paths=[${samplePaths}]. Ensure skill/project rules are active before allowing this stage.`,
+    filePath: '.ai_evidence.json',
+    matchedBy: 'ActiveRulesCoverageGuard',
+    source: 'rules-coverage',
+  };
 };
 
 const detectRequiredSkillsScopesFromPaths = (
@@ -504,12 +712,103 @@ const toPlatformSkillsCoverageBlockingFinding = (params: {
   };
 };
 
+const toCrossPlatformCriticalEnforcementBlockingFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  detectedPlatforms: DetectedPlatforms;
+  skillsRules: SkillsRuleSetLoadResult['rules'];
+  evaluatedRuleIds: ReadonlyArray<string>;
+}): Finding | undefined => {
+  const detectedPlatformKeys = (
+    ['ios', 'android', 'backend', 'frontend'] as const
+  ).filter((platform) => params.detectedPlatforms[platform]?.detected === true);
+
+  if (detectedPlatformKeys.length === 0) {
+    return undefined;
+  }
+
+  const evaluatedRuleIds = new Set(params.evaluatedRuleIds);
+  const gaps: string[] = [];
+
+  for (const platform of detectedPlatformKeys) {
+    const rulePrefix = PLATFORM_SKILLS_RULE_PREFIXES[platform];
+    const criticalSkillRules = params.skillsRules
+      .filter(
+        (rule) =>
+          rule.id.startsWith(rulePrefix) &&
+          isCriticalProfileSeverity(rule.severity)
+      )
+      .map((rule) => rule.id)
+      .sort();
+
+    if (criticalSkillRules.length === 0) {
+      gaps.push(`${platform}{critical_profile_rules=missing}`);
+      continue;
+    }
+
+    const evaluatedCriticalSkillRules = criticalSkillRules.filter((ruleId) =>
+      evaluatedRuleIds.has(ruleId)
+    );
+    if (evaluatedCriticalSkillRules.length === 0) {
+      gaps.push(
+        `${platform}{critical_profile_rules=${criticalSkillRules.length}; evaluated=0}`
+      );
+    }
+  }
+
+  if (gaps.length === 0) {
+    return undefined;
+  }
+
+  return {
+    ruleId: 'governance.skills.cross-platform-critical.incomplete',
+    severity: 'ERROR',
+    code: 'SKILLS_CROSS_PLATFORM_CRITICAL_INCOMPLETE_S0',
+    message:
+      `Cross-platform critical enforcement incomplete at ${params.stage}: ${gaps.join(' | ')}. ` +
+      'Ensure each detected platform has critical-profile skill rules active and evaluated.',
+    filePath: '.ai_evidence.json',
+    matchedBy: 'SkillsCrossPlatformCriticalGuard',
+    source: 'skills-cross-platform-critical',
+  };
+};
+
+const shouldBlockFromFinding = (finding: Finding | undefined): boolean => {
+  if (!finding) {
+    return false;
+  }
+  return finding.severity === 'ERROR' || finding.severity === 'CRITICAL';
+};
+
+const toSoftPreCommitSkillsFinding = (params: {
+  finding: Finding | undefined;
+  enabled: boolean;
+  observedCodePaths: ReadonlyArray<string>;
+}): Finding | undefined => {
+  if (!params.finding) {
+    return undefined;
+  }
+  if (!params.enabled || !shouldBlockFromFinding(params.finding)) {
+    return params.finding;
+  }
+  return {
+    ...params.finding,
+    severity: 'WARN',
+    code: `${params.finding.code}_SOFT_PRECOMMIT`,
+    message:
+      `${params.finding.message} ` +
+      `Soft-enforced at PRE_COMMIT for low-risk scope (observed_code_paths=${params.observedCodePaths.length}). ` +
+      'Strict enforcement remains active at PRE_PUSH/CI.',
+  };
+};
+
 export async function runPlatformGate(params: {
   policy: GatePolicy;
   auditMode?: 'gate' | 'engine';
   policyTrace?: ResolvedStagePolicy['trace'];
   scope: GateScope;
+  silent?: boolean;
   sddShortCircuit?: boolean;
+  sddDecisionOverride?: Pick<SddDecision, 'allowed' | 'code' | 'message'>;
   services?: Partial<GateServices>;
   dependencies?: Partial<GateDependencies>;
 }): Promise<number> {
@@ -532,12 +831,15 @@ export async function runPlatformGate(params: {
     params.policy.stage === 'PRE_PUSH' ||
     params.policy.stage === 'CI'
   ) {
-    sddDecision = dependencies.evaluateSddForStage(
-      params.policy.stage,
-      repoRoot
-    );
+    sddDecision = params.sddDecisionOverride
+      ?? dependencies.evaluateSddForStage(
+        params.policy.stage,
+        repoRoot
+      );
     if (!sddDecision.allowed) {
-      process.stdout.write(`[pumuki][sdd] ${sddDecision.code}: ${sddDecision.message}\n`);
+      if (params.silent !== true) {
+        process.stdout.write(`[pumuki][sdd] ${sddDecision.code}: ${sddDecision.message}\n`);
+      }
       sddBlockingFinding = toSddBlockingFinding(sddDecision);
       if (shouldShortCircuitSdd) {
         const emptyDetectedPlatforms: DetectedPlatforms = {};
@@ -574,7 +876,24 @@ export async function runPlatformGate(params: {
     scope: params.scope,
     git,
   });
-  const filesScanned = countScannedFilesFromFacts(facts);
+  const stagedPaths = collectStagedPaths(git, repoRoot);
+  const factsForPlatformEvaluation = shouldAugmentStagedSkillsContractFactsWithRepoFacts({
+    scope: params.scope,
+    facts,
+    stagedPaths,
+  })
+    ? [
+      ...facts,
+      ...(await dependencies.resolveFactsForGateScope({
+        scope: {
+          kind: 'repo',
+        },
+        git,
+      })),
+    ]
+    : facts;
+  const filesScanned = countScannedFilesFromFacts(factsForPlatformEvaluation);
+  const observedCodePaths = collectObservedCodePathsFromFacts(facts);
 
   const {
     detectedPlatforms,
@@ -582,9 +901,10 @@ export async function runPlatformGate(params: {
     projectRules,
     heuristicRules,
     coverage,
+    evaluationFacts = factsForPlatformEvaluation,
     findings,
   } = dependencies.evaluatePlatformGateFindings({
-    facts,
+    facts: factsForPlatformEvaluation,
     stage: params.policy.stage,
     repoRoot,
   });
@@ -635,6 +955,17 @@ export async function runPlatformGate(params: {
           evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
         })
       : undefined;
+  const crossPlatformCriticalFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toCrossPlatformCriticalEnforcementBlockingFinding({
+          stage: params.policy.stage,
+          detectedPlatforms,
+          skillsRules: skillsRuleSet.rules,
+          evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
+        })
+      : undefined;
   const skillsScopeComplianceFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -645,6 +976,25 @@ export async function runPlatformGate(params: {
           activeRuleIds: coverage?.activeRuleIds ?? [],
         evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
       })
+      : undefined;
+  const activeRulesEmptyForCodeChangesFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toActiveRulesEmptyForCodeChangesBlockingFinding({
+        stage: params.policy.stage,
+        facts,
+        activeRuleIds: coverage?.activeRuleIds ?? [],
+      })
+      : undefined;
+  const iosTestsQualityFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toIosTestsQualityBlockingFinding({
+          stage: params.policy.stage,
+          facts,
+        })
       : undefined;
   const policyAsCodeBlockingFinding =
     params.policy.stage === 'PRE_COMMIT' ||
@@ -664,6 +1014,35 @@ export async function runPlatformGate(params: {
           policyTrace: params.policyTrace,
         })
       : undefined;
+  const astIntelligenceDualValidation:
+    | AstIntelligenceDualValidationResult
+    | undefined =
+    params.policy.stage === 'PRE_COMMIT'
+      || params.policy.stage === 'PRE_PUSH'
+      || params.policy.stage === 'CI'
+      ? dependencies.evaluateAstIntelligenceDualValidation({
+          stage: params.policy.stage,
+          skillsRules: skillsRuleSet.rules,
+          facts: evaluationFacts,
+          legacyFindings: findings,
+        })
+      : undefined;
+  const astIntelligenceDualFinding = astIntelligenceDualValidation?.finding;
+  if (astIntelligenceDualValidation && astIntelligenceDualValidation.mode !== 'off') {
+    const summary = astIntelligenceDualValidation.summary;
+    if (params.silent !== true) {
+      process.stdout.write(
+        `[pumuki][ast-intelligence] mode=${astIntelligenceDualValidation.mode}` +
+        ` mapped_rules=${summary.mapped_rules}` +
+        ` compared_rules=${summary.compared_rules}` +
+        ` divergences=${summary.divergences}` +
+        ` false_positives=${summary.false_positives}` +
+        ` false_negatives=${summary.false_negatives}` +
+        ` latency_ms=${summary.latency_ms}` +
+        ` languages=[${summary.languages.join(',') || 'none'}]\n`
+      );
+    }
+  }
   const degradedModeBlocks = params.policyTrace?.degraded?.action === 'block';
   const rulesCoverage = coverage
     ? {
@@ -706,21 +1085,63 @@ export async function runPlatformGate(params: {
   const hasTddBddBlockingFinding = tddBddEvaluation.findings.some(
     (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
   );
+  const hasNativeBlockingFinding = findings.some(
+    (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
+  );
+  const preCommitSoftSkillsEnabled = process.env.PUMUKI_PRE_COMMIT_SOFT_SKILLS !== '0';
+  const lowRiskPreCommitWindow = observedCodePaths.length > 0 && observedCodePaths.length <= 3;
+  const shouldSoftEnforceSkillsFindings =
+    params.policy.stage === 'PRE_COMMIT'
+    && preCommitSoftSkillsEnabled
+    && lowRiskPreCommitWindow
+    && !sddBlockingFinding
+    && !degradedModeBlocks
+    && !shouldBlockFromFinding(policyAsCodeBlockingFinding)
+    && !shouldBlockFromFinding(unsupportedSkillsMappingFinding)
+    && !shouldBlockFromFinding(coverageBlockingFinding)
+    && !shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding)
+    && !shouldBlockFromFinding(iosTestsQualityFinding)
+    && !shouldBlockFromFinding(astIntelligenceDualFinding)
+    && !hasTddBddBlockingFinding
+    && !hasNativeBlockingFinding;
+  const effectivePlatformSkillsCoverageFinding = toSoftPreCommitSkillsFinding({
+    finding: platformSkillsCoverageFinding,
+    enabled: shouldSoftEnforceSkillsFindings,
+    observedCodePaths,
+  });
+  const effectiveCrossPlatformCriticalFinding = toSoftPreCommitSkillsFinding({
+    finding: crossPlatformCriticalFinding,
+    enabled: shouldSoftEnforceSkillsFindings,
+    observedCodePaths,
+  });
+  const effectiveSkillsScopeComplianceFinding = toSoftPreCommitSkillsFinding({
+    finding: skillsScopeComplianceFinding,
+    enabled: shouldSoftEnforceSkillsFindings,
+    observedCodePaths,
+  });
   const effectiveFindings = sddBlockingFinding
     ? [
       sddBlockingFinding,
       ...(degradedModeFinding ? [degradedModeFinding] : []),
       ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
       ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
-      ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
-      ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
+      ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
+      ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
+      ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
+      ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
+      ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
+      ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
       ...tddBddEvaluation.findings,
       ...findings,
     ]
     : unsupportedSkillsMappingFinding
-      || platformSkillsCoverageFinding
-      || skillsScopeComplianceFinding
+      || effectivePlatformSkillsCoverageFinding
+      || effectiveCrossPlatformCriticalFinding
+      || effectiveSkillsScopeComplianceFinding
+      || activeRulesEmptyForCodeChangesFinding
+      || iosTestsQualityFinding
+      || astIntelligenceDualFinding
       || coverageBlockingFinding
       || policyAsCodeBlockingFinding
       || degradedModeFinding
@@ -729,22 +1150,31 @@ export async function runPlatformGate(params: {
         ...(degradedModeFinding ? [degradedModeFinding] : []),
         ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
         ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
-        ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
-        ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
+        ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
+        ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
+        ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
+        ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
+        ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
+        ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
         ...tddBddEvaluation.findings,
         ...findings,
       ]
       : findings;
+  const hasAstIntelligenceBlockingFinding = shouldBlockFromFinding(astIntelligenceDualFinding);
   const decision = dependencies.evaluateGate([...effectiveFindings], params.policy);
   const baseGateOutcome =
     sddBlockingFinding ||
     degradedModeBlocks ||
-    policyAsCodeBlockingFinding ||
-    unsupportedSkillsMappingFinding ||
-    platformSkillsCoverageFinding ||
-    skillsScopeComplianceFinding ||
-    coverageBlockingFinding ||
+    shouldBlockFromFinding(policyAsCodeBlockingFinding) ||
+    shouldBlockFromFinding(unsupportedSkillsMappingFinding) ||
+    shouldBlockFromFinding(effectivePlatformSkillsCoverageFinding) ||
+    shouldBlockFromFinding(effectiveCrossPlatformCriticalFinding) ||
+    shouldBlockFromFinding(effectiveSkillsScopeComplianceFinding) ||
+    shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding) ||
+    shouldBlockFromFinding(iosTestsQualityFinding) ||
+    hasAstIntelligenceBlockingFinding ||
+    shouldBlockFromFinding(coverageBlockingFinding) ||
     hasTddBddBlockingFinding
       ? 'BLOCK'
       : decision.outcome;
@@ -800,9 +1230,11 @@ export async function runPlatformGate(params: {
     } catch (error) {
       const rawReason = error instanceof Error ? error.message : String(error);
       const reason = rawReason.trim().replace(/\s+/g, ' ');
-      process.stdout.write(
-        `[pumuki][memory-shadow] unavailable reason=${reason.length > 0 ? reason : 'unknown_error'}\n`
-      );
+      if (params.silent !== true) {
+        process.stdout.write(
+          `[pumuki][memory-shadow] unavailable reason=${reason.length > 0 ? reason : 'unknown_error'}\n`
+        );
+      }
     }
   }
   const memoryShadow:
@@ -826,11 +1258,13 @@ export async function runPlatformGate(params: {
       : undefined;
 
   if (memoryShadowRecommendation) {
-    process.stdout.write(
-      `[pumuki][memory-shadow] recommended=${memoryShadowRecommendation.recommendedOutcome}` +
-      ` confidence=${memoryShadowRecommendation.confidence.toFixed(2)}` +
-      ` reasons=${memoryShadowRecommendation.reasonCodes.join(',')}\n`
-    );
+    if (params.silent !== true) {
+      process.stdout.write(
+        `[pumuki][memory-shadow] recommended=${memoryShadowRecommendation.recommendedOutcome}` +
+        ` confidence=${memoryShadowRecommendation.confidence.toFixed(2)}` +
+        ` reasons=${memoryShadowRecommendation.reasonCodes.join(',')}\n`
+      );
+    }
   }
 
   dependencies.emitPlatformGateEvidence({
@@ -854,7 +1288,9 @@ export async function runPlatformGate(params: {
   });
 
   if (gateOutcome === 'BLOCK') {
+    if (params.silent !== true) {
     dependencies.printGateFindings(findingsWithWaiver);
+    }
     return 1;
   }
 

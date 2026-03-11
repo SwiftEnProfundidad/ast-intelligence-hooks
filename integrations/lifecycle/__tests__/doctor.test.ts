@@ -113,8 +113,8 @@ const sampleEvidence = (params: {
       },
       lifecycle: {
         installed: true,
-        package_version: '6.3.26',
-        lifecycle_version: '6.3.26',
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
         hooks: {
           pre_commit: 'managed',
           pre_push: 'managed',
@@ -146,6 +146,8 @@ test('runLifecycleDoctor marca issue bloqueante cuando hay rutas trackeadas en n
       git,
     });
 
+    assert.equal(report.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(report.hooksDirectoryResolution, 'default');
     assert.equal(report.repoRoot, repoRoot);
     assert.equal(typeof report.policyValidation.stages.PRE_COMMIT.hash, 'string');
     assert.equal(typeof report.policyValidation.stages.PRE_PUSH.hash, 'string');
@@ -170,9 +172,12 @@ test('runLifecycleDoctor marca warning si lifecycle dice instalado y falta bloqu
       git,
     });
 
+    assert.equal(report.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(report.hooksDirectoryResolution, 'default');
     assert.equal(report.issues.length, 1);
     assert.equal(report.issues[0]?.severity, 'warning');
     assert.match(report.issues[0]?.message ?? '', /installed=true/i);
+    assert.match(report.issues[0]?.message ?? '', /core\.hooksPath/i);
     assert.equal(doctorHasBlockingIssues(report), false);
   });
 });
@@ -233,12 +238,59 @@ test('runLifecycleDoctor usa process.cwd por defecto y conserva metadatos de lif
     );
 
     assert.equal(report.packageVersion, getCurrentPumukiVersion());
+    assert.equal(report.version.effective, getCurrentPumukiVersion());
+    assert.equal(report.version.runtime, getCurrentPumukiVersion());
+    assert.equal(report.version.consumerInstalled, null);
+    assert.equal(report.version.lifecycleInstalled, '6.3.11');
+    assert.equal(report.version.driftFromRuntime, false);
+    assert.equal(report.version.driftFromLifecycleInstalled, true);
+    assert.match(report.version.driftWarning ?? '', /lifecycle=6\.3\.11/i);
+    assert.equal(
+      report.version.alignmentCommand,
+      `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && npx --yes --package pumuki@${getCurrentPumukiVersion()} pumuki install`
+    );
+    assert.equal(report.version.pathExecutionHazard, false);
+    assert.equal(report.version.pathExecutionWarning, null);
+    assert.equal(report.version.pathExecutionWorkaroundCommand, null);
     assert.equal(report.lifecycleState.installed, 'true');
     assert.equal(report.lifecycleState.version, '6.3.11');
     assert.equal(report.lifecycleState.hooks, 'pre-commit,pre-push');
     assert.equal(report.lifecycleState.installedAt, '2026-02-17T00:00:00.000Z');
     assert.equal(git.resolveRepoRootCalls.length >= 1, true);
     assert.equal(realpathSync(git.resolveRepoRootCalls[0] ?? defaultCwd), realpathSync(defaultCwd));
+  });
+});
+
+test('runLifecycleDoctor expone warning y workaround cuando repoRoot contiene el separador de PATH', async () => {
+  await withTempDir('pumuki:doctor-path-hazard-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: '6.3.11',
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.version.pathExecutionHazard, true);
+    assert.match(report.version.pathExecutionWarning ?? '', /rompe PATH/i);
+    assert.equal(
+      report.version.pathExecutionWorkaroundCommand,
+      process.platform === 'win32'
+        ? 'node .\\node_modules\\pumuki\\bin\\pumuki.js'
+        : 'node ./node_modules/pumuki/bin/pumuki.js'
+    );
+    assert.equal(
+      report.version.alignmentCommand,
+      process.platform === 'win32'
+        ? `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && node .\\node_modules\\pumuki\\bin\\pumuki.js install`
+        : `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && node ./node_modules/pumuki/bin/pumuki.js install`
+    );
   });
 });
 
@@ -305,10 +357,10 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
       JSON.stringify(
         {
           hooks: {
-            pre_write: { command: 'npx --yes pumuki-pre-write' },
-            pre_commit: { command: 'npx --yes pumuki-pre-commit' },
-            pre_push: { command: 'npx --yes pumuki-pre-push' },
-            ci: { command: 'npx --yes pumuki-ci' },
+            pre_write: { command: 'npx --yes --package pumuki@latest pumuki-pre-write' },
+            pre_commit: { command: 'npx --yes --package pumuki@latest pumuki-pre-commit' },
+            pre_push: { command: 'npx --yes --package pumuki@latest pumuki-pre-push' },
+            ci: { command: 'npx --yes --package pumuki@latest pumuki-ci' },
           },
           mcp: {
             enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
@@ -384,6 +436,191 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
   });
 });
 
+test('runLifecycleDoctor --deep marca warning cuando adapter wiring usa comandos frágiles', async () => {
+  await withTempDir('pumuki-doctor-deep-weak-adapter-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    installPumukiHooks(repoRoot);
+
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'adapter.json'),
+      JSON.stringify(
+        {
+          hooks: {
+            pre_write: { command: 'npx --yes pumuki-pre-write' },
+            pre_commit: { command: 'npx --yes pumuki-pre-commit' },
+            pre_push: { command: 'npx --yes pumuki-pre-push' },
+            ci: { command: 'npx --yes pumuki-ci' },
+          },
+          mcp: {
+            enterprise: { command: 'npx --yes pumuki-mcp-enterprise-stdio' },
+            evidence: { command: 'npx --yes pumuki-mcp-evidence-stdio' },
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    writeFileSync(
+      join(repoRoot, 'skills.policy.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          defaultBundleEnabled: true,
+          stages: {
+            PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          },
+          bundles: {},
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const branch = 'feature/doctor-deep-weak-adapter';
+    const upstream = 'origin/feature/doctor-deep-weak-adapter';
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        sampleEvidence({
+          repoRoot,
+          branch,
+          upstream,
+        }),
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      [],
+      {
+        [PUMUKI_CONFIG_KEYS.installed]: 'true',
+        [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+        [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      },
+      {
+        'rev-parse --abbrev-ref --symbolic-full-name @{u}': upstream,
+        'rev-parse --abbrev-ref HEAD': branch,
+      }
+    );
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+      deep: true,
+    });
+
+    const adapterCheck = report.deep?.checks.find(
+      (check) => check.id === 'adapter-wiring'
+    );
+
+    assert.equal(adapterCheck?.status, 'fail');
+    assert.equal(adapterCheck?.severity, 'warning');
+    assert.match(adapterCheck?.message ?? '', /fragile binary resolution/i);
+    assert.equal(report.deep?.blocking, false);
+  });
+});
+
+test('runLifecycleDoctor --deep marca warning cuando adapter wiring muta PATH', async () => {
+  await withTempDir('pumuki-doctor-deep-path-mutation-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    installPumukiHooks(repoRoot);
+
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'adapter.json'),
+      JSON.stringify(
+        {
+          hooks: {
+            pre_write: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-pre-write' },
+            pre_commit: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-pre-commit' },
+            pre_push: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-pre-push' },
+            ci: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-ci' },
+          },
+          mcp: {
+            enterprise: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
+            evidence: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio' },
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    writeFileSync(
+      join(repoRoot, 'skills.policy.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          defaultBundleEnabled: true,
+          stages: {
+            PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          },
+          bundles: {},
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const branch = 'feature/doctor-deep-path-mutation';
+    const upstream = 'origin/feature/doctor-deep-path-mutation';
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        sampleEvidence({
+          repoRoot,
+          branch,
+          upstream,
+        }),
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      [],
+      {
+        [PUMUKI_CONFIG_KEYS.installed]: 'true',
+        [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+        [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      },
+      {
+        'rev-parse --abbrev-ref --symbolic-full-name @{u}': upstream,
+        'rev-parse --abbrev-ref HEAD': branch,
+      }
+    );
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+      deep: true,
+    });
+
+    const adapterCheck = report.deep?.checks.find(
+      (check) => check.id === 'adapter-wiring'
+    );
+
+    assert.equal(adapterCheck?.status, 'fail');
+    assert.equal(adapterCheck?.severity, 'warning');
+    assert.match(adapterCheck?.message ?? '', /path mutation/i);
+  });
+});
+
 test('runLifecycleDoctor --deep marca incompatibilidad cuando OpenSpec es requerido y no está instalado', async () => {
   await withTempDir('pumuki-doctor-deep-compat-openspec-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
@@ -396,10 +633,10 @@ test('runLifecycleDoctor --deep marca incompatibilidad cuando OpenSpec es requer
       JSON.stringify(
         {
           hooks: {
-            pre_write: { command: 'npx --yes pumuki-pre-write' },
-            pre_commit: { command: 'npx --yes pumuki-pre-commit' },
-            pre_push: { command: 'npx --yes pumuki-pre-push' },
-            ci: { command: 'npx --yes pumuki-ci' },
+            pre_write: { command: 'npx --yes --package pumuki@latest pumuki-pre-write' },
+            pre_commit: { command: 'npx --yes --package pumuki@latest pumuki-pre-commit' },
+            pre_push: { command: 'npx --yes --package pumuki@latest pumuki-pre-push' },
+            ci: { command: 'npx --yes --package pumuki@latest pumuki-ci' },
           },
           mcp: {
             enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },

@@ -2,6 +2,7 @@ import { execFileSync as runBinarySync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readLifecycleStatus } from '../lifecycle/status';
+import { resolvePumukiVersionMetadata } from '../lifecycle/packageInfo';
 import type { RepoHardModeState, RepoHookState, RepoState } from './schema';
 
 type HookStateShape = { exists: boolean; managedBlockPresent: boolean };
@@ -127,8 +128,12 @@ export const captureRepoState = (repoRoot: string): RepoState => {
   const statusLines = toStatusLines(safeRunGit(repoRoot, ['status', '--short']) ?? '');
   const staged = statusLines.filter((line) => line[0] && line[0] !== '?' && line[0] !== ' ').length;
   const unstaged = statusLines.filter((line) => line[1] && line[1] !== ' ').length;
+  const pendingChanges = statusLines.length;
   const { ahead, behind } = toAheadBehind(repoRoot, upstream);
   const lifecycle = readLifecycleStatusSafe(repoRoot);
+  const versionMetadata = resolvePumukiVersionMetadata({ repoRoot });
+  const consumerFacingVersion = versionMetadata.resolvedVersion;
+  const installedVersion = versionMetadata.consumerInstalledVersion;
   const hardModeState = readHardModeState(repoRoot);
 
   return {
@@ -142,11 +147,16 @@ export const captureRepoState = (repoRoot: string): RepoState => {
       dirty: statusLines.length > 0,
       staged: toCount(staged),
       unstaged: toCount(unstaged),
+      pending_changes: toCount(pendingChanges),
     },
     lifecycle: {
       installed: lifecycle.lifecycleState.installed === 'true',
-      package_version: lifecycle.packageVersion ?? null,
-      lifecycle_version: lifecycle.lifecycleState.version ?? null,
+      // package/lifecycle version should be stable from consumer perspective.
+      package_version: consumerFacingVersion,
+      lifecycle_version: consumerFacingVersion,
+      package_version_source: versionMetadata.source,
+      package_version_runtime: versionMetadata.runtimeVersion,
+      package_version_installed: installedVersion,
       hooks: {
         pre_commit: toHookState(lifecycle.hookStatus['pre-commit']),
         pre_push: toHookState(lifecycle.hookStatus['pre-push']),

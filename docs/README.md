@@ -1,77 +1,86 @@
 # Documentation Index
 
-Canonical index for active Pumuki documentation.
+Mapa corto y humano de la documentación oficial de Pumuki.
 
-## Seguimiento Activo (único)
+## Si buscas algo concreto
 
-- Maestro: `docs/registro-maestro-de-seguimiento.md`
-- Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
-- Política: una sola tarea en construcción (`🚧`) en el plan activo.
+- Quiero instalar y arrancar Pumuki en un repo consumidor:
+  - `README.md`
+  - `docs/product/INSTALLATION.md`
+  - `docs/product/USAGE.md`
 
-## Product and Architecture
+- Quiero entender cómo funciona por dentro:
+  - `ARCHITECTURE.md`
+  - `docs/product/ARCHITECTURE.md`
+  - `docs/product/HOW_IT_WORKS.md`
 
-- `docs/ARCHITECTURE.md`: normative architecture contract.
-- `docs/HOW_IT_WORKS.md`: facts-to-gate execution flow.
-- `docs/API_REFERENCE.md`: public APIs, binaries, and command surfaces.
+- Quiero el contrato técnico de CLI, status, doctor o evidence:
+  - `docs/product/API_REFERENCE.md`
+  - `docs/mcp/ai-evidence-v2.1-contract.md`
 
-## Setup and Usage
+- Quiero la parte MCP:
+  - `docs/mcp/mcp-servers-overview.md`
+  - `docs/mcp/evidence-context-server.md`
+  - `docs/mcp/agent-context-consumption.md`
 
-- `docs/INSTALLATION.md`: installation and bootstrap guidance.
-- `docs/USAGE.md`: day-to-day usage.
-- `docs/OPERATIONS.md`: production operations baseline (SLA/SLO, incident severity, alerts).
-- `docs/CONFIGURATION.md`: runtime and repository configuration.
-- `docs/CODE_STANDARDS.md`: coding standards for framework contributors.
-- `docs/CONTRIBUTING.md`: contribution workflow.
-- `docs/DEPENDENCIES.md`: dependency policy and maintenance.
-- `docs/TESTING.md`: test strategy and validation commands.
-- `docs/BRANCH_PROTECTION_GUIDE.md`: branch protection baseline.
-- `docs/README_MENU_WALKTHROUGH.md`: visual walkthrough of menu Option 1 flow.
+- Quiero operación diaria o releases:
+  - `PUMUKI.md`
+  - `docs/operations/production-operations-policy.md`
+  - `docs/operations/framework-menu-consumer-walkthrough.md`
+  - `docs/operations/RELEASE_NOTES.md`
 
-## Evidence and MCP
+- Quiero runbooks de validación:
+  - `docs/validation/README.md`
 
-- `docs/evidence-v2.1.md`: deterministic evidence schema.
-- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`: evidence MCP server contract.
-- `docs/MCP_SERVERS.md`: MCP integration overview.
-- `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`: deterministic MCP consumption model.
+- Quiero saber en qué estamos ahora:
+  - `docs/tracking/estado-ejecutivo.md`
+  - `docs/tracking/plan-activo-de-trabajo.md`
 
-## Rule Packs and Skills
+## Estructura oficial
 
-- `docs/rule-packs/README.md`: rule-pack index.
-- `docs/rule-packs/engineering-baseline.md`
-- `docs/rule-packs/ios.md`
-- `docs/rule-packs/backend.md`
-- `docs/rule-packs/frontend.md`
-- `docs/rule-packs/android.md`
-- `docs/rule-packs/heuristics.md`
+- `docs/product/`
+  - Manual funcional y técnico del producto.
+  - Contiene arquitectura, instalación, uso, configuración, testing y referencia API.
 
-## Validation Runbooks
+- `docs/governance/`
+  - Reglas de contribución y gobierno del repo.
 
-- `docs/validation/README.md`: enterprise minimal validation index.
-- `docs/validation/adapter-hook-runtime-validation.md`
-- `docs/validation/c022-phase-acceptance-contract.md`
-- `docs/validation/enterprise-consumer-isolation-policy.md`
-- `docs/validation/mock-consumer-integration-runbook.md`
-- `docs/validation/detection-audit-baseline.md`
-- `docs/validation/skills-rollout-consumer-repositories.md`
+- `docs/mcp/`
+  - Contratos MCP, evidence y consumo por agentes.
 
-## Vendored Codex Skills
+- `docs/operations/`
+  - Operación diaria, walkthroughs y notas de release.
 
-- `docs/codex-skills/swift-concurrency.md`
-- `docs/codex-skills/swiftui-expert-skill.md`
-- `docs/codex-skills/windsurf-rules-android.md`
-- `docs/codex-skills/windsurf-rules-backend.md`
-- `docs/codex-skills/windsurf-rules-frontend.md`
-- `docs/codex-skills/windsurf-rules-ios.md`
+- `docs/validation/`
+  - Runbooks y contratos estables de validación.
 
-## Releases
+- `docs/rule-packs/`
+  - Packs de reglas oficiales por ámbito.
 
-- `docs/RELEASE_NOTES.md`
-- `CHANGELOG.md`
+- `docs/codex-skills/`
+  - Skills vendorizadas que el repo usa como contrato local.
 
-## Root-Level Governance Docs
+- `docs/tracking/`
+  - Seguimiento permitido y solo el imprescindible.
+  - Maestro: `docs/tracking/estado-ejecutivo.md`
+  - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
+  - Históricos técnicos permitidos:
+    - `docs/tracking/historico-validacion-ruralgo-03-03-2026.md`
+    - `docs/tracking/historico-contrato-aceptacion-c022.md`
+  - Regla hard: solo puede existir una tarea `🚧` en el plan activo.
+
+## Fuera de `docs/`
 
 - `README.md`
 - `ARCHITECTURE.md`
 - `CHANGELOG.md`
 - `AGENTS.md`
 - `PUMUKI.md`
+
+## Lo que no se conserva
+
+- No se guardan en `docs/` reportes ad-hoc de ejecución.
+- Los artefactos efímeros se limpian al cerrar ciclo:
+  - `.audit-reports/**`
+  - `.coverage/**`
+  - `.ai_evidence.json`

@@ -25,8 +25,15 @@ export type EvidenceReadResult =
 const toDigest = (value: string): string =>
   `sha256:${createHash('sha256').update(value, 'utf8').digest('hex')}`;
 
-export const readEvidenceResult = (repoRoot: string): EvidenceReadResult => {
-  const evidencePath = resolve(repoRoot, '.ai_evidence.json');
+export const readEvidenceResult = (
+  repoRoot: string,
+  options?: { evidencePath?: string }
+): EvidenceReadResult => {
+  const evidencePathInput = options?.evidencePath?.trim();
+  const evidencePath =
+    typeof evidencePathInput === 'string' && evidencePathInput.length > 0
+      ? resolve(repoRoot, evidencePathInput)
+      : resolve(repoRoot, '.ai_evidence.json');
   if (!existsSync(evidencePath)) {
     return {
       kind: 'missing',
@@ -126,7 +133,10 @@ export const readEvidenceResult = (repoRoot: string): EvidenceReadResult => {
   }
 };
 
-export const readEvidence = (repoRoot: string): AiEvidenceV2_1 | undefined => {
-  const result = readEvidenceResult(repoRoot);
+export const readEvidence = (
+  repoRoot: string,
+  options?: { evidencePath?: string }
+): AiEvidenceV2_1 | undefined => {
+  const result = readEvidenceResult(repoRoot, options);
   return result.kind === 'valid' ? result.evidence : undefined;
 };

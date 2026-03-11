@@ -4,6 +4,8 @@ import { once } from 'node:events';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
+import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
+import { getCurrentPumukiVersion } from '../../lifecycle/packageInfo';
 import { startEnterpriseMcpServer } from '../enterpriseServer';
 
 const safeFetchRequest = async (url: string, init?: RequestInit): Promise<Response> => {
@@ -34,6 +36,21 @@ const withSddBypass = async (callback: () => Promise<void>): Promise<void> => {
       process.env.PUMUKI_SDD_BYPASS = previous;
     }
   }
+};
+
+type AiEvidencePayload = Parameters<typeof computeEvidencePayloadHash>[0];
+
+const withEvidenceChain = (evidence: AiEvidencePayload): AiEvidencePayload => {
+  const payloadHash = computeEvidencePayloadHash(evidence);
+  return {
+    ...evidence,
+    evidence_chain: {
+      algorithm: 'sha256',
+      previous_payload_hash: null,
+      payload_hash: payloadHash,
+      sequence: 1,
+    },
+  };
 };
 
 const withEnterpriseServer = async (
@@ -158,6 +175,8 @@ test('enterprise server exposes enterprise tools catalog', async () => {
       const names = (payload.tools ?? []).map((tool) => tool.name);
       assert.deepEqual(names, [
         'ai_gate_check',
+        'pre_flight_check',
+        'auto_execute_ai_start',
         'check_sdd_status',
         'validate_and_fix',
         'sync_branches',
@@ -196,6 +215,61 @@ test('enterprise server executes legacy-style tools in safe mode', async () => {
       assert.equal(aiGatePayload.success, false);
       assert.equal(aiGatePayload.dryRun, true);
       assert.equal(aiGatePayload.executed, true);
+
+      const preFlightResponse = await safeFetchRequest(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'pre_flight_check',
+          args: {
+            stage: 'PRE_COMMIT',
+          },
+        }),
+      });
+      assert.equal(preFlightResponse.status, 200);
+      const preFlightPayload = (await preFlightResponse.json()) as {
+        tool?: string;
+        success?: boolean;
+        dryRun?: boolean;
+        executed?: boolean;
+      };
+      assert.equal(preFlightPayload.tool, 'pre_flight_check');
+      assert.equal(preFlightPayload.success, false);
+      assert.equal(preFlightPayload.dryRun, true);
+      assert.equal(preFlightPayload.executed, true);
+
+      const autoExecuteResponse = await safeFetchRequest(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'auto_execute_ai_start',
+          args: {
+            stage: 'PRE_WRITE',
+          },
+        }),
+      });
+      assert.equal(autoExecuteResponse.status, 200);
+      const autoExecutePayload = (await autoExecuteResponse.json()) as {
+        tool?: string;
+        success?: boolean;
+        result?: {
+          action?: string;
+          confidence_pct?: number;
+          reason_code?: string;
+          next_action?: {
+            message?: string;
+          };
+        };
+      };
+      assert.equal(autoExecutePayload.tool, 'auto_execute_ai_start');
+      assert.equal(autoExecutePayload.success, true);
+      assert.equal(typeof autoExecutePayload.result?.confidence_pct, 'number');
+      assert.equal(typeof autoExecutePayload.result?.reason_code, 'string');
+      assert.equal((autoExecutePayload.result?.next_action?.message ?? '').length > 0, true);
 
       const sddStatusResponse = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',
@@ -260,6 +334,7 @@ test('enterprise server executes legacy-style tools in safe mode', async () => {
 
 test('enterprise server ai_gate_check bloquea branch protegida aunque evidencia esté ALLOWED', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    const packageVersion = getCurrentPumukiVersion({ repoRoot });
     runGit(repoRoot, ['init']);
     runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
     runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
@@ -328,8 +403,8 @@ test('enterprise server ai_gate_check bloquea branch protegida aunque evidencia 
         },
         lifecycle: {
           installed: true,
-          package_version: '6.3.16',
-          lifecycle_version: '6.3.16',
+          package_version: packageVersion,
+          lifecycle_version: packageVersion,
           hooks: {
             pre_commit: 'managed',
             pre_push: 'managed',
@@ -337,12 +412,13 @@ test('enterprise server ai_gate_check bloquea branch protegida aunque evidencia 
         },
       },
     };
+    const evidenceWithChain = withEvidenceChain(evidence as AiEvidencePayload);
     execFileSync(
       'node',
       [
         '-e',
         `require('node:fs').writeFileSync(${JSON.stringify(`${repoRoot}/.ai_evidence.json`)}, ${JSON.stringify(
-          JSON.stringify(evidence, null, 2)
+          JSON.stringify(evidenceWithChain, null, 2)
         )})`,
       ],
       { stdio: 'ignore' }
@@ -381,6 +457,7 @@ test('enterprise server ai_gate_check bloquea branch protegida aunque evidencia 
 
 test('enterprise server ai_gate_check persiste recibo MCP auditable', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    const packageVersion = getCurrentPumukiVersion({ repoRoot });
     runGit(repoRoot, ['init', '-b', 'feature/mcp-receipt']);
     runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
     runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
@@ -439,8 +516,8 @@ test('enterprise server ai_gate_check persiste recibo MCP auditable', async () =
         },
         lifecycle: {
           installed: true,
-          package_version: '6.3.16',
-          lifecycle_version: '6.3.16',
+          package_version: packageVersion,
+          lifecycle_version: packageVersion,
           hooks: {
             pre_commit: 'managed',
             pre_push: 'managed',
@@ -448,12 +525,13 @@ test('enterprise server ai_gate_check persiste recibo MCP auditable', async () =
         },
       },
     };
+    const evidenceWithChain = withEvidenceChain(evidence as AiEvidencePayload);
     execFileSync(
       'node',
       [
         '-e',
         `require('node:fs').writeFileSync(${JSON.stringify(`${repoRoot}/.ai_evidence.json`)}, ${JSON.stringify(
-          JSON.stringify(evidence, null, 2)
+          JSON.stringify(evidenceWithChain, null, 2)
         )})`,
       ],
       { stdio: 'ignore' }
@@ -496,6 +574,7 @@ test('enterprise server ai_gate_check persiste recibo MCP auditable', async () =
 
 test('enterprise server ai_gate_check propaga policy trace hard mode persistida para PRE_WRITE', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    const packageVersion = getCurrentPumukiVersion({ repoRoot });
     runGit(repoRoot, ['init', '-b', 'feature/hard-mode-check']);
     runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
     runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
@@ -562,8 +641,8 @@ test('enterprise server ai_gate_check propaga policy trace hard mode persistida 
         },
         lifecycle: {
           installed: true,
-          package_version: '6.3.16',
-          lifecycle_version: '6.3.16',
+          package_version: packageVersion,
+          lifecycle_version: packageVersion,
           hooks: {
             pre_commit: 'managed',
             pre_push: 'managed',
@@ -576,12 +655,13 @@ test('enterprise server ai_gate_check propaga policy trace hard mode persistida 
         },
       },
     };
+    const evidenceWithChain = withEvidenceChain(evidence as AiEvidencePayload);
     execFileSync(
       'node',
       [
         '-e',
         `require('node:fs').writeFileSync(${JSON.stringify(`${repoRoot}/.ai_evidence.json`)}, ${JSON.stringify(
-          JSON.stringify(evidence, null, 2)
+          JSON.stringify(evidenceWithChain, null, 2)
         )})`,
       ],
       { stdio: 'ignore' }

@@ -3,6 +3,10 @@
 This file is a concise operator-focused companion to `README.md`.
 
 If you are new to the framework, start in `README.md` first.
+If you need the full installation or daily usage contract, use:
+ 
+- `docs/product/INSTALLATION.md`
+- `docs/product/USAGE.md`
 
 ## 1) Core Model
 
@@ -12,11 +16,11 @@ Pumuki runs deterministic governance over code changes:
 
 ## 2) Minimal Consumer Flow
 
-Install and bootstrap:
+Bootstrap path:
 
 ```bash
 npm install --save-exact pumuki
-npx pumuki install
+npx --yes pumuki bootstrap --enterprise --agent=codex
 ```
 
 Start SDD session:
@@ -28,20 +32,43 @@ npx pumuki sdd session --open --change=<change-id>
 Run gates:
 
 ```bash
-npx pumuki-pre-write
-npx pumuki-pre-commit
-npx pumuki-pre-push
-npx pumuki-ci
+npx --yes --package pumuki@latest pumuki-pre-write
+npx --yes --package pumuki@latest pumuki-pre-commit
+npx --yes --package pumuki@latest pumuki-pre-push
+npx --yes --package pumuki@latest pumuki-ci
 ```
 
 ## 3) Lifecycle Operations
 
 ```bash
-npx pumuki status
-npx pumuki doctor
-npx pumuki update --latest
-npx pumuki remove
+npx --yes pumuki status
+npx --yes pumuki doctor
+npx --yes pumuki update --latest
+npx --yes pumuki remove
 ```
+
+Version drift contract:
+
+- `pumuki status --json` and `pumuki doctor --json` expose:
+  - `version.effective`
+  - `version.runtime`
+  - `version.consumerInstalled`
+  - `version.lifecycleInstalled`
+  - `version.driftWarning`
+  - `version.alignmentCommand`
+  - `version.pathExecutionHazard`
+  - `version.pathExecutionWarning`
+  - `version.pathExecutionWorkaroundCommand`
+- If `driftWarning` appears, align the consumer package and lifecycle state with `version.alignmentCommand`.
+- If `pathExecutionHazard=true`, the safe workaround is the local node invocation printed by Pumuki, for example:
+
+```bash
+node ./node_modules/pumuki/bin/pumuki.js install
+```
+
+For the full lifecycle, SDD, menu and troubleshooting surface, continue in:
+
+- `docs/product/USAGE.md`
 
 ## 4) Deterministic Evidence
 
@@ -49,7 +76,7 @@ Each run can emit `.ai_evidence.json` with stage, findings, rulesets, platforms,
 
 Reference:
 
-- `docs/evidence-v2.1.md`
+- `docs/mcp/ai-evidence-v2.1-contract.md`
 
 ## 5) MCP (Optional)
 
@@ -60,8 +87,8 @@ MCP is optional and intended for external agent/client consumption.
 
 References:
 
-- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
-- `docs/MCP_SERVERS.md`
+- `docs/mcp/evidence-context-server.md`
+- `docs/mcp/mcp-servers-overview.md`
 
 ## 6) Framework Maintainers
 

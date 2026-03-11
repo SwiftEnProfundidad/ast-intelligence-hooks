@@ -151,6 +151,40 @@ test('evaluateSddPolicy bloquea con SDD_SESSION_MISSING cuando no existe sesión
     const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
     assert.equal(result.decision.allowed, false);
     assert.equal(result.decision.code, 'SDD_SESSION_MISSING');
+    assert.match(result.decision.message, /session --open --change=/i);
+    assert.equal(
+      result.decision.details?.command,
+      'npx --yes --package pumuki@latest pumuki sdd session --open --change=add-auth-feature'
+    );
+    assert.equal(
+      result.decision.details?.fallbackCommand,
+      'npx --yes --package pumuki@latest pumuki sdd session --open --change=auto'
+    );
+  });
+});
+
+test('evaluateSddPolicy con múltiples changes activos no recomienda --change=auto', () => {
+  return withFixtureRepo('pumuki-sdd-session-missing-multi-', (repoRoot) => {
+    writeOpenSpecBinary(repoRoot, { version: 'OpenSpec CLI v1.1.1' });
+    createOpenSpecChange(repoRoot, 'add-auth-feature');
+    createOpenSpecChange(repoRoot, 'rgo-2000-01');
+
+    const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
+
+    assert.equal(result.decision.allowed, false);
+    assert.equal(result.decision.code, 'SDD_SESSION_MISSING');
+    assert.match(result.decision.message, /session --open --change=<id>/i);
+    assert.doesNotMatch(result.decision.message, /change=auto/i);
+    assert.equal(
+      result.decision.details?.command,
+      'npx --yes --package pumuki@latest pumuki sdd session --open --change=<id>'
+    );
+    assert.equal(
+      result.decision.details?.fallbackCommand,
+      'npx --yes --package pumuki@latest pumuki sdd session --open --change=<id>'
+    );
+    assert.deepEqual(result.decision.details?.availableChangeIds, ['add-auth-feature', 'rgo-2000-01']);
+    assert.equal(result.decision.details?.suggestedChangeId, undefined);
   });
 });
 

@@ -13,9 +13,18 @@ type FactInput = Fact | FileChangeFact | FileContentFact;
 
 type FindingTarget = {
   filePath?: string;
+  lines?: Finding['lines'];
   matchedBy?: string;
   source?: string;
+  primary_node?: Finding['primary_node'];
+  related_nodes?: Finding['related_nodes'];
+  why?: string;
+  impact?: string;
+  expected_fix?: string;
 };
+
+const isBlockingSeverity = (severity: RuleDefinition['severity']): boolean =>
+  severity === 'CRITICAL' || severity === 'ERROR';
 
 export type EvaluateRulesCoverageResult = {
   findings: ReadonlyArray<Finding>;
@@ -27,14 +36,27 @@ const toFinding = (
   consequence: Consequence,
   target?: FindingTarget
 ): Finding => {
+  const sourceParts = [
+    target?.source?.trim(),
+    consequence.source?.trim(),
+  ].filter((part): part is string => typeof part === 'string' && part.length > 0);
+  const mergedSource = sourceParts.length > 0 ? sourceParts.join('|') : undefined;
+
   return {
     ruleId: rule.id,
     severity: rule.severity,
     code: consequence.code ?? rule.id,
     message: consequence.message,
     filePath: target?.filePath,
+    lines: target?.lines,
     matchedBy: target?.matchedBy,
-    source: target?.source,
+    source: mergedSource,
+    blocking: isBlockingSeverity(rule.severity),
+    primary_node: target?.primary_node,
+    related_nodes: target?.related_nodes,
+    why: target?.why,
+    impact: target?.impact,
+    expected_fix: target?.expected_fix,
   };
 };
 
@@ -127,8 +149,14 @@ const collectSimpleFindingTargets = (
       })
       .map((fact) => ({
         filePath: fact.filePath,
+        lines: fact.lines,
         matchedBy: 'Heuristic',
         source: fact.source,
+        primary_node: fact.primary_node,
+        related_nodes: fact.related_nodes,
+        why: fact.why,
+        impact: fact.impact,
+        expected_fix: fact.expected_fix,
       }));
   }
 

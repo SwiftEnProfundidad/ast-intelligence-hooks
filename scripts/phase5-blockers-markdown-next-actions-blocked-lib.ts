@@ -29,7 +29,7 @@ export const appendPhase5BlockersBlockedNextActions = (params: {
   }
   if (hasAdapterRuntimeBlocker(params.summary)) {
     params.lines.push(
-      '- Execute `docs/validation/adapter-hook-runtime-validation.md` in a real Adapter session and regenerate reports.'
+      '- Execute `docs/validation/adapter-hook-runtime-runbook.md` in a real Adapter session and regenerate reports.'
     );
   }
   if (hasConsumerTriageBlocker(params.summary)) {

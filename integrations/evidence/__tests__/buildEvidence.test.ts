@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { getCurrentPumukiVersion } from '../../lifecycle/packageInfo';
 import type { AiEvidenceV2_1, HumanIntentState } from '../schema';
 import { buildEvidence } from '../buildEvidence';
 
@@ -885,8 +886,8 @@ test('propaga repo_state al construir evidencia determinista', () => {
       },
       lifecycle: {
         installed: true,
-        package_version: '6.3.16',
-        lifecycle_version: '6.3.16',
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
         hooks: {
           pre_commit: 'managed',
           pre_push: 'managed',

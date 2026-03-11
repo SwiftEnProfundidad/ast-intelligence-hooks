@@ -11,6 +11,7 @@ import {
 import {
   installTarballIntoConsumerRepo,
   verifyInstalledPackageCanBeRequired,
+  verifyInstalledPumukiBinaryVersion,
 } from './package-install-smoke-consumer-npm-lib';
 import type { SmokeWorkspace } from './package-install-smoke-workspace-lib';
 
@@ -23,6 +24,7 @@ export const setupConsumerRepository = (
   initializeConsumerGitRepository(workspace);
   installTarballIntoConsumerRepo(workspace);
   verifyInstalledPackageCanBeRequired(workspace);
+  verifyInstalledPumukiBinaryVersion(workspace);
   commitBaseline(workspace);
   configureRemoteAndFeatureBranch(workspace);
   writeAndCommitRangePayloadForBlockMode(workspace, mode);

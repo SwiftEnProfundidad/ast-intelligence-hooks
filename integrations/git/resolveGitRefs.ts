@@ -34,6 +34,43 @@ export const resolveUpstreamRef = (): string | null => {
   }
 };
 
+export const resolveCurrentBranchRef = (): string | null => {
+  try {
+    const branch = runGit(['rev-parse', '--abbrev-ref', 'HEAD']);
+    if (branch.length === 0 || branch === 'HEAD') {
+      return null;
+    }
+    return branch;
+  } catch {
+    return null;
+  }
+};
+
+export const resolveUpstreamTrackingRef = (): string | null => {
+  try {
+    return runGit(['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}']);
+  } catch {
+    return null;
+  }
+};
+
+export const resolveAheadBehindFromRef = (
+  fromRef: string
+): { ahead: number; behind: number } | null => {
+  try {
+    const raw = runGit(['rev-list', '--left-right', '--count', `${fromRef}...HEAD`]);
+    const [behindRaw, aheadRaw] = raw.split(/\s+/);
+    const ahead = Number.parseInt(aheadRaw ?? '', 10);
+    const behind = Number.parseInt(behindRaw ?? '', 10);
+    if (!Number.isFinite(ahead) || !Number.isFinite(behind)) {
+      return null;
+    }
+    return { ahead, behind };
+  } catch {
+    return null;
+  }
+};
+
 export const resolveCiBaseRef = (): string => {
   const fromEnv = process.env.GITHUB_BASE_REF?.trim();
   if (fromEnv) {

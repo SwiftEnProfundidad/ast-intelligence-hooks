@@ -6,7 +6,7 @@ test('inspectPackageManifestPaths reports no issues when required paths are pres
   const filePaths = [
     ...REQUIRED_PACKAGE_PATHS,
     'README.md',
-    'docs/TESTING.md',
+    'docs/product/TESTING.md',
     'integrations/git/preCommitBackend.cli.ts',
   ];
 

@@ -1,16 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { getCurrentPumukiVersion } from '../packageInfo';
 import { createHotspotsSaasIngestionPayload } from '../saasIngestionContract';
 import {
   HOTSPOTS_SAAS_INGESTION_IDEMPOTENCY_PREFIX,
   createHotspotsSaasIngestionIdempotencyKey,
 } from '../saasIngestionIdempotency';
 
+const producerVersion = getCurrentPumukiVersion();
+
 const payload = createHotspotsSaasIngestionPayload({
   tenantId: 'tenant-idempotency',
   repositoryId: 'repo-idempotency',
   repositoryName: 'ast-intelligence-hooks',
-  producerVersion: '6.3.17',
+  producerVersion,
   generatedAt: '2026-02-26T12:00:00+00:00',
   report: {
     generatedAt: '2026-02-26T12:00:00+00:00',
@@ -62,7 +65,7 @@ test('createHotspotsSaasIngestionIdempotencyKey cambia si cambia el payload lóg
     tenantId: 'tenant-idempotency',
     repositoryId: 'repo-idempotency',
     repositoryName: 'ast-intelligence-hooks',
-    producerVersion: '6.3.17',
+    producerVersion,
     generatedAt: '2026-02-26T12:00:01+00:00',
     report: {
       generatedAt: '2026-02-26T12:00:01+00:00',

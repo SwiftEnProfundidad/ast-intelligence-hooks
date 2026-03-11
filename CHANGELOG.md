@@ -6,7 +6,305 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-No changes yet.
+### Changed
+
+- No user-facing changes yet.
+
+## [6.3.55] - 2026-03-06
+
+### Fixed
+
+- `status` and `doctor` now detect when the consumer repository path contains the system `PATH` delimiter and `npx/npm exec` can therefore fail to resolve `pumuki`.
+  - They now expose:
+    - `version.pathExecutionHazard`
+    - `version.pathExecutionWarning`
+    - `version.pathExecutionWorkaroundCommand`
+- `version.alignmentCommand` now switches automatically to a safe local invocation when the repo path makes `PATH`-based execution unsafe.
+  - On POSIX consumers such as `SAAS:APP_SUPERMERCADOS`, remediation now points to `node ./node_modules/pumuki/bin/pumuki.js install` instead of an `npx --package ... pumuki install` command that can fail with `sh: pumuki: command not found`.
+- Human-readable `pumuki status` and `pumuki doctor` now print both:
+  - `execution warning`
+  - `execution workaround`
+  when this path hazard is detected.
+
+## [6.3.54] - 2026-03-06
+
+### Fixed
+
+- The published npm package now includes `docs/codex-skills/*.md`.
+  - Consumers can compile the core skills lock from `skills.sources.json` inside `node_modules/pumuki` instead of silently losing `backend-guidelines`, `frontend-guidelines`, `ios-guidelines`, `swift-concurrency`, `swiftui-expert-skill`, and `android-guidelines`.
+- Package manifest validation now treats the vendored codex skill markdown files as required runtime package assets.
+  - This prevents future releases from shipping a tarball where skills coverage gates fail in consumers because the package is missing its own core skill sources.
+
+## [6.3.53] - 2026-03-06
+
+### Fixed
+
+- `pumuki watch` now respects the requested `repoRoot` when collecting facts and running the gate in cross-repo mode.
+  - Prevents false findings and notifications coming from the current working directory instead of the target checkout.
+- `PRE_WRITE` worktree hygiene now uses deduplicated pending file count when repo state provides it.
+  - Avoids overcounting partially staged files such as `MM foo.ts`.
+- Custom skills bundle hashes now include `ast_node_ids`.
+  - Policy/evidence drift detection now changes when AST coverage of `AUTO` rules changes.
+- `auto_execute_ai_start` now treats `EVIDENCE_CHAIN_INVALID` as an actionable evidence failure.
+  - The next action now tells the user to regenerate or refresh evidence instead of falling back to a generic message.
+
+## [6.3.52] - 2026-03-06
+
+### Fixed
+
+- `pumuki status` and `pumuki doctor` now expose version semantics explicitly instead of mixing runtime, consumer-installed and lifecycle-installed versions under an ambiguous single label.
+  - Both commands now include a structured `version` block with:
+    - `effective`
+    - `runtime`
+    - `consumerInstalled`
+    - `lifecycleInstalled`
+    - `source`
+    - `driftFromRuntime`
+    - `driftFromLifecycleInstalled`
+    - `driftWarning`
+- Human-readable output now reports:
+  - effective version,
+  - runtime version,
+  - consumer installed version,
+  - lifecycle installed version,
+  - and an explicit drift warning when those values diverge.
+
+## [6.3.51] - 2026-03-06
+
+### Fixed
+
+- `PRE_COMMIT` no longer leaves `.ai_evidence.json` dirty after a successful commit when that file was already tracked.
+  - The hook now re-stages the refreshed evidence only when the file is already part of the index.
+- `PRE_PUSH` now respects the exact hook refspec range (`remoteOid..localOid`) when publishing a specific commit instead of always evaluating `upstream..HEAD`.
+- `PRE_PUSH` now suspends SDD session enforcement for historical publishes that target an exact commit different from current `HEAD`.
+  - Prevents false `SDD_SESSION_*` / `SDD_CHANGE_*` blocks when replaying already closed commits.
+- `pumuki sdd evidence` keeps the repo-bound safety check for `--test-output`, but now suggests an immediate valid ephemeral path inside the repo, such as `.pumuki/runtime/<file>.log`.
+
+## [6.3.50] - 2026-03-05
+
+### Improved
+
+- `GIT_ATOMICITY_TOO_MANY_SCOPES` now includes actionable scope/file breakdown in the blocking payload.
+  - Adds `scope_files=...` with per-scope count and sample files.
+  - Improves deterministic split guidance in remediation (`Sugerencia split`).
+- Gate block summary `next_action` for this code now points explicitly to the `scope_files` breakdown before splitting staging.
+
+## [6.3.49] - 2026-03-05
+
+### Fixed
+
+- `pumuki watch --json` now aligns `lastTick.changed` with real file delta of the evaluated scope.
+  - For `scope=staged`, when no staged files are present (`changedFiles=[]`, `evaluatedFiles=[]`), `changed=false`.
+  - Avoids ambiguous interpretation where `changed=true` previously represented tick execution instead of actual scoped changes.
+
+## [6.3.48] - 2026-03-05
+
+### Fixed
+
+- `pumuki watch` now enforces manifest integrity guard during gate evaluation:
+  - snapshots/restores `package.json`, `package-lock.json`, `pnpm-lock.yaml`, and `yarn.lock`,
+  - blocks the tick with `MANIFEST_MUTATION_DETECTED` when unexpected mutation is detected and reverted.
+- Hook-stage manifest guard (`PRE_COMMIT` / `PRE_PUSH`) now also covers `pnpm-lock.yaml` and `yarn.lock` in addition to npm manifests.
+- Prevents silent dependency drift in consumer repos during validation flows when no explicit upgrade command is requested.
+
+## [6.3.47] - 2026-03-05
+
+### Fixed
+
+- Hooks/gates now enforce manifest integrity in `PRE_COMMIT` and `PRE_PUSH`:
+  - snapshot + automatic restore for `package.json` and `package-lock.json`,
+  - explicit block code `MANIFEST_MUTATION_DETECTED` when unexpected mutation is detected.
+- Prevents unintended consumer manifest drift during normal hook/gate execution unless upgrade is explicitly requested by the developer.
+
+## [6.3.46] - 2026-03-05
+
+### Added
+
+- `pumuki watch --json` ahora expone metadata de versión efectiva/runtime:
+  - `version.effective`
+  - `version.runtime`
+  - `version.consumerInstalled`
+  - `version.source`
+  - `version.driftFromRuntime`
+  - `version.driftWarning` (cuando hay desalineación).
+
+### Fixed
+
+- Hooks (`pre-commit`/`pre-push`) ahora auto-reconcilian policy (`--strict --apply`) y reintentan una vez cuando el bloqueo corresponde a códigos de skills coverage:
+  - `SKILLS_PLATFORM_COVERAGE_INCOMPLETE_HIGH`
+  - `SKILLS_SCOPE_COMPLIANCE_INCOMPLETE_HIGH`
+  - `EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE`
+  - `EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING`
+  - `EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE`
+- Se reduce fricción de bootstrap manual repetitivo entre iteraciones al unificar comportamiento de hook con `watch`.
+
+## [6.3.45] - 2026-03-05
+
+### Added
+
+- `pumuki sdd sync-docs` sincroniza por defecto los tres documentos canónicos del consumer cuando existen:
+  - `docs/strategy/ruralgo-tracking-hub.md`
+  - `docs/technical/08-validation/refactor/operational-summary.md`
+  - `docs/validation/refactor/last-run.json`
+- `pumuki sdd auto-sync` incluye por defecto artefactos OpenSpec por cambio:
+  - `openspec/changes/<change>/tasks.md`
+  - `openspec/changes/<change>/design.md`
+  - `openspec/changes/<change>/retrospective.md`
+
+### Changed
+
+- MCP tools (`ai_gate_check`, `pre_flight_check`, `auto_execute_ai_start`) ahora incorporan `learning_context` automáticamente desde `openspec/changes/<change>/learning.json` cuando existe cambio activo.
+
+### Fixed
+
+- `sync-docs` crea secciones managed faltantes de forma idempotente y evita conflictos falsos al inicializar documentación canónica nueva.
+
+## [6.3.43] - 2026-03-05
+
+### Changed
+
+- `pumuki sdd evidence` now emits TDD/BDD-compatible contract by default:
+  - `version` normalized to `"1"`,
+  - includes required `slices[]` payload (`red/green/refactor`) for gate validation.
+- Legacy compatibility is preserved in the scaffold payload:
+  - keeps `scenario_id`, `test_run`, and `ai_evidence` fields used by existing consumers.
+
+### Fixed
+
+- Resolved consumer regression where scaffolded evidence was rejected as invalid (`TDD_BDD_EVIDENCE_INVALID`):
+  - previous payload used `version: "1.0"` without `slices[]`.
+- `sdd state-sync` now accepts source evidence versions `1` and `1.0` for backward compatibility during rollout.
+
+## [6.3.42] - 2026-03-05
+
+### Changed
+
+- Blocked modal (macOS Swift helper) now prioritizes readable vertical layout:
+  - narrower width range (`360..620`) to avoid oversized horizontal dialogs,
+  - dynamic height growth from content fitting size,
+  - compact typography for cause/remediation blocks.
+- Blocked remediation text is now more actionable by default:
+  - richer guidance for `EVIDENCE_*`, `PRE_PUSH_UPSTREAM_MISSING`, `SDD_SESSION_*`,
+  - remediation truncation budget increased to preserve useful resolution steps.
+
+### Fixed
+
+- Improved multiline wrapping behavior in floating blocked dialog:
+  - explicit word wrapping and multiline cell configuration for title/cause/remediation,
+  - avoids aggressive truncation in long real-world messages.
+- Bottom-right pinning remains stable after dynamic relayout on real displays.
+
+## [6.3.41] - 2026-03-05
+
+### Changed
+
+- macOS blocked notifications now include project context in subtitle:
+  - format: `<project> · <stage> · <cause-summary>`,
+  - improves differentiation when multiple repos are active.
+- Blocked dialog is now enabled by default on macOS for `gate.blocked`:
+  - explicit override remains available via `PUMUKI_MACOS_BLOCKED_DIALOG=0|1`,
+  - existing anti-spam controls (`mute/disable`) are preserved.
+
+### Fixed
+
+- Notification config parser and persistence now carry `blockedDialogEnabled` deterministically.
+- Added regression coverage for:
+  - project label rendering in blocked subtitle,
+  - default blocked-dialog activation without explicit env flag.
+
+## [6.3.40] - 2026-03-05
+
+### Added
+
+- AST Intelligence dual validation PoC (`#616`) with compatibility-first rollout:
+  - new dual mode runtime: `PUMUKI_AST_INTELLIGENCE_DUAL_MODE=off|shadow|strict`,
+  - new guard findings:
+    - `governance.ast-intelligence.dual-validation.shadow` (`INFO`, non-blocking),
+    - `governance.ast-intelligence.dual-validation.mismatch` (`ERROR`, blocking in `strict`),
+  - deterministic runtime summary in gate logs:
+    - mapped rules, divergences, `false_positives`, `false_negatives`, `latency_ms`, languages.
+- RFC + roadmap for AST Intelligence by nodes:
+  - `docs/validation/ast-intelligence-validation-roadmap.md`,
+  - includes architecture target, 30/60/90 plan, rollout and rollback contract.
+- Backlog watcher/reconcile JSON now includes `next_commands[].probe_kind`:
+  - `json_contract` for dry-run probe validation.
+  - `state_recheck` for apply probe validation.
+
+### Fixed
+
+- Stage gates now block deterministically when code changes are detected but rules coverage has no active rules:
+  - new finding `governance.rules.active-rule-coverage.empty`,
+  - code `ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH`,
+  - prevents false-green `PASS/ALLOW` with `active_rule_ids=[]` on code surfaces.
+- iOS XCTest quality enforcement for enterprise gates (`PRE_COMMIT/PRE_PUSH/CI`):
+  - new finding `governance.skills.ios-test-quality.incomplete`,
+  - code `IOS_TEST_QUALITY_PATTERN_MISSING_HIGH`,
+  - blocks when XCTest sources in `apps/ios/**/Tests/**.swift` miss `makeSUT()` and/or `trackForMemoryLeaks()`.
+- Fixed findings trace consistency in stage gates:
+  - guard-driven blocking conditions are now always propagated to `effectiveFindings`,
+  - avoiding opaque `BLOCK` outcomes without explicit finding payload.
+- PRE_PUSH scope false positives caused by upstream misalignment now fail fast with deterministic signal:
+  - upstream drift is detected earlier (`PRE_PUSH_UPSTREAM_MISALIGNED`) before scope coverage evaluation.
+- Local smoke for consumer install now falls back deterministically when `npx --no-install` crashes with runtime import errors (`MODULE_NOT_FOUND`).
+- `ai_gate_check` consistency hints now cover legacy `EVIDENCE_*` codes (including `EVIDENCE_INTEGRITY_MISSING`) to reduce hook-vs-MCP diagnosis drift.
+
+## [6.3.39] - 2026-03-04
+
+### Added
+
+- Cross-platform critical skills enforcement in platform gate evaluation:
+  - new blocking finding `governance.skills.cross-platform-critical.incomplete` when a detected platform has no critical (`CRITICAL/ERROR`) skills rules active/evaluated.
+
+### Changed
+
+- Adapter-generated hook/CI commands now resolve robustly through:
+  - `npx --yes --package pumuki@latest ...`
+  - eliminating fragile dependency on local `./node_modules/.bin` availability in consumer repos.
+- Git atomicity enforcement is now enabled by default:
+  - base guard is active out-of-the-box for `PRE_COMMIT/PRE_PUSH/CI`,
+  - existing env/config overrides are preserved for controlled opt-out or threshold tuning.
+- Lifecycle hook diagnostics now expose effective hooks path resolution:
+  - `status`/`doctor` include `hooksDirectory` and `hooksDirectoryResolution`,
+  - console output now prints the effective hook path used for evaluation.
+
+### Fixed
+
+- Commit-range facts resolution no longer crashes or degrades ambiguously when refs are not resolvable (for example repos without `HEAD` yet):
+  - guarded `rev-parse --verify` + safe fallback behavior in git-range facts collection.
+- `core.hooksPath` hardening for versioned hooks:
+  - hook path resolution now falls back to local `.git/config` (`core.hooksPath`) when `git rev-parse --git-path hooks` is unavailable,
+  - non-regression coverage added for both versioned hooks and fallback resolution.
+- Stage-gates non-regression suite stabilization:
+  - updated lifecycle ingestion and preflight fixtures to the current evidence v2.1 contract (`evidence_chain` and `evidence.source`),
+  - aligned architecture guardrail overrides for the current orchestrator module size/import profile (`integrations/lifecycle/cli.ts`).
+
+## [6.3.38] - 2026-03-04
+
+### Added
+
+- Optional macOS blocked dialog flow for gate failures (`PUMUKI_MACOS_BLOCKED_DIALOG=1`):
+  - full cause + remediation detail in modal dialog,
+  - anti-spam user controls in dialog:
+    - `Mantener activas`
+    - `Silenciar 30 min`
+    - `Desactivar`
+  - auto-timeout (`15s`) to avoid hanging local execution when no user interaction happens.
+
+### Changed
+
+- Blocked macOS notification UX is now short and human-readable by default:
+  - title in Spanish (`🔴 Pumuki bloqueado`),
+  - compact subtitle with stage + summarized cause,
+  - message starts with `Solución: ...` so remediation is visible in banner-limited space.
+- Added mute-aware notification delivery:
+  - support for `muteUntil` in `.pumuki/system-notifications.json`,
+  - suppressed delivery while mute window is active (`reason=muted`).
+
+### Fixed
+
+- Stabilized `stageRunners` test baseline against current core-skills contract:
+  - test harness now keeps core skills enabled (`PUMUKI_DISABLE_CORE_SKILLS=0`) to avoid false gate blocks from scope/platform compliance rules,
+  - restored passing regression set for affected suite.
 
 ## [6.3.24] - 2026-02-27
 
@@ -30,7 +328,7 @@ No changes yet.
 - `pumuki loop run` now executes one strict fail-fast gate attempt (`workingTree` scope) and persists outcome/evidence atomically.
 - Documentation updated with loop commands and runtime semantics:
   - `README.md`
-  - `docs/USAGE.md`
+  - `docs/product/USAGE.md`
 
 ### Fixed
 
@@ -82,12 +380,12 @@ No changes yet.
 
 ### Added
 
-- Added production operations policy document at `docs/OPERATIONS.md` with:
+- Added production operations policy document at `docs/operations/production-operations-policy.md` with:
   - SaaS operation scope
   - minimum SLO/SLA targets
   - incident severity and response expectations
   - alerting baseline and go-live checklist
-- Added dedicated README walkthrough document at `docs/README_MENU_WALKTHROUGH.md` for menu Option 1 captures.
+- Added dedicated README walkthrough document at `docs/operations/framework-menu-consumer-walkthrough.md` for menu Option 1 captures.
 - Added explicit collaboration section in root `README.md` with contributor expectations and minimum validation commands.
 
 ### Changed
@@ -100,8 +398,8 @@ No changes yet.
   - documentation index expanded and normalized
 - Updated docs index and usage/install guides to include operations policy and walkthrough references:
   - `docs/README.md`
-  - `docs/USAGE.md`
-  - `docs/INSTALLATION.md`
+  - `docs/product/USAGE.md`
+  - `docs/product/INSTALLATION.md`
 - Validation command documentation now reflects real prerequisites and execution semantics:
   - required flags for `validation:*` scripts (`--repo`, `--repo-path`, `--skip-workflow-lint`)
   - non-zero diagnostic verdict behavior documented (`BLOCKED`, `PENDING`, `MISSING_INPUTS`).
@@ -229,7 +527,7 @@ No changes yet.
 ## Notes
 
 - Canonical v2.x release narrative and operational detail live in:
-  - `docs/RELEASE_NOTES.md`
+  - `docs/operations/RELEASE_NOTES.md`
 - Historical commit-level trace remains available via:
   - `git log`
   - `git show`

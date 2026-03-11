@@ -5,6 +5,7 @@ import test from 'node:test';
 import type { Finding } from '../../../core/gate/Finding';
 import type { RepoState } from '../../evidence/schema';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
+import { getCurrentPumukiVersion } from '../../lifecycle/packageInfo';
 import { emitGateTelemetryEvent } from '../gateTelemetry';
 
 const baseRepoState: RepoState = {
@@ -21,8 +22,8 @@ const baseRepoState: RepoState = {
   },
   lifecycle: {
     installed: true,
-    package_version: '6.3.26',
-    lifecycle_version: '6.3.26',
+    package_version: getCurrentPumukiVersion(),
+    lifecycle_version: getCurrentPumukiVersion(),
     hooks: {
       pre_commit: 'managed',
       pre_push: 'managed',

@@ -1,15 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+MASTER_FILE="docs/tracking/estado-ejecutivo.md"
+
+resolve_default_tracking_file() {
+  if [[ -f "${MASTER_FILE}" ]]; then
+    local active_file
+    active_file="$(
+      sed -n 's/^- Plan activo: `\([^`]*\)`.*/\1/p' "${MASTER_FILE}" | head -n 1
+    )"
+    if [[ -n "${active_file}" ]]; then
+      printf '%s\n' "${active_file}"
+      return 0
+    fi
+  fi
+
+  printf '%s\n' "docs/tracking/plan-activo-de-trabajo.md"
+}
+
 if [[ "$#" -gt 0 ]]; then
   FILES=("$@")
 else
   FILES=(
-    "docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md"
+    "$(resolve_default_tracking_file)"
   )
 fi
 
-ACTIVE_PATTERN='^- 🚧 `P[0-9A-Za-z.-]+` '
+ACTIVE_PATTERN='^- 🚧 (`?P[0-9A-Za-z.-]+`?)'
 HAS_ERROR=0
 
 for FILE in "${FILES[@]}"; do
@@ -36,3 +53,5 @@ if [[ "${HAS_ERROR}" -ne 0 ]]; then
 fi
 
 echo "[tracking-single-active] OK: exactly one in-progress task in active tracking file(s)."
+
+node --import tsx scripts/check-self-worktree-hygiene.ts

@@ -3,6 +3,7 @@ import test from 'node:test';
 import type { RepoState } from '../../evidence/schema';
 import type { AiGateCheckResult, AiGateViolation } from '../../gate/evaluateAiGate';
 import type { SddEvaluateResult } from '../../sdd/types';
+import { getCurrentPumukiVersion } from '../packageInfo';
 import { buildPreWriteAutomationTrace } from '../preWriteAutomation';
 
 const sampleRepoState: RepoState = {
@@ -19,8 +20,8 @@ const sampleRepoState: RepoState = {
   },
   lifecycle: {
     installed: true,
-    package_version: '6.3.26',
-    lifecycle_version: '6.3.26',
+    package_version: getCurrentPumukiVersion(),
+    lifecycle_version: getCurrentPumukiVersion(),
     hooks: {
       pre_commit: 'managed',
       pre_push: 'managed',
@@ -217,4 +218,120 @@ test('buildPreWriteAutomationTrace no ejecuta retry cuando no hay violaciones au
   assert.equal(result.aiGate.allowed, false);
   assert.equal(result.trace.attempted, false);
   assert.equal(result.trace.actions.length, 0);
+});
+
+test('buildPreWriteAutomationTrace refresca evidencia cuando PRE_WRITE llega con EVIDENCE_GATE_BLOCKED', async () => {
+  let runPlatformGateCalls = 0;
+  let runEnterpriseCalls = 0;
+  let sleepCalled = false;
+  const refreshedAiGate = buildAiGate([]);
+
+  const result = await buildPreWriteAutomationTrace(
+    {
+      repoRoot: '/repo',
+      sdd: buildSddAllowed(),
+      aiGate: buildAiGate([toViolation('EVIDENCE_GATE_BLOCKED')]),
+      runPlatformGate: async () => {
+        runPlatformGateCalls += 1;
+        return 0;
+      },
+    },
+    {
+      runEnterpriseAiGateCheck: () => {
+        runEnterpriseCalls += 1;
+        return {
+          tool: 'ai_gate_check',
+          dryRun: true,
+          executed: true,
+          success: refreshedAiGate.allowed,
+          result: refreshedAiGate,
+        };
+      },
+      evaluateAiGate: () => refreshedAiGate,
+      writeMcpAiGateReceipt: () => ({
+        path: '/repo/.pumuki/artifacts/mcp-ai-gate-receipt.json',
+        receipt: {
+          version: '1',
+          source: 'pumuki-enterprise-mcp',
+          tool: 'ai_gate_check',
+          repo_root: '/repo',
+          stage: 'PRE_WRITE',
+          status: 'ALLOWED',
+          allowed: true,
+          issued_at: new Date('2026-03-03T00:00:00.000Z').toISOString(),
+        },
+      }),
+      sleep: async () => {
+        sleepCalled = true;
+      },
+    }
+  );
+
+  assert.equal(runPlatformGateCalls, 1);
+  assert.equal(runEnterpriseCalls, 1);
+  assert.equal(sleepCalled, false);
+  assert.equal(result.aiGate.allowed, true);
+  assert.deepEqual(
+    result.trace.actions.map((item) => item.action),
+    ['refresh_evidence']
+  );
+});
+
+test('buildPreWriteAutomationTrace aplica refresh PRE_PUSH cuando EVIDENCE_GATE_BLOCKED persiste tras PRE_COMMIT', async () => {
+  const stageCalls: string[] = [];
+  let runEnterpriseCalls = 0;
+  const aiGateSequence: AiGateCheckResult[] = [
+    buildAiGate([toViolation('EVIDENCE_GATE_BLOCKED')]),
+    buildAiGate([]),
+  ];
+
+  const result = await buildPreWriteAutomationTrace(
+    {
+      repoRoot: '/repo',
+      sdd: buildSddAllowed(),
+      aiGate: buildAiGate([toViolation('EVIDENCE_GATE_BLOCKED')]),
+      runPlatformGate: async (params) => {
+        stageCalls.push(params.policy.stage);
+        return 0;
+      },
+    },
+    {
+      runEnterpriseAiGateCheck: () => {
+        const aiGate = aiGateSequence[Math.min(runEnterpriseCalls, aiGateSequence.length - 1)]!;
+        runEnterpriseCalls += 1;
+        return {
+          tool: 'ai_gate_check',
+          dryRun: true,
+          executed: true,
+          success: aiGate.allowed,
+          result: aiGate,
+        };
+      },
+      evaluateAiGate: () => buildAiGate([]),
+      writeMcpAiGateReceipt: () => ({
+        path: '/repo/.pumuki/artifacts/mcp-ai-gate-receipt.json',
+        receipt: {
+          version: '1',
+          source: 'pumuki-enterprise-mcp',
+          tool: 'ai_gate_check',
+          repo_root: '/repo',
+          stage: 'PRE_WRITE',
+          status: 'ALLOWED',
+          allowed: true,
+          issued_at: new Date('2026-03-03T00:00:00.000Z').toISOString(),
+        },
+      }),
+      sleep: async () => {},
+    }
+  );
+
+  assert.deepEqual(stageCalls, ['PRE_COMMIT', 'PRE_PUSH']);
+  assert.equal(runEnterpriseCalls, 2);
+  assert.equal(result.aiGate.allowed, true);
+  assert.deepEqual(
+    result.trace.actions.map((item) => item.action),
+    ['refresh_evidence', 'refresh_evidence']
+  );
+  assert.equal(result.trace.actions[0]?.details.includes('stage=PRE_COMMIT'), true);
+  assert.equal(result.trace.actions[1]?.details.includes('stage=PRE_PUSH'), true);
 });

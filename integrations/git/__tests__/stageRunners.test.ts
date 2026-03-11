@@ -27,13 +27,61 @@ type EvidenceShape = {
   rulesets: Array<{ platform: string; bundle: string; hash: string }>;
 };
 
+const createSkillsCoverageBlockedEvidence = (stage: StageName): EvidenceShape =>
+  ({
+    version: '2.1',
+    timestamp: '2026-03-05T10:00:00.000Z',
+    snapshot: {
+      stage,
+      outcome: 'BLOCK',
+      findings: [
+        {
+          ruleId: 'governance.skills.scope-compliance.incomplete',
+          severity: 'ERROR',
+          code: 'SKILLS_SCOPE_COMPLIANCE_INCOMPLETE_HIGH',
+          message: 'Scope compliance incomplete.',
+          file: 'apps/backend/src/service.ts',
+        },
+      ],
+    },
+    rulesets: [],
+    ledger: [],
+    platforms: {},
+    human_intent: null,
+    ai_gate: {
+      status: 'BLOCKED',
+      violations: [
+        {
+          ruleId: 'governance.skills.scope-compliance.incomplete',
+          level: 'ERROR',
+          code: 'SKILLS_SCOPE_COMPLIANCE_INCOMPLETE_HIGH',
+          message: 'Scope compliance incomplete.',
+          file: 'apps/backend/src/service.ts',
+        },
+      ],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'BLOCKED',
+      total_violations: 1,
+      by_severity: {
+        INFO: 0,
+        WARN: 0,
+        ERROR: 1,
+        CRITICAL: 0,
+      },
+    },
+  }) as unknown as EvidenceShape;
+
 const withStageRunnerRepo = async (
   callback: (repoRoot: string) => Promise<void>
 ): Promise<void> => {
   const previousBypass = process.env.PUMUKI_SDD_BYPASS;
   const previousDisableCore = process.env.PUMUKI_DISABLE_CORE_SKILLS;
+  const previousAtomicity = process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
   process.env.PUMUKI_SDD_BYPASS = '1';
-  process.env.PUMUKI_DISABLE_CORE_SKILLS = '1';
+  process.env.PUMUKI_DISABLE_CORE_SKILLS = '0';
+  process.env.PUMUKI_GIT_ATOMICITY_ENABLED = '0';
   try {
     await withTempRepo(async (repoRoot) => {
       seedTddBddEvidenceContract(repoRoot);
@@ -49,6 +97,11 @@ const withStageRunnerRepo = async (
       delete process.env.PUMUKI_DISABLE_CORE_SKILLS;
     } else {
       process.env.PUMUKI_DISABLE_CORE_SKILLS = previousDisableCore;
+    }
+    if (typeof previousAtomicity === 'undefined') {
+      delete process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
+    } else {
+      process.env.PUMUKI_GIT_ATOMICITY_ENABLED = previousAtomicity;
     }
   }
 };
@@ -221,6 +274,60 @@ test('runPreCommitStage keeps default policy thresholds when skills policy is ab
   });
 });
 
+test('runPreCommitStage asegura ignore local para artefactos runtime de Pumuki', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+
+    const exitCode = await runPreCommitStage();
+    assert.equal(exitCode, 0);
+
+    const excludePath = join(repoRoot, '.git', 'info', 'exclude');
+    const content = readFileSync(excludePath, 'utf8');
+    assert.match(content, /# >>> pumuki-runtime-artifacts >>>/);
+    assert.match(content, /\.ai_evidence\.json/);
+    assert.match(content, /\.pumuki\//);
+  });
+});
+
+test('runPreCommitStage evita ruido de HEAD ambiguo en repos sin commit inicial', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+
+    const stderr = await withCapturedStderr(async () => {
+      await runPreCommitStage();
+    });
+
+    const merged = stderr.join('\n');
+    assert.doesNotMatch(merged, /ambiguous argument 'HEAD'/i);
+    assert.doesNotMatch(merged, /argumento ambiguo 'HEAD'/i);
+  });
+});
+
+test('runCiStage no rompe bootstrap en repo sin commit inicial con git-atomicity activa', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const previousAtomicity = process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
+    process.env.PUMUKI_GIT_ATOMICITY_ENABLED = '1';
+
+    try {
+      const stderr = await withCapturedStderr(async () => {
+        const exitCode = await runCiStage();
+        assert.equal(exitCode, 0);
+      });
+
+      const merged = stderr.join('\n');
+      assert.doesNotMatch(merged, /ambiguous argument 'HEAD'/i);
+      assert.doesNotMatch(merged, /argumento ambiguo 'HEAD'/i);
+    } finally {
+      if (typeof previousAtomicity === 'undefined') {
+        delete process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
+      } else {
+        process.env.PUMUKI_GIT_ATOMICITY_ENABLED = previousAtomicity;
+      }
+    }
+  });
+});
+
 test('runPrePushStage uses skills policy override and writes PRE_PUSH policy trace', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     writeSkillsPolicy(repoRoot, {
@@ -298,12 +405,60 @@ test('runPrePushStage keeps default PRE_PUSH thresholds when skills policy is ab
   });
 });
 
-test('runPrePushStage fails safe with guidance when branch has no upstream', async () => {
+test('runPrePushStage sin upstream usa fallback bootstrap range cuando no hay stdin', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRangeWithoutUpstream(repoRoot);
+    const messages = await withCapturedStderr(async () => {
+      const exitCode = await runPrePushStage();
+      assert.equal(exitCode, 0);
+    });
+
+    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
+    const evidence = readEvidence(repoRoot);
+    assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
+    assert.equal(
+      messages.some((message) =>
+        message.includes('[pumuki][pre-push] branch has no upstream; using bootstrap range')
+      ),
+      true
+    );
+  });
+});
+
+test('runPrePushStage sin upstream usa fallback working-tree cuando no hay stdin y no existe base bootstrap válida', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     setupBackendCommitRangeWithoutUpstream(repoRoot);
 
     const messages = await withCapturedStderr(async () => {
-      const exitCode = await runPrePushStage();
+      const exitCode = await runPrePushStage({
+        resolvePrePushBootstrapBaseRef: () => 'HEAD',
+      });
+      assert.equal(exitCode, 0);
+    });
+
+    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
+    const evidence = readEvidence(repoRoot);
+    assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
+    assert.equal(
+      messages.some((message) =>
+        message.includes('using working-tree fallback scope')
+      ),
+      true
+    );
+  });
+});
+
+test('runPrePushStage sin upstream falla safe cuando stdin no representa bootstrap y no existe base válida', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRangeWithoutUpstream(repoRoot);
+    const headOid = runGit(repoRoot, ['rev-parse', 'HEAD']).trim();
+
+    const messages = await withCapturedStderr(async () => {
+      const exitCode = await runPrePushStage({
+        resolvePrePushBootstrapBaseRef: () => 'HEAD',
+        readPrePushStdin: () =>
+          `refs/heads/feature/no-upstream ${headOid} refs/heads/develop ${headOid}\n`,
+      });
       assert.equal(exitCode, 1);
     });
 
@@ -360,6 +515,159 @@ test('runPrePushStage allows bootstrap push without upstream when hook injects s
         process.env.PUMUKI_PRE_PUSH_STDIN = previousEnv;
       }
     }
+  });
+});
+
+test('runPrePushStage usa el rango exacto del stdin cuando se empuja un commit concreto', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    writeFileSync(join(repoRoot, 'docs-note.md'), 'one\n', 'utf8');
+    runGit(repoRoot, ['add', 'docs-note.md']);
+    runGit(repoRoot, ['commit', '-m', 'docs: add note']);
+
+    const remoteOid = runGit(repoRoot, ['rev-parse', 'main']).trim();
+    const pushedCommitOid = runGit(repoRoot, ['rev-parse', 'HEAD~1']).trim();
+    const capturedAtomicityArgs: Array<{ fromRef?: string; toRef?: string }> = [];
+    const capturedScopes: Array<{ kind: string; fromRef?: string; toRef?: string }> = [];
+
+    const exitCode = await runPrePushStage({
+      resolveUpstreamRef: () => 'origin/feature/stage-runners',
+      resolveUpstreamTrackingRef: () => 'origin/feature/stage-runners',
+      resolveAheadBehindFromRef: () => ({ ahead: 2, behind: 0 }),
+      readPrePushStdin: () =>
+        `refs/heads/feature/stage-runners ${pushedCommitOid} refs/heads/feature/stage-runners ${remoteOid}\n`,
+      evaluateGitAtomicity: (params) => {
+        capturedAtomicityArgs.push({
+          fromRef: params.fromRef,
+          toRef: params.toRef,
+        });
+        return {
+          enabled: true,
+          allowed: true,
+          violations: [],
+        };
+      },
+      runPlatformGate: async (params) => {
+        if (params.scope.kind === 'range') {
+          capturedScopes.push({
+            kind: params.scope.kind,
+            fromRef: params.scope.fromRef,
+            toRef: params.scope.toRef,
+          });
+        }
+        return 0;
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(capturedAtomicityArgs, [{ fromRef: remoteOid, toRef: pushedCommitOid }]);
+    assert.deepEqual(capturedScopes, [{ kind: 'range', fromRef: remoteOid, toRef: pushedCommitOid }]);
+  });
+});
+
+test('runPrePushStage mantiene upstream..HEAD cuando stdin no aporta un rango único utilizable', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    const upstreamRef = 'origin/feature/stage-runners';
+    const capturedAtomicityArgs: Array<{ fromRef?: string; toRef?: string }> = [];
+
+    const exitCode = await runPrePushStage({
+      resolveUpstreamRef: () => upstreamRef,
+      resolveUpstreamTrackingRef: () => upstreamRef,
+      resolveAheadBehindFromRef: () => ({ ahead: 1, behind: 0 }),
+      readPrePushStdin: () =>
+        [
+          'refs/heads/feature/stage-runners 1111111111111111111111111111111111111111 refs/heads/feature/stage-runners 2222222222222222222222222222222222222222',
+          'refs/heads/docs/extra 3333333333333333333333333333333333333333 refs/heads/docs/extra 4444444444444444444444444444444444444444',
+        ].join('\n'),
+      evaluateGitAtomicity: (params) => {
+        capturedAtomicityArgs.push({
+          fromRef: params.fromRef,
+          toRef: params.toRef,
+        });
+        return {
+          enabled: true,
+          allowed: true,
+          violations: [],
+        };
+      },
+      runPlatformGate: async () => 0,
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(capturedAtomicityArgs, [{ fromRef: upstreamRef, toRef: 'HEAD' }]);
+  });
+});
+
+test('runPrePushStage suspende enforcement SDD para publish histórico de commit concreto distinto de HEAD', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    writeFileSync(join(repoRoot, 'docs-note.md'), 'one\n', 'utf8');
+    runGit(repoRoot, ['add', 'docs-note.md']);
+    runGit(repoRoot, ['commit', '-m', 'docs: add note']);
+
+    const remoteOid = runGit(repoRoot, ['rev-parse', 'main']).trim();
+    const historicalOid = runGit(repoRoot, ['rev-parse', 'HEAD~1']).trim();
+    const headOid = runGit(repoRoot, ['rev-parse', 'HEAD']).trim();
+    const capturedOverrides: Array<{
+      allowed: boolean;
+      code: string;
+      message: string;
+    }> = [];
+
+    const exitCode = await runPrePushStage({
+      resolveUpstreamRef: () => 'origin/feature/stage-runners',
+      resolveUpstreamTrackingRef: () => 'origin/feature/stage-runners',
+      resolveAheadBehindFromRef: () => ({ ahead: 2, behind: 0 }),
+      readPrePushStdin: () =>
+        `refs/heads/feature/stage-runners ${historicalOid} refs/heads/feature/stage-runners ${remoteOid}\n`,
+      runPlatformGate: async (params) => {
+        if (params.sddDecisionOverride) {
+          capturedOverrides.push({
+            allowed: params.sddDecisionOverride.allowed,
+            code: params.sddDecisionOverride.code,
+            message: params.sddDecisionOverride.message,
+          });
+        }
+        return 0;
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(capturedOverrides.length, 1);
+    assert.equal(capturedOverrides[0]?.allowed, true);
+    assert.equal(capturedOverrides[0]?.code, 'ALLOWED');
+    assert.match(capturedOverrides[0]?.message ?? '', /historical publish/i);
+    assert.match(capturedOverrides[0]?.message ?? '', new RegExp(historicalOid.slice(0, 12)));
+    assert.match(capturedOverrides[0]?.message ?? '', new RegExp(headOid.slice(0, 12)));
+  });
+});
+
+test('runPrePushStage no suspende enforcement SDD cuando el refspec empuja HEAD actual', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    const remoteOid = runGit(repoRoot, ['rev-parse', 'main']).trim();
+    const headOid = runGit(repoRoot, ['rev-parse', 'HEAD']).trim();
+    let capturedOverride: unknown;
+
+    const exitCode = await runPrePushStage({
+      resolveUpstreamRef: () => 'origin/feature/stage-runners',
+      resolveUpstreamTrackingRef: () => 'origin/feature/stage-runners',
+      resolveAheadBehindFromRef: () => ({ ahead: 1, behind: 0 }),
+      readPrePushStdin: () =>
+        `refs/heads/feature/stage-runners ${headOid} refs/heads/feature/stage-runners ${remoteOid}\n`,
+      runPlatformGate: async (params) => {
+        capturedOverride = params.sddDecisionOverride;
+        return 0;
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(capturedOverride, undefined);
   });
 });
 
@@ -486,6 +794,107 @@ test('runPreCommitStage dispara notificación de resumen tras evaluar el gate', 
   });
 });
 
+test('runPreCommitStage restagea .ai_evidence.json cuando ya estaba trackeado', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const stagedPaths: string[] = [];
+
+    const exitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+      isPathTracked: (_repoRoot, relativePath) => relativePath === '.ai_evidence.json',
+      stagePath: (_repoRoot, relativePath) => {
+        stagedPaths.push(relativePath);
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(stagedPaths, ['.ai_evidence.json']);
+  });
+});
+
+test('runPreCommitStage no intenta trackear .ai_evidence.json cuando no estaba versionado', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const stagedPaths: string[] = [];
+
+    const exitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+      isPathTracked: () => false,
+      stagePath: (_repoRoot, relativePath) => {
+        stagedPaths.push(relativePath);
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(stagedPaths, []);
+  });
+});
+
+test('runPreCommitStage bloquea con causa explícita si no puede restagear evidencia trackeada', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const blocked: Array<{
+      stage: StageName;
+      causeCode: string;
+      causeMessage: string;
+      remediation: string;
+    }> = [];
+
+    const exitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+      isPathTracked: (_repoRoot, relativePath) => relativePath === '.ai_evidence.json',
+      stagePath: () => {
+        throw new Error('git add failed');
+      },
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          stage: params.stage,
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+          remediation: params.remediation,
+        });
+      },
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.stage, 'PRE_COMMIT');
+    assert.equal(blocked[0]?.causeCode, 'EVIDENCE_STAGE_SYNC_FAILED');
+    assert.match(blocked[0]?.causeMessage ?? '', /restage tracked \.ai_evidence\.json/i);
+    assert.match(blocked[0]?.remediation ?? '', /git add -- \.ai_evidence\.json/i);
+  });
+});
+
+test('runPreCommitStage no deja drift de working tree en .ai_evidence.json cuando ya estaba trackeado', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
+
+    stageBackendFile(repoRoot);
+    const firstExitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+    });
+    assert.equal(firstExitCode, 0);
+    runGit(repoRoot, ['add', '-f', '.ai_evidence.json']);
+    runGit(repoRoot, ['commit', '-m', 'chore: track ai evidence fixture']);
+
+    writeFileSync(join(repoRoot, 'apps/backend/src/service.ts'), 'export const value: any = 2;\n', 'utf8');
+    runGit(repoRoot, ['add', 'apps/backend/src/service.ts']);
+
+    const exitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(runGit(repoRoot, ['diff', '--name-only', '--', '.ai_evidence.json']), '');
+    assert.equal(
+      runGit(repoRoot, ['diff', '--cached', '--name-only', '--', '.ai_evidence.json']),
+      '.ai_evidence.json'
+    );
+  });
+});
+
 test('runPrePushStage dispara notificación de resumen tras evaluar el gate', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     setupBackendCommitRange(repoRoot);
@@ -534,16 +943,537 @@ test('runPrePushStage sin upstream mantiene paridad de notificación de resumen'
         },
         resolveRepoRoot: () => repoRoot,
       });
-      assert.equal(exitCode, 1);
+      assert.equal(exitCode, 0);
     });
 
-    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), false);
+    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
     assert.equal(
       messages.some((message) =>
-        message.includes('pumuki pre-push blocked: branch has no upstream tracking reference.')
+        message.includes('[pumuki][pre-push] branch has no upstream; using bootstrap range')
       ),
       true
     );
     assert.deepEqual(notifications, [{ repoRoot, stage: 'PRE_PUSH' }]);
+  });
+});
+
+test('runPreCommitStage emite notificación de bloqueo con causa y remediación', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    writeSkillsPolicy(repoRoot, {
+      PRE_COMMIT: { blockOnOrAbove: 'WARN', warnOnOrAbove: 'WARN' },
+    });
+
+    const blocked: Array<{
+      stage: StageName;
+      totalViolations: number;
+      causeCode: string;
+      causeMessage: string;
+      remediation: string;
+    }> = [];
+
+    const exitCode = await runPreCommitStage({
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          stage: params.stage,
+          totalViolations: params.totalViolations,
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+          remediation: params.remediation,
+        });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.stage, 'PRE_COMMIT');
+    assert.match(blocked[0]?.causeCode ?? '', /[A-Z0-9_]+/);
+    assert.equal((blocked[0]?.causeMessage ?? '').length > 0, true);
+    assert.equal((blocked[0]?.remediation ?? '').length > 0, true);
+  });
+});
+
+test('runPreCommitStage usa finding del snapshot PRE_COMMIT como causa primaria y remediación específica', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const blocked: Array<{
+      causeCode: string;
+      causeMessage: string;
+      remediation: string;
+      totalViolations: number;
+    }> = [];
+
+    const exitCode = await runPreCommitStage({
+      runPlatformGate: async () => 1,
+      readEvidence: () =>
+        ({
+          version: '2.1',
+          snapshot: {
+            stage: 'PRE_COMMIT',
+            outcome: 'BLOCK',
+            findings: [
+              {
+                ruleId: 'governance.rules.active-rule-coverage.empty',
+                severity: 'ERROR',
+                code: 'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH',
+                message: 'Active rules coverage is empty at PRE_COMMIT while code changes were detected.',
+              },
+            ],
+          },
+          ai_gate: {
+            status: 'ALLOWED',
+            violations: [],
+            human_intent: null,
+          },
+          rulesets: [],
+        }) as ReturnType<typeof readEvidence>,
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+          remediation: params.remediation,
+          totalViolations: params.totalViolations,
+        });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.causeCode, 'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH');
+    assert.match(blocked[0]?.causeMessage ?? '', /Active rules coverage is empty/i);
+    assert.match(blocked[0]?.remediation ?? '', /policy reconcile --strict --json/i);
+    assert.equal(blocked[0]?.totalViolations, 1);
+  });
+});
+
+test('runPreCommitStage usa el primer finding bloqueante aunque existan warnings antes en el snapshot', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const blocked: Array<{
+      causeCode: string;
+      causeMessage: string;
+      remediation: string;
+      totalViolations: number;
+    }> = [];
+
+    const exitCode = await runPreCommitStage({
+      runPlatformGate: async () => 1,
+      readEvidence: () =>
+        ({
+          version: '2.1',
+          snapshot: {
+            stage: 'PRE_COMMIT',
+            outcome: 'BLOCK',
+            findings: [
+              {
+                ruleId: 'rules.warning.only',
+                severity: 'WARN',
+                code: 'WARNING_ONLY',
+                message: 'warning no bloqueante',
+              },
+              {
+                ruleId: 'governance.rules.active-rule-coverage.empty',
+                severity: 'ERROR',
+                code: 'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH',
+                message: 'Active rules coverage is empty at PRE_COMMIT while code changes were detected.',
+              },
+            ],
+          },
+          ai_gate: {
+            status: 'BLOCKED',
+            violations: [
+              {
+                code: 'AI_GATE_BLOCK',
+                severity: 'ERROR',
+                message: 'bloqueo ai gate',
+              },
+            ],
+            human_intent: null,
+          },
+          rulesets: [],
+        }) as ReturnType<typeof readEvidence>,
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+          remediation: params.remediation,
+          totalViolations: params.totalViolations,
+        });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.causeCode, 'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH');
+    assert.match(blocked[0]?.causeMessage ?? '', /Active rules coverage is empty/i);
+    assert.match(blocked[0]?.remediation ?? '', /policy reconcile --strict --json/i);
+    assert.equal(blocked[0]?.totalViolations, 2);
+  });
+});
+
+test('runPreCommitStage ejecuta policy reconcile y reintenta una vez cuando bloquea por skills coverage', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    let gateCalls = 0;
+    let reconcileCalls = 0;
+    const exitCode = await runPreCommitStage({
+      runPlatformGate: async () => {
+        gateCalls += 1;
+        return gateCalls === 1 ? 1 : 0;
+      },
+      readEvidence: () => createSkillsCoverageBlockedEvidence('PRE_COMMIT') as ReturnType<typeof readEvidence>,
+      runPolicyReconcile: ((params?: { repoRoot?: string; strict?: boolean; apply?: boolean }) => {
+        reconcileCalls += 1;
+        assert.equal(params?.repoRoot, repoRoot);
+        assert.equal(params?.strict, true);
+        assert.equal(params?.apply, true);
+        return {} as never;
+      }) as never,
+      notifyAuditSummaryFromEvidence: () => {
+      },
+      isQuietMode: () => true,
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(reconcileCalls, 1);
+    assert.equal(gateCalls, 2);
+  });
+});
+
+test('runPreCommitStage no reintenta cuando el auto-reconcile de hook está desactivado por env', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    const previous = process.env.PUMUKI_HOOK_POLICY_AUTO_RECONCILE;
+    process.env.PUMUKI_HOOK_POLICY_AUTO_RECONCILE = '0';
+    let gateCalls = 0;
+    let reconcileCalls = 0;
+    try {
+      const exitCode = await runPreCommitStage({
+        runPlatformGate: async () => {
+          gateCalls += 1;
+          return 1;
+        },
+        readEvidence: () =>
+          createSkillsCoverageBlockedEvidence('PRE_COMMIT') as ReturnType<typeof readEvidence>,
+        runPolicyReconcile: (() => {
+          reconcileCalls += 1;
+          return {} as never;
+        }) as never,
+        notifyAuditSummaryFromEvidence: () => {
+        },
+        isQuietMode: () => true,
+        resolveRepoRoot: () => repoRoot,
+      });
+
+      assert.equal(exitCode, 1);
+      assert.equal(reconcileCalls, 0);
+      assert.equal(gateCalls, 1);
+    } finally {
+      if (typeof previous === 'undefined') {
+        delete process.env.PUMUKI_HOOK_POLICY_AUTO_RECONCILE;
+      } else {
+        process.env.PUMUKI_HOOK_POLICY_AUTO_RECONCILE = previous;
+      }
+    }
+  });
+});
+
+test('runPreCommitStage bloquea y revierte mutación inesperada de manifests', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    const packageJsonPath = join(repoRoot, 'package.json');
+    const packageLockPath = join(repoRoot, 'package-lock.json');
+    const pnpmLockPath = join(repoRoot, 'pnpm-lock.yaml');
+    const yarnLockPath = join(repoRoot, 'yarn.lock');
+    const originalPackageJson = '{\n  "name": "consumer-fixture",\n  "private": true\n}\n';
+    const originalPackageLock = '{\n  "name": "consumer-fixture",\n  "lockfileVersion": 3\n}\n';
+    const originalPnpmLock = 'lockfileVersion: 9.0\n';
+    writeFileSync(packageJsonPath, originalPackageJson, 'utf8');
+    writeFileSync(packageLockPath, originalPackageLock, 'utf8');
+    writeFileSync(pnpmLockPath, originalPnpmLock, 'utf8');
+
+    const blocked: Array<{
+      stage: StageName;
+      causeCode: string;
+      causeMessage: string;
+    }> = [];
+
+    const exitCode = await runPreCommitStage({
+      runPlatformGate: async () => {
+        writeFileSync(packageJsonPath, '{\n  "name": "mutated-by-hook"\n}\n', 'utf8');
+        writeFileSync(packageLockPath, '{\n  "name": "mutated-by-hook",\n  "lockfileVersion": 3\n}\n', 'utf8');
+        writeFileSync(pnpmLockPath, 'lockfileVersion: 9.1\n', 'utf8');
+        writeFileSync(yarnLockPath, '# generated unexpectedly\n', 'utf8');
+        return 0;
+      },
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          stage: params.stage,
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+        });
+      },
+      notifyAuditSummaryFromEvidence: () => {
+      },
+      isQuietMode: () => true,
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.stage, 'PRE_COMMIT');
+    assert.equal(blocked[0]?.causeCode, 'MANIFEST_MUTATION_DETECTED');
+    assert.match(blocked[0]?.causeMessage ?? '', /package\.json/i);
+    assert.equal(readFileSync(packageJsonPath, 'utf8'), originalPackageJson);
+    assert.equal(readFileSync(packageLockPath, 'utf8'), originalPackageLock);
+    assert.equal(readFileSync(pnpmLockPath, 'utf8'), originalPnpmLock);
+    assert.equal(existsSync(yarnLockPath), false);
+  });
+});
+
+test('runPrePushStage bloquea y revierte mutación inesperada de manifests', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    const packageJsonPath = join(repoRoot, 'package.json');
+    const packageLockPath = join(repoRoot, 'package-lock.json');
+    const pnpmLockPath = join(repoRoot, 'pnpm-lock.yaml');
+    const yarnLockPath = join(repoRoot, 'yarn.lock');
+    const originalPackageJson = '{\n  "name": "consumer-fixture",\n  "private": true\n}\n';
+    const originalPackageLock = '{\n  "name": "consumer-fixture",\n  "lockfileVersion": 3\n}\n';
+    const originalPnpmLock = 'lockfileVersion: 9.0\n';
+    writeFileSync(packageJsonPath, originalPackageJson, 'utf8');
+    writeFileSync(packageLockPath, originalPackageLock, 'utf8');
+    writeFileSync(pnpmLockPath, originalPnpmLock, 'utf8');
+
+    const blocked: Array<{
+      stage: StageName;
+      causeCode: string;
+      causeMessage: string;
+    }> = [];
+
+    const exitCode = await runPrePushStage({
+      resolveUpstreamRef: () => 'origin/develop',
+      runPlatformGate: async () => {
+        writeFileSync(packageJsonPath, '{\n  "name": "mutated-by-hook"\n}\n', 'utf8');
+        writeFileSync(packageLockPath, '{\n  "name": "mutated-by-hook",\n  "lockfileVersion": 3\n}\n', 'utf8');
+        writeFileSync(pnpmLockPath, 'lockfileVersion: 9.1\n', 'utf8');
+        writeFileSync(yarnLockPath, '# generated unexpectedly\n', 'utf8');
+        return 0;
+      },
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          stage: params.stage,
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+        });
+      },
+      notifyAuditSummaryFromEvidence: () => {
+      },
+      isQuietMode: () => true,
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.stage, 'PRE_PUSH');
+    assert.equal(blocked[0]?.causeCode, 'MANIFEST_MUTATION_DETECTED');
+    assert.match(blocked[0]?.causeMessage ?? '', /package\.json/i);
+    assert.equal(readFileSync(packageJsonPath, 'utf8'), originalPackageJson);
+    assert.equal(readFileSync(packageLockPath, 'utf8'), originalPackageLock);
+    assert.equal(readFileSync(pnpmLockPath, 'utf8'), originalPnpmLock);
+    assert.equal(existsSync(yarnLockPath), false);
+  });
+});
+
+test('runPrePushStage sin upstream emite notificación de bloqueo accionable', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRangeWithoutUpstream(repoRoot);
+    const headOid = runGit(repoRoot, ['rev-parse', 'HEAD']).trim();
+    const blocked: Array<{
+      stage: StageName;
+      causeCode: string;
+      remediation: string;
+    }> = [];
+
+    const exitCode = await runPrePushStage({
+      resolvePrePushBootstrapBaseRef: () => 'HEAD',
+      readPrePushStdin: () =>
+        `refs/heads/feature/no-upstream ${headOid} refs/heads/develop ${headOid}\n`,
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          stage: params.stage,
+          causeCode: params.causeCode,
+          remediation: params.remediation,
+        });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.stage, 'PRE_PUSH');
+    assert.equal(blocked[0]?.causeCode, 'PRE_PUSH_UPSTREAM_MISSING');
+    assert.match(blocked[0]?.remediation ?? '', /set-upstream/i);
+  });
+});
+
+test('runPrePushStage bloquea con código específico cuando upstream está desalineado para rama topic', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    let gateCalls = 0;
+    const blocked: Array<{
+      stage: StageName;
+      causeCode: string;
+      causeMessage: string;
+      remediation: string;
+    }> = [];
+
+    const messages = await withCapturedStderr(async () => {
+      const exitCode = await runPrePushStage({
+        resolveUpstreamRef: () => 'origin/develop',
+        resolveCurrentBranchRef: () => 'feature/misaligned-upstream',
+        resolveUpstreamTrackingRef: () => 'origin/develop',
+        resolveAheadBehindFromRef: () => ({ ahead: 42, behind: 0 }),
+        runPlatformGate: async () => {
+          gateCalls += 1;
+          return 0;
+        },
+        notifyGateBlocked: (params) => {
+          blocked.push({
+            stage: params.stage,
+            causeCode: params.causeCode,
+            causeMessage: params.causeMessage,
+            remediation: params.remediation,
+          });
+        },
+        resolveRepoRoot: () => repoRoot,
+      });
+
+      assert.equal(exitCode, 1);
+    });
+
+    assert.equal(gateCalls, 0);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.stage, 'PRE_PUSH');
+    assert.equal(blocked[0]?.causeCode, 'PRE_PUSH_UPSTREAM_MISALIGNED');
+    assert.equal((blocked[0]?.causeMessage ?? '').includes('upstream appears misaligned'), true);
+    assert.match(blocked[0]?.remediation ?? '', /set-upstream/i);
+    assert.equal(
+      messages.some((message) =>
+        message.includes('pumuki pre-push blocked: upstream appears misaligned')
+      ),
+      true
+    );
+  });
+});
+
+test('runPrePushStage bloquea upstream desalineado también con ahead moderado (evita falso positivo de scope)', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    let gateCalls = 0;
+    const blocked: Array<{
+      stage: StageName;
+      causeCode: string;
+      causeMessage: string;
+      remediation: string;
+    }> = [];
+
+    const exitCode = await runPrePushStage({
+      resolveUpstreamRef: () => 'origin/develop',
+      resolveCurrentBranchRef: () => 'feature/misaligned-low-ahead',
+      resolveUpstreamTrackingRef: () => 'origin/develop',
+      resolveAheadBehindFromRef: () => ({ ahead: 6, behind: 0 }),
+      runPlatformGate: async () => {
+        gateCalls += 1;
+        return 0;
+      },
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          stage: params.stage,
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+          remediation: params.remediation,
+        });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(gateCalls, 0);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.stage, 'PRE_PUSH');
+    assert.equal(blocked[0]?.causeCode, 'PRE_PUSH_UPSTREAM_MISALIGNED');
+  });
+});
+
+test('runPreCommitStage bloquea temprano cuando falla git atomicity y no ejecuta el gate principal', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    let gateCalls = 0;
+    const blocked: Array<{ code: string; remediation: string }> = [];
+
+    const exitCode = await runPreCommitStage({
+      evaluateGitAtomicity: () => ({
+        enabled: true,
+        allowed: false,
+        violations: [
+          {
+            code: 'GIT_ATOMICITY_TOO_MANY_FILES',
+            message: 'changed_files=42 exceeds max_files=10',
+            remediation: 'Divide cambios en commits atómicos.',
+          },
+        ],
+      }),
+      runPlatformGate: async () => {
+        gateCalls += 1;
+        return 0;
+      },
+      notifyGateBlocked: (params) => {
+        blocked.push({ code: params.causeCode, remediation: params.remediation });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(gateCalls, 0);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.code, 'GIT_ATOMICITY_TOO_MANY_FILES');
+    assert.match(blocked[0]?.remediation ?? '', /atómicos/i);
+  });
+});
+
+test('runPrePushStage bloquea temprano cuando falla git atomicity y no ejecuta el gate principal', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    let gateCalls = 0;
+    const blocked: Array<{ code: string; remediation: string }> = [];
+
+    const exitCode = await runPrePushStage({
+      evaluateGitAtomicity: () => ({
+        enabled: true,
+        allowed: false,
+        violations: [
+          {
+            code: 'GIT_ATOMICITY_COMMIT_MESSAGE_TRACEABILITY',
+            message: 'commit messages without traceable pattern detected',
+            remediation: 'Reescribe commits con patrón trazable.',
+          },
+        ],
+      }),
+      runPlatformGate: async () => {
+        gateCalls += 1;
+        return 0;
+      },
+      notifyGateBlocked: (params) => {
+        blocked.push({ code: params.causeCode, remediation: params.remediation });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(gateCalls, 0);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.code, 'GIT_ATOMICITY_COMMIT_MESSAGE_TRACEABILITY');
+    assert.match(blocked[0]?.remediation ?? '', /trazable/i);
   });
 });

@@ -13,6 +13,7 @@ const MARKDOWN_LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g;
 const INLINE_CODE_PATTERN = /`([^`]+)`/g;
 const MARKDOWN_BOLD_PATTERN = /[*_]{1,3}/g;
 const MULTISPACE_PATTERN = /\s+/g;
+const AST_NODE_ID_PATTERN = /\bheuristics\.[a-z0-9._-]+\.ast\b/gi;
 const RULE_KEYWORDS =
   /\b(always|siempre|prefer|use|usar|avoid|evitar|never|nunca|must|obligatorio|required|disallow|do not|no)\b/i;
 
@@ -86,6 +87,25 @@ const inferRuleStage = (raw: string): SkillsStage | undefined => {
   return undefined;
 };
 
+const KNOWN_RULE_DEFAULT_STAGE: Readonly<Record<string, SkillsStage>> = {
+  'skills.backend.no-solid-violations': 'PRE_PUSH',
+  'skills.frontend.no-solid-violations': 'PRE_PUSH',
+  'skills.backend.enforce-clean-architecture': 'PRE_PUSH',
+  'skills.frontend.enforce-clean-architecture': 'PRE_PUSH',
+  'skills.backend.no-god-classes': 'PRE_PUSH',
+  'skills.frontend.no-god-classes': 'PRE_PUSH',
+};
+
+const resolveDefaultStageForKnownRule = (
+  ruleId: string,
+  inferredStage: SkillsStage | undefined
+): SkillsStage | undefined => {
+  if (inferredStage) {
+    return inferredStage;
+  }
+  return KNOWN_RULE_DEFAULT_STAGE[ruleId];
+};
+
 const isRuleCandidateLine = (line: string): boolean => {
   if (CHECK_RULE_PREFIX.test(line)) {
     return true;
@@ -130,6 +150,15 @@ const extractRuleCandidateLines = (markdown: string): string[] => {
   }
 
   return candidates;
+};
+
+const extractAstNodeIdsFromLine = (line: string): string[] => {
+  const matches = line.match(AST_NODE_ID_PATTERN);
+  if (!matches) {
+    return [];
+  }
+  const normalized = matches.map((token) => token.trim().toLowerCase());
+  return [...new Set(normalized)].sort();
 };
 
 const resolvePlatformFromBundle = (
@@ -301,6 +330,7 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
     if (description.length < 6) {
       continue;
     }
+    const astNodeIds = extractAstNodeIdsFromLine(rawLine);
 
     const knownRuleId = normalizeKnownRuleTarget(platform, normalizeForLookup(description));
     let nextId: string;
@@ -325,9 +355,13 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
     }
     usedIds.add(nextId);
 
-    const evaluationMode: SkillsRuleEvaluationMode = knownRuleId
-      ? 'AUTO'
-      : 'DECLARATIVE';
+    const evaluationMode: SkillsRuleEvaluationMode =
+      knownRuleId || astNodeIds.length > 0 ? 'AUTO' : 'DECLARATIVE';
+
+    const inferredStage = inferRuleStage(rawLine);
+    const resolvedStage = knownRuleId
+      ? resolveDefaultStageForKnownRule(knownRuleId, inferredStage)
+      : inferredStage;
 
     rules.push({
       id: nextId,
@@ -336,11 +370,12 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
       platform,
       sourceSkill: params.sourceSkill,
       sourcePath: params.sourcePath,
-      stage: inferRuleStage(rawLine),
+      stage: resolvedStage,
       confidence: inferRuleConfidence(rawLine),
       locked: true,
       evaluationMode,
       origin: params.origin ?? 'core',
+      ...(astNodeIds.length > 0 ? { astNodeIds } : {}),
     });
   }
 

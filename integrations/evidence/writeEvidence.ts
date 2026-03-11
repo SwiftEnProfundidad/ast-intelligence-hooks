@@ -9,6 +9,7 @@ import type {
   RepoState,
   SnapshotEvaluationMetrics,
   SnapshotFinding,
+  SnapshotFindingNode,
 } from './schema';
 import type { TddBddSnapshot } from '../tdd/types';
 import { buildSnapshotPlatformSummaries } from './platformSummary';
@@ -88,6 +89,12 @@ const normalizeFindingPath = (
     lines: normalizeLines(finding.lines),
     matchedBy: finding.matchedBy,
     source: finding.source,
+    blocking: finding.blocking,
+    primary_node: normalizeFindingNode(finding.primary_node),
+    related_nodes: normalizeFindingNodes(finding.related_nodes),
+    why: normalizeOptionalString(finding.why),
+    impact: normalizeOptionalString(finding.impact),
+    expected_fix: normalizeOptionalString(finding.expected_fix),
   };
 };
 
@@ -113,7 +120,52 @@ const toCompatibilityViolations = (
     lines: finding.lines,
     matchedBy: finding.matchedBy,
     source: finding.source,
+    blocking: finding.blocking,
+    primary_node: normalizeFindingNode(finding.primary_node),
+    related_nodes: normalizeFindingNodes(finding.related_nodes),
+    why: normalizeOptionalString(finding.why),
+    impact: normalizeOptionalString(finding.impact),
+    expected_fix: normalizeOptionalString(finding.expected_fix),
   }));
+};
+
+const normalizeOptionalString = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const normalizeFindingNode = (node: SnapshotFindingNode | undefined): SnapshotFindingNode | undefined => {
+  if (!node) {
+    return undefined;
+  }
+
+  const name = normalizeOptionalString(node.name);
+  if (!name) {
+    return undefined;
+  }
+
+  return {
+    kind: node.kind,
+    name,
+    lines: normalizeLines(node.lines),
+  };
+};
+
+const normalizeFindingNodes = (
+  nodes: ReadonlyArray<SnapshotFindingNode> | undefined
+): readonly SnapshotFindingNode[] | undefined => {
+  if (!nodes) {
+    return undefined;
+  }
+
+  const normalized = nodes
+    .map((node) => normalizeFindingNode(node))
+    .filter((node): node is SnapshotFindingNode => Boolean(node));
+
+  return normalized.length > 0 ? normalized : undefined;
 };
 
 const deriveFilesAffected = (findings: ReadonlyArray<SnapshotFinding>): number => {

@@ -11,9 +11,11 @@ test('buildPumukiManagedHookBlock genera comando correcto por hook', () => {
   const preCommit = buildPumukiManagedHookBlock('pre-commit');
   const prePush = buildPumukiManagedHookBlock('pre-push');
 
-  assert.match(preCommit, /npx --yes pumuki-pre-commit/);
+  assert.match(preCommit, /\.\/node_modules\/\.bin\/pumuki-pre-commit/);
+  assert.match(preCommit, /npx --yes --package pumuki@latest pumuki-pre-commit/);
   assert.match(prePush, /PUMUKI_PRE_PUSH_STDIN="\$\(cat\)"/);
-  assert.match(prePush, /PUMUKI_PRE_PUSH_STDIN="\$PUMUKI_PRE_PUSH_STDIN" npx --yes pumuki-pre-push "\$@"/);
+  assert.match(prePush, /PUMUKI_PRE_PUSH_STDIN="\$PUMUKI_PRE_PUSH_STDIN" \.\/node_modules\/\.bin\/pumuki-pre-push "\$@"/);
+  assert.match(prePush, /PUMUKI_PRE_PUSH_STDIN="\$PUMUKI_PRE_PUSH_STDIN" npx --yes --package pumuki@latest pumuki-pre-push "\$@"/);
   assert.match(preCommit, /PUMUKI MANAGED START/);
   assert.match(preCommit, /PUMUKI MANAGED END/);
 });
@@ -41,8 +43,8 @@ test('upsertPumukiManagedBlock reemplaza bloque existente sin duplicarlo', () =>
 
   const startMatches = replaced.match(/# >>> PUMUKI MANAGED START >>>/g) ?? [];
   assert.equal(startMatches.length, 1);
-  assert.match(replaced, /npx --yes pumuki-pre-push/);
-  assert.doesNotMatch(replaced, /npx --yes pumuki-pre-commit/);
+  assert.match(replaced, /\.\/node_modules\/\.bin\/pumuki-pre-push/);
+  assert.doesNotMatch(replaced, /\.\/node_modules\/\.bin\/pumuki-pre-commit/);
 });
 
 test('removePumukiManagedBlock limpia fichero si solo queda shebang y bloque', () => {

@@ -8,6 +8,12 @@ export type EnterpriseSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
 export type EvidenceLines = string | number | readonly number[];
 
+export type SnapshotFindingNode = {
+  kind: 'class' | 'property' | 'call' | 'member';
+  name: string;
+  lines?: EvidenceLines;
+};
+
 export type SnapshotFinding = {
   ruleId: string;
   severity: Severity;
@@ -17,6 +23,12 @@ export type SnapshotFinding = {
   lines?: EvidenceLines;
   matchedBy?: string;
   source?: string;
+  blocking?: boolean;
+  primary_node?: SnapshotFindingNode;
+  related_nodes?: readonly SnapshotFindingNode[];
+  why?: string;
+  impact?: string;
+  expected_fix?: string;
 };
 
 export type SnapshotEvaluationMetrics = {
@@ -123,6 +135,12 @@ export type CompatibilityViolation = {
   lines?: EvidenceLines;
   matchedBy?: string;
   source?: string;
+  blocking?: boolean;
+  primary_node?: SnapshotFindingNode;
+  related_nodes?: readonly SnapshotFindingNode[];
+  why?: string;
+  impact?: string;
+  expected_fix?: string;
 };
 
 export type SddMetrics = {
@@ -164,11 +182,15 @@ export type RepoState = {
     dirty: boolean;
     staged: number;
     unstaged: number;
+    pending_changes?: number;
   };
   lifecycle: {
     installed: boolean;
     package_version: string | null;
     lifecycle_version: string | null;
+    package_version_source?: 'consumer-node-modules' | 'runtime-package';
+    package_version_runtime?: string | null;
+    package_version_installed?: string | null;
     hooks: {
       pre_commit: RepoHookState;
       pre_push: RepoHookState;

@@ -5,11 +5,14 @@ import test from 'node:test';
 import type { TddBddEvidenceReadResult } from '../../tdd/contract';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import type { LocalHotspotsReport } from '../analyticsHotspots';
+import { getCurrentPumukiVersion } from '../packageInfo';
 import { readOperationalMemoryContract } from '../operationalMemoryContract';
 import {
   appendOperationalMemorySnapshotFromLocalSignals,
   resolveOperationalMemorySnapshotsPath,
 } from '../operationalMemorySnapshot';
+
+const producerVersion = getCurrentPumukiVersion();
 
 const report: LocalHotspotsReport = {
   generatedAt: '2026-02-26T22:00:00+00:00',
@@ -74,7 +77,7 @@ test('appendOperationalMemorySnapshotFromLocalSignals persiste contrato + snapsh
   await withTempDir('pumuki-operational-memory-snapshot-', async (tempRoot) => {
     const result = appendOperationalMemorySnapshotFromLocalSignals({
       repoRoot: tempRoot,
-      producerVersion: '6.3.17',
+      producerVersion,
       sourceMode: 'ci',
       scopeId: 'repo:ast-intelligence-hooks',
       scopeType: 'repository',

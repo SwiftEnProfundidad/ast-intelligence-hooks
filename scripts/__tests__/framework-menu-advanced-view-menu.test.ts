@@ -1,0 +1,102 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { createFrameworkMenuActions } from '../framework-menu-actions';
+import {
+  formatAdvancedMenuClassicView,
+  formatAdvancedMenuView,
+} from '../framework-menu-advanced-view-lib';
+import { createFrameworkMenuPrompts } from '../framework-menu-prompts';
+
+const noop = async (): Promise<void> => {};
+
+const buildAdvancedActions = () => {
+  const fakeRl = {
+    question: async () => '',
+  };
+  const prompts = createFrameworkMenuPrompts(
+    fakeRl as unknown as Parameters<typeof createFrameworkMenuPrompts>[0]
+  );
+  return createFrameworkMenuActions({
+    prompts,
+    runStaged: noop,
+    runRange: noop,
+    runRepoAudit: noop,
+    runRepoAndStagedAudit: noop,
+    runStagedAndUnstagedAudit: noop,
+    resolveDefaultRangeFrom: () => 'HEAD~1',
+    printActiveSkillsBundles: () => {},
+  });
+};
+
+test('formatAdvancedMenuView renderiza secciones por dominio y ayuda contextual corta', () => {
+  const rendered = formatAdvancedMenuView(buildAdvancedActions(), {
+    evidenceSummary: {
+      status: 'ok',
+      stage: 'PRE_PUSH',
+      outcome: 'PASS',
+      totalFindings: 0,
+      bySeverity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 },
+      topFiles: [],
+    },
+  });
+
+  assert.match(rendered, /Pumuki Framework Menu \(Advanced\)/);
+  assert.match(rendered, /\b1\)\s+Gates\b/);
+  assert.match(rendered, /\b2\)\s+Diagnostics\b/);
+  assert.match(rendered, /\b3\)\s+Maintenance\b/);
+  assert.match(rendered, /\b4\)\s+Validation\b/);
+  assert.match(rendered, /\b5\)\s+System\b/);
+  assert.match(rendered, /1\)\s+Evaluate staged changes \(PRE_COMMIT policy\)\s+-\s+Evalua solo los cambios staged/i);
+  assert.match(rendered, /27\)\s+Exit/);
+});
+
+test('formatAdvancedMenuView conserva ayuda de opcion 8 sin truncar .ai_evidence.json', () => {
+  const rendered = formatAdvancedMenuView(buildAdvancedActions(), {
+    evidenceSummary: {
+      status: 'ok',
+      stage: 'PRE_PUSH',
+      outcome: 'PASS',
+      totalFindings: 0,
+      bySeverity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 },
+      topFiles: [],
+    },
+  });
+
+  assert.match(rendered, /Read current \.ai_evidence\.json[\s\S]*Lee el \.ai_evidence\.json actual/i);
+});
+
+test('formatAdvancedMenuView muestra ayuda contextual de opcion 33 para importar custom rules', () => {
+  const rendered = formatAdvancedMenuView(buildAdvancedActions(), {
+    evidenceSummary: {
+      status: 'ok',
+      stage: 'PRE_PUSH',
+      outcome: 'PASS',
+      totalFindings: 0,
+      bySeverity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 },
+      topFiles: [],
+    },
+  });
+
+  assert.match(
+    rendered,
+    /33\)\s+Import custom skills rules[\s\S]*Importa reglas custom[\s\S]*AGENTS\.md\/SKILLS\.md/i
+  );
+});
+
+test('formatAdvancedMenuClassicView conserva formato legacy sin panel agrupado', () => {
+  const rendered = formatAdvancedMenuClassicView(buildAdvancedActions(), {
+    evidenceSummary: {
+      status: 'ok',
+      stage: 'PRE_COMMIT',
+      outcome: 'PASS',
+      totalFindings: 0,
+      bySeverity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 },
+      topFiles: [],
+    },
+  });
+
+  assert.match(rendered, /Pumuki Framework Menu \(Advanced\)/);
+  assert.match(rendered, /C\. Switch to consumer menu/);
+  assert.match(rendered, /1\.\s+Evaluate staged changes/);
+  assert.match(rendered, /27\.\s+Exit/);
+});

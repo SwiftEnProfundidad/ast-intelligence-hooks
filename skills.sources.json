@@ -5,42 +5,42 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "template": "ios-guidelines",
-      "sourcePath": "docs/codex-skills/windsurf-rules-ios.md",
+      "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
       "enabled": true
     },
     {
       "name": "ios-concurrency-guidelines",
       "version": "1.0.0",
       "template": "ios-concurrency-guidelines",
-      "sourcePath": "docs/codex-skills/swift-concurrency.md",
+      "sourcePath": "vendor/skills/swift-concurrency/SKILL.md",
       "enabled": true
     },
     {
       "name": "ios-swiftui-expert-guidelines",
       "version": "1.0.0",
       "template": "ios-swiftui-expert-guidelines",
-      "sourcePath": "docs/codex-skills/swiftui-expert-skill.md",
-      "enabled": true
-    },
-    {
-      "name": "backend-guidelines",
-      "version": "1.0.0",
-      "template": "backend-guidelines",
-      "sourcePath": "docs/codex-skills/windsurf-rules-backend.md",
-      "enabled": true
-    },
-    {
-      "name": "frontend-guidelines",
-      "version": "1.0.0",
-      "template": "frontend-guidelines",
-      "sourcePath": "docs/codex-skills/windsurf-rules-frontend.md",
+      "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
       "enabled": true
     },
     {
       "name": "android-guidelines",
       "version": "1.0.0",
       "template": "android-guidelines",
-      "sourcePath": "docs/codex-skills/windsurf-rules-android.md",
+      "sourcePath": "vendor/skills/android-enterprise-rules/SKILL.md",
+      "enabled": true
+    },
+    {
+      "name": "backend-guidelines",
+      "version": "1.0.0",
+      "template": "backend-guidelines",
+      "sourcePath": "vendor/skills/backend-enterprise-rules/SKILL.md",
+      "enabled": true
+    },
+    {
+      "name": "frontend-guidelines",
+      "version": "1.0.0",
+      "template": "frontend-guidelines",
+      "sourcePath": "vendor/skills/frontend-enterprise-rules/SKILL.md",
       "enabled": true
     }
   ]

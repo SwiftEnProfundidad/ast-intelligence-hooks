@@ -13,7 +13,7 @@ import {
 import { loadSkillsPolicy, type SkillsBundlePolicy } from './skillsPolicy';
 import type { DetectedPlatforms } from '../platform/detectPlatforms';
 import { loadEffectiveSkillsLock } from './skillsEffectiveLock';
-import { resolveMappedHeuristicRuleIds } from './skillsDetectorRegistry';
+import { resolveMappedHeuristicRuleIdsForCompiledRule } from './skillsDetectorRegistry';
 
 export type SkillsRuleSetLoadResult = {
   rules: RuleSet;
@@ -240,6 +240,50 @@ const toCode = (ruleId: string): string => {
   return `SKILLS_${ruleId.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase()}`;
 };
 
+const toSkillsRuntimeIrSource = (params: {
+  rule: SkillsCompiledRule;
+  mappedHeuristicRuleIds: ReadonlyArray<string>;
+}): string => {
+  const astNodeIds = [...params.mappedHeuristicRuleIds].sort();
+  const astNodeToken = astNodeIds.length > 0 ? astNodeIds.join(',') : 'none';
+  const evaluationMode = resolveRuleEvaluationMode(params.rule);
+  return (
+    `skills-ir:rule=${params.rule.id};` +
+    `source_skill=${params.rule.sourceSkill};` +
+    `source_path=${params.rule.sourcePath};` +
+    `evaluation_mode=${evaluationMode};` +
+    `ast_nodes=[${astNodeToken}]`
+  );
+};
+
+const buildRuleFindingMessage = (params: {
+  rule: SkillsCompiledRule;
+  mappedHeuristicRuleIds: ReadonlyArray<string>;
+  observedFilePaths?: ReadonlyArray<string>;
+}): string => {
+  if (!params.rule.id.endsWith('.no-solid-violations')) {
+    return params.rule.description;
+  }
+
+  const relevantObservedPaths = (params.observedFilePaths ?? [])
+    .map((path) => normalizeObservedPath(path))
+    .filter((path) =>
+      isObservedPathForPlatform({
+        platform: params.rule.platform,
+        path,
+      })
+    );
+  const samplePaths = [...new Set(relevantObservedPaths)].slice(0, 3);
+  const astNodes = [...params.mappedHeuristicRuleIds].sort();
+  const astNodesToken = astNodes.length > 0 ? astNodes.join(',') : 'none';
+  const sampleToken = samplePaths.length > 0 ? ` sample_paths=[${samplePaths.join(', ')}].` : '';
+
+  return (
+    `${params.rule.description} ` +
+    `Criteria: ast_nodes=[${astNodesToken}], observed_paths=${relevantObservedPaths.length}.${sampleToken}`
+  );
+};
+
 const stageApplies = (
   currentStage: Exclude<GateStage, 'STAGED'>,
   ruleStage?: Exclude<GateStage, 'STAGED'>
@@ -309,7 +353,11 @@ const resolveRuleSeverity = (params: {
   stage: Exclude<GateStage, 'STAGED'>;
 }): Severity => {
   const promotedRuleIds = params.bundlePolicy?.promoteToErrorRuleIds ?? [];
-  const shouldPromote = promotedRuleIds.includes(params.rule.id);
+  const shouldPromoteBySolidContract =
+    params.rule.id.endsWith('.no-solid-violations') &&
+    (params.stage === 'PRE_PUSH' || params.stage === 'CI');
+  const shouldPromote =
+    shouldPromoteBySolidContract || promotedRuleIds.includes(params.rule.id);
 
   if (!shouldPromote) {
     return params.rule.severity;
@@ -333,7 +381,7 @@ const toRuleDefinition = (params: {
   repoRoot: string;
   observedFilePaths?: ReadonlyArray<string>;
 }): RuleDefinition | undefined => {
-  const mappedHeuristicRuleIds = resolveMappedHeuristicRuleIds(params.rule.id);
+  const mappedHeuristicRuleIds = resolveMappedHeuristicRuleIdsForCompiledRule(params.rule);
 
   if (!stageApplies(params.stage, params.rule.stage)) {
     return undefined;
@@ -344,6 +392,15 @@ const toRuleDefinition = (params: {
     rule: params.rule,
     bundlePolicy: params.bundlePolicy,
     stage: params.stage,
+  });
+  const runtimeIrSource = toSkillsRuntimeIrSource({
+    rule: params.rule,
+    mappedHeuristicRuleIds,
+  });
+  const findingMessage = buildRuleFindingMessage({
+    rule: params.rule,
+    mappedHeuristicRuleIds,
+    observedFilePaths: params.observedFilePaths,
   });
 
   if (evaluationMode === 'AUTO') {
@@ -375,8 +432,9 @@ const toRuleDefinition = (params: {
       when,
       then: {
         kind: 'Finding',
-        message: params.rule.description,
+        message: findingMessage,
         code: toCode(params.rule.id),
+        source: runtimeIrSource,
       },
       scope: resolveScopeForPlatform(
         params.rule.platform,
@@ -403,6 +461,7 @@ const toRuleDefinition = (params: {
       kind: 'Finding',
       message: `[Declarative] ${params.rule.description}`,
       code: `${toCode(params.rule.id)}_DECLARATIVE`,
+      source: runtimeIrSource,
     },
     scope: resolveScopeForPlatform(
       params.rule.platform,
@@ -500,7 +559,7 @@ export const loadSkillsRuleSetForStage = (
         continue;
       }
 
-      const mappedRuleIds = resolveMappedHeuristicRuleIds(compiledRule.id);
+      const mappedRuleIds = resolveMappedHeuristicRuleIdsForCompiledRule(compiledRule);
       const evaluationMode = resolveRuleEvaluationMode(compiledRule);
       if (evaluationMode === 'AUTO' && mappedRuleIds.length === 0) {
         unsupportedAutoRuleIds.add(compiledRule.id);

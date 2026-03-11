@@ -16,6 +16,7 @@ import type {
   SnapshotRulesCoverage,
   SddMetrics,
   SnapshotFinding,
+  SnapshotFindingNode,
 } from './schema';
 import type { TddBddSnapshot } from '../tdd/types';
 import { buildSnapshotPlatformSummaries } from './platformSummary';
@@ -110,6 +111,54 @@ const normalizeOptionalNonNegativeInt = (value: unknown) => {
   return Math.max(0, Math.trunc(value));
 };
 
+const normalizeOptionalBoolean = (value: unknown): boolean | undefined => {
+  return typeof value === 'boolean' ? value : undefined;
+};
+
+const normalizeFindingNode = (node: unknown): SnapshotFindingNode | undefined => {
+  if (typeof node !== 'object' || node === null) {
+    return undefined;
+  }
+
+  const candidate = node as {
+    kind?: unknown;
+    name?: unknown;
+    lines?: unknown;
+  };
+
+  if (
+    candidate.kind !== 'class' &&
+    candidate.kind !== 'property' &&
+    candidate.kind !== 'call' &&
+    candidate.kind !== 'member'
+  ) {
+    return undefined;
+  }
+
+  const name = normalizeOptionalString(candidate.name);
+  if (!name) {
+    return undefined;
+  }
+
+  return {
+    kind: candidate.kind,
+    name,
+    lines: normalizeLines(candidate.lines as EvidenceLines | undefined),
+  };
+};
+
+const normalizeFindingNodes = (nodes: unknown): readonly SnapshotFindingNode[] | undefined => {
+  if (!Array.isArray(nodes)) {
+    return undefined;
+  }
+
+  const normalized = nodes
+    .map((node) => normalizeFindingNode(node))
+    .filter((node): node is SnapshotFindingNode => Boolean(node));
+
+  return normalized.length > 0 ? normalized : undefined;
+};
+
 const countFilesAffected = (findings: ReadonlyArray<SnapshotFinding>): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -133,6 +182,12 @@ const normalizeFinding = (finding: BuildFindingInput): SnapshotFinding => {
     lines: normalizeLines(finding.lines),
     matchedBy: normalizeOptionalString(finding.matchedBy),
     source: normalizeOptionalString(finding.source),
+    blocking: normalizeOptionalBoolean(finding.blocking),
+    primary_node: normalizeFindingNode(finding.primary_node),
+    related_nodes: normalizeFindingNodes(finding.related_nodes),
+    why: normalizeOptionalString(finding.why),
+    impact: normalizeOptionalString(finding.impact),
+    expected_fix: normalizeOptionalString(finding.expected_fix),
   };
 };
 

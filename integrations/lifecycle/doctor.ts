@@ -2,9 +2,9 @@ import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { readEvidenceResult } from '../evidence/readEvidence';
 import { resolvePolicyForStage } from '../gate/stagePolicies';
-import { getPumukiHooksStatus } from './hookManager';
+import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
-import { getCurrentPumukiVersion } from './packageInfo';
+import { buildLifecycleVersionReport, getCurrentPumukiVersion } from './packageInfo';
 import {
   readLifecyclePolicyValidationSnapshot,
   type LifecyclePolicyValidationSnapshot,
@@ -72,9 +72,12 @@ export type DoctorCompatibilityContract = {
 export type LifecycleDoctorReport = {
   repoRoot: string;
   packageVersion: string;
+  version: ReturnType<typeof buildLifecycleVersionReport>;
   lifecycleState: LifecycleState;
   trackedNodeModulesPaths: ReadonlyArray<string>;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
+  hooksDirectory: string;
+  hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   policyValidation: LifecyclePolicyValidationSnapshot;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
@@ -83,6 +86,7 @@ export type LifecycleDoctorReport = {
 const buildDoctorIssues = (params: {
   trackedNodeModulesPaths: ReadonlyArray<string>;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
+  hooksDirectory: string;
   lifecycleState: LifecycleState;
 }): ReadonlyArray<DoctorIssue> => {
   const issues: DoctorIssue[] = [];
@@ -99,10 +103,16 @@ const buildDoctorIssues = (params: {
     params.lifecycleState.installed === 'true' &&
     !Object.values(params.hookStatus).every((entry) => entry.managedBlockPresent)
   ) {
+    const totalHooks = Object.keys(params.hookStatus).length;
+    const managedHooks = Object.values(params.hookStatus).filter(
+      (entry) => entry.managedBlockPresent
+    ).length;
     issues.push({
       severity: 'warning',
       message:
-        'Lifecycle state says installed=true but one or more managed hook blocks are missing.',
+        `Lifecycle state says installed=true but managed hook blocks are incomplete (${managedHooks}/${totalHooks}). ` +
+        `Effective hooks path: ${params.hooksDirectory}. ` +
+        'If you use versioned hooks via core.hooksPath, ensure those hooks include the PUMUKI MANAGED block or rerun "pumuki install".',
     });
   }
 
@@ -159,6 +169,34 @@ const readNestedString = (
   }
   return typeof cursor === 'string' && cursor.trim().length > 0 ? cursor : undefined;
 };
+
+const hasRobustPumukiCommandResolution = (command: string): boolean => {
+  const normalized = command.trim();
+  if (normalized.length === 0) {
+    return false;
+  }
+
+  if (/node_modules[\\/]\.bin[\\/]pumuki/i.test(normalized)) {
+    return true;
+  }
+
+  if (
+    /node\s+.*node_modules[\\/]pumuki[\\/]bin[\\/]pumuki(?:-[a-z0-9-]+)?\.js/i.test(
+      normalized
+    )
+  ) {
+    return true;
+  }
+
+  if (/--package\s+pumuki(?:@[^\s]+)?/i.test(normalized)) {
+    return true;
+  }
+
+  return false;
+};
+
+const mutatesPathForCommandExecution = (command: string): boolean =>
+  /\bPATH\s*=\s*[^\n]*\$PATH/i.test(command);
 
 const buildDeepCheck = (
   check: Omit<DoctorDeepCheck, 'status' | 'severity'> & {
@@ -270,6 +308,40 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
       metadata: {
         path: adapterPath,
         missing_count: missingPaths.length,
+      },
+    });
+  }
+
+  const weakResolutionPaths = requiredCommandPaths
+    .map((path) => {
+      const command = readNestedString(parsed, path);
+      return {
+        path: path.join('.'),
+        command,
+      };
+    })
+    .filter(
+      (entry) =>
+        entry.command &&
+        (!hasRobustPumukiCommandResolution(entry.command) ||
+          mutatesPathForCommandExecution(entry.command))
+    );
+
+  if (weakResolutionPaths.length > 0) {
+    const pathMutationCount = weakResolutionPaths.filter(
+      (entry) => entry.command && mutatesPathForCommandExecution(entry.command)
+    ).length;
+    return buildDeepCheck({
+      id: 'adapter-wiring',
+      status: 'fail',
+      severity: 'warning',
+      message: `Adapter wiring commands are present but use fragile binary resolution or PATH mutation (${weakResolutionPaths.map((entry) => entry.path).join(', ')}).`,
+      remediation:
+        'Re-run "pumuki adapter install --agent=codex" to restore robust local/bin-or-package command resolution.',
+      metadata: {
+        path: adapterPath,
+        weak_resolution_count: weakResolutionPaths.length,
+        path_mutation_count: pathMutationCount,
       },
     });
   }
@@ -517,7 +589,7 @@ const buildCompatibilityContract = (params: {
     overall: overallCompatible ? 'compatible' : 'incompatible',
     pumuki: {
       installed: pumukiInstalled,
-      version: getCurrentPumukiVersion(),
+      version: getCurrentPumukiVersion({ repoRoot: params.repoRoot }),
     },
     openspec: {
       required: openSpecRequired,
@@ -635,12 +707,14 @@ export const runLifecycleDoctor = (params?: {
   const cwd = params?.cwd ?? process.cwd();
   const repoRoot = git.resolveRepoRoot(cwd);
   const trackedNodeModulesPaths = git.trackedNodeModulesPaths(repoRoot);
+  const hooksDirectory = resolvePumukiHooksDirectory(repoRoot);
   const hookStatus = getPumukiHooksStatus(repoRoot);
   const lifecycleState = readLifecycleState(git, repoRoot);
 
   const issues = buildDoctorIssues({
     trackedNodeModulesPaths,
     hookStatus,
+    hooksDirectory: hooksDirectory.path,
     lifecycleState,
   });
   const deep = params?.deep
@@ -651,13 +725,20 @@ export const runLifecycleDoctor = (params?: {
       hookStatus,
     })
     : undefined;
+  const version = buildLifecycleVersionReport({
+    repoRoot,
+    lifecycleVersion: lifecycleState.version,
+  });
 
   return {
     repoRoot,
-    packageVersion: getCurrentPumukiVersion(),
+    packageVersion: version.effective,
+    version,
     lifecycleState,
     trackedNodeModulesPaths,
     hookStatus,
+    hooksDirectory: hooksDirectory.path,
+    hooksDirectoryResolution: hooksDirectory.source,
     policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
     issues,
     deep,

@@ -82,6 +82,21 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
 
     assert.equal(status.repoRoot, repoRoot);
     assert.equal(status.packageVersion, getCurrentPumukiVersion());
+    assert.equal(status.version.effective, getCurrentPumukiVersion());
+    assert.equal(status.version.runtime, getCurrentPumukiVersion());
+    assert.equal(status.version.consumerInstalled, null);
+    assert.equal(status.version.lifecycleInstalled, '6.3.11');
+    assert.equal(status.version.source, 'runtime-package');
+    assert.equal(status.version.driftFromRuntime, false);
+    assert.equal(status.version.driftFromLifecycleInstalled, true);
+    assert.match(status.version.driftWarning ?? '', /lifecycle=6\.3\.11/i);
+    assert.equal(
+      status.version.alignmentCommand,
+      `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && npx --yes --package pumuki@${getCurrentPumukiVersion()} pumuki install`
+    );
+    assert.equal(status.version.pathExecutionHazard, false);
+    assert.equal(status.version.pathExecutionWarning, null);
+    assert.equal(status.version.pathExecutionWorkaroundCommand, null);
     assert.equal(status.trackedNodeModulesCount, 2);
     assert.deepEqual(status.lifecycleState, {
       installed: 'true',
@@ -94,6 +109,8 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
       'pre-commit': { exists: true, managedBlockPresent: true },
       'pre-push': { exists: true, managedBlockPresent: false },
     });
+    assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(status.hooksDirectoryResolution, 'default');
     assert.equal(typeof status.policyValidation.stages.PRE_COMMIT.hash, 'string');
     assert.equal(typeof status.policyValidation.stages.PRE_PUSH.hash, 'string');
     assert.equal(typeof status.policyValidation.stages.CI.hash, 'string');
@@ -117,6 +134,43 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
   });
 });
 
+test('readLifecycleStatus expone warning y workaround cuando repoRoot contiene el separador de PATH', async () => {
+  await withTempDir('pumuki:status-path-hazard-', async (repoRoot) => {
+    const hooksDir = join(repoRoot, '.git', 'hooks');
+    mkdirSync(hooksDir, { recursive: true });
+
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      [],
+      {
+        [PUMUKI_CONFIG_KEYS.installed]: 'true',
+        [PUMUKI_CONFIG_KEYS.version]: '6.3.11',
+        [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      }
+    );
+
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.version.pathExecutionHazard, true);
+    assert.match(status.version.pathExecutionWarning ?? '', /rompe PATH/i);
+    assert.equal(
+      status.version.pathExecutionWorkaroundCommand,
+      process.platform === 'win32'
+        ? 'node .\\node_modules\\pumuki\\bin\\pumuki.js'
+        : 'node ./node_modules/pumuki/bin/pumuki.js'
+    );
+    assert.equal(
+      status.version.alignmentCommand,
+      process.platform === 'win32'
+        ? `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && node .\\node_modules\\pumuki\\bin\\pumuki.js install`
+        : `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && node ./node_modules/pumuki/bin/pumuki.js install`
+    );
+  });
+});
+
 test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', async () => {
   await withTempDir('pumuki-lifecycle-status-default-cwd-', async (repoRoot) => {
     const git = new FakeLifecycleGitService(repoRoot, [], {});
@@ -124,9 +178,12 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     const status = readLifecycleStatus({ git });
 
     assert.equal(status.repoRoot, repoRoot);
+    assert.equal(status.version.effective, getCurrentPumukiVersion());
     assert.deepEqual(git.resolveCalls, [process.cwd()]);
     assert.deepEqual(git.listTrackedCalls, [repoRoot]);
     assert.equal(status.trackedNodeModulesCount, 0);
+    assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(status.hooksDirectoryResolution, 'default');
   });
 });
 
@@ -139,6 +196,11 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
       git,
     });
 
+    assert.equal(status.version.effective, getCurrentPumukiVersion());
+    assert.equal(status.version.consumerInstalled, null);
+    assert.equal(status.version.lifecycleInstalled, null);
+    assert.equal(status.version.driftWarning, null);
+    assert.equal(status.version.alignmentCommand, null);
     assert.deepEqual(status.lifecycleState, {
       installed: undefined,
       version: undefined,
@@ -150,5 +212,7 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
       'pre-commit': { exists: false, managedBlockPresent: false },
       'pre-push': { exists: false, managedBlockPresent: false },
     });
+    assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(status.hooksDirectoryResolution, 'default');
   });
 });
