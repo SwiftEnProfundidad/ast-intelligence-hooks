@@ -57,6 +57,7 @@ export const createConsumerMenuRuntime = (
         write: params.write,
       });
     },
+    readCurrentSummary: () => summaryOverride,
   };
 };
 

@@ -44,6 +44,7 @@ export type ConsumerMenuRuntimeParams = {
 export type ConsumerMenuRuntime = {
   actions: ReadonlyArray<ConsumerAction>;
   printMenu: () => void;
+  readCurrentSummary: () => FrameworkMenuEvidenceSummary | null;
 };
 
 export type ConsumerRuntimeScope = 'staged' | 'workingTree';

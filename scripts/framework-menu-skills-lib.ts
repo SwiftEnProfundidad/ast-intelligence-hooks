@@ -1,11 +1,18 @@
 import { type SkillsLockBundle } from '../integrations/config/skillsLock';
 import { loadEffectiveSkillsLock } from '../integrations/config/skillsEffectiveLock';
 
+const buildSkillsLockCompilationHint = (): string =>
+  [
+    'No active skills bundles found.',
+    'Run the installed Pumuki skills lock tool, for example:',
+    'npx --yes tsx@4.21.0 ./node_modules/pumuki/scripts/compile-skills-lock.ts',
+  ].join(' ');
+
 export const formatActiveSkillsBundles = (
   bundles: ReadonlyArray<Pick<SkillsLockBundle, 'name' | 'version' | 'hash'>>
 ): string => {
   if (bundles.length === 0) {
-    return 'No active skills bundles found. Generate skills.lock.json with the installed Pumuki skills lock tool.';
+    return buildSkillsLockCompilationHint();
   }
 
   const lines = [...bundles]
