@@ -14,6 +14,8 @@ export const buildAdapterRealSessionEvaluationMessages = (params: {
 }): EvaluationMessageSet => {
   const missingWriteEvents = !params.signals.preWriteObserved || !params.signals.postWriteObserved;
   const strictAssessmentPass = params.report.parsedStatus.strictAssessmentPass;
+  const noSessionProbeAvailable =
+    !params.report.parsedStatus.strictAvailable && !params.report.parsedStatus.anyAvailable;
 
   if (params.validationPass) {
     return {
@@ -39,6 +41,17 @@ export const buildAdapterRealSessionEvaluationMessages = (params: {
       rootCause: 'Incomplete real IDE event coverage in the captured diagnostics.',
       correctiveAction:
         'Execute full real-session validation steps and capture fresh `.audit_tmp` logs.',
+    };
+  }
+
+  if (noSessionProbeAvailable) {
+    return {
+      summary:
+        'The consumer does not expose direct session assessment probes for adapter diagnostics.',
+      rootCause:
+        'No strict or include-simulated session probe is available in the consumer package contract.',
+      correctiveAction:
+        'Treat this report as partial evidence only, or run adapter diagnostics from the Pumuki source workspace.',
     };
   }
 

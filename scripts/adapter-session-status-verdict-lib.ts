@@ -17,14 +17,25 @@ export const deriveAdapterSessionVerdictFromCommands = (
     (item) => item.label === 'assess-adapter-hooks-session:any'
   );
 
-  if (!verifyResult || !strictResult || !anyResult) {
-    throw new Error('Missing required command execution results.');
+  if (
+    !verifyResult ||
+    verifyResult.availability === 'unavailable' ||
+    verifyResult.exitCode === undefined
+  ) {
+    return 'BLOCKED';
+  }
+
+  const hasStrictProbe = strictResult?.availability === 'available';
+  const hasAnyProbe = anyResult?.availability === 'available';
+
+  if (!hasStrictProbe && !hasAnyProbe) {
+    return verifyResult.exitCode === 0 ? 'NEEDS_REAL_SESSION' : 'BLOCKED';
   }
 
   return determineAdapterSessionVerdict({
     verifyExitCode: verifyResult.exitCode,
-    strictOutput: strictResult.output,
-    anyOutput: anyResult.output,
+    strictOutput: strictResult?.output ?? '',
+    anyOutput: anyResult?.output ?? '',
   });
 };
 

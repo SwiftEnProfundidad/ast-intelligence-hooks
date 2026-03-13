@@ -11,6 +11,9 @@ export type AdapterParsedStatusReport = {
   verifyExitCode?: number;
   strictExitCode?: number;
   anyExitCode?: number;
+  verifyAvailable: boolean;
+  strictAvailable: boolean;
+  anyAvailable: boolean;
   strictAssessmentPass: boolean;
   anyAssessmentPass: boolean;
 };

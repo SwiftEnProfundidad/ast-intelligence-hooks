@@ -74,11 +74,11 @@ test('build-adapter-real-session-report renders PASS when status and runtime sig
         '',
         '## Commands',
         '',
-        '| step | command | exit_code |',
-        '| --- | --- | --- |',
-        '| verify-adapter-hooks-runtime | `npm run verify:adapter-hooks-runtime` | 0 |',
-        '| assess-adapter-hooks-session | `npm run assess:adapter-hooks-session` | 0 |',
-        '| assess-adapter-hooks-session:any | `npm run assess:adapter-hooks-session:any` | 0 |',
+        '| step | command | availability | exit_code |',
+        '| --- | --- | --- | --- |',
+        '| verify-adapter-hooks-runtime | `npm run verify:adapter-hooks-runtime` | available | 0 |',
+        '| assess-adapter-hooks-session | `npm run assess:adapter-hooks-session` | available | 0 |',
+        '| assess-adapter-hooks-session:any | `npm run assess:adapter-hooks-session:any` | available | 0 |',
         '',
         '## Command Output',
         '',
@@ -144,7 +144,8 @@ test('build-adapter-real-session-report renders PASS when status and runtime sig
     assert.match(report, /- Re-test required: NO/);
     assert.match(report, /- `pre_write_code` event observed: YES/);
     assert.match(report, /- `post_write_code` event observed: YES/);
-    assert.match(report, /- `npm run verify:adapter-hooks-runtime`: PASS/);
+    assert.match(report, /- Consumer runtime verification probe: PASS/);
+    assert.match(report, /- Strict session probe available: YES/);
     assert.match(report, /- Any `bash: node: command not found`: NO/);
     assert.match(report, /1\. Normal write action triggered in Adapter: PASS/);
     assert.match(report, /2\. Blocked candidate write action triggered in Adapter: PASS/);
@@ -177,11 +178,11 @@ test('build-adapter-real-session-report renders FAIL with node runtime root caus
         '',
         '## Commands',
         '',
-        '| step | command | exit_code |',
-        '| --- | --- | --- |',
-        '| verify-adapter-hooks-runtime | `npm run verify:adapter-hooks-runtime` | 1 |',
-        '| assess-adapter-hooks-session | `npm run assess:adapter-hooks-session` | 1 |',
-        '| assess-adapter-hooks-session:any | `npm run assess:adapter-hooks-session:any` | 1 |',
+        '| step | command | availability | exit_code |',
+        '| --- | --- | --- | --- |',
+        '| verify-adapter-hooks-runtime | `npm run verify:adapter-hooks-runtime` | available | 1 |',
+        '| assess-adapter-hooks-session | `npm run assess:adapter-hooks-session` | available | 1 |',
+        '| assess-adapter-hooks-session:any | `npm run assess:adapter-hooks-session:any` | available | 1 |',
       ].join('\n'),
       'utf8'
     );
@@ -215,7 +216,7 @@ test('build-adapter-real-session-report renders FAIL with node runtime root caus
 
     assert.match(report, /- Validation result: FAIL/);
     assert.match(report, /- Re-test required: YES/);
-    assert.match(report, /- `npm run verify:adapter-hooks-runtime`: FAIL/);
+    assert.match(report, /- Consumer runtime verification probe: FAIL/);
     assert.match(report, /- Any `bash: node: command not found`: YES/);
     assert.match(
       report,

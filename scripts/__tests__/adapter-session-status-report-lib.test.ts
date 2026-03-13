@@ -21,18 +21,21 @@ test('deriveAdapterSessionVerdictFromCommands returns PASS when strict assessmen
     {
       label: 'verify-adapter-hooks-runtime',
       command: 'npm run verify:adapter-hooks-runtime',
+      availability: 'available',
       exitCode: 0,
       output: 'ok',
     },
     {
       label: 'assess-adapter-hooks-session',
       command: 'npm run assess:adapter-hooks-session',
+      availability: 'available',
       exitCode: 0,
       output: 'session-assessment=PASS',
     },
     {
       label: 'assess-adapter-hooks-session:any',
       command: 'npm run assess:adapter-hooks-session:any',
+      availability: 'available',
       exitCode: 0,
       output: 'session-assessment=FAIL',
     },
@@ -40,6 +43,36 @@ test('deriveAdapterSessionVerdictFromCommands returns PASS when strict assessmen
 
   assert.equal(verdict, 'PASS');
   assert.equal(exitCodeForAdapterSessionVerdict(verdict), 0);
+});
+
+test('deriveAdapterSessionVerdictFromCommands returns NEEDS_REAL_SESSION when session probes are unavailable', () => {
+  const verdict = deriveAdapterSessionVerdictFromCommands([
+    {
+      label: 'verify-adapter-hooks-runtime',
+      command: 'npm run verify:adapter-hooks-runtime',
+      availability: 'available',
+      exitCode: 0,
+      output: 'ok',
+    },
+    {
+      label: 'assess-adapter-hooks-session',
+      command: 'npm run assess:adapter-hooks-session',
+      availability: 'unavailable',
+      output: 'Consumer package.json does not expose `assess:adapter-hooks-session`.',
+      unavailableReason: 'Consumer package.json does not expose `assess:adapter-hooks-session`.',
+    },
+    {
+      label: 'assess-adapter-hooks-session:any',
+      command: 'npm run assess:adapter-hooks-session:any',
+      availability: 'unavailable',
+      output: 'Consumer package.json does not expose `assess:adapter-hooks-session:any`.',
+      unavailableReason:
+        'Consumer package.json does not expose `assess:adapter-hooks-session:any`.',
+    },
+  ]);
+
+  assert.equal(verdict, 'NEEDS_REAL_SESSION');
+  assert.equal(exitCodeForAdapterSessionVerdict(verdict), 2);
 });
 
 test('filterHookLogLinesForRepo keeps repo-scoped lines and normalizes absolute paths', () => {
@@ -96,6 +129,7 @@ test('buildAdapterSessionStatusMarkdown renders deterministic PASS summary', () 
       {
         label: 'verify-adapter-hooks-runtime',
         command: 'npm run verify:adapter-hooks-runtime',
+        availability: 'available',
         exitCode: 0,
         output: 'ok',
       },
@@ -111,6 +145,31 @@ test('buildAdapterSessionStatusMarkdown renders deterministic PASS summary', () 
   });
 
   assert.match(markdown, /- verdict: PASS/);
+  assert.match(markdown, /\| step \| command \| availability \| exit_code \|/);
   assert.match(markdown, /## Interpretation/);
   assert.match(markdown, /Real Adapter pre\/post events are present/);
+});
+
+test('buildAdapterSessionStatusMarkdown explains missing consumer probes without fake remediation', () => {
+  const markdown = buildAdapterSessionStatusMarkdown({
+    generatedAtIso: '2026-02-09T00:00:00.000Z',
+    options: {
+      outFile: '.audit-reports/adapter/adapter-session-status.md',
+      tailLines: 80,
+    },
+    commands: [
+      {
+        label: 'verify-adapter-hooks-runtime',
+        command: 'npm run verify:adapter-hooks-runtime',
+        availability: 'unavailable',
+        output: 'Consumer package.json does not expose `verify:adapter-hooks-runtime`.',
+        unavailableReason: 'Consumer package.json does not expose `verify:adapter-hooks-runtime`.',
+      },
+    ],
+    verdict: 'BLOCKED',
+    tails: [],
+  });
+
+  assert.match(markdown, /This consumer does not expose a runnable adapter runtime verification probe/);
+  assert.doesNotMatch(markdown, /install:adapter-hooks-config/);
 });
