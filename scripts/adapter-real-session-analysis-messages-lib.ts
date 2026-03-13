@@ -35,15 +35,6 @@ export const buildAdapterRealSessionEvaluationMessages = (params: {
     };
   }
 
-  if (missingWriteEvents) {
-    return {
-      summary: 'Real pre/post write events were not fully observed in available logs.',
-      rootCause: 'Incomplete real IDE event coverage in the captured diagnostics.',
-      correctiveAction:
-        'Execute full real-session validation steps and capture fresh `.audit_tmp` logs.',
-    };
-  }
-
   if (noSessionProbeAvailable) {
     return {
       summary:
@@ -52,6 +43,15 @@ export const buildAdapterRealSessionEvaluationMessages = (params: {
         'No strict or include-simulated session probe is available in the consumer package contract.',
       correctiveAction:
         'Treat this report as partial evidence only, or run adapter diagnostics from the Pumuki source workspace.',
+    };
+  }
+
+  if (missingWriteEvents) {
+    return {
+      summary: 'Real pre/post write events were not fully observed in available logs.',
+      rootCause: 'Incomplete real IDE event coverage in the captured diagnostics.',
+      correctiveAction:
+        'Execute full real-session validation steps and capture fresh `.audit_tmp` logs.',
     };
   }
 

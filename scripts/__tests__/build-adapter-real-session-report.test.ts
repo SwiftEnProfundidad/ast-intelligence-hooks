@@ -224,3 +224,67 @@ test('build-adapter-real-session-report renders FAIL with node runtime root caus
     );
   });
 });
+
+test('build-adapter-real-session-report prioritizes missing session probes over missing runtime logs', async () => {
+  await withTempDir('pumuki-adapter-real-no-probes-', (tempRoot) => {
+    const auditAdapter = join(tempRoot, '.audit-reports/adapter');
+    const homeDir = join(tempRoot, 'home');
+    const hookConfigDir = join(homeDir, '.codeium/adapter');
+
+    mkdirSync(auditAdapter, { recursive: true });
+    mkdirSync(hookConfigDir, { recursive: true });
+
+    writeFileSync(
+      join(hookConfigDir, 'hooks.json'),
+      JSON.stringify({ hooks: {} }, null, 2),
+      'utf8'
+    );
+
+    writeFileSync(
+      join(auditAdapter, 'adapter-session-status.md'),
+      [
+        '# Adapter Session Status Report',
+        '',
+        '- verdict: BLOCKED',
+        '',
+        '## Commands',
+        '',
+        '| step | command | availability | exit_code |',
+        '| --- | --- | --- | --- |',
+        '| verify-adapter-hooks-runtime | `npm run verify:adapter-hooks-runtime` | unavailable |  |',
+        '| assess-adapter-hooks-session | `npm run assess:adapter-hooks-session` | unavailable |  |',
+        '| assess-adapter-hooks-session:any | `npm run assess:adapter-hooks-session:any` | unavailable |  |',
+      ].join('\n'),
+      'utf8'
+    );
+
+    runGenerator({
+      cwd: tempRoot,
+      homeDir,
+      statusReportFile: '.audit-reports/adapter/adapter-session-status.md',
+      outFile: '.audit-reports/adapter/adapter-real-session-report.md',
+    });
+
+    const report = readFileSync(
+      join(auditAdapter, 'adapter-real-session-report.md'),
+      'utf8'
+    );
+
+    assert.match(report, /- Validation result: FAIL/);
+    assert.match(report, /- Consumer runtime verification probe: UNKNOWN/);
+    assert.match(report, /- Strict session probe available: NO/);
+    assert.match(report, /- Include-simulated session probe available: NO/);
+    assert.match(
+      report,
+      /The consumer does not expose direct session assessment probes for adapter diagnostics\./
+    );
+    assert.match(
+      report,
+      /No strict or include-simulated session probe is available in the consumer package contract\./
+    );
+    assert.doesNotMatch(
+      report,
+      /Incomplete real IDE event coverage in the captured diagnostics\./
+    );
+  });
+});
