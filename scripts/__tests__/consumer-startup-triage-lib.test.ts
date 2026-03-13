@@ -46,8 +46,29 @@ test('buildConsumerStartupTriageCommands throws when workflow lint args are miss
         outDir: 'docs/validation',
         runWorkflowLint: true,
       }),
-    /Workflow lint requires --repo-path and --actionlint-bin/
+    /Workflow lint requires --repo-path/
   );
+});
+
+test('buildConsumerStartupTriageCommands defaults actionlint binary when repo path exists', () => {
+  const commands = buildConsumerStartupTriageCommands({
+    repo: 'owner/repo',
+    limit: 20,
+    outDir: 'docs/validation',
+    runWorkflowLint: true,
+    repoPath: '/tmp/consumer',
+  });
+
+  const workflowLintCommand = commands.find((command) => command.id === 'workflow-lint');
+
+  assert.deepEqual(workflowLintCommand?.args, [
+    '--repo-path',
+    '/tmp/consumer',
+    '--actionlint-bin',
+    'actionlint',
+    '--out',
+    'docs/validation/consumer-workflow-lint-report.md',
+  ]);
 });
 
 test('buildConsumerStartupTriageCommands omits workflow lint when skipped', () => {

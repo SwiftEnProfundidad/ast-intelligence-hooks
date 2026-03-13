@@ -3,17 +3,16 @@ import type {
   ConsumerStartupTriageOptions,
   ConsumerStartupTriageOutputs,
 } from './consumer-startup-triage-contract';
+import { DEFAULT_ACTIONLINT_BIN } from './framework-menu-runner-constants';
 
 const resolveWorkflowLintInputs = (params: {
   options: ConsumerStartupTriageOptions;
 }): { repoPath: string; actionlintBin: string } => {
   const repoPath = params.options.repoPath?.trim();
-  const actionlintBin = params.options.actionlintBin?.trim();
+  const actionlintBin = params.options.actionlintBin?.trim() || DEFAULT_ACTIONLINT_BIN;
 
-  if (!repoPath || !actionlintBin) {
-    throw new Error(
-      'Workflow lint requires --repo-path and --actionlint-bin (or use --skip-workflow-lint).'
-    );
+  if (!repoPath) {
+    throw new Error('Workflow lint requires --repo-path (or use --skip-workflow-lint).');
   }
 
   return { repoPath, actionlintBin };
