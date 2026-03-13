@@ -10,6 +10,24 @@ import {
   resolvePumukiVersionMetadata,
 } from '../packageInfo';
 
+const withEnv = <T>(key: string, value: string | undefined, run: () => T): T => {
+  const previous = process.env[key];
+  if (value === undefined) {
+    delete process.env[key];
+  } else {
+    process.env[key] = value;
+  }
+  try {
+    return run();
+  } finally {
+    if (previous === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = previous;
+    }
+  }
+};
+
 test('getCurrentPumukiPackageName devuelve el nombre real del package', () => {
   const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')) as {
     name?: string;
@@ -94,6 +112,27 @@ test('resolvePumukiVersionMetadata expone source/runtime/install de forma explí
   });
 });
 
+test('resolvePumukiVersionMetadata prioriza runtime source cuando el bin del repo source marca source-bin', async () => {
+  await withTempDir('pumuki-package-info-source-bin-', async (repoRoot) => {
+    const packageRoot = join(repoRoot, 'node_modules', getCurrentPumukiPackageName());
+    mkdirSync(packageRoot, { recursive: true });
+    writeFileSync(
+      join(packageRoot, 'package.json'),
+      JSON.stringify({ name: getCurrentPumukiPackageName(), version: '8.8.8' }, null, 2),
+      'utf8'
+    );
+
+    const metadata = withEnv('PUMUKI_RUNTIME_EXECUTION_SOURCE', 'source-bin', () =>
+      resolvePumukiVersionMetadata({ repoRoot })
+    );
+
+    assert.equal(metadata.source, 'source-bin');
+    assert.equal(metadata.runtimeVersion, getCurrentPumukiVersion());
+    assert.equal(metadata.resolvedVersion, getCurrentPumukiVersion());
+    assert.equal(metadata.consumerInstalledVersion, '8.8.8');
+  });
+});
+
 test('buildLifecycleVersionReport expone drift entre runtime, consumer y lifecycle de forma explícita', async () => {
   await withTempDir('pumuki-package-info-report-', async (repoRoot) => {
     const packageRoot = join(repoRoot, 'node_modules', getCurrentPumukiPackageName());
@@ -126,6 +165,38 @@ test('buildLifecycleVersionReport expone drift entre runtime, consumer y lifecyc
     assert.equal(report.pathExecutionHazard, false);
     assert.equal(report.pathExecutionWarning, null);
     assert.equal(report.pathExecutionWorkaroundCommand, null);
+  });
+});
+
+test('buildLifecycleVersionReport expone deriva del paquete instalado cuando el runtime efectivo es source-bin', async () => {
+  await withTempDir('pumuki-package-info-report-source-bin-', async (repoRoot) => {
+    const packageRoot = join(repoRoot, 'node_modules', getCurrentPumukiPackageName());
+    mkdirSync(packageRoot, { recursive: true });
+    writeFileSync(
+      join(packageRoot, 'package.json'),
+      JSON.stringify({ name: getCurrentPumukiPackageName(), version: '8.8.8' }, null, 2),
+      'utf8'
+    );
+
+    const report = withEnv('PUMUKI_RUNTIME_EXECUTION_SOURCE', 'source-bin', () =>
+      buildLifecycleVersionReport({
+        repoRoot,
+        lifecycleVersion: getCurrentPumukiVersion(),
+      })
+    );
+
+    assert.equal(report.source, 'source-bin');
+    assert.equal(report.effective, getCurrentPumukiVersion());
+    assert.equal(report.runtime, getCurrentPumukiVersion());
+    assert.equal(report.consumerInstalled, '8.8.8');
+    assert.equal(report.lifecycleInstalled, getCurrentPumukiVersion());
+    assert.equal(report.driftFromRuntime, false);
+    assert.equal(report.driftFromLifecycleInstalled, false);
+    assert.match(report.driftWarning ?? '', /consumer=8\.8\.8/i);
+    assert.equal(
+      report.alignmentCommand,
+      `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && npx --yes --package pumuki@${getCurrentPumukiVersion()} pumuki install`
+    );
   });
 });
 

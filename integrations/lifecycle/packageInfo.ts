@@ -21,7 +21,7 @@ export type PumukiVersionMetadata = {
   resolvedVersion: string;
   runtimeVersion: string;
   consumerInstalledVersion: string | null;
-  source: 'consumer-node-modules' | 'runtime-package';
+  source: 'consumer-node-modules' | 'runtime-package' | 'source-bin';
 };
 
 export type LifecycleVersionReport = {
@@ -63,13 +63,26 @@ export const buildLifecycleAlignmentCommand = (
 export const resolvePumukiVersionMetadata = (params?: { repoRoot?: string }): PumukiVersionMetadata => {
   const runtimeVersion = packageJson.version;
   const repoRoot = params?.repoRoot;
+  const consumerInstalledVersion =
+    typeof repoRoot === 'string' && repoRoot.trim().length > 0
+      ? readConsumerInstalledVersion(repoRoot.trim())
+      : null;
+
+  if (process.env.PUMUKI_RUNTIME_EXECUTION_SOURCE === 'source-bin') {
+    return {
+      resolvedVersion: runtimeVersion,
+      runtimeVersion,
+      consumerInstalledVersion,
+      source: 'source-bin',
+    };
+  }
+
   if (typeof repoRoot === 'string' && repoRoot.trim().length > 0) {
-    const installedVersion = readConsumerInstalledVersion(repoRoot.trim());
-    if (installedVersion) {
+    if (consumerInstalledVersion) {
       return {
-        resolvedVersion: installedVersion,
+        resolvedVersion: consumerInstalledVersion,
         runtimeVersion,
-        consumerInstalledVersion: installedVersion,
+        consumerInstalledVersion,
         source: 'consumer-node-modules',
       };
     }
@@ -98,10 +111,14 @@ export const buildLifecycleVersionReport = (params?: {
       ? params.lifecycleVersion.trim()
       : null;
   const driftFromRuntime = metadata.resolvedVersion !== metadata.runtimeVersion;
+  const driftFromConsumerInstalled =
+    metadata.consumerInstalledVersion !== null &&
+    metadata.consumerInstalledVersion !== metadata.runtimeVersion;
   const driftFromLifecycleInstalled =
     lifecycleInstalled !== null && metadata.resolvedVersion !== lifecycleInstalled;
   const driftTargets = [
     driftFromRuntime ? `runtime=${metadata.runtimeVersion}` : null,
+    driftFromConsumerInstalled ? `consumer=${metadata.consumerInstalledVersion}` : null,
     driftFromLifecycleInstalled ? `lifecycle=${lifecycleInstalled}` : null,
   ].filter((value): value is string => value !== null);
   const pathExecutionHazard = hasPathExecutionHazard(params?.repoRoot);
