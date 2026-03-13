@@ -104,6 +104,29 @@ const withSkillsEnforcementEnv = async <T>(
   }
 };
 
+const withTddBddEnforcementEnv = async <T>(
+  value: string | undefined,
+  callback: () => Promise<T>
+): Promise<T> => {
+  const previous = process.env.PUMUKI_TDD_BDD_ENFORCEMENT;
+
+  if (value === undefined) {
+    delete process.env.PUMUKI_TDD_BDD_ENFORCEMENT;
+  } else {
+    process.env.PUMUKI_TDD_BDD_ENFORCEMENT = value;
+  }
+
+  try {
+    return await callback();
+  } finally {
+    if (previous === undefined) {
+      delete process.env.PUMUKI_TDD_BDD_ENFORCEMENT;
+    } else {
+      process.env.PUMUKI_TDD_BDD_ENFORCEMENT = previous;
+    }
+  }
+};
+
 const evaluateGateFromFindings = (findings: ReadonlyArray<Finding>, policy: GatePolicy) => {
   const hasBlocking = findings.some((finding) =>
     isSeverityAtLeast(finding.severity, policy.blockOnOrAbove)
@@ -3609,11 +3632,116 @@ test('runPlatformGate bloquea cuando el waiver de gate es inválido', async () =
   );
 });
 
-test('runPlatformGate bloquea por policy TDD/BDD en cambios nuevos sin contrato de evidencia', async () => {
-  await withTempDir('pumuki-run-platform-gate-tdd-missing-', async (repoRoot) => {
-    const policy: GatePolicy = {
-      stage: 'PRE_PUSH',
-      blockOnOrAbove: 'CRITICAL',
+test('runPlatformGate degrada TDD/BDD a advisory por defecto en cambios nuevos sin contrato de evidencia', async () => {
+  await withTddBddEnforcementEnv(undefined, async () => {
+    await withTempDir('pumuki-run-platform-gate-tdd-missing-', async (repoRoot) => {
+      const policy: GatePolicy = {
+        stage: 'PRE_PUSH',
+        blockOnOrAbove: 'CRITICAL',
+        warnOnOrAbove: 'ERROR',
+      };
+      const scope = { kind: 'staged' as const };
+      const git = buildGitStub(repoRoot);
+      const evidence = buildEvidenceStub();
+      const facts: ReadonlyArray<Fact> = [
+        {
+          kind: 'FileChange',
+          path: 'apps/backend/src/orders/create-order.ts',
+          changeType: 'added',
+          source: 'git:staged',
+        },
+        {
+          kind: 'FileContent',
+          path: 'apps/backend/src/orders/create-order.ts',
+          content: 'export function createOrder() { return { ok: true }; }',
+          source: 'git:staged',
+        },
+      ];
+
+      let emittedFindings: ReadonlyArray<Finding> = [];
+      let emittedOutcome: 'ALLOW' | 'WARN' | 'BLOCK' | undefined;
+      let emittedTddBddStatus:
+        | 'skipped'
+        | 'passed'
+        | 'advisory'
+        | 'blocked'
+        | 'waived'
+        | undefined;
+
+      const result = await runPlatformGate({
+        policy,
+        scope,
+        services: {
+          git,
+          evidence,
+        },
+        dependencies: {
+          evaluateSddForStage: () => ({
+            allowed: true,
+            code: 'ALLOWED',
+            message: 'ok',
+          }),
+          resolveFactsForGateScope: async () => facts,
+          evaluatePlatformGateFindings: () => ({
+            detectedPlatforms: { backend: { detected: true, confidence: 'HIGH' } },
+            skillsRuleSet: {
+              rules: [],
+              activeBundles: [],
+              mappedHeuristicRuleIds: new Set<string>(),
+              requiresHeuristicFacts: false,
+            },
+            projectRules: [] as RuleSet,
+            heuristicRules: [] as RuleSet,
+            coverage: {
+              factsTotal: facts.length,
+              filesScanned: 1,
+              rulesTotal: 1,
+              baselineRules: 1,
+              heuristicRules: 0,
+              skillsRules: 0,
+              projectRules: 1,
+              matchedRules: 1,
+              unmatchedRules: 0,
+              unevaluatedRules: 0,
+              activeRuleIds: ['rules.backend.dummy'],
+              evaluatedRuleIds: ['rules.backend.dummy'],
+              matchedRuleIds: ['rules.backend.dummy'],
+              unmatchedRuleIds: [],
+              unevaluatedRuleIds: [],
+            },
+            findings: [],
+          }),
+          evaluateGate: (findings) => evaluateGateFromFindings(findings, policy),
+          emitPlatformGateEvidence: (paramsArg) => {
+            emittedFindings = paramsArg.findings;
+            emittedOutcome = paramsArg.gateOutcome;
+            emittedTddBddStatus = paramsArg.tddBdd?.status;
+          },
+          printGateFindings: () => {},
+        },
+      });
+
+      assert.equal(result, 0);
+      assert.equal(emittedOutcome, 'WARN');
+      assert.equal(emittedTddBddStatus, 'advisory');
+      assert.equal(
+        emittedFindings.some(
+          (finding) =>
+            finding.ruleId === 'generic_evidence_integrity_required'
+            && finding.severity === 'WARN'
+        ),
+        true
+      );
+    });
+  });
+});
+
+test('runPlatformGate bloquea por policy TDD/BDD en modo strict para cambios nuevos sin contrato de evidencia', async () => {
+  await withTddBddEnforcementEnv('strict', async () => {
+    await withTempDir('pumuki-run-platform-gate-tdd-missing-strict-', async (repoRoot) => {
+      const policy: GatePolicy = {
+        stage: 'PRE_PUSH',
+        blockOnOrAbove: 'CRITICAL',
       warnOnOrAbove: 'ERROR',
     };
     const scope = { kind: 'staged' as const };
@@ -3637,66 +3765,69 @@ test('runPlatformGate bloquea por policy TDD/BDD en cambios nuevos sin contrato 
     let emittedFindings: ReadonlyArray<Finding> = [];
     let emittedOutcome: 'ALLOW' | 'WARN' | 'BLOCK' | undefined;
 
-    const result = await runPlatformGate({
-      policy,
-      scope,
-      services: {
-        git,
-        evidence,
-      },
-      dependencies: {
-        evaluateSddForStage: () => ({
-          allowed: true,
-          code: 'ALLOWED',
-          message: 'ok',
-        }),
-        resolveFactsForGateScope: async () => facts,
-        evaluatePlatformGateFindings: () => ({
-          detectedPlatforms: { backend: { detected: true, confidence: 'HIGH' } },
-          skillsRuleSet: {
-            rules: [],
-            activeBundles: [],
-            mappedHeuristicRuleIds: new Set<string>(),
-            requiresHeuristicFacts: false,
-          },
-          projectRules: [] as RuleSet,
-          heuristicRules: [] as RuleSet,
-          coverage: {
-            factsTotal: facts.length,
-            filesScanned: 1,
-            rulesTotal: 0,
-            baselineRules: 0,
-            heuristicRules: 0,
-            skillsRules: 0,
-            projectRules: 0,
-            matchedRules: 0,
-            unmatchedRules: 0,
-            unevaluatedRules: 0,
-            activeRuleIds: [],
-            evaluatedRuleIds: [],
-            matchedRuleIds: [],
-            unmatchedRuleIds: [],
-            unevaluatedRuleIds: [],
-          },
-          findings: [],
-        }),
-        evaluateGate: () => ({ outcome: 'ALLOW' }),
-        emitPlatformGateEvidence: (paramsArg) => {
-          emittedFindings = paramsArg.findings;
-          emittedOutcome = paramsArg.gateOutcome;
+      const result = await runPlatformGate({
+        policy,
+        scope,
+        services: {
+          git,
+          evidence,
         },
-        printGateFindings: () => {},
-      },
-    });
+        dependencies: {
+          evaluateSddForStage: () => ({
+            allowed: true,
+            code: 'ALLOWED',
+            message: 'ok',
+          }),
+          resolveFactsForGateScope: async () => facts,
+          evaluatePlatformGateFindings: () => ({
+            detectedPlatforms: { backend: { detected: true, confidence: 'HIGH' } },
+            skillsRuleSet: {
+              rules: [],
+              activeBundles: [],
+              mappedHeuristicRuleIds: new Set<string>(),
+              requiresHeuristicFacts: false,
+            },
+            projectRules: [] as RuleSet,
+            heuristicRules: [] as RuleSet,
+            coverage: {
+              factsTotal: facts.length,
+              filesScanned: 1,
+              rulesTotal: 1,
+              baselineRules: 1,
+              heuristicRules: 0,
+              skillsRules: 0,
+              projectRules: 1,
+              matchedRules: 1,
+              unmatchedRules: 0,
+              unevaluatedRules: 0,
+              activeRuleIds: ['rules.backend.dummy'],
+              evaluatedRuleIds: ['rules.backend.dummy'],
+              matchedRuleIds: ['rules.backend.dummy'],
+              unmatchedRuleIds: [],
+              unevaluatedRuleIds: [],
+            },
+            findings: [],
+          }),
+          evaluateGate: () => ({ outcome: 'ALLOW' }),
+          emitPlatformGateEvidence: (paramsArg) => {
+            emittedFindings = paramsArg.findings;
+            emittedOutcome = paramsArg.gateOutcome;
+          },
+          printGateFindings: () => {},
+        },
+      });
 
-    assert.equal(result, 1);
-    assert.equal(emittedOutcome, 'BLOCK');
-    assert.equal(
-      emittedFindings.some(
-        (finding) => finding.ruleId === 'generic_evidence_integrity_required'
-      ),
-      true
-    );
+      assert.equal(result, 1);
+      assert.equal(emittedOutcome, 'BLOCK');
+      assert.equal(
+        emittedFindings.some(
+          (finding) =>
+            finding.ruleId === 'generic_evidence_integrity_required'
+            && finding.severity === 'ERROR'
+        ),
+        true
+      );
+    });
   });
 });
 

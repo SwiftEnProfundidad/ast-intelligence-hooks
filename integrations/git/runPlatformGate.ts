@@ -32,6 +32,7 @@ import { createEmptySnapshotRulesCoverage } from '../evidence/rulesCoverage';
 import { enforceTddBddPolicy } from '../tdd/enforcement';
 import type { TddBddSnapshot } from '../tdd/types';
 import { resolveSkillsEnforcement } from '../policy/skillsEnforcement';
+import { applyTddBddEnforcement } from '../policy/tddBddEnforcement';
 
 export type OperationalMemoryShadowRecommendation = {
   recommendedOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
@@ -91,6 +92,8 @@ const buildDefaultMemoryShadowRecommendation = (params: {
 
   if (params.tddBddSnapshot?.status === 'blocked') {
     reasonCodes.push('tdd_bdd.blocked');
+  } else if (params.tddBddSnapshot?.status === 'advisory') {
+    reasonCodes.push('tdd_bdd.advisory');
   } else if (params.tddBddSnapshot?.status === 'passed') {
     reasonCodes.push('tdd_bdd.passed');
   }
@@ -106,6 +109,13 @@ const buildDefaultMemoryShadowRecommendation = (params: {
     return {
       recommendedOutcome: 'WARN',
       confidence: 0.75,
+      reasonCodes,
+    };
+  }
+  if (params.tddBddSnapshot?.status === 'advisory') {
+    return {
+      recommendedOutcome: 'WARN',
+      confidence: 0.7,
       reasonCodes,
     };
   }
@@ -1106,11 +1116,13 @@ export async function runPlatformGate(params: {
     }
     : createEmptySnapshotRulesCoverage(params.policy.stage);
   const currentBranch = resolveCurrentBranch(git, repoRoot);
-  const tddBddEvaluation = dependencies.enforceTddBddPolicy({
-    facts,
-    repoRoot,
-    branch: currentBranch,
-  });
+  const tddBddEvaluation = applyTddBddEnforcement(
+    dependencies.enforceTddBddPolicy({
+      facts,
+      repoRoot,
+      branch: currentBranch,
+    })
+  );
   const tddBddSnapshot: TddBddSnapshot | undefined = tddBddEvaluation.snapshot.scope.in_scope
     ? tddBddEvaluation.snapshot
     : undefined;
@@ -1209,7 +1221,9 @@ export async function runPlatformGate(params: {
     shouldBlockFromFinding(coverageBlockingFinding) ||
     hasTddBddBlockingFinding
       ? 'BLOCK'
-      : decision.outcome;
+      : (decision.outcome === 'PASS' && tddBddSnapshot?.status === 'advisory'
+          ? 'WARN'
+          : decision.outcome);
   const gateWaiverStage =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||

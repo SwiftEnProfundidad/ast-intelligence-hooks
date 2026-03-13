@@ -22,7 +22,7 @@
   - `SAAS` mantiene `PUMUKI-021` en `⏳` en su MD canónico.
   - `RuralGo` y `Flux` siguen cerrados.
 - ✅ Ultima task cerrada: `P2.F1.T1` Degradar `PRE_WRITE` a advisory/default-off y preservar `strict` como opt-in explícito.
-- Task activa: `P2.F1.T2` Ejecutar la extracción de `Policy Packs` y la cuarentena de `Experimental` siguiendo con `policy-as-code`, `hard mode` y `SDD completeness` ya desacoplados del camino blocking por defecto del core.
+- Task activa: `P2.F1.T2` Ejecutar la extracción de `Policy Packs` y la cuarentena de `Experimental` siguiendo con `policy-as-code`, `hard mode`, `SDD completeness`, la promoción de heurísticas, `skills enforcement` y `TDD/BDD enforcement` ya desacoplados del camino blocking por defecto del core.
 - ✅ `P2.F1.T1` Queda reactivada y cerrada tras extraer `Policy / Hard mode` fuera del core.
 
 ## Fase 0. Cierre operativo y saneamiento del hub
@@ -42,7 +42,7 @@
 
 - ✅ `P2.F0.T1` Publicar `PUMUKI-RESET-MASTER-PLAN.md` como fuente de verdad del reset y dejar visible `SAAS · PUMUKI-021`.
 - ✅ `P2.F1.T1` Ejecutar la Fase 1 del reset con un primer slice compartido: degradar `PRE_WRITE` a advisory/default-off y corregir el patron que hoy bloquea `PUMUKI-021`.
-- 🚧 `P2.F1.T2` Ejecutar la extraccion de `Policy Packs` y la cuarentena de `Experimental` siguiendo con `policy-as-code`, `hard mode`, `SDD completeness`, la promocion de heuristicas y `skills enforcement` ya desacoplados del camino blocking por defecto del core, alinear `consumer runtime menu/export` con la evidencia canonica, mantener las notificaciones como capacidad desactivable por contrato y cerrar la convergencia de `watch` con los gates directos antes de revalidar el fixture iOS.
+- 🚧 `P2.F1.T2` Ejecutar la extraccion de `Policy Packs` y la cuarentena de `Experimental` siguiendo con `policy-as-code`, `hard mode`, `SDD completeness`, la promocion de heuristicas, `skills enforcement` y `TDD/BDD enforcement` ya desacoplados del camino blocking por defecto del core, alinear `consumer runtime menu/export` con la evidencia canonica, mantener las notificaciones como capacidad desactivable por contrato y cerrar la convergencia de `watch` con los gates directos antes de revalidar el fixture iOS.
 
 ## Referencias de compatibilidad
 
