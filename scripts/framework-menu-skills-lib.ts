@@ -5,7 +5,7 @@ export const formatActiveSkillsBundles = (
   bundles: ReadonlyArray<Pick<SkillsLockBundle, 'name' | 'version' | 'hash'>>
 ): string => {
   if (bundles.length === 0) {
-    return 'No active skills bundles found. Run `npm run skills:compile` to generate skills.lock.json.';
+    return 'No active skills bundles found. Generate skills.lock.json with the installed Pumuki skills compiler.';
   }
 
   const lines = [...bundles]

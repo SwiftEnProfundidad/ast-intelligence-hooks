@@ -43,7 +43,7 @@
 - ✅ `P2.F0.T1` Publicar `PUMUKI-RESET-MASTER-PLAN.md` como fuente de verdad del reset y dejar visible `SAAS · PUMUKI-021`.
 - ✅ `P2.F1.T1` Ejecutar la Fase 1 del reset con un primer slice compartido: degradar `PRE_WRITE` a advisory/default-off y corregir el patron que hoy bloquea `PUMUKI-021`.
 - ✅ `P2.F1.T2` Ejecutar la extraccion de `Policy Packs` y la cuarentena de `Experimental` siguiendo con `policy-as-code`, `hard mode`, `SDD completeness`, la promocion de heuristicas, `skills enforcement`, `TDD/BDD enforcement` y `git atomicity` ya desacoplados del camino blocking por defecto del core, alinear `consumer runtime menu/export` con la evidencia canonica, mantener las notificaciones como capacidad desactivable por contrato, cerrar la convergencia de `watch` con los gates directos y distinguir correctamente `source-bin` frente al paquete instalado del consumer.
-- 🚧 `P2.F1.T3` Sanear `UX / Reporting` del consumer, empezando por `workflow lint`, para que los comandos de soporte fallen limpio, no emitan stacktraces crudos y degraden de forma explicable cuando falten dependencias opcionales como `actionlint`.
+- 🚧 `P2.F1.T3` Sanear `UX / Reporting` del consumer, empezando por `workflow lint` y `skills tooling`, para que los comandos de soporte fallen limpio, no emitan stacktraces crudos y degraden de forma explicable cuando falten dependencias opcionales o artefactos del consumer.
 
 ## Referencias de compatibilidad
 

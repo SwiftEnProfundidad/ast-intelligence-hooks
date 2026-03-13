@@ -5,7 +5,7 @@
 - Plan activo: `docs/tracking/fases-y-tareas.md`
 - Estado del plan: RESET ESTRATEGICO ACTIVO / BACKLOG OPERATIVO VISIBLE
 - Ultima task cerrada (`✅`): `P2.F1.T2` Extraer `Policy Packs`, aislar `Experimental`, estabilizar `watch`, alinear `menu/export` con la evidencia canonica y fijar la semantica `source-bin` frente al paquete instalado del consumer.
-- Task activa (`🚧`): `P2.F1.T3` Sanear `UX / Reporting` del consumer empezando por `workflow lint`, para que falle limpio sin stacktraces crudos y degrade de forma explicable cuando falten dependencias opcionales.
+- Task activa (`🚧`): `P2.F1.T3` Sanear `UX / Reporting` del consumer empezando por `workflow lint` y `skills tooling`, para que falle limpio sin stacktraces crudos y degrade de forma explicable cuando falten dependencias opcionales o artefactos del consumer.
 - Pendientes priorizados (`⏳`): completar la capa `UX / Reporting` limpia del consumer, consolidar la cuarentena de `Experimental`, mantener las notificaciones como capability opcional y revalidar el fixture iOS con el nuevo modelo de policy ya advisory por defecto.
 
 ## Reglas hard
