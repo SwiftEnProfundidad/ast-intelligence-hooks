@@ -7,6 +7,8 @@ import type { AiEvidenceV2_1 } from '../../evidence/schema';
 import type { PolicyReconcileReport } from '../policyReconcile';
 import { runLifecycleWatch } from '../watch';
 
+type WatchDependencies = NonNullable<Parameters<typeof runLifecycleWatch>[1]>;
+
 const makeEvidence = (params: {
   outcome: 'ALLOW' | 'WARN' | 'BLOCK';
   findingSeverity: 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL';
@@ -100,6 +102,17 @@ const makePolicyReconcileReport = (
   drifts: [],
 });
 
+const allowAtomicity = () => ({
+  enabled: true,
+  allowed: true,
+  violations: [],
+});
+
+const withAllowedAtomicity = (dependencies: WatchDependencies): WatchDependencies => ({
+  evaluateGitAtomicity: allowAtomicity,
+  ...dependencies,
+});
+
 test('runLifecycleWatch ejecuta evaluate->notify en cambios de worktree', async () => {
   const blockedNotifications: Array<{ code: string }> = [];
   const summaryNotifications: number[] = [];
@@ -120,7 +133,7 @@ test('runLifecycleWatch ejecuta evaluate->notify en cambios de worktree', async 
         tickLines.push(`${tick.tick}:${tick.notification}`);
       },
     },
-    {
+    withAllowedAtomicity({
       resolveRepoRoot: () => '/repo',
       readChangeToken: () => {
         const value = tokenIndex === 0 ? 'A' : 'B';
@@ -184,7 +197,7 @@ test('runLifecycleWatch ejecuta evaluate->notify en cambios de worktree', async 
       },
       nowMs: () => 1000 + evalIndex * 1000,
       sleep: async () => {},
-    }
+    })
   );
 
   assert.equal(result.evaluations, 2);
@@ -208,7 +221,7 @@ test('runLifecycleWatch expone metadata de versión efectiva/runtime y alerta dr
       notifyEnabled: false,
       maxIterations: 1,
     },
-    {
+    withAllowedAtomicity({
       resolveRepoRoot: () => '/repo',
       readChangeToken: () => 'A',
       resolvePumukiVersionMetadata: () => ({
@@ -241,7 +254,7 @@ test('runLifecycleWatch expone metadata de versión efectiva/runtime y alerta dr
       emitAuditSummaryNotificationFromEvidence: () => ({ delivered: true, reason: 'delivered' }),
       nowMs: () => 1000,
       sleep: async () => {},
-    }
+    })
   );
 
   assert.equal(result.version.effective, '6.3.45');
@@ -269,7 +282,7 @@ test('runLifecycleWatch usa el repoRoot solicitado al resolver facts y ejecutar 
       notifyEnabled: false,
       maxIterations: 1,
     },
-    {
+    withAllowedAtomicity({
       resolveRepoRoot: () => '/current/repo',
       readChangeToken: (repoRoot) => {
         assert.equal(repoRoot, '/target/repo');
@@ -306,12 +319,99 @@ test('runLifecycleWatch usa el repoRoot solicitado al resolver facts y ejecutar 
       emitAuditSummaryNotificationFromEvidence: () => ({ delivered: true, reason: 'delivered' }),
       nowMs: () => 1000,
       sleep: async () => {},
-    }
+    })
   );
 
   assert.equal(result.repoRoot, '/target/repo');
   assert.deepEqual(factsRepoRoots, ['/target/repo']);
   assert.deepEqual(gateRepoRoots, ['/target/repo']);
+});
+
+test('runLifecycleWatch bloquea por atomicidad antes del gate en PRE_PUSH y no arrastra findings legacy', async () => {
+  let gateCalls = 0;
+  const blockedNotifications: Array<{ code: string }> = [];
+
+  const result = await runLifecycleWatch(
+    {
+      stage: 'PRE_PUSH',
+      scope: 'repo',
+      intervalMs: 250,
+      notifyCooldownMs: 0,
+      severityThreshold: 'high',
+      notifyEnabled: true,
+      maxIterations: 1,
+    },
+    withAllowedAtomicity({
+      resolveRepoRoot: () => '/repo',
+      readChangeToken: () => 'A',
+      resolveUpstreamRef: () => 'origin/main',
+      resolvePolicyForStage: (stage) => ({
+        policy: {
+          stage,
+          blockOnOrAbove: 'ERROR',
+          warnOnOrAbove: 'WARN',
+        },
+        trace: {
+          source: 'default',
+          bundle: 'default',
+          hash: 'hash',
+        },
+      }),
+      evaluateGitAtomicity: () => ({
+        enabled: true,
+        allowed: false,
+        violations: [
+          {
+            code: 'GIT_ATOMICITY_TOO_MANY_SCOPES',
+            message: 'delta mezcla demasiados scopes',
+            remediation: 'divide el cambio en slices atómicos',
+          },
+        ],
+      }),
+      runPlatformGate: async () => {
+        gateCalls += 1;
+        return 1;
+      },
+      resolveFactsForGateScope: async () => [
+        {
+          kind: 'FileChange',
+          path: 'src/blocking.ts',
+          changeType: 'modified',
+          source: 'git:working-tree',
+        },
+        {
+          kind: 'FileContent',
+          path: 'src/blocking.ts',
+          content: 'export const blocking = true',
+          source: 'git:working-tree',
+        },
+      ],
+      readEvidence: () =>
+        makeEvidence({
+          outcome: 'BLOCK',
+          findingSeverity: 'ERROR',
+          findingCode: 'LEGACY_FALSE_POSITIVE',
+          findingMessage: 'legacy finding should not leak',
+          aiGateStatus: 'BLOCKED',
+          aiGateViolationCode: 'LEGACY_FALSE_POSITIVE',
+        }),
+      emitGateBlockedNotification: (params) => {
+        blockedNotifications.push({ code: params.causeCode });
+        return { delivered: true, reason: 'delivered' };
+      },
+      emitAuditSummaryNotificationFromEvidence: () => ({ delivered: true, reason: 'delivered' }),
+      nowMs: () => 1000,
+      sleep: async () => {},
+    })
+  );
+
+  assert.equal(gateCalls, 0);
+  assert.equal(result.lastTick.gateExitCode, 1);
+  assert.equal(result.lastTick.gateOutcome, 'BLOCK');
+  assert.deepEqual(result.lastTick.topCodes, ['GIT_ATOMICITY_TOO_MANY_SCOPES']);
+  assert.equal(result.lastTick.totalFindings, 1);
+  assert.equal(result.lastTick.findingsAtOrAboveThreshold, 1);
+  assert.deepEqual(blockedNotifications, [{ code: 'GIT_ATOMICITY_TOO_MANY_SCOPES' }]);
 });
 
 test('runLifecycleWatch aplica anti-spam por cooldown y firma duplicada', async () => {
@@ -330,7 +430,7 @@ test('runLifecycleWatch aplica anti-spam por cooldown y firma duplicada', async 
       notifyEnabled: true,
       maxIterations: 2,
     },
-    {
+    withAllowedAtomicity({
       resolveRepoRoot: () => '/repo',
       readChangeToken: () => {
         const value = tokenIndex === 0 ? 'A' : 'B';
@@ -384,7 +484,7 @@ test('runLifecycleWatch aplica anti-spam por cooldown y firma duplicada', async 
         return value;
       },
       sleep: async () => {},
-    }
+    })
   );
 
   assert.equal(result.evaluations, 2);
@@ -407,7 +507,7 @@ test('runLifecycleWatch respeta umbral de severidad y evita alertas por debajo',
       notifyEnabled: true,
       maxIterations: 1,
     },
-    {
+    withAllowedAtomicity({
       resolveRepoRoot: () => '/repo',
       readChangeToken: () => 'A',
       resolvePolicyForStage: (stage) => ({
@@ -449,7 +549,7 @@ test('runLifecycleWatch respeta umbral de severidad y evita alertas por debajo',
       emitAuditSummaryNotificationFromEvidence: () => ({ delivered: true, reason: 'delivered' }),
       nowMs: () => 1000,
       sleep: async () => {},
-    }
+    })
   );
 
   assert.equal(result.evaluations, 1);
@@ -477,7 +577,7 @@ test('runLifecycleWatch auto-reconcilia policy en drift de skills y reevalua en 
       notifyEnabled: false,
       maxIterations: 1,
     },
-    {
+    withAllowedAtomicity({
       resolveRepoRoot: () => '/repo',
       readChangeToken: () => 'A',
       resolvePolicyForStage: (stage) => ({
@@ -537,7 +637,7 @@ test('runLifecycleWatch auto-reconcilia policy en drift de skills y reevalua en 
       emitAuditSummaryNotificationFromEvidence: () => ({ delivered: true, reason: 'delivered' }),
       nowMs: () => 1000,
       sleep: async () => {},
-    }
+    })
   );
 
   assert.equal(reconcileCalls, 1);
@@ -568,7 +668,7 @@ test('runLifecycleWatch revierte mutaciones inesperadas de manifests y bloquea e
         notifyEnabled: false,
         maxIterations: 1,
       },
-      {
+      withAllowedAtomicity({
         resolveRepoRoot: () => repoRoot,
         readChangeToken: () => 'A',
         resolvePolicyForStage: (stage) => ({
@@ -614,7 +714,7 @@ test('runLifecycleWatch revierte mutaciones inesperadas de manifests y bloquea e
         emitAuditSummaryNotificationFromEvidence: () => ({ delivered: true, reason: 'delivered' }),
         nowMs: () => 1000,
         sleep: async () => {},
-      }
+      })
     );
 
     assert.equal(result.lastTick.gateOutcome, 'BLOCK');

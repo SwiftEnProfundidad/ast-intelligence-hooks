@@ -42,7 +42,7 @@
 
 - ✅ `P2.F0.T1` Publicar `PUMUKI-RESET-MASTER-PLAN.md` como fuente de verdad del reset y dejar visible `SAAS · PUMUKI-021`.
 - ✅ `P2.F1.T1` Ejecutar la Fase 1 del reset con un primer slice compartido: degradar `PRE_WRITE` a advisory/default-off y corregir el patron que hoy bloquea `PUMUKI-021`.
-- 🚧 `P2.F1.T2` Ejecutar la extraccion de `Policy Packs` y la cuarentena de `Experimental` siguiendo con `policy-as-code`, `hard mode`, `SDD completeness` y la promocion de heuristicas ya desacoplados del camino blocking por defecto del core.
+- 🚧 `P2.F1.T2` Ejecutar la extraccion de `Policy Packs` y la cuarentena de `Experimental` siguiendo con `policy-as-code`, `hard mode`, `SDD completeness`, la promocion de heuristicas ya desacoplados del camino blocking por defecto del core y la convergencia de `watch` con los gates directos antes de revalidar el fixture iOS.
 
 ## Referencias de compatibilidad
 

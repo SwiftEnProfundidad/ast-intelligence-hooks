@@ -11,6 +11,16 @@ import { readEvidence } from '../evidence/readEvidence';
 import type { AiEvidenceV2_1, SnapshotFinding } from '../evidence/schema';
 import { GitService, type IGitService } from '../git/GitService';
 import type { Fact } from '../../core/facts/Fact';
+import {
+  evaluateGitAtomicity,
+  type GitAtomicityEvaluation,
+  type GitAtomicityViolation,
+} from '../git/gitAtomicity';
+import {
+  resolveCiBaseRef,
+  resolvePrePushBootstrapBaseRef,
+  resolveUpstreamRef,
+} from '../git/resolveGitRefs';
 import { ensureRuntimeArtifactsIgnored } from './artifacts';
 import {
   emitAuditSummaryNotificationFromEvidence,
@@ -82,6 +92,15 @@ type LifecycleWatchDependencies = {
   resolveRepoRoot: () => string;
   readChangeToken: (repoRoot: string) => string;
   resolvePolicyForStage: (stage: LifecycleWatchStage) => ResolvedStagePolicy;
+  resolveUpstreamRef: typeof resolveUpstreamRef;
+  resolvePrePushBootstrapBaseRef: typeof resolvePrePushBootstrapBaseRef;
+  resolveCiBaseRef: typeof resolveCiBaseRef;
+  evaluateGitAtomicity: (params: {
+    repoRoot: string;
+    stage: LifecycleWatchStage;
+    fromRef?: string;
+    toRef?: string;
+  }) => GitAtomicityEvaluation;
   runPlatformGate: typeof runPlatformGate;
   resolveFactsForGateScope: typeof resolveFactsForGateScope;
   readEvidence: (repoRoot: string) => AiEvidenceV2_1 | undefined;
@@ -115,6 +134,16 @@ const defaultDependencies: LifecycleWatchDependencies = {
   readChangeToken: (repoRoot) =>
     defaultGitService.runGit(['status', '--porcelain=v1', '--untracked-files=all'], repoRoot),
   resolvePolicyForStage: (stage) => resolvePolicyForStage(stage),
+  resolveUpstreamRef,
+  resolvePrePushBootstrapBaseRef,
+  resolveCiBaseRef,
+  evaluateGitAtomicity: (params) =>
+    evaluateGitAtomicity({
+      repoRoot: params.repoRoot,
+      stage: params.stage,
+      fromRef: params.fromRef,
+      toRef: params.toRef,
+    }),
   runPlatformGate,
   resolveFactsForGateScope,
   readEvidence,
@@ -280,6 +309,55 @@ const collectEvaluatedFilesFromFacts = (facts: ReadonlyArray<Fact>): ReadonlyArr
   return collectChangedFilesFromFacts(facts);
 };
 
+const resolveWatchAtomicityRange = (params: {
+  stage: LifecycleWatchStage;
+  scope: LifecycleWatchScope;
+  dependencies: LifecycleWatchDependencies;
+}): { fromRef?: string; toRef?: string } => {
+  if (params.stage === 'PRE_COMMIT') {
+    return {};
+  }
+  if (params.stage === 'CI') {
+    return {
+      fromRef: params.dependencies.resolveCiBaseRef(),
+      toRef: 'HEAD',
+    };
+  }
+  if (params.scope === 'workingTree') {
+    return {};
+  }
+  const upstreamRef = params.dependencies.resolveUpstreamRef();
+  if (typeof upstreamRef === 'string' && upstreamRef.trim().length > 0) {
+    return {
+      fromRef: upstreamRef,
+      toRef: 'HEAD',
+    };
+  }
+  const bootstrapBaseRef = params.dependencies.resolvePrePushBootstrapBaseRef();
+  if (bootstrapBaseRef !== 'HEAD') {
+    return {
+      fromRef: bootstrapBaseRef,
+      toRef: 'HEAD',
+    };
+  }
+  return {};
+};
+
+const toAtomicitySnapshotFindings = (
+  violations: ReadonlyArray<GitAtomicityViolation>
+): ReadonlyArray<SnapshotFinding> =>
+  violations.map((violation) => ({
+    ruleId: 'governance.git.atomicity',
+    severity: 'ERROR',
+    code: violation.code,
+    message: violation.message,
+    file: '.pumuki/git-atomicity.json',
+    matchedBy: 'LifecycleWatch',
+    source: 'skills.backend.runtime-hygiene',
+    blocking: true,
+    expected_fix: violation.remediation,
+  }));
+
 const toFirstCause = (params: {
   evidence: AiEvidenceV2_1 | undefined;
   matchedFindings: ReadonlyArray<SnapshotFinding>;
@@ -403,6 +481,31 @@ export const runLifecycleWatch = async (
         gateOutcome: 'BLOCK' | 'WARN' | 'ALLOW' | 'NO_EVIDENCE';
         topCodes: ReadonlyArray<string>;
       }> => {
+        const atomicityRange = resolveWatchAtomicityRange({
+          stage,
+          scope,
+          dependencies: activeDependencies,
+        });
+        const atomicity = activeDependencies.evaluateGitAtomicity({
+          repoRoot,
+          stage,
+          fromRef: atomicityRange.fromRef,
+          toRef: atomicityRange.toRef,
+        });
+        if (atomicity.enabled && !atomicity.allowed) {
+          const allFindings = toAtomicitySnapshotFindings(atomicity.violations);
+          const matchedFindings = allFindings.filter((finding) =>
+            isSeverityAtLeast(finding.severity, thresholdSeverity)
+          );
+          return {
+            gateExitCode: 1,
+            evidence: undefined,
+            allFindings,
+            matchedFindings,
+            gateOutcome: 'BLOCK',
+            topCodes: toTopCodes(matchedFindings),
+          };
+        }
         const manifestSnapshot = captureWatchManifestGuardSnapshot(repoRoot);
         let gateExitCode = await activeDependencies.runPlatformGate({
           policy: resolvedPolicy.policy,
