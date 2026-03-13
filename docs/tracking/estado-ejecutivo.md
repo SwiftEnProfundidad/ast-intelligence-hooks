@@ -4,9 +4,9 @@
 
 - Plan activo: `docs/tracking/fases-y-tareas.md`
 - Estado del plan: RESET ESTRATEGICO ACTIVO / BACKLOG OPERATIVO VISIBLE
-- Ultima task cerrada (`✅`): `P2.F1.T2` Extraer `Policy Packs`, aislar `Experimental`, estabilizar `watch`, alinear `menu/export` con la evidencia canonica y fijar la semantica `source-bin` frente al paquete instalado del consumer.
-- Task activa (`🚧`): `P2.F1.T3` Sanear `UX / Reporting` del consumer empezando por `workflow lint`, `skills tooling` y `adapter diagnostics`, para que falle limpio sin stacktraces crudos, detecte capacidades reales del consumer y degrade de forma explicable cuando falten dependencias opcionales, scripts o artefactos del consumer; dentro del slice ya quedan corregidos `adapter diagnostics`, los hints legacy de `skills:*` para consumers y la dependencia artificial de `/tmp/actionlint-bin/actionlint`, y el siguiente foco se reduce a `workflow lint` con revalidación del fixture iOS.
-- Pendientes priorizados (`⏳`): completar la capa `UX / Reporting` limpia del consumer, cerrar la línea `workflow lint` con revalidación de fixture, consolidar la cuarentena de `Experimental`, mantener las notificaciones como capability opcional y revalidar el fixture iOS con el nuevo modelo de policy ya advisory por defecto.
+- Ultima task cerrada (`✅`): `P2.F1.T3` Sanear `UX / Reporting` del consumer empezando por `workflow lint`, `skills tooling` y `adapter diagnostics`, para que falle limpio sin stacktraces crudos, detecte capacidades reales del consumer y degrade de forma explicable cuando falten dependencias opcionales, scripts o artefactos del consumer.
+- Task activa (`🚧`): `P2.F1.T4` Cerrar la paridad final `source-bin` / paquete instalado y sanear los wrappers restantes del consumer (`menu avanzado`, `export` y ayudas de soporte) para que consuman la misma verdad canónica del core, no reintroduzcan findings legacy y degraden limpio cuando el paquete instalado vaya por detrás del source o falten capacidades opcionales del consumer.
+- Pendientes priorizados (`⏳`): completar la paridad `source/package` en superficies consumer-facing, consolidar la capa `UX / Reporting` alineada con el core, mantener las notificaciones como capability opcional y revalidar el fixture iOS con el nuevo modelo de policy ya advisory por defecto.
 
 ## Reglas hard
 

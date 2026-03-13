@@ -41,3 +41,23 @@ test('buildConsumerWorkflowLintMarkdown renders no-issues result when output is 
   assert.match(markdown, /## Result/);
   assert.match(markdown, /No issues reported by actionlint/);
 });
+
+test('buildConsumerWorkflowLintMarkdown treats empty output with failing exit code as execution failure', () => {
+  const markdown = buildConsumerWorkflowLintMarkdown({
+    generatedAtIso: '2026-02-09T00:00:00.000Z',
+    options: {
+      repoPath: '/tmp/repo',
+      outFile: '.audit-reports/consumer-triage/consumer-workflow-lint-report.md',
+      actionlintBin: 'actionlint',
+    },
+    lintResult: {
+      exitCode: 1,
+      output: '',
+      workflowPath: '/tmp/repo/.github/workflows/*.{yml,yaml}',
+    },
+  });
+
+  assert.match(markdown, /## Result/);
+  assert.match(markdown, /workflow lint command failed/);
+  assert.doesNotMatch(markdown, /No issues reported by actionlint/);
+});

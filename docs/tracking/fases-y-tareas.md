@@ -21,8 +21,8 @@
 - ⛔ Backlog externo abierto:
   - `SAAS` mantiene `PUMUKI-021` en `⏳` en su MD canónico.
   - `RuralGo` y `Flux` siguen cerrados.
-- ✅ Ultima task cerrada: `P2.F1.T2` Ejecutar la extracción de `Policy Packs` y la cuarentena de `Experimental`, alineando `watch`, `menu/export` y la metadata de runtime del source repo con el core ya estabilizado.
-- Task activa: `P2.F1.T3` Sanear `UX / Reporting` del consumer empezando por `workflow lint`, `skills tooling` y `adapter diagnostics`, eliminando stacktraces crudos, hints inválidos y wrappers que no degraden de forma limpia cuando falten dependencias opcionales.
+- ✅ Ultima task cerrada: `P2.F1.T3` Sanear `UX / Reporting` del consumer empezando por `workflow lint`, `skills tooling` y `adapter diagnostics`, eliminando stacktraces crudos, hints inválidos y wrappers que no degraden de forma limpia cuando falten dependencias opcionales.
+- Task activa: `P2.F1.T4` Cerrar la paridad final `source-bin` / paquete instalado y sanear los wrappers restantes del consumer (`menu avanzado`, `export` y ayudas de soporte) para que consuman la misma verdad canónica del core sin narrativa heredada ni hints inválidos.
 - ✅ `P2.F1.T1` Queda reactivada y cerrada tras extraer `Policy / Hard mode` fuera del core.
 
 ## Fase 0. Cierre operativo y saneamiento del hub
@@ -43,7 +43,8 @@
 - ✅ `P2.F0.T1` Publicar `PUMUKI-RESET-MASTER-PLAN.md` como fuente de verdad del reset y dejar visible `SAAS · PUMUKI-021`.
 - ✅ `P2.F1.T1` Ejecutar la Fase 1 del reset con un primer slice compartido: degradar `PRE_WRITE` a advisory/default-off y corregir el patron que hoy bloquea `PUMUKI-021`.
 - ✅ `P2.F1.T2` Ejecutar la extraccion de `Policy Packs` y la cuarentena de `Experimental` siguiendo con `policy-as-code`, `hard mode`, `SDD completeness`, la promocion de heuristicas, `skills enforcement`, `TDD/BDD enforcement` y `git atomicity` ya desacoplados del camino blocking por defecto del core, alinear `consumer runtime menu/export` con la evidencia canonica, mantener las notificaciones como capacidad desactivable por contrato, cerrar la convergencia de `watch` con los gates directos y distinguir correctamente `source-bin` frente al paquete instalado del consumer.
-- 🚧 `P2.F1.T3` Sanear `UX / Reporting` del consumer, empezando por `workflow lint`, `skills tooling` y `adapter diagnostics`, para que los comandos de soporte fallen limpio, no emitan stacktraces crudos, resuelvan capacidades reales del consumer y degraden de forma explicable cuando falten dependencias opcionales, scripts o artefactos del propio consumer. Dentro del slice ya quedan corregidos `adapter diagnostics`, la prioridad correcta de `no probes available` sobre `missing logs`, la eliminación de la dependencia artificial de `/tmp/actionlint-bin/actionlint` en `startup triage` y `phase5 closure`, y los hints legacy de `skills:*` para consumers; el siguiente foco queda reducido a `workflow lint` y su revalidación en el fixture iOS.
+- ✅ `P2.F1.T3` Sanear `UX / Reporting` del consumer, empezando por `workflow lint`, `skills tooling` y `adapter diagnostics`, para que los comandos de soporte fallen limpio, no emitan stacktraces crudos, resuelvan capacidades reales del consumer y degraden de forma explicable cuando falten dependencias opcionales, scripts o artefactos del propio consumer. El slice queda cerrado con `adapter diagnostics` capability-aware, prioridad correcta de `no probes available` sobre `missing logs`, eliminación de la dependencia artificial de `/tmp/actionlint-bin/actionlint` en `startup triage` y `phase5 closure`, hints legacy de `skills:*` corregidos para consumers y `workflow lint` dejando de presentar `exit_code != 0` con salida vacía como si fuera un reporte limpio.
+- 🚧 `P2.F1.T4` Cerrar la paridad final `source-bin` / paquete instalado y sanear los wrappers restantes del consumer (`menu avanzado`, `export` y ayudas de soporte) para que consuman la misma verdad canónica del core, no reintroduzcan findings legacy y degraden limpio cuando el paquete instalado vaya por detrás del source o falten capacidades opcionales del consumer.
 
 ## Referencias de compatibilidad
 
