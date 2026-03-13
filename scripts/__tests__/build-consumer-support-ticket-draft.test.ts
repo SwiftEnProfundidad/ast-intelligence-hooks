@@ -87,10 +87,72 @@ test('build-consumer-support-ticket-draft generates deterministic support draft'
       'utf8'
     );
     assert.match(report, /# Consumer CI Support Ticket Draft/);
+    assert.match(
+      report,
+      /Persistent GitHub Actions `startup_failure` before job creation in private repository/
+    );
     assert.match(report, /- startup_failure_runs observed: 2\./);
     assert.match(report, /- startup_stalled_runs observed: 1\./);
     assert.match(report, /- oldest_queued_run_age_minutes observed: 90\./);
     assert.match(report, /- auth verdict: READY/);
     assert.match(report, /- https:\/\/github.com\/owner\/repo\/actions\/runs\/123/);
+  });
+});
+
+test('build-consumer-support-ticket-draft stays neutral for public repo without startup failures', async () => {
+  await withTempDir('pumuki-consumer-support-ticket-build-public-', (tempRoot) => {
+    const outDir = join(tempRoot, '.audit-reports/consumer-triage');
+    mkdirSync(outDir, { recursive: true });
+
+    writeFileSync(
+      join(outDir, 'consumer-startup-failure-support-bundle.md'),
+      [
+        '# Consumer CI Startup Failure Support Bundle',
+        '',
+        '- startup_failure_runs: 0',
+        '- startup_stalled_runs: 0',
+        '- oldest_queued_run_age_minutes: 12',
+        '- path: BuildSucceeded',
+        '- jobs.total_count: 1',
+        '- artifacts.total_count: 0',
+        '- repo_visibility: `public`',
+        '',
+        'https://github.com/owner/repo/actions/runs/999',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(outDir, 'consumer-ci-auth-check.md'),
+      [
+        '# Consumer CI Auth Check',
+        '',
+        '- verdict: READY',
+        '- detected_scopes: repo, workflow, user',
+        '- missing_scopes: (none)',
+      ].join('\n'),
+      'utf8'
+    );
+
+    runGenerator({
+      cwd: tempRoot,
+      repo: 'owner/repo',
+      supportBundleFile:
+        '.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md',
+      authReportFile: '.audit-reports/consumer-triage/consumer-ci-auth-check.md',
+      outFile: '.audit-reports/consumer-triage/consumer-support-ticket-draft.md',
+    });
+
+    const report = readFileSync(
+      join(outDir, 'consumer-support-ticket-draft.md'),
+      'utf8'
+    );
+    assert.match(report, /Consumer CI diagnostics request for public repository/);
+    assert.match(
+      report,
+      /Current support bundle does not show `startup_failure` conclusions in the sampled runs/
+    );
+    assert.doesNotMatch(report, /private repository/);
+    assert.doesNotMatch(report, /Persistent GitHub Actions `startup_failure`/);
+    assert.doesNotMatch(report, /before job creation/);
   });
 });
