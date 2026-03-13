@@ -21,9 +21,9 @@
 - ⛔ Backlog externo abierto:
   - `SAAS` mantiene `PUMUKI-021` en `⏳` en su MD canónico.
   - `RuralGo` y `Flux` siguen cerrados.
-- ✅ Ultima task cerrada: `P2.F0.T1` Abrir el track `STRATEGIC_RESET` y publicar `PUMUKI-RESET-MASTER-PLAN.md` sin ocultar `SAAS · PUMUKI-021`.
-- Task activa: `P2.F1.T2` Ejecutar la extracción de `Policy Packs` y la cuarentena de `Experimental` empezando por sacar `hard mode` del core y convertirlo en perfil de policy.
-- ⛔ `P2.F1.T1` Degradar `PRE_WRITE` a advisory/default-off queda bloqueado hasta extraer primero `Policy / Hard mode` fuera del core.
+- ✅ Ultima task cerrada: `P2.F1.T1` Degradar `PRE_WRITE` a advisory/default-off y preservar `strict` como opt-in explícito.
+- Task activa: `P2.F1.T2` Ejecutar la extracción de `Policy Packs` y la cuarentena de `Experimental` siguiendo con `policy-as-code` y el desacople del camino blocking del core.
+- ✅ `P2.F1.T1` Queda reactivada y cerrada tras extraer `Policy / Hard mode` fuera del core.
 
 ## Fase 0. Cierre operativo y saneamiento del hub
 
@@ -41,8 +41,8 @@
 ## Fase 2. Strategic Reset
 
 - ✅ `P2.F0.T1` Publicar `PUMUKI-RESET-MASTER-PLAN.md` como fuente de verdad del reset y dejar visible `SAAS · PUMUKI-021`.
-- ⛔ `P2.F1.T1` Ejecutar la Fase 1 del reset con un primer slice compartido: degradar `PRE_WRITE` a advisory/default-off y corregir el patron que hoy bloquea `PUMUKI-021`.
-- 🚧 `P2.F1.T2` Ejecutar la extraccion de `Policy Packs` y la cuarentena de `Experimental` empezando por sacar `hard mode` del core y convertirlo en perfil de policy.
+- ✅ `P2.F1.T1` Ejecutar la Fase 1 del reset con un primer slice compartido: degradar `PRE_WRITE` a advisory/default-off y corregir el patron que hoy bloquea `PUMUKI-021`.
+- 🚧 `P2.F1.T2` Ejecutar la extraccion de `Policy Packs` y la cuarentena de `Experimental` siguiendo con `policy-as-code` y la separacion del camino blocking del core.
 
 ## Referencias de compatibilidad
 

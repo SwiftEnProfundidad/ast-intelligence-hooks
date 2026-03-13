@@ -70,6 +70,7 @@ import {
   type RemoteCiDiagnostics,
 } from './remoteCiDiagnostics';
 import { runPolicyReconcile } from './policyReconcile';
+import { resolvePreWriteEnforcement, type PreWriteEnforcementResolution } from '../policy/preWriteEnforcement';
 
 type LifecycleCommand =
   | 'bootstrap'
@@ -1562,6 +1563,7 @@ const PRE_WRITE_POLICY_RECONCILE_COMMAND =
 type PreWriteValidationEnvelope = {
   sdd: ReturnType<typeof evaluateSddPolicy>;
   ai_gate: ReturnType<typeof evaluateAiGate>;
+  pre_write_enforcement: PreWriteEnforcementResolution;
   policy_validation: LifecyclePolicyValidationSnapshot;
   automation: PreWriteAutomationTrace;
   bootstrap: {
@@ -1841,6 +1843,7 @@ const resolveAiGateViolationLocation = (code: string) => {
 const buildPreWriteValidationEnvelope = (
   result: ReturnType<typeof evaluateSddPolicy>,
   aiGate: ReturnType<typeof evaluateAiGate>,
+  preWriteEnforcement: PreWriteEnforcementResolution,
   policyValidation: LifecyclePolicyValidationSnapshot,
   automation: PreWriteAutomationTrace,
   bootstrap: PreWriteOpenSpecBootstrapTrace,
@@ -1848,6 +1851,7 @@ const buildPreWriteValidationEnvelope = (
 ): PreWriteValidationEnvelope => ({
   sdd: result,
   ai_gate: aiGate,
+  pre_write_enforcement: preWriteEnforcement,
   policy_validation: policyValidation,
   automation: {
     attempted: automation.attempted,
@@ -2473,6 +2477,13 @@ export const runLifecycleCli = async (
           let result = evaluateSddPolicy({
             stage: parsed.sddStage ?? 'PRE_COMMIT',
           });
+          const preWriteEnforcement = result.stage === 'PRE_WRITE'
+            ? resolvePreWriteEnforcement()
+            : {
+              mode: 'strict',
+              source: 'default',
+              blocking: true,
+            } satisfies PreWriteEnforcementResolution;
           const policyValidation = readLifecyclePolicyValidationSnapshot(process.cwd());
           const preWriteAutoBootstrapEnabled = process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP !== '0';
           const preWriteBootstrapTrace: PreWriteOpenSpecBootstrapTrace = {
@@ -2545,6 +2556,7 @@ export const runLifecycleCli = async (
                   ? buildPreWriteValidationEnvelope(
                     result,
                     aiGate,
+                    preWriteEnforcement,
                     policyValidation,
                     automationTrace,
                     preWriteBootstrapTrace,
@@ -2582,6 +2594,9 @@ export const runLifecycleCli = async (
               writeInfo(
                 `[pumuki][sdd] openspec auto-bootstrap: enabled=${preWriteBootstrapTrace.enabled ? 'yes' : 'no'} attempted=${preWriteBootstrapTrace.attempted ? 'yes' : 'no'} status=${preWriteBootstrapTrace.status} actions=${preWriteBootstrapTrace.actions.join(',') || 'none'}`
               );
+              writeInfo(
+                `[pumuki][sdd] pre-write enforcement: mode=${preWriteEnforcement.mode} source=${preWriteEnforcement.source} blocking=${preWriteEnforcement.blocking ? 'yes' : 'no'}`
+              );
               if (preWriteBootstrapTrace.details) {
                 writeInfo(
                   `[pumuki][sdd] openspec auto-bootstrap details: ${preWriteBootstrapTrace.details}`
@@ -2617,7 +2632,7 @@ export const runLifecycleCli = async (
               aiGateResult: aiGate,
             });
           }
-          if (!result.decision.allowed) {
+          if (!result.decision.allowed && preWriteEnforcement.blocking) {
             activeDependencies.emitGateBlockedNotification({
               repoRoot: process.cwd(),
               stage: result.stage,
@@ -2631,7 +2646,7 @@ export const runLifecycleCli = async (
             });
             return 1;
           }
-          if (aiGate && !aiGate.allowed) {
+          if (aiGate && !aiGate.allowed && preWriteEnforcement.blocking) {
             const firstViolation = aiGate.violations[0];
             const causeCode = firstViolation?.code ?? 'AI_GATE_BLOCKED';
             const causeMessage = firstViolation?.message ?? 'AI gate blocked PRE_WRITE stage.';

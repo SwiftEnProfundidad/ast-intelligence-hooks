@@ -4,9 +4,9 @@
 
 - Plan activo: `docs/tracking/fases-y-tareas.md`
 - Estado del plan: RESET ESTRATEGICO ACTIVO / BACKLOG OPERATIVO VISIBLE
-- Ultima task cerrada (`✅`): `P2.F0.T1` Abrir el track `STRATEGIC_RESET` y publicar `PUMUKI-RESET-MASTER-PLAN.md`.
-- Task activa (`🚧`): `P2.F1.T2` Extraer `Policy Packs`, aislar `Experimental` y sacar `hard mode` del core para convertirlo en perfil de policy.
-- Pendientes priorizados (`⏳`): reactivar `P2.F1.T1` para degradar `PRE_WRITE` cuando `Policy / Hard mode` ya no viva dentro del core, manteniendo `SAAS · PUMUKI-021` visible hasta su cierre real.
+- Ultima task cerrada (`✅`): `P2.F1.T1` Degradar `PRE_WRITE` a advisory/default-off y mantener `strict` como opt-in explicito.
+- Task activa (`🚧`): `P2.F1.T2` Extraer `Policy Packs`, aislar `Experimental` y seguir separando `policy-as-code` y el camino blocking del core.
+- Pendientes priorizados (`⏳`): completar la cuarentena de `Experimental` y revalidar los stages `PRE_PUSH` / `CI` con el nuevo modelo de policy.
 
 ## Reglas hard
 
