@@ -42,6 +42,7 @@ const PRE_PUSH_UPSTREAM_MISALIGNED_AHEAD_THRESHOLD = 5;
 
 const PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS = 900;
 const PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS = 1800;
+const HOOK_GATE_PROGRESS_REMINDER_MS = 2000;
 const DEFAULT_BLOCKED_REMEDIATION = 'Corrige la causa del bloqueo y vuelve a ejecutar el gate.';
 const EVIDENCE_FILE_PATH = '.ai_evidence.json';
 
@@ -110,6 +111,11 @@ type StageRunnerDependencies = {
   now: () => number;
   writeHookGateSummary: (message: string) => void;
   isQuietMode: () => boolean;
+  scheduleHookGateProgressReminder: (params: {
+    stage: HookStage;
+    delayMs: number;
+    onProgress: () => void;
+  }) => () => void;
   ensureRuntimeArtifactsIgnored: (repoRoot: string) => void;
   runPolicyReconcile: typeof runPolicyReconcile;
   isPathTracked: (repoRoot: string, relativePath: string) => boolean;
@@ -165,6 +171,17 @@ const defaultDependencies: StageRunnerDependencies = {
     process.stdout.write(`${message}\n`);
   },
   isQuietMode: () => process.argv.includes('--quiet'),
+  scheduleHookGateProgressReminder: ({ delayMs, onProgress }) => {
+    const timer = setTimeout(() => {
+      onProgress();
+    }, delayMs);
+    if (typeof timer === 'object' && timer !== null && 'unref' in timer) {
+      timer.unref();
+    }
+    return () => {
+      clearTimeout(timer);
+    };
+  },
   ensureRuntimeArtifactsIgnored: (repoRoot) => {
     try {
       ensureRuntimeArtifactsIgnored(repoRoot);
@@ -406,38 +423,59 @@ const runHookGateWithPolicyRetry = async (params: {
   scope: Parameters<typeof runPlatformGate>[0]['scope'];
   sddDecisionOverride?: Pick<SddDecision, 'allowed' | 'code' | 'message'>;
 }): Promise<{ exitCode: number; policyTrace: HookPolicyTrace }> => {
-  const firstAttempt = await runHookGateAttempt({
-    dependencies: params.dependencies,
-    stage: params.stage,
-    scope: params.scope,
-    sddDecisionOverride: params.sddDecisionOverride,
-  });
-  if (firstAttempt.exitCode === 0) {
-    return firstAttempt;
+  if (!params.dependencies.isQuietMode()) {
+    params.dependencies.writeHookGateSummary(
+      `[pumuki][hook-gate] stage=${params.stage} decision=PENDING status=STARTED`
+    );
   }
-  if (!isHookPolicyAutoReconcileEnabled()) {
-    return firstAttempt;
-  }
-  if (
-    !shouldRetryAfterPolicyReconcile({
+  const cancelProgressReminder = params.dependencies.isQuietMode()
+    ? () => {}
+    : params.dependencies.scheduleHookGateProgressReminder({
+        stage: params.stage,
+        delayMs: HOOK_GATE_PROGRESS_REMINDER_MS,
+        onProgress: () => {
+          params.dependencies.writeHookGateSummary(
+            `[pumuki][hook-gate] stage=${params.stage} decision=PENDING status=RUNNING`
+          );
+        },
+      });
+  try {
+    const firstAttempt = await runHookGateAttempt({
+      dependencies: params.dependencies,
+      stage: params.stage,
+      scope: params.scope,
+      sddDecisionOverride: params.sddDecisionOverride,
+    });
+    if (firstAttempt.exitCode === 0) {
+      return firstAttempt;
+    }
+    if (!isHookPolicyAutoReconcileEnabled()) {
+      return firstAttempt;
+    }
+    if (
+      !shouldRetryAfterPolicyReconcile({
+        dependencies: params.dependencies,
+        repoRoot: params.repoRoot,
+        stage: params.stage,
+      })
+    ) {
+      return firstAttempt;
+    }
+    params.dependencies.runPolicyReconcile({
       dependencies: params.dependencies,
       repoRoot: params.repoRoot,
+      strict: true,
+      apply: true,
+    });
+    return runHookGateAttempt({
+      dependencies: params.dependencies,
       stage: params.stage,
-    })
-  ) {
-    return firstAttempt;
+      scope: params.scope,
+      sddDecisionOverride: params.sddDecisionOverride,
+    });
+  } finally {
+    cancelProgressReminder();
   }
-  params.dependencies.runPolicyReconcile({
-    repoRoot: params.repoRoot,
-    strict: true,
-    apply: true,
-  });
-  return runHookGateAttempt({
-    dependencies: params.dependencies,
-    stage: params.stage,
-    scope: params.scope,
-    sddDecisionOverride: params.sddDecisionOverride,
-  });
 };
 
 const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {

@@ -281,6 +281,92 @@ test('runPreCommitStage keeps default policy thresholds when skills policy is ab
   });
 });
 
+test('runPreCommitStage emits visible progress before evaluating the gate', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const hookMessages: Array<string> = [];
+
+    const exitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+      writeHookGateSummary: (message) => {
+        hookMessages.push(message);
+      },
+      runPlatformGate: async () => {
+        assert.equal(
+          hookMessages.some((message) =>
+            message.includes('stage=PRE_COMMIT decision=PENDING status=STARTED')
+          ),
+          true
+        );
+        return 0;
+      },
+    });
+
+    assert.equal(exitCode, 0);
+  });
+});
+
+test('runPreCommitStage emits a running reminder when the gate evaluation takes longer', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const hookMessages: Array<string> = [];
+    let reminderCancelled = false;
+
+    const exitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+      writeHookGateSummary: (message) => {
+        hookMessages.push(message);
+      },
+      scheduleHookGateProgressReminder: ({ onProgress }) => {
+        onProgress();
+        return () => {
+          reminderCancelled = true;
+        };
+      },
+      runPlatformGate: async () => {
+        assert.equal(
+          hookMessages.some((message) =>
+            message.includes('stage=PRE_COMMIT decision=PENDING status=RUNNING')
+          ),
+          true
+        );
+        return 0;
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(reminderCancelled, true);
+  });
+});
+
+test('runPreCommitStage stays silent in quiet mode while the gate runs', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const hookMessages: Array<string> = [];
+    let reminderScheduled = false;
+
+    const exitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+      isQuietMode: () => true,
+      writeHookGateSummary: (message) => {
+        hookMessages.push(message);
+      },
+      scheduleHookGateProgressReminder: () => {
+        reminderScheduled = true;
+        return () => {};
+      },
+      runPlatformGate: async () => {
+        assert.deepEqual(hookMessages, []);
+        return 0;
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(hookMessages, []);
+    assert.equal(reminderScheduled, false);
+  });
+});
+
 test('runPreCommitStage asegura ignore local para artefactos runtime de Pumuki', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     stageBackendFile(repoRoot);
