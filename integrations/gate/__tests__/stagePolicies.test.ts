@@ -213,9 +213,21 @@ test('applyHeuristicSeverityForStage promueve heurísticas a ERROR en PRE_COMMIT
     },
   ];
 
-  const promoted = applyHeuristicSeverityForStage(rules, 'PRE_PUSH');
-  const preCommit = applyHeuristicSeverityForStage(rules, 'PRE_COMMIT');
+  const advisoryPrePush = applyHeuristicSeverityForStage(rules, 'PRE_PUSH');
+  const promoted = applyHeuristicSeverityForStage(rules, 'PRE_PUSH', {
+    mode: 'strict',
+    source: 'env',
+    blocking: true,
+  });
+  const preCommit = applyHeuristicSeverityForStage(rules, 'PRE_COMMIT', {
+    mode: 'strict',
+    source: 'env',
+    blocking: true,
+  });
 
+  assert.equal(advisoryPrePush[0]?.severity, 'WARN');
+  assert.equal(advisoryPrePush[1]?.severity, 'WARN');
+  assert.equal(advisoryPrePush[2]?.severity, 'WARN');
   assert.equal(promoted[0]?.severity, 'ERROR');
   assert.equal(promoted[1]?.severity, 'ERROR');
   assert.equal(promoted[2]?.severity, 'WARN');

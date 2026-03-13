@@ -13,6 +13,10 @@ import {
   type PolicyProfileSource,
 } from '../policy/policyProfiles';
 import { resolvePolicyAsCodeTraceMetadata } from '../policy/policyAsCode';
+import {
+  resolveHeuristicsEnforcement,
+  type HeuristicsEnforcementResolution,
+} from '../policy/heuristicsEnforcement';
 import { resolveDegradedMode } from './degradedMode';
 
 const heuristicsPromotionStageAllowList = new Set<GateStage>([
@@ -31,8 +35,12 @@ const canPromoteHeuristicForStage = (stage: GateStage): boolean => {
 
 const heuristicSeverityOverrideForStage = (
   ruleId: string,
-  stage: GateStage
+  stage: GateStage,
+  enforcement: HeuristicsEnforcementResolution
 ): Severity | null => {
+  if (!enforcement.blocking) {
+    return null;
+  }
   if (!canPromoteHeuristicForStage(stage)) {
     return null;
   }
@@ -134,10 +142,11 @@ export const resolvePolicyForStage = (
 
 export const applyHeuristicSeverityForStage = (
   rules: RuleSet,
-  stage: GateStage
+  stage: GateStage,
+  enforcement: HeuristicsEnforcementResolution = resolveHeuristicsEnforcement()
 ): RuleSet => {
   return rules.map((rule) => {
-    const severityOverride = heuristicSeverityOverrideForStage(rule.id, stage);
+    const severityOverride = heuristicSeverityOverrideForStage(rule.id, stage, enforcement);
     if (severityOverride === null || severityOverride === rule.severity) {
       return rule;
     }

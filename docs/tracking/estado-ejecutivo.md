@@ -5,8 +5,8 @@
 - Plan activo: `docs/tracking/fases-y-tareas.md`
 - Estado del plan: RESET ESTRATEGICO ACTIVO / BACKLOG OPERATIVO VISIBLE
 - Ultima task cerrada (`✅`): `P2.F1.T1` Degradar `PRE_WRITE` a advisory/default-off y mantener `strict` como opt-in explicito.
-- Task activa (`🚧`): `P2.F1.T2` Extraer `Policy Packs`, aislar `Experimental` y seguir separando `policy-as-code`, `hard mode` y `SDD completeness` del camino blocking por defecto del core.
-- Pendientes priorizados (`⏳`): completar la cuarentena de `Experimental` y revalidar `watch`, `PRE_PUSH` y `CI` con el nuevo modelo de policy.
+- Task activa (`🚧`): `P2.F1.T2` Extraer `Policy Packs`, aislar `Experimental` y seguir separando `policy-as-code`, `hard mode`, `SDD completeness` y la promocion de heuristicas del camino blocking por defecto del core.
+- Pendientes priorizados (`⏳`): completar la cuarentena de `Experimental` y revalidar `watch`, `PRE_PUSH` y `CI` con el nuevo modelo de policy y heuristicas en advisory por defecto.
 
 ## Reglas hard
 
