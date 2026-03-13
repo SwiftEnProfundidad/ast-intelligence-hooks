@@ -13,6 +13,7 @@ import {
   refreshSddSession,
 } from './sessionStore';
 import { resolveDegradedMode } from '../gate/degradedMode';
+import { resolveSddCompletenessEnforcement } from '../policy/sddCompletenessEnforcement';
 import type {
   SddDecision,
   SddEvaluateResult,
@@ -246,7 +247,7 @@ export const evaluateSddPolicy = (params: {
   const bypassEnabled = process.env.PUMUKI_SDD_BYPASS === '1';
   const autoRefreshEnabled = process.env.PUMUKI_SDD_AUTO_REFRESH_SESSION !== '0';
   const strictEmptyItemsEnabled = process.env.PUMUKI_SDD_STRICT_EMPTY_ITEMS !== '0';
-  const strictCompletenessEnabled = process.env.PUMUKI_SDD_ENFORCE_COMPLETENESS !== '0';
+  const completenessEnforcement = resolveSddCompletenessEnforcement();
   let status = buildStatus(repoRoot);
   let autoRefreshAttempted = false;
   let autoRefreshError: string | undefined;
@@ -411,16 +412,21 @@ export const evaluateSddPolicy = (params: {
   }
 
   const activeChangeId = status.session.changeId;
+  let completeness = undefined as
+    | {
+      complete: boolean;
+      missingRequirements: string[];
+    }
+    | undefined;
   if (
-    strictCompletenessEnabled &&
     activeChangeId &&
     (params.stage === 'PRE_PUSH' || params.stage === 'CI')
   ) {
-    const completeness = evaluateActiveChangeCompleteness({
+    completeness = evaluateActiveChangeCompleteness({
       repoRoot,
       changeId: activeChangeId,
     });
-    if (!completeness.complete) {
+    if (!completeness.complete && completenessEnforcement.blocking) {
       return {
         stage: params.stage,
         status,
@@ -434,8 +440,10 @@ export const evaluateSddPolicy = (params: {
             changeId: activeChangeId,
             contractVersion: SDD_COMPLETENESS_CONTRACT_VERSION,
             missingRequirements: completeness.missingRequirements,
-            strictCompletenessEnabled,
-            overrideEnv: 'PUMUKI_SDD_ENFORCE_COMPLETENESS=0',
+            completenessEnforcementMode: completenessEnforcement.mode,
+            completenessEnforcementSource: completenessEnforcement.source,
+            completenessBlocking: completenessEnforcement.blocking,
+            overrideEnv: 'PUMUKI_SDD_ENFORCE_COMPLETENESS=advisory',
           }
         ),
       };
@@ -446,16 +454,27 @@ export const evaluateSddPolicy = (params: {
     stage: params.stage,
     status,
     validation,
-    decision: allowed('SDD validation passed for active changes.', {
-      command: OPENSPEC_VALIDATE_ALL_COMMAND,
-      passedItems: validation.totals.passed,
-      validatedItems: validation.totals.items,
-      warnings: validation.issues.warnings,
-      emptyScope: validation.totals.items <= 0,
-      strictEmptyItemsEnabled,
-      strictCompletenessEnabled,
-      completenessContractVersion: SDD_COMPLETENESS_CONTRACT_VERSION,
-    }),
+    decision: allowed(
+      completeness?.complete === false
+        ? 'SDD validation passed; active change completeness remains advisory for this stage.'
+        : 'SDD validation passed for active changes.',
+      {
+        command: OPENSPEC_VALIDATE_ALL_COMMAND,
+        passedItems: validation.totals.passed,
+        validatedItems: validation.totals.items,
+        warnings: validation.issues.warnings,
+        emptyScope: validation.totals.items <= 0,
+        strictEmptyItemsEnabled,
+        completenessEnforcementMode: completenessEnforcement.mode,
+        completenessEnforcementSource: completenessEnforcement.source,
+        completenessBlocking: completenessEnforcement.blocking,
+        completenessContractVersion: SDD_COMPLETENESS_CONTRACT_VERSION,
+        completenessStatus: completeness?.complete === false ? 'incomplete-advisory' : 'complete',
+        missingCompletenessRequirements: completeness?.complete === false
+          ? completeness.missingRequirements
+          : [],
+      }
+    ),
   };
 };
 
