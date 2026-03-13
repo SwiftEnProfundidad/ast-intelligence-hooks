@@ -34,6 +34,7 @@ test('consumer runtime avisa cuando STAGING only no tiene archivos en scope', { 
     await action.execute();
 
     assert.match(output.join('\n'), /Scope vacío.*staged/i);
+    assert.match(output.join('\n'), /archivos soportados en staged/i);
   } finally {
     process.chdir(previous);
   }
@@ -63,6 +64,38 @@ test('consumer runtime avisa cuando working tree no tiene archivos en scope', { 
     await action.execute();
 
     assert.match(output.join('\n'), /Scope vacío.*working tree/i);
+    assert.match(output.join('\n'), /archivos soportados en staged\/unstaged/i);
+  } finally {
+    process.chdir(previous);
+  }
+});
+
+test('consumer runtime no vende scope vacío cuando working tree queda bloqueado', { concurrency: false }, async () => {
+  const previous = process.cwd();
+  const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-working-blocked-'));
+  process.chdir(temp);
+  try {
+    const output: string[] = [];
+    const runtime = createConsumerMenuRuntime({
+      runRepoGate: async () => {},
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runWorkingTreeGate: async () => {
+        writeEvidenceWithLines(temp);
+      },
+      runPreflight: async () => {},
+      write: (text) => {
+        output.push(text);
+      },
+    });
+
+    const action = runtime.actions.find((item) => item.id === '4');
+    assert.ok(action, 'Expected consumer action id=4');
+    await action.execute();
+
+    const rendered = output.join('\n');
+    assert.doesNotMatch(rendered, /Scope vacío.*working tree/i);
+    assert.match(rendered, /Evidence: status=ok stage=PRE_COMMIT outcome=BLOCK findings=2/);
   } finally {
     process.chdir(previous);
   }

@@ -107,17 +107,21 @@ export const printConsumerRuntimeEmptyScopeHint = (
   summary: FrameworkMenuEvidenceSummary,
   scope: ConsumerRuntimeScope
 ): void => {
-  if (summary.status !== 'ok' || summary.filesScanned > 0) {
+  if (
+    summary.status !== 'ok'
+    || summary.filesScanned > 0
+    || summary.outcome !== 'PASS'
+  ) {
     return;
   }
   if (scope === 'staged') {
     dependencies.write(
-      '\nℹ Scope vacío (staged): no hay archivos staged para auditar. Resultado PASS por alcance vacío; usa 1 o 2 para validar repo completo.\n'
+      '\nℹ Scope vacío (staged): no hay archivos soportados en staged para auditar. Resultado PASS por alcance vacío; usa 1 o 2 para validar repo completo.\n'
     );
     return;
   }
   dependencies.write(
-    '\nℹ Scope vacío (working tree): no hay cambios sin commitear para auditar. Resultado PASS por alcance vacío; usa 1 o 2 para validar repo completo.\n'
+    '\nℹ Scope vacío (working tree): no hay archivos soportados en staged/unstaged para auditar. Resultado PASS por alcance vacío; usa 1 o 2 para validar repo completo.\n'
   );
 };
 
