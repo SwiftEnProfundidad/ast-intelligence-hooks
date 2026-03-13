@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { basename } from 'node:path';
 import test from 'node:test';
 import {
   buildConsumerStartupTriageCommands,
@@ -35,6 +36,10 @@ test('buildConsumerStartupTriageCommands includes workflow lint when configured'
   assert.equal(commands[2]?.id, 'workflow-lint');
   assert.equal(commands.at(-1)?.id, 'startup-unblock-status');
   assert.equal(commands.length, 6);
+  assert.equal(commands[0]?.displayScript, 'scripts/check-consumer-ci-auth.ts');
+  assert.equal(basename(commands[0]?.scriptPath ?? ''), 'check-consumer-ci-auth.ts');
+  assert.equal(commands[2]?.displayScript, 'scripts/lint-consumer-workflows.ts');
+  assert.equal(basename(commands[2]?.scriptPath ?? ''), 'lint-consumer-workflows.ts');
 });
 
 test('buildConsumerStartupTriageCommands throws when workflow lint args are missing', () => {
@@ -119,6 +124,7 @@ test('buildConsumerStartupTriageReportMarkdown renders READY verdict for success
 
   assert.match(markdown, /- verdict: READY/);
   assert.match(markdown, /Triage outputs are ready for review and escalation workflow\./);
+  assert.match(markdown, /npx --yes tsx@4.21.0 scripts\/check-consumer-ci-auth\.ts/);
 });
 
 test('buildConsumerStartupTriageReportMarkdown renders BLOCKED verdict for failed required steps', () => {

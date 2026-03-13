@@ -1,5 +1,4 @@
 import { execFileSync as runBinarySync } from 'node:child_process';
-import { resolve } from 'node:path';
 import type {
   ConsumerStartupTriageCommand,
   ConsumerStartupTriageExecution,
@@ -11,7 +10,7 @@ export const renderConsumerStartupTriageDryRunPlan = (
   const lines = ['consumer startup triage dry-run plan:'];
   for (const command of commands) {
     lines.push(
-      `- ${command.id}: npx --yes tsx@4.21.0 ${command.script} ${command.args.join(' ')}`
+      `- ${command.id}: npx --yes tsx@4.21.0 ${command.displayScript} ${command.args.join(' ')}`
     );
   }
   return `${lines.join('\n')}\n`;
@@ -35,9 +34,8 @@ export const executeConsumerStartupTriageCommands = (
   const executions: ConsumerStartupTriageExecution[] = [];
 
   for (const command of commands) {
-    const scriptPath = resolve(process.cwd(), command.script);
     try {
-      runBinarySync('npx', ['--yes', 'tsx@4.21.0', scriptPath, ...command.args], {
+      runBinarySync('npx', ['--yes', 'tsx@4.21.0', command.scriptPath, ...command.args], {
         stdio: 'inherit',
       });
       executions.push({

@@ -4,6 +4,7 @@ import type {
   ConsumerStartupTriageOutputs,
 } from './consumer-startup-triage-contract';
 import { DEFAULT_ACTIONLINT_BIN } from './framework-menu-runner-constants';
+import { resolveConsumerStartupTriageScript } from './consumer-startup-triage-script-paths-lib';
 
 const resolveWorkflowLintInputs = (params: {
   options: ConsumerStartupTriageOptions;
@@ -27,9 +28,12 @@ export const buildConsumerStartupTriageWorkflowLintCommand = (params: {
   });
 
   return {
+    ...resolveConsumerStartupTriageScript(
+      import.meta.url,
+      'scripts/lint-consumer-workflows.ts'
+    ),
     id: 'workflow-lint',
     description: 'Run semantic workflow lint on consumer repository',
-    script: 'scripts/lint-consumer-workflows.ts',
     args: [
       '--repo-path',
       workflowLintInputs.repoPath,

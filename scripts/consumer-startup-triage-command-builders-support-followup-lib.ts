@@ -3,15 +3,19 @@ import type {
   ConsumerStartupTriageOptions,
   ConsumerStartupTriageOutputs,
 } from './consumer-startup-triage-contract';
+import { resolveConsumerStartupTriageScript } from './consumer-startup-triage-script-paths-lib';
 
 export const buildConsumerStartupTriageSupportTicketDraftCommand = (params: {
   options: ConsumerStartupTriageOptions;
   outputs: ConsumerStartupTriageOutputs;
 }): ConsumerStartupTriageCommand => {
   return {
+    ...resolveConsumerStartupTriageScript(
+      import.meta.url,
+      'scripts/build-consumer-support-ticket-draft.ts'
+    ),
     id: 'support-ticket-draft',
     description: 'Build support ticket draft from auth + support bundle',
-    script: 'scripts/build-consumer-support-ticket-draft.ts',
     args: [
       '--repo',
       params.options.repo,
@@ -32,9 +36,12 @@ export const buildConsumerStartupTriageStartupUnblockStatusCommand = (params: {
   outputs: ConsumerStartupTriageOutputs;
 }): ConsumerStartupTriageCommand => {
   return {
+    ...resolveConsumerStartupTriageScript(
+      import.meta.url,
+      'scripts/build-consumer-startup-unblock-status.ts'
+    ),
     id: 'startup-unblock-status',
     description: 'Build consolidated startup-unblock status report',
-    script: 'scripts/build-consumer-startup-unblock-status.ts',
     args: [
       '--repo',
       params.options.repo,
