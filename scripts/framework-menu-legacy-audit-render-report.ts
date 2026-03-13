@@ -23,6 +23,16 @@ const codeHealthLabel = (score: number): string => {
   return 'Needs attention';
 };
 
+const resolveLegacyAuditStageActionLabel = (stage: string | null | undefined): string => {
+  if (stage === 'PRE_COMMIT') {
+    return 'COMMIT';
+  }
+  if (stage === 'PRE_PUSH' || stage === 'CI') {
+    return stage;
+  }
+  return 'GATE';
+};
+
 const buildOverviewPanelLines = (): string[] => {
   return [
     LEGACY_AUDIT_OVERVIEW_TITLE,
@@ -94,9 +104,10 @@ const buildRemediationPanelLines = (summary: LegacyAuditSummary): string[] => {
 };
 
 const buildMetricsPanelLines = (summary: LegacyAuditSummary): string[] => {
+  const stageActionLabel = resolveLegacyAuditStageActionLabel(summary.stage);
   const commitStatus = summary.bySeverity.CRITICAL > 0 || summary.bySeverity.HIGH > 0
-    ? 'COMMIT BLOCKED — STRICT REPO+STAGING'
-    : 'COMMIT ALLOWED';
+    ? `${stageActionLabel} BLOCKED — STRICT REPO+STAGING`
+    : `${stageActionLabel} ALLOWED`;
   const blockedMessage = summary.bySeverity.CRITICAL > 0 || summary.bySeverity.HIGH > 0
     ? 'ACTION REQUIRED: Critical or high-severity issues detected. Please review and fix before proceeding.'
     : 'No blocking violations detected.';

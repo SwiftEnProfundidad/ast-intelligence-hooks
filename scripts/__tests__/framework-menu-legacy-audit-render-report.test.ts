@@ -34,6 +34,23 @@ test('formatLegacyAuditReport renderiza secciones legacy con resumen por platafo
   });
 });
 
+test('formatLegacyAuditReport usa el stage real en el resumen final cuando no es PRE_COMMIT', async () => {
+  await withTempDir('pumuki-legacy-audit-pre-push-status-', async (repoRoot) => {
+    writeLegacyAuditEvidenceFixture(repoRoot, {
+      snapshot: {
+        stage: 'PRE_PUSH',
+        outcome: 'BLOCK',
+      },
+    });
+    const summary = readLegacyAuditSummary(repoRoot);
+    const rendered = formatLegacyAuditReport(summary);
+
+    assert.match(rendered, /PRE_PUSH BLOCKED — STRICT REPO\+STAGING/);
+    assert.doesNotMatch(rendered, /COMMIT BLOCKED — STRICT REPO\+STAGING/);
+    assert.match(rendered, /Stage: PRE_PUSH • Outcome: BLOCK/);
+  });
+});
+
 test('formatLegacyAuditReport ajusta lineas al ancho de panel solicitado', async () => {
   await withTempDir('pumuki-legacy-audit-width-', async (repoRoot) => {
     writeLegacyAuditEvidenceFixture(repoRoot);
