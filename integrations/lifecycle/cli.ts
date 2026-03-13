@@ -568,6 +568,9 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   if (!isLifecycleCommand(commandRaw)) {
     throw new Error(`Unknown command "${commandRaw}".\n\n${HELP_TEXT}`);
   }
+  if (argv.slice(1).some((arg) => arg === '--help' || arg === '-h')) {
+    throw new Error(HELP_TEXT);
+  }
 
   let purgeArtifacts = false;
   let updateSpec: ParsedArgs['updateSpec'];
@@ -1895,6 +1898,50 @@ const writeLoopAttemptEvidence = (params: {
   return relativePath;
 };
 
+const withTemporaryEnvOverrides = <T>(
+  overrides: Readonly<Record<string, string | undefined>>,
+  callback: () => T
+): T => {
+  const previous = new Map<string, string | undefined>();
+  for (const [key, value] of Object.entries(overrides)) {
+    previous.set(key, process.env[key]);
+    if (typeof value === 'undefined') {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+  try {
+    return callback();
+  } finally {
+    for (const [key, value] of previous.entries()) {
+      if (typeof value === 'undefined') {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+};
+
+const runRawPreWriteAiGateCheck = (params: {
+  repoRoot: string;
+  requireMcpReceipt: boolean;
+}): ReturnType<typeof evaluateAiGate> =>
+  withTemporaryEnvOverrides(
+    {
+      PUMUKI_SKILLS_ENFORCEMENT: process.env.PUMUKI_SKILLS_ENFORCEMENT ?? 'strict',
+      PUMUKI_TDD_BDD_ENFORCEMENT: process.env.PUMUKI_TDD_BDD_ENFORCEMENT ?? 'strict',
+      PUMUKI_HEURISTICS_ENFORCEMENT: process.env.PUMUKI_HEURISTICS_ENFORCEMENT ?? 'strict',
+    },
+    () =>
+      runEnterpriseAiGateCheck({
+        repoRoot: params.repoRoot,
+        stage: 'PRE_WRITE',
+        requireMcpReceipt: params.requireMcpReceipt,
+      }).result
+  );
+
 export const runLifecycleCli = async (
   argv: ReadonlyArray<string>,
   dependencies: Partial<LifecycleCliDependencies> = {}
@@ -2545,17 +2592,23 @@ export const runLifecycleCli = async (
             automationTrace.attempted = auto.trace.attempted;
             automationTrace.actions = auto.trace.actions;
           }
+          const rawPreWriteAiGate = result.stage === 'PRE_WRITE' && aiGate
+            ? runRawPreWriteAiGateCheck({
+              repoRoot: process.cwd(),
+              requireMcpReceipt: true,
+            })
+            : null;
           const nextAction = resolvePreWriteNextAction({
             sdd: result,
-            aiGate,
+            aiGate: rawPreWriteAiGate ?? aiGate,
           });
           if (parsed.json) {
             writeInfo(
               JSON.stringify(
-                aiGate
+                (rawPreWriteAiGate ?? aiGate)
                   ? buildPreWriteValidationEnvelope(
                     result,
-                    aiGate,
+                    rawPreWriteAiGate ?? aiGate!,
                     preWriteEnforcement,
                     policyValidation,
                     automationTrace,

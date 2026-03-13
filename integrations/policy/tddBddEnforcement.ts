@@ -6,11 +6,12 @@ export type TddBddEnforcementMode = 'advisory' | 'strict';
 
 export type TddBddEnforcementResolution = {
   mode: TddBddEnforcementMode;
-  source: 'default' | 'env';
+  source: 'default' | 'env' | 'prewrite';
   blocking: boolean;
 };
 
 const TDD_BDD_ENFORCEMENT_ENV = 'PUMUKI_TDD_BDD_ENFORCEMENT';
+const PRE_WRITE_ENFORCEMENT_ENV = 'PUMUKI_PREWRITE_ENFORCEMENT';
 
 const toTddBddEnforcementMode = (
   value: string | undefined
@@ -49,6 +50,14 @@ export const resolveTddBddEnforcement = (): TddBddEnforcementResolution => {
       mode: modeFromEnv,
       source: 'env',
       blocking: modeFromEnv === 'strict',
+    };
+  }
+  const preWriteMode = process.env[PRE_WRITE_ENFORCEMENT_ENV]?.trim().toLowerCase();
+  if (preWriteMode === 'strict') {
+    return {
+      mode: 'strict',
+      source: 'prewrite',
+      blocking: true,
     };
   }
   return {

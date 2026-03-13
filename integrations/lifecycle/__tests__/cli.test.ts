@@ -895,6 +895,28 @@ test('runLifecycleCli retorna 0 para ayuda explícita en subcomando', async () =
   assert.equal(code, 0);
 });
 
+test('runLifecycleCli retorna 0 para ayuda explícita en comandos lifecycle simples', async () => {
+  const bootstrapCode = await withSilentConsole(() => runLifecycleCli(['bootstrap', '--help']));
+  const statusCode = await withSilentConsole(() => runLifecycleCli(['status', '--help']));
+  const doctorCode = await withSilentConsole(() => runLifecycleCli(['doctor', '--help']));
+
+  assert.equal(bootstrapCode, 0);
+  assert.equal(statusCode, 0);
+  assert.equal(doctorCode, 0);
+});
+
+test('runLifecycleCli retorna 0 para ayuda explícita en subcomandos profundos', async () => {
+  const validateCode = await withSilentConsole(() =>
+    runLifecycleCli(['sdd', 'validate', '--help'])
+  );
+  const hotspotsCode = await withSilentConsole(() =>
+    runLifecycleCli(['analytics', 'hotspots', 'report', '--help'])
+  );
+
+  assert.equal(validateCode, 0);
+  assert.equal(hotspotsCode, 0);
+});
+
 test('runLifecycleCli watch --json delega en runLifecycleWatch y devuelve payload estable', async () => {
   const printed: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);

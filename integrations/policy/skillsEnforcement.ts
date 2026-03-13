@@ -2,11 +2,12 @@ export type SkillsEnforcementMode = 'advisory' | 'strict';
 
 export type SkillsEnforcementResolution = {
   mode: SkillsEnforcementMode;
-  source: 'default' | 'env';
+  source: 'default' | 'env' | 'prewrite';
   blocking: boolean;
 };
 
 const SKILLS_ENFORCEMENT_ENV = 'PUMUKI_SKILLS_ENFORCEMENT';
+const PRE_WRITE_ENFORCEMENT_ENV = 'PUMUKI_PREWRITE_ENFORCEMENT';
 
 const toSkillsEnforcementMode = (
   value: string | undefined
@@ -45,6 +46,14 @@ export const resolveSkillsEnforcement = (): SkillsEnforcementResolution => {
       mode: modeFromEnv,
       source: 'env',
       blocking: modeFromEnv === 'strict',
+    };
+  }
+  const preWriteMode = process.env[PRE_WRITE_ENFORCEMENT_ENV]?.trim().toLowerCase();
+  if (preWriteMode === 'strict') {
+    return {
+      mode: 'strict',
+      source: 'prewrite',
+      blocking: true,
     };
   }
   return {

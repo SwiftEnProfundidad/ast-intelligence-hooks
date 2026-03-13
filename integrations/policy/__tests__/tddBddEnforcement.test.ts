@@ -23,6 +23,27 @@ const withTddBddEnforcementEnv = async <T>(
   }
 };
 
+const withPreWriteEnforcementEnv = async <T>(
+  value: string | undefined,
+  callback: () => Promise<T> | T
+): Promise<T> => {
+  const previous = process.env.PUMUKI_PREWRITE_ENFORCEMENT;
+  if (typeof value === 'undefined') {
+    delete process.env.PUMUKI_PREWRITE_ENFORCEMENT;
+  } else {
+    process.env.PUMUKI_PREWRITE_ENFORCEMENT = value;
+  }
+  try {
+    return await callback();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env.PUMUKI_PREWRITE_ENFORCEMENT;
+    } else {
+      process.env.PUMUKI_PREWRITE_ENFORCEMENT = previous;
+    }
+  }
+};
+
 test('resolveTddBddEnforcement defaults to advisory mode', async () => {
   await withTddBddEnforcementEnv(undefined, () => {
     const resolved = resolveTddBddEnforcement();
@@ -55,6 +76,20 @@ test('resolveTddBddEnforcement falls back to advisory on invalid environment val
       mode: 'advisory',
       source: 'default',
       blocking: false,
+    });
+  });
+});
+
+test('resolveTddBddEnforcement inherits strict mode from PRE_WRITE enforcement when explicit tdd/bdd env is absent', async () => {
+  await withTddBddEnforcementEnv(undefined, async () => {
+    await withPreWriteEnforcementEnv('strict', () => {
+      const resolved = resolveTddBddEnforcement();
+
+      assert.deepEqual(resolved, {
+        mode: 'strict',
+        source: 'prewrite',
+        blocking: true,
+      });
     });
   });
 });

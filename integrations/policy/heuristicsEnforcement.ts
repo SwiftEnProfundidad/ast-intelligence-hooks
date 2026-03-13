@@ -2,11 +2,12 @@ export type HeuristicsEnforcementMode = 'advisory' | 'strict';
 
 export type HeuristicsEnforcementResolution = {
   mode: HeuristicsEnforcementMode;
-  source: 'default' | 'env';
+  source: 'default' | 'env' | 'prewrite';
   blocking: boolean;
 };
 
 const HEURISTICS_ENFORCEMENT_ENV = 'PUMUKI_HEURISTICS_ENFORCEMENT';
+const PRE_WRITE_ENFORCEMENT_ENV = 'PUMUKI_PREWRITE_ENFORCEMENT';
 
 const toHeuristicsEnforcementMode = (
   value: string | undefined
@@ -45,6 +46,14 @@ export const resolveHeuristicsEnforcement = (): HeuristicsEnforcementResolution 
       mode: modeFromEnv,
       source: 'env',
       blocking: modeFromEnv === 'strict',
+    };
+  }
+  const preWriteMode = process.env[PRE_WRITE_ENFORCEMENT_ENV]?.trim().toLowerCase();
+  if (preWriteMode === 'strict') {
+    return {
+      mode: 'strict',
+      source: 'prewrite',
+      blocking: true,
     };
   }
   return {
