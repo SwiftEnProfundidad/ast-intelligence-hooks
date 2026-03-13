@@ -27,6 +27,10 @@ import { ensureRuntimeArtifactsIgnored } from '../lifecycle/artifacts';
 import { runPolicyReconcile } from '../lifecycle/policyReconcile';
 import { isSeverityAtLeast } from '../../core/rules/Severity';
 import type { SddDecision } from '../sdd';
+import {
+  resolveGitAtomicityEnforcement,
+  type GitAtomicityEnforcementResolution,
+} from '../policy/gitAtomicityEnforcement';
 
 const PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE =
   'pumuki pre-push blocked: branch has no upstream tracking reference. Configure upstream first (for example: git push --set-upstream origin <branch>) and retry.';
@@ -111,6 +115,7 @@ type StageRunnerDependencies = {
   isPathTracked: (repoRoot: string, relativePath: string) => boolean;
   stagePath: (repoRoot: string, relativePath: string) => void;
   resolveHeadOid: (repoRoot: string) => string | null;
+  resolveGitAtomicityEnforcement: () => GitAtomicityEnforcementResolution;
 };
 
 const defaultDependencies: StageRunnerDependencies = {
@@ -185,6 +190,7 @@ const defaultDependencies: StageRunnerDependencies = {
       return null;
     }
   },
+  resolveGitAtomicityEnforcement,
 };
 
 const getDependencies = (
@@ -659,7 +665,8 @@ const enforceGitAtomicityGate = (params: {
     fromRef: params.fromRef,
     toRef: params.toRef,
   });
-  if (!atomicity.enabled || atomicity.allowed) {
+  const enforcement = params.dependencies.resolveGitAtomicityEnforcement();
+  if (!atomicity.enabled || atomicity.allowed || !enforcement.blocking) {
     return false;
   }
   const firstViolation = atomicity.violations[0];

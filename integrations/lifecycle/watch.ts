@@ -32,6 +32,10 @@ import {
   resolvePumukiVersionMetadata,
   type PumukiVersionMetadata,
 } from './packageInfo';
+import {
+  resolveGitAtomicityEnforcement,
+  type GitAtomicityEnforcementResolution,
+} from '../policy/gitAtomicityEnforcement';
 
 export type LifecycleWatchStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 export type LifecycleWatchScope = 'workingTree' | 'staged' | 'repoAndStaged' | 'repo';
@@ -109,6 +113,7 @@ type LifecycleWatchDependencies = {
   emitGateBlockedNotification: typeof emitGateBlockedNotification;
   runPolicyReconcile: typeof runPolicyReconcile;
   resolvePumukiVersionMetadata: (params?: { repoRoot?: string }) => PumukiVersionMetadata;
+  resolveGitAtomicityEnforcement: () => GitAtomicityEnforcementResolution;
   nowMs: () => number;
   sleep: (ms: number) => Promise<void>;
 };
@@ -157,6 +162,7 @@ const defaultDependencies: LifecycleWatchDependencies = {
   emitGateBlockedNotification,
   runPolicyReconcile,
   resolvePumukiVersionMetadata,
+  resolveGitAtomicityEnforcement,
   nowMs: () => Date.now(),
   sleep: async (ms) => {
     await sleepTimer(ms);
@@ -344,17 +350,18 @@ const resolveWatchAtomicityRange = (params: {
 };
 
 const toAtomicitySnapshotFindings = (
-  violations: ReadonlyArray<GitAtomicityViolation>
+  violations: ReadonlyArray<GitAtomicityViolation>,
+  enforcement: GitAtomicityEnforcementResolution
 ): ReadonlyArray<SnapshotFinding> =>
   violations.map((violation) => ({
     ruleId: 'governance.git.atomicity',
-    severity: 'ERROR',
+    severity: enforcement.blocking ? 'ERROR' : 'WARN',
     code: violation.code,
     message: violation.message,
     file: '.pumuki/git-atomicity.json',
     matchedBy: 'LifecycleWatch',
     source: 'skills.backend.runtime-hygiene',
-    blocking: true,
+    blocking: enforcement.blocking,
     expected_fix: violation.remediation,
   }));
 
@@ -492,8 +499,13 @@ export const runLifecycleWatch = async (
           fromRef: atomicityRange.fromRef,
           toRef: atomicityRange.toRef,
         });
-        if (atomicity.enabled && !atomicity.allowed) {
-          const allFindings = toAtomicitySnapshotFindings(atomicity.violations);
+        const atomicityEnforcement = activeDependencies.resolveGitAtomicityEnforcement();
+        const atomicityFindings =
+          atomicity.enabled && !atomicity.allowed
+            ? toAtomicitySnapshotFindings(atomicity.violations, atomicityEnforcement)
+            : [];
+        if (atomicityFindings.length > 0 && atomicityEnforcement.blocking) {
+          const allFindings = atomicityFindings;
           const matchedFindings = allFindings.filter((finding) =>
             isSeverityAtLeast(finding.severity, thresholdSeverity)
           );
@@ -535,20 +547,28 @@ export const runLifecycleWatch = async (
                 source: 'skills.backend.runtime-hygiene',
               }
             : null;
+        const allFindingsWithAtomicity = [...allFindingsBase, ...atomicityFindings];
+        const matchedFindingsWithAtomicity = allFindingsWithAtomicity.filter((finding) =>
+          isSeverityAtLeast(finding.severity, thresholdSeverity)
+        );
         const allFindings = manifestMutationFinding
-          ? [...allFindingsBase, manifestMutationFinding]
-          : allFindingsBase;
+          ? [...allFindingsWithAtomicity, manifestMutationFinding]
+          : allFindingsWithAtomicity;
         const matchedFindings = manifestMutationFinding
-          ? [...matchedFindingsBase, manifestMutationFinding]
-          : matchedFindingsBase;
+          ? [...matchedFindingsWithAtomicity, manifestMutationFinding]
+          : matchedFindingsWithAtomicity;
         const rawGateOutcome =
           evidence?.snapshot.outcome ??
           (gateExitCode !== 0 ? 'BLOCK' : 'NO_EVIDENCE');
-        const gateOutcome = manifestMutationFinding
-          ? 'BLOCK'
-          : rawGateOutcome === 'PASS'
+        const normalizedGateOutcome =
+          rawGateOutcome === 'PASS'
             ? 'ALLOW'
             : rawGateOutcome;
+        const gateOutcome = manifestMutationFinding
+          ? 'BLOCK'
+          : normalizedGateOutcome === 'ALLOW' && atomicityFindings.length > 0
+            ? 'WARN'
+            : normalizedGateOutcome;
         if (manifestMutationFinding) {
           gateExitCode = 1;
           process.stderr.write(

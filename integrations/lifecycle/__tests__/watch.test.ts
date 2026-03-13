@@ -327,7 +327,7 @@ test('runLifecycleWatch usa el repoRoot solicitado al resolver facts y ejecutar 
   assert.deepEqual(gateRepoRoots, ['/target/repo']);
 });
 
-test('runLifecycleWatch bloquea por atomicidad antes del gate en PRE_PUSH y no arrastra findings legacy', async () => {
+test('runLifecycleWatch deja git atomicity en advisory por defecto y ejecuta el gate principal en PRE_PUSH', async () => {
   let gateCalls = 0;
   const blockedNotifications: Array<{ code: string }> = [];
 
@@ -367,6 +367,98 @@ test('runLifecycleWatch bloquea por atomicidad antes del gate en PRE_PUSH y no a
             remediation: 'divide el cambio en slices atómicos',
           },
         ],
+      }),
+      runPlatformGate: async () => {
+        gateCalls += 1;
+        return 1;
+      },
+      resolveFactsForGateScope: async () => [
+        {
+          kind: 'FileChange',
+          path: 'src/blocking.ts',
+          changeType: 'modified',
+          source: 'git:working-tree',
+        },
+        {
+          kind: 'FileContent',
+          path: 'src/blocking.ts',
+          content: 'export const blocking = true',
+          source: 'git:working-tree',
+        },
+      ],
+      readEvidence: () =>
+        makeEvidence({
+          outcome: 'BLOCK',
+          findingSeverity: 'ERROR',
+          findingCode: 'LEGACY_FALSE_POSITIVE',
+          findingMessage: 'legacy finding should not leak',
+          aiGateStatus: 'BLOCKED',
+          aiGateViolationCode: 'LEGACY_FALSE_POSITIVE',
+        }),
+      emitGateBlockedNotification: (params) => {
+        blockedNotifications.push({ code: params.causeCode });
+        return { delivered: true, reason: 'delivered' };
+      },
+      emitAuditSummaryNotificationFromEvidence: () => ({ delivered: true, reason: 'delivered' }),
+      nowMs: () => 1000,
+      sleep: async () => {},
+    })
+  );
+
+  assert.equal(gateCalls, 1);
+  assert.equal(result.lastTick.gateExitCode, 1);
+  assert.equal(result.lastTick.gateOutcome, 'BLOCK');
+  assert.deepEqual(result.lastTick.topCodes, ['LEGACY_FALSE_POSITIVE']);
+  assert.equal(result.lastTick.totalFindings, 2);
+  assert.equal(result.lastTick.findingsAtOrAboveThreshold, 1);
+  assert.deepEqual(blockedNotifications, [{ code: 'LEGACY_FALSE_POSITIVE' }]);
+});
+
+test('runLifecycleWatch bloquea por atomicidad antes del gate en PRE_PUSH cuando el enforcement es strict', async () => {
+  let gateCalls = 0;
+  const blockedNotifications: Array<{ code: string }> = [];
+
+  const result = await runLifecycleWatch(
+    {
+      stage: 'PRE_PUSH',
+      scope: 'repo',
+      intervalMs: 250,
+      notifyCooldownMs: 0,
+      severityThreshold: 'high',
+      notifyEnabled: true,
+      maxIterations: 1,
+    },
+    withAllowedAtomicity({
+      resolveRepoRoot: () => '/repo',
+      readChangeToken: () => 'A',
+      resolveUpstreamRef: () => 'origin/main',
+      resolvePolicyForStage: (stage) => ({
+        policy: {
+          stage,
+          blockOnOrAbove: 'ERROR',
+          warnOnOrAbove: 'WARN',
+        },
+        trace: {
+          source: 'default',
+          bundle: 'default',
+          hash: 'hash',
+        },
+      }),
+      evaluateGitAtomicity: () => ({
+        enabled: true,
+        allowed: false,
+        violations: [
+          {
+            code: 'GIT_ATOMICITY_TOO_MANY_SCOPES',
+            message: 'delta mezcla demasiados scopes',
+            remediation: 'divide el cambio en slices atómicos',
+          },
+        ],
+      }),
+      resolveGitAtomicityEnforcement: () => ({
+        mode: 'strict',
+        source: 'env',
+        blocking: true,
       }),
       runPlatformGate: async () => {
         gateCalls += 1;
