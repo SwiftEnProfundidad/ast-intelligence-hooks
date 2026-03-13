@@ -341,17 +341,10 @@ export const iosEnterpriseRuleSet: RuleSet = [
       exclude: ['**/Bridges/**', '**/*Tests*/**'],
     },
     when: {
-      kind: 'Any',
-      conditions: [
-        {
-          kind: 'FileContent',
-          contains: ['@escaping'],
-        },
-        {
-          kind: 'FileContent',
-          contains: ['completion:'],
-        },
-      ],
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.callback-style.ast',
+      },
     },
     then: {
       kind: 'Finding',
