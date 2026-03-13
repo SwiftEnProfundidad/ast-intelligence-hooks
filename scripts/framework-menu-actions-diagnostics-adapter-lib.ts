@@ -6,9 +6,23 @@ import type {
   FrameworkMenuActionContext,
   MenuAction,
 } from './framework-menu-action-contract';
+import { runAndPrintExitCode } from './framework-menu-runner-common';
+
+type FrameworkMenuDiagnosticsAdapterActionDeps = {
+  runAdapterSessionStatusReport: typeof runAdapterSessionStatusReport;
+  runAdapterRealSessionReport: typeof runAdapterRealSessionReport;
+  runAndPrintExitCode: typeof runAndPrintExitCode;
+};
+
+const defaultDeps: FrameworkMenuDiagnosticsAdapterActionDeps = {
+  runAdapterSessionStatusReport,
+  runAdapterRealSessionReport,
+  runAndPrintExitCode,
+};
 
 export const createFrameworkMenuDiagnosticsAdapterActions = (
-  params: FrameworkMenuActionContext
+  params: FrameworkMenuActionContext,
+  deps: FrameworkMenuDiagnosticsAdapterActionDeps = defaultDeps
 ): ReadonlyArray<MenuAction> => {
   return [
     {
@@ -16,7 +30,7 @@ export const createFrameworkMenuDiagnosticsAdapterActions = (
       label: 'Build adapter session status report (optional diagnostics)',
       execute: async () => {
         const report = await params.prompts.askAdapterSessionStatusReport();
-        await runAdapterSessionStatusReport(report);
+        await deps.runAndPrintExitCode(() => deps.runAdapterSessionStatusReport(report));
       },
     },
     {
@@ -24,7 +38,7 @@ export const createFrameworkMenuDiagnosticsAdapterActions = (
       label: 'Build adapter real-session report (optional diagnostics)',
       execute: async () => {
         const report = await params.prompts.askAdapterRealSessionReport();
-        await runAdapterRealSessionReport(report);
+        await deps.runAndPrintExitCode(() => deps.runAdapterRealSessionReport(report));
       },
     },
   ];
