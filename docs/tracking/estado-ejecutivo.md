@@ -5,8 +5,8 @@
 - Plan activo: `docs/tracking/fases-y-tareas.md`
 - Estado del plan: RESET ESTRATEGICO ACTIVO / BACKLOG OPERATIVO VISIBLE
 - Ultima task cerrada (`✅`): `P2.F1.T1` Degradar `PRE_WRITE` a advisory/default-off y mantener `strict` como opt-in explicito.
-- Task activa (`🚧`): `P2.F1.T2` Extraer `Policy Packs`, aislar `Experimental` y seguir separando `policy-as-code`, `hard mode`, `SDD completeness`, la promocion de heuristicas y la convergencia de `watch` con los gates directos fuera del camino blocking por defecto del core.
-- Pendientes priorizados (`⏳`): cerrar la convergencia de `watch` con `PRE_PUSH/CI`, completar la cuarentena de `Experimental` y revalidar el fixture iOS con el nuevo modelo de policy y heuristicas en advisory por defecto.
+- Task activa (`🚧`): `P2.F1.T2` Extraer `Policy Packs`, aislar `Experimental` y seguir separando `policy-as-code`, `hard mode`, `SDD completeness`, la promocion de heuristicas, y alinear `consumer runtime menu/export` con la evidencia canonica y la convergencia de `watch` con los gates directos fuera del camino blocking por defecto del core.
+- Pendientes priorizados (`⏳`): cerrar la convergencia de `watch` con `PRE_PUSH/CI`, terminar la paridad de `menu/export` con el core, completar la cuarentena de `Experimental` y revalidar el fixture iOS con el nuevo modelo de policy y heuristicas en advisory por defecto.
 
 ## Reglas hard
 

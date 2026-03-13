@@ -144,11 +144,45 @@ test('consumer runtime opción 8 exporta markdown con enlaces clicables', { conc
 
     const markdown = readExportedMarkdown(temp);
     assert.match(output.join('\n'), /Markdown exported:/);
+    assert.match(markdown, /- Outcome: `BLOCK`/);
+    assert.match(markdown, /- Total violations: `2`/);
     assert.match(markdown, /## Clickable Findings/);
     assert.match(
       markdown,
       /\[apps\/backend\/src\/runtime\/process\.ts:27\]\(\.\/apps\/backend\/src\/runtime\/process\.ts#L27\)/
     );
+  } finally {
+    process.chdir(previous);
+  }
+});
+
+test('consumer runtime opción 2 resume la evidencia canónica tras PRE_PUSH', { concurrency: false }, async () => {
+  const previous = process.cwd();
+  const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-summary-opt2-'));
+  process.chdir(temp);
+  try {
+    const output: string[] = [];
+    const runtime = createConsumerMenuRuntime({
+      runRepoGate: async () => {},
+      runRepoAndStagedGate: async () => {
+        writeEvidenceWithLines(temp);
+      },
+      runStagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runPreflight: async () => {},
+      write: (text) => {
+        output.push(text);
+      },
+    });
+
+    const action = runtime.actions.find((item) => item.id === '2');
+    assert.ok(action, 'Expected consumer action id=2');
+    await action.execute();
+
+    const rendered = output.join('\n');
+    assert.match(rendered, /Evidence: status=ok stage=PRE_COMMIT outcome=BLOCK findings=2/);
+    assert.match(rendered, /Files scanned: 12/);
+    assert.match(rendered, /Files affected: 2/);
   } finally {
     process.chdir(previous);
   }

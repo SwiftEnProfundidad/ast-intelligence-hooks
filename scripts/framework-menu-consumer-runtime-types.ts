@@ -1,4 +1,4 @@
-import type { LegacyAuditSummary } from './framework-menu-legacy-audit-lib';
+import type { FrameworkMenuEvidenceSummary } from './framework-menu-evidence-summary-lib';
 import type {
   PumukiCriticalNotificationEvent,
   SystemNotificationEmitResult,
@@ -48,5 +48,5 @@ export type ConsumerRuntimeNotificationDependencies = {
 };
 
 export type ConsumerRuntimeSummaryHandler = (
-  summary: LegacyAuditSummary
+  summary: FrameworkMenuEvidenceSummary
 ) => void;
