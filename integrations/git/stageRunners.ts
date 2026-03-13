@@ -253,6 +253,18 @@ const shouldRetryAfterPolicyReconcile = (params: {
   repoRoot: string;
   stage: 'PRE_COMMIT' | 'PRE_PUSH';
 }): boolean => {
+  const toEvidenceViolationSeverity = (violation: {
+    severity?: string | null;
+    level?: string | null;
+  }): string => {
+    if (typeof violation.severity === 'string') {
+      return violation.severity;
+    }
+    if (typeof violation.level === 'string') {
+      return violation.level;
+    }
+    return 'INFO';
+  };
   const evidence = params.dependencies.readEvidence(params.repoRoot);
   if (!evidence) {
     return false;
@@ -260,11 +272,15 @@ const shouldRetryAfterPolicyReconcile = (params: {
   const stageCodes = new Set<string>();
   if (evidence.snapshot.stage === params.stage) {
     for (const finding of evidence.snapshot.findings) {
-      stageCodes.add(finding.code);
+      if (isSeverityAtLeast(finding.severity, 'ERROR')) {
+        stageCodes.add(finding.code);
+      }
     }
   }
   for (const violation of evidence.ai_gate.violations) {
-    stageCodes.add(violation.code);
+    if (isSeverityAtLeast(toEvidenceViolationSeverity(violation), 'ERROR')) {
+      stageCodes.add(violation.code);
+    }
   }
   for (const code of stageCodes) {
     if (HOOK_POLICY_RECONCILE_CODES.has(code)) {

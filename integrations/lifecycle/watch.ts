@@ -568,9 +568,25 @@ export const runLifecycleWatch = async (
 
       let evaluation = await runEvaluation(activeDependencies.resolvePolicyForStage(stage));
       if (autoPolicyReconcileEnabled && evaluation.gateExitCode !== 0) {
+        const toEvidenceViolationSeverity = (violation: {
+          severity?: string | null;
+          level?: string | null;
+        }): string => {
+          if (typeof violation.severity === 'string') {
+            return violation.severity;
+          }
+          if (typeof violation.level === 'string') {
+            return violation.level;
+          }
+          return 'INFO';
+        };
         const findingCodes = new Set<string>([
-          ...evaluation.allFindings.map((finding) => finding.code),
-          ...((evaluation.evidence?.ai_gate.violations ?? []).map((violation) => violation.code)),
+          ...evaluation.allFindings
+            .filter((finding) => isSeverityAtLeast(finding.severity, 'ERROR'))
+            .map((finding) => finding.code),
+          ...((evaluation.evidence?.ai_gate.violations ?? [])
+            .filter((violation) => isSeverityAtLeast(toEvidenceViolationSeverity(violation), 'ERROR'))
+            .map((violation) => violation.code)),
         ]);
         const shouldAttemptAutoReconcile = [...findingCodes].some((code) =>
           WATCH_POLICY_RECONCILE_CODES.has(code)

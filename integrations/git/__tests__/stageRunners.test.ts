@@ -79,9 +79,11 @@ const withStageRunnerRepo = async (
   const previousBypass = process.env.PUMUKI_SDD_BYPASS;
   const previousDisableCore = process.env.PUMUKI_DISABLE_CORE_SKILLS;
   const previousAtomicity = process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
+  const previousDisableNotifications = process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS;
   process.env.PUMUKI_SDD_BYPASS = '1';
   process.env.PUMUKI_DISABLE_CORE_SKILLS = '0';
   process.env.PUMUKI_GIT_ATOMICITY_ENABLED = '0';
+  process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS = '1';
   try {
     await withTempRepo(async (repoRoot) => {
       seedTddBddEvidenceContract(repoRoot);
@@ -102,6 +104,11 @@ const withStageRunnerRepo = async (
       delete process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
     } else {
       process.env.PUMUKI_GIT_ATOMICITY_ENABLED = previousAtomicity;
+    }
+    if (typeof previousDisableNotifications === 'undefined') {
+      delete process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS;
+    } else {
+      process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS = previousDisableNotifications;
     }
   }
 };

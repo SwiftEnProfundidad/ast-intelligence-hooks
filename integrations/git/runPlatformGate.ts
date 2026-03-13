@@ -31,6 +31,7 @@ import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { createEmptySnapshotRulesCoverage } from '../evidence/rulesCoverage';
 import { enforceTddBddPolicy } from '../tdd/enforcement';
 import type { TddBddSnapshot } from '../tdd/types';
+import { resolveSkillsEnforcement } from '../policy/skillsEnforcement';
 
 export type OperationalMemoryShadowRecommendation = {
   recommendedOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
@@ -779,6 +780,22 @@ const shouldBlockFromFinding = (finding: Finding | undefined): boolean => {
   return finding.severity === 'ERROR' || finding.severity === 'CRITICAL';
 };
 
+const applySkillsFindingEnforcement = (
+  finding: Finding | undefined
+): Finding | undefined => {
+  if (!finding) {
+    return undefined;
+  }
+  const skillsEnforcement = resolveSkillsEnforcement();
+  if (skillsEnforcement.blocking) {
+    return finding;
+  }
+  return {
+    ...finding,
+    severity: 'WARN',
+  };
+};
+
 const toSoftPreCommitSkillsFinding = (params: {
   finding: Finding | undefined;
   enabled: boolean;
@@ -943,6 +960,9 @@ export async function runPlatformGate(params: {
         unsupportedAutoRuleIds: skillsRuleSet.unsupportedAutoRuleIds ?? [],
       })
       : undefined;
+  const effectiveUnsupportedSkillsMappingFinding = applySkillsFindingEnforcement(
+    unsupportedSkillsMappingFinding
+  );
   const platformSkillsCoverageFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -955,6 +975,9 @@ export async function runPlatformGate(params: {
           evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
         })
       : undefined;
+  const effectivePlatformSkillsCoverageInput = applySkillsFindingEnforcement(
+    platformSkillsCoverageFinding
+  );
   const crossPlatformCriticalFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -966,6 +989,9 @@ export async function runPlatformGate(params: {
           evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
         })
       : undefined;
+  const effectiveCrossPlatformCriticalInput = applySkillsFindingEnforcement(
+    crossPlatformCriticalFinding
+  );
   const skillsScopeComplianceFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -977,6 +1003,9 @@ export async function runPlatformGate(params: {
         evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
       })
       : undefined;
+  const effectiveSkillsScopeComplianceInput = applySkillsFindingEnforcement(
+    skillsScopeComplianceFinding
+  );
   const activeRulesEmptyForCodeChangesFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -996,6 +1025,9 @@ export async function runPlatformGate(params: {
           facts,
         })
       : undefined;
+  const effectiveIosTestsQualityFinding = applySkillsFindingEnforcement(
+    iosTestsQualityFinding
+  );
   const policyAsCodeBlockingFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -1097,25 +1129,25 @@ export async function runPlatformGate(params: {
     && !sddBlockingFinding
     && !degradedModeBlocks
     && !shouldBlockFromFinding(policyAsCodeBlockingFinding)
-    && !shouldBlockFromFinding(unsupportedSkillsMappingFinding)
+    && !shouldBlockFromFinding(effectiveUnsupportedSkillsMappingFinding)
     && !shouldBlockFromFinding(coverageBlockingFinding)
     && !shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding)
-    && !shouldBlockFromFinding(iosTestsQualityFinding)
+    && !shouldBlockFromFinding(effectiveIosTestsQualityFinding)
     && !shouldBlockFromFinding(astIntelligenceDualFinding)
     && !hasTddBddBlockingFinding
     && !hasNativeBlockingFinding;
   const effectivePlatformSkillsCoverageFinding = toSoftPreCommitSkillsFinding({
-    finding: platformSkillsCoverageFinding,
+    finding: effectivePlatformSkillsCoverageInput,
     enabled: shouldSoftEnforceSkillsFindings,
     observedCodePaths,
   });
   const effectiveCrossPlatformCriticalFinding = toSoftPreCommitSkillsFinding({
-    finding: crossPlatformCriticalFinding,
+    finding: effectiveCrossPlatformCriticalInput,
     enabled: shouldSoftEnforceSkillsFindings,
     observedCodePaths,
   });
   const effectiveSkillsScopeComplianceFinding = toSoftPreCommitSkillsFinding({
-    finding: skillsScopeComplianceFinding,
+    finding: effectiveSkillsScopeComplianceInput,
     enabled: shouldSoftEnforceSkillsFindings,
     observedCodePaths,
   });
@@ -1124,23 +1156,23 @@ export async function runPlatformGate(params: {
       sddBlockingFinding,
       ...(degradedModeFinding ? [degradedModeFinding] : []),
       ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
-      ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
+      ...(effectiveUnsupportedSkillsMappingFinding ? [effectiveUnsupportedSkillsMappingFinding] : []),
       ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
       ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
       ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
       ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
-      ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
+      ...(effectiveIosTestsQualityFinding ? [effectiveIosTestsQualityFinding] : []),
       ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
       ...tddBddEvaluation.findings,
       ...findings,
     ]
-    : unsupportedSkillsMappingFinding
+    : effectiveUnsupportedSkillsMappingFinding
       || effectivePlatformSkillsCoverageFinding
       || effectiveCrossPlatformCriticalFinding
       || effectiveSkillsScopeComplianceFinding
       || activeRulesEmptyForCodeChangesFinding
-      || iosTestsQualityFinding
+      || effectiveIosTestsQualityFinding
       || astIntelligenceDualFinding
       || coverageBlockingFinding
       || policyAsCodeBlockingFinding
@@ -1149,12 +1181,12 @@ export async function runPlatformGate(params: {
       ? [
         ...(degradedModeFinding ? [degradedModeFinding] : []),
         ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
-        ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
+        ...(effectiveUnsupportedSkillsMappingFinding ? [effectiveUnsupportedSkillsMappingFinding] : []),
         ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
         ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
         ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
         ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
-        ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
+        ...(effectiveIosTestsQualityFinding ? [effectiveIosTestsQualityFinding] : []),
         ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
         ...tddBddEvaluation.findings,
@@ -1167,12 +1199,12 @@ export async function runPlatformGate(params: {
     sddBlockingFinding ||
     degradedModeBlocks ||
     shouldBlockFromFinding(policyAsCodeBlockingFinding) ||
-    shouldBlockFromFinding(unsupportedSkillsMappingFinding) ||
+    shouldBlockFromFinding(effectiveUnsupportedSkillsMappingFinding) ||
     shouldBlockFromFinding(effectivePlatformSkillsCoverageFinding) ||
     shouldBlockFromFinding(effectiveCrossPlatformCriticalFinding) ||
     shouldBlockFromFinding(effectiveSkillsScopeComplianceFinding) ||
     shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding) ||
-    shouldBlockFromFinding(iosTestsQualityFinding) ||
+    shouldBlockFromFinding(effectiveIosTestsQualityFinding) ||
     hasAstIntelligenceBlockingFinding ||
     shouldBlockFromFinding(coverageBlockingFinding) ||
     hasTddBddBlockingFinding

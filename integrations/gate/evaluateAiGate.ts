@@ -11,6 +11,10 @@ import {
   loadRequiredSkillsLock,
 } from '../config/skillsEffectiveLock';
 import {
+  resolveSkillsEnforcement,
+  type SkillsEnforcementResolution,
+} from '../policy/skillsEnforcement';
+import {
   readMcpAiGateReceipt,
   resolveMcpAiGateReceiptPath,
   type McpAiGateReceiptReadResult,
@@ -181,6 +185,16 @@ const toWarnViolation = (code: string, message: string): AiGateViolation => ({
   severity: 'WARN',
   message,
 });
+
+const toSkillsViolation = (
+  resolution: SkillsEnforcementResolution,
+  code: string,
+  message: string
+): AiGateViolation => (
+  resolution.blocking
+    ? toErrorViolation(code, message)
+    : toWarnViolation(code, message)
+);
 
 const normalizeRepoStateLifecycleVersions = (repoState: RepoState): RepoState => {
   const packageVersion = repoState.lifecycle.package_version;
@@ -426,6 +440,7 @@ const collectActiveRuleIdsCoverageViolations = (params: {
 const collectPreWritePlatformSkillsViolations = (params: {
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
   coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
+  skillsEnforcement: SkillsEnforcementResolution;
 }): AiGateViolation[] => {
   const detectedPlatforms = toPreWriteDetectedSkillsPlatforms({
     platforms: params.evidence.platforms,
@@ -460,7 +475,8 @@ const collectPreWritePlatformSkillsViolations = (params: {
 
   if (missingScopeCoverage.length > 0) {
     violations.push(
-      toErrorViolation(
+      toSkillsViolation(
+        params.skillsEnforcement,
         'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE',
         `Detected platforms missing skill-rule coverage in PRE_WRITE: ${missingScopeCoverage.join(' | ')}.`
       )
@@ -485,7 +501,8 @@ const collectPreWritePlatformSkillsViolations = (params: {
 
   if (missingBundlesByPlatform.length > 0) {
     violations.push(
-      toErrorViolation(
+      toSkillsViolation(
+        params.skillsEnforcement,
         'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING',
         `Detected platforms missing required skill bundles in PRE_WRITE: ${missingBundlesByPlatform.join(' | ')}.`
       )
@@ -513,7 +530,8 @@ const collectPreWritePlatformSkillsViolations = (params: {
 
   if (missingCriticalRulesByPlatform.length > 0) {
     violations.push(
-      toErrorViolation(
+      toSkillsViolation(
+        params.skillsEnforcement,
         'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
         `Detected platforms missing critical skill-rule enforcement in PRE_WRITE: ${missingCriticalRulesByPlatform.join(' | ')}.`
       )
@@ -526,6 +544,7 @@ const collectPreWritePlatformSkillsViolations = (params: {
 const collectPreWriteCrossPlatformCriticalViolations = (params: {
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
   coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
+  skillsEnforcement: SkillsEnforcementResolution;
 }): AiGateViolation[] => {
   const detectedPlatforms = toPreWriteDetectedSkillsPlatforms({
     platforms: params.evidence.platforms,
@@ -561,7 +580,8 @@ const collectPreWriteCrossPlatformCriticalViolations = (params: {
   }
 
   return [
-    toErrorViolation(
+    toSkillsViolation(
+      params.skillsEnforcement,
       'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE',
       `Cross-platform critical enforcement incomplete in PRE_WRITE: ${missingCriticalCoverage.join(' | ')}.`
     ),
@@ -573,6 +593,7 @@ const toSkillsContractAssessment = (params: {
   repoRoot: string;
   evidenceResult: EvidenceReadResult;
   requiredLock?: SkillsLockV1;
+  skillsEnforcement: SkillsEnforcementResolution;
 }): AiGateSkillsContractAssessment => {
   const requiredPlatforms = toLockRequiredPlatforms(params.requiredLock);
 
@@ -602,7 +623,8 @@ const toSkillsContractAssessment = (params: {
       violations:
         requiredPlatforms.length > 0
           ? [
-              toErrorViolation(
+              toSkillsViolation(
+                params.skillsEnforcement,
                 'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED',
                 `Required repo skills exist, but active platforms could not be detected for ${params.stage}.`
               ),
@@ -665,7 +687,8 @@ const toSkillsContractAssessment = (params: {
       detected_platforms: [],
       requirements,
       violations: [
-        toErrorViolation(
+        toSkillsViolation(
+          params.skillsEnforcement,
           'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED',
           `Required repo skills exist, but active platforms could not be detected for ${params.stage}.`
         ),
@@ -694,7 +717,8 @@ const toSkillsContractAssessment = (params: {
   const violations: AiGateViolation[] = [];
   if (requiredPlatforms.length > 0 && detectedPlatforms.length === 0) {
     violations.push(
-      toErrorViolation(
+      toSkillsViolation(
+        params.skillsEnforcement,
         'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED',
         `Required repo skills exist, but active platforms could not be detected for ${params.stage}.`
       )
@@ -759,7 +783,8 @@ const toSkillsContractAssessment = (params: {
         missingParts.push('evaluated_prefix');
       }
       violations.push(
-        toErrorViolation(
+        toSkillsViolation(
+          params.skillsEnforcement,
           'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE',
           `Skills contract scope coverage missing for ${platform}: ${missingParts.join(', ')} (${requiredRulePrefix}).`
         )
@@ -767,7 +792,8 @@ const toSkillsContractAssessment = (params: {
     }
     if (missingBundles.length > 0) {
       violations.push(
-        toErrorViolation(
+        toSkillsViolation(
+          params.skillsEnforcement,
           'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING',
           `Skills contract missing bundles for ${platform}: [${missingBundles.join(', ')}].`
         )
@@ -775,7 +801,8 @@ const toSkillsContractAssessment = (params: {
     }
     if (missingCriticalRuleIds.length > 0) {
       violations.push(
-        toErrorViolation(
+        toSkillsViolation(
+          params.skillsEnforcement,
           'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
           `Skills contract missing critical rule coverage for ${platform}: [${missingCriticalRuleIds.join(', ')}].`
         )
@@ -783,7 +810,8 @@ const toSkillsContractAssessment = (params: {
     }
     if (!transversalCriticalCovered && requiredAnyTransversalCriticalRuleIds.length > 0) {
       violations.push(
-        toErrorViolation(
+        toSkillsViolation(
+          params.skillsEnforcement,
           'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE',
           `Skills contract missing transversal critical coverage for ${platform}: required_any=[${requiredAnyTransversalCriticalRuleIds.join(', ')}].`
         )
@@ -867,6 +895,7 @@ const collectPreWriteCoherenceViolations = (params: {
       )
     );
   } else {
+    const skillsEnforcement = resolveSkillsEnforcement();
     if (coverage.stage !== params.evidence.snapshot.stage) {
       violations.push(
         toErrorViolation(
@@ -908,12 +937,14 @@ const collectPreWriteCoherenceViolations = (params: {
       ...collectPreWritePlatformSkillsViolations({
         evidence: params.evidence,
         coverage,
+        skillsEnforcement,
       })
     );
     violations.push(
       ...collectPreWriteCrossPlatformCriticalViolations({
         evidence: params.evidence,
         coverage,
+        skillsEnforcement,
       })
     );
   }
@@ -1222,6 +1253,7 @@ export const evaluateAiGate = (
     policyStage,
     params.repoRoot
   );
+  const skillsEnforcement = resolveSkillsEnforcement();
   const evidenceAssessment = collectEvidenceViolations(
     evidenceResult,
     params.repoRoot,
@@ -1245,13 +1277,15 @@ export const evaluateAiGate = (
     repoRoot: params.repoRoot,
     evidenceResult,
     requiredLock: requiredSkillsLock,
+    skillsEnforcement,
   });
   const stageSkillsContractViolations =
     skillsContract.status !== 'FAIL'
     || (params.stage === 'PRE_WRITE' && requiredSkillsPlatforms.length === 0)
-      ? []
+        ? []
       : [
-          toErrorViolation(
+          toSkillsViolation(
+            skillsEnforcement,
             'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE',
             `Skills contract incomplete for ${params.stage}: ${skillsContract.violations.map((violation) => violation.code).join(', ')}.`
           ),

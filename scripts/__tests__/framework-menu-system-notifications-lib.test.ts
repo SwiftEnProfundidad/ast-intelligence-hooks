@@ -20,6 +20,27 @@ test('emitSystemNotification mantiene la fachada pública y devuelve unsupported
   assert.equal(result.reason, 'unsupported-platform');
 });
 
+test('emitSystemNotification respeta PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS', () => {
+  const result = emitSystemNotification({
+    platform: 'darwin',
+    event: {
+      kind: 'gate.blocked',
+      stage: 'PRE_PUSH',
+      totalViolations: 1,
+    },
+    env: {
+      ...process.env,
+      PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS: '1',
+    },
+    runCommand: () => {
+      throw new Error('runCommand should not be called when notifications are disabled');
+    },
+  });
+
+  assert.equal(result.delivered, false);
+  assert.equal(result.reason, 'disabled');
+});
+
 test('emitSystemNotification mantiene la fachada pública y entrega por macOS cuando pasa el gate', async () => {
   await withTempDir('pumuki-system-notifications-lib-', async (repoRoot) => {
     const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];
