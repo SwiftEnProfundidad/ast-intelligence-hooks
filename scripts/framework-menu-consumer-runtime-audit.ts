@@ -15,6 +15,7 @@ import {
   type FrameworkMenuEvidenceSummary,
 } from './framework-menu-evidence-summary-lib';
 import type {
+  ConsumerRuntimeBlockedGate,
   ConsumerRuntimeNotificationDependencies,
   ConsumerRuntimeScope,
   ConsumerRuntimeSummaryDependencies,
@@ -30,7 +31,7 @@ export const resolveConsumerRuntimeUseColor = (): boolean => {
 export const renderConsumerRuntimeSummary = (
   dependencies: ConsumerRuntimeSummaryDependencies
 ): FrameworkMenuEvidenceSummary => {
-  const summary = readEvidenceSummaryForMenu(dependencies.repoRoot);
+  const summary = dependencies.summaryOverride ?? readEvidenceSummaryForMenu(dependencies.repoRoot);
   const lines = [
     formatEvidenceSummaryForMenu(summary),
     '',
@@ -38,6 +39,11 @@ export const renderConsumerRuntimeSummary = (
     `Files scanned: ${summary.filesScanned}`,
     `Files affected: ${summary.filesAffected}`,
   ];
+
+  if (summary.status === 'ok' && summary.topFindings.length > 0) {
+    const primaryFinding = summary.topFindings[0];
+    lines.push('', `Primary block: ${primaryFinding.ruleId}`);
+  }
 
   if (summary.topFiles.length > 0) {
     lines.push(
@@ -52,6 +58,49 @@ export const renderConsumerRuntimeSummary = (
   })}\n`);
   return summary;
 };
+
+export const buildConsumerRuntimeBlockedSummary = (
+  blocked: ConsumerRuntimeBlockedGate
+): FrameworkMenuEvidenceSummary => ({
+  status: 'ok',
+  stage: blocked.stage,
+  outcome: 'BLOCK',
+  totalFindings: blocked.totalViolations,
+  filesScanned: 0,
+  filesAffected: 0,
+  bySeverity: {
+    CRITICAL: 0,
+    ERROR: 1,
+    WARN: 0,
+    INFO: 0,
+  },
+  byEnterpriseSeverity: {
+    CRITICAL: 0,
+    HIGH: 1,
+    MEDIUM: 0,
+    LOW: 0,
+  },
+  topFiles: [
+    {
+      file: 'PROJECT_ROOT',
+      count: 1,
+    },
+  ],
+  topFileLocations: [
+    {
+      file: 'PROJECT_ROOT',
+      line: 1,
+    },
+  ],
+  topFindings: [
+    {
+      severity: 'HIGH',
+      ruleId: blocked.causeCode,
+      file: 'PROJECT_ROOT',
+      line: 1,
+    },
+  ],
+});
 
 export const printConsumerRuntimeEmptyScopeHint = (
   dependencies: Pick<ConsumerRuntimeSummaryDependencies, 'write'>,
@@ -160,9 +209,16 @@ const buildConsumerRuntimeMarkdownDocument = (
   ].join('\n');
 };
 
-export const exportConsumerRuntimeMarkdown = (repoRoot: string = process.cwd()): string => {
+export const exportConsumerRuntimeMarkdown = (
+  repoRoot: string = process.cwd(),
+  summaryOverride?: FrameworkMenuEvidenceSummary | null
+): string => {
   const outputPath = join(repoRoot, '.audit-reports', 'pumuki-legacy-audit.md');
   mkdirSync(join(outputPath, '..'), { recursive: true });
-  writeFileSync(outputPath, buildConsumerRuntimeMarkdownDocument(readEvidenceSummaryForMenu(repoRoot)), 'utf8');
+  writeFileSync(
+    outputPath,
+    buildConsumerRuntimeMarkdownDocument(summaryOverride ?? readEvidenceSummaryForMenu(repoRoot)),
+    'utf8'
+  );
   return outputPath;
 };

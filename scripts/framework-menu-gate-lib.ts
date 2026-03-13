@@ -1,7 +1,9 @@
 import { resolvePolicyForStage } from '../integrations/gate/stagePolicies';
 import { runPlatformGate } from '../integrations/git/runPlatformGate';
 import { evaluatePlatformGateFindings } from '../integrations/git/runPlatformGateEvaluation';
+import { runPrePushStage } from '../integrations/git/stageRunners';
 import { runAndPrintExitCode } from './framework-menu-runners';
+import type { ConsumerRuntimeGateResult } from './framework-menu-consumer-runtime-types';
 
 export type MenuStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 
@@ -15,6 +17,16 @@ export type MenuScope =
       fromRef: string;
       toRef: string;
     };
+
+type MenuGateDependencies = {
+  runPlatformGate: typeof runPlatformGate;
+  runPrePushStage: typeof runPrePushStage;
+};
+
+const defaultDependencies: MenuGateDependencies = {
+  runPlatformGate,
+  runPrePushStage,
+};
 
 export const buildMenuGateParams = (params: {
   stage: MenuStage;
@@ -107,12 +119,10 @@ export const runRepoAndStagedGateSilent = async (): Promise<void> => {
   await runMenuAuditGate(gateParams);
 };
 
-export const runRepoAndStagedPrePushGateSilent = async (): Promise<void> => {
-  const gateParams = buildMenuGateParams({
-    stage: 'PRE_PUSH',
-    scope: { kind: 'repoAndStaged' },
-  });
-  await runMenuAuditGate(gateParams);
+export const runRepoAndStagedPrePushGateSilent = async (): Promise<
+  ConsumerRuntimeGateResult | void
+> => {
+  return await runRepoAndStagedPrePushGateSilentWithDependencies(defaultDependencies);
 };
 
 export const runWorkingTreeGateSilent = async (): Promise<void> => {
@@ -134,7 +144,7 @@ export const runWorkingTreePrePushGateSilent = async (): Promise<void> => {
 const runMenuAuditGate = async (
   gateParams: ReturnType<typeof buildMenuGateParams>
 ): Promise<void> => {
-  await runPlatformGate({
+  await defaultDependencies.runPlatformGate({
     ...gateParams,
     auditMode: 'engine',
     dependencies: {
@@ -148,4 +158,31 @@ const runMenuAuditGate = async (
         }),
     },
   });
+};
+
+const runRepoAndStagedPrePushGateSilentWithDependencies = async (
+  dependencies: MenuGateDependencies
+): Promise<ConsumerRuntimeGateResult | void> => {
+  let blocked: ConsumerRuntimeGateResult['blocked'];
+
+  await dependencies.runPrePushStage({
+    isQuietMode: () => true,
+    notifyAuditSummaryFromEvidence: () => {},
+    notifyGateBlocked: (params) => {
+      blocked = {
+        stage: params.stage,
+        totalViolations: params.totalViolations,
+        causeCode: params.causeCode,
+        causeMessage: params.causeMessage,
+        remediation: params.remediation,
+      };
+    },
+    writeHookGateSummary: () => {},
+  });
+
+  return blocked ? { blocked } : undefined;
+};
+
+export const __testables = {
+  runRepoAndStagedPrePushGateSilentWithDependencies,
 };

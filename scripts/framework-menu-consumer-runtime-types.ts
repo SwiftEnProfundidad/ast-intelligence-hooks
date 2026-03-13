@@ -10,6 +10,18 @@ export type ConsumerAction = {
   execute: () => Promise<void>;
 };
 
+export type ConsumerRuntimeBlockedGate = {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  totalViolations: number;
+  causeCode: string;
+  causeMessage: string;
+  remediation: string;
+};
+
+export type ConsumerRuntimeGateResult = {
+  blocked?: ConsumerRuntimeBlockedGate;
+};
+
 export type ConsumerRuntimeWrite = (text: string) => void;
 
 export type ConsumerRuntimeEmitNotification = (params: {
@@ -18,10 +30,10 @@ export type ConsumerRuntimeEmitNotification = (params: {
 }) => SystemNotificationEmitResult;
 
 export type ConsumerMenuRuntimeParams = {
-  runRepoGate: () => Promise<void>;
-  runRepoAndStagedGate: () => Promise<void>;
-  runStagedGate: () => Promise<void>;
-  runWorkingTreeGate: () => Promise<void>;
+  runRepoGate: () => Promise<ConsumerRuntimeGateResult | void>;
+  runRepoAndStagedGate: () => Promise<ConsumerRuntimeGateResult | void>;
+  runStagedGate: () => Promise<ConsumerRuntimeGateResult | void>;
+  runWorkingTreeGate: () => Promise<ConsumerRuntimeGateResult | void>;
   runPreflight?: (
     stage: 'PRE_COMMIT' | 'PRE_PUSH'
   ) => Promise<string | void> | string | void;
@@ -40,6 +52,7 @@ export type ConsumerRuntimeSummaryDependencies = {
   repoRoot: string;
   write: ConsumerRuntimeWrite;
   useColor: () => boolean;
+  summaryOverride?: FrameworkMenuEvidenceSummary | null;
 };
 
 export type ConsumerRuntimeNotificationDependencies = {

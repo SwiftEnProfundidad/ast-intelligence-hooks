@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 import {
+  __testables,
   runRepoAndStagedPrePushGateSilent,
   runRepoGateSilent,
   runWorkingTreePrePushGateSilent,
@@ -50,7 +51,7 @@ test('runRepoGateSilent aplica SDD estricto e inyecta sdd.policy.blocked cuando 
   });
 });
 
-test('runRepoAndStagedPrePushGateSilent emite evidencia con stage PRE_PUSH', async () => {
+test('runRepoAndStagedPrePushGateSilent emite evidencia con stage PRE_PUSH usando el stage runner canónico', async () => {
   await withTempDir('pumuki-menu-gate-prepush-', async (repoRoot) => {
     const previousCwd = process.cwd();
     try {
@@ -75,12 +76,7 @@ test('runRepoAndStagedPrePushGateSilent emite evidencia con stage PRE_PUSH', asy
       assert.equal(evidence.snapshot?.stage, 'PRE_PUSH');
       const findings = Array.isArray(evidence.snapshot?.findings) ? evidence.snapshot.findings : [];
       const ruleIds = findings.map((finding) => finding.ruleId ?? '');
-      assert.equal(
-        ruleIds.includes('skills.backend.no-console-log') ||
-          ruleIds.includes('skills.frontend.no-console-log') ||
-          ruleIds.includes('heuristics.ts.console-log.ast'),
-        true
-      );
+      assert.equal(ruleIds.includes('sdd.policy.blocked'), true);
     } finally {
       process.chdir(previousCwd);
     }
@@ -128,4 +124,23 @@ test('runWorkingTreePrePushGateSilent emite evidencia con stage PRE_PUSH', async
       process.chdir(previousCwd);
     }
   });
+});
+
+test('runRepoAndStagedPrePushGateSilent usa el stage runner canónico de PRE_PUSH', async () => {
+  let runPrePushStageCalls = 0;
+  let runPlatformGateCalls = 0;
+
+  await __testables.runRepoAndStagedPrePushGateSilentWithDependencies({
+    runPrePushStage: async () => {
+      runPrePushStageCalls += 1;
+      return 0;
+    },
+    runPlatformGate: async () => {
+      runPlatformGateCalls += 1;
+      return 0;
+    },
+  });
+
+  assert.equal(runPrePushStageCalls, 1);
+  assert.equal(runPlatformGateCalls, 0);
 });
