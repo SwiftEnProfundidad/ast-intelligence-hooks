@@ -10,7 +10,17 @@ const SCRIPT_PATH = resolve(
   'scripts/build-consumer-startup-failure-support-bundle.ts'
 );
 
-const writeMockGh = (binDir: string): void => {
+const writeMockGh = (
+  binDir: string,
+  options: {
+    visibility?: 'public' | 'private';
+    isPrivate?: boolean;
+    runConclusion?: string;
+  } = {}
+): void => {
+  const visibility = options.visibility ?? 'private';
+  const isPrivate = options.isPrivate ?? true;
+  const runConclusion = options.runConclusion ?? 'startup_failure';
   const ghPath = join(binDir, 'gh');
   writeFileSync(
     ghPath,
@@ -31,7 +41,7 @@ fi
 
 if [ "\${1:-}" = "run" ] && [ "\${2:-}" = "list" ]; then
   cat <<'EOF'
-[{"databaseId":123,"workflowName":"","status":"completed","conclusion":"startup_failure","url":"https://example.local/runs/123","event":"push","createdAt":"2026-02-08T00:00:00.000Z","headBranch":"main","headSha":"abc123"}]
+[{"databaseId":123,"workflowName":"","status":"completed","conclusion":"${runConclusion}","url":"https://example.local/runs/123","event":"push","createdAt":"2026-02-08T00:00:00.000Z","headBranch":"main","headSha":"abc123"}]
 EOF
   exit 0
 fi
@@ -40,7 +50,7 @@ if [ "\${1:-}" = "api" ]; then
   endpoint="\${2:-}"
   case "\${endpoint}" in
     "repos/owner/repo")
-      echo '{"full_name":"owner/repo","private":true,"visibility":"private"}'
+      echo '{"full_name":"owner/repo","private":${isPrivate},"visibility":"${visibility}"}'
       exit 0
       ;;
     "repos/owner/repo/actions/permissions")
@@ -57,15 +67,23 @@ if [ "\${1:-}" = "api" ]; then
       exit 0
       ;;
     "repos/owner/repo/actions/runs/123")
-      echo '{"id":123,"name":"BuildFailed","path":"BuildFailed","status":"completed","conclusion":"startup_failure","html_url":"https://example.local/runs/123","referenced_workflows":[]}'
+      echo '{"id":123,"name":"BuildFailed","path":"BuildFailed","status":"completed","conclusion":"${runConclusion}","html_url":"https://example.local/runs/123","referenced_workflows":[]}'
       exit 0
       ;;
     "repos/owner/repo/actions/runs/123/jobs")
-      echo '{"total_count":0}'
+      if [ "${runConclusion}" = "startup_failure" ]; then
+        echo '{"total_count":0}'
+      else
+        echo '{"total_count":2}'
+      fi
       exit 0
       ;;
     "repos/owner/repo/actions/runs/123/artifacts")
-      echo '{"total_count":0}'
+      if [ "${runConclusion}" = "startup_failure" ]; then
+        echo '{"total_count":0}'
+      else
+        echo '{"total_count":1}'
+      fi
       exit 0
       ;;
     *)
@@ -86,10 +104,17 @@ exit 1
 const runBundle = (params: {
   tempRoot: string;
   billingMode: 'ok' | 'error';
+  visibility?: 'public' | 'private';
+  isPrivate?: boolean;
+  runConclusion?: string;
 }): string => {
   const binDir = join(params.tempRoot, 'bin');
   mkdirSync(binDir, { recursive: true });
-  writeMockGh(binDir);
+  writeMockGh(binDir, {
+    visibility: params.visibility,
+    isPrivate: params.isPrivate,
+    runConclusion: params.runConclusion,
+  });
 
   const outputPath = join(params.tempRoot, 'support-bundle.md');
   const envPath = `${binDir}:${process.env.PATH ?? ''}`;
@@ -152,5 +177,27 @@ test('support bundle documents billing scope remediation when billing probe fail
       /gh auth refresh -h github\.com -s user/
     );
     assert.match(report, /- remediation:/);
+  });
+});
+
+test('support bundle payload stays neutral for public repos without startup_failure runs', async () => {
+  await withTempDir('pumuki-support-bundle-public-', async (tempRoot) => {
+    const report = runBundle({
+      tempRoot,
+      billingMode: 'ok',
+      visibility: 'public',
+      isPrivate: false,
+      runConclusion: 'success',
+    });
+
+    assert.match(
+      report,
+      /No startup_failure runs were observed in the sampled workflow runs for this public repository/
+    );
+    assert.match(
+      report,
+      /The current support bundle does not show startup_failure runs in the sampled evidence window/
+    );
+    assert.doesNotMatch(report, /Persistent GitHub Actions startup_failure in private repository/);
   });
 });
