@@ -26,7 +26,7 @@ test('returns guidance when no active skills bundles are available', () => {
 
   assert.equal(
     rendered,
-    'No active skills bundles found. Generate skills.lock.json with the installed Pumuki skills compiler.'
+    'No active skills bundles found. Generate skills.lock.json with the installed Pumuki skills lock tool.'
   );
 });
 

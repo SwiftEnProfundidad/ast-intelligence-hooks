@@ -74,11 +74,18 @@ Ownership model:
 - CI and team members must evaluate the same committed contract files.
 - User-home skill sources (`~/.codex/**`) are not runtime inputs for CI gate decisions.
 
-Compile/check commands:
+Compile/check commands in the Pumuki source workspace:
 
 ```bash
 npm run skills:compile
 npm run skills:lock:check
+```
+
+If you are validating an installed consumer package rather than the Pumuki source repo, invoke the packaged tool directly instead of assuming consumer-local `npm run skills:*` scripts:
+
+```bash
+npx --yes tsx@4.21.0 ./node_modules/pumuki/scripts/compile-skills-lock.ts
+npx --yes tsx@4.21.0 ./node_modules/pumuki/scripts/compile-skills-lock.ts --check
 ```
 
 CI guardrail:

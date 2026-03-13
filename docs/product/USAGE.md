@@ -311,11 +311,18 @@ npx --yes pumuki adapter install --agent=codex --dry-run
 npx --yes pumuki adapter install --agent=cursor
 npm run adapter:install -- --agent=claude
 
-# skills engine helpers
+# skills engine helpers (inside the Pumuki source repo)
 npm run skills:compile
 npm run skills:lock:check
 npm run skills:import:custom
 npm run skills:import:custom -- --source /abs/path/to/SKILL.md --source ./skills/backend/SKILL.md
+```
+
+If you are operating from a consumer repository with the published package installed, do not assume `npm run skills:*` exists in the consumer. Use the packaged script directly instead:
+
+```bash
+npx --yes tsx@4.21.0 ./node_modules/pumuki/scripts/compile-skills-lock.ts
+npx --yes tsx@4.21.0 ./node_modules/pumuki/scripts/compile-skills-lock.ts --check
 ```
 
 `pumuki remove` is the enterprise-safe removal path because it performs lifecycle cleanup before package uninstall.

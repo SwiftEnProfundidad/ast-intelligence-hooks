@@ -208,7 +208,7 @@ export const checkSkillsLockStatus = (
   if (!existsSync(lockPath)) {
     return {
       status: 'missing',
-      details: `${lockFile} is missing. Run skills lock compilation.`,
+      details: `${lockFile} is missing. Generate it with the installed Pumuki skills lock tool.`,
     };
   }
 
