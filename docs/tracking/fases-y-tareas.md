@@ -52,3 +52,36 @@
 - Historicos conservados:
   - `docs/tracking/historico-validacion-ruralgo-03-03-2026.md`
   - `docs/tracking/historico-contrato-aceptacion-c022.md`
+
+## Parking revisado (no olvidar)
+
+- Rama de parking: `wip/tracking-cleanup-parking`
+- Criterio:
+  - volver solo lo que aporte gobernanza reusable del producto,
+  - no reinyectar documentos legacy o contratos demasiado específicos del repo.
+
+### Reincorporar mas adelante
+
+- `scripts/check-tracking-single-active.sh`
+  - destino: `Policy Packs / governance tooling`
+  - valor: enforcement reusable de `una sola 🚧`
+- `scripts/check-refactor-progress-single-active.sh`
+  - destino: `Policy Packs / governance tooling`
+  - valor: wrapper fino del check de tracking activo
+- `scripts/clean-validation-artifacts-lib.ts`
+  - destino: `UX / Reporting` o `tooling hygiene`
+  - valor: limpieza enterprise de artefactos efímeros
+- `scripts/__tests__/clean-validation-artifacts-lib.test.ts`
+  - destino: mantener junto al módulo si el módulo sobrevive
+- `docs/validation/README.md`
+  - destino: `UX / Reporting`
+  - valor: documentación estable de runbooks de validación, si se simplifica
+
+### No reincorporar al core
+
+- `AGENTS.md`
+  - demasiado específico del repo; debe influir vía `Policy Packs`, no volver como pieza del core
+- `docs/README.md`
+  - documental, no afecta al núcleo del reset
+- `docs/tracking/plan-activo-de-trabajo.md`
+  - puente legacy retirado; no debe volver a ser fuente activa del tracking
