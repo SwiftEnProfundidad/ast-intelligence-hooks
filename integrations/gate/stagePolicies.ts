@@ -5,11 +5,15 @@ import type { GatePolicy } from '../../core/gate/GatePolicy';
 import type { GateStage } from '../../core/gate/GateStage';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import type { Severity } from '../../core/rules/Severity';
-import {
-  createSkillsPolicyDeterministicHash,
-  loadSkillsPolicy,
-} from '../config/skillsPolicy';
 import type { SkillsStage } from '../config/skillsLock';
+import {
+  mapEnterpriseSeverityToGateSeverity as mapEnterpriseSeverityToGateSeverityFromProfiles,
+  policyForCI as policyForCIFromProfiles,
+  policyForPreCommit as policyForPreCommitFromProfiles,
+  policyForPrePush as policyForPrePushFromProfiles,
+  resolvePolicyProfileForStage,
+  type PolicyProfileSource,
+} from '../policy/policyProfiles';
 import { resolveDegradedMode } from './degradedMode';
 
 const heuristicsPromotionStageAllowList = new Set<GateStage>([
@@ -42,7 +46,7 @@ const heuristicSeverityOverrideForStage = (
 export type ResolvedStagePolicy = {
   policy: GatePolicy;
   trace: {
-    source: 'default' | 'skills.policy' | 'hard-mode';
+    source: PolicyProfileSource;
     bundle: string;
     hash: string;
     version?: string;
@@ -72,138 +76,9 @@ export type ResolvedStagePolicy = {
 
 export type EnterpriseSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
-export const mapEnterpriseSeverityToGateSeverity = (
-  severity: EnterpriseSeverity
-): Severity => {
-  switch (severity) {
-    case 'CRITICAL':
-      return 'CRITICAL';
-    case 'HIGH':
-      return 'ERROR';
-    case 'MEDIUM':
-      return 'WARN';
-    case 'LOW':
-      return 'INFO';
-  }
-};
+export const mapEnterpriseSeverityToGateSeverity =
+  mapEnterpriseSeverityToGateSeverityFromProfiles;
 
-type EnterpriseStageThresholds = {
-  blockOnOrAbove: EnterpriseSeverity;
-  warnOnOrAbove: EnterpriseSeverity;
-};
-
-const toGatePolicyFromEnterpriseThresholds = (
-  stage: SkillsStage,
-  thresholds: EnterpriseStageThresholds
-): GatePolicy => {
-  return {
-    stage,
-    blockOnOrAbove: mapEnterpriseSeverityToGateSeverity(thresholds.blockOnOrAbove),
-    warnOnOrAbove: mapEnterpriseSeverityToGateSeverity(thresholds.warnOnOrAbove),
-  };
-};
-
-const toGatePolicyRecordFromEnterpriseThresholds = (
-  enterpriseThresholdsByStage: Record<SkillsStage, EnterpriseStageThresholds>
-): Record<SkillsStage, GatePolicy> => {
-  return {
-    PRE_COMMIT: toGatePolicyFromEnterpriseThresholds(
-      'PRE_COMMIT',
-      enterpriseThresholdsByStage.PRE_COMMIT
-    ),
-    PRE_PUSH: toGatePolicyFromEnterpriseThresholds(
-      'PRE_PUSH',
-      enterpriseThresholdsByStage.PRE_PUSH
-    ),
-    CI: toGatePolicyFromEnterpriseThresholds('CI', enterpriseThresholdsByStage.CI),
-  };
-};
-
-const defaultPolicyByStage: Record<SkillsStage, GatePolicy> = {
-  PRE_COMMIT: {
-    stage: 'PRE_COMMIT',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
-  },
-  PRE_PUSH: {
-    stage: 'PRE_PUSH',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
-  },
-  CI: {
-    stage: 'CI',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
-  },
-};
-
-const hardModeEnterpriseThresholdsByStage: Record<SkillsStage, EnterpriseStageThresholds> = {
-  PRE_COMMIT: {
-    blockOnOrAbove: 'MEDIUM',
-    warnOnOrAbove: 'LOW',
-  },
-  PRE_PUSH: {
-    blockOnOrAbove: 'MEDIUM',
-    warnOnOrAbove: 'LOW',
-  },
-  CI: {
-    blockOnOrAbove: 'MEDIUM',
-    warnOnOrAbove: 'LOW',
-  },
-};
-
-const hardModePolicyByStage: Record<SkillsStage, GatePolicy> =
-  toGatePolicyRecordFromEnterpriseThresholds(hardModeEnterpriseThresholdsByStage);
-
-type HardModeProfileName = 'critical-high' | 'all-severities';
-
-const hardModeEnterpriseThresholdsProfileByStage: Record<
-  HardModeProfileName,
-  Record<SkillsStage, EnterpriseStageThresholds>
-> = {
-  'critical-high': {
-    PRE_COMMIT: {
-      blockOnOrAbove: 'HIGH',
-      warnOnOrAbove: 'MEDIUM',
-    },
-    PRE_PUSH: {
-      blockOnOrAbove: 'HIGH',
-      warnOnOrAbove: 'MEDIUM',
-    },
-    CI: {
-      blockOnOrAbove: 'HIGH',
-      warnOnOrAbove: 'MEDIUM',
-    },
-  },
-  'all-severities': {
-    PRE_COMMIT: {
-      blockOnOrAbove: 'LOW',
-      warnOnOrAbove: 'LOW',
-    },
-    PRE_PUSH: {
-      blockOnOrAbove: 'LOW',
-      warnOnOrAbove: 'LOW',
-    },
-    CI: {
-      blockOnOrAbove: 'LOW',
-      warnOnOrAbove: 'LOW',
-    },
-  },
-};
-
-const hardModePolicyProfileByStage: Record<
-  HardModeProfileName,
-  Record<SkillsStage, GatePolicy>
-> = {
-  'critical-high': toGatePolicyRecordFromEnterpriseThresholds(
-    hardModeEnterpriseThresholdsProfileByStage['critical-high']
-  ),
-  'all-severities': toGatePolicyRecordFromEnterpriseThresholds(
-    hardModeEnterpriseThresholdsProfileByStage['all-severities']
-  ),
-};
-
-const HARD_MODE_CONFIG_PATH = '.pumuki/hard-mode.json';
 const POLICY_AS_CODE_CONTRACT_PATH = '.pumuki/policy-as-code.json';
 const POLICY_AS_CODE_VERSION = '1.0';
 
@@ -266,7 +141,7 @@ const isPolicyAsCodeContract = (value: unknown): value is PolicyAsCodeContract =
 
 const createPolicyAsCodeSignature = (params: {
   stage: SkillsStage;
-  source: 'default' | 'skills.policy' | 'hard-mode';
+  source: PolicyProfileSource;
   bundle: string;
   hash: string;
   version: string;
@@ -286,7 +161,7 @@ const createPolicyAsCodeSignature = (params: {
 
 const resolvePolicyAsCodeTraceMetadata = (params: {
   stage: SkillsStage;
-  source: 'default' | 'skills.policy' | 'hard-mode';
+  source: PolicyProfileSource;
   bundle: string;
   hash: string;
   repoRoot: string;
@@ -434,94 +309,9 @@ const resolvePolicyAsCodeTraceMetadata = (params: {
   }
 };
 
-const toHardModeProfileName = (value: unknown): HardModeProfileName | null => {
-  if (typeof value !== 'string') {
-    return null;
-  }
-  const normalized = value.trim().toLowerCase();
-  if (normalized === 'critical-high') {
-    return 'critical-high';
-  }
-  if (normalized === 'all-severities') {
-    return 'all-severities';
-  }
-  return null;
-};
-
-const hardModeEnabledFromEnv = (): boolean | null => {
-  const value = process.env.PUMUKI_HARD_MODE?.trim().toLowerCase();
-  if (typeof value !== 'string' || value.length === 0) {
-    return null;
-  }
-  if (value === '1' || value === 'true' || value === 'yes' || value === 'on') {
-    return true;
-  }
-  if (value === '0' || value === 'false' || value === 'no' || value === 'off') {
-    return false;
-  }
-  return null;
-};
-
-const hardModeProfileNameFromEnv = (): HardModeProfileName | null => {
-  return toHardModeProfileName(process.env.PUMUKI_HARD_MODE_PROFILE);
-};
-
-type HardModeConfigState = {
-  enabled: boolean;
-  profileName: HardModeProfileName | null;
-};
-
-const readHardModeConfig = (repoRoot: string): HardModeConfigState | null => {
-  const configPath = join(repoRoot, HARD_MODE_CONFIG_PATH);
-  if (!existsSync(configPath)) {
-    return null;
-  }
-  try {
-    const parsed = JSON.parse(readFileSync(configPath, 'utf8')) as {
-      enabled?: unknown;
-      profile?: unknown;
-    };
-    if (typeof parsed.enabled !== 'boolean') {
-      return null;
-    }
-    return {
-      enabled: parsed.enabled,
-      profileName: toHardModeProfileName(parsed.profile),
-    };
-  } catch {
-    return null;
-  }
-};
-
-const resolveHardModeState = (repoRoot: string): HardModeConfigState => {
-  const configured = readHardModeConfig(repoRoot);
-  const envEnabled = hardModeEnabledFromEnv();
-  const envProfile = hardModeProfileNameFromEnv();
-
-  if (envEnabled !== null) {
-    return {
-      enabled: envEnabled,
-      profileName: envProfile ?? configured?.profileName ?? null,
-    };
-  }
-
-  if (configured) {
-    return {
-      enabled: configured.enabled,
-      profileName: envProfile ?? configured.profileName,
-    };
-  }
-
-  return {
-    enabled: false,
-    profileName: envProfile,
-  };
-};
-
-
 const createPolicyTraceHash = (params: {
   stage: SkillsStage;
-  source: 'default' | 'skills.policy' | 'hard-mode';
+  source: PolicyProfileSource;
   blockOnOrAbove: GatePolicy['blockOnOrAbove'];
   warnOnOrAbove: GatePolicy['warnOnOrAbove'];
   sourcePolicyHash?: string;
@@ -544,105 +334,26 @@ export const resolvePolicyForStage = (
   repoRoot: string = process.cwd()
 ): ResolvedStagePolicy => {
   const degraded = resolveDegradedMode(stage, repoRoot);
-  const hardModeState = resolveHardModeState(repoRoot);
-  if (hardModeState.enabled) {
-    const profileName = hardModeState.profileName;
-    const profilePolicy = profileName
-      ? hardModePolicyProfileByStage[profileName][stage]
-      : null;
-    const hardModePolicy = profilePolicy ?? hardModePolicyByStage[stage];
-    const bundle = profileName
-      ? `gate-policy.hard-mode.${profileName}.${stage}`
-      : `gate-policy.hard-mode.${stage}`;
-    const hash = createPolicyTraceHash({
-      stage,
-      source: 'hard-mode',
-      blockOnOrAbove: hardModePolicy.blockOnOrAbove,
-      warnOnOrAbove: hardModePolicy.warnOnOrAbove,
-      sourcePolicyHash: profileName ?? undefined,
-    });
-    const policyAsCode = resolvePolicyAsCodeTraceMetadata({
-      stage,
-      source: 'hard-mode',
-      bundle,
-      hash,
-      repoRoot,
-    });
-    return {
-      policy: hardModePolicy,
-      trace: {
-        source: 'hard-mode',
-        bundle,
-        hash,
-        version: policyAsCode.version,
-        signature: policyAsCode.signature,
-        policySource: policyAsCode.policySource,
-        validation: policyAsCode.validation,
-        ...(degraded ? { degraded } : {}),
-      },
-    };
-  }
-
-  const defaults = defaultPolicyByStage[stage];
-  const loadedPolicy = loadSkillsPolicy(repoRoot);
-  const stageOverride = loadedPolicy?.stages[stage];
-
-  if (!stageOverride) {
-    const bundle = `gate-policy.default.${stage}`;
-    const hash = createPolicyTraceHash({
-      stage,
-      source: 'default',
-      blockOnOrAbove: defaults.blockOnOrAbove,
-      warnOnOrAbove: defaults.warnOnOrAbove,
-    });
-    const policyAsCode = resolvePolicyAsCodeTraceMetadata({
-      stage,
-      source: 'default',
-      bundle,
-      hash,
-      repoRoot,
-    });
-    return {
-      policy: defaults,
-      trace: {
-        source: 'default',
-        bundle,
-        hash,
-        version: policyAsCode.version,
-        signature: policyAsCode.signature,
-        policySource: policyAsCode.policySource,
-        validation: policyAsCode.validation,
-        ...(degraded ? { degraded } : {}),
-      },
-    };
-  }
-
-  const resolvedPolicy: GatePolicy = {
-    stage: defaults.stage,
-    blockOnOrAbove: stageOverride.blockOnOrAbove,
-    warnOnOrAbove: stageOverride.warnOnOrAbove,
-  };
-
-  const bundle = `gate-policy.skills.policy.${stage}`;
+  const resolvedProfile = resolvePolicyProfileForStage(stage, repoRoot);
   const hash = createPolicyTraceHash({
     stage,
-    source: 'skills.policy',
-    blockOnOrAbove: resolvedPolicy.blockOnOrAbove,
-    warnOnOrAbove: resolvedPolicy.warnOnOrAbove,
-    sourcePolicyHash: createSkillsPolicyDeterministicHash(loadedPolicy),
+    source: resolvedProfile.source,
+    blockOnOrAbove: resolvedProfile.policy.blockOnOrAbove,
+    warnOnOrAbove: resolvedProfile.policy.warnOnOrAbove,
+    sourcePolicyHash: resolvedProfile.sourcePolicyHash,
   });
   const policyAsCode = resolvePolicyAsCodeTraceMetadata({
     stage,
-    source: 'skills.policy',
-    bundle,
+    source: resolvedProfile.source,
+    bundle: resolvedProfile.bundle,
     hash,
     repoRoot,
   });
   return {
-    policy: resolvedPolicy,
+    policy: resolvedProfile.policy,
     trace: {
-      source: 'skills.policy',
-      bundle,
+      source: resolvedProfile.source,
+      bundle: resolvedProfile.bundle,
       hash,
       version: policyAsCode.version,
       signature: policyAsCode.signature,
@@ -670,13 +381,13 @@ export const applyHeuristicSeverityForStage = (
 };
 
 export const policyForPreCommit = (): GatePolicy => {
-  return defaultPolicyByStage.PRE_COMMIT;
+  return policyForPreCommitFromProfiles();
 };
 
 export const policyForPrePush = (): GatePolicy => {
-  return defaultPolicyByStage.PRE_PUSH;
+  return policyForPrePushFromProfiles();
 };
 
 export const policyForCI = (): GatePolicy => {
-  return defaultPolicyByStage.CI;
+  return policyForCIFromProfiles();
 };
