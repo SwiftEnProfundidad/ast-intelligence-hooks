@@ -194,7 +194,9 @@ const buildConsumerRuntimeMarkdownDocument = (
   const byEnterpriseSeverity = summary.byEnterpriseSeverity;
 
   return [
-    '# PUMUKI Audit Report',
+    '# PUMUKI Legacy Read-Only Evidence Snapshot',
+    '',
+    'Derived from the canonical evidence summary. This document does not redefine the gate verdict.',
     '',
     '## Snapshot',
     `- Stage: \`${stage}\``,
@@ -203,6 +205,8 @@ const buildConsumerRuntimeMarkdownDocument = (
     `- Files scanned: \`${summary.filesScanned}\``,
     `- Files affected: \`${summary.filesAffected}\``,
     `- Severity: \`CRITICAL ${byEnterpriseSeverity?.CRITICAL ?? summary.bySeverity.CRITICAL} | HIGH ${byEnterpriseSeverity?.HIGH ?? summary.bySeverity.ERROR} | MEDIUM ${byEnterpriseSeverity?.MEDIUM ?? summary.bySeverity.WARN} | LOW ${byEnterpriseSeverity?.LOW ?? summary.bySeverity.INFO}\``,
+    '- Mode: `legacy read-only`',
+    '- Canonical verdict: `pumuki status --json | doctor --deep --json`',
     '',
     '## Clickable Top Files',
     buildClickableTopFilesSection(summary),

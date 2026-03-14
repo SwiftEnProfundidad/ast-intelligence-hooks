@@ -13,48 +13,24 @@ import {
   formatLegacyStatusLine,
 } from './framework-menu-legacy-audit-render-sections';
 
-const codeHealthLabel = (score: number): string => {
-  if (score >= 80) {
-    return 'Good';
-  }
-  if (score >= 60) {
-    return 'Moderate';
-  }
-  return 'Needs attention';
-};
-
-const resolveLegacyAuditStageActionLabel = (stage: string | null | undefined): string => {
-  if (stage === 'PRE_COMMIT') {
-    return 'COMMIT';
-  }
-  if (stage === 'PRE_PUSH' || stage === 'CI') {
-    return stage;
-  }
-  return 'GATE';
-};
-
 const buildOverviewPanelLines = (): string[] => {
   return [
     LEGACY_AUDIT_OVERVIEW_TITLE,
     LEGACY_AUDIT_OVERVIEW_SUBTITLE,
     '',
-    '1) Pattern checks',
-    '2) ESLint audits',
-    '3) AST Intelligence analysis',
-    '4) Intelligent Audit Gate (block/allow)',
-    '5) Evidence update (.AI_EVIDENCE.json)',
+    '1) Pattern checks snapshot',
+    '2) ESLint snapshot',
+    '3) AST evidence breakdown',
+    '4) Ruleset coverage snapshot',
     '',
-    'Pipeline',
-    'Source files → AST analyzers → violations → severity evaluation → AI Gate verdict',
+    'Source of truth',
+    '.ai_evidence.json + canonical evidence summary',
     '',
-    'Outputs',
-    '• .audit_tmp/ast-summary.json',
-    '• .audit_tmp/ast-summary-enhanced.json',
-    '• reports/ (json + text)',
-    '• .AI_EVIDENCE.json (ai_gate + metrics)',
+    'Mode',
+    'Legacy read-only export; no gate recomputation',
     '',
-    'Rule: Fail fast, block early',
-    'Goal: deterministic governance across iOS / Android / Backend / Frontend',
+    'Canonical verdict',
+    'Use pumuki status --json or doctor --deep --json',
   ];
 };
 
@@ -80,10 +56,7 @@ const buildQuickSummaryPanelLines = (summary: LegacyAuditSummary): string[] => {
 const buildRemediationPanelLines = (summary: LegacyAuditSummary): string[] => {
   const topViolations = summary.topViolations.length === 0
     ? ['• none']
-    : summary.topViolations.flatMap((violation) => [
-      `• ${violation.ruleId} (${violation.count} violations)`,
-      '  → Review and fix violations.',
-    ]);
+    : summary.topViolations.map((violation) => `• ${violation.ruleId} (${violation.count} violations)`);
   const topFindings = summary.topFindings ?? [];
   const topFindingLocations = topFindings.length === 0
     ? ['• none']
@@ -92,39 +65,22 @@ const buildRemediationPanelLines = (summary: LegacyAuditSummary): string[] => {
     ));
 
   return [
-    '5) TOP VIOLATIONS & REMEDIATION',
+    '5) TOP FINDINGS SNAPSHOT',
     '',
     ...topViolations,
     '',
     'Clickable locations (file:line)',
     ...topFindingLocations,
-    '',
-    '6) EXECUTIVE SUMMARY',
   ];
 };
 
 const buildMetricsPanelLines = (summary: LegacyAuditSummary): string[] => {
-  const stageActionLabel = resolveLegacyAuditStageActionLabel(summary.stage);
-  const commitStatus = summary.bySeverity.CRITICAL > 0 || summary.bySeverity.HIGH > 0
-    ? `${stageActionLabel} BLOCKED — STRICT REPO+STAGING`
-    : `${stageActionLabel} ALLOWED`;
-  const blockedMessage = summary.bySeverity.CRITICAL > 0 || summary.bySeverity.HIGH > 0
-    ? 'ACTION REQUIRED: Critical or high-severity issues detected. Please review and fix before proceeding.'
-    : 'No blocking violations detected.';
-  const actionLine = commitStatus.includes('BLOCKED')
-    ? 'Action: clean entire repository before committing.'
-    : 'Action: proceed with commit flow.';
   const affectedRatio = summary.filesScanned > 0
     ? Math.round((summary.filesAffected / Math.max(1, summary.filesScanned)) * 100)
     : 0;
-  const nextAction = commitStatus.includes('BLOCKED')
-    ? 'Next action: fix CRITICAL/HIGH findings and rerun full audit.'
-    : summary.bySeverity.MEDIUM > 0 || summary.bySeverity.LOW > 0
-      ? 'Next action: schedule MEDIUM/LOW cleanup without blocking delivery.'
-      : 'Next action: maintain baseline and continue with regular checks.';
 
   return [
-    'METRICS',
+    'READ-ONLY EVIDENCE SNAPSHOT',
     `Total violations detected: ${summary.totalViolations}`,
     `ESLint errors: ${summary.eslint.errors}`,
     `Critical issues: ${summary.bySeverity.CRITICAL}`,
@@ -132,21 +88,16 @@ const buildMetricsPanelLines = (summary: LegacyAuditSummary): string[] => {
     `Files scanned: ${summary.filesScanned}`,
     `Affected ratio: ${affectedRatio}%`,
     '',
-    `Code Health Score: ${summary.codeHealthScore}% (${codeHealthLabel(summary.codeHealthScore)})`,
+    `Evidence stage: ${summary.stage}`,
+    `Evidence outcome: ${summary.outcome}`,
+    'Export semantics: legacy read-only snapshot',
+    'Canonical verdict: pumuki status --json / doctor --deep --json',
     '',
-    blockedMessage,
-    nextAction,
-    '',
-    'FINAL SUMMARY — VIOLATIONS BY SEVERITY',
+    'SEVERITY SNAPSHOT',
     `● CRITICAL: ${summary.bySeverity.CRITICAL}`,
     `● HIGH: ${summary.bySeverity.HIGH}`,
     `● MEDIUM: ${summary.bySeverity.MEDIUM}`,
     `● LOW: ${summary.bySeverity.LOW}`,
-    '',
-    commitStatus,
-    actionLine,
-    `Stage: ${summary.stage} • Outcome: ${summary.outcome}`,
-    'Generated by Pumuki — Hook-System',
   ];
 };
 
@@ -155,10 +106,10 @@ export const formatLegacyAuditReport = (
   options?: { panelWidth?: number; color?: boolean }
 ): string => {
   if (summary.status === 'missing') {
-    return 'No .ai_evidence.json found. Run an audit option first.';
+    return 'Legacy read-only export unavailable: no .ai_evidence.json found. Generate canonical evidence first.';
   }
   if (summary.status === 'invalid') {
-    return '.ai_evidence.json is invalid. Regenerate evidence and retry.';
+    return 'Legacy read-only export unavailable: .ai_evidence.json is invalid. Regenerate canonical evidence and retry.';
   }
 
   const widthOptions = { width: options?.panelWidth, color: options?.color };

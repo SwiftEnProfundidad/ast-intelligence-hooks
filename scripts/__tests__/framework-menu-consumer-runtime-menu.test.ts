@@ -27,7 +27,7 @@ const buildAdvancedActions = () => {
   });
 };
 
-test('consumer runtime printMenu agrupa opciones por flujos canónicos', async () => {
+test('consumer runtime printMenu agrupa opciones por shell mínima y diagnósticos legacy read-only', async () => {
   const previousUiV2 = process.env.PUMUKI_MENU_UI_V2;
   process.env.PUMUKI_MENU_UI_V2 = '1';
   try {
@@ -45,11 +45,12 @@ test('consumer runtime printMenu agrupa opciones por flujos canónicos', async (
 
     runtime.printMenu();
     const rendered = output.join('\n');
-    assert.match(rendered, /Audit Flows/i);
-    assert.match(rendered, /Diagnostics/i);
-    assert.match(rendered, /Export/i);
+    assert.match(rendered, /Read-Only Gate Flows/i);
+    assert.match(rendered, /Legacy Read-Only Export/i);
+    assert.match(rendered, /Legacy Read-Only Diagnostics/i);
     assert.match(rendered, /System/i);
-    assert.match(rendered, /1\)\s+Full audit/i);
+    assert.match(rendered, /1\)\s+Read-only full audit/i);
+    assert.match(rendered, /8\)\s+Export legacy read-only evidence snapshot/i);
     assert.match(rendered, /10\)\s+Exit/i);
   } finally {
     if (typeof previousUiV2 === 'string') {
@@ -122,7 +123,7 @@ test('consumer runtime printMenu muestra badge de estado PASS/WARN/BLOCK', { con
   }
 });
 
-test('consumer runtime printMenu usa vista clásica por defecto cuando PUMUKI_MENU_UI_V2 no está activo', async () => {
+test('consumer runtime printMenu usa vista clásica agrupada por shell mínima cuando PUMUKI_MENU_UI_V2 no está activo', async () => {
   const previousUiV2 = process.env.PUMUKI_MENU_UI_V2;
   delete process.env.PUMUKI_MENU_UI_V2;
   try {
@@ -140,7 +141,8 @@ test('consumer runtime printMenu usa vista clásica por defecto cuando PUMUKI_ME
     runtime.printMenu();
     const rendered = output.join('\n');
     assert.match(rendered, /A\. Switch to advanced menu/);
-    assert.doesNotMatch(rendered, /Audit Flows/i);
+    assert.match(rendered, /Read-Only Gate Flows/i);
+    assert.match(rendered, /Legacy Read-Only Diagnostics/i);
   } finally {
     if (typeof previousUiV2 === 'string') {
       process.env.PUMUKI_MENU_UI_V2 = previousUiV2;

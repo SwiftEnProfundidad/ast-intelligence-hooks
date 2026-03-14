@@ -151,7 +151,7 @@ export const createConsumerRuntimeActions = (
         dependencies.repoRoot,
         dependencies.getSummaryOverride()
       );
-      dependencies.write(`\nMarkdown exported: ${filePath}\n`);
+      dependencies.write(`\nLegacy read-only markdown exported: ${filePath}\n`);
     },
     runFileDiagnostics: async () => {
       dependencies.write(`\n${renderConsumerRuntimeFileDiagnostics(dependencies.repoRoot)}\n`);

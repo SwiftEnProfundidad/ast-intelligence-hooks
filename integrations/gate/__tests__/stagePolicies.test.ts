@@ -19,6 +19,9 @@ test('resolvePolicyForStage returns default PRE_PUSH policy when skills policy i
       warnOnOrAbove: 'WARN',
     });
     assert.equal(resolved.trace.source, 'default');
+    assert.equal(resolved.trace.layer, 'policy-pack');
+    assert.equal(resolved.trace.activation, 'default-advisory');
+    assert.equal(resolved.trace.activationSource, null);
     assert.equal(resolved.trace.bundle, 'gate-policy.default.PRE_PUSH');
     assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
     assert.equal(resolved.trace.version, 'policy-as-code/default@1.0');
@@ -75,6 +78,9 @@ test('resolvePolicyForStage applies PRE_PUSH override from skills.policy.json', 
       warnOnOrAbove: 'ERROR',
     });
     assert.equal(resolved.trace.source, 'skills.policy');
+    assert.equal(resolved.trace.layer, 'policy-pack');
+    assert.equal(resolved.trace.activation, 'explicit');
+    assert.equal(resolved.trace.activationSource, 'file:skills.policy.json');
     assert.equal(resolved.trace.bundle, 'gate-policy.skills.policy.PRE_PUSH');
     assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
     assert.equal(resolved.trace.version, 'policy-as-code/skills.policy@1.0');
@@ -108,6 +114,8 @@ test('resolvePolicyForStage marks unknown-source when policy-as-code contract so
 
     const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
     assert.equal(resolved.trace.source, 'default');
+    assert.equal(resolved.trace.layer, 'policy-pack');
+    assert.equal(resolved.trace.activation, 'default-advisory');
     assert.equal(resolved.trace.validation?.status, 'unknown-source');
     assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_UNKNOWN_SOURCE');
     assert.equal(resolved.trace.policySource, 'file:.pumuki/policy-as-code.json');
@@ -250,6 +258,9 @@ test('resolvePolicyForStage aplica hard mode por entorno y bloquea desde WARN', 
         warnOnOrAbove: 'INFO',
       });
       assert.equal(resolved.trace.source, 'hard-mode');
+      assert.equal(resolved.trace.layer, 'policy-pack');
+      assert.equal(resolved.trace.activation, 'explicit');
+      assert.equal(resolved.trace.activationSource, 'env');
       assert.equal(resolved.trace.bundle, 'gate-policy.hard-mode.PRE_COMMIT');
       assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
     } finally {
@@ -276,6 +287,9 @@ test('resolvePolicyForStage aplica perfil enterprise critical-high en hard mode'
         warnOnOrAbove: 'WARN',
       });
       assert.equal(resolved.trace.source, 'hard-mode');
+      assert.equal(resolved.trace.layer, 'policy-pack');
+      assert.equal(resolved.trace.activation, 'explicit');
+      assert.equal(resolved.trace.activationSource, 'env');
       assert.equal(resolved.trace.bundle, 'gate-policy.hard-mode.critical-high.PRE_COMMIT');
       assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
     } finally {
@@ -314,6 +328,9 @@ test('resolvePolicyForStage aplica hard mode/profile desde config persistida sin
         warnOnOrAbove: 'WARN',
       });
       assert.equal(resolved.trace.source, 'hard-mode');
+      assert.equal(resolved.trace.layer, 'policy-pack');
+      assert.equal(resolved.trace.activation, 'explicit');
+      assert.equal(resolved.trace.activationSource, 'file:.pumuki/hard-mode.json');
       assert.equal(resolved.trace.bundle, 'gate-policy.hard-mode.critical-high.CI');
       assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
     } finally {
@@ -345,6 +362,8 @@ test('resolvePolicyForStage aplica perfil all-severities y bloquea INFO', async 
         warnOnOrAbove: 'INFO',
       });
       assert.equal(resolved.trace.source, 'hard-mode');
+      assert.equal(resolved.trace.layer, 'policy-pack');
+      assert.equal(resolved.trace.activation, 'explicit');
       assert.equal(
         resolved.trace.bundle,
         'gate-policy.hard-mode.all-severities.PRE_COMMIT'

@@ -1,4 +1,5 @@
 import { evaluateAiGate, type AiGateStage } from '../gate/evaluateAiGate';
+import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
 
 const AUTO_FIX_BY_CODE: Readonly<Record<string, string>> = {
@@ -153,9 +154,12 @@ export const runEnterpriseAiGateCheck = (params: {
   });
   const branch = evaluation.repo_state.git.branch;
   const timestamp = evaluation.evidence.source.generated_at;
-  const learningContext = readSddLearningContext({
-    repoRoot: params.repoRoot,
-  });
+  const learningContextFeature = resolveLearningContextExperimentalFeature();
+  const learningContext = learningContextFeature.mode === 'off'
+    ? null
+    : readSddLearningContext({
+      repoRoot: params.repoRoot,
+    });
   const warnings = buildWarnings(evaluation);
   const autoFixes = buildAutoFixes(evaluation, learningContext);
   const message = buildMessage(evaluation);

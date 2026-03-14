@@ -24,7 +24,7 @@ const readConsumerPackageJson = (repoRoot: string): ConsumerPackageJson | null =
 };
 
 const isDeprecatedVerifyAlias = (scriptBody: string): boolean =>
-  scriptBody.includes('Migrated to modern TS scripts');
+  scriptBody.includes('Migrated to');
 
 const resolveCommandFromSpec = (
   spec: AdapterSessionStatusCommandSpec,

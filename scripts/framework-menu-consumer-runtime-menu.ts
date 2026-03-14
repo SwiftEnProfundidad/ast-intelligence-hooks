@@ -35,12 +35,17 @@ export const renderConsumerRuntimeClassicMenu = (
   actions: ReadonlyArray<ConsumerAction>,
   useColor: () => boolean
 ): string => {
+  const groupedActions = resolveConsumerMenuLayout(actions);
   const lines = [
     'PUMUKI — Hook-System (run: npx ast-hooks)',
     'AST Intelligence System Overview',
     'A. Switch to advanced menu',
     '',
-    ...actions.map((action) => `${action.id}) ${action.label}`),
+    ...groupedActions.flatMap((group) => [
+      group.title,
+      ...group.items.map((item) => `${item.id}) ${item.action.label}`),
+      '',
+    ]),
   ];
   return renderLegacyPanel(lines, {
     width: resolveLegacyPanelOuterWidth(),

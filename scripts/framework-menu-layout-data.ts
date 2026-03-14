@@ -2,19 +2,19 @@ import type { MenuLayoutGroup } from './framework-menu-layout-types';
 
 export const CONSUMER_MENU_LAYOUT: ReadonlyArray<MenuLayoutGroup> = [
   {
-    key: 'audit',
-    title: 'Audit Flows',
+    key: 'read-only-gates',
+    title: 'Read-Only Gate Flows',
     itemIds: ['1', '2', '3', '4'],
   },
   {
-    key: 'diagnostics',
-    title: 'Diagnostics',
-    itemIds: ['5', '6', '7', '9'],
+    key: 'export',
+    title: 'Legacy Read-Only Export',
+    itemIds: ['8'],
   },
   {
-    key: 'export',
-    title: 'Export',
-    itemIds: ['8'],
+    key: 'legacy-read-only-diagnostics',
+    title: 'Legacy Read-Only Diagnostics',
+    itemIds: ['5', '6', '7', '9'],
   },
   {
     key: 'system',
@@ -27,12 +27,17 @@ export const ADVANCED_MENU_LAYOUT: ReadonlyArray<MenuLayoutGroup> = [
   {
     key: 'gates',
     title: 'Gates',
-    itemIds: ['1', '2', '3', '28', '29', '30', '4', '5', '6', '7', '8'],
+    itemIds: ['1', '2', '3', '4', '5', '6', '7', '8'],
   },
   {
     key: 'diagnostics',
     title: 'Diagnostics',
-    itemIds: ['9', '10', '11', '12', '13', '14', '15', '16', '19', '20', '32'],
+    itemIds: ['9', '10', '11', '12', '13', '14', '15', '16', '19', '20'],
+  },
+  {
+    key: 'legacy-read-only',
+    title: 'Legacy Read-Only Audits',
+    itemIds: ['28', '29', '30', '32'],
   },
   {
     key: 'maintenance',

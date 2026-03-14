@@ -591,12 +591,19 @@ export const runLifecycleWatch = async (
         const toEvidenceViolationSeverity = (violation: {
           severity?: string | null;
           level?: string | null;
-        }): string => {
-          if (typeof violation.severity === 'string') {
-            return violation.severity;
-          }
-          if (typeof violation.level === 'string') {
-            return violation.level;
+        }): Severity => {
+          const candidate = typeof violation.severity === 'string'
+            ? violation.severity
+            : typeof violation.level === 'string'
+              ? violation.level
+              : null;
+          if (
+            candidate === 'INFO' ||
+            candidate === 'WARN' ||
+            candidate === 'ERROR' ||
+            candidate === 'CRITICAL'
+          ) {
+            return candidate;
           }
           return 'INFO';
         };

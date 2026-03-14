@@ -6,6 +6,36 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-14 (unreleased)
+
+- Support surface removed from product baseline:
+  - consumer support bundle, startup triage, adapter readiness and phase5 closure helpers are now presented as auxiliary support toolkit,
+  - product docs and menu labels no longer describe that surface as baseline framework behavior.
+- Canonical support namespace:
+  - new primary npm commands: `toolkit:*`,
+  - legacy `validation:*` commands remain only as compatibility aliases for existing automations.
+- Legacy escalation/handoff surface frozen:
+  - `phase5-latest`, `phase5-escalation`, `phase8` and final external handoff/reporting now live under `toolkit:legacy:*`,
+  - shell chains and next-command hints already point to `toolkit:legacy:*` instead of treating `validation:*` as the primary contract.
+- Operational impact:
+  - the product baseline stays focused on install/status/doctor/gate,
+  - support and rollout helpers remain available without contaminating the core surface,
+  - frozen escalation chains stay callable for legacy workflows but leave the official product API.
+- Legacy export/reporting downgraded to read-only snapshots:
+  - legacy markdown export and consumer runtime export now declare themselves as `legacy read-only evidence snapshots`,
+  - they no longer publish prescriptive `next_action` / `blocked` copy or act as a parallel gate summary outside canonical `status` / `doctor`.
+- Consumer menu shell parity tightened:
+  - consumer mode now groups `1/2/3/4` as canonical read-only gate flows, `8` as the matching read-only markdown export, and `5/6/7/9` as `Legacy Read-Only Diagnostics`,
+  - fixture validation on `ios-architecture-showcase` confirms parity between gate execution, menu summary, and exported markdown snapshot.
+- Fixture acceptance baseline added:
+  - `validation:consumer-matrix-baseline` now runs repeated consumer matrix rounds against a real fixture repo,
+  - the command emits `report.json` + `summary.md` under `.audit-reports/fixture-matrix/<fixture>/consumer-menu-matrix-baseline/`, adds `doctor_blocking` plus `layerSummary`, and fails fast on drift,
+  - real baselines on `2026-03-14` are already stable for `ios-architecture-showcase`, `SAAS:APP_SUPERMERCADOS`, and `R_GO`, which makes per-layer acceptance visible before any promotion to blocking.
+- Release readiness frozen for the reset:
+  - release decision now depends on an explicit checklist (`typecheck`, enterprise contract suite, package manifest, both package smokes, and the three fixture baselines),
+  - publication is allowed only from `release/<semver>` cut from `develop`,
+  - rollback is defined as previous stable semver + consumer repin + revalidation of `status` / `doctor` / fixture baseline.
+
 ### 2026-03-11 (v6.3.57)
 
 - AST intelligence and gate payload enrichment:

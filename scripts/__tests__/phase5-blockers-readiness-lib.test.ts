@@ -144,5 +144,5 @@ test('buildPhase5BlockersReadinessMarkdown renders verdict and next actions', ()
   assert.match(markdown, /- verdict: BLOCKED/);
   assert.match(markdown, /- adapter_required: NO/);
   assert.match(markdown, /- consumer_triage_verdict: BLOCKED/);
-  assert.match(markdown, /Resolve failed consumer triage steps and rerun `validation:consumer-startup-triage`/);
+  assert.match(markdown, /Resolve failed consumer triage steps and rerun `toolkit:consumer-startup-triage`/);
 });

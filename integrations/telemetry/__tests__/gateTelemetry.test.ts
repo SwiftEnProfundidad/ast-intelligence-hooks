@@ -57,6 +57,8 @@ test('emitGateTelemetryEvent escribe JSONL determinista cuando está configurado
         },
         policyTrace: {
           source: 'default',
+          layer: 'policy-pack',
+          activation: 'default-advisory',
           bundle: 'gate-policy.default.PRE_PUSH',
           hash: 'abc123',
           version: 'policy-as-code/default@1.0',
@@ -99,6 +101,8 @@ test('emitGateTelemetryEvent escribe JSONL determinista cuando está configurado
       gate_outcome: string;
       findings_total: number;
       policy?: {
+        layer?: string;
+        activation?: string;
         bundle?: string;
         version?: string;
         signature?: string;
@@ -116,6 +120,8 @@ test('emitGateTelemetryEvent escribe JSONL determinista cuando está configurado
     assert.equal(parsed.stage, 'PRE_PUSH');
     assert.equal(parsed.gate_outcome, 'BLOCK');
     assert.equal(parsed.findings_total, 1);
+    assert.equal(parsed.policy?.layer, 'policy-pack');
+    assert.equal(parsed.policy?.activation, 'default-advisory');
     assert.equal(parsed.policy?.bundle, 'gate-policy.default.PRE_PUSH');
     assert.equal(parsed.policy?.version, 'policy-as-code/default@1.0');
     assert.equal(parsed.policy?.signature, 'f'.repeat(64));

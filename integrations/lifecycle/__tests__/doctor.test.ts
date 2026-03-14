@@ -152,6 +152,22 @@ test('runLifecycleDoctor marca issue bloqueante cuando hay rutas trackeadas en n
     assert.equal(typeof report.policyValidation.stages.PRE_COMMIT.hash, 'string');
     assert.equal(typeof report.policyValidation.stages.PRE_PUSH.hash, 'string');
     assert.equal(typeof report.policyValidation.stages.CI.hash, 'string');
+    assert.equal(report.experimentalFeatures.features.analytics.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.analytics.source, 'default');
+    assert.equal(report.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.pre_write.source, 'default');
+    assert.equal(report.experimentalFeatures.features.heuristics.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.heuristics.source, 'default');
+    assert.equal(report.experimentalFeatures.features.learning_context.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.learning_context.source, 'default');
+    assert.equal(report.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.mcp_enterprise.source, 'default');
+    assert.equal(report.experimentalFeatures.features.operational_memory.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.operational_memory.source, 'default');
+    assert.equal(report.experimentalFeatures.features.saas_ingestion.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.saas_ingestion.source, 'default');
+    assert.equal(report.experimentalFeatures.features.sdd.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.sdd.source, 'default');
     assert.deepEqual(report.trackedNodeModulesPaths, ['node_modules/pkg/index.js']);
     assert.equal(report.issues.some((issue) => issue.severity === 'error'), true);
     assert.equal(doctorHasBlockingIssues(report), true);
@@ -314,7 +330,7 @@ test('runLifecycleDoctor reporta error y warning cuando hay tracked node_modules
   });
 });
 
-test('runLifecycleDoctor --deep reporta fallo bloqueante cuando evidence está ausente', async () => {
+test('runLifecycleDoctor --deep reporta warning no bloqueante cuando evidence está ausente', async () => {
   await withTempDir('pumuki-doctor-deep-missing-evidence-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
     installPumukiHooks(repoRoot);
@@ -340,9 +356,158 @@ test('runLifecycleDoctor --deep reporta fallo bloqueante cuando evidence está a
 
     assert.equal(report.deep?.enabled, true);
     assert.equal(report.deep?.checks.some((check) => check.id === 'evidence-source-drift'), true);
-    assert.equal(report.deep?.checks.some((check) => check.id === 'evidence-source-drift' && check.status === 'fail'), true);
-    assert.equal(report.deep?.blocking, true);
-    assert.equal(doctorHasBlockingIssues(report), true);
+    assert.equal(report.deep?.checks.some((check) => check.id === 'evidence-source-drift' && check.status === 'warn'), true);
+    assert.equal(
+      report.deep?.checks.some(
+        (check) =>
+          check.id === 'evidence-source-drift' &&
+          check.severity === 'warning' &&
+          check.layer === 'operational'
+      ),
+      true
+    );
+    assert.equal(report.deep?.blocking, false);
+    assert.equal(doctorHasBlockingIssues(report), false);
+  });
+});
+
+test('runLifecycleDoctor --deep reporta warning no bloqueante cuando evidence está stale', async () => {
+  await withTempDir('pumuki-doctor-deep-stale-evidence-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    const branch = 'feature/deep-evidence-stale';
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        sampleEvidence({
+          repoRoot,
+          branch,
+          upstream: null,
+          timestamp: '2026-01-01T00:00:00.000Z',
+        }),
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      [],
+      {
+        [PUMUKI_CONFIG_KEYS.installed]: 'true',
+        [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+        [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      },
+      {
+        'rev-parse --abbrev-ref --symbolic-full-name @{u}': '',
+        'rev-parse --abbrev-ref HEAD': branch,
+      }
+    );
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+      deep: true,
+    });
+
+    const evidenceCheck = report.deep?.checks.find(
+      (check) => check.id === 'evidence-source-drift'
+    );
+
+    assert.equal(evidenceCheck?.status, 'warn');
+    assert.equal(evidenceCheck?.severity, 'warning');
+    assert.equal(evidenceCheck?.layer, 'operational');
+    assert.match(evidenceCheck?.message ?? '', /Evidence is stale/i);
+    assert.equal(report.deep?.blocking, false);
+    assert.equal(doctorHasBlockingIssues(report), false);
+  });
+});
+
+test('runLifecycleDoctor --deep trata policy-drift por fallback default como advisory', async () => {
+  await withTempDir('pumuki-doctor-deep-policy-drift-advisory-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    installPumukiHooks(repoRoot);
+
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'adapter.json'),
+      JSON.stringify(
+        {
+          hooks: {
+            pre_write: { command: 'npx --yes --package pumuki@latest pumuki-pre-write' },
+            pre_commit: { command: 'npx --yes --package pumuki@latest pumuki-pre-commit' },
+            pre_push: { command: 'npx --yes --package pumuki@latest pumuki-pre-push' },
+            ci: { command: 'npx --yes --package pumuki@latest pumuki-ci' },
+          },
+          mcp: {
+            enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
+            evidence: { command: 'npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio' },
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const branch = 'feature/doctor-policy-drift-advisory';
+    const upstream = 'origin/feature/doctor-policy-drift-advisory';
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        sampleEvidence({
+          repoRoot,
+          branch,
+          upstream,
+        }),
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      [],
+      {
+        [PUMUKI_CONFIG_KEYS.installed]: 'true',
+        [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+        [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      },
+      {
+        'rev-parse --abbrev-ref --symbolic-full-name @{u}': upstream,
+        'rev-parse --abbrev-ref HEAD': branch,
+      }
+    );
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+      deep: true,
+    });
+
+    const policyDriftCheck = report.deep?.checks.find(
+      (check) => check.id === 'policy-drift'
+    );
+
+    assert.equal(policyDriftCheck?.status, 'warn');
+    assert.equal(policyDriftCheck?.severity, 'warning');
+    assert.equal(policyDriftCheck?.layer, 'policy-pack');
+    assert.equal(policyDriftCheck?.metadata?.pre_commit_activation_source, null);
+    assert.equal(policyDriftCheck?.metadata?.pre_push_activation_source, null);
+    assert.equal(report.policyValidation.stages.PRE_COMMIT.activationSource, null);
+    assert.equal(report.experimentalFeatures.features.analytics.activationVariable, 'PUMUKI_EXPERIMENTAL_ANALYTICS');
+    assert.equal(report.experimentalFeatures.features.pre_write.activationVariable, 'PUMUKI_EXPERIMENTAL_PRE_WRITE');
+    assert.equal(report.experimentalFeatures.features.heuristics.activationVariable, 'PUMUKI_EXPERIMENTAL_HEURISTICS');
+    assert.equal(report.experimentalFeatures.features.learning_context.activationVariable, 'PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT');
+    assert.equal(report.experimentalFeatures.features.mcp_enterprise.activationVariable, 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE');
+    assert.equal(report.experimentalFeatures.features.operational_memory.activationVariable, 'PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY');
+    assert.equal(report.experimentalFeatures.features.saas_ingestion.activationVariable, 'PUMUKI_EXPERIMENTAL_SAAS_INGESTION');
+    assert.equal(report.experimentalFeatures.features.sdd.activationVariable, 'PUMUKI_EXPERIMENTAL_SDD');
+    assert.match(policyDriftCheck?.message ?? '', /default advisory pack/i);
+    assert.equal(report.deep?.blocking, false);
+    assert.equal(doctorHasBlockingIssues(report), false);
   });
 });
 
@@ -429,6 +594,22 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
     });
 
     assert.equal(report.deep?.enabled, true);
+    assert.equal(
+      report.policyValidation.stages.PRE_COMMIT.activationSource,
+      'file:skills.policy.json'
+    );
+    assert.equal(
+      report.policyValidation.stages.PRE_PUSH.activationSource,
+      'file:skills.policy.json'
+    );
+    assert.equal(report.experimentalFeatures.features.analytics.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.heuristics.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.learning_context.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.operational_memory.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.saas_ingestion.mode, 'off');
+    assert.equal(report.experimentalFeatures.features.sdd.mode, 'off');
     assert.equal(report.deep?.checks.every((check) => check.status === 'pass'), true);
     assert.equal(report.deep?.contract.overall, 'compatible');
     assert.equal(report.deep?.blocking, false);

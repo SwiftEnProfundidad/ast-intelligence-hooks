@@ -23,27 +23,6 @@ const withSkillsEnforcementEnv = async <T>(
   }
 };
 
-const withPreWriteEnforcementEnv = async <T>(
-  value: string | undefined,
-  callback: () => Promise<T> | T
-): Promise<T> => {
-  const previous = process.env.PUMUKI_PREWRITE_ENFORCEMENT;
-  if (typeof value === 'undefined') {
-    delete process.env.PUMUKI_PREWRITE_ENFORCEMENT;
-  } else {
-    process.env.PUMUKI_PREWRITE_ENFORCEMENT = value;
-  }
-  try {
-    return await callback();
-  } finally {
-    if (typeof previous === 'undefined') {
-      delete process.env.PUMUKI_PREWRITE_ENFORCEMENT;
-    } else {
-      process.env.PUMUKI_PREWRITE_ENFORCEMENT = previous;
-    }
-  }
-};
-
 test('resolveSkillsEnforcement defaults to advisory mode', async () => {
   await withSkillsEnforcementEnv(undefined, () => {
     const resolved = resolveSkillsEnforcement();
@@ -80,16 +59,14 @@ test('resolveSkillsEnforcement falls back to advisory on invalid environment val
   });
 });
 
-test('resolveSkillsEnforcement inherits strict mode from PRE_WRITE enforcement when explicit skills env is absent', async () => {
-  await withSkillsEnforcementEnv(undefined, async () => {
-    await withPreWriteEnforcementEnv('strict', () => {
-      const resolved = resolveSkillsEnforcement();
+test('resolveSkillsEnforcement no hereda strict desde PRE_WRITE y permanece advisory por defecto', async () => {
+  await withSkillsEnforcementEnv(undefined, () => {
+    const resolved = resolveSkillsEnforcement();
 
-      assert.deepEqual(resolved, {
-        mode: 'strict',
-        source: 'prewrite',
-        blocking: true,
-      });
+    assert.deepEqual(resolved, {
+      mode: 'advisory',
+      source: 'default',
+      blocking: false,
     });
   });
 });

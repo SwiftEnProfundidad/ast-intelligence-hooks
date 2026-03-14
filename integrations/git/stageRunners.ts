@@ -25,7 +25,7 @@ import type { EvidenceReadResult } from '../evidence/readEvidence';
 import type { SnapshotFinding } from '../evidence/schema';
 import { ensureRuntimeArtifactsIgnored } from '../lifecycle/artifacts';
 import { runPolicyReconcile } from '../lifecycle/policyReconcile';
-import { isSeverityAtLeast } from '../../core/rules/Severity';
+import { isSeverityAtLeast, type Severity } from '../../core/rules/Severity';
 import type { SddDecision } from '../sdd';
 import {
   resolveGitAtomicityEnforcement,
@@ -279,12 +279,19 @@ const shouldRetryAfterPolicyReconcile = (params: {
   const toEvidenceViolationSeverity = (violation: {
     severity?: string | null;
     level?: string | null;
-  }): string => {
-    if (typeof violation.severity === 'string') {
-      return violation.severity;
-    }
-    if (typeof violation.level === 'string') {
-      return violation.level;
+  }): Severity => {
+    const candidate = typeof violation.severity === 'string'
+      ? violation.severity
+      : typeof violation.level === 'string'
+        ? violation.level
+        : null;
+    if (
+      candidate === 'INFO' ||
+      candidate === 'WARN' ||
+      candidate === 'ERROR' ||
+      candidate === 'CRITICAL'
+    ) {
+      return candidate;
     }
     return 'INFO';
   };
@@ -462,7 +469,6 @@ const runHookGateWithPolicyRetry = async (params: {
       return firstAttempt;
     }
     params.dependencies.runPolicyReconcile({
-      dependencies: params.dependencies,
       repoRoot: params.repoRoot,
       strict: true,
       apply: true,

@@ -22,47 +22,47 @@ export const createConsumerLegacyMenuActions = (
   return [
     {
       id: '1',
-      label: 'Full audit (repo analysis · PRE_COMMIT)',
+      label: 'Read-only full audit (repo analysis · PRE_COMMIT)',
       execute: params.runFullAudit,
     },
     {
       id: '2',
-      label: 'Strict REPO+STAGING (CI/CD · PRE_PUSH)',
+      label: 'Read-only strict REPO+STAGING (CI/CD · PRE_PUSH)',
       execute: params.runStrictRepoAndStaged,
     },
     {
       id: '3',
-      label: 'Strict STAGING only (dev · PRE_COMMIT)',
+      label: 'Read-only strict STAGING only (dev · PRE_COMMIT)',
       execute: params.runStrictStagedOnly,
     },
     {
       id: '4',
-      label: 'Audit STAGED+UNSTAGED working tree (PRE_PUSH policy)',
+      label: 'Read-only audit of STAGED+UNSTAGED working tree (PRE_PUSH policy)',
       execute: params.runStandardCriticalHigh,
     },
     {
       id: '5',
-      label: 'Pattern checks',
+      label: 'Legacy read-only pattern checks snapshot',
       execute: params.runPatternChecks,
     },
     {
       id: '6',
-      label: 'ESLint diagnostics (evidence snapshot)',
+      label: 'Legacy read-only ESLint evidence snapshot',
       execute: params.runEslintAudit,
     },
     {
       id: '7',
-      label: 'AST Intelligence',
+      label: 'Legacy read-only AST snapshot',
       execute: params.runAstIntelligence,
     },
     {
       id: '8',
-      label: 'Export Markdown',
+      label: 'Export legacy read-only evidence snapshot',
       execute: params.runExportMarkdown,
     },
     {
       id: '9',
-      label: 'File diagnostics (top violated files)',
+      label: 'Legacy read-only file diagnostics snapshot',
       execute: params.runFileDiagnostics,
     },
     {

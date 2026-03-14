@@ -9,7 +9,10 @@ import {
   policyForCI as policyForCIFromProfiles,
   policyForPreCommit as policyForPreCommitFromProfiles,
   policyForPrePush as policyForPrePushFromProfiles,
-  resolvePolicyProfileForStage,
+  resolveCorePolicyForStage,
+  resolveDefaultAdvisoryPolicyProfileForStage,
+  resolveExplicitPolicyProfileForStage,
+  type PolicyPackActivationSource,
   type PolicyProfileSource,
 } from '../policy/policyProfiles';
 import { resolvePolicyAsCodeTraceMetadata } from '../policy/policyAsCode';
@@ -54,6 +57,9 @@ export type ResolvedStagePolicy = {
   policy: GatePolicy;
   trace: {
     source: PolicyProfileSource;
+    layer: 'policy-pack';
+    activation: 'default-advisory' | 'explicit';
+    activationSource: PolicyPackActivationSource | null;
     bundle: string;
     hash: string;
     version?: string;
@@ -110,12 +116,15 @@ export const resolvePolicyForStage = (
   repoRoot: string = process.cwd()
 ): ResolvedStagePolicy => {
   const degraded = resolveDegradedMode(stage, repoRoot);
-  const resolvedProfile = resolvePolicyProfileForStage(stage, repoRoot);
+  const corePolicy = resolveCorePolicyForStage(stage);
+  const explicitProfile = resolveExplicitPolicyProfileForStage(stage, repoRoot);
+  const resolvedProfile =
+    explicitProfile ?? resolveDefaultAdvisoryPolicyProfileForStage(stage);
   const hash = createPolicyTraceHash({
     stage,
     source: resolvedProfile.source,
-    blockOnOrAbove: resolvedProfile.policy.blockOnOrAbove,
-    warnOnOrAbove: resolvedProfile.policy.warnOnOrAbove,
+    blockOnOrAbove: explicitProfile?.policy.blockOnOrAbove ?? corePolicy.blockOnOrAbove,
+    warnOnOrAbove: explicitProfile?.policy.warnOnOrAbove ?? corePolicy.warnOnOrAbove,
     sourcePolicyHash: resolvedProfile.sourcePolicyHash,
   });
   const policyAsCode = resolvePolicyAsCodeTraceMetadata({
@@ -126,9 +135,12 @@ export const resolvePolicyForStage = (
     repoRoot,
   });
   return {
-    policy: resolvedProfile.policy,
+    policy: explicitProfile?.policy ?? corePolicy,
     trace: {
       source: resolvedProfile.source,
+      layer: resolvedProfile.layer,
+      activation: resolvedProfile.activation,
+      activationSource: resolvedProfile.activationSource,
       bundle: resolvedProfile.bundle,
       hash,
       version: policyAsCode.version,

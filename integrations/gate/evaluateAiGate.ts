@@ -3,6 +3,7 @@ import { readEvidenceResult } from '../evidence/readEvidence';
 import { captureRepoState } from '../evidence/repoState';
 import type { RepoState } from '../evidence/schema';
 import { resolvePolicyForStage } from './stagePolicies';
+import { execFileSync } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { SkillsLockV1, SkillsStage } from '../config/skillsLock';
@@ -173,6 +174,13 @@ const MCP_RECEIPT_STAGE_ORDER: Readonly<Record<AiGateStage, number>> = {
   PRE_PUSH: 2,
   CI: 3,
 };
+const SKILLS_CONTRACT_SUPPRESSED_EVIDENCE_CODES = new Set([
+  'EVIDENCE_MISSING',
+  'EVIDENCE_INVALID',
+  'EVIDENCE_CHAIN_INVALID',
+  'EVIDENCE_TIMESTAMP_INVALID',
+  'EVIDENCE_STALE',
+]);
 
 const toErrorViolation = (code: string, message: string): AiGateViolation => ({
   code,
@@ -344,6 +352,109 @@ const toRepoTreeDetectedPlatforms = (params: {
     const prefixes = PREWRITE_PLATFORM_REPO_TREE_PREFIXES[platform] ?? [];
     return prefixes.some((prefix) => existsSync(resolve(params.repoRoot, prefix)));
   });
+};
+
+const normalizeChangedPath = (value: string): string =>
+  value.replace(/\\/g, '/').replace(/^"+|"+$/g, '').trim();
+
+const parseChangedPath = (line: string): string | null => {
+  if (line.length < 4) {
+    return null;
+  }
+  const raw = line.slice(3).trim();
+  if (raw.length === 0) {
+    return null;
+  }
+  if (raw.includes(' -> ')) {
+    const renamed = raw.split(' -> ').pop();
+    if (!renamed) {
+      return null;
+    }
+    const normalizedRenamed = normalizeChangedPath(renamed);
+    return normalizedRenamed.length > 0 ? normalizedRenamed : null;
+  }
+  const normalized = normalizeChangedPath(raw);
+  return normalized.length > 0 ? normalized : null;
+};
+
+const collectWorktreeChangedPaths = (repoRoot: string): ReadonlyArray<string> => {
+  try {
+    const output = execFileSync(
+      'git',
+      ['status', '--short', '--untracked-files=all'],
+      {
+        cwd: repoRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }
+    );
+    const files = output
+      .split('\n')
+      .map((line) => parseChangedPath(line))
+      .filter((line): line is string => typeof line === 'string' && line.length > 0);
+    return [...new Set(files)];
+  } catch {
+    return [];
+  }
+};
+
+const isPlatformPath = (platform: PreWriteSkillsPlatform, filePath: string): boolean => {
+  const normalized = normalizeChangedPath(filePath).toLowerCase();
+  if (platform === 'ios') {
+    return normalized.endsWith('.swift')
+      || normalized.startsWith('apps/ios/')
+      || normalized.startsWith('ios/');
+  }
+  if (platform === 'android') {
+    return normalized.endsWith('.kt')
+      || normalized.endsWith('.kts')
+      || normalized.startsWith('apps/android/')
+      || normalized.startsWith('android/');
+  }
+  if (platform === 'backend') {
+    const isTypeScriptOrJavaScript =
+      normalized.endsWith('.ts')
+      || normalized.endsWith('.js')
+      || normalized.endsWith('.mts')
+      || normalized.endsWith('.cts')
+      || normalized.endsWith('.mjs')
+      || normalized.endsWith('.cjs');
+    if (!isTypeScriptOrJavaScript) {
+      return false;
+    }
+    return normalized.startsWith('apps/backend/')
+      || /(^|\/)(backend|server|api)(\/|$)/.test(normalized);
+  }
+  const isReactExtension = normalized.endsWith('.tsx') || normalized.endsWith('.jsx');
+  if (isReactExtension) {
+    return true;
+  }
+  const isTypeScriptOrJavaScript =
+    normalized.endsWith('.ts')
+    || normalized.endsWith('.js')
+    || normalized.endsWith('.mts')
+    || normalized.endsWith('.cts')
+    || normalized.endsWith('.mjs')
+    || normalized.endsWith('.cjs');
+  if (!isTypeScriptOrJavaScript) {
+    return false;
+  }
+  return normalized.startsWith('apps/frontend/')
+    || normalized.startsWith('apps/web/')
+    || /(^|\/)(frontend|web|client)(\/|$)/.test(normalized);
+};
+
+const hasWorktreeCodePlatforms = (params: {
+  repoRoot: string;
+  requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
+}): boolean => {
+  const changedPaths = collectWorktreeChangedPaths(params.repoRoot);
+  if (changedPaths.length === 0) {
+    return false;
+  }
+  return changedPaths.some((filePath) =>
+    params.requiredPlatforms.some((platform) => isPlatformPath(platform, filePath))
+  );
 };
 
 const toLockRequiredPlatforms = (
@@ -591,6 +702,7 @@ const collectPreWriteCrossPlatformCriticalViolations = (params: {
 const toSkillsContractAssessment = (params: {
   stage: AiGateStage;
   repoRoot: string;
+  repoState: RepoState;
   evidenceResult: EvidenceReadResult;
   requiredLock?: SkillsLockV1;
   skillsEnforcement: SkillsEnforcementResolution;
@@ -637,7 +749,7 @@ const toSkillsContractAssessment = (params: {
   const explicitlyDetectedPlatforms = toDetectedSkillsPlatforms(params.evidenceResult.evidence.platforms);
   const inferredPlatforms = toCoverageInferredPlatforms(coverage);
   const repoTreeDetectedPlatforms =
-    requiredPlatforms.length > 0
+    params.stage !== 'PRE_WRITE' && requiredPlatforms.length > 0
       ? toRepoTreeDetectedPlatforms({
           repoRoot: params.repoRoot,
           platforms: requiredPlatforms,
@@ -656,12 +768,35 @@ const toSkillsContractAssessment = (params: {
       : inferredPlatforms.length > 0
         ? inferredPlatforms
         : repoTreeDetectedPlatforms;
+  const pendingChanges = resolvePendingChanges(params.repoState);
+  const detectedPlatformSet = new Set(detectedPlatforms);
   const assessmentPlatforms =
     requiredPlatforms.length > 0
-      ? requiredPlatforms
+      ? params.stage === 'PRE_WRITE' && detectedPlatforms.length > 0
+        ? requiredPlatforms.filter((platform) => detectedPlatformSet.has(platform))
+        : requiredPlatforms
       : detectedPlatforms;
 
   if (requiredPlatforms.length > 0 && detectedPlatforms.length === 0) {
+    if (
+      params.stage === 'PRE_WRITE'
+      && (
+        pendingChanges === 0
+        || !hasWorktreeCodePlatforms({
+          repoRoot: params.repoRoot,
+          requiredPlatforms,
+        })
+      )
+    ) {
+      return {
+        stage: params.stage,
+        enforced: false,
+        status: 'NOT_APPLICABLE',
+        detected_platforms: [],
+        requirements: [],
+        violations: [],
+      };
+    }
     const requirements: AiGateSkillsContractPlatformRequirement[] = requiredPlatforms.map((platform) => ({
       platform,
       required_rule_prefix: PLATFORM_SKILLS_RULE_PREFIXES[platform],
@@ -959,9 +1094,7 @@ const collectPreWriteCoherenceViolations = (params: {
   }
 
   if (params.preWriteWorktreeHygiene.enabled && params.repoState.git.available) {
-    const pendingChanges =
-      params.repoState.git.pending_changes
-      ?? (params.repoState.git.staged + params.repoState.git.unstaged);
+    const pendingChanges = resolvePendingChanges(params.repoState) ?? 0;
     if (pendingChanges >= params.preWriteWorktreeHygiene.blockThreshold) {
       violations.push(
         toErrorViolation(
@@ -1086,6 +1219,13 @@ const collectGitflowViolations = (
     );
   }
   return violations;
+};
+
+const resolvePendingChanges = (repoState: RepoState): number | null => {
+  if (!repoState.git.available) {
+    return null;
+  }
+  return repoState.git.pending_changes ?? (repoState.git.staged + repoState.git.unstaged);
 };
 
 const toPolicyStage = (stage: AiGateStage): SkillsStage => {
@@ -1275,12 +1415,17 @@ export const evaluateAiGate = (
   const skillsContract = toSkillsContractAssessment({
     stage: params.stage,
     repoRoot: params.repoRoot,
+    repoState,
     evidenceResult,
     requiredLock: requiredSkillsLock,
     skillsEnforcement,
   });
+  const suppressSkillsContractViolation = evidenceAssessment.violations.some((violation) =>
+    SKILLS_CONTRACT_SUPPRESSED_EVIDENCE_CODES.has(violation.code)
+  );
   const stageSkillsContractViolations =
-    skillsContract.status !== 'FAIL'
+    suppressSkillsContractViolation
+    || skillsContract.status !== 'FAIL'
     || (params.stage === 'PRE_WRITE' && requiredSkillsPlatforms.length === 0)
         ? []
       : [

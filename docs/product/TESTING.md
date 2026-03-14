@@ -80,6 +80,34 @@ npm run test:saas-ingestion
 npm run test:deterministic
 ```
 
+## Release readiness del reset
+
+Before deciding whether the reset is publishable, freeze this exact sequence:
+
+```bash
+npm run -s typecheck
+npm run -s validation:contract-suite:enterprise
+npm run -s validation:package-manifest
+npm run -s validation:package-smoke
+npm run -s validation:package-smoke:minimal
+npm run -s validation:consumer-matrix-baseline -- --repo-root /Users/juancarlosmerlosalbarracin/Developer/Projects/ios-architecture-showcase --fixture ios-architecture-showcase --rounds 3 --json
+npm run -s validation:consumer-matrix-baseline -- --repo-root "/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS" --fixture saas-app-supermercados --rounds 3 --json
+npm run -s validation:consumer-matrix-baseline -- --repo-root /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO --fixture r_go --rounds 3 --json
+git diff --check
+```
+
+Publication rule:
+
+- only publish from `release/<semver>` cut from `develop`
+- do not publish while a framework-owned fixture failure or known false-positive blocking signal remains
+- consumer-owned debt may remain only when it is explicitly classified and does not change the canonical framework verdict
+
+Minimum rollback:
+
+- revert to the previous stable `pumuki` semver
+- repin affected consumers to that exact version
+- rerun `status`, `doctor`, and the fixture baseline on the impacted consumer before declaring rollback complete
+
 ## CI alignment
 
 Workflows rely on the same deterministic model and should remain consistent with local commands:

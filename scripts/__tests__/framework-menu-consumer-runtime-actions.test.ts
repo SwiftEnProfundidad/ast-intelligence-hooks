@@ -176,14 +176,56 @@ test('consumer runtime opción 8 exporta markdown con enlaces clicables', { conc
     await action.execute();
 
     const markdown = readExportedMarkdown(temp);
-    assert.match(output.join('\n'), /Markdown exported:/);
+    assert.match(output.join('\n'), /Legacy read-only markdown exported:/);
+    assert.match(markdown, /# PUMUKI Legacy Read-Only Evidence Snapshot/);
     assert.match(markdown, /- Outcome: `BLOCK`/);
     assert.match(markdown, /- Total violations: `2`/);
+    assert.match(markdown, /- Mode: `legacy read-only`/);
     assert.match(markdown, /## Clickable Findings/);
     assert.match(
       markdown,
       /\[apps\/backend\/src\/runtime\/process\.ts:27\]\(\.\/apps\/backend\/src\/runtime\/process\.ts#L27\)/
     );
+  } finally {
+    process.chdir(previous);
+  }
+});
+
+test('consumer runtime opción 8 mantiene paridad con la evidence canónica tras ejecutar la opción 1', { concurrency: false }, async () => {
+  const previous = process.cwd();
+  const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-export-parity-'));
+  process.chdir(temp);
+  try {
+    const output: string[] = [];
+    const runtime = createConsumerMenuRuntime({
+      runRepoGate: async () => {
+        writeEvidenceWithLines(temp);
+      },
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runPreflight: async () => {},
+      write: (text) => {
+        output.push(text);
+      },
+    });
+
+    const auditAction = runtime.actions.find((item) => item.id === '1');
+    const exportAction = runtime.actions.find((item) => item.id === '8');
+    assert.ok(auditAction, 'Expected consumer action id=1');
+    assert.ok(exportAction, 'Expected consumer action id=8');
+
+    await auditAction.execute();
+    await exportAction.execute();
+
+    const rendered = output.join('\n');
+    const markdown = readExportedMarkdown(temp);
+
+    assert.match(rendered, /Evidence: status=ok stage=PRE_COMMIT outcome=BLOCK findings=2/);
+    assert.match(markdown, /- Stage: `PRE_COMMIT`/);
+    assert.match(markdown, /- Outcome: `BLOCK`/);
+    assert.match(markdown, /- Total violations: `2`/);
+    assert.match(markdown, /- Files scanned: `12`/);
   } finally {
     process.chdir(previous);
   }
@@ -293,6 +335,7 @@ test('consumer runtime opción 8 exporta el bloqueo en memoria cuando la opción
     await exportAction.execute();
 
     const markdown = readExportedMarkdown(temp);
+    assert.match(markdown, /# PUMUKI Legacy Read-Only Evidence Snapshot/);
     assert.match(markdown, /- Stage: `PRE_PUSH`/);
     assert.match(markdown, /- Outcome: `BLOCK`/);
     assert.match(markdown, /- Total violations: `1`/);

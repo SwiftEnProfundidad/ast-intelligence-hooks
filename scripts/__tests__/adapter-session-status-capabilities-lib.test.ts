@@ -36,7 +36,7 @@ test('resolveAdapterSessionStatusCommands treats deprecated verify alias as unav
           name: 'consumer-fixture',
           scripts: {
             'verify:adapter-hooks-runtime':
-              "echo 'Migrated to modern TS scripts — use validation:adapter-readiness instead'",
+              "echo 'Migrated to toolkit support scripts — use toolkit:adapter-readiness instead'",
           },
         },
         null,

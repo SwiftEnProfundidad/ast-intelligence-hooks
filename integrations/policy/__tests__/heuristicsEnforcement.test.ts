@@ -7,6 +7,8 @@ const withHeuristicsEnforcementEnv = async <T>(
   callback: () => Promise<T> | T
 ): Promise<T> => {
   const previous = process.env.PUMUKI_HEURISTICS_ENFORCEMENT;
+  const previousExperimentalHeuristics = process.env.PUMUKI_EXPERIMENTAL_HEURISTICS;
+  delete process.env.PUMUKI_EXPERIMENTAL_HEURISTICS;
   if (typeof value === 'undefined') {
     delete process.env.PUMUKI_HEURISTICS_ENFORCEMENT;
   } else {
@@ -20,26 +22,31 @@ const withHeuristicsEnforcementEnv = async <T>(
     } else {
       process.env.PUMUKI_HEURISTICS_ENFORCEMENT = previous;
     }
+    if (typeof previousExperimentalHeuristics === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_HEURISTICS;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_HEURISTICS = previousExperimentalHeuristics;
+    }
   }
 };
 
-const withPreWriteEnforcementEnv = async <T>(
+const withExperimentalHeuristicsEnv = async <T>(
   value: string | undefined,
   callback: () => Promise<T> | T
 ): Promise<T> => {
-  const previous = process.env.PUMUKI_PREWRITE_ENFORCEMENT;
+  const previous = process.env.PUMUKI_EXPERIMENTAL_HEURISTICS;
   if (typeof value === 'undefined') {
-    delete process.env.PUMUKI_PREWRITE_ENFORCEMENT;
+    delete process.env.PUMUKI_EXPERIMENTAL_HEURISTICS;
   } else {
-    process.env.PUMUKI_PREWRITE_ENFORCEMENT = value;
+    process.env.PUMUKI_EXPERIMENTAL_HEURISTICS = value;
   }
   try {
     return await callback();
   } finally {
     if (typeof previous === 'undefined') {
-      delete process.env.PUMUKI_PREWRITE_ENFORCEMENT;
+      delete process.env.PUMUKI_EXPERIMENTAL_HEURISTICS;
     } else {
-      process.env.PUMUKI_PREWRITE_ENFORCEMENT = previous;
+      process.env.PUMUKI_EXPERIMENTAL_HEURISTICS = previous;
     }
   }
 };
@@ -80,15 +87,29 @@ test('resolveHeuristicsEnforcement falls back to advisory on invalid environment
   });
 });
 
-test('resolveHeuristicsEnforcement inherits strict mode from PRE_WRITE enforcement when explicit heuristics env is absent', async () => {
+test('resolveHeuristicsEnforcement inherits strict mode from heuristics experimental feature when explicit heuristics env is absent', async () => {
   await withHeuristicsEnforcementEnv(undefined, async () => {
-    await withPreWriteEnforcementEnv('strict', () => {
+    await withExperimentalHeuristicsEnv('strict', () => {
       const resolved = resolveHeuristicsEnforcement();
 
       assert.deepEqual(resolved, {
         mode: 'strict',
-        source: 'prewrite',
+        source: 'experimental:heuristics',
         blocking: true,
+      });
+    });
+  });
+});
+
+test('resolveHeuristicsEnforcement inherits advisory mode from heuristics experimental feature when explicit heuristics env is absent', async () => {
+  await withHeuristicsEnforcementEnv(undefined, async () => {
+    await withExperimentalHeuristicsEnv('advisory', () => {
+      const resolved = resolveHeuristicsEnforcement();
+
+      assert.deepEqual(resolved, {
+        mode: 'advisory',
+        source: 'experimental:heuristics',
+        blocking: false,
       });
     });
   });

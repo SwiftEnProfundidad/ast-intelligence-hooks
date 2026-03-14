@@ -1,5 +1,6 @@
 import { evaluateAiGate, type AiGateStage, type AiGateViolation } from '../gate/evaluateAiGate';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
+import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
 
 type AutoExecuteAction = 'proceed' | 'ask';
@@ -178,9 +179,12 @@ export const runEnterpriseAutoExecuteAiStart = (params: {
     stage,
     requireMcpReceipt: params.requireMcpReceipt ?? false,
   });
-  const learningContext = readSddLearningContext({
-    repoRoot: params.repoRoot,
-  });
+  const learningContextFeature = resolveLearningContextExperimentalFeature();
+  const learningContext = learningContextFeature.mode === 'off'
+    ? null
+    : readSddLearningContext({
+      repoRoot: params.repoRoot,
+    });
   const firstViolation = evaluation.violations[0];
   const reasonCode = firstViolation?.code ?? 'READY';
   const action: AutoExecuteAction = evaluation.allowed ? 'proceed' : 'ask';

@@ -14,7 +14,7 @@ import {
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
   execFileSync('git', args, { cwd, encoding: 'utf8' });
 
-test('runRepoGateSilent aplica SDD estricto e inyecta sdd.policy.blocked cuando faltan precondiciones', async () => {
+test('runRepoGateSilent ya no inyecta sdd.policy.blocked por defecto tras degradar SDD a experimental', async () => {
   await withTempDir('pumuki-menu-gate-sdd-bypass-', async (repoRoot) => {
     const previousCwd = process.cwd();
     try {
@@ -38,7 +38,7 @@ test('runRepoGateSilent aplica SDD estricto e inyecta sdd.policy.blocked cuando 
       const findings = Array.isArray(evidence.snapshot?.findings) ? evidence.snapshot.findings : [];
       const ruleIds = findings.map((finding) => finding.ruleId ?? '');
 
-      assert.equal(ruleIds.includes('sdd.policy.blocked'), true);
+      assert.equal(ruleIds.includes('sdd.policy.blocked'), false);
       assert.equal(
         ruleIds.includes('skills.backend.no-console-log') ||
           ruleIds.includes('skills.frontend.no-console-log') ||
@@ -51,7 +51,7 @@ test('runRepoGateSilent aplica SDD estricto e inyecta sdd.policy.blocked cuando 
   });
 });
 
-test('runRepoAndStagedPrePushGateSilent emite evidencia con stage PRE_PUSH usando el stage runner canónico', async () => {
+test('runRepoAndStagedPrePushGateSilent emite evidencia con stage PRE_PUSH sin sdd.policy.blocked por defecto', async () => {
   await withTempDir('pumuki-menu-gate-prepush-', async (repoRoot) => {
     const previousCwd = process.cwd();
     try {
@@ -76,7 +76,7 @@ test('runRepoAndStagedPrePushGateSilent emite evidencia con stage PRE_PUSH usand
       assert.equal(evidence.snapshot?.stage, 'PRE_PUSH');
       const findings = Array.isArray(evidence.snapshot?.findings) ? evidence.snapshot.findings : [];
       const ruleIds = findings.map((finding) => finding.ruleId ?? '');
-      assert.equal(ruleIds.includes('sdd.policy.blocked'), true);
+      assert.equal(ruleIds.includes('sdd.policy.blocked'), false);
     } finally {
       process.chdir(previousCwd);
     }

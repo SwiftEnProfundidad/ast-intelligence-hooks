@@ -1,41 +1,29 @@
-export type PreWriteEnforcementMode = 'advisory' | 'strict';
+import {
+  resolvePreWriteExperimentalFeature,
+  type ExperimentalFeatureMode,
+  type ExperimentalFeatureResolution,
+  type ExperimentalFeatureSource,
+} from './experimentalFeatures';
+
+export type PreWriteEnforcementMode = ExperimentalFeatureMode;
 
 export type PreWriteEnforcementResolution = {
   mode: PreWriteEnforcementMode;
-  source: 'default' | 'env';
+  source: ExperimentalFeatureSource;
   blocking: boolean;
-};
-
-const PRE_WRITE_ENFORCEMENT_ENV = 'PUMUKI_PREWRITE_ENFORCEMENT';
-
-const toPreWriteEnforcementMode = (
-  value: string | undefined
-): PreWriteEnforcementMode | null => {
-  if (typeof value !== 'string') {
-    return null;
-  }
-  const normalized = value.trim().toLowerCase();
-  if (normalized === 'strict') {
-    return 'strict';
-  }
-  if (normalized === 'advisory' || normalized === 'warn' || normalized === 'warning') {
-    return 'advisory';
-  }
-  return null;
+  layer: ExperimentalFeatureResolution['layer'];
+  activationVariable: ExperimentalFeatureResolution['activationVariable'];
+  legacyActivationVariable: ExperimentalFeatureResolution['legacyActivationVariable'];
 };
 
 export const resolvePreWriteEnforcement = (): PreWriteEnforcementResolution => {
-  const modeFromEnv = toPreWriteEnforcementMode(process.env[PRE_WRITE_ENFORCEMENT_ENV]);
-  if (modeFromEnv) {
-    return {
-      mode: modeFromEnv,
-      source: 'env',
-      blocking: modeFromEnv === 'strict',
-    };
-  }
+  const experimentalFeature = resolvePreWriteExperimentalFeature();
   return {
-    mode: 'advisory',
-    source: 'default',
-    blocking: false,
+    mode: experimentalFeature.mode,
+    source: experimentalFeature.source,
+    blocking: experimentalFeature.blocking,
+    layer: experimentalFeature.layer,
+    activationVariable: experimentalFeature.activationVariable,
+    legacyActivationVariable: experimentalFeature.legacyActivationVariable,
   };
 };

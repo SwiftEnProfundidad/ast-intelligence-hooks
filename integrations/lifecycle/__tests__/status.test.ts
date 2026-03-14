@@ -114,9 +114,79 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     assert.equal(typeof status.policyValidation.stages.PRE_COMMIT.hash, 'string');
     assert.equal(typeof status.policyValidation.stages.PRE_PUSH.hash, 'string');
     assert.equal(typeof status.policyValidation.stages.CI.hash, 'string');
+    assert.equal(status.policyValidation.stages.PRE_COMMIT.activationSource, null);
+    assert.equal(status.policyValidation.stages.PRE_PUSH.activationSource, null);
+    assert.equal(status.policyValidation.stages.CI.activationSource, null);
     assert.equal(status.policyValidation.stages.PRE_COMMIT.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(status.policyValidation.stages.PRE_PUSH.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(status.policyValidation.stages.CI.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(status.experimentalFeatures.features.pre_write.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.source, 'default');
+    assert.equal(status.experimentalFeatures.features.analytics.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.analytics.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.analytics.activationVariable,
+      'PUMUKI_EXPERIMENTAL_ANALYTICS'
+    );
+    assert.equal(status.experimentalFeatures.features.analytics.legacyActivationVariable, null);
+    assert.equal(status.experimentalFeatures.features.heuristics.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.heuristics.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.heuristics.activationVariable,
+      'PUMUKI_EXPERIMENTAL_HEURISTICS'
+    );
+    assert.equal(status.experimentalFeatures.features.heuristics.legacyActivationVariable, null);
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.mcp_enterprise.activationVariable,
+      'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE'
+    );
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.legacyActivationVariable, null);
+    assert.equal(status.experimentalFeatures.features.operational_memory.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.operational_memory.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.operational_memory.activationVariable,
+      'PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY'
+    );
+    assert.equal(status.experimentalFeatures.features.operational_memory.legacyActivationVariable, null);
+    assert.equal(status.experimentalFeatures.features.learning_context.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.learning_context.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.learning_context.activationVariable,
+      'PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT'
+    );
+    assert.equal(status.experimentalFeatures.features.learning_context.legacyActivationVariable, null);
+    assert.equal(
+      status.experimentalFeatures.features.pre_write.activationVariable,
+      'PUMUKI_EXPERIMENTAL_PRE_WRITE'
+    );
+    assert.equal(
+      status.experimentalFeatures.features.pre_write.legacyActivationVariable,
+      'PUMUKI_PREWRITE_ENFORCEMENT'
+    );
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.saas_ingestion.activationVariable,
+      'PUMUKI_EXPERIMENTAL_SAAS_INGESTION'
+    );
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.legacyActivationVariable, null);
+    assert.equal(status.experimentalFeatures.features.sdd.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.sdd.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.sdd.activationVariable,
+      'PUMUKI_EXPERIMENTAL_SDD'
+    );
+    assert.equal(status.experimentalFeatures.features.sdd.legacyActivationVariable, null);
 
     assert.deepEqual(git.resolveCalls, ['/tmp/ignored-cwd']);
     assert.deepEqual(git.listTrackedCalls, [repoRoot]);
@@ -184,6 +254,14 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     assert.equal(status.trackedNodeModulesCount, 0);
     assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
     assert.equal(status.hooksDirectoryResolution, 'default');
+    assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
   });
 });
 
@@ -214,5 +292,13 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
     });
     assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
     assert.equal(status.hooksDirectoryResolution, 'default');
+    assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
   });
 });

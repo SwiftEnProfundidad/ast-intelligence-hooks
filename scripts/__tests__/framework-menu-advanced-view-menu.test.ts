@@ -43,10 +43,15 @@ test('formatAdvancedMenuView renderiza secciones por dominio y ayuda contextual 
   assert.match(rendered, /Pumuki Framework Menu \(Advanced\)/);
   assert.match(rendered, /\b1\)\s+Gates\b/);
   assert.match(rendered, /\b2\)\s+Diagnostics\b/);
-  assert.match(rendered, /\b3\)\s+Maintenance\b/);
-  assert.match(rendered, /\b4\)\s+Validation\b/);
-  assert.match(rendered, /\b5\)\s+System\b/);
+  assert.match(rendered, /\b3\)\s+Legacy Read-Only Audits\b/);
+  assert.match(rendered, /\b4\)\s+Maintenance\b/);
+  assert.match(rendered, /\b5\)\s+Validation\b/);
+  assert.match(rendered, /\b6\)\s+System\b/);
   assert.match(rendered, /1\)\s+Evaluate staged changes \(PRE_COMMIT policy\)\s+-\s+Evalua solo los cambios staged/i);
+  assert.match(
+    rendered,
+    /28\)\s+Legacy read-only audit: full repository snapshot[\s\S]*Auditoria legacy\/read-only/i
+  );
   assert.match(rendered, /27\)\s+Exit/);
 });
 

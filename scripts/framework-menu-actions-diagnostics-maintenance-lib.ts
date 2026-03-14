@@ -38,7 +38,7 @@ export const createFrameworkMenuDiagnosticsMaintenanceActions = (
     },
     {
       id: '32',
-      label: 'Run rule coverage diagnostics (repo/stages)',
+      label: 'Legacy read-only audit: rule coverage diagnostics (repo/stages)',
       execute: async () => runAndPrintExitCode(runRuleCoverageDiagnostics),
     },
     {

@@ -8,10 +8,19 @@ import {
 import type { SkillsStage } from '../config/skillsLock';
 
 export type PolicyProfileSource = 'default' | 'skills.policy' | 'hard-mode';
+export type PolicyProfileLayer = 'policy-pack';
+export type PolicyProfileActivation = 'default-advisory' | 'explicit';
+export type PolicyPackActivationSource =
+  | 'env'
+  | 'file:.pumuki/hard-mode.json'
+  | 'file:skills.policy.json';
 
 export type ResolvedPolicyProfile = {
   policy: GatePolicy;
   source: PolicyProfileSource;
+  layer: PolicyProfileLayer;
+  activation: PolicyProfileActivation;
+  activationSource: PolicyPackActivationSource | null;
   bundle: string;
   sourcePolicyHash?: string;
 };
@@ -113,7 +122,7 @@ const hardModePolicyByStage: Record<SkillsStage, GatePolicy> =
     hardModeEnterpriseThresholdsByStage
   );
 
-type HardModeProfileName = 'critical-high' | 'all-severities';
+export type HardModeProfileName = 'critical-high' | 'all-severities';
 
 const hardModeEnterpriseThresholdsProfileByStage: Record<
   HardModeProfileName,
@@ -161,7 +170,7 @@ const hardModePolicyProfileByStage: Record<
   ),
 };
 
-const HARD_MODE_CONFIG_PATH = '.pumuki/hard-mode.json';
+export const HARD_MODE_CONFIG_PATH = '.pumuki/hard-mode.json';
 
 const toHardModeProfileName = (
   value: unknown
@@ -202,7 +211,33 @@ type HardModeConfigState = {
   profileName: HardModeProfileName | null;
 };
 
-const readHardModeConfig = (repoRoot: string): HardModeConfigState | null => {
+export type PersistedHardModeConfig = HardModeConfigState & {
+  configPath: typeof HARD_MODE_CONFIG_PATH;
+};
+
+export type HardModeRuntimeState = HardModeConfigState & {
+  activationSource: 'env' | 'file:.pumuki/hard-mode.json' | null;
+  configPath: typeof HARD_MODE_CONFIG_PATH;
+};
+
+export type ExplicitPolicyPackSelection =
+  | {
+    source: 'hard-mode';
+    activation: 'explicit';
+    activationSource: 'env' | 'file:.pumuki/hard-mode.json';
+    profileName: HardModeProfileName | null;
+  }
+  | {
+    source: 'skills.policy';
+    activation: 'explicit';
+    activationSource: 'file:skills.policy.json';
+    policy: NonNullable<ReturnType<typeof loadSkillsPolicy>>;
+    sourcePolicyHash: string;
+  };
+
+export const readPersistedHardModeConfig = (
+  repoRoot: string
+): PersistedHardModeConfig | null => {
   const configPath = join(repoRoot, HARD_MODE_CONFIG_PATH);
   if (!existsSync(configPath)) {
     return null;
@@ -218,14 +253,17 @@ const readHardModeConfig = (repoRoot: string): HardModeConfigState | null => {
     return {
       enabled: parsed.enabled,
       profileName: toHardModeProfileName(parsed.profile),
+      configPath: HARD_MODE_CONFIG_PATH,
     };
   } catch {
     return null;
   }
 };
 
-const resolveHardModeState = (repoRoot: string): HardModeConfigState => {
-  const configured = readHardModeConfig(repoRoot);
+export const resolveHardModeRuntimeState = (
+  repoRoot: string
+): HardModeRuntimeState => {
+  const configured = readPersistedHardModeConfig(repoRoot);
   const envEnabled = hardModeEnabledFromEnv();
   const envProfile = hardModeProfileNameFromEnv();
 
@@ -233,6 +271,8 @@ const resolveHardModeState = (repoRoot: string): HardModeConfigState => {
     return {
       enabled: envEnabled,
       profileName: envProfile ?? configured?.profileName ?? null,
+      activationSource: 'env',
+      configPath: HARD_MODE_CONFIG_PATH,
     };
   }
 
@@ -240,22 +280,76 @@ const resolveHardModeState = (repoRoot: string): HardModeConfigState => {
     return {
       enabled: configured.enabled,
       profileName: envProfile ?? configured.profileName,
+      activationSource: 'file:.pumuki/hard-mode.json',
+      configPath: configured.configPath,
     };
   }
 
   return {
     enabled: false,
     profileName: envProfile,
+    activationSource: null,
+    configPath: HARD_MODE_CONFIG_PATH,
   };
 };
 
-export const resolvePolicyProfileForStage = (
+export const resolveExplicitPolicyPackSelection = (
+  repoRoot: string = process.cwd()
+): ExplicitPolicyPackSelection | null => {
+  const hardModeState = resolveHardModeRuntimeState(repoRoot);
+  if (hardModeState.enabled && hardModeState.activationSource) {
+    return {
+      source: 'hard-mode',
+      activation: 'explicit',
+      activationSource: hardModeState.activationSource,
+      profileName: hardModeState.profileName,
+    };
+  }
+
+  const loadedPolicy = loadSkillsPolicy(repoRoot);
+  if (!loadedPolicy) {
+    return null;
+  }
+
+  return {
+    source: 'skills.policy',
+    activation: 'explicit',
+    activationSource: 'file:skills.policy.json',
+    policy: loadedPolicy,
+    sourcePolicyHash: createSkillsPolicyDeterministicHash(loadedPolicy),
+  };
+};
+
+export const resolveCorePolicyForStage = (
+  stage: SkillsStage
+): GatePolicy => {
+  return defaultPolicyByStage[stage];
+};
+
+export const resolveDefaultAdvisoryPolicyProfileForStage = (
+  stage: SkillsStage
+): ResolvedPolicyProfile => {
+  return {
+    policy: resolveCorePolicyForStage(stage),
+    source: 'default',
+    layer: 'policy-pack',
+    activation: 'default-advisory',
+    activationSource: null,
+    bundle: `gate-policy.default.${stage}`,
+  };
+};
+
+export const resolveExplicitPolicyProfileForStage = (
   stage: SkillsStage,
   repoRoot: string = process.cwd()
-): ResolvedPolicyProfile => {
-  const hardModeState = resolveHardModeState(repoRoot);
-  if (hardModeState.enabled) {
-    const profileName = hardModeState.profileName;
+): ResolvedPolicyProfile | null => {
+  const explicitPack = resolveExplicitPolicyPackSelection(repoRoot);
+  if (!explicitPack) {
+    return null;
+  }
+
+  if (explicitPack.source === 'hard-mode') {
+    const profileName = explicitPack.profileName;
     const profilePolicy = profileName
       ? hardModePolicyProfileByStage[profileName][stage]
       : null;
@@ -263,6 +357,9 @@ export const resolvePolicyProfileForStage = (
     return {
       policy: hardModePolicy,
       source: 'hard-mode',
+      layer: 'policy-pack',
+      activation: 'explicit',
+      activationSource: explicitPack.activationSource,
       bundle: profileName
         ? `gate-policy.hard-mode.${profileName}.${stage}`
         : `gate-policy.hard-mode.${stage}`,
@@ -270,17 +367,8 @@ export const resolvePolicyProfileForStage = (
     };
   }
 
-  const defaults = defaultPolicyByStage[stage];
-  const loadedPolicy = loadSkillsPolicy(repoRoot);
-  const stageOverride = loadedPolicy?.stages[stage];
-
-  if (!stageOverride) {
-    return {
-      policy: defaults,
-      source: 'default',
-      bundle: `gate-policy.default.${stage}`,
-    };
-  }
+  const defaults = resolveCorePolicyForStage(stage);
+  const stageOverride = explicitPack.policy.stages[stage];
 
   return {
     policy: {
@@ -289,21 +377,34 @@ export const resolvePolicyProfileForStage = (
       warnOnOrAbove: stageOverride.warnOnOrAbove,
     },
     source: 'skills.policy',
+    layer: 'policy-pack',
+    activation: 'explicit',
+    activationSource: explicitPack.activationSource,
     bundle: `gate-policy.skills.policy.${stage}`,
-    sourcePolicyHash: createSkillsPolicyDeterministicHash(loadedPolicy),
+    sourcePolicyHash: explicitPack.sourcePolicyHash,
   };
 };
 
+export const resolvePolicyProfileForStage = (
+  stage: SkillsStage,
+  repoRoot: string = process.cwd()
+): ResolvedPolicyProfile => {
+  return (
+    resolveExplicitPolicyProfileForStage(stage, repoRoot) ??
+    resolveDefaultAdvisoryPolicyProfileForStage(stage)
+  );
+};
+
 export const policyForPreCommit = (): GatePolicy => {
-  return defaultPolicyByStage.PRE_COMMIT;
+  return resolveCorePolicyForStage('PRE_COMMIT');
 };
 
 export const policyForPrePush = (): GatePolicy => {
-  return defaultPolicyByStage.PRE_PUSH;
+  return resolveCorePolicyForStage('PRE_PUSH');
 };
 
 export const policyForCI = (): GatePolicy => {
-  return defaultPolicyByStage.CI;
+  return resolveCorePolicyForStage('CI');
 };
 
 export { mapEnterpriseSeverityToGateSeverity };
