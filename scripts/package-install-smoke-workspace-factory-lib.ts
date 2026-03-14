@@ -17,7 +17,7 @@ export const createSmokeWorkspace = (mode: SmokeMode): SmokeWorkspace => {
   const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-package-smoke-'));
   const consumerRepo = join(
     tmpRoot,
-    process.platform === 'win32' ? 'consumer' : 'consumer:repo'
+    ...(process.platform === 'win32' ? ['consumer'] : ['path:fixture', 'consumer-repo'])
   );
   const bareRemote = join(tmpRoot, 'origin.git');
 
