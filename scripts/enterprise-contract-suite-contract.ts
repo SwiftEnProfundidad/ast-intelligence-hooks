@@ -38,7 +38,7 @@ export const resolveEnterpriseContractProfiles = (): ReadonlyArray<EnterpriseCon
   {
     id: 'minimal',
     mode: 'minimal',
-    expectedExitCode: 1,
+    expectedExitCode: 0,
   },
   {
     id: 'block',
@@ -48,7 +48,7 @@ export const resolveEnterpriseContractProfiles = (): ReadonlyArray<EnterpriseCon
   {
     id: 'minimal-repeat',
     mode: 'minimal',
-    expectedExitCode: 1,
+    expectedExitCode: 0,
   },
   {
     id: 'telemetry-rotation',
