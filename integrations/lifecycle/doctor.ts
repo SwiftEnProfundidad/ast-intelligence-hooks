@@ -423,9 +423,9 @@ const evaluateEvidenceSourceDriftCheck = (params: {
     return buildDeepCheck({
       id: 'evidence-source-drift',
       status: 'fail',
-      severity: 'error',
+      severity: 'warning',
       message: '.ai_evidence.json is missing.',
-      remediation: 'Regenerate evidence with a full audit before continuing with enterprise checks.',
+      remediation: 'Regenerate evidence with a full audit before relying on enterprise diagnostics or gates.',
       metadata: {
         path: evidenceResult.source_descriptor.path,
       },
@@ -456,15 +456,17 @@ const evaluateEvidenceSourceDriftCheck = (params: {
   const ageSeconds = Number.isFinite(timestampMs)
     ? Math.max(0, Math.floor((nowMs - timestampMs) / 1000))
     : null;
+  let operationalDriftOnly = true;
 
   if (!Number.isFinite(timestampMs)) {
     toError();
+    operationalDriftOnly = false;
     violations.push('Evidence timestamp is invalid.');
   } else if (timestampMs > nowMs) {
     toError();
+    operationalDriftOnly = false;
     violations.push('Evidence timestamp is in the future.');
   } else if (ageSeconds !== null && ageSeconds > DEEP_EVIDENCE_MAX_AGE_SECONDS) {
-    toError();
     violations.push(
       `Evidence is stale (${ageSeconds}s > ${DEEP_EVIDENCE_MAX_AGE_SECONDS}s).`
     );
@@ -488,6 +490,7 @@ const evaluateEvidenceSourceDriftCheck = (params: {
     toCanonicalPath(expectedEvidencePath)
   ) {
     toError();
+    operationalDriftOnly = false;
     violations.push(
       `Evidence source path mismatch (${evidenceResult.source_descriptor.path} != ${expectedEvidencePath}).`
     );
@@ -498,6 +501,7 @@ const evaluateEvidenceSourceDriftCheck = (params: {
     !/^sha256:[0-9a-f]{64}$/i.test(evidenceResult.source_descriptor.digest)
   ) {
     toError();
+    operationalDriftOnly = false;
     violations.push('Evidence digest format is invalid.');
   }
 
@@ -508,6 +512,7 @@ const evaluateEvidenceSourceDriftCheck = (params: {
     toCanonicalPath(evidenceRepoRoot) !== toCanonicalPath(params.repoRoot)
   ) {
     toError();
+    operationalDriftOnly = false;
     violations.push(`Evidence repo_root mismatch (${evidenceRepoRoot} != ${params.repoRoot}).`);
   }
 
@@ -520,6 +525,7 @@ const evaluateEvidenceSourceDriftCheck = (params: {
     evidenceBranch !== currentBranch
   ) {
     toError();
+    operationalDriftOnly = false;
     violations.push(`Evidence branch mismatch (${evidenceBranch} != ${currentBranch}).`);
   }
 
@@ -535,6 +541,9 @@ const evaluateEvidenceSourceDriftCheck = (params: {
   }
 
   if (violations.length > 0) {
+    if (operationalDriftOnly) {
+      severity = 'warning';
+    }
     return buildDeepCheck({
       id: 'evidence-source-drift',
       status: 'fail',

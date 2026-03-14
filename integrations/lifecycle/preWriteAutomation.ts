@@ -98,7 +98,7 @@ export const buildPreWriteAutomationTrace = async (params: {
     attempted: false,
     actions: [],
   };
-  if (params.sdd.stage !== 'PRE_WRITE' || !params.sdd.decision.allowed || params.aiGate.allowed) {
+  if (params.sdd.stage !== 'PRE_WRITE' || params.aiGate.allowed) {
     return {
       aiGate: params.aiGate,
       trace,

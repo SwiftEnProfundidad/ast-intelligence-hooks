@@ -10,6 +10,20 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.58] - 2026-03-14
+
+### Fixed
+
+- `PRE_WRITE` now behaves like a clean no-op for consumer slices that have no pending changes and no materialized active platforms.
+  - The gate no longer escalates `EVIDENCE_SKILLS_PLATFORMS_UNDETECTED` / `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE` in those clean-slice cases.
+- `PRE_WRITE` automation now refreshes stale evidence and stale MCP receipts even when the SDD session is currently invalid.
+  - This removes stale-artifact noise from the final verdict and keeps the residual focused on the true blocking cause.
+- Lifecycle `doctor --deep` now degrades missing/stale evidence to operational warnings instead of hard blocking the diagnostic verdict.
+- Release packaging is aligned again with runtime metadata and hook/watch severity typing.
+  - `source-bin` is now a valid `package_version_source` in repo evidence,
+  - hook/watch evidence severities are normalized to canonical `Severity` values,
+  - policy auto-reconcile calls match the current runtime signature.
+
 ## [6.3.57] - 2026-03-11
 
 ### Changed

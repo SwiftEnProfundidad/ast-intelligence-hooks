@@ -314,7 +314,7 @@ test('runLifecycleDoctor reporta error y warning cuando hay tracked node_modules
   });
 });
 
-test('runLifecycleDoctor --deep reporta fallo bloqueante cuando evidence está ausente', async () => {
+test('runLifecycleDoctor --deep reporta warning no bloqueante cuando evidence está ausente', async () => {
   await withTempDir('pumuki-doctor-deep-missing-evidence-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
     installPumukiHooks(repoRoot);
@@ -341,8 +341,66 @@ test('runLifecycleDoctor --deep reporta fallo bloqueante cuando evidence está a
     assert.equal(report.deep?.enabled, true);
     assert.equal(report.deep?.checks.some((check) => check.id === 'evidence-source-drift'), true);
     assert.equal(report.deep?.checks.some((check) => check.id === 'evidence-source-drift' && check.status === 'fail'), true);
-    assert.equal(report.deep?.blocking, true);
-    assert.equal(doctorHasBlockingIssues(report), true);
+    assert.equal(
+      report.deep?.checks.some(
+        (check) => check.id === 'evidence-source-drift' && check.severity === 'warning'
+      ),
+      true
+    );
+    assert.equal(report.deep?.blocking, false);
+    assert.equal(doctorHasBlockingIssues(report), false);
+  });
+});
+
+test('runLifecycleDoctor --deep reporta warning no bloqueante cuando evidence está stale', async () => {
+  await withTempDir('pumuki-doctor-deep-stale-evidence-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    const branch = 'feature/deep-evidence-stale';
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        sampleEvidence({
+          repoRoot,
+          branch,
+          upstream: null,
+          timestamp: '2026-01-01T00:00:00.000Z',
+        }),
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      [],
+      {
+        [PUMUKI_CONFIG_KEYS.installed]: 'true',
+        [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+        [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      },
+      {
+        'rev-parse --abbrev-ref --symbolic-full-name @{u}': '',
+        'rev-parse --abbrev-ref HEAD': branch,
+      }
+    );
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+      deep: true,
+    });
+
+    const evidenceCheck = report.deep?.checks.find(
+      (check) => check.id === 'evidence-source-drift'
+    );
+
+    assert.equal(evidenceCheck?.status, 'fail');
+    assert.equal(evidenceCheck?.severity, 'warning');
+    assert.match(evidenceCheck?.message ?? '', /Evidence is stale/i);
+    assert.equal(report.deep?.blocking, false);
+    assert.equal(doctorHasBlockingIssues(report), false);
   });
 });
 

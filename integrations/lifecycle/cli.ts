@@ -70,6 +70,7 @@ import {
   type RemoteCiDiagnostics,
 } from './remoteCiDiagnostics';
 import { runPolicyReconcile } from './policyReconcile';
+import { resolvePreWriteEnforcement, type PreWriteEnforcementResolution } from '../policy/preWriteEnforcement';
 
 type LifecycleCommand =
   | 'bootstrap'
@@ -566,6 +567,9 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   }
   if (!isLifecycleCommand(commandRaw)) {
     throw new Error(`Unknown command "${commandRaw}".\n\n${HELP_TEXT}`);
+  }
+  if (argv.slice(1).some((arg) => arg === '--help' || arg === '-h')) {
+    throw new Error(HELP_TEXT);
   }
 
   let purgeArtifacts = false;
@@ -1562,6 +1566,7 @@ const PRE_WRITE_POLICY_RECONCILE_COMMAND =
 type PreWriteValidationEnvelope = {
   sdd: ReturnType<typeof evaluateSddPolicy>;
   ai_gate: ReturnType<typeof evaluateAiGate>;
+  pre_write_enforcement: PreWriteEnforcementResolution;
   policy_validation: LifecyclePolicyValidationSnapshot;
   automation: PreWriteAutomationTrace;
   bootstrap: {
@@ -1841,6 +1846,7 @@ const resolveAiGateViolationLocation = (code: string) => {
 const buildPreWriteValidationEnvelope = (
   result: ReturnType<typeof evaluateSddPolicy>,
   aiGate: ReturnType<typeof evaluateAiGate>,
+  preWriteEnforcement: PreWriteEnforcementResolution,
   policyValidation: LifecyclePolicyValidationSnapshot,
   automation: PreWriteAutomationTrace,
   bootstrap: PreWriteOpenSpecBootstrapTrace,
@@ -1848,6 +1854,7 @@ const buildPreWriteValidationEnvelope = (
 ): PreWriteValidationEnvelope => ({
   sdd: result,
   ai_gate: aiGate,
+  pre_write_enforcement: preWriteEnforcement,
   policy_validation: policyValidation,
   automation: {
     attempted: automation.attempted,
@@ -1890,6 +1897,50 @@ const writeLoopAttemptEvidence = (params: {
   writeFileSync(absolutePath, `${JSON.stringify(params.payload, null, 2)}\n`, 'utf8');
   return relativePath;
 };
+
+const withTemporaryEnvOverrides = <T>(
+  overrides: Readonly<Record<string, string | undefined>>,
+  callback: () => T
+): T => {
+  const previous = new Map<string, string | undefined>();
+  for (const [key, value] of Object.entries(overrides)) {
+    previous.set(key, process.env[key]);
+    if (typeof value === 'undefined') {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+  try {
+    return callback();
+  } finally {
+    for (const [key, value] of previous.entries()) {
+      if (typeof value === 'undefined') {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+};
+
+const runRawPreWriteAiGateCheck = (params: {
+  repoRoot: string;
+  requireMcpReceipt: boolean;
+}): ReturnType<typeof evaluateAiGate> =>
+  withTemporaryEnvOverrides(
+    {
+      PUMUKI_SKILLS_ENFORCEMENT: process.env.PUMUKI_SKILLS_ENFORCEMENT ?? 'strict',
+      PUMUKI_TDD_BDD_ENFORCEMENT: process.env.PUMUKI_TDD_BDD_ENFORCEMENT ?? 'strict',
+      PUMUKI_HEURISTICS_ENFORCEMENT: process.env.PUMUKI_HEURISTICS_ENFORCEMENT ?? 'strict',
+    },
+    () =>
+      runEnterpriseAiGateCheck({
+        repoRoot: params.repoRoot,
+        stage: 'PRE_WRITE',
+        requireMcpReceipt: params.requireMcpReceipt,
+      }).result
+  );
 
 export const runLifecycleCli = async (
   argv: ReadonlyArray<string>,
@@ -2473,6 +2524,13 @@ export const runLifecycleCli = async (
           let result = evaluateSddPolicy({
             stage: parsed.sddStage ?? 'PRE_COMMIT',
           });
+          const preWriteEnforcement = result.stage === 'PRE_WRITE'
+            ? resolvePreWriteEnforcement()
+            : {
+              mode: 'strict',
+              source: 'default',
+              blocking: true,
+            } satisfies PreWriteEnforcementResolution;
           const policyValidation = readLifecyclePolicyValidationSnapshot(process.cwd());
           const preWriteAutoBootstrapEnabled = process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP !== '0';
           const preWriteBootstrapTrace: PreWriteOpenSpecBootstrapTrace = {
@@ -2534,17 +2592,24 @@ export const runLifecycleCli = async (
             automationTrace.attempted = auto.trace.attempted;
             automationTrace.actions = auto.trace.actions;
           }
+          const rawPreWriteAiGate = result.stage === 'PRE_WRITE' && aiGate
+            ? runRawPreWriteAiGateCheck({
+              repoRoot: process.cwd(),
+              requireMcpReceipt: true,
+            })
+            : null;
           const nextAction = resolvePreWriteNextAction({
             sdd: result,
-            aiGate,
+            aiGate: rawPreWriteAiGate ?? aiGate,
           });
           if (parsed.json) {
             writeInfo(
               JSON.stringify(
-                aiGate
+                (rawPreWriteAiGate ?? aiGate)
                   ? buildPreWriteValidationEnvelope(
                     result,
-                    aiGate,
+                    rawPreWriteAiGate ?? aiGate!,
+                    preWriteEnforcement,
                     policyValidation,
                     automationTrace,
                     preWriteBootstrapTrace,
@@ -2582,6 +2647,9 @@ export const runLifecycleCli = async (
               writeInfo(
                 `[pumuki][sdd] openspec auto-bootstrap: enabled=${preWriteBootstrapTrace.enabled ? 'yes' : 'no'} attempted=${preWriteBootstrapTrace.attempted ? 'yes' : 'no'} status=${preWriteBootstrapTrace.status} actions=${preWriteBootstrapTrace.actions.join(',') || 'none'}`
               );
+              writeInfo(
+                `[pumuki][sdd] pre-write enforcement: mode=${preWriteEnforcement.mode} source=${preWriteEnforcement.source} blocking=${preWriteEnforcement.blocking ? 'yes' : 'no'}`
+              );
               if (preWriteBootstrapTrace.details) {
                 writeInfo(
                   `[pumuki][sdd] openspec auto-bootstrap details: ${preWriteBootstrapTrace.details}`
@@ -2617,7 +2685,7 @@ export const runLifecycleCli = async (
               aiGateResult: aiGate,
             });
           }
-          if (!result.decision.allowed) {
+          if (!result.decision.allowed && preWriteEnforcement.blocking) {
             activeDependencies.emitGateBlockedNotification({
               repoRoot: process.cwd(),
               stage: result.stage,
@@ -2631,7 +2699,7 @@ export const runLifecycleCli = async (
             });
             return 1;
           }
-          if (aiGate && !aiGate.allowed) {
+          if (aiGate && !aiGate.allowed && preWriteEnforcement.blocking) {
             const firstViolation = aiGate.violations[0];
             const causeCode = firstViolation?.code ?? 'AI_GATE_BLOCKED';
             const causeMessage = firstViolation?.message ?? 'AI gate blocked PRE_WRITE stage.';
