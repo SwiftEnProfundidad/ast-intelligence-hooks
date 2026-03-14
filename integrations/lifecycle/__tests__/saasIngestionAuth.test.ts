@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { getCurrentPumukiVersion } from '../packageInfo';
 import { createHotspotsSaasIngestionPayload } from '../saasIngestionContract';
 import { validateHotspotsSaasIngestionAuthPolicy } from '../saasIngestionAuth';
+
+const producerVersion = getCurrentPumukiVersion();
 
 const payload = createHotspotsSaasIngestionPayload({
   tenantId: 'tenant-auth',
   repositoryId: 'repo-auth',
   repositoryName: 'ast-intelligence-hooks',
-  producerVersion: '6.3.17',
+  producerVersion,
   generatedAt: '2026-02-26T12:20:00+00:00',
   report: {
     generatedAt: '2026-02-26T12:20:00+00:00',

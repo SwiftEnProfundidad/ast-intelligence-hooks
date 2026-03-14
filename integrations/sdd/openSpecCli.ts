@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path';
 import type { OpenSpecValidationSummary } from './types';
 
 export const OPENSPEC_NPM_PACKAGE_NAME = '@fission-ai/openspec';
+export const OPENSPEC_VALIDATE_ALL_COMMAND = 'openspec validate --all --json --no-interactive';
 export const OPENSPEC_COMPATIBILITY_MATRIX = {
   packageName: OPENSPEC_NPM_PACKAGE_NAME,
   minimumVersion: '1.1.1',
@@ -163,10 +164,7 @@ export const isOpenSpecProjectInitialized = (repoRoot: string): boolean =>
 export const validateOpenSpecChanges = (
   repoRoot: string
 ): OpenSpecValidationSummary => {
-  const result = runOpenSpecCommand(
-    ['validate', '--changes', '--json', '--no-interactive'],
-    repoRoot
-  );
+  const result = runOpenSpecCommand(['validate', '--all', '--json', '--no-interactive'], repoRoot);
   const parsed = parseValidationJson(result.stdout);
   const hasErrors = parsed.totals.failed > 0 || parsed.issues.errors > 0;
   return {

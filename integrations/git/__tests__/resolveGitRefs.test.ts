@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { resolveCiBaseRef, resolveUpstreamRef } from '../resolveGitRefs';
+import {
+  resolveCiBaseRef,
+  resolvePrePushBootstrapBaseRef,
+  resolveUpstreamRef,
+} from '../resolveGitRefs';
 import { runGit, withGithubBaseRef, withTempRepo } from './helpers/gitTestUtils';
 
 const withResolveRepo = async (
@@ -93,6 +97,34 @@ test(
           const resolved = resolveCiBaseRef();
           assert.equal(resolved, 'HEAD');
         });
+      },
+      'trunk'
+    );
+  }
+);
+
+test(
+  'resolvePrePushBootstrapBaseRef prefers develop when available',
+  { concurrency: false },
+  async () => {
+    await withResolveRepo(async (repoRoot) => {
+      runGit(repoRoot, ['checkout', '--quiet', '-b', 'develop']);
+      runGit(repoRoot, ['checkout', '--quiet', '-b', 'feature/bootstrap-base']);
+
+      const resolved = resolvePrePushBootstrapBaseRef();
+      assert.equal(resolved, 'develop');
+    });
+  }
+);
+
+test(
+  'resolvePrePushBootstrapBaseRef falls back to HEAD when no base refs are resolvable',
+  { concurrency: false },
+  async () => {
+    await withResolveRepo(
+      async () => {
+        const resolved = resolvePrePushBootstrapBaseRef();
+        assert.equal(resolved, 'HEAD');
       },
       'trunk'
     );

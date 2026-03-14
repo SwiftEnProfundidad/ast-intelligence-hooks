@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createConsumerLegacyMenuActions } from '../framework-menu-consumer-actions-lib';
 
-test('createConsumerLegacyMenuActions expone opciones 1..9 con labels legacy esperadas', async () => {
+test('createConsumerLegacyMenuActions expone shell read-only mínima y diagnósticos legacy explícitos', async () => {
   let repo = 0;
   let repoAndStaged = 0;
   let staged = 0;
@@ -47,11 +47,15 @@ test('createConsumerLegacyMenuActions expone opciones 1..9 con labels legacy esp
     actions.map((action) => action.id),
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
   );
-  assert.match(actions[0]?.label ?? '', /Full audit.*PRE_COMMIT/i);
-  assert.match(actions[1]?.label ?? '', /Strict REPO\+STAGING.*PRE_PUSH/i);
-  assert.match(actions[2]?.label ?? '', /Strict STAGING only.*PRE_COMMIT/i);
-  assert.match(actions[3]?.label ?? '', /Audit STAGED\+UNSTAGED working tree.*PRE_PUSH/i);
-  assert.match(actions[5]?.label ?? '', /ESLint diagnostics.*evidence snapshot/i);
+  assert.match(actions[0]?.label ?? '', /Read-only full audit.*PRE_COMMIT/i);
+  assert.match(actions[1]?.label ?? '', /Read-only strict REPO\+STAGING.*PRE_PUSH/i);
+  assert.match(actions[2]?.label ?? '', /Read-only strict STAGING only.*PRE_COMMIT/i);
+  assert.match(actions[3]?.label ?? '', /Read-only audit of STAGED\+UNSTAGED working tree.*PRE_PUSH/i);
+  assert.match(actions[4]?.label ?? '', /Legacy read-only pattern checks snapshot/i);
+  assert.match(actions[5]?.label ?? '', /Legacy read-only ESLint evidence snapshot/i);
+  assert.match(actions[6]?.label ?? '', /Legacy read-only AST snapshot/i);
+  assert.match(actions[7]?.label ?? '', /Export legacy read-only evidence snapshot/i);
+  assert.match(actions[8]?.label ?? '', /Legacy read-only file diagnostics snapshot/i);
 
   for (const action of actions.slice(0, 9)) {
     await action.execute();

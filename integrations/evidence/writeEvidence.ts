@@ -1,19 +1,22 @@
-import { writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import type {
   AiEvidenceV2_1,
   CompatibilityViolation,
+  EvidenceChain,
   EvidenceLines,
   LedgerEntry,
   RepoState,
   SnapshotEvaluationMetrics,
   SnapshotFinding,
+  SnapshotFindingNode,
 } from './schema';
 import type { TddBddSnapshot } from '../tdd/types';
 import { buildSnapshotPlatformSummaries } from './platformSummary';
 import { normalizeHumanIntent } from './humanIntent';
 import { normalizeSnapshotEvaluationMetrics } from './evaluationMetrics';
 import { normalizeSnapshotRulesCoverage } from './rulesCoverage';
+import { buildEvidenceChain, isEvidenceChain } from './evidenceChain';
 
 export type WriteEvidenceResult = {
   ok: boolean;
@@ -22,6 +25,7 @@ export type WriteEvidenceResult = {
 };
 
 const EVIDENCE_FILE_NAME = '.ai_evidence.json';
+const TEMP_EVIDENCE_PREFIX = '.ai_evidence.json.tmp-';
 
 const normalizeLines = (lines?: EvidenceLines): EvidenceLines | undefined => {
   if (typeof lines === 'undefined') {
@@ -85,6 +89,12 @@ const normalizeFindingPath = (
     lines: normalizeLines(finding.lines),
     matchedBy: finding.matchedBy,
     source: finding.source,
+    blocking: finding.blocking,
+    primary_node: normalizeFindingNode(finding.primary_node),
+    related_nodes: normalizeFindingNodes(finding.related_nodes),
+    why: normalizeOptionalString(finding.why),
+    impact: normalizeOptionalString(finding.impact),
+    expected_fix: normalizeOptionalString(finding.expected_fix),
   };
 };
 
@@ -110,7 +120,52 @@ const toCompatibilityViolations = (
     lines: finding.lines,
     matchedBy: finding.matchedBy,
     source: finding.source,
+    blocking: finding.blocking,
+    primary_node: normalizeFindingNode(finding.primary_node),
+    related_nodes: normalizeFindingNodes(finding.related_nodes),
+    why: normalizeOptionalString(finding.why),
+    impact: normalizeOptionalString(finding.impact),
+    expected_fix: normalizeOptionalString(finding.expected_fix),
   }));
+};
+
+const normalizeOptionalString = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const normalizeFindingNode = (node: SnapshotFindingNode | undefined): SnapshotFindingNode | undefined => {
+  if (!node) {
+    return undefined;
+  }
+
+  const name = normalizeOptionalString(node.name);
+  if (!name) {
+    return undefined;
+  }
+
+  return {
+    kind: node.kind,
+    name,
+    lines: normalizeLines(node.lines),
+  };
+};
+
+const normalizeFindingNodes = (
+  nodes: ReadonlyArray<SnapshotFindingNode> | undefined
+): readonly SnapshotFindingNode[] | undefined => {
+  if (!nodes) {
+    return undefined;
+  }
+
+  const normalized = nodes
+    .map((node) => normalizeFindingNode(node))
+    .filter((node): node is SnapshotFindingNode => Boolean(node));
+
+  return normalized.length > 0 ? normalized : undefined;
 };
 
 const deriveFilesAffected = (findings: ReadonlyArray<SnapshotFinding>): number => {
@@ -341,21 +396,50 @@ const resolveRepoRoot = (): string => {
   return process.cwd();
 };
 
+const buildTempEvidencePath = (repoRoot: string): string => {
+  const uniqueSuffix = `${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+  return join(repoRoot, `${TEMP_EVIDENCE_PREFIX}${uniqueSuffix}`);
+};
+
+const resolvePreviousEvidenceChain = (outputPath: string): EvidenceChain | undefined => {
+  if (!existsSync(outputPath)) {
+    return undefined;
+  }
+  try {
+    const raw = readFileSync(outputPath, 'utf8');
+    const parsed = JSON.parse(raw) as { evidence_chain?: unknown };
+    return isEvidenceChain(parsed.evidence_chain) ? parsed.evidence_chain : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 export function writeEvidence(
   evidence: AiEvidenceV2_1,
   options?: { repoRoot?: string }
 ): WriteEvidenceResult {
   const repoRoot = options?.repoRoot ?? resolveRepoRoot();
   const outputPath = join(repoRoot, EVIDENCE_FILE_NAME);
+  const tempPath = buildTempEvidencePath(repoRoot);
 
   try {
     const stableEvidence = toStableEvidence(evidence, repoRoot);
-    writeFileSync(outputPath, `${JSON.stringify(stableEvidence, null, 2)}\n`, 'utf8');
+    const previousChain = resolvePreviousEvidenceChain(outputPath);
+    const evidenceWithChain: AiEvidenceV2_1 = {
+      ...stableEvidence,
+      evidence_chain: buildEvidenceChain({
+        evidence: stableEvidence,
+        previousChain,
+      }),
+    };
+    writeFileSync(tempPath, `${JSON.stringify(evidenceWithChain, null, 2)}\n`, 'utf8');
+    renameSync(tempPath, outputPath);
     return {
       ok: true,
       path: outputPath,
     };
   } catch (error) {
+    rmSync(tempPath, { force: true });
     const message = error instanceof Error ? error.message : String(error);
     console.warn(`[ai-evidence] ${message}`);
     return {

@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { EvidenceService } from '../EvidenceService';
+import { buildEvidenceChain } from '../../evidence/evidenceChain';
 
 const service = new EvidenceService();
 
@@ -45,7 +46,7 @@ test('loadPreviousEvidence returns undefined for wrong version', async () => {
 
 test('loadPreviousEvidence returns evidence for valid v2.1', async () => {
   await withTempDir((dir) => {
-    const evidence = {
+    const evidenceWithoutChain = {
       version: '2.1',
       timestamp: '2026-01-01T00:00:00Z',
       snapshot: { stage: 'PRE_COMMIT', outcome: 'PASS', findings: [] },
@@ -55,6 +56,12 @@ test('loadPreviousEvidence returns evidence for valid v2.1', async () => {
       human_intent: null,
       ai_gate: { status: 'ALLOWED', violations: [], human_intent: null },
       severity_metrics: { gate_status: 'ALLOWED', total_violations: 0, by_severity: {} },
+    };
+    const evidence = {
+      ...evidenceWithoutChain,
+      evidence_chain: buildEvidenceChain({
+        evidence: evidenceWithoutChain as Parameters<typeof buildEvidenceChain>[0]['evidence'],
+      }),
     };
     writeFileSync(join(dir, '.ai_evidence.json'), JSON.stringify(evidence), 'utf8');
     const result = service.loadPreviousEvidence(dir);

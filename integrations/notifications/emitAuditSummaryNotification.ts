@@ -133,3 +133,31 @@ export const emitAuditSummaryNotificationFromAiGate = (
     repoRoot: params.repoRoot,
   });
 };
+
+export const emitGateBlockedNotification = (
+  params: {
+    repoRoot: string;
+    stage: AuditSummaryNotificationStage;
+    totalViolations: number;
+    causeCode: string;
+    causeMessage: string;
+    remediation: string;
+  },
+  dependencies: Partial<AuditSummaryNotificationDependencies> = {}
+): SystemNotificationEmitResult => {
+  const activeDependencies: AuditSummaryNotificationDependencies = {
+    ...defaultDependencies,
+    ...dependencies,
+  };
+  return activeDependencies.emitSystemNotification({
+    event: {
+      kind: 'gate.blocked',
+      stage: params.stage,
+      totalViolations: params.totalViolations,
+      causeCode: params.causeCode,
+      causeMessage: params.causeMessage,
+      remediation: params.remediation,
+    },
+    repoRoot: params.repoRoot,
+  });
+};

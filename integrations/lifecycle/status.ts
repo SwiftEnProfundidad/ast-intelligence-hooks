@@ -1,14 +1,27 @@
-import { getPumukiHooksStatus } from './hookManager';
+import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
-import { getCurrentPumukiVersion } from './packageInfo';
+import { buildLifecycleVersionReport } from './packageInfo';
+import {
+  readLifecycleExperimentalFeaturesSnapshot,
+  type LifecycleExperimentalFeaturesSnapshot,
+} from './experimentalFeaturesSnapshot';
+import {
+  readLifecyclePolicyValidationSnapshot,
+  type LifecyclePolicyValidationSnapshot,
+} from './policyValidationSnapshot';
 import { readLifecycleState, type LifecycleState } from './state';
 
 export type LifecycleStatus = {
   repoRoot: string;
   packageVersion: string;
+  version: ReturnType<typeof buildLifecycleVersionReport>;
   lifecycleState: LifecycleState;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
+  hooksDirectory: string;
+  hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   trackedNodeModulesCount: number;
+  policyValidation: LifecyclePolicyValidationSnapshot;
+  experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
 };
 
 export const readLifecycleStatus = (params?: {
@@ -18,13 +31,24 @@ export const readLifecycleStatus = (params?: {
   const git = params?.git ?? new LifecycleGitService();
   const cwd = params?.cwd ?? process.cwd();
   const repoRoot = git.resolveRepoRoot(cwd);
+  const hooksDirectory = resolvePumukiHooksDirectory(repoRoot);
   const trackedNodeModulesCount = git.trackedNodeModulesPaths(repoRoot).length;
+  const lifecycleState = readLifecycleState(git, repoRoot);
+  const version = buildLifecycleVersionReport({
+    repoRoot,
+    lifecycleVersion: lifecycleState.version,
+  });
 
   return {
     repoRoot,
-    packageVersion: getCurrentPumukiVersion(),
-    lifecycleState: readLifecycleState(git, repoRoot),
+    packageVersion: version.effective,
+    version,
+    lifecycleState,
     hookStatus: getPumukiHooksStatus(repoRoot),
+    hooksDirectory: hooksDirectory.path,
+    hooksDirectoryResolution: hooksDirectory.source,
     trackedNodeModulesCount,
+    policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
+    experimentalFeatures: readLifecycleExperimentalFeaturesSnapshot(),
   };
 };

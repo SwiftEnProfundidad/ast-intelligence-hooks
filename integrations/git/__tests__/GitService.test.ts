@@ -247,6 +247,9 @@ test('GitService.getStagedAndUnstagedFacts agrega tracked y untracked del workin
     mutableService.runGit = (args: ReadonlyArray<string>): string => {
       const command = args.join(' ');
       calls.push(command);
+      if (command === 'rev-parse --verify HEAD') {
+        return 'abc123';
+      }
       if (command === 'diff --name-status HEAD') {
         return ['M\tsrc/tracked.ts'].join('\n');
       }
@@ -286,7 +289,75 @@ test('GitService.getStagedAndUnstagedFacts agrega tracked y untracked del workin
       },
     ]);
     assert.deepEqual(calls, [
+      'rev-parse --verify HEAD',
       'diff --name-status HEAD',
+      'ls-files --others --exclude-standard',
+    ]);
+  });
+});
+
+test('GitService.getStagedAndUnstagedFacts soporta repos sin HEAD en commit inicial', async () => {
+  await withTempDir('pumuki-git-working-tree-initial-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'src'), { recursive: true });
+    writeFileSync(join(repoRoot, 'src', 'bootstrap.ts'), 'export const bootstrap = true;\n', 'utf8');
+    writeFileSync(join(repoRoot, 'src', 'new.ts'), 'export const created = true;\n', 'utf8');
+    const service = new GitService();
+    const calls: string[] = [];
+    const mutableService = service as GitService & {
+      runGit(args: ReadonlyArray<string>, cwd?: string): string;
+      resolveRepoRoot(): string;
+    };
+    mutableService.runGit = (args: ReadonlyArray<string>): string => {
+      const command = args.join(' ');
+      calls.push(command);
+      if (command === 'rev-parse --verify HEAD') {
+        throw new Error("fatal: argumento ambiguo 'HEAD'");
+      }
+      if (command === 'diff --cached --name-status') {
+        return ['A\tsrc/bootstrap.ts'].join('\n');
+      }
+      if (command === 'diff --name-status') {
+        return ['M\tsrc/bootstrap.ts'].join('\n');
+      }
+      if (command === 'ls-files --others --exclude-standard') {
+        return ['src/new.ts', 'src/ignored.swift'].join('\n');
+      }
+      throw new Error(`comando git no esperado: ${command}`);
+    };
+    mutableService.resolveRepoRoot = () => repoRoot;
+
+    const result = service.getStagedAndUnstagedFacts(['.ts']);
+
+    assert.deepEqual(result, [
+      {
+        kind: 'FileChange',
+        path: 'src/bootstrap.ts',
+        changeType: 'modified',
+        source: 'git:working-tree',
+      },
+      {
+        kind: 'FileContent',
+        path: 'src/bootstrap.ts',
+        content: 'export const bootstrap = true;\n',
+        source: 'git:working-tree',
+      },
+      {
+        kind: 'FileChange',
+        path: 'src/new.ts',
+        changeType: 'added',
+        source: 'git:working-tree',
+      },
+      {
+        kind: 'FileContent',
+        path: 'src/new.ts',
+        content: 'export const created = true;\n',
+        source: 'git:working-tree',
+      },
+    ]);
+    assert.deepEqual(calls, [
+      'rev-parse --verify HEAD',
+      'diff --cached --name-status',
+      'diff --name-status',
       'ls-files --others --exclude-standard',
     ]);
   });

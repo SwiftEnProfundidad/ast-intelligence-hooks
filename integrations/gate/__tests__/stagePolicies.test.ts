@@ -19,8 +19,36 @@ test('resolvePolicyForStage returns default PRE_PUSH policy when skills policy i
       warnOnOrAbove: 'WARN',
     });
     assert.equal(resolved.trace.source, 'default');
+    assert.equal(resolved.trace.layer, 'policy-pack');
+    assert.equal(resolved.trace.activation, 'default-advisory');
+    assert.equal(resolved.trace.activationSource, null);
     assert.equal(resolved.trace.bundle, 'gate-policy.default.PRE_PUSH');
     assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
+    assert.equal(resolved.trace.version, 'policy-as-code/default@1.0');
+    assert.match(resolved.trace.signature ?? '', /^[a-f0-9]{64}$/i);
+    assert.equal(resolved.trace.policySource, 'computed-local');
+    assert.equal(resolved.trace.validation?.status, 'valid');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_VALID');
+  });
+});
+
+test('resolvePolicyForStage marks unsigned in strict mode when policy-as-code contract is missing', async () => {
+  await withTempDir('pumuki-stage-policy-unsigned-strict-', async (repoRoot) => {
+    const previousStrict = process.env.PUMUKI_POLICY_STRICT;
+    process.env.PUMUKI_POLICY_STRICT = '1';
+    try {
+      const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+      assert.equal(resolved.trace.validation?.status, 'unsigned');
+      assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_UNSIGNED');
+      assert.equal(resolved.trace.validation?.strict, true);
+      assert.equal(resolved.trace.policySource, 'computed-local');
+    } finally {
+      if (typeof previousStrict === 'undefined') {
+        delete process.env.PUMUKI_POLICY_STRICT;
+      } else {
+        process.env.PUMUKI_POLICY_STRICT = previousStrict;
+      }
+    }
   });
 });
 
@@ -50,8 +78,109 @@ test('resolvePolicyForStage applies PRE_PUSH override from skills.policy.json', 
       warnOnOrAbove: 'ERROR',
     });
     assert.equal(resolved.trace.source, 'skills.policy');
+    assert.equal(resolved.trace.layer, 'policy-pack');
+    assert.equal(resolved.trace.activation, 'explicit');
+    assert.equal(resolved.trace.activationSource, 'file:skills.policy.json');
     assert.equal(resolved.trace.bundle, 'gate-policy.skills.policy.PRE_PUSH');
     assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
+    assert.equal(resolved.trace.version, 'policy-as-code/skills.policy@1.0');
+    assert.match(resolved.trace.signature ?? '', /^[a-f0-9]{64}$/i);
+    assert.equal(resolved.trace.policySource, 'computed-local');
+    assert.equal(resolved.trace.validation?.status, 'valid');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_VALID');
+  });
+});
+
+test('resolvePolicyForStage marks unknown-source when policy-as-code contract source mismatches', async () => {
+  await withTempDir('pumuki-stage-policy-contract-unknown-source-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'policy-as-code.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          source: 'skills.policy',
+          signatures: {
+            PRE_COMMIT: 'a'.repeat(64),
+            PRE_PUSH: 'b'.repeat(64),
+            CI: 'c'.repeat(64),
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    assert.equal(resolved.trace.source, 'default');
+    assert.equal(resolved.trace.layer, 'policy-pack');
+    assert.equal(resolved.trace.activation, 'default-advisory');
+    assert.equal(resolved.trace.validation?.status, 'unknown-source');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_UNKNOWN_SOURCE');
+    assert.equal(resolved.trace.policySource, 'file:.pumuki/policy-as-code.json');
+  });
+});
+
+test('resolvePolicyForStage marks expired when policy-as-code contract is out of date', async () => {
+  await withTempDir('pumuki-stage-policy-contract-expired-', async (repoRoot) => {
+    const baseline = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    const prePushSignature = baseline.trace.signature;
+    assert.ok(prePushSignature);
+
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'policy-as-code.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          source: 'default',
+          expires_at: '2000-01-01T00:00:00.000Z',
+          signatures: {
+            PRE_COMMIT: 'a'.repeat(64),
+            PRE_PUSH: prePushSignature,
+            CI: 'c'.repeat(64),
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    assert.equal(resolved.trace.validation?.status, 'expired');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_CONTRACT_EXPIRED');
+    assert.equal(resolved.trace.policySource, 'file:.pumuki/policy-as-code.json');
+  });
+});
+
+test('resolvePolicyForStage marks invalid when policy-as-code contract expiry is malformed', async () => {
+  await withTempDir('pumuki-stage-policy-contract-invalid-expiry-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'policy-as-code.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          source: 'default',
+          expires_at: 'not-an-iso-date',
+          signatures: {
+            PRE_COMMIT: 'a'.repeat(64),
+            PRE_PUSH: 'b'.repeat(64),
+            CI: 'c'.repeat(64),
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    assert.equal(resolved.trace.validation?.status, 'invalid');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_CONTRACT_INVALID');
+    assert.equal(resolved.trace.policySource, 'file:.pumuki/policy-as-code.json');
   });
 });
 
@@ -92,9 +221,21 @@ test('applyHeuristicSeverityForStage promueve heurísticas a ERROR en PRE_COMMIT
     },
   ];
 
-  const promoted = applyHeuristicSeverityForStage(rules, 'PRE_PUSH');
-  const preCommit = applyHeuristicSeverityForStage(rules, 'PRE_COMMIT');
+  const advisoryPrePush = applyHeuristicSeverityForStage(rules, 'PRE_PUSH');
+  const promoted = applyHeuristicSeverityForStage(rules, 'PRE_PUSH', {
+    mode: 'strict',
+    source: 'env',
+    blocking: true,
+  });
+  const preCommit = applyHeuristicSeverityForStage(rules, 'PRE_COMMIT', {
+    mode: 'strict',
+    source: 'env',
+    blocking: true,
+  });
 
+  assert.equal(advisoryPrePush[0]?.severity, 'WARN');
+  assert.equal(advisoryPrePush[1]?.severity, 'WARN');
+  assert.equal(advisoryPrePush[2]?.severity, 'WARN');
   assert.equal(promoted[0]?.severity, 'ERROR');
   assert.equal(promoted[1]?.severity, 'ERROR');
   assert.equal(promoted[2]?.severity, 'WARN');
@@ -117,6 +258,9 @@ test('resolvePolicyForStage aplica hard mode por entorno y bloquea desde WARN', 
         warnOnOrAbove: 'INFO',
       });
       assert.equal(resolved.trace.source, 'hard-mode');
+      assert.equal(resolved.trace.layer, 'policy-pack');
+      assert.equal(resolved.trace.activation, 'explicit');
+      assert.equal(resolved.trace.activationSource, 'env');
       assert.equal(resolved.trace.bundle, 'gate-policy.hard-mode.PRE_COMMIT');
       assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
     } finally {
@@ -143,6 +287,9 @@ test('resolvePolicyForStage aplica perfil enterprise critical-high en hard mode'
         warnOnOrAbove: 'WARN',
       });
       assert.equal(resolved.trace.source, 'hard-mode');
+      assert.equal(resolved.trace.layer, 'policy-pack');
+      assert.equal(resolved.trace.activation, 'explicit');
+      assert.equal(resolved.trace.activationSource, 'env');
       assert.equal(resolved.trace.bundle, 'gate-policy.hard-mode.critical-high.PRE_COMMIT');
       assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
     } finally {
@@ -181,6 +328,9 @@ test('resolvePolicyForStage aplica hard mode/profile desde config persistida sin
         warnOnOrAbove: 'WARN',
       });
       assert.equal(resolved.trace.source, 'hard-mode');
+      assert.equal(resolved.trace.layer, 'policy-pack');
+      assert.equal(resolved.trace.activation, 'explicit');
+      assert.equal(resolved.trace.activationSource, 'file:.pumuki/hard-mode.json');
       assert.equal(resolved.trace.bundle, 'gate-policy.hard-mode.critical-high.CI');
       assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
     } finally {
@@ -212,6 +362,8 @@ test('resolvePolicyForStage aplica perfil all-severities y bloquea INFO', async 
         warnOnOrAbove: 'INFO',
       });
       assert.equal(resolved.trace.source, 'hard-mode');
+      assert.equal(resolved.trace.layer, 'policy-pack');
+      assert.equal(resolved.trace.activation, 'explicit');
       assert.equal(
         resolved.trace.bundle,
         'gate-policy.hard-mode.all-severities.PRE_COMMIT'
@@ -229,6 +381,73 @@ test('resolvePolicyForStage aplica perfil all-severities y bloquea INFO', async 
         process.env.PUMUKI_HARD_MODE_PROFILE = previousProfile;
       }
     }
+  });
+});
+
+test('resolvePolicyForStage expone contrato degraded mode desde entorno con acción block por stage', async () => {
+  await withTempDir('pumuki-stage-policy-degraded-env-', async (repoRoot) => {
+    const previousEnabled = process.env.PUMUKI_DEGRADED_MODE;
+    const previousReason = process.env.PUMUKI_DEGRADED_REASON;
+    const previousPrePush = process.env.PUMUKI_DEGRADED_ACTION_PRE_PUSH;
+    process.env.PUMUKI_DEGRADED_MODE = '1';
+    process.env.PUMUKI_DEGRADED_REASON = 'offline-airgapped';
+    process.env.PUMUKI_DEGRADED_ACTION_PRE_PUSH = 'block';
+    try {
+      const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+      assert.equal(resolved.trace.degraded?.enabled, true);
+      assert.equal(resolved.trace.degraded?.action, 'block');
+      assert.equal(resolved.trace.degraded?.reason, 'offline-airgapped');
+      assert.equal(resolved.trace.degraded?.source, 'env');
+      assert.equal(resolved.trace.degraded?.code, 'DEGRADED_MODE_BLOCKED');
+    } finally {
+      if (typeof previousEnabled === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_MODE;
+      } else {
+        process.env.PUMUKI_DEGRADED_MODE = previousEnabled;
+      }
+      if (typeof previousReason === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_REASON;
+      } else {
+        process.env.PUMUKI_DEGRADED_REASON = previousReason;
+      }
+      if (typeof previousPrePush === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_ACTION_PRE_PUSH;
+      } else {
+        process.env.PUMUKI_DEGRADED_ACTION_PRE_PUSH = previousPrePush;
+      }
+    }
+  });
+});
+
+test('resolvePolicyForStage expone contrato degraded mode desde archivo con acción allow por stage', async () => {
+  await withTempDir('pumuki-stage-policy-degraded-file-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'degraded-mode.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          enabled: true,
+          reason: 'airgapped-enterprise',
+          stages: {
+            PRE_WRITE: 'allow',
+            PRE_COMMIT: 'allow',
+            PRE_PUSH: 'block',
+            CI: 'block',
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_COMMIT', repoRoot);
+    assert.equal(resolved.trace.degraded?.enabled, true);
+    assert.equal(resolved.trace.degraded?.action, 'allow');
+    assert.equal(resolved.trace.degraded?.reason, 'airgapped-enterprise');
+    assert.equal(resolved.trace.degraded?.source, 'file:.pumuki/degraded-mode.json');
+    assert.equal(resolved.trace.degraded?.code, 'DEGRADED_MODE_ALLOWED');
   });
 });
 

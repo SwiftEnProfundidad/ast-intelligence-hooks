@@ -25,9 +25,36 @@ markdown_extensions:
 
 nav:
   - Home: README.md
-  - PUMUKI Playbook: PUMUKI.md
-  - Docs Index: docs/README.md
-  - Validation Runbooks: docs/validation/README.md
-  - Evidence Contract: docs/evidence-v2.1.md
-  - MCP Evidence Server: docs/MCP_EVIDENCE_CONTEXT_SERVER.md
-
+  - Start Here:
+      - Operator Playbook: PUMUKI.md
+      - Documentation Index: docs/README.md
+      - Installation: docs/product/INSTALLATION.md
+      - Usage: docs/product/USAGE.md
+  - Product:
+      - Architecture: docs/product/ARCHITECTURE.md
+      - How It Works: docs/product/HOW_IT_WORKS.md
+      - Configuration: docs/product/CONFIGURATION.md
+      - API Reference: docs/product/API_REFERENCE.md
+      - Dependencies: docs/product/DEPENDENCIES.md
+      - Testing: docs/product/TESTING.md
+  - Governance:
+      - Contributing: docs/governance/CONTRIBUTING.md
+      - Code Standards: docs/governance/CODE_STANDARDS.md
+      - Branch Protection Guide: docs/governance/BRANCH_PROTECTION_GUIDE.md
+  - MCP:
+      - Overview: docs/mcp/mcp-servers-overview.md
+      - Evidence Contract: docs/mcp/ai-evidence-v2.1-contract.md
+      - Evidence Context Server: docs/mcp/evidence-context-server.md
+      - Agent Context Consumption: docs/mcp/agent-context-consumption.md
+  - Operations:
+      - Production Operations Policy: docs/operations/production-operations-policy.md
+      - Framework Menu Consumer Walkthrough: docs/operations/framework-menu-consumer-walkthrough.md
+      - Release Notes Highlights: docs/operations/RELEASE_NOTES.md
+  - Validation:
+      - Validation Index: docs/validation/README.md
+      - Adapter Hook Runtime Runbook: docs/validation/adapter-hook-runtime-runbook.md
+      - AST Intelligence Validation Roadmap: docs/validation/ast-intelligence-validation-roadmap.md
+      - Full Repo Detection Audit Baseline: docs/validation/full-repo-detection-audit-baseline.md
+      - Enterprise Consumer Isolation Policy: docs/validation/enterprise-consumer-isolation-policy.md
+      - Mock Consumer Integration Runbook: docs/validation/mock-consumer-integration-runbook.md
+      - Consumer Repositories Skills Rollout Validation: docs/validation/consumer-repositories-skills-rollout-validation.md

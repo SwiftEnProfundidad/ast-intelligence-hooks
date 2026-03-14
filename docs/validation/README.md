@@ -1,35 +1,61 @@
-# Validation Docs (Enterprise Minimal Set)
+# Validation Docs
 
-Este directorio contiene solo documentación oficial y estable de validación para Pumuki.
+Este directorio contiene solo documentación estable de validación y runbooks oficiales.
 
-## Documentación oficial vigente
+## Documentación vigente
 
-- `adapter-hook-runtime-validation.md`
-- `c022-phase-acceptance-contract.md`
-- `detection-audit-baseline.md`
+- `adapter-hook-runtime-runbook.md`
+- `ast-intelligence-validation-roadmap.md`
+- `full-repo-detection-audit-baseline.md`
 - `enterprise-consumer-isolation-policy.md`
 - `mock-consumer-integration-runbook.md`
-- `skills-rollout-consumer-repositories.md`
+- `consumer-repositories-skills-rollout-validation.md`
 
-## Estado operativo actual
+## Estado de seguimiento
 
-- Ciclo activo de seguimiento diario: `docs/EXECUTION_BOARD.md`.
+- Fuente viva única: `PUMUKI-RESET-MASTER-PLAN.md`
+- No se conservan MDs legacy de seguimiento en `docs/tracking/`.
 
 ## Política de higiene
 
-- Los reportes de ejecución/cierre de ciclos se generan en `.audit_tmp` o `.audit-reports`.
-- No se versionan reportes históricos ad-hoc en `docs/validation/`.
-- Si hace falta conservar evidencia operativa de ejecución, se referencia desde el ciclo temporal activo (si existe) y/o desde reportes en `.audit_tmp` / `.audit-reports`.
-- El cierre oficial de `C022` (`D.T2` + `D.T4`) está consolidado en `c022-phase-acceptance-contract.md`.
-- El cierre de `C023` (incluyendo No-MVP SaaS ingestion diagnostics) está consolidado en documentación estable:
-  - `docs/REFRACTOR_PROGRESS.md`
-  - `docs/USAGE.md`
-  - `docs/CONFIGURATION.md`
-  - `docs/TESTING.md`
-  - `docs/API_REFERENCE.md`
-  - `docs/evidence-v2.1.md`
-- El cierre de `C025` (auditoría exhaustiva de funcionalidades + reglas) quedó consolidado en:
-  - `docs/REFRACTOR_PROGRESS.md` (estado, evidencia y cierre del bloque P5).
-- El cierre de `P6` (verificación exhaustiva real/mock) quedó consolidado en:
-  - `docs/EXECUTION_BOARD.md` (checklist unificada con evidencia `371/371`).
-  - `docs/REFRACTOR_PROGRESS.md` (veredicto y transición a bloque `P7`).
+- `docs/validation/` no guarda reportes temporales.
+- Los artefactos efímeros se generan fuera de `docs/` y deben limpiarse antes de cerrar un ciclo:
+  - `.audit-reports/**`
+  - `.coverage/**`
+  - `.ai_evidence.json`
+- La evidencia histórica que sí aporta contexto se consolida en documentación estable o en el histórico permitido.
+
+## Comprobaciones útiles
+
+- Higiene hard del worktree propio: `npm run -s validation:self-worktree-hygiene`
+- Suite contractual enterprise: `npm run -s validation:contract-suite:enterprise`
+- Baseline repetible de fixture consumer: `npm run -s validation:consumer-matrix-baseline -- --repo-root /absolute/path/to/<fixture> --fixture <name> --rounds 3 --json`
+  - emite `report.json` + `summary.md` con `doctor_blocking` y `layerSummary`
+  - validado en `ios-architecture-showcase`, `SAAS:APP_SUPERMERCADOS` y `R_GO`
+- Verificación de plan activo único + higiene hard del worktree propio: `npm run -s validation:tracking-single-active`
+
+## Release readiness del reset
+
+Secuencia mínima congelada antes de decidir una publicación útil:
+
+- `npm run -s typecheck`
+- `npm run -s validation:contract-suite:enterprise`
+- `npm run -s validation:package-manifest`
+- `npm run -s validation:package-smoke`
+- `npm run -s validation:package-smoke:minimal`
+- `npm run -s validation:consumer-matrix-baseline -- --repo-root /Users/juancarlosmerlosalbarracin/Developer/Projects/ios-architecture-showcase --fixture ios-architecture-showcase --rounds 3 --json`
+- `npm run -s validation:consumer-matrix-baseline -- --repo-root "/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS" --fixture saas-app-supermercados --rounds 3 --json`
+- `npm run -s validation:consumer-matrix-baseline -- --repo-root /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO --fixture r_go --rounds 3 --json`
+- `git diff --check`
+
+Regla de publicación:
+
+- publicar solo desde `release/<semver>` cortada desde `develop`
+- exigir checklist verde o hallazgos remanentes ya clasificados como deuda del consumer, nunca como bug del framework
+- no publicar si reaparece un falso positivo blocking conocido o si un fixture necesita bypass manual
+
+Rollback mínimo:
+
+- volver al semver estable previo de `pumuki`
+- repinear consumers afectados a esa versión exacta
+- revalidar `status`, `doctor` y la baseline del consumer impactado antes de cerrar el incidente

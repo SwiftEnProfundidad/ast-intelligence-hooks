@@ -7,18 +7,29 @@ import type {
 export const runAdapterSessionStatusCommand = (
   command: AdapterSessionStatusCommand
 ): AdapterSessionStatusCommandExecution => {
+  if (command.availability === 'unavailable') {
+    return {
+      label: command.label,
+      command: command.command,
+      availability: 'unavailable',
+      output: command.unavailableReason ?? 'Capability unavailable in this consumer.',
+      unavailableReason: command.unavailableReason,
+    };
+  }
+
   try {
     const output = runBinarySync('bash', ['-lc', command.command], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    return {
-      label: command.label,
-      command: command.command,
-      exitCode: 0,
-      output,
-    };
+      return {
+        label: command.label,
+        command: command.command,
+        availability: 'available',
+        exitCode: 0,
+        output,
+      };
   } catch (error) {
     if (
       error &&
@@ -34,6 +45,7 @@ export const runAdapterSessionStatusCommand = (
       return {
         label: command.label,
         command: command.command,
+        availability: 'available',
         exitCode: Number.isFinite(status) ? status : 1,
         output: `${stdout}${stderr}`.trim(),
       };

@@ -39,6 +39,162 @@ export const iosEnterpriseRuleSet: RuleSet = [
     },
   },
   {
+    id: 'ios.solid.ocp.discriminator-switch-branching',
+    description:
+      'Blocks iOS application or presentation types that must be modified to support new discriminator cases instead of extending behavior through abstractions.',
+    severity: 'CRITICAL',
+    platform: 'ios',
+    stage: 'PRE_COMMIT',
+    locked: true,
+    scope: {
+      include: ['**/*.swift'],
+      exclude: ['**/*Tests*/**', '**/*UITests*/**'],
+    },
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.solid.ocp.discriminator-switch.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'iOS application or presentation type branches by discriminator switch and must be modified directly to support new cases.',
+      code: 'IOS_SOLID_OCP_DISCRIMINATOR_SWITCH_BRANCHING',
+      source: 'ios-solid-ocp',
+    },
+  },
+  {
+    id: 'ios.solid.dip.concrete-framework-dependency',
+    description:
+      'Blocks iOS application or presentation types that depend directly on concrete framework services instead of abstractions.',
+    severity: 'CRITICAL',
+    platform: 'ios',
+    stage: 'PRE_COMMIT',
+    locked: true,
+    scope: {
+      include: ['**/*.swift'],
+      exclude: ['**/*Tests*/**', '**/*UITests*/**'],
+    },
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.solid.dip.concrete-framework-dependency.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'iOS application or presentation type depends directly on concrete framework services instead of ports or abstractions.',
+      code: 'IOS_SOLID_DIP_CONCRETE_FRAMEWORK_DEPENDENCY',
+      source: 'ios-solid-dip',
+    },
+  },
+  {
+    id: 'ios.solid.isp.fat-protocol-dependency',
+    description:
+      'Blocks iOS application or presentation types that depend on fat protocols instead of a minimal port tailored to the members they actually use.',
+    severity: 'CRITICAL',
+    platform: 'ios',
+    stage: 'PRE_COMMIT',
+    locked: true,
+    scope: {
+      include: ['**/*.swift'],
+      exclude: ['**/*Tests*/**', '**/*UITests*/**'],
+    },
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.solid.isp.fat-protocol-dependency.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'iOS application or presentation type depends on a fat protocol and consumes only a narrow subset of that contract.',
+      code: 'IOS_SOLID_ISP_FAT_PROTOCOL_DEPENDENCY',
+      source: 'ios-solid-isp',
+    },
+  },
+  {
+    id: 'ios.solid.lsp.narrowed-precondition-substitution',
+    description:
+      'Blocks iOS application or presentation types whose subtype narrows the contract preconditions and becomes unsafe to substitute for the base protocol or abstraction.',
+    severity: 'CRITICAL',
+    platform: 'ios',
+    stage: 'PRE_COMMIT',
+    locked: true,
+    scope: {
+      include: ['**/*.swift'],
+      exclude: ['**/*Tests*/**', '**/*UITests*/**'],
+    },
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.solid.lsp.narrowed-precondition.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'iOS application or presentation subtype narrows the base contract preconditions and breaks safe substitution.',
+      code: 'IOS_SOLID_LSP_NARROWED_PRECONDITION_SUBSTITUTION',
+      source: 'ios-solid-lsp',
+    },
+  },
+  {
+    id: 'ios.solid.srp.presentation-mixed-responsibilities',
+    description:
+      'Blocks iOS presentation types that mix session, networking, persistence and navigation responsibilities in the same semantic node.',
+    severity: 'CRITICAL',
+    platform: 'ios',
+    stage: 'PRE_COMMIT',
+    locked: true,
+    scope: {
+      include: ['**/*.swift'],
+      exclude: ['**/*Tests*/**', '**/*UITests*/**'],
+    },
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'iOS presentation type mixes session, networking, persistence and navigation responsibilities in a single semantic node.',
+      code: 'IOS_SOLID_SRP_PRESENTATION_MIXED_RESPONSIBILITIES',
+      source: 'ios-solid-srp',
+    },
+  },
+  {
+    id: 'ios.canary-001.presentation-mixed-responsibilities',
+    description:
+      'Blocks iOS ViewModels that mix singleton, network, persistence and navigation responsibilities in the same node.',
+    severity: 'CRITICAL',
+    platform: 'ios',
+    stage: 'PRE_COMMIT',
+    locked: true,
+    scope: {
+      include: ['**/*.swift'],
+      exclude: ['**/*Tests*/**', '**/*UITests*/**'],
+    },
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.canary-001.presentation-mixed-responsibilities.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'iOS ViewModel mixes singleton, networking, persistence or navigation responsibilities in a single semantic node.',
+      code: 'IOS_CANARY_001_PRESENTATION_MIXED_RESPONSIBILITIES',
+      source: 'ios-canary-001',
+    },
+  },
+  {
     id: 'ios.no-gcd',
     description: 'Disallows GCD and OperationQueue usage in iOS code.',
     severity: 'CRITICAL',
@@ -153,8 +309,10 @@ export const iosEnterpriseRuleSet: RuleSet = [
       kind: 'All',
       conditions: [
         {
-          kind: 'FileContent',
-          contains: ['!'],
+          kind: 'Heuristic',
+          where: {
+            ruleId: 'heuristics.ios.force-unwrap.ast',
+          },
         },
         {
           kind: 'Not',
@@ -183,17 +341,10 @@ export const iosEnterpriseRuleSet: RuleSet = [
       exclude: ['**/Bridges/**', '**/*Tests*/**'],
     },
     when: {
-      kind: 'Any',
-      conditions: [
-        {
-          kind: 'FileContent',
-          contains: ['@escaping'],
-        },
-        {
-          kind: 'FileContent',
-          contains: ['completion:'],
-        },
-      ],
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.callback-style.ast',
+      },
     },
     then: {
       kind: 'Finding',

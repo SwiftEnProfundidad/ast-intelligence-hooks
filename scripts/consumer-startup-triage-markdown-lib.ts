@@ -41,7 +41,7 @@ export const buildConsumerStartupTriageReportMarkdown = (params: {
   for (const command of params.commands) {
     lines.push(`- ${command.id}: ${command.description}`);
     lines.push(
-      `  - run: \`npx --yes tsx@4.21.0 ${command.script} ${command.args.join(' ')}\``
+      `  - run: \`npx --yes tsx@4.21.0 ${command.displayScript} ${command.args.join(' ')}\``
     );
   }
   lines.push('');

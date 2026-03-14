@@ -1,4 +1,4 @@
-import type { SkillsCompiledRule } from './skillsLock';
+import { normalizeSkillsAstNodeIds, type SkillsCompiledRule } from './skillsLock';
 
 type SkillsDetectorKind = 'heuristic';
 
@@ -152,4 +152,14 @@ export const resolveMappedHeuristicRuleIds = (
   ruleId: SkillsCompiledRule['id']
 ): ReadonlyArray<string> => {
   return registryByRuleId[ruleId]?.mappedHeuristicRuleIds ?? [];
+};
+
+export const resolveMappedHeuristicRuleIdsForCompiledRule = (
+  rule: SkillsCompiledRule
+): ReadonlyArray<string> => {
+  const dynamicAstNodeIds = normalizeSkillsAstNodeIds(rule.astNodeIds);
+  if (dynamicAstNodeIds.length > 0) {
+    return dynamicAstNodeIds;
+  }
+  return resolveMappedHeuristicRuleIds(rule.id);
 };

@@ -9,6 +9,12 @@ test('getFactsForCommitRange filtra por extension y construye facts con source d
     runGit: (args: ReadonlyArray<string>): string => {
       const command = args.join(' ');
       calls.push(command);
+      if (command === 'rev-parse --verify main') {
+        return 'main-hash';
+      }
+      if (command === 'rev-parse --verify HEAD') {
+        return 'head-hash';
+      }
       if (command === 'diff --name-status main..HEAD') {
         return [
           'A\tsrc/a.ts',
@@ -72,6 +78,8 @@ test('getFactsForCommitRange filtra por extension y construye facts con source d
     },
   ]);
   assert.deepEqual(calls, [
+    'rev-parse --verify main',
+    'rev-parse --verify HEAD',
     'diff --name-status main..HEAD',
     'show HEAD:src/a.ts',
     'show HEAD:src/d.ts',
@@ -84,6 +92,12 @@ test('getFactsForCommitRange retorna vacio si ningun cambio coincide con extensi
     runGit: (args: ReadonlyArray<string>): string => {
       const command = args.join(' ');
       calls.push(command);
+      if (command === 'rev-parse --verify main') {
+        return 'main-hash';
+      }
+      if (command === 'rev-parse --verify HEAD') {
+        return 'head-hash';
+      }
       if (command === 'diff --name-status main..HEAD') {
         return ['M\tsrc/a.swift', 'A\tsrc/b.kt'].join('\n');
       }
@@ -104,5 +118,44 @@ test('getFactsForCommitRange retorna vacio si ningun cambio coincide con extensi
   });
 
   assert.deepEqual(result, []);
-  assert.deepEqual(calls, ['diff --name-status main..HEAD']);
+  assert.deepEqual(calls, [
+    'rev-parse --verify main',
+    'rev-parse --verify HEAD',
+    'diff --name-status main..HEAD',
+  ]);
+});
+
+test('getFactsForCommitRange retorna vacio cuando HEAD no es resoluble (repo sin commits)', async () => {
+  const calls: string[] = [];
+  const git: IGitService = {
+    runGit: (args: ReadonlyArray<string>): string => {
+      const command = args.join(' ');
+      calls.push(command);
+      if (command === 'rev-parse --verify main') {
+        return 'main-hash';
+      }
+      if (command === 'rev-parse --verify HEAD') {
+        throw new Error('fatal: ambiguous argument HEAD');
+      }
+      throw new Error(`comando git no esperado: ${command}`);
+    },
+    getStagedFacts: () => [],
+    getRepoFacts: () => [],
+    getRepoAndStagedFacts: () => [],
+    getStagedAndUnstagedFacts: () => [],
+    resolveRepoRoot: () => process.cwd(),
+  };
+
+  const result = await getFactsForCommitRange({
+    fromRef: 'main',
+    toRef: 'HEAD',
+    extensions: ['.ts'],
+    git,
+  });
+
+  assert.deepEqual(result, []);
+  assert.deepEqual(calls, [
+    'rev-parse --verify main',
+    'rev-parse --verify HEAD',
+  ]);
 });

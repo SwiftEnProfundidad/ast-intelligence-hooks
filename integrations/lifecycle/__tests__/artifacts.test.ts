@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import type { ILifecycleGitService } from '../gitService';
-import { purgeUntrackedPumukiArtifacts } from '../artifacts';
+import { ensureRuntimeArtifactsIgnored, purgeUntrackedPumukiArtifacts } from '../artifacts';
 
 const createGitStub = (
   trackedPaths: ReadonlyArray<string>
@@ -156,5 +156,61 @@ test('purgeUntrackedPumukiArtifacts preserva artefactos OpenSpec gestionados que
     assert.deepEqual(removed, ['openspec/changes/archive/.gitkeep']);
     assert.equal(existsSync(join(repoRoot, 'openspec', 'project.md')), true);
     assert.equal(existsSync(join(repoRoot, 'openspec')), true);
+  });
+});
+
+test('ensureRuntimeArtifactsIgnored inserta bloque gestionado en .git/info/exclude', async () => {
+  await withTempDir('pumuki-artifacts-ignore-block-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'info'), { recursive: true });
+
+    const result = ensureRuntimeArtifactsIgnored(repoRoot);
+
+    assert.equal(result.updated, true);
+    const excludePath = join(repoRoot, '.git', 'info', 'exclude');
+    const content = existsSync(excludePath) ? readFileSync(excludePath, 'utf8') : '';
+    assert.match(content, /# >>> pumuki-runtime-artifacts >>>/);
+    assert.match(content, /\.ai_evidence\.json/);
+    assert.match(content, /\.pumuki\//);
+    assert.match(content, /# <<< pumuki-runtime-artifacts <<</);
+  });
+});
+
+test('ensureRuntimeArtifactsIgnored es idempotente y no reescribe bloque si ya está alineado', async () => {
+  await withTempDir('pumuki-artifacts-ignore-idempotent-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'info'), { recursive: true });
+
+    const first = ensureRuntimeArtifactsIgnored(repoRoot);
+    const second = ensureRuntimeArtifactsIgnored(repoRoot);
+
+    assert.equal(first.updated, true);
+    assert.equal(second.updated, false);
+  });
+});
+
+test('ensureRuntimeArtifactsIgnored reemplaza bloque existente y preserva contenido externo', async () => {
+  await withTempDir('pumuki-artifacts-ignore-replace-', async (repoRoot) => {
+    const excludePath = join(repoRoot, '.git', 'info', 'exclude');
+    mkdirSync(join(repoRoot, '.git', 'info'), { recursive: true });
+    writeFileSync(
+      excludePath,
+      [
+        '# custom-line',
+        '# >>> pumuki-runtime-artifacts >>>',
+        '.ai_evidence.json',
+        '# legacy-entry',
+        '# <<< pumuki-runtime-artifacts <<<',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = ensureRuntimeArtifactsIgnored(repoRoot);
+
+    assert.equal(result.updated, true);
+    const content = readFileSync(excludePath, 'utf8');
+    assert.match(content, /# custom-line/);
+    assert.match(content, /\.AI_EVIDENCE\.json/);
+    assert.match(content, /\.pumuki\//);
+    assert.equal((content.match(/# >>> pumuki-runtime-artifacts >>>/g) ?? []).length, 1);
   });
 });

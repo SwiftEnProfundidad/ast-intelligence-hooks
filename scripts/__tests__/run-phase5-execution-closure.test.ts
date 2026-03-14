@@ -107,5 +107,19 @@ test('run-phase5-execution-closure validates workflow lint requirements', () => 
   ]);
 
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /Workflow lint requires --repo-path and --actionlint-bin/);
+  assert.match(result.stderr, /Workflow lint requires --repo-path/);
+});
+
+test('run-phase5-execution-closure dry-run defaults actionlint when repo path is provided', () => {
+  const result = runClosureCommand([
+    '--repo',
+    'owner/repo',
+    '--repo-path',
+    '/tmp/consumer',
+    '--dry-run',
+  ]);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /--repo-path \/tmp\/consumer/);
+  assert.match(result.stdout, /--actionlint-bin actionlint/);
 });

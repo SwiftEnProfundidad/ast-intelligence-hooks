@@ -3,17 +3,17 @@ import type {
   ConsumerStartupTriageOptions,
   ConsumerStartupTriageOutputs,
 } from './consumer-startup-triage-contract';
+import { DEFAULT_ACTIONLINT_BIN } from './framework-menu-runner-constants';
+import { resolveConsumerStartupTriageScript } from './consumer-startup-triage-script-paths-lib';
 
 const resolveWorkflowLintInputs = (params: {
   options: ConsumerStartupTriageOptions;
 }): { repoPath: string; actionlintBin: string } => {
   const repoPath = params.options.repoPath?.trim();
-  const actionlintBin = params.options.actionlintBin?.trim();
+  const actionlintBin = params.options.actionlintBin?.trim() || DEFAULT_ACTIONLINT_BIN;
 
-  if (!repoPath || !actionlintBin) {
-    throw new Error(
-      'Workflow lint requires --repo-path and --actionlint-bin (or use --skip-workflow-lint).'
-    );
+  if (!repoPath) {
+    throw new Error('Workflow lint requires --repo-path (or use --skip-workflow-lint).');
   }
 
   return { repoPath, actionlintBin };
@@ -28,9 +28,12 @@ export const buildConsumerStartupTriageWorkflowLintCommand = (params: {
   });
 
   return {
+    ...resolveConsumerStartupTriageScript(
+      import.meta.url,
+      'scripts/lint-consumer-workflows.ts'
+    ),
     id: 'workflow-lint',
     description: 'Run semantic workflow lint on consumer repository',
-    script: 'scripts/lint-consumer-workflows.ts',
     args: [
       '--repo-path',
       workflowLintInputs.repoPath,

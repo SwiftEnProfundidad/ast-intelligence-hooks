@@ -1,0 +1,40 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import {
+  BACKLOG_ID_PATTERN,
+  type BacklogIdIssueMapRecord,
+} from './backlog-id-issue-map-types';
+
+const parsePositiveIssueNumber = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return Math.trunc(value);
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+  return null;
+};
+
+export const parseIdIssueMapRecord = (raw: string): BacklogIdIssueMapRecord => {
+  const parsed = JSON.parse(raw) as Record<string, unknown>;
+  const normalized: Record<string, number> = {};
+  for (const [id, value] of Object.entries(parsed)) {
+    if (!BACKLOG_ID_PATTERN.test(id)) {
+      throw new Error(`Invalid id in --id-issue-map: "${id}"`);
+    }
+    const issueNumber = parsePositiveIssueNumber(value);
+    if (issueNumber === null) {
+      throw new Error(`Invalid issue number for "${id}" in --id-issue-map`);
+    }
+    normalized[id] = issueNumber;
+  }
+  return normalized;
+};
+
+export const parseIdIssueMapRecordFile = (
+  filePath: string,
+  readFile: (path: string) => string = (path) => readFileSync(path, 'utf8')
+): BacklogIdIssueMapRecord => parseIdIssueMapRecord(readFile(resolve(filePath)));

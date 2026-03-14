@@ -6,7 +6,7 @@ import { evaluateRules } from '../../../core/gate/evaluateRules';
 import { astHeuristicsRuleSet } from '../../../core/rules/presets/astHeuristicsRuleSet';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import {
-  applyHeuristicSeverityForStage,
+  applyHeuristicSeverityForStage as applyHeuristicSeverityForStageFromPolicies,
   policyForCI,
   policyForPreCommit,
   policyForPrePush,
@@ -14,6 +14,19 @@ import {
 } from '../stagePolicies';
 
 type GateTestStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+
+const strictHeuristicsEnforcement = {
+  mode: 'strict' as const,
+  source: 'env' as const,
+  blocking: true,
+};
+
+export const applyHeuristicSeverityForStage = (
+  rules: RuleSet,
+  stage: GateTestStage
+) => {
+  return applyHeuristicSeverityForStageFromPolicies(rules, stage, strictHeuristicsEnforcement);
+};
 
 export const findSeverity = (ruleId: string, stage: GateTestStage) => {
   const rules = applyHeuristicSeverityForStage(astHeuristicsRuleSet, stage);
@@ -25,7 +38,6 @@ export const findSeverity = (ruleId: string, stage: GateTestStage) => {
 export {
   astHeuristicsRuleSet,
   assert,
-  applyHeuristicSeverityForStage,
   evaluateGate,
   evaluateRules,
   join,

@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import type { LocalHotspotsReport } from '../analyticsHotspots';
+import { getCurrentPumukiVersion } from '../packageInfo';
 import {
   HOTSPOTS_SAAS_INGESTION_CANONICAL_VERSION,
   HOTSPOTS_SAAS_INGESTION_SUPPORTED_VERSIONS,
@@ -15,6 +16,8 @@ import {
   type HotspotsSaasIngestionPayloadBodyCompat,
   type HotspotsSaasIngestionPayloadBodyV1,
 } from '../saasIngestionContract';
+
+const producerVersion = getCurrentPumukiVersion();
 
 const buildReport = (): LocalHotspotsReport => ({
   generatedAt: '2026-02-26T10:10:00+00:00',
@@ -71,7 +74,7 @@ test('createHotspotsSaasIngestionPayload genera contrato v1 con integridad váli
     tenantId: 'tenant-demo',
     repositoryId: 'repo-demo',
     repositoryName: 'ast-intelligence-hooks',
-    producerVersion: '6.3.17',
+    producerVersion: producerVersion,
     sourceMode: 'local',
     generatedAt: '2026-02-26T10:15:00+00:00',
     report: buildReport(),
@@ -120,6 +123,49 @@ test('createHotspotsSaasIngestionPayload genera contrato v1 con integridad váli
   }
 });
 
+test('createHotspotsSaasIngestionPayload acepta compliance TDD/BDD advisory', () => {
+  const payload = createHotspotsSaasIngestionPayload({
+    tenantId: 'tenant-demo',
+    repositoryId: 'repo-demo',
+    repositoryName: 'ast-intelligence-hooks',
+    producerVersion: producerVersion,
+    sourceMode: 'local',
+    generatedAt: '2026-02-26T10:15:00+00:00',
+    report: buildReport(),
+    tddBdd: {
+      status: 'advisory',
+      scope: {
+        in_scope: true,
+        is_new_feature: true,
+        is_complex_change: false,
+        reasons: ['new_feature'],
+        metrics: {
+          changed_files: 1,
+          estimated_loc: 40,
+          critical_path_files: 0,
+          public_interface_files: 1,
+        },
+      },
+      evidence: {
+        path: '.pumuki/artifacts/pumuki-evidence-v1.json',
+        state: 'missing',
+        slices_total: 0,
+        slices_valid: 0,
+        slices_invalid: 0,
+        integrity_ok: false,
+        errors: ['missing_contract'],
+      },
+      waiver: {
+        applied: false,
+      },
+    },
+  });
+
+  assert.equal(payload.compliance?.tdd_bdd?.status, 'advisory');
+  const parsed = parseHotspotsSaasIngestionPayload(payload);
+  assert.equal(parsed.kind, 'valid');
+});
+
 test('createHotspotsSaasIngestionPayloadHash es determinista para el mismo body lógico', () => {
   const bodyA: HotspotsSaasIngestionPayloadBodyV1 = {
     version: '1',
@@ -132,7 +178,7 @@ test('createHotspotsSaasIngestionPayloadHash es determinista para el mismo body 
     },
     source: {
       producer: 'pumuki',
-      producer_version: '6.3.17',
+      producer_version: producerVersion,
       mode: 'ci',
     },
     hotspots: {
@@ -176,7 +222,7 @@ test('createHotspotsSaasIngestionPayloadHash es determinista para el mismo body 
   const bodyB: HotspotsSaasIngestionPayloadBodyV1 = {
     source: {
       mode: 'ci',
-      producer_version: '6.3.17',
+      producer_version: producerVersion,
       producer: 'pumuki',
     },
     repository: {
@@ -236,7 +282,7 @@ test('parseHotspotsSaasIngestionPayload detecta tampering de payload con hash in
     tenantId: 'tenant-demo',
     repositoryId: 'repo-demo',
     repositoryName: 'ast-intelligence-hooks',
-    producerVersion: '6.3.17',
+    producerVersion: producerVersion,
     generatedAt: '2026-02-26T10:15:00+00:00',
     report: buildReport(),
   });
@@ -256,7 +302,7 @@ test('parseHotspotsSaasIngestionPayload rechaza schema incompleto', () => {
     tenantId: 'tenant-demo',
     repositoryId: 'repo-demo',
     repositoryName: 'ast-intelligence-hooks',
-    producerVersion: '6.3.17',
+    producerVersion: producerVersion,
     generatedAt: '2026-02-26T10:15:00+00:00',
     report: buildReport(),
   });
@@ -276,7 +322,7 @@ test('parseHotspotsSaasIngestionPayload soporta payload legacy v1.0 y lo canoniz
     tenantId: 'tenant-legacy',
     repositoryId: 'repo-legacy',
     repositoryName: 'ast-intelligence-hooks',
-    producerVersion: '6.3.17',
+    producerVersion: producerVersion,
     generatedAt: '2026-02-26T11:00:00+00:00',
     report: buildReport(),
   });
@@ -353,7 +399,7 @@ test('readHotspotsSaasIngestionPayload devuelve valid para payload íntegro', as
         tenantId: 'tenant-demo',
         repositoryId: 'repo-demo',
         repositoryName: 'ast-intelligence-hooks',
-        producerVersion: '6.3.17',
+        producerVersion: producerVersion,
         generatedAt: '2026-02-26T10:15:00+00:00',
         report: buildReport(),
       });

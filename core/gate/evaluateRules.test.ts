@@ -75,6 +75,46 @@ test('evaluateRules usa id de la regla como code cuando no se define en consecue
   assert.equal(findings[0]?.severity, 'ERROR');
 });
 
+test('evaluateRules combina source del fact y source declarada por la regla', () => {
+  const rules: RuleSet = [
+    {
+      id: 'skills.backend.no-empty-catch',
+      description: 'Disallow empty catch blocks in backend runtime code.',
+      severity: 'ERROR',
+      when: {
+        kind: 'FileContent',
+        regex: ['catch\\s*\\{\\s*\\}'],
+      },
+      then: {
+        kind: 'Finding',
+        message: 'Disallow empty catch blocks in backend runtime code.',
+        code: 'SKILLS_BACKEND_NO_EMPTY_CATCH',
+        source:
+          'skills-ir:rule=skills.backend.no-empty-catch;source_skill=backend-guidelines;source_path=docs/codex-skills/windsurf-rules-backend.md;evaluation_mode=AUTO;ast_nodes=[heuristics.ts.empty-catch.ast]',
+      },
+      scope: {
+        include: ['apps/backend/'],
+      },
+    },
+  ];
+  const facts = [
+    {
+      kind: 'FileContent',
+      path: 'apps/backend/src/service.ts',
+      content: 'try { doStuff(); } catch {}',
+      source: 'git:staged',
+    },
+  ] as const;
+
+  const findings = evaluateRules(rules, facts);
+
+  assert.equal(findings.length, 1);
+  assert.equal(
+    findings[0]?.source,
+    'git:staged|skills-ir:rule=skills.backend.no-empty-catch;source_skill=backend-guidelines;source_path=docs/codex-skills/windsurf-rules-backend.md;evaluation_mode=AUTO;ast_nodes=[heuristics.ts.empty-catch.ast]'
+  );
+});
+
 test('evaluateRules respeta scope y no genera hallazgo cuando no coincide', () => {
   const rules: RuleSet = [
     {
@@ -198,4 +238,50 @@ test('evaluateRules genera un finding por cada heuristica coincidente', () => {
     ['core/a.ts', 'core/b.ts']
   );
   assert.equal(findings.every((finding) => finding.matchedBy === 'Heuristic'), true);
+});
+
+test('evaluateRules no genera finding de iOS cuando el scope es swift y el archivo es TypeScript', () => {
+  const rules: RuleSet = [
+    {
+      id: 'ios.no-force-unwrap',
+      description: 'Disallows force unwraps in iOS code.',
+      severity: 'CRITICAL',
+      scope: {
+        include: ['**/*.swift'],
+      },
+      when: {
+        kind: 'All',
+        conditions: [
+          {
+            kind: 'FileContent',
+            contains: ['!'],
+          },
+          {
+            kind: 'Not',
+            condition: {
+              kind: 'FileContent',
+              contains: ['IBOutlet'],
+            },
+          },
+        ],
+      },
+      then: {
+        kind: 'Finding',
+        message: 'Force unwraps are not allowed in iOS code.',
+        code: 'IOS_NO_FORCE_UNWRAP',
+      },
+    },
+  ];
+  const facts = [
+    {
+      kind: 'FileContent',
+      path: 'apps/admin-dashboard/middleware.ts',
+      content: 'if (token != null) { return NextResponse.next(); }',
+      source: 'repo',
+    },
+  ] as const;
+
+  const findings = evaluateRules(rules, facts);
+
+  assert.deepEqual(findings, []);
 });

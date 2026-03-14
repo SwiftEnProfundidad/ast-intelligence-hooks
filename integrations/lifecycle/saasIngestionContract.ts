@@ -32,7 +32,7 @@ const hotspotEntrySchema = z
 
 const tddBddComplianceSchema = z
   .object({
-    status: z.enum(['skipped', 'passed', 'blocked', 'waived']),
+    status: z.enum(['skipped', 'passed', 'advisory', 'blocked', 'waived']),
     in_scope: z.boolean(),
     slices_total: z.number().int().nonnegative(),
     slices_valid: z.number().int().nonnegative(),

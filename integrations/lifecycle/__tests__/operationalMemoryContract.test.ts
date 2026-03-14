@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
+import { getCurrentPumukiVersion } from '../packageInfo';
 import {
   OPERATIONAL_MEMORY_CONTRACT_CANONICAL_VERSION,
   OPERATIONAL_MEMORY_CONTRACT_SUPPORTED_VERSIONS,
@@ -18,6 +19,8 @@ import {
   type OperationalMemoryContractBodyV1,
 } from '../operationalMemoryContract';
 
+const producerVersion = getCurrentPumukiVersion();
+
 const signalHashA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const signalHashB = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
 const signatureA = '1111111111111111111111111111111111111111111111111111111111111111';
@@ -25,7 +28,7 @@ const signatureB = '222222222222222222222222222222222222222222222222222222222222
 
 test('createOperationalMemoryContract crea contrato v1 con integridad valida', () => {
   const contract = createOperationalMemoryContract({
-    producerVersion: '6.3.17',
+    producerVersion: producerVersion,
     sourceMode: 'ci',
     generatedAt: '2026-02-26T23:00:00+00:00',
     scopeId: 'repo:ast-intelligence-hooks',
@@ -75,7 +78,7 @@ test('createOperationalMemoryContractHash es determinista para payload equivalen
     generated_at: '2026-02-26T23:00:00+00:00',
     source: {
       producer: 'pumuki',
-      producer_version: '6.3.17',
+      producer_version: producerVersion,
       mode: 'ci',
     },
     scope: {
@@ -145,7 +148,7 @@ test('createOperationalMemoryContractHash es determinista para payload equivalen
     },
     source: {
       mode: 'ci',
-      producer_version: '6.3.17',
+      producer_version: producerVersion,
       producer: 'pumuki',
     },
     generated_at: '2026-02-26T23:00:00+00:00',
@@ -203,7 +206,7 @@ test('dedupeOperationalMemoryRecords conserva una única entrada por señal y pr
 
 test('parseOperationalMemoryContract detecta tampering por hash', () => {
   const contract = createOperationalMemoryContract({
-    producerVersion: '6.3.17',
+    producerVersion: producerVersion,
     sourceMode: 'ci',
     generatedAt: '2026-02-26T23:00:00+00:00',
     scopeId: 'repo:ast-intelligence-hooks',
@@ -236,7 +239,7 @@ test('parseOperationalMemoryContract detecta tampering por hash', () => {
 
 test('createOperationalMemoryContract deduplica señales equivalentes al construir el contrato', () => {
   const contract = createOperationalMemoryContract({
-    producerVersion: '6.3.17',
+    producerVersion: producerVersion,
     sourceMode: 'ci',
     generatedAt: '2026-02-26T23:00:00+00:00',
     scopeId: 'repo:ast-intelligence-hooks',
@@ -273,7 +276,7 @@ test('createOperationalMemoryContract deduplica señales equivalentes al constru
 
 test('parseOperationalMemoryContract soporta payload legacy v1.0 y canoniza a v1', () => {
   const canonical = createOperationalMemoryContract({
-    producerVersion: '6.3.17',
+    producerVersion: producerVersion,
     sourceMode: 'ci',
     generatedAt: '2026-02-26T23:00:00+00:00',
     scopeId: 'repo:ast-intelligence-hooks',
@@ -342,7 +345,7 @@ test('readOperationalMemoryContract devuelve valid para contrato integro', async
     process.env.PUMUKI_OPERATIONAL_MEMORY_CONTRACT_PATH = '.pumuki/artifacts/contract.json';
     try {
       const contract = createOperationalMemoryContract({
-        producerVersion: '6.3.17',
+        producerVersion: producerVersion,
         sourceMode: 'ci',
         generatedAt: '2026-02-26T23:00:00+00:00',
         scopeId: 'repo:ast-intelligence-hooks',
@@ -388,7 +391,7 @@ test('writeOperationalMemoryContract persiste de forma determinista y reutilizab
     process.env.PUMUKI_OPERATIONAL_MEMORY_CONTRACT_PATH = '.pumuki/artifacts/contract.json';
     try {
       const contract = createOperationalMemoryContract({
-        producerVersion: '6.3.17',
+        producerVersion: producerVersion,
         sourceMode: 'ci',
         generatedAt: '2026-02-26T23:00:00+00:00',
         scopeId: 'repo:ast-intelligence-hooks',

@@ -24,12 +24,12 @@ if ! npm run validation:progress-single-active; then
   exit 1
 fi
 
-if npm run validation:phase8:doctor -- "${OUT_DIR}" "${REPO}" "${LIMIT}" "${MOCK_AB_REPORT}"; then
+if npm run toolkit:legacy:phase8:doctor -- "${OUT_DIR}" "${REPO}" "${LIMIT}" "${MOCK_AB_REPORT}"; then
   echo "[phase8-status-pack] chain_status=READY"
-  echo "[phase8-status-pack] next_command=npm run validation:phase8:close-ready -- ${OUT_DIR}"
+  echo "[phase8-status-pack] next_command=npm run toolkit:legacy:phase8:close-ready -- ${OUT_DIR}"
   exit 0
 fi
 
 echo "[phase8-status-pack] chain_status=BLOCKED"
-echo "[phase8-status-pack] next_command=npm run validation:phase8:resume-after-billing -- ${REPO} ${LIMIT} ${OUT_DIR} ${MOCK_AB_REPORT}"
+echo "[phase8-status-pack] next_command=npm run toolkit:legacy:phase8:resume-after-billing -- ${REPO} ${LIMIT} ${OUT_DIR} ${MOCK_AB_REPORT}"
 exit 1

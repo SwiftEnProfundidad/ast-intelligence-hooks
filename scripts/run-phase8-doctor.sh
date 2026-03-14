@@ -50,12 +50,12 @@ echo "[phase8-doctor] oldest_queued_run_age_minutes=${OLDEST_QUEUED_AGE}"
 echo "[phase8-doctor] latest_run_url=${LATEST_RUN_URL}"
 echo "[phase8-doctor] ${KNOWN_CAUSE}"
 
-if npm run validation:phase5-latest:ready-check -- "${OUT_DIR}" >/tmp/phase8-doctor-ready.log 2>&1; then
+if npm run toolkit:legacy:phase5-latest:ready-check -- "${OUT_DIR}" >/tmp/phase8-doctor-ready.log 2>&1; then
   echo "[phase8-doctor] chain_status=READY"
-  echo "[phase8-doctor] next_command=npm run validation:phase8:close-ready -- ${OUT_DIR}"
+  echo "[phase8-doctor] next_command=npm run toolkit:legacy:phase8:close-ready -- ${OUT_DIR}"
   exit 0
 fi
 
 echo "[phase8-doctor] chain_status=BLOCKED"
-echo "[phase8-doctor] next_command=npm run validation:phase8:resume-after-billing -- ${REPO} ${LIMIT} ${OUT_DIR} ${MOCK_AB_REPORT}"
+echo "[phase8-doctor] next_command=npm run toolkit:legacy:phase8:resume-after-billing -- ${REPO} ${LIMIT} ${OUT_DIR} ${MOCK_AB_REPORT}"
 exit 1

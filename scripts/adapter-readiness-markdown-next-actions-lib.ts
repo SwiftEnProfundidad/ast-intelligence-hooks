@@ -21,12 +21,12 @@ export const appendAdapterReadinessNextActionsSection = (params: {
 
   if (!params.source.hasAdapterReport) {
     params.lines.push(
-      '- Generate Adapter report: `npm run validation:adapter-real-session-report -- --status-report .audit-reports/adapter/adapter-session-status.md --out .audit-reports/adapter/adapter-real-session-report.md`'
+      '- Generate Adapter report: `npm run toolkit:adapter-real-session-report -- --status-report .audit-reports/adapter/adapter-session-status.md --out .audit-reports/adapter/adapter-real-session-report.md`'
     );
   }
   if (hasAdapterRuntimeBlocker(params.source)) {
     params.lines.push(
-      '- Execute `docs/validation/adapter-hook-runtime-validation.md`, then regenerate adapter readiness report.'
+      '- Execute `docs/validation/adapter-hook-runtime-runbook.md`, then regenerate adapter readiness report.'
     );
   }
   params.lines.push('');

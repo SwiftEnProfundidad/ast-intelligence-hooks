@@ -45,6 +45,20 @@ test('build-consumer-startup-triage dry-run renders workflow lint step when conf
   assert.match(output, /--actionlint-bin \/tmp\/actionlint/);
 });
 
+test('build-consumer-startup-triage dry-run defaults actionlint when repo path is provided', () => {
+  const output = runDry([
+    '--repo',
+    'owner/repo',
+    '--repo-path',
+    '/tmp/consumer',
+    '--dry-run',
+  ]);
+
+  assert.match(output, /- workflow-lint:/);
+  assert.match(output, /--repo-path \/tmp\/consumer/);
+  assert.match(output, /--actionlint-bin actionlint/);
+});
+
 test('build-consumer-startup-triage dry-run can skip auth-check command', () => {
   const output = runDry([
     '--repo',

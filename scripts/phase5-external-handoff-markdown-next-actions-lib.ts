@@ -22,6 +22,6 @@ export const appendPhase5ExternalHandoffNextActions = (params: {
   if (params.summary.artifactUrls.length === 0) {
     params.lines.push('- Attach artifact URLs from CI/workflow runs to complete handoff context.');
   }
-  params.lines.push('- Re-run: `npm run validation:phase5-external-handoff`.');
+  params.lines.push('- Re-run: `npm run toolkit:legacy:phase5-external-handoff`.');
   params.lines.push('');
 };

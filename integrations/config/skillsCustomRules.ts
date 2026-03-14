@@ -28,6 +28,7 @@ type CustomSkillsRuleV1 = {
   confidence?: SkillsRuleConfidence;
   locked?: boolean;
   evaluationMode?: SkillsRuleEvaluationMode;
+  ast_node_ids?: string[];
 };
 
 export type CustomSkillsRulesFileV1 = {
@@ -41,6 +42,20 @@ export type CustomSkillsImportResult = {
   sourceFiles: string[];
   importedRules: SkillsCompiledRule[];
   outputPath: string;
+};
+
+export type CompiledImportedSkillsRulesResult = Omit<
+  CustomSkillsImportResult,
+  'outputPath'
+>;
+
+type VendorSkillManifestEntry = {
+  name: string;
+  file: string;
+};
+
+type VendorSkillsManifest = {
+  skills: VendorSkillManifestEntry[];
 };
 
 const severityValues = new Set<Severity>(['INFO', 'WARN', 'ERROR', 'CRITICAL']);
@@ -62,6 +77,24 @@ const isObject = (value: unknown): value is Record<string, string | number | boo
 
 const isNonEmptyString = (value: unknown): value is string => {
   return typeof value === 'string' && value.trim().length > 0;
+};
+
+const isVendorSkillManifestEntry = (
+  value: unknown
+): value is VendorSkillManifestEntry => {
+  return (
+    isObject(value) &&
+    isNonEmptyString(value.name) &&
+    isNonEmptyString(value.file)
+  );
+};
+
+const isVendorSkillsManifest = (value: unknown): value is VendorSkillsManifest => {
+  return (
+    isObject(value) &&
+    Array.isArray(value.skills) &&
+    value.skills.every((entry) => isVendorSkillManifestEntry(entry))
+  );
 };
 
 const stableStringify = (value: unknown): string => {
@@ -110,6 +143,14 @@ const isCustomRule = (value: unknown): value is CustomSkillsRuleV1 => {
   if (
     typeof value.evaluationMode !== 'undefined' &&
     !evaluationModeValues.has(value.evaluationMode as SkillsRuleEvaluationMode)
+  ) {
+    return false;
+  }
+  if (
+    typeof value.ast_node_ids !== 'undefined' &&
+    (!Array.isArray(value.ast_node_ids) ||
+      value.ast_node_ids.length === 0 ||
+      !value.ast_node_ids.every(isNonEmptyString))
   ) {
     return false;
   }
@@ -164,6 +205,10 @@ const computeBundleHash = (rules: ReadonlyArray<SkillsCompiledRule>): string => 
       confidence: rule.confidence ?? null,
       locked: rule.locked ?? false,
       evaluationMode: rule.evaluationMode ?? null,
+      ast_node_ids:
+        rule.astNodeIds && rule.astNodeIds.length > 0
+          ? [...new Set(rule.astNodeIds)].sort()
+          : null,
       origin: rule.origin ?? null,
       sourceSkill: rule.sourceSkill,
       sourcePath: rule.sourcePath,
@@ -196,6 +241,10 @@ const toCustomRulesFile = (
       confidence: rule.confidence,
       locked: rule.locked ?? false,
       evaluationMode: rule.evaluationMode ?? 'AUTO',
+      ast_node_ids:
+        rule.astNodeIds && rule.astNodeIds.length > 0
+          ? [...new Set(rule.astNodeIds)].sort()
+          : undefined,
     }))
     .sort((left, right) => left.id.localeCompare(right.id));
 
@@ -239,6 +288,7 @@ export const loadCustomSkillsLock = (
 
   const rules: SkillsCompiledRule[] = payload.rules.map((rule) => ({
     ...rule,
+    astNodeIds: rule.ast_node_ids,
     sourceSkill: 'custom-guidelines',
     sourcePath: '.pumuki/custom-rules.json',
     evaluationMode: rule.evaluationMode ?? 'AUTO',
@@ -261,22 +311,114 @@ export const loadCustomSkillsLock = (
   };
 };
 
+const isVendoredSkillMarkdownPath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/');
+  return (
+    normalized.includes('/docs/codex-skills/') ||
+    normalized.startsWith('docs/codex-skills/') ||
+    normalized.includes('/vendor/skills/') ||
+    normalized.startsWith('vendor/skills/')
+  );
+};
+
+const isSkillMarkdownCandidatePath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/');
+  return /(^|\/)SKILL\.md$/i.test(normalized) || isVendoredSkillMarkdownPath(normalized);
+};
+
 const extractSkillPathsFromText = (content: string): string[] => {
   const matches = content.match(
-    /(\/[^\s`'"]*SKILL\.md|(?:\.{1,2}\/)?[A-Za-z0-9_./-]*SKILL\.md)/g
+    /(\/[^\s`'"]+\.md|(?:\.{1,2}\/)?[A-Za-z0-9_./:-]+\.md)/g
   );
   if (!matches) {
     return [];
   }
-  return matches;
+  return [...new Set(matches.filter(isSkillMarkdownCandidatePath))];
+};
+
+const extractRequiredSkillNamesFromText = (content: string): string[] => {
+  const names = new Set<string>();
+  const pattern =
+    /REQUIRED\s+SKILL\s*:\s*["'`]?([A-Za-z0-9_.:/-]+(?:\s+[A-Za-z0-9_.:/-]+)*)["'`]?/gi;
+
+  for (const match of content.matchAll(pattern)) {
+    const rawName = match[1]?.trim();
+    if (rawName) {
+      names.add(rawName);
+    }
+  }
+
+  return [...names];
 };
 
 const sourceSkillNameFromPath = (path: string): string => {
-  const parent = basename(dirname(path));
-  if (parent && parent.toUpperCase() !== 'SKILL.MD') {
-    return parent;
+  const fileName = basename(path);
+  if (/^SKILL\.md$/i.test(fileName)) {
+    return basename(dirname(path));
   }
-  return basename(path).replace(/\.md$/i, '');
+  return fileName.replace(/\.md$/i, '');
+};
+
+const CANONICAL_IMPORTED_SKILL_NAMES: Readonly<Record<string, string>> = {
+  android: 'android-guidelines',
+  'android-guidelines': 'android-guidelines',
+  'android-enterprise-rules': 'android-guidelines',
+  backend: 'backend-guidelines',
+  'backend-guidelines': 'backend-guidelines',
+  'backend-enterprise-rules': 'backend-guidelines',
+  'enterprise-operating-system': 'enterprise-operating-system',
+  frontend: 'frontend-guidelines',
+  'frontend-guidelines': 'frontend-guidelines',
+  'frontend-enterprise-rules': 'frontend-guidelines',
+  ios: 'ios-guidelines',
+  'ios-guidelines': 'ios-guidelines',
+  'ios-enterprise-rules': 'ios-guidelines',
+  'swift-concurrency': 'ios-concurrency-guidelines',
+  'swift-concurrency-guidelines': 'ios-concurrency-guidelines',
+  'ios-concurrency-guidelines': 'ios-concurrency-guidelines',
+  'swiftui-expert-skill': 'ios-swiftui-expert-guidelines',
+  'swiftui-guidelines': 'ios-swiftui-expert-guidelines',
+  'ios-swiftui-expert-guidelines': 'ios-swiftui-expert-guidelines',
+  'windsurf-rules-android': 'android-guidelines',
+  'windsurf-rules-backend': 'backend-guidelines',
+  'windsurf-rules-frontend': 'frontend-guidelines',
+  'windsurf-rules-ios': 'ios-guidelines',
+};
+
+export const toCanonicalImportedSkillName = (rawName: string): string => {
+  const normalized = rawName
+    .normalize('NFKD')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return CANONICAL_IMPORTED_SKILL_NAMES[normalized] ?? rawName;
+};
+
+export const canonicalImportedSkillNameFromPath = (path: string): string => {
+  return toCanonicalImportedSkillName(sourceSkillNameFromPath(path));
+};
+
+const loadVendorSkillsManifest = (
+  repoRoot: string
+): ReadonlyMap<string, string> => {
+  const manifestPath = resolve(repoRoot, 'vendor/skills/MANIFEST.json');
+  if (!existsSync(manifestPath)) {
+    return new Map();
+  }
+
+  const parsed = readJson(manifestPath);
+  if (!isVendorSkillsManifest(parsed)) {
+    return new Map();
+  }
+
+  const bySkillName = new Map<string, string>();
+  for (const entry of parsed.skills) {
+    bySkillName.set(
+      toCanonicalImportedSkillName(entry.name),
+      normalizePath({ repoRoot, path: entry.file })
+    );
+  }
+  return bySkillName;
 };
 
 export const resolveSkillImportSources = (params: {
@@ -284,7 +426,8 @@ export const resolveSkillImportSources = (params: {
   explicitSources?: ReadonlyArray<string>;
 }): string[] => {
   const repoRoot = params.repoRoot ?? process.cwd();
-  const resolved = new Set<string>();
+  const resolved = new Map<string, { path: string; priority: number }>();
+  const vendoredManifest = loadVendorSkillsManifest(repoRoot);
 
   const pushIfExists = (rawPath: string): void => {
     const normalized = normalizePath({
@@ -294,14 +437,25 @@ export const resolveSkillImportSources = (params: {
     if (!existsSync(normalized)) {
       return;
     }
-    resolved.add(normalized);
+    const skillKey = toCanonicalImportedSkillName(sourceSkillNameFromPath(normalized));
+    const priority = isVendoredSkillMarkdownPath(normalized) ? 2 : 1;
+    const current = resolved.get(skillKey);
+    if (
+      !current ||
+      priority > current.priority ||
+      (priority === current.priority && normalized.localeCompare(current.path) < 0)
+    ) {
+      resolved.set(skillKey, { path: normalized, priority });
+    }
   };
 
   if (params.explicitSources && params.explicitSources.length > 0) {
     for (const source of params.explicitSources) {
       pushIfExists(source);
     }
-    return [...resolved].sort();
+    return [...resolved.values()]
+      .map((item) => item.path)
+      .sort();
   }
 
   for (const profileFile of ['AGENTS.md', 'SKILLS.md']) {
@@ -313,15 +467,27 @@ export const resolveSkillImportSources = (params: {
     for (const candidate of extractSkillPathsFromText(content)) {
       pushIfExists(candidate);
     }
+    for (const requiredSkillName of extractRequiredSkillNamesFromText(content)) {
+      const canonicalName = toCanonicalImportedSkillName(requiredSkillName);
+      const manifestPath = vendoredManifest.get(canonicalName);
+      if (manifestPath) {
+        pushIfExists(manifestPath);
+        continue;
+      }
+      pushIfExists(`vendor/skills/${requiredSkillName}/SKILL.md`);
+      pushIfExists(`vendor/skills/${canonicalName}/SKILL.md`);
+    }
   }
 
-  return [...resolved].sort();
+  return [...resolved.values()]
+    .map((item) => item.path)
+    .sort();
 };
 
-export const importCustomSkillsRules = (params: {
+export const compileImportedSkillsRules = (params: {
   repoRoot?: string;
   sourceFiles?: ReadonlyArray<string>;
-}): CustomSkillsImportResult => {
+}): CompiledImportedSkillsRulesResult => {
   const repoRoot = params.repoRoot ?? process.cwd();
   const sourceFiles = resolveSkillImportSources({
     repoRoot,
@@ -333,7 +499,7 @@ export const importCustomSkillsRules = (params: {
 
   for (const sourceFile of sourceFiles) {
     const sourceContent = readFileSync(sourceFile, 'utf8');
-    const sourceSkill = sourceSkillNameFromPath(sourceFile);
+    const sourceSkill = toCanonicalImportedSkillName(sourceSkillNameFromPath(sourceFile));
     const sourcePath = toRepoRelativePath({
       repoRoot,
       absolutePath: sourceFile,
@@ -356,14 +522,26 @@ export const importCustomSkillsRules = (params: {
     }
   }
 
-  const outputPath = resolve(repoRoot, '.pumuki/custom-rules.json');
-  mkdirSync(dirname(outputPath), { recursive: true });
-  const payload = toCustomRulesFile(importedRules, sourceFiles);
-  writeFileSync(outputPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
-
   return {
     sourceFiles,
     importedRules: importedRules.sort((left, right) => left.id.localeCompare(right.id)),
+  };
+};
+
+export const importCustomSkillsRules = (params: {
+  repoRoot?: string;
+  sourceFiles?: ReadonlyArray<string>;
+}): CustomSkillsImportResult => {
+  const repoRoot = params.repoRoot ?? process.cwd();
+  const compiled = compileImportedSkillsRules(params);
+  const outputPath = resolve(repoRoot, '.pumuki/custom-rules.json');
+  mkdirSync(dirname(outputPath), { recursive: true });
+  const payload = toCustomRulesFile(compiled.importedRules, compiled.sourceFiles);
+  writeFileSync(outputPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+
+  return {
+    sourceFiles: compiled.sourceFiles,
+    importedRules: compiled.importedRules,
     outputPath,
   };
 };

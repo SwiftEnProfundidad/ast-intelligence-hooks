@@ -44,7 +44,7 @@ test('open/read/refresh/close session persists state per repository', () => {
     process.chdir(repo);
 
     const opened = openSddSession({
-      changeId: 'add-auth-feature',
+      changeId: 'Add-Auth-Feature',
       ttlMinutes: 30,
     });
     assert.equal(opened.active, true);
@@ -73,6 +73,27 @@ test('open/read/refresh/close session persists state per repository', () => {
   }
 });
 
+test('readSddSession normaliza changeId legado en mayúsculas a lowercase canónico', () => {
+  const repo = createRepoWithOpenSpecChange();
+  const previousCwd = process.cwd();
+  try {
+    process.chdir(repo);
+    openSddSession({
+      changeId: 'add-auth-feature',
+      ttlMinutes: 30,
+    });
+    runGit(repo, ['config', '--local', 'pumuki.sdd.session.change', 'ADD-AUTH-FEATURE']);
+
+    const readBack = readSddSession();
+    assert.equal(readBack.active, true);
+    assert.equal(readBack.changeId, 'add-auth-feature');
+    assert.equal(readBack.valid, true);
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('openSddSession falla cuando el changeId no existe en openspec/changes', () => {
   const repo = createRepoWithOpenSpecChange();
   const previousCwd = process.cwd();
@@ -84,6 +105,49 @@ test('openSddSession falla cuando el changeId no existe en openspec/changes', ()
           changeId: 'missing-change',
         }),
       /not found/i
+    );
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('openSddSession permite --change=auto cuando existe un único cambio activo', () => {
+  const repo = createRepoWithOpenSpecChange();
+  const previousCwd = process.cwd();
+  try {
+    process.chdir(repo);
+    const opened = openSddSession({
+      changeId: 'auto',
+    });
+    assert.equal(opened.active, true);
+    assert.equal(opened.changeId, 'add-auth-feature');
+    assert.equal(opened.valid, true);
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('openSddSession con --change=auto falla cuando hay múltiples cambios activos', () => {
+  const repo = createRepoWithOpenSpecChange();
+  const previousCwd = process.cwd();
+  try {
+    process.chdir(repo);
+    mkdirSync(join(repo, 'openspec', 'changes', 'rgo-2000-01'), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(repo, 'openspec', 'changes', 'rgo-2000-01', 'proposal.md'),
+      '# proposal\n',
+      'utf8'
+    );
+    assert.throws(
+      () =>
+        openSddSession({
+          changeId: 'auto',
+        }),
+      /Multiple active OpenSpec changes found/i
     );
   } finally {
     process.chdir(previousCwd);

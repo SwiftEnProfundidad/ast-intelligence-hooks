@@ -116,6 +116,90 @@ test('attachFindingTraceability agrega filePath para reglas Heuristic', () => {
   assert.equal(traced[0]?.source, 'heuristics:ast');
 });
 
+test('attachFindingTraceability hereda payload semantico desde heuristicas dentro de reglas Any', () => {
+  const rules: RuleSet = [
+    {
+      id: 'skills.backend.no-solid-violations',
+      description: 'No SOLID violations',
+      severity: 'ERROR',
+      when: {
+        kind: 'Any',
+        conditions: [
+          {
+            kind: 'Heuristic',
+            where: {
+              ruleId: 'heuristics.ts.solid.srp.class-command-query-mix.ast',
+            },
+          },
+          {
+            kind: 'Heuristic',
+            where: {
+              ruleId: 'heuristics.ts.solid.ocp.discriminator-switch.ast',
+            },
+          },
+        ],
+      },
+      then: {
+        kind: 'Finding',
+        code: 'SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS',
+        message: 'No SOLID violations',
+      },
+    },
+  ];
+
+  const facts: ReadonlyArray<Fact> = [
+    {
+      kind: 'Heuristic',
+      ruleId: 'heuristics.ts.solid.srp.class-command-query-mix.ast',
+      severity: 'WARN',
+      code: 'HEURISTICS_SOLID_SRP_CLASS_COMMAND_QUERY_MIX_AST',
+      message: 'AST heuristic detected class-level SRP/CQS mix.',
+      filePath: 'apps/backend/src/runtime/pumuki-srp-canary.ts',
+      lines: [1, 2, 6],
+      source: 'heuristics:ast',
+      primary_node: {
+        kind: 'class',
+        name: 'PumukiSrpCommandQueryCanary',
+        lines: [1],
+      },
+      related_nodes: [
+        { kind: 'member', name: 'query:getById', lines: [2] },
+        { kind: 'member', name: 'command:save', lines: [6] },
+      ],
+      why: 'Rompe SRP y CQS.',
+      impact: 'Acopla lectura y escritura.',
+      expected_fix: 'Separar lectura y escritura.',
+    },
+  ];
+
+  const findings: ReadonlyArray<Finding> = [
+    {
+      ruleId: 'skills.backend.no-solid-violations',
+      severity: 'ERROR',
+      code: 'SKILLS_SKILLS_BACKEND_NO_SOLID_VIOLATIONS',
+      message: 'No SOLID violations',
+      blocking: true,
+    },
+  ];
+
+  const traced = attachFindingTraceability({
+    findings,
+    rules,
+    facts,
+  });
+
+  assert.equal(traced[0]?.filePath, 'apps/backend/src/runtime/pumuki-srp-canary.ts');
+  assert.deepEqual(traced[0]?.lines, [1, 2, 6]);
+  assert.equal(traced[0]?.primary_node?.name, 'PumukiSrpCommandQueryCanary');
+  assert.deepEqual(traced[0]?.related_nodes, [
+    { kind: 'member', name: 'query:getById', lines: [2] },
+    { kind: 'member', name: 'command:save', lines: [6] },
+  ]);
+  assert.equal(traced[0]?.why, 'Rompe SRP y CQS.');
+  assert.equal(traced[0]?.impact, 'Acopla lectura y escritura.');
+  assert.equal(traced[0]?.expected_fix, 'Separar lectura y escritura.');
+});
+
 test('attachFindingTraceability respeta lineas del fichero del finding para reglas Heuristic', () => {
   const rules: RuleSet = [
     {
@@ -238,4 +322,67 @@ test('attachFindingTraceability mantiene finding sin contexto cuando la regla es
 
   assert.equal(traced[0]?.filePath, undefined);
   assert.equal(traced[0]?.lines, undefined);
+});
+
+test('attachFindingTraceability no adjunta contexto cuando scope iOS usa glob swift y el finding proviene de archivo TS', () => {
+  const rules: RuleSet = [
+    {
+      id: 'ios.no-force-unwrap',
+      description: 'Disallows force unwraps in iOS code.',
+      severity: 'CRITICAL',
+      when: {
+        kind: 'All',
+        conditions: [
+          {
+            kind: 'FileContent',
+            contains: ['!'],
+          },
+          {
+            kind: 'Not',
+            condition: {
+              kind: 'FileContent',
+              contains: ['IBOutlet'],
+            },
+          },
+        ],
+      },
+      then: {
+        kind: 'Finding',
+        code: 'IOS_NO_FORCE_UNWRAP',
+        message: 'Force unwraps are not allowed in iOS code.',
+      },
+      scope: {
+        include: ['**/*.swift'],
+      },
+    },
+  ];
+
+  const facts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileContent',
+      path: 'apps/admin-dashboard/middleware.ts',
+      content: 'if (token != null) { return NextResponse.next(); }',
+      source: 'git:staged',
+    },
+  ];
+
+  const findings: ReadonlyArray<Finding> = [
+    {
+      ruleId: 'ios.no-force-unwrap',
+      severity: 'CRITICAL',
+      code: 'IOS_NO_FORCE_UNWRAP',
+      message: 'Force unwraps are not allowed in iOS code.',
+      filePath: 'apps/admin-dashboard/middleware.ts',
+    },
+  ];
+
+  const traced = attachFindingTraceability({
+    findings,
+    rules,
+    facts,
+  });
+
+  assert.equal(traced[0]?.filePath, 'apps/admin-dashboard/middleware.ts');
+  assert.equal(traced[0]?.lines, undefined);
+  assert.equal(traced[0]?.matchedBy, undefined);
 });

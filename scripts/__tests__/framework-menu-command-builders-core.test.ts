@@ -31,20 +31,27 @@ test('builds deterministic command args for adapter real-session report', () => 
 });
 
 test('builds deterministic command args for skills lock freshness check', () => {
-  const args = buildSkillsLockCheckCommandArgs();
+  const args = buildSkillsLockCheckCommandArgs({
+    scriptPath: '/repo/scripts/compile-skills-lock.ts',
+  });
 
   assert.deepEqual(args, [
-    'run',
-    'skills:lock:check',
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/compile-skills-lock.ts',
+    '--check',
   ]);
 });
 
 test('builds deterministic command args for custom skills import', () => {
-  const args = buildImportCustomSkillsCommandArgs();
+  const args = buildImportCustomSkillsCommandArgs({
+    scriptPath: '/repo/scripts/import-custom-skills.ts',
+  });
 
   assert.deepEqual(args, [
-    'run',
-    'skills:import:custom',
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/import-custom-skills.ts',
   ]);
 });
 

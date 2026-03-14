@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   LifecycleGitService,
@@ -29,6 +29,41 @@ const parsePositiveMinutes = (value?: number): number =>
     ? Math.floor(value as number)
     : DEFAULT_TTL_MINUTES;
 
+const normalizeChangeId = (value: string): string =>
+  value.trim().toLowerCase();
+
+export const listActiveOpenSpecChangeIds = (repoRoot: string): ReadonlyArray<string> => {
+  const changesRoot = resolve(repoRoot, 'openspec', 'changes');
+  if (!existsSync(changesRoot)) {
+    return [];
+  }
+  try {
+    return readdirSync(changesRoot, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => normalizeChangeId(entry.name))
+      .filter((changeId) => changeId.length > 0 && changeId !== 'archive' && !changeId.startsWith('.'))
+      .sort();
+  } catch {
+    return [];
+  }
+};
+
+const resolveAutoChangeId = (repoRoot: string): string => {
+  const activeChanges = listActiveOpenSpecChangeIds(repoRoot);
+  if (activeChanges.length === 1) {
+    return activeChanges[0] ?? '';
+  }
+  if (activeChanges.length === 0) {
+    throw new Error(
+      'No active OpenSpec change was found. Create one and run `pumuki sdd session --open --change=<id>`.'
+    );
+  }
+  throw new Error(
+    `Multiple active OpenSpec changes found (${activeChanges.join(', ')}). ` +
+    'Run `pumuki sdd session --open --change=<id>` with an explicit change.'
+  );
+};
+
 const computeValidity = (expiresAt?: string): {
   valid: boolean;
   remainingSeconds?: number;
@@ -52,7 +87,11 @@ const readConfig = (
   git: ILifecycleGitService
 ): SddSessionState => {
   const active = git.localConfig(repoRoot, SDD_KEYS.active) === 'true';
-  const changeId = git.localConfig(repoRoot, SDD_KEYS.change) ?? undefined;
+  const rawChangeId = git.localConfig(repoRoot, SDD_KEYS.change);
+  const changeId =
+    typeof rawChangeId === 'string' && rawChangeId.trim().length > 0
+      ? normalizeChangeId(rawChangeId)
+      : undefined;
   const updatedAt = git.localConfig(repoRoot, SDD_KEYS.updatedAt) ?? undefined;
   const expiresAt = git.localConfig(repoRoot, SDD_KEYS.expiresAt) ?? undefined;
   const ttlRaw = git.localConfig(repoRoot, SDD_KEYS.ttlMinutes);
@@ -102,7 +141,14 @@ export const openSddSession = (params: {
 }): SddSessionState => {
   const git = params.git ?? new LifecycleGitService();
   const repoRoot = resolveRepoRoot(params.cwd ?? process.cwd(), git);
-  const changeId = params.changeId.trim();
+  const requestedChangeId = normalizeChangeId(params.changeId);
+  if (requestedChangeId.length === 0) {
+    throw new Error('OpenSpec change id is required.');
+  }
+  const changeId =
+    requestedChangeId === 'auto'
+      ? resolveAutoChangeId(repoRoot)
+      : requestedChangeId;
   const changeState = ensureChangePath(repoRoot, changeId);
   if (!changeState.exists) {
     throw new Error(`OpenSpec change "${changeId}" not found in openspec/changes.`);

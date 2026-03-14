@@ -75,6 +75,12 @@ test('resolveFactsForGateScope resuelve facts para scope range', async () => {
     },
     runGit: (args) => {
       runGitCalls.push(args.join(' '));
+      if (args[0] === 'rev-parse' && args[1] === '--verify' && args[2] === 'main') {
+        return 'main-hash';
+      }
+      if (args[0] === 'rev-parse' && args[1] === '--verify' && args[2] === 'HEAD') {
+        return 'head-hash';
+      }
       if (args[0] === 'diff') {
         return ['A\tsrc/a.ts', 'M\tsrc/ignored.swift', 'D\tsrc/deleted.ts'].join('\n');
       }
@@ -119,6 +125,8 @@ test('resolveFactsForGateScope resuelve facts para scope range', async () => {
     },
   ]);
   assert.deepEqual(runGitCalls, [
+    'rev-parse --verify main',
+    'rev-parse --verify HEAD',
     'diff --name-status main..HEAD',
     'show HEAD:src/a.ts',
   ]);

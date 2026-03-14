@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../__tests__/helpers/tempDir';
+import { getCurrentPumukiVersion } from '../lifecycle/packageInfo';
 import type { AiEvidenceV2_1 } from './schema';
 import { writeEvidence } from './writeEvidence';
 
@@ -135,8 +136,8 @@ const sampleEvidence = (repoRoot: string): AiEvidenceV2_1 => ({
     },
     lifecycle: {
       installed: true,
-      package_version: '6.3.16',
-      lifecycle_version: '6.3.16',
+      package_version: getCurrentPumukiVersion(),
+      lifecycle_version: getCurrentPumukiVersion(),
       hooks: {
         pre_commit: 'managed',
         pre_push: 'managed',
@@ -384,6 +385,87 @@ test('writeEvidence preserva snapshot.memory_shadow con orden estable', async ()
         confidence: 0.987654,
         reason_codes: ['shadow.diff', 'tdd_bdd.blocked'],
       });
+    });
+  });
+});
+
+test('writeEvidence no deja temporales de evidencia tras escribir atómicamente', async () => {
+  await withTempDir('pumuki-write-evidence-atomic-cleanup-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    await withCwd(tempRoot, async () => {
+      const result = writeEvidence(sampleEvidence(tempRoot));
+      assert.equal(result.ok, true);
+      const tempArtifacts = readdirSync(tempRoot).filter((entry) =>
+        entry.startsWith('.ai_evidence.json.tmp-')
+      );
+      assert.deepEqual(tempArtifacts, []);
+    });
+  });
+});
+
+test('writeEvidence mantiene JSON válido bajo ráfaga de escrituras consecutivas', async () => {
+  await withTempDir('pumuki-write-evidence-atomic-stress-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    await withCwd(tempRoot, async () => {
+      const writes = Array.from({ length: 50 }, (_, index) =>
+        Promise.resolve().then(() => {
+          const evidence = sampleEvidence(tempRoot);
+          evidence.timestamp = `2026-02-17T00:00:${String(index).padStart(2, '0')}.000Z`;
+          const result = writeEvidence(evidence);
+          assert.equal(result.ok, true);
+        })
+      );
+
+      await Promise.all(writes);
+
+      const persisted = JSON.parse(
+        readFileSync(join(tempRoot, '.ai_evidence.json'), 'utf8')
+      ) as AiEvidenceV2_1;
+      assert.equal(persisted.version, '2.1');
+      assert.equal(typeof persisted.timestamp, 'string');
+      assert.equal(persisted.snapshot.findings.length > 0, true);
+    });
+  });
+});
+
+test('writeEvidence añade evidence_chain y encadena con la escritura previa', async () => {
+  await withTempDir('pumuki-write-evidence-chain-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    await withCwd(tempRoot, async () => {
+      const firstResult = writeEvidence(sampleEvidence(tempRoot));
+      assert.equal(firstResult.ok, true);
+
+      const firstPersisted = JSON.parse(readFileSync(firstResult.path, 'utf8')) as AiEvidenceV2_1 & {
+        evidence_chain?: {
+          algorithm: 'sha256';
+          previous_payload_hash: string | null;
+          payload_hash: string;
+          sequence: number;
+        };
+      };
+      assert.equal(typeof firstPersisted.evidence_chain?.payload_hash, 'string');
+      assert.equal(firstPersisted.evidence_chain?.previous_payload_hash, null);
+      assert.equal(firstPersisted.evidence_chain?.sequence, 1);
+
+      const secondEvidence = sampleEvidence(tempRoot);
+      secondEvidence.timestamp = '2026-02-17T00:10:00.000Z';
+      const secondResult = writeEvidence(secondEvidence);
+      assert.equal(secondResult.ok, true);
+
+      const secondPersisted = JSON.parse(readFileSync(secondResult.path, 'utf8')) as AiEvidenceV2_1 & {
+        evidence_chain?: {
+          algorithm: 'sha256';
+          previous_payload_hash: string | null;
+          payload_hash: string;
+          sequence: number;
+        };
+      };
+      assert.equal(secondPersisted.evidence_chain?.algorithm, 'sha256');
+      assert.equal(
+        secondPersisted.evidence_chain?.previous_payload_hash,
+        firstPersisted.evidence_chain?.payload_hash
+      );
+      assert.equal(secondPersisted.evidence_chain?.sequence, 2);
     });
   });
 });

@@ -23,6 +23,34 @@ test('Finding conserva campos requeridos y filePath opcional', () => {
   assert.equal(findingWithoutPath.filePath, undefined);
 });
 
+test('Finding admite metadata semantica enriquecida para hallazgos bloqueantes', () => {
+  const finding: Finding = {
+    ruleId: 'ios.canary-001.presentation-mixed-responsibilities',
+    severity: 'CRITICAL',
+    code: 'IOS_CANARY_001_PRESENTATION_MIXED_RESPONSIBILITIES',
+    message: 'ViewModel mezcla responsabilidades.',
+    filePath: 'apps/ios/AppShellViewModel.swift',
+    blocking: true,
+    primary_node: {
+      kind: 'class',
+      name: 'AppShellViewModel',
+      lines: [1],
+    },
+    related_nodes: [
+      { kind: 'property', name: 'shared singleton', lines: [2] },
+      { kind: 'call', name: 'URLSession.shared', lines: [3] },
+    ],
+    why: 'Rompe SRP y Clean Architecture.',
+    impact: 'Acopla presentation a infraestructura.',
+    expected_fix: 'Extraer collaborators.',
+  };
+
+  assert.equal(finding.blocking, true);
+  assert.equal(finding.primary_node?.name, 'AppShellViewModel');
+  assert.equal(finding.related_nodes?.length, 2);
+  assert.match(finding.why ?? '', /SRP/);
+});
+
 test('Finding permite representar severidades distintas', () => {
   const findings: Finding[] = [
     {

@@ -13,10 +13,16 @@ export const buildCleanValidationArtifactsCommandArgs = (params: {
   return args;
 };
 
-export const buildSkillsLockCheckCommandArgs = (): string[] => {
-  return ['run', 'skills:lock:check'];
+export const buildSkillsLockCheckCommandArgs = (params: {
+  scriptPath: string;
+}): string[] => {
+  const args = buildFrameworkMenuTsxCommandPrefix(params.scriptPath);
+  args.push('--check');
+  return args;
 };
 
-export const buildImportCustomSkillsCommandArgs = (): string[] => {
-  return ['run', 'skills:import:custom'];
+export const buildImportCustomSkillsCommandArgs = (params: {
+  scriptPath: string;
+}): string[] => {
+  return buildFrameworkMenuTsxCommandPrefix(params.scriptPath);
 };

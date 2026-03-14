@@ -11,6 +11,8 @@ import { buildAdapterRealSessionEvaluationMessages } from './adapter-real-sessio
 export type AdapterRealSessionEvaluation = {
   verifyStatus: PassFailUnknown;
   installStatus: 'PASS' | 'FAIL';
+  strictProbeAvailable: boolean;
+  anyProbeAvailable: boolean;
   validationPass: boolean;
   summary: string;
   rootCause: string;
@@ -41,6 +43,8 @@ export const evaluateAdapterRealSessionSignals = (params: {
   return {
     verifyStatus,
     installStatus,
+    strictProbeAvailable: params.report.parsedStatus.strictAvailable,
+    anyProbeAvailable: params.report.parsedStatus.anyAvailable,
     validationPass,
     summary: messages.summary,
     rootCause: messages.rootCause,

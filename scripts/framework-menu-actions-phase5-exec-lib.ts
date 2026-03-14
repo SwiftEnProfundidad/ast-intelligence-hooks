@@ -14,7 +14,7 @@ export const createFrameworkMenuPhase5ExecutionActions = (
   return [
     {
       id: '24',
-      label: 'Run phase5 execution closure (one-shot orchestration)',
+      label: 'Toolkit: run phase5 execution closure',
       execute: async () => {
         const runParams = await params.prompts.askPhase5ExecutionClosure();
         await runPhase5ExecutionClosure(runParams);
@@ -22,7 +22,7 @@ export const createFrameworkMenuPhase5ExecutionActions = (
     },
     {
       id: '26',
-      label: 'Clean local validation artifacts',
+      label: 'Toolkit: clean local validation artifacts',
       execute: async () => {
         const cleanParams = await params.prompts.askValidationArtifactsCleanup();
         await runAndPrintExitCode(() => runValidationArtifactsCleanup(cleanParams));

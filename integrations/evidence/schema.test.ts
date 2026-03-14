@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { getCurrentPumukiVersion } from '../lifecycle/packageInfo';
 import type { AiEvidenceV2_1, CompatibilityViolation, HumanIntentState, SnapshotFinding } from './schema';
 
 const sampleIntent = (): HumanIntentState => ({
@@ -122,8 +123,8 @@ test('AiEvidenceV2_1 soporta snapshot/ledger/platforms/rulesets con contrato 2.1
       },
       lifecycle: {
         installed: true,
-        package_version: '6.3.16',
-        lifecycle_version: '6.3.16',
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
         hooks: {
           pre_commit: 'managed',
           pre_push: 'managed',

@@ -158,6 +158,19 @@ test('loads and transforms active bundles into heuristic-driven rules', async ()
     assert.ok(firstRule);
     assert.equal(firstRule.id, 'skills.ios.no-force-try');
     assert.equal(firstRule.severity, 'ERROR');
+    assert.equal(firstRule.then.kind, 'Finding');
+    assert.equal(
+      firstRule.then.source?.includes('skills-ir:rule=skills.ios.no-force-try'),
+      true
+    );
+    assert.equal(
+      firstRule.then.source?.includes('source_skill=ios-guidelines'),
+      true
+    );
+    assert.equal(
+      firstRule.then.source?.includes('ast_nodes=[heuristics.ios.force-try.ast]'),
+      true
+    );
     const iosHeuristicPrefixes = collectHeuristicPrefixes(firstRule.when).sort();
     assert.equal(iosHeuristicPrefixes.length > 0, true);
     assert.equal(iosHeuristicPrefixes.includes('apps/ios/'), true);
@@ -272,6 +285,65 @@ test('marca reglas AUTO no mapeadas como unsupported y mantiene reglas mapeadas 
     assert.deepEqual(prePush.unsupportedAutoRuleIds, ['skills.ios.custom-non-mapped-rule']);
     assert.equal(prePushMapped.severity, 'ERROR');
   }));
+});
+
+test('compila reglas AUTO con astNodeIds dinámicos aunque no existan en registry estático', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-dynamic-ast-ir-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+            hash: 'a'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.dynamic-explicit-any',
+                description: 'Avoid dynamic explicit any usages in backend runtime code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                evaluationMode: 'AUTO',
+                astNodeIds: ['heuristics.ts.explicit-any.ast'],
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+
+      const dynamicRule = result.rules[0];
+      assert.ok(dynamicRule);
+      assert.equal(dynamicRule.id, 'skills.backend.guideline.dynamic-explicit-any');
+      assert.equal(dynamicRule.when.kind, 'Heuristic');
+      if (dynamicRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for dynamic AST node mapping.');
+      }
+      assert.equal(dynamicRule.when.where?.ruleId, 'heuristics.ts.explicit-any.ast');
+      assert.equal(
+        dynamicRule.then.source?.includes('ast_nodes=[heuristics.ts.explicit-any.ast]'),
+        true
+      );
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ts.explicit-any.ast'),
+        true
+      );
+    })
+  );
 });
 
 test('scopes backend/frontend heuristic rules to platform file prefixes', async () => {
@@ -391,6 +463,117 @@ test('mapea reglas SOLID y God Class a detectores AST heuristics en backend', as
       assert.equal(solidRule.when.conditions.length >= 2, true);
       assert.equal(result.mappedHeuristicRuleIds.has('heuristics.ts.solid.srp.class-command-query-mix.ast'), true);
       assert.equal(result.mappedHeuristicRuleIds.has('heuristics.ts.god-class-large-class.ast'), true);
+    })
+  );
+});
+
+test('enriquce mensaje de no-solid-violations con criterios accionables y métricas observadas', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-solid-actionable-message-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/web/src/presentation'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-03-05T10:00:00.000Z',
+        bundles: [
+          {
+            name: 'frontend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/windsurf-rules-frontend.md',
+            hash: 'f'.repeat(64),
+            rules: [
+              {
+                id: 'skills.frontend.no-solid-violations',
+                description: 'Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP).',
+                severity: 'ERROR',
+                platform: 'frontend',
+                sourceSkill: 'frontend-guidelines',
+                sourcePath: 'docs/codex-skills/windsurf-rules-frontend.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage(
+        'PRE_COMMIT',
+        tempRoot,
+        undefined,
+        ['apps/web/src/presentation/App.tsx']
+      );
+      const rule = result.rules.find((item) => item.id === 'skills.frontend.no-solid-violations');
+      assert.ok(rule);
+      if (rule.then.kind !== 'Finding') {
+        assert.fail('Expected finding consequence for skills.frontend.no-solid-violations');
+      }
+      assert.match(rule.then.message, /Criteria: ast_nodes=\[/);
+      assert.match(rule.then.message, /observed_paths=1/);
+      assert.match(rule.then.message, /sample_paths=\[apps\/web\/src\/presentation\/App\.tsx\]/);
+    })
+  );
+});
+
+test('promueve no-solid-violations a ERROR en PRE_PUSH aunque la skill fuente llegue como WARN', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-solid-promotion-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend/src/runtime'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-03-10T19:00:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:vendor/skills/backend-enterprise-rules/SKILL.md',
+            hash: 'b'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.no-solid-violations',
+                description: 'Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)',
+                severity: 'WARN',
+                platform: 'backend',
+                confidence: 'MEDIUM',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'vendor/skills/backend-enterprise-rules/SKILL.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const preCommit = loadSkillsRuleSetForStage(
+        'PRE_COMMIT',
+        tempRoot,
+        undefined,
+        ['apps/backend/src/runtime/pumuki-srp-canary.ts']
+      );
+      const prePush = loadSkillsRuleSetForStage(
+        'PRE_PUSH',
+        tempRoot,
+        undefined,
+        ['apps/backend/src/runtime/pumuki-srp-canary.ts']
+      );
+
+      const preCommitRule = preCommit.rules.find(
+        (rule) => rule.id === 'skills.backend.no-solid-violations'
+      );
+      const prePushRule = prePush.rules.find(
+        (rule) => rule.id === 'skills.backend.no-solid-violations'
+      );
+
+      assert.equal(preCommitRule?.severity, 'WARN');
+      assert.equal(prePushRule?.severity, 'ERROR');
     })
   );
 });

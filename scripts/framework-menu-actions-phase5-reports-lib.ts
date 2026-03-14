@@ -15,7 +15,7 @@ export const createFrameworkMenuPhase5ReportActions = (
   return [
     {
       id: '21',
-      label: 'Build phase5 blockers readiness report',
+      label: 'Toolkit: build phase5 blockers readiness report',
       execute: async () => {
         const report = await params.prompts.askPhase5BlockersReadiness();
         await runPhase5BlockersReadiness(report);
@@ -23,7 +23,7 @@ export const createFrameworkMenuPhase5ReportActions = (
     },
     {
       id: '22',
-      label: 'Build adapter readiness report',
+      label: 'Toolkit: build adapter readiness report',
       execute: async () => {
         const report = await params.prompts.askAdapterReadiness();
         await runAdapterReadiness(report);
@@ -31,7 +31,7 @@ export const createFrameworkMenuPhase5ReportActions = (
     },
     {
       id: '23',
-      label: 'Build phase5 execution closure status report',
+      label: 'Toolkit: build phase5 execution closure status report',
       execute: async () => {
         const report = await params.prompts.askPhase5ExecutionClosureStatus();
         await runPhase5ExecutionClosureStatus(report);
@@ -39,7 +39,7 @@ export const createFrameworkMenuPhase5ReportActions = (
     },
     {
       id: '25',
-      label: 'Build phase5 external handoff report',
+      label: 'Toolkit legacy: build phase5 external handoff report',
       execute: async () => {
         const reportParams = await params.prompts.askPhase5ExternalHandoff();
         await runPhase5ExternalHandoff(reportParams);

@@ -8,6 +8,7 @@ import {
   buildHotspotsSaasIngestionPayloadFromLocalSignals,
   type BuildHotspotsSaasIngestionPayloadFromLocalParams,
 } from '../saasIngestionBuilder';
+import { buildEvidenceChain } from '../../evidence/evidenceChain';
 import { getCurrentPumukiVersion } from '../packageInfo';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
@@ -42,47 +43,67 @@ test('buildHotspotsSaasIngestionPayloadFromLocalSignals compone payload desde se
     runGit(repo, ['add', 'src/core.ts']);
     runGit(repo, ['commit', '-m', 'feat: add churn fixture']);
 
-    writeFileSync(
-      join(repo, '.ai_evidence.json'),
-      JSON.stringify(
-        {
-          version: '2.1',
-          snapshot: {
-            tdd_bdd: {
-              status: 'passed',
-              scope: {
-                in_scope: true,
-                is_new_feature: true,
-                is_complex_change: false,
-                reasons: [],
-                metrics: {
-                  changed_files: 1,
-                  estimated_loc: 10,
-                  critical_path_files: 0,
-                  public_interface_files: 1,
-                },
-              },
-              evidence: {
-                path: '.pumuki/artifacts/pumuki-evidence-v1.json',
-                state: 'valid',
-                version: '1',
-                slices_total: 1,
-                slices_valid: 1,
-                slices_invalid: 0,
-                integrity_ok: true,
-                errors: [],
-              },
-              waiver: {
-                applied: false,
-              },
+    const baseEvidence = {
+      version: '2.1' as const,
+      timestamp: '2026-03-04T00:00:00.000Z',
+      snapshot: {
+        stage: 'PRE_COMMIT' as const,
+        outcome: 'PASS' as const,
+        findings: [],
+        tdd_bdd: {
+          status: 'passed' as const,
+          scope: {
+            in_scope: true,
+            is_new_feature: true,
+            is_complex_change: false,
+            reasons: [],
+            metrics: {
+              changed_files: 1,
+              estimated_loc: 10,
+              critical_path_files: 0,
+              public_interface_files: 1,
             },
           },
+          evidence: {
+            path: '.pumuki/artifacts/pumuki-evidence-v1.json',
+            state: 'valid' as const,
+            version: '1',
+            slices_total: 1,
+            slices_valid: 1,
+            slices_invalid: 0,
+            integrity_ok: true,
+            errors: [],
+          },
+          waiver: {
+            applied: false,
+          },
         },
-        null,
-        2
-      ),
-      'utf8'
-    );
+      },
+      ledger: [],
+      platforms: {},
+      rulesets: [],
+      human_intent: null,
+      ai_gate: {
+        status: 'ALLOWED' as const,
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED' as const,
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+    };
+    const validEvidence = {
+      ...baseEvidence,
+      evidence_chain: buildEvidenceChain({ evidence: baseEvidence }),
+    };
+    writeFileSync(join(repo, '.ai_evidence.json'), JSON.stringify(validEvidence, null, 2), 'utf8');
 
     const payload = buildHotspotsSaasIngestionPayloadFromLocalSignals(baseParams(repo));
     assert.equal(payload.version, '1');

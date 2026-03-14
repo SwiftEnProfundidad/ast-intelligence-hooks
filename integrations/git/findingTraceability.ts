@@ -3,6 +3,7 @@ import type { Finding } from '../../core/gate/Finding';
 import type { Condition } from '../../core/rules/Condition';
 import type { RuleDefinition } from '../../core/rules/RuleDefinition';
 import type { RuleSet } from '../../core/rules/RuleSet';
+import { matchesScope } from '../../core/gate/scopeMatcher';
 
 type Trace = {
   matched: boolean;
@@ -10,30 +11,14 @@ type Trace = {
   lines?: readonly number[];
   matchedBy?: string;
   source?: string;
+  primary_node?: Finding['primary_node'];
+  related_nodes?: Finding['related_nodes'];
+  why?: string;
+  impact?: string;
+  expected_fix?: string;
 };
 
 type RuleScope = RuleDefinition['scope'];
-
-const extractPrefix = (pattern: string): string => {
-  const wildcardIndex = pattern.indexOf('*');
-  return wildcardIndex === -1 ? pattern : pattern.slice(0, wildcardIndex);
-};
-
-const matchesAnyPrefix = (path: string, patterns: ReadonlyArray<string>): boolean => {
-  return patterns.some((pattern) => path.startsWith(extractPrefix(pattern)));
-};
-
-const matchesScope = (path: string, scope?: RuleScope): boolean => {
-  const include = scope?.include;
-  const exclude = scope?.exclude;
-  if (exclude && exclude.length > 0 && matchesAnyPrefix(path, exclude)) {
-    return false;
-  }
-  if (!include || include.length === 0) {
-    return true;
-  }
-  return matchesAnyPrefix(path, include);
-};
 
 const normalizePath = (path: string): string => path.replace(/\\/g, '/');
 
@@ -222,6 +207,11 @@ const traceHeuristic = (
     lines: sortedUniqueLines(selected.lines ?? []),
     matchedBy: 'Heuristic',
     source: selected.source,
+    primary_node: selected.primary_node,
+    related_nodes: selected.related_nodes,
+    why: selected.why,
+    impact: selected.impact,
+    expected_fix: selected.expected_fix,
   };
 };
 
@@ -318,6 +308,11 @@ export const attachFindingTraceability = (params: {
       lines: finding.lines ?? trace.lines,
       matchedBy: finding.matchedBy ?? trace.matchedBy,
       source: finding.source ?? trace.source,
+      primary_node: finding.primary_node ?? trace.primary_node,
+      related_nodes: finding.related_nodes ?? trace.related_nodes,
+      why: finding.why ?? trace.why,
+      impact: finding.impact ?? trace.impact,
+      expected_fix: finding.expected_fix ?? trace.expected_fix,
     };
   });
 };

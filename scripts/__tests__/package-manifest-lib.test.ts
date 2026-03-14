@@ -6,7 +6,7 @@ test('inspectPackageManifestPaths reports no issues when required paths are pres
   const filePaths = [
     ...REQUIRED_PACKAGE_PATHS,
     'README.md',
-    'docs/TESTING.md',
+    'docs/product/TESTING.md',
     'integrations/git/preCommitBackend.cli.ts',
   ];
 
@@ -43,4 +43,16 @@ test('inspectPackageManifestPaths reports forbidden bundle entries', () => {
     'docs/validation/archive/skills-rollout-mock_consumer-report.md',
     '.audit-reports/package-smoke/summary.md',
   ]);
+});
+
+test('inspectPackageManifestPaths permite superficies legacy oficiales canónicas', () => {
+  const filePaths = [
+    ...REQUIRED_PACKAGE_PATHS,
+    'legacy/scripts/hooks-system/infrastructure/cascade-hooks/verify-adapter-hooks-runtime.sh',
+    'legacy/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh',
+    'legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh',
+  ];
+
+  const report = inspectPackageManifestPaths(filePaths);
+  assert.deepEqual(report.forbiddenMatches, []);
 });

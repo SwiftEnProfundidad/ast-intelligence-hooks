@@ -122,6 +122,52 @@ test('generateEvidence respeta gateOutcome explícito al componer build + write'
   });
 });
 
+test('generateEvidence persiste metadata semantica enriquecida en findings bloqueantes', async () => {
+  await withTempDir('pumuki-generate-evidence-ios-canary-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    await withCwd(tempRoot, async () => {
+      const result = generateEvidence({
+        stage: 'PRE_COMMIT',
+        findings: [
+          {
+            ruleId: 'ios.canary-001.presentation-mixed-responsibilities',
+            severity: 'CRITICAL',
+            code: 'IOS_CANARY_001_PRESENTATION_MIXED_RESPONSIBILITIES',
+            message: 'ViewModel mezcla responsabilidades.',
+            filePath: 'apps/ios/Sources/AppShell/Application/AppShellViewModel.swift',
+            blocking: true,
+            primary_node: {
+              kind: 'class',
+              name: 'AppShellViewModel',
+              lines: [1],
+            },
+            related_nodes: [
+              { kind: 'property', name: 'shared singleton', lines: [2] },
+              { kind: 'call', name: 'URLSession.shared', lines: [4] },
+            ],
+            why: 'Rompe SRP y Clean Architecture.',
+            impact: 'Acopla presentation a infraestructura.',
+            expected_fix: 'Extraer collaborators.',
+          },
+        ],
+        detectedPlatforms: {
+          ios: { detected: true, confidence: 'HIGH' },
+        },
+        loadedRulesets: [{ platform: 'ios', bundle: 'iosEnterpriseRuleSet', hash: 'hash-ios' }],
+      });
+
+      assert.equal(result.evidence.snapshot.findings[0]?.blocking, true);
+      assert.equal(result.evidence.snapshot.findings[0]?.primary_node?.name, 'AppShellViewModel');
+      assert.equal(result.write.ok, true);
+
+      const persisted = JSON.parse(readFileSync(join(tempRoot, '.ai_evidence.json'), 'utf8')) as AiEvidenceV2_1;
+      assert.equal(persisted.snapshot.findings[0]?.blocking, true);
+      assert.equal(persisted.snapshot.findings[0]?.primary_node?.name, 'AppShellViewModel');
+      assert.equal(persisted.ai_gate.violations[0]?.expected_fix, 'Extraer collaborators.');
+    });
+  });
+});
+
 test('generateEvidence persiste contrato SDD cuando se informa bloqueo de policy', async () => {
   await withTempDir('pumuki-generate-evidence-sdd-contract-', async (tempRoot) => {
     initGitRepo(tempRoot);

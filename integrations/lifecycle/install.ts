@@ -11,6 +11,7 @@ import { readEvidence } from '../evidence/readEvidence';
 import { captureRepoState } from '../evidence/repoState';
 import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { readOpenSpecManagedArtifacts, writeLifecycleState } from './state';
+import { ensureRuntimeArtifactsIgnored } from './artifacts';
 
 export type LifecycleInstallResult = {
   repoRoot: string;
@@ -81,6 +82,7 @@ export const runLifecycleInstall = (params?: {
     version,
     openSpecManagedArtifacts: Array.from(mergedOpenSpecArtifacts),
   });
+  ensureRuntimeArtifactsIgnored(report.repoRoot);
 
   if (shouldBootstrapEvidence(report.repoRoot)) {
     writeBootstrapEvidence(report.repoRoot);

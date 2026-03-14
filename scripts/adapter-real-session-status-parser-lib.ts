@@ -5,7 +5,9 @@ const parseCommandExitCode = (
   commandLabel: string
 ): number | undefined => {
   const escaped = commandLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(`\\|\\s*${escaped}\\s*\\|[^|]*\\|\\s*([0-9]+)\\s*\\|`);
+  const regex = new RegExp(
+    `\\|\\s*${escaped}\\s*\\|[^|]*\\|[^|]*\\|\\s*([0-9]+)\\s*\\|`
+  );
   const match = markdown.match(regex);
   if (!match?.[1]) {
     return undefined;
@@ -15,11 +17,34 @@ const parseCommandExitCode = (
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
+const parseCommandAvailability = (
+  markdown: string,
+  commandLabel: string
+): boolean => {
+  const escaped = commandLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(
+    `\\|\\s*${escaped}\\s*\\|[^|]*\\|\\s*(available|unavailable)\\s*\\|`,
+    'i'
+  );
+  const match = markdown.match(regex)?.[1]?.toLowerCase();
+  if (match === 'available') {
+    return true;
+  }
+  if (match === 'unavailable') {
+    return false;
+  }
+
+  return parseCommandExitCode(markdown, commandLabel) !== undefined;
+};
+
 export const parseAdapterRealSessionStatusReport = (
   markdown?: string
 ): AdapterParsedStatusReport => {
   if (!markdown) {
     return {
+      verifyAvailable: false,
+      strictAvailable: false,
+      anyAvailable: false,
       strictAssessmentPass: false,
       anyAssessmentPass: false,
     };
@@ -32,6 +57,9 @@ export const parseAdapterRealSessionStatusReport = (
     verifyExitCode: parseCommandExitCode(markdown, 'verify-adapter-hooks-runtime'),
     strictExitCode: parseCommandExitCode(markdown, 'assess-adapter-hooks-session'),
     anyExitCode: parseCommandExitCode(markdown, 'assess-adapter-hooks-session:any'),
+    verifyAvailable: parseCommandAvailability(markdown, 'verify-adapter-hooks-runtime'),
+    strictAvailable: parseCommandAvailability(markdown, 'assess-adapter-hooks-session'),
+    anyAvailable: parseCommandAvailability(markdown, 'assess-adapter-hooks-session:any'),
     strictAssessmentPass: /assess-adapter-hooks-session[\s\S]*?session-assessment=PASS/.test(
       markdown
     ),

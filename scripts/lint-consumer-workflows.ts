@@ -8,22 +8,31 @@ import {
 } from './consumer-workflow-lint-runner-lib';
 
 const main = (): number => {
-  const options = parseConsumerWorkflowLintArgs(process.argv.slice(2));
-  assertConsumerWorkflowLintBinary(options.actionlintBin, process.cwd());
+  try {
+    const options = parseConsumerWorkflowLintArgs(process.argv.slice(2));
+    assertConsumerWorkflowLintBinary(options.actionlintBin, process.cwd());
 
-  const lintResult = runConsumerWorkflowLint(options);
-  const report = buildConsumerWorkflowLintMarkdown({
-    options,
-    lintResult,
-  });
+    const lintResult = runConsumerWorkflowLint(options);
+    const report = buildConsumerWorkflowLintMarkdown({
+      options,
+      lintResult,
+    });
 
-  const outPath = resolve(process.cwd(), options.outFile);
-  mkdirSync(dirname(outPath), { recursive: true });
-  writeFileSync(outPath, report, 'utf8');
+    const outPath = resolve(process.cwd(), options.outFile);
+    mkdirSync(dirname(outPath), { recursive: true });
+    writeFileSync(outPath, report, 'utf8');
 
-  process.stdout.write(`consumer workflow lint report generated at ${outPath}\n`);
+    process.stdout.write(`consumer workflow lint report generated at ${outPath}\n`);
 
-  return lintResult.exitCode === 0 ? 0 : 1;
+    return lintResult.exitCode === 0 ? 0 : 1;
+  } catch (error) {
+    const message =
+      error instanceof Error && error.message.trim().length > 0
+        ? error.message.trim()
+        : 'consumer workflow lint failed';
+    process.stderr.write(`${message}\n`);
+    return 1;
+  }
 };
 
 process.exitCode = main();

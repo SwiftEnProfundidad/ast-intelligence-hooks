@@ -19,6 +19,6 @@ export const appendPhase5ExecutionClosureStatusNextActions = (
   if (summary.verdict === 'BLOCKED') {
     lines.push('- Resolve blockers from report inputs and regenerate reports.');
   }
-  lines.push('- Re-run: `npm run validation:phase5-execution-closure-status`.');
+  lines.push('- Re-run: `npm run toolkit:phase5-execution-closure-status`.');
   lines.push('');
 };

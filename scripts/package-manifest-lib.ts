@@ -10,13 +10,30 @@ export const REQUIRED_PACKAGE_PATHS = [
   'core/rules/presets/heuristics/typescript.ts',
   'scripts/package-install-smoke.ts',
   'integrations/git/runPlatformGate.ts',
+  'integrations/policy/policyProfiles.ts',
+  'integrations/policy/experimentalFeatures.ts',
+  'integrations/telemetry/gateTelemetry.ts',
   'integrations/lifecycle/cli.ts',
   'integrations/notifications/emitAuditSummaryNotification.ts',
   'integrations/evidence/buildEvidence.ts',
+  'skills.sources.json',
+  'docs/codex-skills/android-enterprise-rules.md',
+  'docs/codex-skills/backend-enterprise-rules.md',
+  'docs/codex-skills/frontend-enterprise-rules.md',
+  'docs/codex-skills/ios-enterprise-rules.md',
+  'docs/codex-skills/swift-concurrency.md',
+  'docs/codex-skills/swiftui-expert-skill.md',
 ];
 
+export const CANONICAL_ALLOWED_LEGACY_PATHS = new Set([
+  'legacy/scripts/hooks-system/infrastructure/cascade-hooks/verify-adapter-hooks-runtime.sh',
+  'legacy/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh',
+  'legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh',
+]);
+
+const LEGACY_ROOT_PATTERN = /^legacy\//;
+
 export const FORBIDDEN_PACKAGE_PATTERNS: RegExp[] = [
-  /^legacy\//,
   /\/__tests__\//,
   /^docs\/validation\/archive\//,
   /^\.audit-reports\//,
@@ -34,9 +51,13 @@ export const inspectPackageManifestPaths = (
   const missingRequired = REQUIRED_PACKAGE_PATHS.filter(
     (requiredPath) => !filePaths.includes(requiredPath)
   );
-  const forbiddenMatches = filePaths.filter((path) =>
-    FORBIDDEN_PACKAGE_PATTERNS.some((pattern) => pattern.test(path))
-  );
+  const forbiddenMatches = filePaths.filter((path) => {
+    if (LEGACY_ROOT_PATTERN.test(path)) {
+      return !CANONICAL_ALLOWED_LEGACY_PATHS.has(path);
+    }
+
+    return FORBIDDEN_PACKAGE_PATTERNS.some((pattern) => pattern.test(path));
+  });
 
   return {
     missingRequired,

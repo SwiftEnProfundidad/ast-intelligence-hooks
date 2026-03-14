@@ -10,6 +10,7 @@ export type SkillsStage = Exclude<GateStage, 'STAGED'>;
 export type SkillsRuleConfidence = 'HIGH' | 'MEDIUM' | 'LOW';
 export type SkillsRuleEvaluationMode = 'AUTO' | 'DECLARATIVE';
 export type SkillsRuleOrigin = 'core' | 'custom';
+export type SkillsAstNodeId = string;
 
 export type SkillsCompiledRule = {
   id: string;
@@ -23,6 +24,7 @@ export type SkillsCompiledRule = {
   locked?: boolean;
   evaluationMode?: SkillsRuleEvaluationMode;
   origin?: SkillsRuleOrigin;
+  astNodeIds?: ReadonlyArray<SkillsAstNodeId>;
 };
 
 export type SkillsLockBundle = {
@@ -43,6 +45,7 @@ export type SkillsLockV1 = {
 const SKILLS_LOCK_FILE = 'skills.lock.json';
 const SEMVER_PATTERN = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
 const SHA256_PATTERN = /^[A-Fa-f0-9]{64}$/;
+const AST_NODE_ID_PATTERN = /^heuristics\.[A-Za-z0-9._-]+\.ast$/;
 
 const severityValues = new Set<Severity>(['INFO', 'WARN', 'ERROR', 'CRITICAL']);
 const stageValues = new Set<SkillsStage>(['PRE_COMMIT', 'PRE_PUSH', 'CI']);
@@ -88,6 +91,23 @@ const isRuleConfidence = (value: unknown): value is SkillsRuleConfidence => {
 
 const isRuleEvaluationMode = (value: unknown): value is SkillsRuleEvaluationMode => {
   return typeof value === 'string' && evaluationModeValues.has(value as SkillsRuleEvaluationMode);
+};
+
+const isAstNodeId = (value: unknown): value is SkillsAstNodeId => {
+  return typeof value === 'string' && AST_NODE_ID_PATTERN.test(value.trim());
+};
+
+export const normalizeSkillsAstNodeIds = (
+  astNodeIds?: ReadonlyArray<SkillsAstNodeId>
+): SkillsAstNodeId[] => {
+  if (!astNodeIds || astNodeIds.length === 0) {
+    return [];
+  }
+
+  const normalized = astNodeIds
+    .map((value) => value.trim().toLowerCase())
+    .filter((value) => AST_NODE_ID_PATTERN.test(value));
+  return [...new Set(normalized)].sort();
 };
 
 const isRuleOrigin = (value: unknown): value is SkillsRuleOrigin => {
@@ -142,6 +162,15 @@ const isSkillsCompiledRule = (value: unknown): value is SkillsCompiledRule => {
   if (
     typeof value.evaluationMode !== 'undefined' &&
     !isRuleEvaluationMode(value.evaluationMode)
+  ) {
+    return false;
+  }
+
+  if (
+    typeof value.astNodeIds !== 'undefined' &&
+    (!Array.isArray(value.astNodeIds) ||
+      value.astNodeIds.length === 0 ||
+      value.astNodeIds.some((item) => !isAstNodeId(item)))
   ) {
     return false;
   }
@@ -221,6 +250,7 @@ const normalizedRuleForHash = (rule: SkillsCompiledRule): Record<string, string 
     locked: rule.locked ?? false,
     evaluationMode: rule.evaluationMode ?? null,
     origin: rule.origin ?? null,
+    astNodeIds: normalizeSkillsAstNodeIds(rule.astNodeIds),
   };
 };
 

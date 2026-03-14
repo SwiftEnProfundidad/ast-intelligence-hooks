@@ -82,6 +82,21 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
 
     assert.equal(status.repoRoot, repoRoot);
     assert.equal(status.packageVersion, getCurrentPumukiVersion());
+    assert.equal(status.version.effective, getCurrentPumukiVersion());
+    assert.equal(status.version.runtime, getCurrentPumukiVersion());
+    assert.equal(status.version.consumerInstalled, null);
+    assert.equal(status.version.lifecycleInstalled, '6.3.11');
+    assert.equal(status.version.source, 'runtime-package');
+    assert.equal(status.version.driftFromRuntime, false);
+    assert.equal(status.version.driftFromLifecycleInstalled, true);
+    assert.match(status.version.driftWarning ?? '', /lifecycle=6\.3\.11/i);
+    assert.equal(
+      status.version.alignmentCommand,
+      `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && npx --yes --package pumuki@${getCurrentPumukiVersion()} pumuki install`
+    );
+    assert.equal(status.version.pathExecutionHazard, false);
+    assert.equal(status.version.pathExecutionWarning, null);
+    assert.equal(status.version.pathExecutionWorkaroundCommand, null);
     assert.equal(status.trackedNodeModulesCount, 2);
     assert.deepEqual(status.lifecycleState, {
       installed: 'true',
@@ -94,6 +109,84 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
       'pre-commit': { exists: true, managedBlockPresent: true },
       'pre-push': { exists: true, managedBlockPresent: false },
     });
+    assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(status.hooksDirectoryResolution, 'default');
+    assert.equal(typeof status.policyValidation.stages.PRE_COMMIT.hash, 'string');
+    assert.equal(typeof status.policyValidation.stages.PRE_PUSH.hash, 'string');
+    assert.equal(typeof status.policyValidation.stages.CI.hash, 'string');
+    assert.equal(status.policyValidation.stages.PRE_COMMIT.activationSource, null);
+    assert.equal(status.policyValidation.stages.PRE_PUSH.activationSource, null);
+    assert.equal(status.policyValidation.stages.CI.activationSource, null);
+    assert.equal(status.policyValidation.stages.PRE_COMMIT.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(status.policyValidation.stages.PRE_PUSH.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(status.policyValidation.stages.CI.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(status.experimentalFeatures.features.pre_write.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.source, 'default');
+    assert.equal(status.experimentalFeatures.features.analytics.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.analytics.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.analytics.activationVariable,
+      'PUMUKI_EXPERIMENTAL_ANALYTICS'
+    );
+    assert.equal(status.experimentalFeatures.features.analytics.legacyActivationVariable, null);
+    assert.equal(status.experimentalFeatures.features.heuristics.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.heuristics.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.heuristics.activationVariable,
+      'PUMUKI_EXPERIMENTAL_HEURISTICS'
+    );
+    assert.equal(status.experimentalFeatures.features.heuristics.legacyActivationVariable, null);
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.mcp_enterprise.activationVariable,
+      'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE'
+    );
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.legacyActivationVariable, null);
+    assert.equal(status.experimentalFeatures.features.operational_memory.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.operational_memory.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.operational_memory.activationVariable,
+      'PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY'
+    );
+    assert.equal(status.experimentalFeatures.features.operational_memory.legacyActivationVariable, null);
+    assert.equal(status.experimentalFeatures.features.learning_context.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.learning_context.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.learning_context.activationVariable,
+      'PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT'
+    );
+    assert.equal(status.experimentalFeatures.features.learning_context.legacyActivationVariable, null);
+    assert.equal(
+      status.experimentalFeatures.features.pre_write.activationVariable,
+      'PUMUKI_EXPERIMENTAL_PRE_WRITE'
+    );
+    assert.equal(
+      status.experimentalFeatures.features.pre_write.legacyActivationVariable,
+      'PUMUKI_PREWRITE_ENFORCEMENT'
+    );
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.saas_ingestion.activationVariable,
+      'PUMUKI_EXPERIMENTAL_SAAS_INGESTION'
+    );
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.legacyActivationVariable, null);
+    assert.equal(status.experimentalFeatures.features.sdd.layer, 'experimental');
+    assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.sdd.source, 'default');
+    assert.equal(
+      status.experimentalFeatures.features.sdd.activationVariable,
+      'PUMUKI_EXPERIMENTAL_SDD'
+    );
+    assert.equal(status.experimentalFeatures.features.sdd.legacyActivationVariable, null);
 
     assert.deepEqual(git.resolveCalls, ['/tmp/ignored-cwd']);
     assert.deepEqual(git.listTrackedCalls, [repoRoot]);
@@ -111,6 +204,43 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
   });
 });
 
+test('readLifecycleStatus expone warning y workaround cuando repoRoot contiene el separador de PATH', async () => {
+  await withTempDir('pumuki:status-path-hazard-', async (repoRoot) => {
+    const hooksDir = join(repoRoot, '.git', 'hooks');
+    mkdirSync(hooksDir, { recursive: true });
+
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      [],
+      {
+        [PUMUKI_CONFIG_KEYS.installed]: 'true',
+        [PUMUKI_CONFIG_KEYS.version]: '6.3.11',
+        [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      }
+    );
+
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.version.pathExecutionHazard, true);
+    assert.match(status.version.pathExecutionWarning ?? '', /rompe PATH/i);
+    assert.equal(
+      status.version.pathExecutionWorkaroundCommand,
+      process.platform === 'win32'
+        ? 'node .\\node_modules\\pumuki\\bin\\pumuki.js'
+        : 'node ./node_modules/pumuki/bin/pumuki.js'
+    );
+    assert.equal(
+      status.version.alignmentCommand,
+      process.platform === 'win32'
+        ? `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && node .\\node_modules\\pumuki\\bin\\pumuki.js install`
+        : `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && node ./node_modules/pumuki/bin/pumuki.js install`
+    );
+  });
+});
+
 test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', async () => {
   await withTempDir('pumuki-lifecycle-status-default-cwd-', async (repoRoot) => {
     const git = new FakeLifecycleGitService(repoRoot, [], {});
@@ -118,9 +248,20 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     const status = readLifecycleStatus({ git });
 
     assert.equal(status.repoRoot, repoRoot);
+    assert.equal(status.version.effective, getCurrentPumukiVersion());
     assert.deepEqual(git.resolveCalls, [process.cwd()]);
     assert.deepEqual(git.listTrackedCalls, [repoRoot]);
     assert.equal(status.trackedNodeModulesCount, 0);
+    assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(status.hooksDirectoryResolution, 'default');
+    assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
   });
 });
 
@@ -133,6 +274,11 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
       git,
     });
 
+    assert.equal(status.version.effective, getCurrentPumukiVersion());
+    assert.equal(status.version.consumerInstalled, null);
+    assert.equal(status.version.lifecycleInstalled, null);
+    assert.equal(status.version.driftWarning, null);
+    assert.equal(status.version.alignmentCommand, null);
     assert.deepEqual(status.lifecycleState, {
       installed: undefined,
       version: undefined,
@@ -144,5 +290,15 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
       'pre-commit': { exists: false, managedBlockPresent: false },
       'pre-push': { exists: false, managedBlockPresent: false },
     });
+    assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(status.hooksDirectoryResolution, 'default');
+    assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
   });
 });
