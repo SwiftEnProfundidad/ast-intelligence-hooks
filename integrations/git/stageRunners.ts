@@ -25,8 +25,12 @@ import type { EvidenceReadResult } from '../evidence/readEvidence';
 import type { SnapshotFinding } from '../evidence/schema';
 import { ensureRuntimeArtifactsIgnored } from '../lifecycle/artifacts';
 import { runPolicyReconcile } from '../lifecycle/policyReconcile';
-import { isSeverityAtLeast } from '../../core/rules/Severity';
+import { isSeverityAtLeast, type Severity } from '../../core/rules/Severity';
 import type { SddDecision } from '../sdd';
+import {
+  resolveGitAtomicityEnforcement,
+  type GitAtomicityEnforcementResolution,
+} from '../policy/gitAtomicityEnforcement';
 
 const PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE =
   'pumuki pre-push blocked: branch has no upstream tracking reference. Configure upstream first (for example: git push --set-upstream origin <branch>) and retry.';
@@ -38,6 +42,7 @@ const PRE_PUSH_UPSTREAM_MISALIGNED_AHEAD_THRESHOLD = 5;
 
 const PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS = 900;
 const PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS = 1800;
+const HOOK_GATE_PROGRESS_REMINDER_MS = 2000;
 const DEFAULT_BLOCKED_REMEDIATION = 'Corrige la causa del bloqueo y vuelve a ejecutar el gate.';
 const EVIDENCE_FILE_PATH = '.ai_evidence.json';
 
@@ -106,11 +111,17 @@ type StageRunnerDependencies = {
   now: () => number;
   writeHookGateSummary: (message: string) => void;
   isQuietMode: () => boolean;
+  scheduleHookGateProgressReminder: (params: {
+    stage: HookStage;
+    delayMs: number;
+    onProgress: () => void;
+  }) => () => void;
   ensureRuntimeArtifactsIgnored: (repoRoot: string) => void;
   runPolicyReconcile: typeof runPolicyReconcile;
   isPathTracked: (repoRoot: string, relativePath: string) => boolean;
   stagePath: (repoRoot: string, relativePath: string) => void;
   resolveHeadOid: (repoRoot: string) => string | null;
+  resolveGitAtomicityEnforcement: () => GitAtomicityEnforcementResolution;
 };
 
 const defaultDependencies: StageRunnerDependencies = {
@@ -160,6 +171,17 @@ const defaultDependencies: StageRunnerDependencies = {
     process.stdout.write(`${message}\n`);
   },
   isQuietMode: () => process.argv.includes('--quiet'),
+  scheduleHookGateProgressReminder: ({ delayMs, onProgress }) => {
+    const timer = setTimeout(() => {
+      onProgress();
+    }, delayMs);
+    if (typeof timer === 'object' && timer !== null && 'unref' in timer) {
+      timer.unref();
+    }
+    return () => {
+      clearTimeout(timer);
+    };
+  },
   ensureRuntimeArtifactsIgnored: (repoRoot) => {
     try {
       ensureRuntimeArtifactsIgnored(repoRoot);
@@ -185,6 +207,7 @@ const defaultDependencies: StageRunnerDependencies = {
       return null;
     }
   },
+  resolveGitAtomicityEnforcement,
 };
 
 const getDependencies = (
@@ -253,6 +276,25 @@ const shouldRetryAfterPolicyReconcile = (params: {
   repoRoot: string;
   stage: 'PRE_COMMIT' | 'PRE_PUSH';
 }): boolean => {
+  const toEvidenceViolationSeverity = (violation: {
+    severity?: string | null;
+    level?: string | null;
+  }): Severity => {
+    const candidate = typeof violation.severity === 'string'
+      ? violation.severity
+      : typeof violation.level === 'string'
+        ? violation.level
+        : null;
+    if (
+      candidate === 'INFO' ||
+      candidate === 'WARN' ||
+      candidate === 'ERROR' ||
+      candidate === 'CRITICAL'
+    ) {
+      return candidate;
+    }
+    return 'INFO';
+  };
   const evidence = params.dependencies.readEvidence(params.repoRoot);
   if (!evidence) {
     return false;
@@ -260,11 +302,15 @@ const shouldRetryAfterPolicyReconcile = (params: {
   const stageCodes = new Set<string>();
   if (evidence.snapshot.stage === params.stage) {
     for (const finding of evidence.snapshot.findings) {
-      stageCodes.add(finding.code);
+      if (isSeverityAtLeast(finding.severity, 'ERROR')) {
+        stageCodes.add(finding.code);
+      }
     }
   }
   for (const violation of evidence.ai_gate.violations) {
-    stageCodes.add(violation.code);
+    if (isSeverityAtLeast(toEvidenceViolationSeverity(violation), 'ERROR')) {
+      stageCodes.add(violation.code);
+    }
   }
   for (const code of stageCodes) {
     if (HOOK_POLICY_RECONCILE_CODES.has(code)) {
@@ -384,38 +430,58 @@ const runHookGateWithPolicyRetry = async (params: {
   scope: Parameters<typeof runPlatformGate>[0]['scope'];
   sddDecisionOverride?: Pick<SddDecision, 'allowed' | 'code' | 'message'>;
 }): Promise<{ exitCode: number; policyTrace: HookPolicyTrace }> => {
-  const firstAttempt = await runHookGateAttempt({
-    dependencies: params.dependencies,
-    stage: params.stage,
-    scope: params.scope,
-    sddDecisionOverride: params.sddDecisionOverride,
-  });
-  if (firstAttempt.exitCode === 0) {
-    return firstAttempt;
+  if (!params.dependencies.isQuietMode()) {
+    params.dependencies.writeHookGateSummary(
+      `[pumuki][hook-gate] stage=${params.stage} decision=PENDING status=STARTED`
+    );
   }
-  if (!isHookPolicyAutoReconcileEnabled()) {
-    return firstAttempt;
-  }
-  if (
-    !shouldRetryAfterPolicyReconcile({
+  const cancelProgressReminder = params.dependencies.isQuietMode()
+    ? () => {}
+    : params.dependencies.scheduleHookGateProgressReminder({
+        stage: params.stage,
+        delayMs: HOOK_GATE_PROGRESS_REMINDER_MS,
+        onProgress: () => {
+          params.dependencies.writeHookGateSummary(
+            `[pumuki][hook-gate] stage=${params.stage} decision=PENDING status=RUNNING`
+          );
+        },
+      });
+  try {
+    const firstAttempt = await runHookGateAttempt({
       dependencies: params.dependencies,
-      repoRoot: params.repoRoot,
       stage: params.stage,
-    })
-  ) {
-    return firstAttempt;
+      scope: params.scope,
+      sddDecisionOverride: params.sddDecisionOverride,
+    });
+    if (firstAttempt.exitCode === 0) {
+      return firstAttempt;
+    }
+    if (!isHookPolicyAutoReconcileEnabled()) {
+      return firstAttempt;
+    }
+    if (
+      !shouldRetryAfterPolicyReconcile({
+        dependencies: params.dependencies,
+        repoRoot: params.repoRoot,
+        stage: params.stage,
+      })
+    ) {
+      return firstAttempt;
+    }
+    params.dependencies.runPolicyReconcile({
+      repoRoot: params.repoRoot,
+      strict: true,
+      apply: true,
+    });
+    return runHookGateAttempt({
+      dependencies: params.dependencies,
+      stage: params.stage,
+      scope: params.scope,
+      sddDecisionOverride: params.sddDecisionOverride,
+    });
+  } finally {
+    cancelProgressReminder();
   }
-  params.dependencies.runPolicyReconcile({
-    repoRoot: params.repoRoot,
-    strict: true,
-    apply: true,
-  });
-  return runHookGateAttempt({
-    dependencies: params.dependencies,
-    stage: params.stage,
-    scope: params.scope,
-    sddDecisionOverride: params.sddDecisionOverride,
-  });
 };
 
 const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
@@ -643,7 +709,8 @@ const enforceGitAtomicityGate = (params: {
     fromRef: params.fromRef,
     toRef: params.toRef,
   });
-  if (!atomicity.enabled || atomicity.allowed) {
+  const enforcement = params.dependencies.resolveGitAtomicityEnforcement();
+  if (!atomicity.enabled || atomicity.allowed || !enforcement.blocking) {
     return false;
   }
   const firstViolation = atomicity.violations[0];

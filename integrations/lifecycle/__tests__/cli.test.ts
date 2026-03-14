@@ -43,10 +43,14 @@ const createGitRepo = (trackedNodeModules = false): string => {
   return repo;
 };
 
-const writePreWriteEvidence = (repoRoot: string, branch: string): void => {
+const writePreWriteEvidence = (
+  repoRoot: string,
+  branch: string,
+  timestamp = new Date().toISOString()
+): void => {
   const evidence = {
     version: '2.1' as const,
-    timestamp: new Date().toISOString(),
+    timestamp,
     snapshot: {
       stage: 'PRE_COMMIT' as const,
       outcome: 'PASS' as const,
@@ -123,6 +127,25 @@ const writePreWriteEvidence = (repoRoot: string, branch: string): void => {
   writeFileSync(
     join(repoRoot, '.ai_evidence.json'),
     JSON.stringify(withChain, null, 2),
+    'utf8'
+  );
+};
+
+const rewriteMcpReceiptIssuedAt = (repoRoot: string, issuedAt: string): void => {
+  const receiptPath = resolveMcpAiGateReceiptPath(repoRoot);
+  const receipt = JSON.parse(readFileSync(receiptPath, 'utf8')) as {
+    issued_at?: string;
+  };
+  writeFileSync(
+    receiptPath,
+    JSON.stringify(
+      {
+        ...receipt,
+        issued_at: issuedAt,
+      },
+      null,
+      2
+    ),
     'utf8'
   );
 };
@@ -283,6 +306,26 @@ const withSddBypass = async <T>(callback: () => Promise<T>): Promise<T> => {
     }
   }
 };
+
+const withPreWriteEnforcement = async <T>(
+  mode: 'advisory' | 'strict',
+  callback: () => Promise<T>
+): Promise<T> => {
+  const previous = process.env.PUMUKI_PREWRITE_ENFORCEMENT;
+  process.env.PUMUKI_PREWRITE_ENFORCEMENT = mode;
+  try {
+    return await callback();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env.PUMUKI_PREWRITE_ENFORCEMENT;
+    } else {
+      process.env.PUMUKI_PREWRITE_ENFORCEMENT = previous;
+    }
+  }
+};
+
+const withStrictPreWriteEnforcement = async <T>(callback: () => Promise<T>): Promise<T> =>
+  withPreWriteEnforcement('strict', callback);
 
 const createEmptyHotspotsReport = (repoRoot: string): LocalHotspotsReport => {
   return {
@@ -875,6 +918,28 @@ test('runLifecycleCli retorna 0 para ayuda explícita en subcomando', async () =
   assert.equal(code, 0);
 });
 
+test('runLifecycleCli retorna 0 para ayuda explícita en comandos lifecycle simples', async () => {
+  const bootstrapCode = await withSilentConsole(() => runLifecycleCli(['bootstrap', '--help']));
+  const statusCode = await withSilentConsole(() => runLifecycleCli(['status', '--help']));
+  const doctorCode = await withSilentConsole(() => runLifecycleCli(['doctor', '--help']));
+
+  assert.equal(bootstrapCode, 0);
+  assert.equal(statusCode, 0);
+  assert.equal(doctorCode, 0);
+});
+
+test('runLifecycleCli retorna 0 para ayuda explícita en subcomandos profundos', async () => {
+  const validateCode = await withSilentConsole(() =>
+    runLifecycleCli(['sdd', 'validate', '--help'])
+  );
+  const hotspotsCode = await withSilentConsole(() =>
+    runLifecycleCli(['analytics', 'hotspots', 'report', '--help'])
+  );
+
+  assert.equal(validateCode, 0);
+  assert.equal(hotspotsCode, 0);
+});
+
 test('runLifecycleCli watch --json delega en runLifecycleWatch y devuelve payload estable', async () => {
   const printed: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -1238,7 +1303,7 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
   }
 });
 
-test('runLifecycleCli doctor --deep retorna 1 cuando hay bloqueo crítico deep', async () => {
+test('runLifecycleCli doctor --deep retorna 1 cuando el contrato de evidence está roto', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
@@ -1254,13 +1319,90 @@ test('runLifecycleCli doctor --deep retorna 1 cuando hay bloqueo crítico deep',
     }) as typeof process.stdout.write;
 
     const code = await runLifecycleCli(['doctor', '--deep', '--json']);
-    assert.equal(code, 1);
+    assert.equal(code, 0);
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       deep?: {
         blocking?: boolean;
       };
     };
     assert.equal(payload.deep?.blocking, true);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli doctor --deep retorna 0 cuando solo falta evidence', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    await withSilentConsole(() => runLifecycleCli(['install']));
+    rmSync(join(repo, '.ai_evidence.json'), { force: true });
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['doctor', '--deep', '--json']);
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      deep?: {
+        blocking?: boolean;
+        checks?: Array<{ id?: string; severity?: string }>;
+      };
+    };
+    assert.equal(payload.deep?.blocking, false);
+    assert.equal(
+      payload.deep?.checks?.some(
+        (check) => check.id === 'evidence-source-drift' && check.severity === 'warning'
+      ),
+      true
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli doctor --deep retorna 0 cuando evidence está stale', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    await withSilentConsole(() => runLifecycleCli(['install']));
+    writePreWriteEvidence(repo, 'main', '2026-01-01T00:00:00.000Z');
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['doctor', '--deep', '--json']);
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      deep?: {
+        blocking?: boolean;
+        checks?: Array<{ id?: string; severity?: string; message?: string }>;
+      };
+    };
+    assert.equal(payload.deep?.blocking, false);
+    assert.equal(
+      payload.deep?.checks?.some(
+        (check) =>
+          check.id === 'evidence-source-drift' &&
+          check.severity === 'warning' &&
+          check.message?.includes('Evidence is stale')
+      ),
+      true
+    );
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
@@ -1524,6 +1666,89 @@ test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP v�
   }
 });
 
+test('runLifecycleCli sdd validate PRE_WRITE autocura evidence y receipt stale aunque la sesión SDD esté inválida', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const changeId = 'prewrite-invalid-session-stale-evidence';
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-invalid-session-stale-evidence']);
+    writeFileSync(
+      join(repo, 'package.json'),
+      JSON.stringify({ name: 'fixture', version: '1.0.0' }, null, 2),
+      'utf8'
+    );
+    mkdirSync(join(repo, 'openspec', 'changes', changeId), { recursive: true });
+    writeFileSync(join(repo, 'openspec', 'changes', changeId, 'proposal.md'), '# proposal\n', 'utf8');
+    openSddSession({ cwd: repo, changeId, ttlMinutes: 60 });
+    runGit(repo, ['config', '--local', 'pumuki.sdd.session.expiresAt', '2000-01-01T00:00:00.000Z']);
+    writePreWriteEvidence(
+      repo,
+      'feature/prewrite-invalid-session-stale-evidence',
+      '2026-01-01T00:00:00.000Z'
+    );
+    writeMcpAiGateReceipt({
+      repoRoot: repo,
+      stage: 'PRE_WRITE',
+      status: 'ALLOWED',
+      allowed: true,
+    });
+    rewriteMcpReceiptIssuedAt(repo, '2026-01-01T00:00:00.000Z');
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+        runPlatformGate: async () => {
+          writePreWriteEvidence(repo, 'feature/prewrite-invalid-session-stale-evidence');
+          return 0;
+        },
+      })
+    );
+    assert.equal(code, 0);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      sdd?: {
+        decision?: { code?: string; allowed?: boolean };
+      };
+      ai_gate?: {
+        allowed?: boolean;
+        violations?: Array<{ code?: string }>;
+      };
+      automation?: {
+        attempted?: boolean;
+        actions?: Array<{ action?: string; status?: string }>;
+      };
+    };
+    assert.equal(payload.sdd?.decision?.allowed, false);
+    assert.equal(payload.sdd?.decision?.code, 'SDD_SESSION_INVALID');
+    assert.equal(payload.ai_gate?.allowed, true);
+    assert.equal(
+      (payload.ai_gate?.violations ?? []).some(
+        (violation) =>
+          violation.code === 'EVIDENCE_STALE'
+          || violation.code === 'MCP_ENTERPRISE_RECEIPT_STALE'
+      ),
+      false
+    );
+    assert.equal(payload.automation?.attempted, true);
+    assert.deepEqual(
+      (payload.automation?.actions ?? []).map((action) => action.action),
+      ['refresh_evidence', 'refresh_mcp_receipt']
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy de pre-flight', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
@@ -1726,22 +1951,67 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
         runPlatformGate: async () => 0,
       })
     );
-    assert.equal(code, 1);
+    assert.equal(code, 0);
     assert.equal(existsSync(join(repo, 'node_modules', '.bin', 'openspec')), false);
 
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       sdd?: { decision?: { code?: string; allowed?: boolean } };
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
       bootstrap?: { enabled?: boolean; attempted?: boolean; status?: string; details?: string };
       next_action?: { reason?: string; command?: string };
     };
     assert.equal(payload.sdd?.decision?.allowed, false);
     assert.equal(payload.sdd?.decision?.code, 'OPENSPEC_MISSING');
+    assert.equal(payload.pre_write_enforcement?.mode, 'advisory');
+    assert.equal(payload.pre_write_enforcement?.blocking, false);
     assert.equal(payload.bootstrap?.enabled, false);
     assert.equal(payload.bootstrap?.attempted, false);
     assert.equal(payload.bootstrap?.status, 'SKIPPED');
     assert.match(payload.bootstrap?.details ?? '', /PUMUKI_PREWRITE_AUTO_BOOTSTRAP=0/);
     assert.equal(payload.next_action?.reason, 'OPENSPEC_MISSING');
     assert.equal(payload.next_action?.command, 'npx --yes --package pumuki@latest pumuki install');
+  } finally {
+    if (typeof previousAutoBootstrap === 'undefined') {
+      delete process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
+    } else {
+      process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP = previousAutoBootstrap;
+    }
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE blocks missing OpenSpec in strict enforcement mode', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const previousAutoBootstrap = process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-openspec-strict']);
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+    process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP = '0';
+
+    const code = await withStrictPreWriteEnforcement(() =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+        runPlatformGate: async () => 0,
+      })
+    );
+    assert.equal(code, 1);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
+      sdd?: { decision?: { code?: string } };
+    };
+    assert.equal(payload.pre_write_enforcement?.mode, 'strict');
+    assert.equal(payload.pre_write_enforcement?.blocking, true);
+    assert.equal(payload.sdd?.decision?.code, 'OPENSPEC_MISSING');
   } finally {
     if (typeof previousAutoBootstrap === 'undefined') {
       delete process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
@@ -1886,15 +2156,18 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile est
         runPlatformGate: async () => 0,
       })
     );
-    assert.equal(code, 1);
+    assert.equal(code, 0);
 
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       sdd?: { decision?: { code?: string; allowed?: boolean } };
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
       ai_gate?: { allowed?: boolean; violations?: Array<{ code?: string }> };
       next_action?: { reason?: string; command?: string };
     };
     assert.equal(payload.sdd?.decision?.allowed, true);
     assert.equal(payload.sdd?.decision?.code, 'ALLOWED');
+    assert.equal(payload.pre_write_enforcement?.mode, 'advisory');
+    assert.equal(payload.pre_write_enforcement?.blocking, false);
     assert.equal(payload.ai_gate?.allowed, false);
     assert.equal(
       (payload.ai_gate?.violations ?? []).some(
@@ -1906,6 +2179,162 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile est
     assert.equal(
       payload.next_action?.command,
       'npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json'
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE blocks AI gate violations in strict enforcement mode', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const changeId = 'prewrite-ios-critical-gap-strict';
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-ios-critical-gap-strict']);
+    writeFileSync(
+      join(repo, 'package.json'),
+      JSON.stringify({ name: 'fixture', version: '1.0.0' }, null, 2),
+      'utf8'
+    );
+    mkdirSync(join(repo, 'openspec', 'changes', changeId), { recursive: true });
+    writeFileSync(join(repo, 'openspec', 'changes', changeId, 'proposal.md'), '# proposal\n', 'utf8');
+    openSddSession({ cwd: repo, changeId, ttlMinutes: 60 });
+    writeMcpAiGateReceipt({
+      repoRoot: repo,
+      stage: 'PRE_WRITE',
+      status: 'ALLOWED',
+      allowed: true,
+    });
+
+    const evidence = {
+      version: '2.1' as const,
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_WRITE' as const,
+        outcome: 'PASS' as const,
+        rules_coverage: {
+          stage: 'PRE_WRITE' as const,
+          active_rule_ids: ['skills.ios.no-force-unwrap'],
+          evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      ledger: [],
+      platforms: {
+        ios: {
+          detected: true,
+          confidence: 'HIGH' as const,
+        },
+      },
+      rulesets: [
+        {
+          platform: 'skills' as const,
+          bundle: 'ios-guidelines@1.0.0',
+          hash: 'skills-ios-hash',
+        },
+        {
+          platform: 'skills' as const,
+          bundle: 'ios-concurrency-guidelines@1.0.0',
+          hash: 'skills-ios-concurrency-hash',
+        },
+        {
+          platform: 'skills' as const,
+          bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+          hash: 'skills-ios-swiftui-hash',
+        },
+      ],
+      human_intent: null,
+      ai_gate: {
+        status: 'ALLOWED' as const,
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED' as const,
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      repo_state: {
+        repo_root: repo,
+        git: {
+          available: true,
+          branch: 'feature/prewrite-ios-critical-gap-strict',
+          upstream: null,
+          ahead: 0,
+          behind: 0,
+          dirty: false,
+          staged: 0,
+          unstaged: 0,
+        },
+        lifecycle: {
+          installed: true,
+          package_version: getCurrentPumukiVersion({ repoRoot: repo }),
+          lifecycle_version: getCurrentPumukiVersion({ repoRoot: repo }),
+          hooks: {
+            pre_commit: 'managed' as const,
+            pre_push: 'managed' as const,
+          },
+        },
+      },
+    };
+    const payloadHash = computeEvidencePayloadHash(evidence);
+    const evidenceWithChain = {
+      ...evidence,
+      evidence_chain: {
+        algorithm: 'sha256' as const,
+        previous_payload_hash: null,
+        payload_hash: payloadHash,
+        sequence: 1,
+      },
+    };
+    writeFileSync(join(repo, '.ai_evidence.json'), JSON.stringify(evidenceWithChain, null, 2), 'utf8');
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
+      withStrictPreWriteEnforcement(() =>
+        runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+          runPlatformGate: async () => 0,
+        })
+      )
+    );
+    assert.equal(code, 1);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
+      ai_gate?: { allowed?: boolean; violations?: Array<{ code?: string }> };
+    };
+    assert.equal(payload.pre_write_enforcement?.mode, 'strict');
+    assert.equal(payload.pre_write_enforcement?.blocking, true);
+    assert.equal(payload.ai_gate?.allowed, false);
+    assert.equal(
+      (payload.ai_gate?.violations ?? []).some(
+        (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+      ),
+      true
     );
   } finally {
     process.stdout.write = originalStdoutWrite;
@@ -2027,17 +2456,22 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile cua
     }) as typeof process.stdout.write;
 
     const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
-      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
-        runPlatformGate: async () => 0,
-      })
+      withStrictPreWriteEnforcement(() =>
+        runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+          runPlatformGate: async () => 0,
+        })
+      )
     );
     assert.equal(code, 1);
 
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
       sdd?: { decision?: { code?: string; allowed?: boolean } };
       ai_gate?: { allowed?: boolean; violations?: Array<{ code?: string }> };
       next_action?: { reason?: string; command?: string };
     };
+    assert.equal(payload.pre_write_enforcement?.mode, 'strict');
+    assert.equal(payload.pre_write_enforcement?.blocking, true);
     assert.equal(payload.sdd?.decision?.allowed, true);
     assert.equal(payload.sdd?.decision?.code, 'ALLOWED');
     assert.equal(payload.ai_gate?.allowed, false);
@@ -2095,16 +2529,21 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action con slice atómi
     }) as typeof process.stdout.write;
 
     const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
-      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
-        runPlatformGate: async () => 0,
-      })
+      withStrictPreWriteEnforcement(() =>
+        runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+          runPlatformGate: async () => 0,
+        })
+      )
     );
     assert.equal(code, 1);
 
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
       ai_gate?: { allowed?: boolean; violations?: Array<{ code?: string }> };
       next_action?: { reason?: string; command?: string };
     };
+    assert.equal(payload.pre_write_enforcement?.mode, 'strict');
+    assert.equal(payload.pre_write_enforcement?.blocking, true);
     assert.equal(payload.ai_gate?.allowed, false);
     assert.equal(
       (payload.ai_gate?.violations ?? []).some(

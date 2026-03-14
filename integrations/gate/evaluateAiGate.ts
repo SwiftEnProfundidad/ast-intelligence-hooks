@@ -3,6 +3,7 @@ import { readEvidenceResult } from '../evidence/readEvidence';
 import { captureRepoState } from '../evidence/repoState';
 import type { RepoState } from '../evidence/schema';
 import { resolvePolicyForStage } from './stagePolicies';
+import { execFileSync } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { SkillsLockV1, SkillsStage } from '../config/skillsLock';
@@ -10,6 +11,10 @@ import {
   loadEffectiveSkillsLock,
   loadRequiredSkillsLock,
 } from '../config/skillsEffectiveLock';
+import {
+  resolveSkillsEnforcement,
+  type SkillsEnforcementResolution,
+} from '../policy/skillsEnforcement';
 import {
   readMcpAiGateReceipt,
   resolveMcpAiGateReceiptPath,
@@ -169,6 +174,13 @@ const MCP_RECEIPT_STAGE_ORDER: Readonly<Record<AiGateStage, number>> = {
   PRE_PUSH: 2,
   CI: 3,
 };
+const SKILLS_CONTRACT_SUPPRESSED_EVIDENCE_CODES = new Set([
+  'EVIDENCE_MISSING',
+  'EVIDENCE_INVALID',
+  'EVIDENCE_CHAIN_INVALID',
+  'EVIDENCE_TIMESTAMP_INVALID',
+  'EVIDENCE_STALE',
+]);
 
 const toErrorViolation = (code: string, message: string): AiGateViolation => ({
   code,
@@ -181,6 +193,16 @@ const toWarnViolation = (code: string, message: string): AiGateViolation => ({
   severity: 'WARN',
   message,
 });
+
+const toSkillsViolation = (
+  resolution: SkillsEnforcementResolution,
+  code: string,
+  message: string
+): AiGateViolation => (
+  resolution.blocking
+    ? toErrorViolation(code, message)
+    : toWarnViolation(code, message)
+);
 
 const normalizeRepoStateLifecycleVersions = (repoState: RepoState): RepoState => {
   const packageVersion = repoState.lifecycle.package_version;
@@ -332,6 +354,109 @@ const toRepoTreeDetectedPlatforms = (params: {
   });
 };
 
+const normalizeChangedPath = (value: string): string =>
+  value.replace(/\\/g, '/').replace(/^"+|"+$/g, '').trim();
+
+const parseChangedPath = (line: string): string | null => {
+  if (line.length < 4) {
+    return null;
+  }
+  const raw = line.slice(3).trim();
+  if (raw.length === 0) {
+    return null;
+  }
+  if (raw.includes(' -> ')) {
+    const renamed = raw.split(' -> ').pop();
+    if (!renamed) {
+      return null;
+    }
+    const normalizedRenamed = normalizeChangedPath(renamed);
+    return normalizedRenamed.length > 0 ? normalizedRenamed : null;
+  }
+  const normalized = normalizeChangedPath(raw);
+  return normalized.length > 0 ? normalized : null;
+};
+
+const collectWorktreeChangedPaths = (repoRoot: string): ReadonlyArray<string> => {
+  try {
+    const output = execFileSync(
+      'git',
+      ['status', '--short', '--untracked-files=all'],
+      {
+        cwd: repoRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }
+    );
+    const files = output
+      .split('\n')
+      .map((line) => parseChangedPath(line))
+      .filter((line): line is string => typeof line === 'string' && line.length > 0);
+    return [...new Set(files)];
+  } catch {
+    return [];
+  }
+};
+
+const isPlatformPath = (platform: PreWriteSkillsPlatform, filePath: string): boolean => {
+  const normalized = normalizeChangedPath(filePath).toLowerCase();
+  if (platform === 'ios') {
+    return normalized.endsWith('.swift')
+      || normalized.startsWith('apps/ios/')
+      || normalized.startsWith('ios/');
+  }
+  if (platform === 'android') {
+    return normalized.endsWith('.kt')
+      || normalized.endsWith('.kts')
+      || normalized.startsWith('apps/android/')
+      || normalized.startsWith('android/');
+  }
+  if (platform === 'backend') {
+    const isTypeScriptOrJavaScript =
+      normalized.endsWith('.ts')
+      || normalized.endsWith('.js')
+      || normalized.endsWith('.mts')
+      || normalized.endsWith('.cts')
+      || normalized.endsWith('.mjs')
+      || normalized.endsWith('.cjs');
+    if (!isTypeScriptOrJavaScript) {
+      return false;
+    }
+    return normalized.startsWith('apps/backend/')
+      || /(^|\/)(backend|server|api)(\/|$)/.test(normalized);
+  }
+  const isReactExtension = normalized.endsWith('.tsx') || normalized.endsWith('.jsx');
+  if (isReactExtension) {
+    return true;
+  }
+  const isTypeScriptOrJavaScript =
+    normalized.endsWith('.ts')
+    || normalized.endsWith('.js')
+    || normalized.endsWith('.mts')
+    || normalized.endsWith('.cts')
+    || normalized.endsWith('.mjs')
+    || normalized.endsWith('.cjs');
+  if (!isTypeScriptOrJavaScript) {
+    return false;
+  }
+  return normalized.startsWith('apps/frontend/')
+    || normalized.startsWith('apps/web/')
+    || /(^|\/)(frontend|web|client)(\/|$)/.test(normalized);
+};
+
+const hasWorktreeCodePlatforms = (params: {
+  repoRoot: string;
+  requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
+}): boolean => {
+  const changedPaths = collectWorktreeChangedPaths(params.repoRoot);
+  if (changedPaths.length === 0) {
+    return false;
+  }
+  return changedPaths.some((filePath) =>
+    params.requiredPlatforms.some((platform) => isPlatformPath(platform, filePath))
+  );
+};
+
 const toLockRequiredPlatforms = (
   requiredLock: SkillsLockV1 | undefined
 ): ReadonlyArray<PreWriteSkillsPlatform> => {
@@ -426,6 +551,7 @@ const collectActiveRuleIdsCoverageViolations = (params: {
 const collectPreWritePlatformSkillsViolations = (params: {
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
   coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
+  skillsEnforcement: SkillsEnforcementResolution;
 }): AiGateViolation[] => {
   const detectedPlatforms = toPreWriteDetectedSkillsPlatforms({
     platforms: params.evidence.platforms,
@@ -460,7 +586,8 @@ const collectPreWritePlatformSkillsViolations = (params: {
 
   if (missingScopeCoverage.length > 0) {
     violations.push(
-      toErrorViolation(
+      toSkillsViolation(
+        params.skillsEnforcement,
         'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE',
         `Detected platforms missing skill-rule coverage in PRE_WRITE: ${missingScopeCoverage.join(' | ')}.`
       )
@@ -485,7 +612,8 @@ const collectPreWritePlatformSkillsViolations = (params: {
 
   if (missingBundlesByPlatform.length > 0) {
     violations.push(
-      toErrorViolation(
+      toSkillsViolation(
+        params.skillsEnforcement,
         'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING',
         `Detected platforms missing required skill bundles in PRE_WRITE: ${missingBundlesByPlatform.join(' | ')}.`
       )
@@ -513,7 +641,8 @@ const collectPreWritePlatformSkillsViolations = (params: {
 
   if (missingCriticalRulesByPlatform.length > 0) {
     violations.push(
-      toErrorViolation(
+      toSkillsViolation(
+        params.skillsEnforcement,
         'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
         `Detected platforms missing critical skill-rule enforcement in PRE_WRITE: ${missingCriticalRulesByPlatform.join(' | ')}.`
       )
@@ -526,6 +655,7 @@ const collectPreWritePlatformSkillsViolations = (params: {
 const collectPreWriteCrossPlatformCriticalViolations = (params: {
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
   coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
+  skillsEnforcement: SkillsEnforcementResolution;
 }): AiGateViolation[] => {
   const detectedPlatforms = toPreWriteDetectedSkillsPlatforms({
     platforms: params.evidence.platforms,
@@ -561,7 +691,8 @@ const collectPreWriteCrossPlatformCriticalViolations = (params: {
   }
 
   return [
-    toErrorViolation(
+    toSkillsViolation(
+      params.skillsEnforcement,
       'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE',
       `Cross-platform critical enforcement incomplete in PRE_WRITE: ${missingCriticalCoverage.join(' | ')}.`
     ),
@@ -571,8 +702,10 @@ const collectPreWriteCrossPlatformCriticalViolations = (params: {
 const toSkillsContractAssessment = (params: {
   stage: AiGateStage;
   repoRoot: string;
+  repoState: RepoState;
   evidenceResult: EvidenceReadResult;
   requiredLock?: SkillsLockV1;
+  skillsEnforcement: SkillsEnforcementResolution;
 }): AiGateSkillsContractAssessment => {
   const requiredPlatforms = toLockRequiredPlatforms(params.requiredLock);
 
@@ -602,7 +735,8 @@ const toSkillsContractAssessment = (params: {
       violations:
         requiredPlatforms.length > 0
           ? [
-              toErrorViolation(
+              toSkillsViolation(
+                params.skillsEnforcement,
                 'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED',
                 `Required repo skills exist, but active platforms could not be detected for ${params.stage}.`
               ),
@@ -615,7 +749,7 @@ const toSkillsContractAssessment = (params: {
   const explicitlyDetectedPlatforms = toDetectedSkillsPlatforms(params.evidenceResult.evidence.platforms);
   const inferredPlatforms = toCoverageInferredPlatforms(coverage);
   const repoTreeDetectedPlatforms =
-    requiredPlatforms.length > 0
+    params.stage !== 'PRE_WRITE' && requiredPlatforms.length > 0
       ? toRepoTreeDetectedPlatforms({
           repoRoot: params.repoRoot,
           platforms: requiredPlatforms,
@@ -634,12 +768,35 @@ const toSkillsContractAssessment = (params: {
       : inferredPlatforms.length > 0
         ? inferredPlatforms
         : repoTreeDetectedPlatforms;
+  const pendingChanges = resolvePendingChanges(params.repoState);
+  const detectedPlatformSet = new Set(detectedPlatforms);
   const assessmentPlatforms =
     requiredPlatforms.length > 0
-      ? requiredPlatforms
+      ? params.stage === 'PRE_WRITE' && detectedPlatforms.length > 0
+        ? requiredPlatforms.filter((platform) => detectedPlatformSet.has(platform))
+        : requiredPlatforms
       : detectedPlatforms;
 
   if (requiredPlatforms.length > 0 && detectedPlatforms.length === 0) {
+    if (
+      params.stage === 'PRE_WRITE'
+      && (
+        pendingChanges === 0
+        || !hasWorktreeCodePlatforms({
+          repoRoot: params.repoRoot,
+          requiredPlatforms,
+        })
+      )
+    ) {
+      return {
+        stage: params.stage,
+        enforced: false,
+        status: 'NOT_APPLICABLE',
+        detected_platforms: [],
+        requirements: [],
+        violations: [],
+      };
+    }
     const requirements: AiGateSkillsContractPlatformRequirement[] = requiredPlatforms.map((platform) => ({
       platform,
       required_rule_prefix: PLATFORM_SKILLS_RULE_PREFIXES[platform],
@@ -665,7 +822,8 @@ const toSkillsContractAssessment = (params: {
       detected_platforms: [],
       requirements,
       violations: [
-        toErrorViolation(
+        toSkillsViolation(
+          params.skillsEnforcement,
           'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED',
           `Required repo skills exist, but active platforms could not be detected for ${params.stage}.`
         ),
@@ -694,7 +852,8 @@ const toSkillsContractAssessment = (params: {
   const violations: AiGateViolation[] = [];
   if (requiredPlatforms.length > 0 && detectedPlatforms.length === 0) {
     violations.push(
-      toErrorViolation(
+      toSkillsViolation(
+        params.skillsEnforcement,
         'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED',
         `Required repo skills exist, but active platforms could not be detected for ${params.stage}.`
       )
@@ -759,7 +918,8 @@ const toSkillsContractAssessment = (params: {
         missingParts.push('evaluated_prefix');
       }
       violations.push(
-        toErrorViolation(
+        toSkillsViolation(
+          params.skillsEnforcement,
           'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE',
           `Skills contract scope coverage missing for ${platform}: ${missingParts.join(', ')} (${requiredRulePrefix}).`
         )
@@ -767,7 +927,8 @@ const toSkillsContractAssessment = (params: {
     }
     if (missingBundles.length > 0) {
       violations.push(
-        toErrorViolation(
+        toSkillsViolation(
+          params.skillsEnforcement,
           'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING',
           `Skills contract missing bundles for ${platform}: [${missingBundles.join(', ')}].`
         )
@@ -775,7 +936,8 @@ const toSkillsContractAssessment = (params: {
     }
     if (missingCriticalRuleIds.length > 0) {
       violations.push(
-        toErrorViolation(
+        toSkillsViolation(
+          params.skillsEnforcement,
           'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
           `Skills contract missing critical rule coverage for ${platform}: [${missingCriticalRuleIds.join(', ')}].`
         )
@@ -783,7 +945,8 @@ const toSkillsContractAssessment = (params: {
     }
     if (!transversalCriticalCovered && requiredAnyTransversalCriticalRuleIds.length > 0) {
       violations.push(
-        toErrorViolation(
+        toSkillsViolation(
+          params.skillsEnforcement,
           'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE',
           `Skills contract missing transversal critical coverage for ${platform}: required_any=[${requiredAnyTransversalCriticalRuleIds.join(', ')}].`
         )
@@ -867,6 +1030,7 @@ const collectPreWriteCoherenceViolations = (params: {
       )
     );
   } else {
+    const skillsEnforcement = resolveSkillsEnforcement();
     if (coverage.stage !== params.evidence.snapshot.stage) {
       violations.push(
         toErrorViolation(
@@ -908,12 +1072,14 @@ const collectPreWriteCoherenceViolations = (params: {
       ...collectPreWritePlatformSkillsViolations({
         evidence: params.evidence,
         coverage,
+        skillsEnforcement,
       })
     );
     violations.push(
       ...collectPreWriteCrossPlatformCriticalViolations({
         evidence: params.evidence,
         coverage,
+        skillsEnforcement,
       })
     );
   }
@@ -928,9 +1094,7 @@ const collectPreWriteCoherenceViolations = (params: {
   }
 
   if (params.preWriteWorktreeHygiene.enabled && params.repoState.git.available) {
-    const pendingChanges =
-      params.repoState.git.pending_changes
-      ?? (params.repoState.git.staged + params.repoState.git.unstaged);
+    const pendingChanges = resolvePendingChanges(params.repoState) ?? 0;
     if (pendingChanges >= params.preWriteWorktreeHygiene.blockThreshold) {
       violations.push(
         toErrorViolation(
@@ -1055,6 +1219,13 @@ const collectGitflowViolations = (
     );
   }
   return violations;
+};
+
+const resolvePendingChanges = (repoState: RepoState): number | null => {
+  if (!repoState.git.available) {
+    return null;
+  }
+  return repoState.git.pending_changes ?? (repoState.git.staged + repoState.git.unstaged);
 };
 
 const toPolicyStage = (stage: AiGateStage): SkillsStage => {
@@ -1222,6 +1393,7 @@ export const evaluateAiGate = (
     policyStage,
     params.repoRoot
   );
+  const skillsEnforcement = resolveSkillsEnforcement();
   const evidenceAssessment = collectEvidenceViolations(
     evidenceResult,
     params.repoRoot,
@@ -1243,15 +1415,22 @@ export const evaluateAiGate = (
   const skillsContract = toSkillsContractAssessment({
     stage: params.stage,
     repoRoot: params.repoRoot,
+    repoState,
     evidenceResult,
     requiredLock: requiredSkillsLock,
+    skillsEnforcement,
   });
+  const suppressSkillsContractViolation = evidenceAssessment.violations.some((violation) =>
+    SKILLS_CONTRACT_SUPPRESSED_EVIDENCE_CODES.has(violation.code)
+  );
   const stageSkillsContractViolations =
-    skillsContract.status !== 'FAIL'
+    suppressSkillsContractViolation
+    || skillsContract.status !== 'FAIL'
     || (params.stage === 'PRE_WRITE' && requiredSkillsPlatforms.length === 0)
-      ? []
+        ? []
       : [
-          toErrorViolation(
+          toSkillsViolation(
+            skillsEnforcement,
             'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE',
             `Skills contract incomplete for ${params.stage}: ${skillsContract.violations.map((violation) => violation.code).join(', ')}.`
           ),

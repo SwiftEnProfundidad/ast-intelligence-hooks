@@ -6,6 +6,41 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-14 (v6.3.59)
+
+- PRE_WRITE tooling-only no-op:
+  - consumer deltas that only touch package/runtime alignment files no longer materialize a fake multi-platform skills contract,
+  - the result is now `skills_contract=NOT_APPLICABLE` even with `pending_changes > 0` when no code platform is active in the worktree delta.
+- Policy packaging alignment:
+  - the published tarball now includes the `integrations/policy/*.ts` helpers required by `evaluateAiGate`, `stageRunners`, `watch` and `cli`.
+- Operational impact:
+  - `SAAS · PUMUKI-021` can now be revalidated against the published package on a real tooling-only adoption slice.
+- Validation evidence:
+  - `npm run -s typecheck` (`PASS`)
+  - `node --import tsx --test integrations/gate/__tests__/evaluateAiGate.test.ts` (`41 pass / 0 fail`)
+  - `node --import tsx --test --test-name-pattern "autocura evidence y receipt stale aunque la sesión SDD esté inválida|blocks AI gate violations in strict enforcement mode|blocks missing OpenSpec in strict enforcement mode|expone next_action de reconcile cuando active_rule_ids está vacío para código|expone next_action con slice atómico" integrations/lifecycle/__tests__/cli.test.ts` (`4 pass / 0 fail`)
+  - `npm run -s validation:package-manifest` (`PASS`)
+  - `npm pack --json --dry-run` (`PASS`)
+
+### 2026-03-14 (v6.3.58)
+
+- PRE_WRITE no-op stability for consumer slices:
+  - clean slices with `pending_changes=0` no longer fail by undetected multi-platform skills contract noise,
+  - the resulting contract is now `NOT_APPLICABLE` when there is no materialized active platform scope.
+- PRE_WRITE freshness autocure:
+  - stale `ai_evidence` and stale MCP receipts are refreshed even if the SDD session itself is invalid,
+  - operational noise is removed before the final decision is reported.
+- Deep doctor de-escalation:
+  - missing/stale evidence is now treated as operational drift (`warning`) instead of a hard diagnostic block.
+- Operational impact:
+  - `SAAS · PUMUKI-021` is left with only release/adoption work; the core no longer has a technical residual for that bug.
+- Validation evidence:
+  - `npm run -s typecheck` (`PASS`)
+  - `node --import tsx --test integrations/gate/__tests__/evaluateAiGate.test.ts` (`40 pass / 0 fail`)
+  - `node --import tsx --test --test-name-pattern "autocura evidence y receipt stale aunque la sesión SDD esté inválida|blocks AI gate violations in strict enforcement mode|blocks missing OpenSpec in strict enforcement mode|expone next_action de reconcile cuando active_rule_ids está vacío para código|expone next_action con slice atómico" integrations/lifecycle/__tests__/cli.test.ts` (`4 pass / 0 fail`)
+  - `npm run -s validation:package-manifest` (`PASS`)
+  - `npm pack --json --dry-run` (`PASS`)
+
 ### 2026-03-11 (v6.3.57)
 
 - AST intelligence and gate payload enrichment:

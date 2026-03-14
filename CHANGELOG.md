@@ -10,6 +10,32 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.59] - 2026-03-14
+
+### Fixed
+
+- `PRE_WRITE` now treats tooling-only consumer deltas as `NOT_APPLICABLE` even when `pending_changes > 0`.
+  - Version bumps or hook/runtime alignment slices that only touch files such as `package.json` and `package-lock.json` no longer fail with `EVIDENCE_SKILLS_PLATFORMS_UNDETECTED`.
+- Release packaging now carries the policy helpers required by the runtime surface.
+  - `integrations/policy/gitAtomicityEnforcement.ts`
+  - `integrations/policy/preWriteEnforcement.ts`
+  - `integrations/policy/skillsEnforcement.ts`
+  are included in the published tarball together with the stage and lifecycle entrypoints that import them.
+
+## [6.3.58] - 2026-03-14
+
+### Fixed
+
+- `PRE_WRITE` now behaves like a clean no-op for consumer slices that have no pending changes and no materialized active platforms.
+  - The gate no longer escalates `EVIDENCE_SKILLS_PLATFORMS_UNDETECTED` / `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE` in those clean-slice cases.
+- `PRE_WRITE` automation now refreshes stale evidence and stale MCP receipts even when the SDD session is currently invalid.
+  - This removes stale-artifact noise from the final verdict and keeps the residual focused on the true blocking cause.
+- Lifecycle `doctor --deep` now degrades missing/stale evidence to operational warnings instead of hard blocking the diagnostic verdict.
+- Release packaging is aligned again with runtime metadata and hook/watch severity typing.
+  - `source-bin` is now a valid `package_version_source` in repo evidence,
+  - hook/watch evidence severities are normalized to canonical `Severity` values,
+  - policy auto-reconcile calls match the current runtime signature.
+
 ## [6.3.57] - 2026-03-11
 
 ### Changed
