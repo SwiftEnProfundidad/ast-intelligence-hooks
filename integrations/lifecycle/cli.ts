@@ -62,6 +62,12 @@ import {
   type LifecycleWatchSeverityThreshold,
   type LifecycleWatchStage,
 } from './watch';
+import {
+  writeInfo,
+  writeError,
+  withOptionalLocation,
+} from './cliOutputs';
+
 import { buildLocalHotspotsReport, type LocalHotspotsReport } from './analyticsHotspots';
 import { resolveHotspotsSaasIngestionAuditPath } from './saasIngestionAudit';
 import { readHotspotsSaasIngestionPayload } from './saasIngestionContract';
@@ -215,21 +221,6 @@ const LOOP_RUN_POLICY: GatePolicy = {
   stage: 'STAGED',
   blockOnOrAbove: 'ERROR',
   warnOnOrAbove: 'WARN',
-};
-
-const writeInfo = (message: string): void => {
-  process.stdout.write(`${message}\n`);
-};
-
-const writeError = (message: string): void => {
-  process.stderr.write(`${message}\n`);
-};
-
-const withOptionalLocation = (message: string, location?: string): string => {
-  if (!location || location.trim().length === 0) {
-    return message;
-  }
-  return `${message} -> ${location}`;
 };
 
 const isLifecycleCommand = (value: string): value is LifecycleCommand =>
