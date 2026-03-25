@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { createPolicyAsCodeSignature } from '../policy/policyAsCode';
 import {
   readLifecyclePolicyValidationSnapshot,
   type LifecyclePolicyValidationSnapshot,
@@ -115,13 +116,20 @@ const tryApplyPolicyAutofix = (params: {
     };
   }
 
+  const preWriteStage = params.report.stages.PRE_WRITE;
   const signatures = {
-    PRE_WRITE: params.report.stages.PRE_WRITE.signature,
+    PRE_WRITE: createPolicyAsCodeSignature({
+      stage: 'PRE_COMMIT',
+      source: toContractSource(preWriteStage.source),
+      bundle: preWriteStage.bundle,
+      hash: preWriteStage.hash,
+      version: '1.0',
+    }),
     PRE_COMMIT: params.report.stages.PRE_COMMIT.signature,
     PRE_PUSH: params.report.stages.PRE_PUSH.signature,
     CI: params.report.stages.CI.signature,
   };
-  if (!signatures.PRE_WRITE || !signatures.PRE_COMMIT || !signatures.PRE_PUSH || !signatures.CI) {
+  if (!signatures.PRE_COMMIT || !signatures.PRE_PUSH || !signatures.CI) {
     return {
       attempted: true,
       status: 'FAILED',

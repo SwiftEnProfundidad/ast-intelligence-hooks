@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import { createPolicyAsCodeSignature } from '../../policy/policyAsCode';
 import { readLifecyclePolicyValidationSnapshot } from '../policyValidationSnapshot';
 import { runPolicyReconcile } from '../policyReconcile';
 
@@ -79,6 +80,18 @@ const withPolicyStrictEnv = async <T>(callback: () => Promise<T> | T): Promise<T
 
 const writeValidPolicyAsCodeContract = (repoRoot: string): void => {
   const snapshot = readLifecyclePolicyValidationSnapshot(repoRoot);
+  const preWriteStage = snapshot.stages.PRE_WRITE;
+  const contractSource =
+    preWriteStage.source === 'skills.policy' || preWriteStage.source === 'hard-mode'
+      ? preWriteStage.source
+      : 'default';
+  const preWriteSignature = createPolicyAsCodeSignature({
+    stage: 'PRE_COMMIT',
+    source: contractSource,
+    bundle: preWriteStage.bundle,
+    hash: preWriteStage.hash,
+    version: '1.0',
+  });
   const preCommitSignature = snapshot.stages.PRE_COMMIT.signature;
   const prePushSignature = snapshot.stages.PRE_PUSH.signature;
   const ciSignature = snapshot.stages.CI.signature;
@@ -93,6 +106,7 @@ const writeValidPolicyAsCodeContract = (repoRoot: string): void => {
         version: '1.0',
         source: 'default',
         signatures: {
+          PRE_WRITE: preWriteSignature,
           PRE_COMMIT: preCommitSignature,
           PRE_PUSH: prePushSignature,
           CI: ciSignature,

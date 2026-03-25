@@ -15,6 +15,7 @@ import {
 } from '../saasIngestionContract';
 import { resolveHotspotsSaasIngestionMetricsPath } from '../saasIngestionMetrics';
 import { parseLifecycleCliArgs, runLifecycleCli } from '../cli';
+import { createPolicyAsCodeSignature } from '../../policy/policyAsCode';
 import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
 import { openSddSession } from '../../sdd/sessionStore';
 import { resolveMcpAiGateReceiptPath, writeMcpAiGateReceipt } from '../../mcp/aiGateReceipt';
@@ -224,6 +225,18 @@ const writePolicyReconcileInputs = (repoRoot: string): void => {
 
 const writePolicyAsCodeContractForDefaultSource = (repoRoot: string): void => {
   const snapshot = readLifecyclePolicyValidationSnapshot(repoRoot);
+  const preWriteStage = snapshot.stages.PRE_WRITE;
+  const contractSource =
+    preWriteStage.source === 'skills.policy' || preWriteStage.source === 'hard-mode'
+      ? preWriteStage.source
+      : 'default';
+  const preWriteSignature = createPolicyAsCodeSignature({
+    stage: 'PRE_COMMIT',
+    source: contractSource,
+    bundle: preWriteStage.bundle,
+    hash: preWriteStage.hash,
+    version: '1.0',
+  });
   const preCommitSignature = snapshot.stages.PRE_COMMIT.signature;
   const prePushSignature = snapshot.stages.PRE_PUSH.signature;
   const ciSignature = snapshot.stages.CI.signature;
@@ -238,6 +251,7 @@ const writePolicyAsCodeContractForDefaultSource = (repoRoot: string): void => {
         version: '1.0',
         source: 'default',
         signatures: {
+          PRE_WRITE: preWriteSignature,
           PRE_COMMIT: preCommitSignature,
           PRE_PUSH: prePushSignature,
           CI: ciSignature,
