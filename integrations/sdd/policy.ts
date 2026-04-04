@@ -13,6 +13,8 @@ import {
   refreshSddSession,
 } from './sessionStore';
 import { resolveDegradedMode } from '../gate/degradedMode';
+import { resolveSddCompletenessEnforcement } from '../policy/sddCompletenessEnforcement';
+import { resolveSddExperimentalFeature } from '../policy/experimentalFeatures';
 import type {
   SddDecision,
   SddEvaluateResult,
@@ -27,6 +29,9 @@ const SDD_SESSION_OPEN_AUTO_COMMAND =
 const SDD_SESSION_OPEN_EXPLICIT_COMMAND =
   'npx --yes --package pumuki@latest pumuki sdd session --open --change=<id>';
 const SDD_COMPLETENESS_CONTRACT_VERSION = '1.0';
+
+const buildSddExperimentalEnableCommand = (stage: SddStage): string =>
+  `PUMUKI_EXPERIMENTAL_SDD=advisory npx --yes --package pumuki@latest pumuki sdd validate --stage=${stage} --json`;
 
 const resolveMissingSessionGuidance = (repoRoot: string): {
   message: string;
@@ -246,13 +251,52 @@ export const evaluateSddPolicy = (params: {
   const bypassEnabled = process.env.PUMUKI_SDD_BYPASS === '1';
   const autoRefreshEnabled = process.env.PUMUKI_SDD_AUTO_REFRESH_SESSION !== '0';
   const strictEmptyItemsEnabled = process.env.PUMUKI_SDD_STRICT_EMPTY_ITEMS !== '0';
-  const strictCompletenessEnabled = process.env.PUMUKI_SDD_ENFORCE_COMPLETENESS !== '0';
+  const completenessEnforcement = resolveSddCompletenessEnforcement();
+  const sddExperimentalFeature = resolveSddExperimentalFeature();
   let status = buildStatus(repoRoot);
   let autoRefreshAttempted = false;
   let autoRefreshError: string | undefined;
+  const finalizeResult = (result: SddEvaluateResult): SddEvaluateResult => {
+    const details = {
+      ...(result.decision.details ?? {}),
+      experimental: true,
+      experimentalFeature: 'sdd',
+      experimentalLayer: sddExperimentalFeature.layer,
+      experimentalMode: sddExperimentalFeature.mode,
+      experimentalSource: sddExperimentalFeature.source,
+      activation_env: sddExperimentalFeature.activationVariable,
+      legacy_activation_env: sddExperimentalFeature.legacyActivationVariable,
+    };
+
+    if (sddExperimentalFeature.mode !== 'advisory' || result.decision.allowed) {
+      return {
+        ...result,
+        decision: {
+          ...result.decision,
+          details,
+        },
+      };
+    }
+
+    return {
+      ...result,
+      decision: {
+        ...result.decision,
+        allowed: true,
+        message:
+          `SDD/OpenSpec está activo en modo advisory y no bloquea por defecto. ${result.decision.message}`,
+        details: {
+          ...details,
+          advisory: true,
+          blocking: false,
+          advisory_reason_code: result.decision.code,
+        },
+      },
+    };
+  };
 
   if (bypassEnabled) {
-    return {
+    return finalizeResult({
       stage: params.stage,
       status,
       decision: allowed(
@@ -262,12 +306,36 @@ export const evaluateSddPolicy = (params: {
           env: 'PUMUKI_SDD_BYPASS',
         }
       ),
+    });
+  }
+
+  if (sddExperimentalFeature.mode === 'off') {
+    return {
+      stage: params.stage,
+      status,
+      decision: {
+        allowed: true,
+        code: 'SDD_EXPERIMENTAL_DISABLED',
+        message:
+          'SDD/OpenSpec pertenece al namespace experimental y está desactivado por defecto. Actívalo explícitamente con PUMUKI_EXPERIMENTAL_SDD=advisory o strict si necesitas este flujo.',
+        details: {
+          experimental: true,
+          default_off: true,
+          layer: sddExperimentalFeature.layer,
+          experimentalFeature: 'sdd',
+          experimentalMode: sddExperimentalFeature.mode,
+          experimentalSource: sddExperimentalFeature.source,
+          activation_env: sddExperimentalFeature.activationVariable,
+          legacy_activation_env: sddExperimentalFeature.legacyActivationVariable,
+          activation_command: buildSddExperimentalEnableCommand(params.stage),
+        },
+      },
     };
   }
 
   const degradedMode = resolveDegradedMode(params.stage, repoRoot);
   if (degradedMode?.action === 'block') {
-    return {
+    return finalizeResult({
       stage: params.stage,
       status,
       decision: blocked(
@@ -281,11 +349,11 @@ export const evaluateSddPolicy = (params: {
           degraded_code: degradedMode.code,
         }
       ),
-    };
+    });
   }
 
   if (degradedMode?.action === 'allow') {
-    return {
+    return finalizeResult({
       stage: params.stage,
       status,
       decision: allowed(
@@ -298,40 +366,40 @@ export const evaluateSddPolicy = (params: {
           degraded_code: degradedMode.code,
         }
       ),
-    };
+    });
   }
 
   if (!status.openspec.installed) {
-    return {
+    return finalizeResult({
       stage: params.stage,
       status,
       decision: blocked(
         'OPENSPEC_MISSING',
         'OpenSpec is required but was not detected. Install OpenSpec before continuing.'
       ),
-    };
+    });
   }
 
   if (!status.openspec.compatible) {
-    return {
+    return finalizeResult({
       stage: params.stage,
       status,
       decision: blocked(
         'OPENSPEC_VERSION_UNSUPPORTED',
         `OpenSpec version is unsupported. Minimum required is ${status.openspec.minimumVersion} (detected: ${status.openspec.version ?? 'unknown'}).`
       ),
-    };
+    });
   }
 
   if (!status.openspec.projectInitialized) {
-    return {
+    return finalizeResult({
       stage: params.stage,
       status,
       decision: blocked(
         'OPENSPEC_PROJECT_MISSING',
         'OpenSpec project is not initialized in this repository. Run OpenSpec init/bootstrap.'
       ),
-    };
+    });
   }
 
   if (
@@ -357,24 +425,24 @@ export const evaluateSddPolicy = (params: {
     autoRefreshError,
   });
   if (sessionDecision) {
-    return {
+    return finalizeResult({
       stage: params.stage,
       status,
       decision: sessionDecision,
-    };
+    });
   }
 
   if (params.stage === 'PRE_WRITE') {
-    return {
+    return finalizeResult({
       stage: params.stage,
       status,
       decision: allowed('SDD pre-write checks passed with active valid session.'),
-    };
+    });
   }
 
   const validation = validateOpenSpecChanges(repoRoot);
   if (!validation.ok) {
-    return {
+    return finalizeResult({
       stage: params.stage,
       status,
       validation,
@@ -388,11 +456,11 @@ export const evaluateSddPolicy = (params: {
           errors: validation.issues.errors,
         }
       ),
-    };
+    });
   }
 
   if (strictEmptyItemsEnabled && validation.totals.items <= 0) {
-    return {
+    return finalizeResult({
       stage: params.stage,
       status,
       validation,
@@ -407,21 +475,26 @@ export const evaluateSddPolicy = (params: {
           overrideEnv: 'PUMUKI_SDD_STRICT_EMPTY_ITEMS=0',
         }
       ),
-    };
+    });
   }
 
   const activeChangeId = status.session.changeId;
+  let completeness = undefined as
+    | {
+      complete: boolean;
+      missingRequirements: string[];
+    }
+    | undefined;
   if (
-    strictCompletenessEnabled &&
     activeChangeId &&
     (params.stage === 'PRE_PUSH' || params.stage === 'CI')
   ) {
-    const completeness = evaluateActiveChangeCompleteness({
+    completeness = evaluateActiveChangeCompleteness({
       repoRoot,
       changeId: activeChangeId,
     });
-    if (!completeness.complete) {
-      return {
+    if (!completeness.complete && completenessEnforcement.blocking) {
+      return finalizeResult({
         stage: params.stage,
         status,
         validation,
@@ -434,29 +507,42 @@ export const evaluateSddPolicy = (params: {
             changeId: activeChangeId,
             contractVersion: SDD_COMPLETENESS_CONTRACT_VERSION,
             missingRequirements: completeness.missingRequirements,
-            strictCompletenessEnabled,
-            overrideEnv: 'PUMUKI_SDD_ENFORCE_COMPLETENESS=0',
+            completenessEnforcementMode: completenessEnforcement.mode,
+            completenessEnforcementSource: completenessEnforcement.source,
+            completenessBlocking: completenessEnforcement.blocking,
+            overrideEnv: 'PUMUKI_SDD_ENFORCE_COMPLETENESS=advisory',
           }
         ),
-      };
+      });
     }
   }
 
-  return {
+  return finalizeResult({
     stage: params.stage,
     status,
     validation,
-    decision: allowed('SDD validation passed for active changes.', {
-      command: OPENSPEC_VALIDATE_ALL_COMMAND,
-      passedItems: validation.totals.passed,
-      validatedItems: validation.totals.items,
-      warnings: validation.issues.warnings,
-      emptyScope: validation.totals.items <= 0,
-      strictEmptyItemsEnabled,
-      strictCompletenessEnabled,
-      completenessContractVersion: SDD_COMPLETENESS_CONTRACT_VERSION,
-    }),
-  };
+    decision: allowed(
+      completeness?.complete === false
+        ? 'SDD validation passed; active change completeness remains advisory for this stage.'
+        : 'SDD validation passed for active changes.',
+      {
+        command: OPENSPEC_VALIDATE_ALL_COMMAND,
+        passedItems: validation.totals.passed,
+        validatedItems: validation.totals.items,
+        warnings: validation.issues.warnings,
+        emptyScope: validation.totals.items <= 0,
+        strictEmptyItemsEnabled,
+        completenessEnforcementMode: completenessEnforcement.mode,
+        completenessEnforcementSource: completenessEnforcement.source,
+        completenessBlocking: completenessEnforcement.blocking,
+        completenessContractVersion: SDD_COMPLETENESS_CONTRACT_VERSION,
+        completenessStatus: completeness?.complete === false ? 'incomplete-advisory' : 'complete',
+        missingCompletenessRequirements: completeness?.complete === false
+          ? completeness.missingRequirements
+          : [],
+      }
+    ),
+  });
 };
 
 export const readSddStatus = (repoRoot?: string): SddStatusPayload =>

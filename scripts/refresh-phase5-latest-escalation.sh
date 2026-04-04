@@ -13,7 +13,7 @@ if [[ -f "scripts/check-phase8-loop-guard.sh" ]]; then
   if ! bash scripts/check-phase8-loop-guard.sh; then
     echo "[phase5-latest-refresh] blocked by loop guard; skipping refresh"
     echo "[phase5-latest-refresh] next_action=manual follow-up post/reply tracking in ticket 4077449"
-    echo "[phase5-latest-refresh] override_if_support_replied=PHASE8_LOOP_GUARD_OVERRIDE=1 npm run validation:phase5-latest:refresh -- ${REPO} ${LIMIT} ${OUT_DIR} ${MOCK_AB_REPORT}"
+    echo "[phase5-latest-refresh] override_if_support_replied=PHASE8_LOOP_GUARD_OVERRIDE=1 npm run toolkit:legacy:phase5-latest:refresh -- ${REPO} ${LIMIT} ${OUT_DIR} ${MOCK_AB_REPORT}"
     exit 1
   fi
 else

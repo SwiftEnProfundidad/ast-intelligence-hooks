@@ -4,8 +4,30 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { createConsumerMenuRuntime } from '../framework-menu-consumer-runtime-lib';
+import { formatAdvancedMenuView } from '../framework-menu-advanced-view-lib';
+import { createFrameworkMenuActions } from '../framework-menu-actions';
+import { createFrameworkMenuPrompts } from '../framework-menu-prompts';
 
-test('consumer runtime printMenu agrupa opciones por flujos canónicos', async () => {
+const buildAdvancedActions = () => {
+  const fakeRl = {
+    question: async () => '',
+  };
+  const prompts = createFrameworkMenuPrompts(
+    fakeRl as unknown as Parameters<typeof createFrameworkMenuPrompts>[0]
+  );
+  return createFrameworkMenuActions({
+    prompts,
+    runStaged: async () => {},
+    runRange: async () => {},
+    runRepoAudit: async () => {},
+    runRepoAndStagedAudit: async () => {},
+    runStagedAndUnstagedAudit: async () => {},
+    resolveDefaultRangeFrom: () => 'HEAD~1',
+    printActiveSkillsBundles: () => {},
+  });
+};
+
+test('consumer runtime printMenu agrupa opciones por shell mínima y diagnósticos legacy read-only', async () => {
   const previousUiV2 = process.env.PUMUKI_MENU_UI_V2;
   process.env.PUMUKI_MENU_UI_V2 = '1';
   try {
@@ -23,11 +45,12 @@ test('consumer runtime printMenu agrupa opciones por flujos canónicos', async (
 
     runtime.printMenu();
     const rendered = output.join('\n');
-    assert.match(rendered, /Audit Flows/i);
-    assert.match(rendered, /Diagnostics/i);
-    assert.match(rendered, /Export/i);
+    assert.match(rendered, /Read-Only Gate Flows/i);
+    assert.match(rendered, /Legacy Read-Only Export/i);
+    assert.match(rendered, /Legacy Read-Only Diagnostics/i);
     assert.match(rendered, /System/i);
-    assert.match(rendered, /1\)\s+Full audit/i);
+    assert.match(rendered, /1\)\s+Read-only full audit/i);
+    assert.match(rendered, /8\)\s+Export legacy read-only evidence snapshot/i);
     assert.match(rendered, /10\)\s+Exit/i);
   } finally {
     if (typeof previousUiV2 === 'string') {
@@ -100,7 +123,7 @@ test('consumer runtime printMenu muestra badge de estado PASS/WARN/BLOCK', { con
   }
 });
 
-test('consumer runtime printMenu usa vista clásica por defecto cuando PUMUKI_MENU_UI_V2 no está activo', async () => {
+test('consumer runtime printMenu usa vista clásica agrupada por shell mínima cuando PUMUKI_MENU_UI_V2 no está activo', async () => {
   const previousUiV2 = process.env.PUMUKI_MENU_UI_V2;
   delete process.env.PUMUKI_MENU_UI_V2;
   try {
@@ -118,10 +141,44 @@ test('consumer runtime printMenu usa vista clásica por defecto cuando PUMUKI_ME
     runtime.printMenu();
     const rendered = output.join('\n');
     assert.match(rendered, /A\. Switch to advanced menu/);
-    assert.doesNotMatch(rendered, /Audit Flows/i);
+    assert.match(rendered, /Read-Only Gate Flows/i);
+    assert.match(rendered, /Legacy Read-Only Diagnostics/i);
   } finally {
     if (typeof previousUiV2 === 'string') {
       process.env.PUMUKI_MENU_UI_V2 = previousUiV2;
     }
   }
+});
+
+test('consumer runtime exposes blocked summary so advanced menu can stay aligned with consumer gate', async () => {
+  const runtime = createConsumerMenuRuntime({
+    runRepoGate: async () => {},
+    runRepoAndStagedGate: async () => ({
+      blocked: {
+        stage: 'PRE_PUSH',
+        totalViolations: 3,
+        causeCode: 'GIT_ATOMICITY_TOO_MANY_SCOPES',
+        causeMessage: 'Atomicity budget exceeded.',
+        remediation: 'Split the change by scope.',
+      },
+    }),
+    runStagedGate: async () => {},
+    runWorkingTreeGate: async () => {},
+    runPreflight: async () => {},
+    write: () => {},
+  });
+
+  const strictRepoAndStaged = runtime.actions.find((action) => action.id === '2');
+  assert.ok(strictRepoAndStaged);
+  await strictRepoAndStaged.execute();
+
+  const summary = runtime.readCurrentSummary();
+  assert.ok(summary);
+  assert.equal(summary.outcome, 'BLOCK');
+
+  const rendered = formatAdvancedMenuView(buildAdvancedActions(), {
+    evidenceSummary: summary,
+  });
+
+  assert.match(rendered, /\bBLOCK\b/);
 });

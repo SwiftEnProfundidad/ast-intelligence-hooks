@@ -4,13 +4,11 @@ import type {
 } from './framework-menu-legacy-audit-types';
 
 export const formatLegacyStatusLine = (summary: LegacyAuditSummary): string => {
-  if (summary.bySeverity.CRITICAL > 0 || summary.bySeverity.HIGH > 0) {
-    return '⚠ STATUS: ACTION REQUIRED\nCritical or high-severity issues detected';
-  }
-  if (summary.bySeverity.MEDIUM > 0 || summary.bySeverity.LOW > 0) {
-    return '⚠ STATUS: REVIEW RECOMMENDED\nOnly medium/low issues detected';
-  }
-  return '✅ STATUS: CLEAN\nNo violations detected';
+  return [
+    'ℹ READ-ONLY SNAPSHOT',
+    `Evidence stage/outcome: ${summary.stage} / ${summary.outcome}`,
+    'Canonical verdict: use pumuki status --json or doctor --deep --json',
+  ].join('\n');
 };
 
 const formatPlatformBlock = (platform: PlatformSummary): string => {

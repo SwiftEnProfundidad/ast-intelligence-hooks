@@ -1,9 +1,9 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { collectAdapterSessionStatusTails } from './adapter-session-status-audit-tail-lib';
+import { resolveAdapterSessionStatusCommands } from './adapter-session-status-capabilities-lib';
 import { runAdapterSessionStatusCommands } from './adapter-session-status-command-lib';
 import {
-  ADAPTER_SESSION_STATUS_COMMANDS,
   buildAdapterSessionStatusMarkdown,
   deriveAdapterSessionVerdictFromCommands,
   exitCodeForAdapterSessionVerdict,
@@ -12,10 +12,12 @@ import {
 
 const main = (): number => {
   const options = parseAdapterSessionStatusArgs(process.argv.slice(2));
-
-  const commands = runAdapterSessionStatusCommands(ADAPTER_SESSION_STATUS_COMMANDS);
-  const verdict = deriveAdapterSessionVerdictFromCommands(commands);
   const repoRoot = resolve(process.cwd());
+
+  const commands = runAdapterSessionStatusCommands(
+    resolveAdapterSessionStatusCommands(repoRoot)
+  );
+  const verdict = deriveAdapterSessionVerdictFromCommands(commands);
 
   const markdown = buildAdapterSessionStatusMarkdown({
     generatedAtIso: new Date().toISOString(),

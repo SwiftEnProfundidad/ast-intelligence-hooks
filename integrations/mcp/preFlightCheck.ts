@@ -1,5 +1,6 @@
 import { evaluateAiGate, type AiGateStage, type AiGateViolation } from '../gate/evaluateAiGate';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
+import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
 
 const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
@@ -137,9 +138,12 @@ export const runEnterprisePreFlightCheck = (params: {
     stage: params.stage,
     requireMcpReceipt: params.requireMcpReceipt ?? false,
   });
-  const learningContext = readSddLearningContext({
-    repoRoot: params.repoRoot,
-  });
+  const learningContextFeature = resolveLearningContextExperimentalFeature();
+  const learningContext = learningContextFeature.mode === 'off'
+    ? null
+    : readSddLearningContext({
+      repoRoot: params.repoRoot,
+    });
 
   const hints = buildPreFlightHints({
     repoRoot: params.repoRoot,

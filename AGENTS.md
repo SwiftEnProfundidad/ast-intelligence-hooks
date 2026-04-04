@@ -127,15 +127,10 @@ Antes de realizar cualquier accion:
   - `/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md`
   - `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
   - `/Users/juancarlosmerlosalbarracin/Developer/Projects/Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md`
-- Los MDs internos `docs/tracking/plan-activo-de-trabajo.md` y `docs/tracking/estado-ejecutivo.md` NO son backlog principal.
-  - Solo pueden actuar como espejo subordinado del estado real de los MDs externos.
-  - Si se desalinean con los MDs externos, los MDs externos mandan automaticamente.
-- El bucle previo se produjo exactamente por convertir `docs/tracking/plan-activo-de-trabajo.md` en backlog principal y dar prioridad a tasks `PUMUKI-2xx` sobre bugs externos abiertos.
-- `docs/tracking/estado-ejecutivo.md` contribuyo al mismo bucle al resumir y legitimar esas prioridades internas como si fueran el trabajo principal.
-- Desde este punto, ambos documentos quedan marcados como:
-  - espejo operativo subordinado,
-  - nunca backlog fuente,
-  - nunca criterio para abrir una task interna mientras exista un bug externo abierto.
+- La unica fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`.
+- Los antiguos MDs internos bajo `docs/tracking/` quedan retirados del repo y no pueden reintroducirse como backlog fuente.
+- El bucle previo se produjo por mantener espejos internos compitiendo con backlog externo y con el propio reset.
+- Desde este punto, ningun documento de seguimiento fuera de `PUMUKI-RESET-MASTER-PLAN.md` puede actuar como backlog, criterio de prioridad ni prueba de avance.
 - Regla hard nueva:
   - si existe aunque sea un bug abierto en cualquiera de los MDs externos,
   - la unica task `🚧` permitida en el tracking interno debe corresponder a uno de esos bugs externos,
@@ -159,10 +154,9 @@ Antes de realizar cualquier accion:
 - Si el modelo detecta que se esta desviando a trabajo interno con bugs externos abiertos:
   - debe parar,
   - declarar el desvio en la respuesta,
-  - corregir `docs/tracking/plan-activo-de-trabajo.md` y `docs/tracking/estado-ejecutivo.md` en ese mismo turno,
+  - corregir `PUMUKI-RESET-MASTER-PLAN.md` en ese mismo turno,
   - corregir el tracking interno,
   - y volver en ese mismo turno al bug externo prioritario.
-- El plan interno (`docs/tracking/plan-activo-de-trabajo.md`) nunca puede volver a convertirse en backlog principal mientras haya bugs externos abiertos.
 - Si el modelo vuelve a abrir una task interna no alineada con bugs externos abiertos:
   - declarar `STATUS: BLOCKED`,
   - no editar mas codigo funcional,

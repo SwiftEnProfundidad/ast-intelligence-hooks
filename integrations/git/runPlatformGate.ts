@@ -31,6 +31,8 @@ import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { createEmptySnapshotRulesCoverage } from '../evidence/rulesCoverage';
 import { enforceTddBddPolicy } from '../tdd/enforcement';
 import type { TddBddSnapshot } from '../tdd/types';
+import { resolveSkillsEnforcement } from '../policy/skillsEnforcement';
+import { applyTddBddEnforcement } from '../policy/tddBddEnforcement';
 
 export type OperationalMemoryShadowRecommendation = {
   recommendedOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
@@ -90,6 +92,8 @@ const buildDefaultMemoryShadowRecommendation = (params: {
 
   if (params.tddBddSnapshot?.status === 'blocked') {
     reasonCodes.push('tdd_bdd.blocked');
+  } else if (params.tddBddSnapshot?.status === 'advisory') {
+    reasonCodes.push('tdd_bdd.advisory');
   } else if (params.tddBddSnapshot?.status === 'passed') {
     reasonCodes.push('tdd_bdd.passed');
   }
@@ -105,6 +109,13 @@ const buildDefaultMemoryShadowRecommendation = (params: {
     return {
       recommendedOutcome: 'WARN',
       confidence: 0.75,
+      reasonCodes,
+    };
+  }
+  if (params.tddBddSnapshot?.status === 'advisory') {
+    return {
+      recommendedOutcome: 'WARN',
+      confidence: 0.7,
       reasonCodes,
     };
   }
@@ -779,6 +790,22 @@ const shouldBlockFromFinding = (finding: Finding | undefined): boolean => {
   return finding.severity === 'ERROR' || finding.severity === 'CRITICAL';
 };
 
+const applySkillsFindingEnforcement = (
+  finding: Finding | undefined
+): Finding | undefined => {
+  if (!finding) {
+    return undefined;
+  }
+  const skillsEnforcement = resolveSkillsEnforcement();
+  if (skillsEnforcement.blocking) {
+    return finding;
+  }
+  return {
+    ...finding,
+    severity: 'WARN',
+  };
+};
+
 const toSoftPreCommitSkillsFinding = (params: {
   finding: Finding | undefined;
   enabled: boolean;
@@ -943,6 +970,9 @@ export async function runPlatformGate(params: {
         unsupportedAutoRuleIds: skillsRuleSet.unsupportedAutoRuleIds ?? [],
       })
       : undefined;
+  const effectiveUnsupportedSkillsMappingFinding = applySkillsFindingEnforcement(
+    unsupportedSkillsMappingFinding
+  );
   const platformSkillsCoverageFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -955,6 +985,9 @@ export async function runPlatformGate(params: {
           evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
         })
       : undefined;
+  const effectivePlatformSkillsCoverageInput = applySkillsFindingEnforcement(
+    platformSkillsCoverageFinding
+  );
   const crossPlatformCriticalFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -966,6 +999,9 @@ export async function runPlatformGate(params: {
           evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
         })
       : undefined;
+  const effectiveCrossPlatformCriticalInput = applySkillsFindingEnforcement(
+    crossPlatformCriticalFinding
+  );
   const skillsScopeComplianceFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -977,6 +1013,9 @@ export async function runPlatformGate(params: {
         evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
       })
       : undefined;
+  const effectiveSkillsScopeComplianceInput = applySkillsFindingEnforcement(
+    skillsScopeComplianceFinding
+  );
   const activeRulesEmptyForCodeChangesFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -996,6 +1035,9 @@ export async function runPlatformGate(params: {
           facts,
         })
       : undefined;
+  const effectiveIosTestsQualityFinding = applySkillsFindingEnforcement(
+    iosTestsQualityFinding
+  );
   const policyAsCodeBlockingFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -1074,11 +1116,13 @@ export async function runPlatformGate(params: {
     }
     : createEmptySnapshotRulesCoverage(params.policy.stage);
   const currentBranch = resolveCurrentBranch(git, repoRoot);
-  const tddBddEvaluation = dependencies.enforceTddBddPolicy({
-    facts,
-    repoRoot,
-    branch: currentBranch,
-  });
+  const tddBddEvaluation = applyTddBddEnforcement(
+    dependencies.enforceTddBddPolicy({
+      facts,
+      repoRoot,
+      branch: currentBranch,
+    })
+  );
   const tddBddSnapshot: TddBddSnapshot | undefined = tddBddEvaluation.snapshot.scope.in_scope
     ? tddBddEvaluation.snapshot
     : undefined;
@@ -1097,25 +1141,25 @@ export async function runPlatformGate(params: {
     && !sddBlockingFinding
     && !degradedModeBlocks
     && !shouldBlockFromFinding(policyAsCodeBlockingFinding)
-    && !shouldBlockFromFinding(unsupportedSkillsMappingFinding)
+    && !shouldBlockFromFinding(effectiveUnsupportedSkillsMappingFinding)
     && !shouldBlockFromFinding(coverageBlockingFinding)
     && !shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding)
-    && !shouldBlockFromFinding(iosTestsQualityFinding)
+    && !shouldBlockFromFinding(effectiveIosTestsQualityFinding)
     && !shouldBlockFromFinding(astIntelligenceDualFinding)
     && !hasTddBddBlockingFinding
     && !hasNativeBlockingFinding;
   const effectivePlatformSkillsCoverageFinding = toSoftPreCommitSkillsFinding({
-    finding: platformSkillsCoverageFinding,
+    finding: effectivePlatformSkillsCoverageInput,
     enabled: shouldSoftEnforceSkillsFindings,
     observedCodePaths,
   });
   const effectiveCrossPlatformCriticalFinding = toSoftPreCommitSkillsFinding({
-    finding: crossPlatformCriticalFinding,
+    finding: effectiveCrossPlatformCriticalInput,
     enabled: shouldSoftEnforceSkillsFindings,
     observedCodePaths,
   });
   const effectiveSkillsScopeComplianceFinding = toSoftPreCommitSkillsFinding({
-    finding: skillsScopeComplianceFinding,
+    finding: effectiveSkillsScopeComplianceInput,
     enabled: shouldSoftEnforceSkillsFindings,
     observedCodePaths,
   });
@@ -1124,23 +1168,23 @@ export async function runPlatformGate(params: {
       sddBlockingFinding,
       ...(degradedModeFinding ? [degradedModeFinding] : []),
       ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
-      ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
+      ...(effectiveUnsupportedSkillsMappingFinding ? [effectiveUnsupportedSkillsMappingFinding] : []),
       ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
       ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
       ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
       ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
-      ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
+      ...(effectiveIosTestsQualityFinding ? [effectiveIosTestsQualityFinding] : []),
       ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
       ...tddBddEvaluation.findings,
       ...findings,
     ]
-    : unsupportedSkillsMappingFinding
+    : effectiveUnsupportedSkillsMappingFinding
       || effectivePlatformSkillsCoverageFinding
       || effectiveCrossPlatformCriticalFinding
       || effectiveSkillsScopeComplianceFinding
       || activeRulesEmptyForCodeChangesFinding
-      || iosTestsQualityFinding
+      || effectiveIosTestsQualityFinding
       || astIntelligenceDualFinding
       || coverageBlockingFinding
       || policyAsCodeBlockingFinding
@@ -1149,12 +1193,12 @@ export async function runPlatformGate(params: {
       ? [
         ...(degradedModeFinding ? [degradedModeFinding] : []),
         ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
-        ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
+        ...(effectiveUnsupportedSkillsMappingFinding ? [effectiveUnsupportedSkillsMappingFinding] : []),
         ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
         ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
         ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
         ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
-        ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
+        ...(effectiveIosTestsQualityFinding ? [effectiveIosTestsQualityFinding] : []),
         ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
         ...tddBddEvaluation.findings,
@@ -1167,17 +1211,19 @@ export async function runPlatformGate(params: {
     sddBlockingFinding ||
     degradedModeBlocks ||
     shouldBlockFromFinding(policyAsCodeBlockingFinding) ||
-    shouldBlockFromFinding(unsupportedSkillsMappingFinding) ||
+    shouldBlockFromFinding(effectiveUnsupportedSkillsMappingFinding) ||
     shouldBlockFromFinding(effectivePlatformSkillsCoverageFinding) ||
     shouldBlockFromFinding(effectiveCrossPlatformCriticalFinding) ||
     shouldBlockFromFinding(effectiveSkillsScopeComplianceFinding) ||
     shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding) ||
-    shouldBlockFromFinding(iosTestsQualityFinding) ||
+    shouldBlockFromFinding(effectiveIosTestsQualityFinding) ||
     hasAstIntelligenceBlockingFinding ||
     shouldBlockFromFinding(coverageBlockingFinding) ||
     hasTddBddBlockingFinding
       ? 'BLOCK'
-      : decision.outcome;
+      : (decision.outcome === 'PASS' && tddBddSnapshot?.status === 'advisory'
+          ? 'WARN'
+          : decision.outcome);
   const gateWaiverStage =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||

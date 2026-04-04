@@ -10,7 +10,7 @@ export const createFrameworkMenuDiagnosticsSupportTriageActions = (
   return [
     {
       id: '19',
-      label: 'Run consumer startup triage bundle',
+      label: 'Toolkit: run consumer startup triage bundle',
       execute: async () => {
         const triage = await params.prompts.askConsumerStartupTriage();
         await runConsumerStartupTriage(triage);
@@ -18,7 +18,7 @@ export const createFrameworkMenuDiagnosticsSupportTriageActions = (
     },
     {
       id: '20',
-      label: 'Build mock consumer A/B validation report',
+      label: 'Toolkit: build mock consumer A/B validation report',
       execute: async () => {
         const report = await params.prompts.askMockConsumerAbReport();
         await runMockConsumerAbReport(report);

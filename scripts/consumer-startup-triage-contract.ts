@@ -27,7 +27,8 @@ export type ConsumerStartupTriageCommand = {
     | 'support-ticket-draft'
     | 'startup-unblock-status';
   description: string;
-  script: string;
+  displayScript: string;
+  scriptPath: string;
   args: string[];
   outputFile: string;
   required: boolean;

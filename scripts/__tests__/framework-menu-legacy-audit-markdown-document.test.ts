@@ -15,12 +15,12 @@ test('buildLegacyAuditMarkdownDocument compone snapshot, links y panel legacy', 
     const summary = readLegacyAuditSummary(repoRoot);
     const markdown = buildLegacyAuditMarkdownDocument(summary);
 
-    assert.match(markdown, /# PUMUKI Audit Report/);
+    assert.match(markdown, /# PUMUKI Legacy Read-Only Evidence Snapshot/);
     assert.match(markdown, /## Snapshot/);
     assert.match(markdown, /## Clickable Top Files/);
     assert.match(markdown, /## Clickable Findings/);
-    assert.match(markdown, /## Legacy Panel/);
-    assert.match(markdown, /FINAL SUMMARY — VIOLATIONS BY SEVERITY/);
+    assert.match(markdown, /## Legacy Read-Only Panel/);
+    assert.match(markdown, /Canonical verdict: `pumuki status --json \| doctor --deep --json`/);
   });
 });
 
@@ -37,14 +37,14 @@ test('exportLegacyAuditMarkdown genera reporte markdown en .audit-reports', asyn
 
     assert.equal(existsSync(filePath), true);
     const markdown = readFileSync(filePath, 'utf8');
-    assert.match(markdown, /# PUMUKI Audit Report/);
+    assert.match(markdown, /# PUMUKI Legacy Read-Only Evidence Snapshot/);
     assert.match(markdown, /## Clickable Top Files/);
     assert.match(markdown, /## Clickable Findings/);
     assert.match(
       markdown,
       /\[apps\/ios\/App\/Feature\.swift:18\]\(\.\/apps\/ios\/App\/Feature\.swift#L18\)/
     );
-    assert.match(markdown, /FINAL SUMMARY — VIOLATIONS BY SEVERITY/);
+    assert.match(markdown, /Mode: `legacy read-only`/);
   });
 });
 
@@ -52,13 +52,13 @@ test('formatLegacyAuditReport devuelve mensaje claro cuando falta o falla eviden
   await withTempDir('pumuki-legacy-audit-empty-', async (repoRoot) => {
     assert.equal(
       formatLegacyAuditReport(readLegacyAuditSummary(repoRoot)),
-      'No .ai_evidence.json found. Run an audit option first.'
+      'Legacy read-only export unavailable: no .ai_evidence.json found. Generate canonical evidence first.'
     );
 
     writeFileSync(join(repoRoot, '.ai_evidence.json'), '{bad json', 'utf8');
     assert.equal(
       formatLegacyAuditReport(readLegacyAuditSummary(repoRoot)),
-      '.ai_evidence.json is invalid. Regenerate evidence and retry.'
+      'Legacy read-only export unavailable: .ai_evidence.json is invalid. Regenerate canonical evidence and retry.'
     );
   });
 });

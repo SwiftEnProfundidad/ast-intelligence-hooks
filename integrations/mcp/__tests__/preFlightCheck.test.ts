@@ -12,6 +12,27 @@ import type { AiEvidenceV2_1 } from '../../evidence/schema';
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
   execFileSync('git', args, { cwd, encoding: 'utf8' });
 
+const withLearningContextMode = async <T>(
+  mode: 'off' | 'advisory' | 'strict' | undefined,
+  callback: () => Promise<T> | T
+): Promise<T> => {
+  const previous = process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
+  if (typeof mode === 'undefined') {
+    delete process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
+  } else {
+    process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT = mode;
+  }
+  try {
+    return await callback();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT = previous;
+    }
+  }
+};
+
 test('pre_flight_check comparte evaluador con ai_gate_check y mantiene mismo veredicto', () => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-preflight-check-'));
   try {
@@ -155,25 +176,109 @@ test('pre_flight_check expone phase/message GREEN cuando no hay bloqueos', () =>
   }
 });
 
-test('pre_flight_check incorpora learning_context cuando existe learning.json del cambio activo', () => {
-  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-preflight-learning-'));
+test('pre_flight_check incorpora learning_context cuando existe learning.json del cambio activo', async () => {
+  await withLearningContextMode('advisory', async () => {
+    const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-preflight-learning-'));
+    try {
+      runGit(repoRoot, ['init', '-b', 'feature/preflight-learning']);
+      runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+      runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+      runGit(repoRoot, ['config', '--local', 'pumuki.sdd.session.active', 'true']);
+      runGit(repoRoot, ['config', '--local', 'pumuki.sdd.session.change', 'rgo-1700-09']);
+      mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+      mkdirSync(join(repoRoot, 'openspec', 'changes', 'rgo-1700-09'), { recursive: true });
+      writeFileSync(
+        join(repoRoot, 'openspec', 'changes', 'rgo-1700-09', 'learning.json'),
+        JSON.stringify(
+          {
+            generated_at: '2026-03-05T10:00:00.000Z',
+            failed_patterns: [],
+            successful_patterns: ['sync-docs.completed'],
+            rule_updates: ['evidence.bootstrap.required'],
+            gate_anomalies: [],
+          },
+          null,
+          2
+        ),
+        'utf8'
+      );
+      const evidence: AiEvidenceV2_1 = {
+        version: '2.1',
+        timestamp: new Date().toISOString(),
+        snapshot: {
+          stage: 'PRE_WRITE',
+          outcome: 'PASS',
+          rules_coverage: {
+            stage: 'PRE_WRITE',
+            active_rule_ids: ['skills.backend.no-empty-catch'],
+            evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+            matched_rule_ids: [],
+            unevaluated_rule_ids: [],
+            counts: {
+              active: 1,
+              evaluated: 1,
+              matched: 0,
+              unevaluated: 0,
+            },
+            coverage_ratio: 1,
+          },
+          findings: [],
+        },
+        ai_gate: {
+          status: 'ALLOWED',
+          violations: [],
+          human_intent: null,
+        },
+        severity_metrics: {
+          gate_status: 'ALLOWED',
+          total_violations: 0,
+          by_severity: {
+            CRITICAL: 0,
+            ERROR: 0,
+            WARN: 0,
+            INFO: 0,
+          },
+        },
+        platforms: {},
+        rulesets: [],
+        ledger: [],
+        human_intent: null,
+      };
+      evidence.evidence_chain = buildEvidenceChain({ evidence });
+      writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+      const result = runEnterprisePreFlightCheck({
+        repoRoot,
+        stage: 'PRE_WRITE',
+      });
+
+      assert.equal(result.result.learning_context?.change, 'rgo-1700-09');
+      assert.equal(
+        result.result.hints.some((hint) => hint.startsWith('LEARNING_CONTEXT:')),
+        true
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+});
+
+test('pre_flight_check no expone learning_context cuando el feature está apagado por defecto', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-preflight-learning-off-'));
   try {
-    runGit(repoRoot, ['init', '-b', 'feature/preflight-learning']);
+    runGit(repoRoot, ['init', '-b', 'feature/preflight-learning-off']);
     runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
     runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
     runGit(repoRoot, ['config', '--local', 'pumuki.sdd.session.active', 'true']);
-    runGit(repoRoot, ['config', '--local', 'pumuki.sdd.session.change', 'rgo-1700-09']);
+    runGit(repoRoot, ['config', '--local', 'pumuki.sdd.session.change', 'rgo-1700-13']);
     mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
-    mkdirSync(join(repoRoot, 'openspec', 'changes', 'rgo-1700-09'), { recursive: true });
+    mkdirSync(join(repoRoot, 'openspec', 'changes', 'rgo-1700-13'), { recursive: true });
     writeFileSync(
-      join(repoRoot, 'openspec', 'changes', 'rgo-1700-09', 'learning.json'),
+      join(repoRoot, 'openspec', 'changes', 'rgo-1700-13', 'learning.json'),
       JSON.stringify(
         {
           generated_at: '2026-03-05T10:00:00.000Z',
-          failed_patterns: [],
-          successful_patterns: ['sync-docs.completed'],
           rule_updates: ['evidence.bootstrap.required'],
-          gate_anomalies: [],
         },
         null,
         2
@@ -217,10 +322,6 @@ test('pre_flight_check incorpora learning_context cuando existe learning.json de
           INFO: 0,
         },
       },
-      platforms: {},
-      rulesets: [],
-      ledger: [],
-      human_intent: null,
     };
     evidence.evidence_chain = buildEvidenceChain({ evidence });
     writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
@@ -230,10 +331,10 @@ test('pre_flight_check incorpora learning_context cuando existe learning.json de
       stage: 'PRE_WRITE',
     });
 
-    assert.equal(result.result.learning_context?.change, 'rgo-1700-09');
+    assert.equal(result.result.learning_context, null);
     assert.equal(
       result.result.hints.some((hint) => hint.startsWith('LEARNING_CONTEXT:')),
-      true
+      false
     );
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
@@ -306,8 +407,8 @@ test('pre_flight_check expone hint accionable cuando falta cobertura de skills p
       stage: 'PRE_WRITE',
     });
 
-    assert.equal(preFlightResult.result.allowed, false);
-    assert.equal(preFlightResult.result.phase, 'RED');
+    assert.equal(preFlightResult.result.allowed, true);
+    assert.equal(preFlightResult.result.phase, 'GREEN');
     assert.equal(
       preFlightResult.result.violations.some(
         (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
@@ -403,8 +504,8 @@ test('pre_flight_check expone hint accionable de reconcile estricto cuando falta
       stage: 'PRE_WRITE',
     });
 
-    assert.equal(preFlightResult.result.allowed, false);
-    assert.equal(preFlightResult.result.phase, 'RED');
+    assert.equal(preFlightResult.result.allowed, true);
+    assert.equal(preFlightResult.result.phase, 'GREEN');
     assert.equal(
       preFlightResult.result.violations.some(
         (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'

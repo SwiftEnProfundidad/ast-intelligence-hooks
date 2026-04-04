@@ -11,7 +11,11 @@ test('readEvidenceSummaryForMenu devuelve estado missing cuando no existe .ai_ev
     const summary = readEvidenceSummaryForMenu(repoRoot);
     assert.equal(summary.status, 'missing');
     assert.equal(summary.totalFindings, 0);
+    assert.equal(summary.filesScanned, 0);
+    assert.equal(summary.filesAffected, 0);
     assert.deepEqual(summary.topFiles, []);
+    assert.deepEqual(summary.topFileLocations, []);
+    assert.deepEqual(summary.topFindings, []);
   });
 });
 
@@ -21,6 +25,8 @@ test('readEvidenceSummaryForMenu devuelve estado invalid cuando el JSON es corru
     const summary = readEvidenceSummaryForMenu(repoRoot);
     assert.equal(summary.status, 'invalid');
     assert.equal(summary.totalFindings, 0);
+    assert.equal(summary.filesScanned, 0);
+    assert.equal(summary.filesAffected, 0);
   });
 });
 
@@ -30,10 +36,12 @@ test('readEvidenceSummaryForMenu orquesta lectura, normalización y severidades'
       snapshot: {
         stage: 'PRE_COMMIT',
         outcome: 'BLOCKED',
+        files_scanned: 12,
+        files_affected: 2,
         findings: [
-          { file: join(repoRoot, 'apps', 'backend', 'src', 'a.ts'), severity: 'ERROR' },
-          { file: join(repoRoot, 'apps', 'backend', 'src', 'a.ts'), severity: 'ERROR' },
-          { file: 'apps/web/src/view.tsx', severity: 'WARN' },
+          { ruleId: 'rule.a', file: join(repoRoot, 'apps', 'backend', 'src', 'a.ts'), lines: [14, 16], severity: 'ERROR' },
+          { ruleId: 'rule.a', file: join(repoRoot, 'apps', 'backend', 'src', 'a.ts'), lines: [7], severity: 'ERROR' },
+          { ruleId: 'rule.b', file: 'apps/web/src/view.tsx', lines: 21, severity: 'WARN' },
         ],
       },
       severity_metrics: {
@@ -52,6 +60,8 @@ test('readEvidenceSummaryForMenu orquesta lectura, normalización y severidades'
     assert.equal(summary.stage, 'PRE_COMMIT');
     assert.equal(summary.outcome, 'BLOCKED');
     assert.equal(summary.totalFindings, 3);
+    assert.equal(summary.filesScanned, 12);
+    assert.equal(summary.filesAffected, 2);
     assert.deepEqual(summary.bySeverity, {
       CRITICAL: 0,
       ERROR: 2,
@@ -67,6 +77,15 @@ test('readEvidenceSummaryForMenu orquesta lectura, normalización y severidades'
     assert.deepEqual(summary.topFiles, [
       { file: 'apps/backend/src/a.ts', count: 2 },
       { file: 'apps/web/src/view.tsx', count: 1 },
+    ]);
+    assert.deepEqual(summary.topFileLocations, [
+      { file: 'apps/backend/src/a.ts', line: 7 },
+      { file: 'apps/web/src/view.tsx', line: 21 },
+    ]);
+    assert.deepEqual(summary.topFindings, [
+      { severity: 'HIGH', ruleId: 'rule.a', file: 'apps/backend/src/a.ts', line: 7 },
+      { severity: 'HIGH', ruleId: 'rule.a', file: 'apps/backend/src/a.ts', line: 14 },
+      { severity: 'MEDIUM', ruleId: 'rule.b', file: 'apps/web/src/view.tsx', line: 21 },
     ]);
   });
 });

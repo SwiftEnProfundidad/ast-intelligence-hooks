@@ -6,6 +6,10 @@ import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { buildLifecycleVersionReport, getCurrentPumukiVersion } from './packageInfo';
 import {
+  readLifecycleExperimentalFeaturesSnapshot,
+  type LifecycleExperimentalFeaturesSnapshot,
+} from './experimentalFeaturesSnapshot';
+import {
   readLifecyclePolicyValidationSnapshot,
   type LifecyclePolicyValidationSnapshot,
 } from './policyValidationSnapshot';
@@ -30,9 +34,16 @@ export type DoctorDeepCheckId =
   | 'evidence-source-drift'
   | 'compatibility-contract';
 
+export type DoctorDeepCheckLayer =
+  | 'core'
+  | 'operational'
+  | 'integration'
+  | 'policy-pack';
+
 export type DoctorDeepCheck = {
   id: DoctorDeepCheckId;
-  status: 'pass' | 'fail';
+  status: 'pass' | 'warn' | 'fail';
+  layer: DoctorDeepCheckLayer;
   severity: 'info' | DoctorIssueSeverity;
   message: string;
   remediation?: string;
@@ -79,6 +90,7 @@ export type LifecycleDoctorReport = {
   hooksDirectory: string;
   hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   policyValidation: LifecyclePolicyValidationSnapshot;
+  experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
 };
@@ -220,7 +232,8 @@ const evaluateUpstreamReadinessCheck = (params: {
   if (!upstream) {
     return buildDeepCheck({
       id: 'upstream-readiness',
-      status: 'fail',
+      status: 'warn',
+      layer: 'operational',
       severity: 'warning',
       message: `Branch "${branch}" has no upstream tracking.`,
       remediation: `Run "git push --set-upstream origin ${branch}" before relying on PRE_PUSH diagnostics.`,
@@ -233,6 +246,7 @@ const evaluateUpstreamReadinessCheck = (params: {
   return buildDeepCheck({
     id: 'upstream-readiness',
     status: 'pass',
+    layer: 'operational',
     severity: 'info',
     message: `Upstream tracking is configured (${upstream}).`,
     metadata: {
@@ -248,6 +262,7 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
     return buildDeepCheck({
       id: 'adapter-wiring',
       status: 'fail',
+      layer: 'integration',
       severity: 'warning',
       message: 'Adapter wiring file .pumuki/adapter.json is missing.',
       remediation: 'Run "pumuki adapter install --agent=codex" to scaffold adapter hooks and MCP wiring.',
@@ -264,6 +279,7 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
     return buildDeepCheck({
       id: 'adapter-wiring',
       status: 'fail',
+      layer: 'integration',
       severity: 'error',
       message: 'Adapter wiring file is not valid JSON.',
       remediation: 'Re-run "pumuki adapter install --agent=codex" to repair adapter wiring contract.',
@@ -277,6 +293,7 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
     return buildDeepCheck({
       id: 'adapter-wiring',
       status: 'fail',
+      layer: 'integration',
       severity: 'error',
       message: 'Adapter wiring payload must be an object.',
       remediation: 'Re-run "pumuki adapter install --agent=codex" to restore adapter schema.',
@@ -302,6 +319,7 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
     return buildDeepCheck({
       id: 'adapter-wiring',
       status: 'fail',
+      layer: 'integration',
       severity: 'error',
       message: `Adapter wiring is incomplete (missing: ${missingPaths.join(', ')}).`,
       remediation: 'Re-run "pumuki adapter install --agent=codex" and keep generated commands unchanged.',
@@ -334,6 +352,7 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
     return buildDeepCheck({
       id: 'adapter-wiring',
       status: 'fail',
+      layer: 'integration',
       severity: 'warning',
       message: `Adapter wiring commands are present but use fragile binary resolution or PATH mutation (${weakResolutionPaths.map((entry) => entry.path).join(', ')}).`,
       remediation:
@@ -349,6 +368,7 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
   return buildDeepCheck({
     id: 'adapter-wiring',
     status: 'pass',
+    layer: 'integration',
     severity: 'info',
     message: 'Adapter wiring contract is valid.',
     metadata: {
@@ -376,6 +396,7 @@ const evaluatePolicyDriftCheck = (repoRoot: string): DoctorDeepCheck => {
     return buildDeepCheck({
       id: 'policy-drift',
       status: 'fail',
+      layer: 'policy-pack',
       severity: 'error',
       message: 'Policy resolution is non-deterministic across repeated reads.',
       remediation: 'Lock policy configuration and rerun doctor --deep after removing nondeterministic overrides.',
@@ -386,18 +407,26 @@ const evaluatePolicyDriftCheck = (repoRoot: string): DoctorDeepCheck => {
     });
   }
 
-  const usesDefault =
-    preCommitFirst.trace.source === 'default' || prePushFirst.trace.source === 'default';
-  if (usesDefault) {
+  const usesDefaultAdvisoryPack =
+    preCommitFirst.trace.activation === 'default-advisory' ||
+    prePushFirst.trace.activation === 'default-advisory';
+  if (usesDefaultAdvisoryPack) {
     return buildDeepCheck({
       id: 'policy-drift',
-      status: 'fail',
+      status: 'warn',
+      layer: 'policy-pack',
       severity: 'warning',
-      message: 'Policy is running on default fallback without explicit skills policy or hard-mode.',
-      remediation: 'Define skills.policy.json or .pumuki/hard-mode.json to avoid policy drift in enterprise environments.',
+      message:
+        'Policy is running on the default advisory pack without explicit repo policy or hard-mode activation.',
+      remediation:
+        'Define skills.policy.json or .pumuki/hard-mode.json when this repository is ready to promote policy from advisory to explicit enforcement.',
       metadata: {
         pre_commit_source: preCommitFirst.trace.source,
+        pre_commit_activation: preCommitFirst.trace.activation,
+        pre_commit_activation_source: preCommitFirst.trace.activationSource,
         pre_push_source: prePushFirst.trace.source,
+        pre_push_activation: prePushFirst.trace.activation,
+        pre_push_activation_source: prePushFirst.trace.activationSource,
       },
     });
   }
@@ -405,11 +434,16 @@ const evaluatePolicyDriftCheck = (repoRoot: string): DoctorDeepCheck => {
   return buildDeepCheck({
     id: 'policy-drift',
     status: 'pass',
+    layer: 'policy-pack',
     severity: 'info',
     message: 'Policy resolution is deterministic and explicitly configured.',
     metadata: {
       pre_commit_source: preCommitFirst.trace.source,
+      pre_commit_activation: preCommitFirst.trace.activation,
+      pre_commit_activation_source: preCommitFirst.trace.activationSource,
       pre_push_source: prePushFirst.trace.source,
+      pre_push_activation: prePushFirst.trace.activation,
+      pre_push_activation_source: prePushFirst.trace.activationSource,
     },
   });
 };
@@ -422,10 +456,11 @@ const evaluateEvidenceSourceDriftCheck = (params: {
   if (evidenceResult.kind === 'missing') {
     return buildDeepCheck({
       id: 'evidence-source-drift',
-      status: 'fail',
-      severity: 'error',
+      status: 'warn',
+      layer: 'operational',
+      severity: 'warning',
       message: '.ai_evidence.json is missing.',
-      remediation: 'Regenerate evidence with a full audit before continuing with enterprise checks.',
+      remediation: 'Regenerate evidence with a full audit before relying on enterprise diagnostics or gates.',
       metadata: {
         path: evidenceResult.source_descriptor.path,
       },
@@ -436,6 +471,7 @@ const evaluateEvidenceSourceDriftCheck = (params: {
     return buildDeepCheck({
       id: 'evidence-source-drift',
       status: 'fail',
+      layer: 'core',
       severity: 'error',
       message: `.ai_evidence.json is invalid${evidenceResult.version ? ` (version=${evidenceResult.version})` : ''}.`,
       remediation: 'Repair evidence schema and regenerate evidence from this repository and branch.',
@@ -456,15 +492,17 @@ const evaluateEvidenceSourceDriftCheck = (params: {
   const ageSeconds = Number.isFinite(timestampMs)
     ? Math.max(0, Math.floor((nowMs - timestampMs) / 1000))
     : null;
+  let operationalDriftOnly = true;
 
   if (!Number.isFinite(timestampMs)) {
     toError();
+    operationalDriftOnly = false;
     violations.push('Evidence timestamp is invalid.');
   } else if (timestampMs > nowMs) {
     toError();
+    operationalDriftOnly = false;
     violations.push('Evidence timestamp is in the future.');
   } else if (ageSeconds !== null && ageSeconds > DEEP_EVIDENCE_MAX_AGE_SECONDS) {
-    toError();
     violations.push(
       `Evidence is stale (${ageSeconds}s > ${DEEP_EVIDENCE_MAX_AGE_SECONDS}s).`
     );
@@ -488,6 +526,7 @@ const evaluateEvidenceSourceDriftCheck = (params: {
     toCanonicalPath(expectedEvidencePath)
   ) {
     toError();
+    operationalDriftOnly = false;
     violations.push(
       `Evidence source path mismatch (${evidenceResult.source_descriptor.path} != ${expectedEvidencePath}).`
     );
@@ -498,6 +537,7 @@ const evaluateEvidenceSourceDriftCheck = (params: {
     !/^sha256:[0-9a-f]{64}$/i.test(evidenceResult.source_descriptor.digest)
   ) {
     toError();
+    operationalDriftOnly = false;
     violations.push('Evidence digest format is invalid.');
   }
 
@@ -508,6 +548,7 @@ const evaluateEvidenceSourceDriftCheck = (params: {
     toCanonicalPath(evidenceRepoRoot) !== toCanonicalPath(params.repoRoot)
   ) {
     toError();
+    operationalDriftOnly = false;
     violations.push(`Evidence repo_root mismatch (${evidenceRepoRoot} != ${params.repoRoot}).`);
   }
 
@@ -520,6 +561,7 @@ const evaluateEvidenceSourceDriftCheck = (params: {
     evidenceBranch !== currentBranch
   ) {
     toError();
+    operationalDriftOnly = false;
     violations.push(`Evidence branch mismatch (${evidenceBranch} != ${currentBranch}).`);
   }
 
@@ -535,9 +577,13 @@ const evaluateEvidenceSourceDriftCheck = (params: {
   }
 
   if (violations.length > 0) {
+    if (operationalDriftOnly) {
+      severity = 'warning';
+    }
     return buildDeepCheck({
       id: 'evidence-source-drift',
-      status: 'fail',
+      status: operationalDriftOnly && severity === 'warning' ? 'warn' : 'fail',
+      layer: operationalDriftOnly && severity === 'warning' ? 'operational' : 'core',
       severity,
       message: violations.join(' '),
       remediation: 'Regenerate evidence in the current repository and branch before running enterprise gates.',
@@ -553,6 +599,7 @@ const evaluateEvidenceSourceDriftCheck = (params: {
   return buildDeepCheck({
     id: 'evidence-source-drift',
     status: 'pass',
+    layer: 'operational',
     severity: 'info',
     message: 'Evidence source metadata is aligned with repository state.',
     metadata: {
@@ -616,6 +663,7 @@ const evaluateCompatibilityContractCheck = (
     return buildDeepCheck({
       id: 'compatibility-contract',
       status: 'pass',
+      layer: 'core',
       severity: 'info',
       message: 'Compatibility contract is satisfied for pumuki/openspec/hooks/adapter.',
       metadata: {
@@ -647,6 +695,7 @@ const evaluateCompatibilityContractCheck = (
   return buildDeepCheck({
     id: 'compatibility-contract',
     status: 'fail',
+    layer: 'core',
     severity: 'warning',
     message: 'Compatibility contract is not satisfied for one or more required components.',
     remediation: remediation.join(' '),
@@ -740,6 +789,7 @@ export const runLifecycleDoctor = (params?: {
     hooksDirectory: hooksDirectory.path,
     hooksDirectoryResolution: hooksDirectory.source,
     policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
+    experimentalFeatures: readLifecycleExperimentalFeaturesSnapshot(),
     issues,
     deep,
   };

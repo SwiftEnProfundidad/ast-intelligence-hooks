@@ -49,6 +49,7 @@ export const emitSystemNotification = (params: {
     config,
     nowMs,
     platform,
+    env: params.env ?? process.env,
   });
   if (gateResult) {
     return gateResult;

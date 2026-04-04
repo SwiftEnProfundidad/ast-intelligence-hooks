@@ -51,10 +51,41 @@ export const verifyInstalledPackageCanBeRequired = (
 export const verifyInstalledPumukiBinaryVersion = (
   workspace: SmokeWorkspace
 ): void => {
+  const assertInstalledStatusVersion = (
+    result: ReturnType<typeof runCommand>,
+    context: string
+  ): void => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(result.stdout);
+    } catch {
+      throw new Error(`${context} returned invalid JSON\n${result.combined}`);
+    }
+
+    const packageVersion =
+      typeof parsed === 'object' && parsed !== null && 'packageVersion' in parsed
+        ? (parsed as { packageVersion?: unknown }).packageVersion
+        : null;
+    const effectiveVersion =
+      typeof parsed === 'object'
+      && parsed !== null
+      && 'version' in parsed
+      && typeof (parsed as { version?: unknown }).version === 'object'
+      && (parsed as { version: { effective?: unknown } }).version !== null
+        ? (parsed as { version: { effective?: unknown } }).version.effective
+        : null;
+
+    if (packageVersion !== packageJson.version && effectiveVersion !== packageJson.version) {
+      throw new Error(
+        `${context} reported unexpected version (packageVersion=${String(packageVersion)}, effectiveVersion=${String(effectiveVersion)}, expected=${packageJson.version})`
+      );
+    }
+  };
+
   const noInstallVersionCheck = runCommand({
     cwd: workspace.consumerRepo,
     executable: 'npx',
-    args: ['--no-install', 'pumuki', '--version'],
+    args: ['--no-install', 'pumuki', 'status', '--json'],
   });
   pushCommandLog(workspace.commandLog, noInstallVersionCheck);
 
@@ -64,14 +95,15 @@ export const verifyInstalledPumukiBinaryVersion = (
       noInstallVersionCheck.combined
     );
   if (noInstallPassed) {
-    assertNoFatalOutput(noInstallVersionCheck, 'pumuki --version smoke');
+    assertNoFatalOutput(noInstallVersionCheck, 'pumuki status --json smoke');
+    assertInstalledStatusVersion(noInstallVersionCheck, 'pumuki status --json smoke');
     return;
   }
 
   const fallback = resolveConsumerPumukiCommand({
     consumerRepo: workspace.consumerRepo,
     binary: 'pumuki',
-    args: ['--version'],
+    args: ['status', '--json'],
   });
   const fallbackCheck = runCommand({
     cwd: workspace.consumerRepo,
@@ -81,10 +113,14 @@ export const verifyInstalledPumukiBinaryVersion = (
   pushCommandLog(workspace.commandLog, fallbackCheck);
   assertSuccess(
     fallbackCheck,
-    `pumuki --version smoke fallback (${fallback.resolution})`
+    `pumuki status --json smoke fallback (${fallback.resolution})`
   );
   assertNoFatalOutput(
     fallbackCheck,
-    `pumuki --version smoke fallback (${fallback.resolution})`
+    `pumuki status --json smoke fallback (${fallback.resolution})`
+  );
+  assertInstalledStatusVersion(
+    fallbackCheck,
+    `pumuki status --json smoke fallback (${fallback.resolution})`
   );
 };

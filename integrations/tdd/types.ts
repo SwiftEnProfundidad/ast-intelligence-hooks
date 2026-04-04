@@ -1,5 +1,5 @@
 export type TddBddSnapshot = {
-  status: 'skipped' | 'passed' | 'blocked' | 'waived';
+  status: 'skipped' | 'passed' | 'advisory' | 'blocked' | 'waived';
   scope: {
     in_scope: boolean;
     is_new_feature: boolean;

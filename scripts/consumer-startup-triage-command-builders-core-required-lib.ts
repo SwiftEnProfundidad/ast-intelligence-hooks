@@ -3,15 +3,19 @@ import type {
   ConsumerStartupTriageOptions,
   ConsumerStartupTriageOutputs,
 } from './consumer-startup-triage-contract';
+import { resolveConsumerStartupTriageScript } from './consumer-startup-triage-script-paths-lib';
 
 export const buildConsumerStartupTriageAuthCheckCommand = (params: {
   options: ConsumerStartupTriageOptions;
   outputs: ConsumerStartupTriageOutputs;
 }): ConsumerStartupTriageCommand => {
   return {
+    ...resolveConsumerStartupTriageScript(
+      import.meta.url,
+      'scripts/check-consumer-ci-auth.ts'
+    ),
     id: 'auth-check',
     description: 'Check GitHub auth/scopes and billing probe',
-    script: 'scripts/check-consumer-ci-auth.ts',
     args: ['--repo', params.options.repo, '--out', params.outputs.authReport],
     outputFile: params.outputs.authReport,
     required: true,
@@ -23,9 +27,12 @@ export const buildConsumerStartupTriageArtifactsCommand = (params: {
   outputs: ConsumerStartupTriageOutputs;
 }): ConsumerStartupTriageCommand => {
   return {
+    ...resolveConsumerStartupTriageScript(
+      import.meta.url,
+      'scripts/collect-consumer-ci-artifacts.ts'
+    ),
     id: 'ci-artifacts',
     description: 'Collect recent CI runs and artifact status',
-    script: 'scripts/collect-consumer-ci-artifacts.ts',
     args: [
       '--repo',
       params.options.repo,

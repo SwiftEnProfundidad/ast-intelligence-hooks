@@ -30,17 +30,17 @@ export const createFrameworkMenuGateStageActions = (
     },
     {
       id: '28',
-      label: 'Audit full repository snapshot (PRE_COMMIT policy)',
+      label: 'Legacy read-only audit: full repository snapshot (PRE_COMMIT policy)',
       execute: params.runRepoAudit,
     },
     {
       id: '29',
-      label: 'Audit repository + staged snapshot (PRE_COMMIT policy)',
+      label: 'Legacy read-only audit: repository + staged snapshot (PRE_COMMIT policy)',
       execute: params.runRepoAndStagedAudit,
     },
     {
       id: '30',
-      label: 'Audit staged + unstaged working tree (PRE_COMMIT policy)',
+      label: 'Legacy read-only audit: staged + unstaged working tree (PRE_COMMIT policy)',
       execute: params.runStagedAndUnstagedAudit,
     },
   ];

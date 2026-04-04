@@ -37,18 +37,18 @@ const withFakeNpx = async (scriptBody: string, callback: () => void): Promise<vo
   }
 };
 
-test('verifyInstalledPumukiBinaryVersion valida npx --no-install pumuki --version y registra comando', async () => {
+test('verifyInstalledPumukiBinaryVersion valida npx --no-install pumuki status --json y registra comando', async () => {
   const workspace = createWorkspace();
   try {
     await withFakeNpx(
-      '#!/usr/bin/env sh\necho "6.3.39"\nexit 0\n',
+      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.60","version":{"effective":"6.3.60"}}\\n\'\nexit 0\n',
       () => {
         verifyInstalledPumukiBinaryVersion(workspace);
       }
     );
     assert.equal(workspace.commandLog.length, 1);
     assert.equal(
-      workspace.commandLog[0]?.includes('npx --no-install pumuki --version'),
+      workspace.commandLog[0]?.includes('npx --no-install pumuki status --json'),
       true
     );
   } finally {
@@ -80,7 +80,11 @@ test('verifyInstalledPumukiBinaryVersion usa fallback local cuando npx --no-inst
     const localBinDir = join(workspace.consumerRepo, 'node_modules', '.bin');
     mkdirSync(localBinDir, { recursive: true });
     const localPumukiBin = join(localBinDir, 'pumuki');
-    writeFileSync(localPumukiBin, '#!/usr/bin/env sh\necho "6.3.39-local"\nexit 0\n', 'utf8');
+    writeFileSync(
+      localPumukiBin,
+      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.60","version":{"effective":"6.3.60"}}\\n\'\nexit 0\n',
+      'utf8'
+    );
     chmodSync(localPumukiBin, 0o755);
 
     await withFakeNpx(
@@ -92,11 +96,11 @@ test('verifyInstalledPumukiBinaryVersion usa fallback local cuando npx --no-inst
 
     assert.equal(workspace.commandLog.length, 2);
     assert.equal(
-      workspace.commandLog[0]?.includes('npx --no-install pumuki --version'),
+      workspace.commandLog[0]?.includes('npx --no-install pumuki status --json'),
       true
     );
     assert.equal(
-      workspace.commandLog[1]?.includes('node_modules/.bin/pumuki --version'),
+      workspace.commandLog[1]?.includes('node_modules/.bin/pumuki status --json'),
       true
     );
   } finally {

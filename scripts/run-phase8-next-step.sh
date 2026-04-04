@@ -9,9 +9,9 @@ HANDOFF_DOC="docs/validation/consumer-startup-escalation-handoff-latest.md"
 
 echo "[phase8-next-step] out_dir=${OUT_DIR}"
 
-if npm run validation:phase5-latest:ready-check -- "${OUT_DIR}" >/tmp/phase8-next-step-ready.log 2>&1; then
+if npm run toolkit:legacy:phase5-latest:ready-check -- "${OUT_DIR}" >/tmp/phase8-next-step-ready.log 2>&1; then
   echo "[phase8-next-step] status=READY"
-  echo "[phase8-next-step] next_command=npm run validation:phase8:close-ready -- ${OUT_DIR}"
+  echo "[phase8-next-step] next_command=npm run toolkit:legacy:phase8:close-ready -- ${OUT_DIR}"
   echo "[phase8-next-step] note=run close-ready to build final package and finish P8-4."
   exit 0
 fi
@@ -34,6 +34,6 @@ fi
 
 echo "[phase8-next-step] status=BLOCKED"
 echo "[phase8-next-step] ${KNOWN_CAUSE}"
-echo "[phase8-next-step] next_command=npm run validation:phase8:resume-after-billing -- ${REPO} ${LIMIT} ${OUT_DIR} ${MOCK_AB_REPORT}"
+echo "[phase8-next-step] next_command=npm run toolkit:legacy:phase8:resume-after-billing -- ${REPO} ${LIMIT} ${OUT_DIR} ${MOCK_AB_REPORT}"
 echo "[phase8-next-step] note=run resume-after-billing once billing is active, then rerun this status command."
 exit 1

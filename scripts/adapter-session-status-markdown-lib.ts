@@ -8,6 +8,15 @@ export const buildAdapterSessionStatusMarkdown = (
   params: BuildAdapterSessionStatusMarkdownParams
 ): string => {
   const lines: string[] = [];
+  const verifyResult = params.commands.find(
+    (command) => command.label === 'verify-adapter-hooks-runtime'
+  );
+  const hasAvailableSessionProbe = params.commands.some(
+    (command) =>
+      (command.label === 'assess-adapter-hooks-session' ||
+        command.label === 'assess-adapter-hooks-session:any') &&
+      command.availability === 'available'
+  );
 
   lines.push('# Adapter Session Status Report');
   lines.push('');
@@ -18,10 +27,14 @@ export const buildAdapterSessionStatusMarkdown = (
 
   lines.push('## Commands');
   lines.push('');
-  lines.push('| step | command | exit_code |');
-  lines.push('| --- | --- | --- |');
+  lines.push('| step | command | availability | exit_code |');
+  lines.push('| --- | --- | --- | --- |');
   for (const command of params.commands) {
-    lines.push(`| ${command.label} | \`${command.command}\` | ${command.exitCode} |`);
+    const exitCode =
+      typeof command.exitCode === 'number' ? String(command.exitCode) : 'n/a';
+    lines.push(
+      `| ${command.label} | \`${command.command}\` | ${command.availability} | ${exitCode} |`
+    );
   }
   lines.push('');
 
@@ -53,11 +66,21 @@ export const buildAdapterSessionStatusMarkdown = (
   if (params.verdict === 'PASS') {
     lines.push('- Real Adapter pre/post events are present in strict session assessment.');
   } else if (params.verdict === 'NEEDS_REAL_SESSION') {
-    lines.push('- Runtime wiring appears healthy, but strict assessment did not observe real IDE events yet.');
-    lines.push('- Next: execute a real Adapter write session and regenerate this report.');
+    if (!hasAvailableSessionProbe) {
+      lines.push('- Runtime verification is available, but this consumer does not expose direct session assessment probes.');
+      lines.push('- Next: treat this as advisory evidence only, or run deeper adapter diagnostics from the Pumuki source workspace.');
+    } else {
+      lines.push('- Runtime wiring appears healthy, but strict assessment did not observe real IDE events yet.');
+      lines.push('- Next: execute a real Adapter write session and regenerate this report.');
+    }
   } else {
-    lines.push('- Runtime verification and/or session assessments are failing.');
-    lines.push('- Next: run `npm run install:adapter-hooks-config` and `npm run verify:adapter-hooks-runtime`, then retry.');
+    if (verifyResult?.availability === 'unavailable') {
+      lines.push('- This consumer does not expose a runnable adapter runtime verification probe.');
+      lines.push('- Next: do not treat this report as authoritative until the consumer provides explicit adapter diagnostics commands.');
+    } else {
+      lines.push('- Runtime verification and/or session assessments are failing.');
+      lines.push('- Next: fix adapter runtime wiring or rerun diagnostics from the Pumuki source workspace if consumer probes are incomplete.');
+    }
   }
   lines.push('');
 

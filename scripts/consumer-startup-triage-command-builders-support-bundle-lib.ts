@@ -3,15 +3,19 @@ import type {
   ConsumerStartupTriageOptions,
   ConsumerStartupTriageOutputs,
 } from './consumer-startup-triage-contract';
+import { resolveConsumerStartupTriageScript } from './consumer-startup-triage-script-paths-lib';
 
 export const buildConsumerStartupTriageSupportBundleCommand = (params: {
   options: ConsumerStartupTriageOptions;
   outputs: ConsumerStartupTriageOutputs;
 }): ConsumerStartupTriageCommand => {
   return {
+    ...resolveConsumerStartupTriageScript(
+      import.meta.url,
+      'scripts/build-consumer-startup-failure-support-bundle.ts'
+    ),
     id: 'support-bundle',
     description: 'Build startup-failure support bundle',
-    script: 'scripts/build-consumer-startup-failure-support-bundle.ts',
     args: [
       '--repo',
       params.options.repo,

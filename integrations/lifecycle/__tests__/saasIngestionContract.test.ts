@@ -123,6 +123,49 @@ test('createHotspotsSaasIngestionPayload genera contrato v1 con integridad váli
   }
 });
 
+test('createHotspotsSaasIngestionPayload acepta compliance TDD/BDD advisory', () => {
+  const payload = createHotspotsSaasIngestionPayload({
+    tenantId: 'tenant-demo',
+    repositoryId: 'repo-demo',
+    repositoryName: 'ast-intelligence-hooks',
+    producerVersion: producerVersion,
+    sourceMode: 'local',
+    generatedAt: '2026-02-26T10:15:00+00:00',
+    report: buildReport(),
+    tddBdd: {
+      status: 'advisory',
+      scope: {
+        in_scope: true,
+        is_new_feature: true,
+        is_complex_change: false,
+        reasons: ['new_feature'],
+        metrics: {
+          changed_files: 1,
+          estimated_loc: 40,
+          critical_path_files: 0,
+          public_interface_files: 1,
+        },
+      },
+      evidence: {
+        path: '.pumuki/artifacts/pumuki-evidence-v1.json',
+        state: 'missing',
+        slices_total: 0,
+        slices_valid: 0,
+        slices_invalid: 0,
+        integrity_ok: false,
+        errors: ['missing_contract'],
+      },
+      waiver: {
+        applied: false,
+      },
+    },
+  });
+
+  assert.equal(payload.compliance?.tdd_bdd?.status, 'advisory');
+  const parsed = parseHotspotsSaasIngestionPayload(payload);
+  assert.equal(parsed.kind, 'valid');
+});
+
 test('createHotspotsSaasIngestionPayloadHash es determinista para el mismo body lógico', () => {
   const bodyA: HotspotsSaasIngestionPayloadBodyV1 = {
     version: '1',

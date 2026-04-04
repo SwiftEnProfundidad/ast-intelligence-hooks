@@ -33,8 +33,7 @@ Mapa corto y humano de la documentación oficial de Pumuki.
   - `docs/validation/README.md`
 
 - Quiero saber en qué estamos ahora:
-  - `docs/tracking/estado-ejecutivo.md`
-  - `docs/tracking/plan-activo-de-trabajo.md`
+  - `PUMUKI-RESET-MASTER-PLAN.md`
 
 ## Estructura oficial
 
@@ -60,14 +59,9 @@ Mapa corto y humano de la documentación oficial de Pumuki.
 - `docs/codex-skills/`
   - Skills vendorizadas que el repo usa como contrato local.
 
-- `docs/tracking/`
-  - Seguimiento permitido y solo el imprescindible.
-  - Maestro: `docs/tracking/estado-ejecutivo.md`
-  - Plan activo: `docs/tracking/plan-activo-de-trabajo.md`
-  - Históricos técnicos permitidos:
-    - `docs/tracking/historico-validacion-ruralgo-03-03-2026.md`
-    - `docs/tracking/historico-contrato-aceptacion-c022.md`
-  - Regla hard: solo puede existir una tarea `🚧` en el plan activo.
+- Seguimiento operativo:
+  - Fuente viva única: `PUMUKI-RESET-MASTER-PLAN.md`
+  - Regla hard: no mantener MDs legacy de seguimiento dentro del repo.
 
 ## Fuera de `docs/`
 
@@ -76,6 +70,7 @@ Mapa corto y humano de la documentación oficial de Pumuki.
 - `CHANGELOG.md`
 - `AGENTS.md`
 - `PUMUKI.md`
+- `PUMUKI-RESET-MASTER-PLAN.md`
 
 ## Lo que no se conserva
 

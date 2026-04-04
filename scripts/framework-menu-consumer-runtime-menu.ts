@@ -1,6 +1,8 @@
 import {
-  type LegacyAuditSummary,
-  readLegacyAuditSummary,
+  readEvidenceSummaryForMenu,
+  type FrameworkMenuEvidenceSummary,
+} from './framework-menu-evidence-summary-lib';
+import {
   renderLegacyPanel,
   resolveLegacyPanelOuterWidth,
 } from './framework-menu-legacy-audit-lib';
@@ -17,26 +19,33 @@ import type {
 } from './framework-menu-consumer-runtime-types';
 
 const buildConsumerRuntimeMenuStatus = (
-  menuSummary: LegacyAuditSummary
+  menuSummary: FrameworkMenuEvidenceSummary
 ): { level: 'info' | 'block' | 'warn' | 'ok'; label: string } =>
   menuSummary.status !== 'ok'
     ? { level: 'info', label: 'NO_EVIDENCE' }
-    : menuSummary.bySeverity.CRITICAL > 0 || menuSummary.bySeverity.HIGH > 0
+    : (menuSummary.outcome ?? 'UNKNOWN').trim().toUpperCase() === 'BLOCK'
       ? { level: 'block', label: 'BLOCK' }
-      : menuSummary.bySeverity.MEDIUM > 0 || menuSummary.bySeverity.LOW > 0
+      : (menuSummary.outcome ?? 'UNKNOWN').trim().toUpperCase() === 'WARN'
         ? { level: 'warn', label: 'WARN' }
-        : { level: 'ok', label: 'PASS' };
+        : (menuSummary.outcome ?? 'UNKNOWN').trim().toUpperCase() === 'PASS'
+          ? { level: 'ok', label: 'PASS' }
+          : { level: 'info', label: (menuSummary.outcome ?? 'UNKNOWN').trim().toUpperCase() };
 
 export const renderConsumerRuntimeClassicMenu = (
   actions: ReadonlyArray<ConsumerAction>,
   useColor: () => boolean
 ): string => {
+  const groupedActions = resolveConsumerMenuLayout(actions);
   const lines = [
     'PUMUKI — Hook-System (run: npx ast-hooks)',
     'AST Intelligence System Overview',
     'A. Switch to advanced menu',
     '',
-    ...actions.map((action) => `${action.id}) ${action.label}`),
+    ...groupedActions.flatMap((group) => [
+      group.title,
+      ...group.items.map((item) => `${item.id}) ${item.action.label}`),
+      '',
+    ]),
   ];
   return renderLegacyPanel(lines, {
     width: resolveLegacyPanelOuterWidth(),
@@ -51,7 +60,7 @@ export const renderConsumerRuntimeModernMenu = (
     useColor: () => boolean;
   }
 ): string => {
-  const menuSummary = readLegacyAuditSummary(params.repoRoot);
+  const menuSummary = readEvidenceSummaryForMenu(params.repoRoot);
   const menuStatus = buildConsumerRuntimeMenuStatus(menuSummary);
   const tokens = buildCliDesignTokens({
     width: resolveLegacyPanelOuterWidth(),

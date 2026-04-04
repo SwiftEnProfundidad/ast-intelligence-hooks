@@ -1,12 +1,22 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-export const writeLegacyAuditEvidenceFixture = (repoRoot: string): void => {
+type LegacyAuditFixtureOverrides = {
+  snapshot?: Partial<{
+    stage: string;
+    outcome: string;
+  }>;
+};
+
+export const writeLegacyAuditEvidenceFixture = (
+  repoRoot: string,
+  overrides?: LegacyAuditFixtureOverrides
+): void => {
   const payload = {
     version: '2.1',
     snapshot: {
-      stage: 'PRE_COMMIT',
-      outcome: 'BLOCK',
+      stage: overrides?.snapshot?.stage ?? 'PRE_COMMIT',
+      outcome: overrides?.snapshot?.outcome ?? 'BLOCK',
       findings: [
         {
           ruleId: 'ios.quality.long-function',

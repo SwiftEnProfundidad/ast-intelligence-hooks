@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readLifecycleStatus } from '../lifecycle/status';
 import { resolvePumukiVersionMetadata } from '../lifecycle/packageInfo';
+import { readPersistedHardModeConfig } from '../policy/policyProfiles';
 import type { RepoHardModeState, RepoHookState, RepoState } from './schema';
 
 type HookStateShape = { exists: boolean; managedBlockPresent: boolean };
@@ -88,8 +89,6 @@ const readLifecycleStatusSafe = (repoRoot: string): LifecycleStatusShape => {
   }
 };
 
-const HARD_MODE_CONFIG_PATH = '.pumuki/hard-mode.json';
-
 const toNormalizedProfile = (value: unknown): string | null => {
   if (typeof value !== 'string') {
     return null;
@@ -99,26 +98,15 @@ const toNormalizedProfile = (value: unknown): string | null => {
 };
 
 const readHardModeState = (repoRoot: string): RepoHardModeState | undefined => {
-  const configPath = join(repoRoot, HARD_MODE_CONFIG_PATH);
-  if (!existsSync(configPath)) {
+  const persisted = readPersistedHardModeConfig(repoRoot);
+  if (!persisted) {
     return undefined;
   }
-  try {
-    const raw = JSON.parse(readFileSync(configPath, 'utf8')) as {
-      enabled?: unknown;
-      profile?: unknown;
-    };
-    if (typeof raw.enabled !== 'boolean') {
-      return undefined;
-    }
-    return {
-      enabled: raw.enabled,
-      profile: toNormalizedProfile(raw.profile),
-      config_path: HARD_MODE_CONFIG_PATH,
-    };
-  } catch {
-    return undefined;
-  }
+  return {
+    enabled: persisted.enabled,
+    profile: toNormalizedProfile(persisted.profileName),
+    config_path: persisted.configPath,
+  };
 };
 
 export const captureRepoState = (repoRoot: string): RepoState => {

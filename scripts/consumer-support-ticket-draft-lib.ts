@@ -21,11 +21,12 @@ export const buildSupportTicketDraft = (params: {
       repo: params.repo,
       supportBundlePath: params.supportBundlePath,
       authReportPath: params.authReportPath,
+      support: params.support,
     }),
     ...buildSupportTicketProblemSummaryLines(params.support),
     ...buildSupportTicketEvidenceLines(params.support),
     ...buildSupportTicketAuthLines(params.auth),
-    ...buildSupportTicketRequestLines(),
+    ...buildSupportTicketRequestLines(params.support),
     ...buildSupportTicketAttachmentLines({
       supportBundlePath: params.supportBundlePath,
       authReportPath: params.authReportPath,

@@ -35,7 +35,7 @@ test('iosEnterpriseRuleSet define reglas locked para plataforma ios', () => {
   assert.equal(byId.get('ios.solid.srp.presentation-mixed-responsibilities')?.when.kind, 'Heuristic');
   assert.equal(byId.get('ios.canary-001.presentation-mixed-responsibilities')?.when.kind, 'Heuristic');
   assert.equal(byId.get('ios.tdd.domain-changes-require-tests')?.when.kind, 'All');
-  assert.equal(byId.get('ios.no-completion-handlers-outside-bridges')?.when.kind, 'Any');
+  assert.equal(byId.get('ios.no-completion-handlers-outside-bridges')?.when.kind, 'Heuristic');
   assert.equal(byId.get('ios.no-force-unwrap')?.when.kind, 'All');
   assert.equal(byId.get('ios.no-force-unwrap')?.when.conditions[0]?.kind, 'Heuristic');
 
@@ -88,6 +88,54 @@ test('ios.no-force-unwrap bloquea cuando la heuristica detecta force unwrap real
   assert.equal(findings.length, 1);
   assert.equal(findings[0]?.ruleId, 'ios.no-force-unwrap');
   assert.equal(findings[0]?.code, 'IOS_NO_FORCE_UNWRAP');
+});
+
+test('ios.no-completion-handlers-outside-bridges ignora closures async modernos', () => {
+  const rule = iosEnterpriseRuleSet.find(
+    (candidate) => candidate.id === 'ios.no-completion-handlers-outside-bridges'
+  );
+  assert.ok(rule);
+
+  const findings = evaluateRules([rule], [
+    {
+      kind: 'FileContent',
+      path: 'Sources/AppComposition/Presentation/ProtectedPathCommandChannel.swift',
+      content:
+        'public init(publish: @escaping @Sendable ([AppRoute]) async -> Void) { self.publish = publish }',
+      source: 'unit-test',
+    },
+  ]);
+
+  assert.deepEqual(findings, []);
+});
+
+test('ios.no-completion-handlers-outside-bridges bloquea callback-style signatures detectadas por AST', () => {
+  const rule = iosEnterpriseRuleSet.find(
+    (candidate) => candidate.id === 'ios.no-completion-handlers-outside-bridges'
+  );
+  assert.ok(rule);
+
+  const findings = evaluateRules([rule], [
+    {
+      kind: 'FileContent',
+      path: 'Sources/Features/Flights/Application/LegacyAdapter.swift',
+      content: 'func fetch(completion: @escaping (Result<Void, Error>) -> Void) {}',
+      source: 'unit-test',
+    },
+    {
+      kind: 'Heuristic',
+      ruleId: 'heuristics.ios.callback-style.ast',
+      severity: 'CRITICAL',
+      code: 'HEURISTICS_IOS_CALLBACK_STYLE_AST',
+      message: 'AST heuristic detected callback-style API signature outside bridge layers.',
+      filePath: 'Sources/Features/Flights/Application/LegacyAdapter.swift',
+      source: 'heuristics:ast',
+    },
+  ]);
+
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0]?.ruleId, 'ios.no-completion-handlers-outside-bridges');
+  assert.equal(findings[0]?.code, 'IOS_NO_COMPLETION_HANDLERS');
 });
 
 test('ios.canary-001.presentation-mixed-responsibilities emite finding bloqueante con metadata semantica', () => {

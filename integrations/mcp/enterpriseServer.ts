@@ -5,6 +5,7 @@ import { execFileSync as runBinarySync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { readLifecycleStatus } from '../lifecycle';
+import { resolveMcpEnterpriseExperimentalFeature } from '../policy/experimentalFeatures';
 import { evaluateSddPolicy, readSddStatus } from '../sdd';
 import type { SddStage } from '../sdd';
 import { toStatusPayload } from './evidencePayloads';
@@ -150,6 +151,26 @@ const CRITICAL_ENTERPRISE_TOOLS = new Set<EnterpriseToolName>([
   'sync_branches',
   'cleanup_stale_branches',
 ]);
+const EXPERIMENTAL_MCP_ENTERPRISE_TOOLS = new Set<EnterpriseToolName>([
+  'ai_gate_check',
+  'pre_flight_check',
+  'auto_execute_ai_start',
+]);
+
+const readMcpEnterpriseExperimentalState = () => resolveMcpEnterpriseExperimentalFeature();
+
+const isEnterpriseToolEnabled = (toolName: EnterpriseToolName): boolean => {
+  if (!EXPERIMENTAL_MCP_ENTERPRISE_TOOLS.has(toolName)) {
+    return true;
+  }
+  return readMcpEnterpriseExperimentalState().mode !== 'off';
+};
+
+const listEnabledEnterpriseTools = (): ReadonlyArray<EnterpriseToolName> =>
+  ENTERPRISE_TOOLS.filter((toolName) => isEnterpriseToolEnabled(toolName));
+
+const listEnabledEnterpriseToolDescriptors = () =>
+  ENTERPRISE_TOOL_DESCRIPTORS.filter((tool) => isEnterpriseToolEnabled(tool.name));
 
 const isEnterpriseToolName = (value: string | null): value is EnterpriseToolName =>
   value !== null && ENTERPRISE_TOOLS.includes(value as EnterpriseToolName);
@@ -621,7 +642,7 @@ const buildStatusPayload = (repoRoot: string): EnterpriseStatusPayload => ({
   repoRoot,
   capabilities: {
     resources: [...ENTERPRISE_RESOURCES],
-    tools: [...ENTERPRISE_TOOLS],
+    tools: [...listEnabledEnterpriseTools()],
     mode: 'baseline',
   },
   lifecycle: safeReadLifecycleStatus(repoRoot),
@@ -709,7 +730,7 @@ export const startEnterpriseMcpServer = (
         return;
       }
       sendJson(res, 200, {
-        tools: ENTERPRISE_TOOL_DESCRIPTORS,
+        tools: listEnabledEnterpriseToolDescriptors(),
       });
       return;
     }
@@ -741,6 +762,32 @@ export const startEnterpriseMcpServer = (
             return;
           }
           const toolName = toolNameCandidate;
+          if (!isEnterpriseToolEnabled(toolName)) {
+            const experimentalFeature = readMcpEnterpriseExperimentalState();
+            sendJson(res, 200, {
+              tool: toolName,
+              dryRun: true,
+              executed: false,
+              success: false,
+              warnings: ['Enterprise MCP está desactivado por defecto en el baseline del reset.'],
+              result: {
+                code: 'MCP_ENTERPRISE_EXPERIMENTAL_DISABLED',
+                message:
+                  'MCP enterprise pertenece al namespace experimental y está desactivado por defecto.',
+                experimental_feature: experimentalFeature.feature,
+                mode: experimentalFeature.mode,
+                source: experimentalFeature.source,
+                activation_variable: experimentalFeature.activationVariable,
+                next_action: {
+                  kind: 'run_command',
+                  message: 'Activa MCP enterprise explícitamente antes de usar estos tools.',
+                  command:
+                    `${experimentalFeature.activationVariable}=advisory npx --yes --package pumuki@latest pumuki status --json`,
+                },
+              },
+            });
+            return;
+          }
           const args = typeof payload.args === 'object' && payload.args !== null
             ? (payload.args as Record<string, string | number | boolean | bigint | symbol | null | Date | object>)
             : {};

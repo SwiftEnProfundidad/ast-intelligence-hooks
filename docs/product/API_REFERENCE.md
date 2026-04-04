@@ -301,7 +301,7 @@ Consumption: `docs/mcp/agent-context-consumption.md`.
 npm run framework:menu
 npm run adapter:install -- --agent=codex --dry-run
 npx --yes pumuki adapter install --agent=cursor
-npm run validation:adapter-readiness
+npm run toolkit:adapter-readiness
 npm run typecheck
 npm run test:deterministic
 ```
@@ -318,11 +318,19 @@ Consumer menu pre-flight:
 - options `1/2/3/4` execute pre-flight before gate evaluation
 - pre-flight checks `repo_state`, stale/missing evidence, git-flow protected branches, and AI gate chain consistency
 - stage mapping is deterministic: `1/3 -> PRE_COMMIT`, `2/4 -> PRE_PUSH`
+- consumer mode is a read-only shell: `1/2/3/4` are gate flows, `8` is the matching markdown export, and `5/6/7/9` are `Legacy Read-Only Diagnostics`
 - in modern UI mode (`PUMUKI_MENU_UI_V2=1`) options are grouped by domains while preserving IDs and execution wiring
 - advanced maintenance option `33` imports custom rules from `AGENTS.md/SKILLS.md` to `/.pumuki/custom-rules.json`
 - menu audits no longer bypass SDD; `sdd.policy.blocked` can be emitted in menu-driven runs
+- advanced options `28/29/30/32` are legacy read-only audits: they help inspect evidence snapshots, but they do not redefine the canonical gate verdict
+- acceptance baseline helper: `npm run validation:consumer-matrix-baseline -- --repo-root /absolute/path/to/<fixture> --fixture <name> --rounds 3 --json`
+- baseline outputs are written under `.audit-reports/fixture-matrix/<fixture>/consumer-menu-matrix-baseline/{report.json,summary.md}` and return exit `1` on drift
+- baseline `report.json` also carries `status.policyValidation`, `status.experimentalFeatures`, `doctor.blocking`, and `doctor.layerSummary`
+- validated acceptance snapshots on `2026-03-14`: `ios-architecture-showcase=stable YES`, `SAAS:APP_SUPERMERCADOS=stable YES`, `R_GO=stable YES`
 
-## Optional diagnostics adapters
+## Optional support toolkit
+
+Primary namespace is `toolkit:*`. Legacy `validation:*` aliases remain only for compatibility.
 
 Files:
 
@@ -340,16 +348,15 @@ Files:
 
 Commands:
 
-- `npm run validation:adapter-readiness`
-- `npm run validation:adapter-session-status`
-- `npm run validation:adapter-real-session-report`
-- `npm run validation:phase5-blockers-readiness`
-- `npm run validation:phase5-execution-closure-status`
-- `npm run validation:phase5-execution-closure`
-- `npm run validation:phase5-external-handoff`
-- `npm run validation:clean-artifacts`
+- `npm run toolkit:adapter-readiness`
+- `npm run toolkit:adapter-session-status`
+- `npm run toolkit:adapter-real-session-report`
+- `npm run toolkit:phase5-blockers-readiness`
+- `npm run toolkit:phase5-execution-closure-status`
+- `npm run toolkit:phase5-execution-closure`
+- `npm run toolkit:clean-artifacts`
 
-`validation:phase5-execution-closure` notes:
+`toolkit:phase5-execution-closure` notes:
 
 - defaults to output directory `.audit-reports/phase5`
 - runs auth preflight and fails fast on auth/scope blockers
@@ -357,11 +364,23 @@ Commands:
 
 Framework menu action:
 
-- `Build adapter readiness report`
-- `Build phase5 execution closure status report`
-- `Run phase5 execution closure (one-shot orchestration)`
-- `Build phase5 external handoff report`
-- `Clean local validation artifacts`
+- `Toolkit: build adapter readiness report`
+- `Toolkit: build phase5 execution closure status report`
+- `Toolkit: run phase5 execution closure`
+- `Toolkit: clean local validation artifacts`
+
+Frozen legacy support namespace:
+
+- `npm run toolkit:legacy:phase5-external-handoff`
+- `npm run toolkit:legacy:phase5-latest:refresh`
+- `npm run toolkit:legacy:phase5-latest:ready-check`
+- `npm run toolkit:legacy:phase5-escalation:prepare`
+- `npm run toolkit:legacy:phase8:doctor`
+- `npm run toolkit:legacy:phase8:close-ready`
+
+Legacy advanced menu action:
+
+- `Toolkit legacy: build phase5 external handoff report`
 
 Deterministic argument builders exported from menu module:
 

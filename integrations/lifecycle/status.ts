@@ -2,6 +2,10 @@ import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { buildLifecycleVersionReport } from './packageInfo';
 import {
+  readLifecycleExperimentalFeaturesSnapshot,
+  type LifecycleExperimentalFeaturesSnapshot,
+} from './experimentalFeaturesSnapshot';
+import {
   readLifecyclePolicyValidationSnapshot,
   type LifecyclePolicyValidationSnapshot,
 } from './policyValidationSnapshot';
@@ -17,6 +21,7 @@ export type LifecycleStatus = {
   hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   trackedNodeModulesCount: number;
   policyValidation: LifecyclePolicyValidationSnapshot;
+  experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
 };
 
 export const readLifecycleStatus = (params?: {
@@ -44,5 +49,6 @@ export const readLifecycleStatus = (params?: {
     hooksDirectoryResolution: hooksDirectory.source,
     trackedNodeModulesCount,
     policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
+    experimentalFeatures: readLifecycleExperimentalFeaturesSnapshot(),
   };
 };

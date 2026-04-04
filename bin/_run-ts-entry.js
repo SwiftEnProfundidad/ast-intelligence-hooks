@@ -22,7 +22,10 @@ function runTsEntry(relativeEntry, forwardedArgs = []) {
     [tsxCli, entryFile, ...forwardedArgs],
     {
       stdio: 'inherit',
-      env: process.env,
+      env: {
+        ...process.env,
+        PUMUKI_RUNTIME_EXECUTION_SOURCE: 'source-bin',
+      },
     }
   );
 

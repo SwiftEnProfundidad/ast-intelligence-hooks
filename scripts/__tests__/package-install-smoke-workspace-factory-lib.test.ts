@@ -11,8 +11,11 @@ test('createSmokeWorkspace usa ruta consumer robusta para paths con ":" en plata
   try {
     if (process.platform === 'win32') {
       assert.equal(workspace.consumerRepo.includes(':'), false);
+      assert.equal(workspace.consumerRepo.endsWith('consumer'), true);
     } else {
-      assert.equal(workspace.consumerRepo.includes('consumer:repo'), true);
+      assert.equal(workspace.consumerRepo.includes('path:fixture'), true);
+      assert.equal(workspace.consumerRepo.endsWith('consumer-repo'), true);
+      assert.equal(workspace.consumerRepo.includes('consumer:repo'), false);
     }
     assert.equal(existsSync(workspace.tmpRoot), true);
   } finally {

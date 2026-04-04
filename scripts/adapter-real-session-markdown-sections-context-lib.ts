@@ -27,8 +27,14 @@ export const appendPreconditionsSection = (
 ): void => {
   lines.push('## Preconditions Check');
   lines.push('');
-  lines.push(`- \`npm run install:adapter-hooks-config\`: ${evaluation.installStatus}`);
-  lines.push(`- \`npm run verify:adapter-hooks-runtime\`: ${evaluation.verifyStatus}`);
+  lines.push(`- Adapter hook config present: ${evaluation.installStatus}`);
+  lines.push(`- Consumer runtime verification probe: ${evaluation.verifyStatus}`);
+  lines.push(
+    `- Strict session probe available: ${evaluation.strictProbeAvailable ? 'YES' : 'NO'}`
+  );
+  lines.push(
+    `- Include-simulated session probe available: ${evaluation.anyProbeAvailable ? 'YES' : 'NO'}`
+  );
   lines.push(
     `- \`PUMUKI_HOOK_DIAGNOSTIC=1\`: ${process.env.PUMUKI_HOOK_DIAGNOSTIC === '1' ? 'ON' : 'OFF'}`
   );

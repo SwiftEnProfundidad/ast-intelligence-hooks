@@ -121,6 +121,12 @@ npx --yes --package pumuki@latest pumuki-framework
 Menu starts in `Consumer` mode by default (focused operational options).
 Use `A` to switch to `Advanced` mode (full options), and `C` to return to `Consumer`.
 Advanced mode options include short inline contextual help.
+Consumer mode is now a minimal read-only shell:
+
+- `1/2/3/4` are the canonical read-only gate flows
+- `8` exports the same evidence snapshot in markdown form
+- `5/6/7/9` remain available only as `Legacy Read-Only Diagnostics`
+
 If needed, you can start directly in advanced mode:
 
 ```bash
@@ -145,14 +151,16 @@ To avoid host-specific defaults for consumer diagnostics prompts, set:
 export PUMUKI_CONSUMER_REPO_PATH=/absolute/path/to/consumer-repo
 ```
 
-Optional diagnostics adapters (runtime diagnostics and consumer startup triage) are also exposed from the menu, but they are not required for PRE_COMMIT/PRE_PUSH/CI gate outcomes.
+Advanced menu still exposes an auxiliary support toolkit (runtime diagnostics, consumer startup triage and phase5 closure helpers), but that toolkit is outside the product baseline and never required for PRE_COMMIT/PRE_PUSH/CI gate outcomes.
 
-Adapter readiness diagnostics are available from the interactive menu as:
+Advanced menu options `28/29/30/32` are legacy read-only audits. They remain available for diagnosis, but they are not part of the baseline gate shell and must not be interpreted as the canonical gate result.
 
-- `Build adapter readiness report`
-- `Build phase5 execution closure status report`
-- `Run phase5 execution closure (one-shot orchestration)`
-- `Clean local validation artifacts`
+Support toolkit actions are available from the interactive menu as:
+
+- `Toolkit: build adapter readiness report`
+- `Toolkit: build phase5 execution closure status report`
+- `Toolkit: run phase5 execution closure`
+- `Toolkit: clean local validation artifacts`
 
 ### 1.1) Non-interactive consumer matrix (1/2/3/4/9)
 
@@ -182,6 +190,31 @@ Diagnosis semantics:
 - `repo-clean`: files were scanned and no violations were detected.
 - `violations-detected`: one or more findings were produced.
 - `unknown`: evidence is missing/invalid or report normalization could not resolve status.
+
+Repeated baseline for a real fixture:
+
+```bash
+npm run validation:consumer-matrix-baseline -- \
+  --repo-root /absolute/path/to/ios-architecture-showcase \
+  --fixture ios-architecture-showcase \
+  --rounds 3 \
+  --json
+```
+
+This command writes `report.json` and `summary.md` under `.audit-reports/fixture-matrix/<fixture>/consumer-menu-matrix-baseline/`.
+Exit code is `0` when the repeated matrix stays stable and `1` when drift is detected across rounds.
+The JSON snapshot also includes:
+
+- `status.policyValidation`
+- `status.experimentalFeatures`
+- `doctor.blocking`
+- `doctor.layerSummary` for `core`, `operational`, `integration`, `policy-pack`, and `experimental`
+
+Real baselines validated on `2026-03-14`:
+
+- `ios-architecture-showcase`: `stable=YES`, with deterministic matrix output across `3` rounds
+- `SAAS:APP_SUPERMERCADOS`: `stable=YES`, `layerSummary={core:FAIL, operational:WARN, integration:FAIL, policy-pack:WARN, experimental:PASS}`
+- `R_GO`: `stable=YES`, `layerSummary={core:PASS, operational:WARN, integration:PASS, policy-pack:WARN, experimental:PASS}`
 
 Optional canary execution (controlled temporary violation + cleanup):
 
@@ -311,11 +344,18 @@ npx --yes pumuki adapter install --agent=codex --dry-run
 npx --yes pumuki adapter install --agent=cursor
 npm run adapter:install -- --agent=claude
 
-# skills engine helpers
+# skills engine helpers (inside the Pumuki source repo)
 npm run skills:compile
 npm run skills:lock:check
 npm run skills:import:custom
 npm run skills:import:custom -- --source /abs/path/to/SKILL.md --source ./skills/backend/SKILL.md
+```
+
+If you are operating from a consumer repository with the published package installed, do not assume `npm run skills:*` exists in the consumer. Use the packaged script directly instead:
+
+```bash
+npx --yes tsx@4.21.0 ./node_modules/pumuki/scripts/compile-skills-lock.ts
+npx --yes tsx@4.21.0 ./node_modules/pumuki/scripts/compile-skills-lock.ts --check
 ```
 
 `pumuki remove` is the enterprise-safe removal path because it performs lifecycle cleanup before package uninstall.
@@ -570,56 +610,58 @@ Verificación post-rollback:
 - `npx --yes pumuki analytics hotspots diagnose --json` puede quedar en `degraded` por artefactos ausentes.
 - El flujo local de gate (`pre-write/pre-commit/pre-push/ci`) sigue operativo y no depende de publicación SaaS.
 
-### 3) Diagnostics reports (optional adapters)
+### 3) Support toolkit reports (advanced-only, optional)
+
+These commands are support tooling, not gate baseline. Primary namespace is `toolkit:*`; legacy `validation:*` aliases remain only for compatibility.
 
 ```bash
 # Adapter-only readiness
 # (current adapter implementation consumes --adapter-report as input path)
-npm run validation:adapter-readiness -- \
+npm run toolkit:adapter-readiness -- \
   --adapter-report .audit-reports/adapter/adapter-real-session-report.md \
   --out .audit-reports/adapter/adapter-readiness.md
 
 # Adapter runtime status/report aliases (provider-agnostic command naming)
-npm run validation:adapter-session-status -- \
+npm run toolkit:adapter-session-status -- \
   --out .audit-reports/adapter/adapter-session-status.md
 
-npm run validation:adapter-real-session-report -- \
+npm run toolkit:adapter-real-session-report -- \
   --status-report .audit-reports/adapter/adapter-session-status.md \
   --out .audit-reports/adapter/adapter-real-session-report.md
 
 # Phase 5 consolidated readiness (consumer triage required, adapter report optional by default)
-npm run validation:phase5-blockers-readiness -- \
+npm run toolkit:phase5-blockers-readiness -- \
   --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md \
   --out .audit-reports/phase5/phase5-blockers-readiness.md
 
 # Phase 5 execution-closure status snapshot
-npm run validation:phase5-execution-closure-status -- \
+npm run toolkit:phase5-execution-closure-status -- \
   --phase5-blockers-report .audit-reports/phase5/phase5-blockers-readiness.md \
   --consumer-unblock-report .audit-reports/consumer-triage/consumer-startup-unblock-status.md \
   --out .audit-reports/phase5/phase5-execution-closure-status.md
 
 # One-shot: run full Phase 5 execution-closure orchestration
-npm run validation:phase5-execution-closure -- \
+npm run toolkit:phase5-execution-closure -- \
   --repo <owner>/<repo> \
   --out-dir .audit-reports/phase5 \
   --skip-workflow-lint
 
 # Local mock-consumer closure (no external GH dependency)
-npm run validation:phase5-execution-closure -- \
+npm run toolkit:phase5-execution-closure -- \
   --repo <owner>/<repo> \
   --out-dir .audit-reports/phase5 \
   --mock-consumer
 
 # Optional: disable auth preflight fail-fast
-npm run validation:phase5-execution-closure -- \
+npm run toolkit:phase5-execution-closure -- \
   --repo <owner>/<repo> \
   --out-dir .audit-reports/phase5 \
   --skip-workflow-lint \
   --skip-auth-preflight
 
 # Optional: clean local generated validation artifacts
-npm run validation:clean-artifacts
-npm run validation:clean-artifacts -- --dry-run
+npm run toolkit:clean-artifacts
+npm run toolkit:clean-artifacts -- --dry-run
 ```
 
 ## Scope behavior

@@ -9,6 +9,8 @@ test('formatEvidenceSummaryForMenu renderiza bloque operativo', () => {
     stage: 'CI',
     outcome: 'BLOCKED',
     totalFindings: 3,
+    filesScanned: 12,
+    filesAffected: 2,
     bySeverity: {
       CRITICAL: 1,
       ERROR: 1,
@@ -25,6 +27,14 @@ test('formatEvidenceSummaryForMenu renderiza bloque operativo', () => {
       { file: 'apps/backend/src/a.ts', count: 2 },
       { file: 'apps/ios/App/B.swift', count: 1 },
     ],
+    topFileLocations: [
+      { file: 'apps/backend/src/a.ts', line: 7 },
+      { file: 'apps/ios/App/B.swift', line: 14 },
+    ],
+    topFindings: [
+      { severity: 'CRITICAL', ruleId: 'rule.a', file: 'apps/backend/src/a.ts', line: 7 },
+      { severity: 'HIGH', ruleId: 'rule.b', file: 'apps/ios/App/B.swift', line: 14 },
+    ],
   });
 
   assert.match(rendered, /Evidence: status=ok stage=CI outcome=BLOCKED findings=3/);
@@ -38,6 +48,8 @@ test('formatEvidenceSummaryForMenu en missing da instruccion accionable', () => 
     stage: null,
     outcome: null,
     totalFindings: 0,
+    filesScanned: 0,
+    filesAffected: 0,
     bySeverity: {
       CRITICAL: 0,
       ERROR: 0,
@@ -51,6 +63,8 @@ test('formatEvidenceSummaryForMenu en missing da instruccion accionable', () => 
       LOW: 0,
     },
     topFiles: [],
+    topFileLocations: [],
+    topFindings: [],
   });
 
   assert.match(rendered, /Evidence: status=missing/);

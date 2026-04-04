@@ -109,39 +109,39 @@ npx tsx integrations/git/prePushBackend.cli.ts
 npx tsx integrations/git/ciFrontend.cli.ts
 ```
 
-## Operational adapters (optional)
+## Support toolkit (optional)
 
-Adapter diagnostics are intentionally outside the deterministic gate runtime.
+Adapter diagnostics and rollout helpers are intentionally outside the deterministic gate runtime and outside the product baseline.
 
 - They live under `scripts/*` and `docs/validation/*`.
 - They do not change PRE_COMMIT/PRE_PUSH/CI outcomes.
-- They support rollout diagnostics and incident triage.
+- They support rollout diagnostics and incident triage as auxiliary toolkit.
 
 Typical commands:
 
 ```bash
-npm run validation:adapter-readiness -- \
+npm run toolkit:adapter-readiness -- \
   --adapter-report .audit-reports/adapter/adapter-real-session-report.md \
   --out .audit-reports/adapter/adapter-readiness.md
 
-npm run validation:adapter-session-status -- \
+npm run toolkit:adapter-session-status -- \
   --out .audit-reports/adapter/adapter-session-status.md
 
-npm run validation:adapter-real-session-report -- \
+npm run toolkit:adapter-real-session-report -- \
   --status-report .audit-reports/adapter/adapter-session-status.md \
   --out .audit-reports/adapter/adapter-real-session-report.md
 
-npm run validation:phase5-blockers-readiness -- \
+npm run toolkit:phase5-blockers-readiness -- \
   --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md \
   --out .audit-reports/phase5/phase5-blockers-readiness.md
 
-npm run validation:phase5-execution-closure-status -- \
+npm run toolkit:phase5-execution-closure-status -- \
   --phase5-blockers-report .audit-reports/phase5/phase5-blockers-readiness.md \
   --consumer-unblock-report .audit-reports/consumer-triage/consumer-startup-unblock-status.md \
   --out .audit-reports/phase5/phase5-execution-closure-status.md
 ```
 
-Note: current adapter readiness command uses `--adapter-report` as the adapter input file flag.
+Primary namespace is `toolkit:*`; legacy `validation:*` aliases remain only for compatibility. Current adapter readiness command still uses `--adapter-report` as the adapter input file flag.
 
 ### CI workflows
 

@@ -42,19 +42,6 @@ const resolveInitialMenuMode = (): MenuMode => {
   return 'consumer';
 };
 
-const printAdvancedMenu = (actions: ReadonlyArray<MenuAction>): void => {
-  if (!isMenuUiV2Enabled()) {
-    output.write(`\n${formatAdvancedMenuClassicView(actions)}\n`);
-    return;
-  }
-  try {
-    output.write(`\n${formatAdvancedMenuView(actions)}\n`);
-  } catch {
-    output.write('\n[pumuki][menu-ui-v2] Render failed. Falling back to classic menu.\n');
-    output.write(`\n${formatAdvancedMenuClassicView(actions)}\n`);
-  }
-};
-
 const menu = async (): Promise<void> => {
   const rl = createInterface({ input, output });
 
@@ -85,7 +72,29 @@ const menu = async (): Promise<void> => {
       if (mode === 'consumer') {
         consumerRuntime.printMenu();
       } else {
-        printAdvancedMenu(advancedActions);
+        const currentSummary = consumerRuntime.readCurrentSummary();
+        if (!isMenuUiV2Enabled()) {
+          output.write(
+            `\n${formatAdvancedMenuClassicView(advancedActions, {
+              evidenceSummary: currentSummary ?? undefined,
+            })}\n`
+          );
+        } else {
+          try {
+            output.write(
+              `\n${formatAdvancedMenuView(advancedActions, {
+                evidenceSummary: currentSummary ?? undefined,
+              })}\n`
+            );
+          } catch {
+            output.write('\n[pumuki][menu-ui-v2] Render failed. Falling back to classic menu.\n');
+            output.write(
+              `\n${formatAdvancedMenuClassicView(advancedActions, {
+                evidenceSummary: currentSummary ?? undefined,
+              })}\n`
+            );
+          }
+        }
       }
       const option = (await rl.question('\nSelect option: ')).trim();
       const normalized = option.toUpperCase();

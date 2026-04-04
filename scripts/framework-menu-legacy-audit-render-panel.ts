@@ -3,8 +3,9 @@ import type {
   LegacyMenuPaletteRole,
 } from './framework-menu-legacy-audit-types';
 
-export const LEGACY_AUDIT_OVERVIEW_TITLE = 'PUMUKI — Hook-System (run: npx ast-hooks)';
-export const LEGACY_AUDIT_OVERVIEW_SUBTITLE = 'AST Intelligence System Overview';
+export const LEGACY_AUDIT_OVERVIEW_TITLE = 'PUMUKI — Legacy Read-Only Evidence Snapshot';
+export const LEGACY_AUDIT_OVERVIEW_SUBTITLE =
+  'Derived from .ai_evidence.json without recomputing the canonical gate verdict';
 
 const ANSI_PATTERN = /\u001b\[[0-9;]*m/g;
 const PANEL_MIN_WIDTH = 56;

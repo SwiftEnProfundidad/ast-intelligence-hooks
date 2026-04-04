@@ -19,9 +19,9 @@ test('parseAdapterRealSessionArgs provides deterministic defaults', () => {
 test('parseAdapterRealSessionStatusReport extracts command exit codes and pass signals', () => {
   const parsed = parseAdapterRealSessionStatusReport([
     '- verdict: PASS',
-    '| verify-adapter-hooks-runtime | `npm run verify:adapter-hooks-runtime` | 0 |',
-    '| assess-adapter-hooks-session | `npm run assess:adapter-hooks-session` | 0 |',
-    '| assess-adapter-hooks-session:any | `npm run assess:adapter-hooks-session:any` | 0 |',
+    '| verify-adapter-hooks-runtime | `npm run verify:adapter-hooks-runtime` | available | 0 |',
+    '| assess-adapter-hooks-session | `npm run assess:adapter-hooks-session` | available | 0 |',
+    '| assess-adapter-hooks-session:any | `npm run assess:adapter-hooks-session:any` | available | 0 |',
     'assess-adapter-hooks-session',
     'session-assessment=PASS',
     'assess-adapter-hooks-session:any',
@@ -32,6 +32,9 @@ test('parseAdapterRealSessionStatusReport extracts command exit codes and pass s
   assert.equal(parsed.verifyExitCode, 0);
   assert.equal(parsed.strictExitCode, 0);
   assert.equal(parsed.anyExitCode, 0);
+  assert.equal(parsed.verifyAvailable, true);
+  assert.equal(parsed.strictAvailable, true);
+  assert.equal(parsed.anyAvailable, true);
   assert.equal(parsed.strictAssessmentPass, true);
   assert.equal(parsed.anyAssessmentPass, true);
 });
@@ -58,6 +61,9 @@ test('buildAdapterRealSessionReportMarkdown renders PASS outcome when strict run
       verifyExitCode: 0,
       strictExitCode: 0,
       anyExitCode: 0,
+      verifyAvailable: true,
+      strictAvailable: true,
+      anyAvailable: true,
       strictAssessmentPass: true,
       anyAssessmentPass: true,
     },
@@ -82,5 +88,7 @@ test('buildAdapterRealSessionReportMarkdown renders PASS outcome when strict run
 
   assert.match(markdown, /- Validation result: PASS/);
   assert.match(markdown, /- Re-test required: NO/);
+  assert.match(markdown, /- Consumer runtime verification probe: PASS/);
+  assert.match(markdown, /- Strict session probe available: YES/);
   assert.match(markdown, /- `pre_write_code` event observed: YES/);
 });

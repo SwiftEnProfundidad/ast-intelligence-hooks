@@ -95,8 +95,53 @@ test('buildSupportTicketDraft renders deterministic support sections with attach
   assert.match(markdown, /- auth verdict: BLOCKED/);
   assert.match(markdown, /- billing probe error: missing user scope/);
   assert.match(markdown, /queued\/stuck before any job is created/);
+  assert.match(
+    markdown,
+    /Persistent GitHub Actions `startup_failure` before job creation in private repository/
+  );
+  assert.match(
+    markdown,
+    /Please verify account\/repository-level controls for private Actions execution/
+  );
   assert.match(markdown, /## Attachments/);
   assert.match(markdown, /docs\/validation\/auth-check\.md/);
   assert.match(markdown, /docs\/validation\/consumer-ci-artifacts-report\.md/);
   assert.match(markdown, /docs\/validation\/consumer-workflow-lint-report\.md/);
+});
+
+test('buildSupportTicketDraft stays neutral when support bundle has no startup failures', () => {
+  const markdown = buildSupportTicketDraft({
+    repo: 'acme/repo',
+    supportBundlePath: 'docs/validation/support-bundle.md',
+    authReportPath: 'docs/validation/auth-check.md',
+    support: {
+      repoVisibility: 'public',
+      startupFailureRuns: '0',
+      startupStalledRuns: '0',
+      oldestQueuedRunAgeMinutes: '12',
+      runUrls: ['https://github.com/acme/repo/actions/runs/3'],
+      path: 'BuildSucceeded',
+      jobsCount: '1',
+      artifactsCount: '0',
+    },
+    auth: {
+      verdict: 'READY',
+      detectedScopes: 'repo, workflow',
+      missingScopes: '(none)',
+      billingError: undefined,
+    },
+  });
+
+  assert.match(markdown, /Consumer CI diagnostics request for public repository/);
+  assert.match(
+    markdown,
+    /Current support bundle does not show `startup_failure` conclusions in the sampled runs/
+  );
+  assert.match(
+    markdown,
+    /Please review the attached diagnostics and identify the exact root cause reflected in the support bundle/
+  );
+  assert.doesNotMatch(markdown, /private repository/);
+  assert.doesNotMatch(markdown, /Persistent GitHub Actions `startup_failure`/);
+  assert.doesNotMatch(markdown, /before job creation/);
 });

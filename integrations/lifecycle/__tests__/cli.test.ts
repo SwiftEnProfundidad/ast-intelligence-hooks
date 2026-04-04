@@ -19,6 +19,14 @@ import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
 import { openSddSession } from '../../sdd/sessionStore';
 import { resolveMcpAiGateReceiptPath, writeMcpAiGateReceipt } from '../../mcp/aiGateReceipt';
 
+test.afterEach(() => {
+  process.exitCode = 0;
+});
+
+test.after(() => {
+  process.exitCode = 0;
+});
+
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
   execFileSync('git', args, { cwd, encoding: 'utf8' });
 
@@ -43,10 +51,14 @@ const createGitRepo = (trackedNodeModules = false): string => {
   return repo;
 };
 
-const writePreWriteEvidence = (repoRoot: string, branch: string): void => {
+const writePreWriteEvidence = (
+  repoRoot: string,
+  branch: string,
+  timestamp = new Date().toISOString()
+): void => {
   const evidence = {
     version: '2.1' as const,
-    timestamp: new Date().toISOString(),
+    timestamp,
     snapshot: {
       stage: 'PRE_COMMIT' as const,
       outcome: 'PASS' as const,
@@ -123,6 +135,25 @@ const writePreWriteEvidence = (repoRoot: string, branch: string): void => {
   writeFileSync(
     join(repoRoot, '.ai_evidence.json'),
     JSON.stringify(withChain, null, 2),
+    'utf8'
+  );
+};
+
+const rewriteMcpReceiptIssuedAt = (repoRoot: string, issuedAt: string): void => {
+  const receiptPath = resolveMcpAiGateReceiptPath(repoRoot);
+  const receipt = JSON.parse(readFileSync(receiptPath, 'utf8')) as {
+    issued_at?: string;
+  };
+  writeFileSync(
+    receiptPath,
+    JSON.stringify(
+      {
+        ...receipt,
+        issued_at: issuedAt,
+      },
+      null,
+      2
+    ),
     'utf8'
   );
 };
@@ -283,6 +314,95 @@ const withSddBypass = async <T>(callback: () => Promise<T>): Promise<T> => {
     }
   }
 };
+
+const withPreWriteEnforcement = async <T>(
+  mode: 'off' | 'advisory' | 'strict',
+  callback: () => Promise<T>
+): Promise<T> => {
+  const previous = process.env.PUMUKI_EXPERIMENTAL_PRE_WRITE;
+  const previousSdd = process.env.PUMUKI_EXPERIMENTAL_SDD;
+  const previousHeuristics = process.env.PUMUKI_EXPERIMENTAL_HEURISTICS;
+  const previousLearningContext = process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
+  const previousAnalytics = process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
+  const previousSkills = process.env.PUMUKI_SKILLS_ENFORCEMENT;
+  const previousTddBdd = process.env.PUMUKI_TDD_BDD_ENFORCEMENT;
+  const previousLegacy = process.env.PUMUKI_PREWRITE_ENFORCEMENT;
+  delete process.env.PUMUKI_EXPERIMENTAL_HEURISTICS;
+  delete process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
+  delete process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
+  delete process.env.PUMUKI_SKILLS_ENFORCEMENT;
+  delete process.env.PUMUKI_TDD_BDD_ENFORCEMENT;
+  delete process.env.PUMUKI_PREWRITE_ENFORCEMENT;
+  process.env.PUMUKI_EXPERIMENTAL_PRE_WRITE = mode;
+  process.env.PUMUKI_EXPERIMENTAL_SDD = 'strict';
+  try {
+    return await callback();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_PRE_WRITE;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_PRE_WRITE = previous;
+    }
+    if (typeof previousSdd === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_SDD;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_SDD = previousSdd;
+    }
+    if (typeof previousHeuristics === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_HEURISTICS;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_HEURISTICS = previousHeuristics;
+    }
+    if (typeof previousLearningContext === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT = previousLearningContext;
+    }
+    if (typeof previousAnalytics === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_ANALYTICS = previousAnalytics;
+    }
+    if (typeof previousSkills === 'undefined') {
+      delete process.env.PUMUKI_SKILLS_ENFORCEMENT;
+    } else {
+      process.env.PUMUKI_SKILLS_ENFORCEMENT = previousSkills;
+    }
+    if (typeof previousTddBdd === 'undefined') {
+      delete process.env.PUMUKI_TDD_BDD_ENFORCEMENT;
+    } else {
+      process.env.PUMUKI_TDD_BDD_ENFORCEMENT = previousTddBdd;
+    }
+    if (typeof previousLegacy === 'undefined') {
+      delete process.env.PUMUKI_PREWRITE_ENFORCEMENT;
+    } else {
+      process.env.PUMUKI_PREWRITE_ENFORCEMENT = previousLegacy;
+    }
+  }
+};
+
+const withSkillsEnforcement = async <T>(
+  mode: 'advisory' | 'strict',
+  callback: () => Promise<T>
+): Promise<T> => {
+  const previous = process.env.PUMUKI_SKILLS_ENFORCEMENT;
+  process.env.PUMUKI_SKILLS_ENFORCEMENT = mode;
+  try {
+    return await callback();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env.PUMUKI_SKILLS_ENFORCEMENT;
+    } else {
+      process.env.PUMUKI_SKILLS_ENFORCEMENT = previous;
+    }
+  }
+};
+
+const withStrictPreWriteEnforcement = async <T>(callback: () => Promise<T>): Promise<T> =>
+  withPreWriteEnforcement('strict', callback);
+
+const withAdvisoryPreWriteEnforcement = async <T>(callback: () => Promise<T>): Promise<T> =>
+  withPreWriteEnforcement('advisory', callback);
 
 const createEmptyHotspotsReport = (repoRoot: string): LocalHotspotsReport => {
   return {
@@ -875,6 +995,28 @@ test('runLifecycleCli retorna 0 para ayuda explícita en subcomando', async () =
   assert.equal(code, 0);
 });
 
+test('runLifecycleCli retorna 0 para ayuda explícita en comandos lifecycle simples', async () => {
+  const bootstrapCode = await withSilentConsole(() => runLifecycleCli(['bootstrap', '--help']));
+  const statusCode = await withSilentConsole(() => runLifecycleCli(['status', '--help']));
+  const doctorCode = await withSilentConsole(() => runLifecycleCli(['doctor', '--help']));
+
+  assert.equal(bootstrapCode, 0);
+  assert.equal(statusCode, 0);
+  assert.equal(doctorCode, 0);
+});
+
+test('runLifecycleCli retorna 0 para ayuda explícita en subcomandos profundos', async () => {
+  const validateCode = await withSilentConsole(() =>
+    runLifecycleCli(['sdd', 'validate', '--help'])
+  );
+  const hotspotsCode = await withSilentConsole(() =>
+    runLifecycleCli(['analytics', 'hotspots', 'report', '--help'])
+  );
+
+  assert.equal(validateCode, 0);
+  assert.equal(hotspotsCode, 0);
+});
+
 test('runLifecycleCli watch --json delega en runLifecycleWatch y devuelve payload estable', async () => {
   const printed: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -1084,9 +1226,48 @@ test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto e
       remoteCiDiagnostics?: { status?: string; blockers?: Array<{ code?: string }> };
       policyValidation?: {
         stages?: {
-          PRE_COMMIT?: { validationCode?: string };
-          PRE_PUSH?: { validationCode?: string };
-          CI?: { validationCode?: string };
+          PRE_COMMIT?: { validationCode?: string; activationSource?: string | null };
+          PRE_PUSH?: { validationCode?: string; activationSource?: string | null };
+          CI?: { validationCode?: string; activationSource?: string | null };
+        };
+      };
+      experimentalFeatures?: {
+        features?: {
+          analytics?: {
+            mode?: string;
+            source?: string;
+            activationVariable?: string;
+          };
+          operational_memory?: {
+            mode?: string;
+            source?: string;
+            activationVariable?: string;
+          };
+          saas_ingestion?: {
+            mode?: string;
+            source?: string;
+            activationVariable?: string;
+          };
+          learning_context?: {
+            mode?: string;
+            source?: string;
+            activationVariable?: string;
+          };
+          pre_write?: {
+            mode?: string;
+            source?: string;
+            activationVariable?: string;
+          };
+          heuristics?: {
+            mode?: string;
+            source?: string;
+            activationVariable?: string;
+          };
+          sdd?: {
+            mode?: string;
+            source?: string;
+            activationVariable?: string;
+          };
         };
       };
     };
@@ -1096,11 +1277,56 @@ test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto e
       payload.policyValidation?.stages?.PRE_COMMIT?.validationCode,
       'POLICY_AS_CODE_VALID'
     );
+    assert.equal(payload.policyValidation?.stages?.PRE_COMMIT?.activationSource, null);
     assert.equal(
       payload.policyValidation?.stages?.PRE_PUSH?.validationCode,
       'POLICY_AS_CODE_VALID'
     );
+    assert.equal(payload.policyValidation?.stages?.PRE_PUSH?.activationSource, null);
     assert.equal(payload.policyValidation?.stages?.CI?.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(payload.policyValidation?.stages?.CI?.activationSource, null);
+    assert.equal(payload.experimentalFeatures?.features?.analytics?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.analytics?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.operational_memory?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.operational_memory?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.pre_write?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.pre_write?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.saas_ingestion?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.saas_ingestion?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.heuristics?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.heuristics?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.learning_context?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.learning_context?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.sdd?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.sdd?.source, 'default');
+    assert.equal(
+      payload.experimentalFeatures?.features?.analytics?.activationVariable,
+      'PUMUKI_EXPERIMENTAL_ANALYTICS'
+    );
+    assert.equal(
+      payload.experimentalFeatures?.features?.operational_memory?.activationVariable,
+      'PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY'
+    );
+    assert.equal(
+      payload.experimentalFeatures?.features?.pre_write?.activationVariable,
+      'PUMUKI_EXPERIMENTAL_PRE_WRITE'
+    );
+    assert.equal(
+      payload.experimentalFeatures?.features?.saas_ingestion?.activationVariable,
+      'PUMUKI_EXPERIMENTAL_SAAS_INGESTION'
+    );
+    assert.equal(
+      payload.experimentalFeatures?.features?.heuristics?.activationVariable,
+      'PUMUKI_EXPERIMENTAL_HEURISTICS'
+    );
+    assert.equal(
+      payload.experimentalFeatures?.features?.learning_context?.activationVariable,
+      'PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT'
+    );
+    assert.equal(
+      payload.experimentalFeatures?.features?.sdd?.activationVariable,
+      'PUMUKI_EXPERIMENTAL_SDD'
+    );
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
@@ -1198,16 +1424,44 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       deep?: {
         enabled?: boolean;
-        checks?: Array<{ id?: string }>;
+        checks?: Array<{ id?: string; status?: string; layer?: string }>;
         contract?: {
           overall?: string;
         };
       };
       policyValidation?: {
         stages?: {
-          PRE_COMMIT?: { validationCode?: string };
-          PRE_PUSH?: { validationCode?: string };
-          CI?: { validationCode?: string };
+          PRE_COMMIT?: { validationCode?: string; activationSource?: string | null };
+          PRE_PUSH?: { validationCode?: string; activationSource?: string | null };
+          CI?: { validationCode?: string; activationSource?: string | null };
+        };
+      };
+      experimentalFeatures?: {
+        features?: {
+          analytics?: {
+            mode?: string;
+            source?: string;
+          };
+          operational_memory?: {
+            mode?: string;
+            source?: string;
+          };
+          saas_ingestion?: {
+            mode?: string;
+            source?: string;
+          };
+          learning_context?: {
+            mode?: string;
+            source?: string;
+          };
+          pre_write?: {
+            mode?: string;
+            source?: string;
+          };
+          sdd?: {
+            mode?: string;
+            source?: string;
+          };
         };
       };
     };
@@ -1215,6 +1469,24 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'upstream-readiness'), true);
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'adapter-wiring'), true);
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'policy-drift'), true);
+    assert.equal(
+      payload.deep?.checks?.some(
+        (check) =>
+          check.id === 'policy-drift' &&
+          check.status === 'warn' &&
+          check.layer === 'policy-pack'
+      ),
+      true
+    );
+    assert.equal(
+      payload.deep?.checks?.some(
+        (check) =>
+          check.id === 'upstream-readiness' &&
+          check.status === 'warn' &&
+          check.layer === 'operational'
+      ),
+      true
+    );
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'evidence-source-drift'), true);
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'compatibility-contract'), true);
     assert.equal(
@@ -1226,11 +1498,26 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
       payload.policyValidation?.stages?.PRE_COMMIT?.validationCode,
       'POLICY_AS_CODE_VALID'
     );
+    assert.equal(payload.policyValidation?.stages?.PRE_COMMIT?.activationSource, null);
     assert.equal(
       payload.policyValidation?.stages?.PRE_PUSH?.validationCode,
       'POLICY_AS_CODE_VALID'
     );
+    assert.equal(payload.policyValidation?.stages?.PRE_PUSH?.activationSource, null);
     assert.equal(payload.policyValidation?.stages?.CI?.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(payload.policyValidation?.stages?.CI?.activationSource, null);
+    assert.equal(payload.experimentalFeatures?.features?.analytics?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.analytics?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.operational_memory?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.operational_memory?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.pre_write?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.pre_write?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.saas_ingestion?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.saas_ingestion?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.learning_context?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.learning_context?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.sdd?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.sdd?.source, 'default');
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
@@ -1238,7 +1525,7 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
   }
 });
 
-test('runLifecycleCli doctor --deep retorna 1 cuando hay bloqueo crítico deep', async () => {
+test('runLifecycleCli doctor --deep retorna 1 cuando el contrato de evidence está roto', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
@@ -1254,7 +1541,7 @@ test('runLifecycleCli doctor --deep retorna 1 cuando hay bloqueo crítico deep',
     }) as typeof process.stdout.write;
 
     const code = await runLifecycleCli(['doctor', '--deep', '--json']);
-    assert.equal(code, 1);
+    assert.equal(code, 0);
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       deep?: {
         blocking?: boolean;
@@ -1268,13 +1555,97 @@ test('runLifecycleCli doctor --deep retorna 1 cuando hay bloqueo crítico deep',
   }
 });
 
-test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y permite continuar', async () => {
+test('runLifecycleCli doctor --deep retorna 0 cuando solo falta evidence', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
   try {
+    process.chdir(repo);
+    await withSilentConsole(() => runLifecycleCli(['install']));
+    rmSync(join(repo, '.ai_evidence.json'), { force: true });
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['doctor', '--deep', '--json']);
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      deep?: {
+        blocking?: boolean;
+        checks?: Array<{ id?: string; severity?: string; status?: string; layer?: string }>;
+      };
+    };
+    assert.equal(payload.deep?.blocking, false);
+    assert.equal(
+      payload.deep?.checks?.some(
+        (check) =>
+          check.id === 'evidence-source-drift' &&
+          check.severity === 'warning' &&
+          check.status === 'warn' &&
+          check.layer === 'operational'
+      ),
+      true
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli doctor --deep retorna 0 cuando evidence está stale', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    await withSilentConsole(() => runLifecycleCli(['install']));
+    writePreWriteEvidence(repo, 'main', '2026-01-01T00:00:00.000Z');
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['doctor', '--deep', '--json']);
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      deep?: {
+        blocking?: boolean;
+        checks?: Array<{ id?: string; severity?: string; status?: string; layer?: string; message?: string }>;
+      };
+    };
+    assert.equal(payload.deep?.blocking, false);
+    assert.equal(
+      payload.deep?.checks?.some(
+        (check) =>
+          check.id === 'evidence-source-drift' &&
+          check.status === 'warn' &&
+          check.layer === 'operational' &&
+          check.severity === 'warning' &&
+          check.message?.includes('Evidence is stale')
+      ),
+      true
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y permite continuar', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  await withAdvisoryPreWriteEnforcement(async () => {
+    try {
     const packageVersion = getCurrentPumukiVersion({ repoRoot: repo });
     runGit(repo, ['checkout', '-b', 'feature/prewrite-mcp-enforcement']);
     writeFileSync(
@@ -1390,11 +1761,12 @@ test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y perm
     );
     assert.equal(payload.policy_validation?.stages?.CI?.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(existsSync(resolveMcpAiGateReceiptPath(repo)), true);
-  } finally {
-    process.stdout.write = originalStdoutWrite;
-    process.chdir(previousCwd);
-    rmSync(repo, { recursive: true, force: true });
-  }
+    } finally {
+      process.stdout.write = originalStdoutWrite;
+      process.chdir(previousCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
 });
 
 test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP válido', async () => {
@@ -1403,7 +1775,8 @@ test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP v�
   const printed: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
-  try {
+  await withAdvisoryPreWriteEnforcement(async () => {
+    try {
     const packageVersion = getCurrentPumukiVersion({ repoRoot: repo });
     runGit(repo, ['checkout', '-b', 'feature/prewrite-mcp-ready']);
     writeFileSync(
@@ -1517,11 +1890,97 @@ test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP v�
       'POLICY_AS_CODE_VALID'
     );
     assert.equal(payload.policy_validation?.stages?.CI?.validationCode, 'POLICY_AS_CODE_VALID');
-  } finally {
-    process.stdout.write = originalStdoutWrite;
-    process.chdir(previousCwd);
-    rmSync(repo, { recursive: true, force: true });
-  }
+    } finally {
+      process.stdout.write = originalStdoutWrite;
+      process.chdir(previousCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE autocura evidence y receipt stale aunque la sesión SDD esté inválida', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const changeId = 'prewrite-invalid-session-stale-evidence';
+
+  await withAdvisoryPreWriteEnforcement(async () => {
+    try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-invalid-session-stale-evidence']);
+    writeFileSync(
+      join(repo, 'package.json'),
+      JSON.stringify({ name: 'fixture', version: '1.0.0' }, null, 2),
+      'utf8'
+    );
+    mkdirSync(join(repo, 'openspec', 'changes', changeId), { recursive: true });
+    writeFileSync(join(repo, 'openspec', 'changes', changeId, 'proposal.md'), '# proposal\n', 'utf8');
+    openSddSession({ cwd: repo, changeId, ttlMinutes: 60 });
+    runGit(repo, ['config', '--local', 'pumuki.sdd.session.expiresAt', '2000-01-01T00:00:00.000Z']);
+    writePreWriteEvidence(
+      repo,
+      'feature/prewrite-invalid-session-stale-evidence',
+      '2026-01-01T00:00:00.000Z'
+    );
+    writeMcpAiGateReceipt({
+      repoRoot: repo,
+      stage: 'PRE_WRITE',
+      status: 'ALLOWED',
+      allowed: true,
+    });
+    rewriteMcpReceiptIssuedAt(repo, '2026-01-01T00:00:00.000Z');
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+        runPlatformGate: async () => {
+          writePreWriteEvidence(repo, 'feature/prewrite-invalid-session-stale-evidence');
+          return 0;
+        },
+      })
+    );
+    assert.equal(code, 0);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      sdd?: {
+        decision?: { code?: string; allowed?: boolean };
+      };
+      ai_gate?: {
+        allowed?: boolean;
+        violations?: Array<{ code?: string }>;
+      };
+      automation?: {
+        attempted?: boolean;
+        actions?: Array<{ action?: string; status?: string }>;
+      };
+    };
+    assert.equal(payload.sdd?.decision?.allowed, false);
+    assert.equal(payload.sdd?.decision?.code, 'SDD_SESSION_INVALID');
+    assert.equal(payload.ai_gate?.allowed, true);
+    assert.equal(
+      (payload.ai_gate?.violations ?? []).some(
+        (violation) =>
+          violation.code === 'EVIDENCE_STALE'
+          || violation.code === 'MCP_ENTERPRISE_RECEIPT_STALE'
+      ),
+      false
+    );
+    assert.equal(payload.automation?.attempted, true);
+    assert.deepEqual(
+      (payload.automation?.actions ?? []).map((action) => action.action),
+      ['refresh_evidence', 'refresh_mcp_receipt']
+    );
+    } finally {
+      process.stdout.write = originalStdoutWrite;
+      process.chdir(previousCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
 });
 
 test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy de pre-flight', async () => {
@@ -1530,7 +1989,8 @@ test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy d
   const printed: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
-  try {
+  await withAdvisoryPreWriteEnforcement(async () => {
+    try {
     const packageVersion = getCurrentPumukiVersion({ repoRoot: repo });
     runGit(repo, ['checkout', '-b', 'feature/prewrite-panel']);
     writeFileSync(
@@ -1620,11 +2080,12 @@ test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy d
     assert.match(output, /PRE-FLIGHT CHECK/);
     assert.match(output, /MCP receipt: required=yes kind=valid/);
     assert.match(output, /Evidence source: source=local-file/);
-  } finally {
-    process.stdout.write = originalStdoutWrite;
-    process.chdir(previousCwd);
-    rmSync(repo, { recursive: true, force: true });
-  }
+    } finally {
+      process.stdout.write = originalStdoutWrite;
+      process.chdir(previousCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
 });
 
 test('runLifecycleCli sdd validate PRE_WRITE auto-bootstrap de OpenSpec y habilita flujo determinista', async () => {
@@ -1634,7 +2095,8 @@ test('runLifecycleCli sdd validate PRE_WRITE auto-bootstrap de OpenSpec y habili
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
   const changeId = 'bootstrap-openspec-missing';
 
-  try {
+  await withAdvisoryPreWriteEnforcement(async () => {
+    try {
     runGit(repo, ['checkout', '-b', 'feature/prewrite-openspec-bootstrap']);
     writeFileSync(
       join(repo, 'package.json'),
@@ -1681,11 +2143,12 @@ test('runLifecycleCli sdd validate PRE_WRITE auto-bootstrap de OpenSpec y habili
     assert.equal(payload.bootstrap?.attempted, true);
     assert.equal(payload.bootstrap?.status, 'OK');
     assert.equal((payload.bootstrap?.actions ?? []).includes('npm-install:@fission-ai/openspec@latest'), true);
-  } finally {
-    process.stdout.write = originalStdoutWrite;
-    process.chdir(previousCwd);
-    rmSync(repo, { recursive: true, force: true });
-  }
+    } finally {
+      process.stdout.write = originalStdoutWrite;
+      process.chdir(previousCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
 });
 
 test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado expone next_action ejecutable', async () => {
@@ -1696,7 +2159,8 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
   const previousAutoBootstrap = process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
   const changeId = 'bootstrap-disabled-openspec-missing';
 
-  try {
+  await withAdvisoryPreWriteEnforcement(async () => {
+    try {
     runGit(repo, ['checkout', '-b', 'feature/prewrite-openspec-bootstrap-disabled']);
     writeFileSync(
       join(repo, 'package.json'),
@@ -1726,22 +2190,68 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
         runPlatformGate: async () => 0,
       })
     );
-    assert.equal(code, 1);
+    assert.equal(code, 0);
     assert.equal(existsSync(join(repo, 'node_modules', '.bin', 'openspec')), false);
 
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       sdd?: { decision?: { code?: string; allowed?: boolean } };
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
       bootstrap?: { enabled?: boolean; attempted?: boolean; status?: string; details?: string };
       next_action?: { reason?: string; command?: string };
     };
     assert.equal(payload.sdd?.decision?.allowed, false);
     assert.equal(payload.sdd?.decision?.code, 'OPENSPEC_MISSING');
+    assert.equal(payload.pre_write_enforcement?.mode, 'advisory');
+    assert.equal(payload.pre_write_enforcement?.blocking, false);
     assert.equal(payload.bootstrap?.enabled, false);
     assert.equal(payload.bootstrap?.attempted, false);
     assert.equal(payload.bootstrap?.status, 'SKIPPED');
     assert.match(payload.bootstrap?.details ?? '', /PUMUKI_PREWRITE_AUTO_BOOTSTRAP=0/);
     assert.equal(payload.next_action?.reason, 'OPENSPEC_MISSING');
     assert.equal(payload.next_action?.command, 'npx --yes --package pumuki@latest pumuki install');
+    } finally {
+      if (typeof previousAutoBootstrap === 'undefined') {
+        delete process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
+      } else {
+        process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP = previousAutoBootstrap;
+      }
+      process.stdout.write = originalStdoutWrite;
+      process.chdir(previousCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE blocks missing OpenSpec in strict enforcement mode', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const previousAutoBootstrap = process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-openspec-strict']);
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+    process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP = '0';
+
+    const code = await withStrictPreWriteEnforcement(() =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+        runPlatformGate: async () => 0,
+      })
+    );
+    assert.equal(code, 1);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
+      sdd?: { decision?: { code?: string } };
+    };
+    assert.equal(payload.pre_write_enforcement?.mode, 'strict');
+    assert.equal(payload.pre_write_enforcement?.blocking, true);
+    assert.equal(payload.sdd?.decision?.code, 'OPENSPEC_MISSING');
   } finally {
     if (typeof previousAutoBootstrap === 'undefined') {
       delete process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
@@ -1754,14 +2264,15 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
   }
 });
 
-test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile estricto cuando falta regla crítica iOS', async () => {
+test('runLifecycleCli sdd validate PRE_WRITE deja skills gap en advisory cuando skills enforcement no está activado explícitamente', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
   const changeId = 'prewrite-ios-critical-gap';
 
-  try {
+  await withAdvisoryPreWriteEnforcement(async () => {
+    try {
     runGit(repo, ['checkout', '-b', 'feature/prewrite-ios-critical-gap']);
     writeFileSync(
       join(repo, 'package.json'),
@@ -1886,26 +2397,184 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile est
         runPlatformGate: async () => 0,
       })
     );
-    assert.equal(code, 1);
+    assert.equal(code, 0);
 
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       sdd?: { decision?: { code?: string; allowed?: boolean } };
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
       ai_gate?: { allowed?: boolean; violations?: Array<{ code?: string }> };
       next_action?: { reason?: string; command?: string };
     };
     assert.equal(payload.sdd?.decision?.allowed, true);
     assert.equal(payload.sdd?.decision?.code, 'ALLOWED');
-    assert.equal(payload.ai_gate?.allowed, false);
+    assert.equal(payload.pre_write_enforcement?.mode, 'advisory');
+    assert.equal(payload.pre_write_enforcement?.blocking, false);
+    assert.equal(payload.ai_gate?.allowed, true);
     assert.equal(
       (payload.ai_gate?.violations ?? []).some(
         (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
       ),
       true
     );
-    assert.equal(payload.next_action?.reason, 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING');
+    assert.equal(payload.next_action, undefined);
+    } finally {
+      process.stdout.write = originalStdoutWrite;
+      process.chdir(previousCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE blocks skills gap when skills enforcement está activado en strict explícitamente', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const changeId = 'prewrite-ios-critical-gap-strict';
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-ios-critical-gap-strict']);
+    writeFileSync(
+      join(repo, 'package.json'),
+      JSON.stringify({ name: 'fixture', version: '1.0.0' }, null, 2),
+      'utf8'
+    );
+    mkdirSync(join(repo, 'openspec', 'changes', changeId), { recursive: true });
+    writeFileSync(join(repo, 'openspec', 'changes', changeId, 'proposal.md'), '# proposal\n', 'utf8');
+    openSddSession({ cwd: repo, changeId, ttlMinutes: 60 });
+    writeMcpAiGateReceipt({
+      repoRoot: repo,
+      stage: 'PRE_WRITE',
+      status: 'ALLOWED',
+      allowed: true,
+    });
+
+    const evidence = {
+      version: '2.1' as const,
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_WRITE' as const,
+        outcome: 'PASS' as const,
+        rules_coverage: {
+          stage: 'PRE_WRITE' as const,
+          active_rule_ids: ['skills.ios.no-force-unwrap'],
+          evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      ledger: [],
+      platforms: {
+        ios: {
+          detected: true,
+          confidence: 'HIGH' as const,
+        },
+      },
+      rulesets: [
+        {
+          platform: 'skills' as const,
+          bundle: 'ios-guidelines@1.0.0',
+          hash: 'skills-ios-hash',
+        },
+        {
+          platform: 'skills' as const,
+          bundle: 'ios-concurrency-guidelines@1.0.0',
+          hash: 'skills-ios-concurrency-hash',
+        },
+        {
+          platform: 'skills' as const,
+          bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+          hash: 'skills-ios-swiftui-hash',
+        },
+      ],
+      human_intent: null,
+      ai_gate: {
+        status: 'ALLOWED' as const,
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED' as const,
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      repo_state: {
+        repo_root: repo,
+        git: {
+          available: true,
+          branch: 'feature/prewrite-ios-critical-gap-strict',
+          upstream: null,
+          ahead: 0,
+          behind: 0,
+          dirty: false,
+          staged: 0,
+          unstaged: 0,
+        },
+        lifecycle: {
+          installed: true,
+          package_version: getCurrentPumukiVersion({ repoRoot: repo }),
+          lifecycle_version: getCurrentPumukiVersion({ repoRoot: repo }),
+          hooks: {
+            pre_commit: 'managed' as const,
+            pre_push: 'managed' as const,
+          },
+        },
+      },
+    };
+    const payloadHash = computeEvidencePayloadHash(evidence);
+    const evidenceWithChain = {
+      ...evidence,
+      evidence_chain: {
+        algorithm: 'sha256' as const,
+        previous_payload_hash: null,
+        payload_hash: payloadHash,
+        sequence: 1,
+      },
+    };
+    writeFileSync(join(repo, '.ai_evidence.json'), JSON.stringify(evidenceWithChain, null, 2), 'utf8');
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
+      withStrictPreWriteEnforcement(() =>
+        withSkillsEnforcement('strict', () =>
+          runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+            runPlatformGate: async () => 0,
+          })
+        )
+      )
+    );
+    assert.equal(code, 1);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
+      ai_gate?: { allowed?: boolean; violations?: Array<{ code?: string }> };
+    };
+    assert.equal(payload.pre_write_enforcement?.mode, 'strict');
+    assert.equal(payload.pre_write_enforcement?.blocking, true);
+    assert.equal(payload.ai_gate?.allowed, false);
     assert.equal(
-      payload.next_action?.command,
-      'npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json'
+      (payload.ai_gate?.violations ?? []).some(
+        (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+      ),
+      true
     );
   } finally {
     process.stdout.write = originalStdoutWrite;
@@ -2027,17 +2696,22 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile cua
     }) as typeof process.stdout.write;
 
     const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
-      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
-        runPlatformGate: async () => 0,
-      })
+      withStrictPreWriteEnforcement(() =>
+        runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+          runPlatformGate: async () => 0,
+        })
+      )
     );
     assert.equal(code, 1);
 
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
       sdd?: { decision?: { code?: string; allowed?: boolean } };
       ai_gate?: { allowed?: boolean; violations?: Array<{ code?: string }> };
       next_action?: { reason?: string; command?: string };
     };
+    assert.equal(payload.pre_write_enforcement?.mode, 'strict');
+    assert.equal(payload.pre_write_enforcement?.blocking, true);
     assert.equal(payload.sdd?.decision?.allowed, true);
     assert.equal(payload.sdd?.decision?.code, 'ALLOWED');
     assert.equal(payload.ai_gate?.allowed, false);
@@ -2095,16 +2769,21 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action con slice atómi
     }) as typeof process.stdout.write;
 
     const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
-      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
-        runPlatformGate: async () => 0,
-      })
+      withStrictPreWriteEnforcement(() =>
+        runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+          runPlatformGate: async () => 0,
+        })
+      )
     );
     assert.equal(code, 1);
 
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      pre_write_enforcement?: { mode?: string; blocking?: boolean };
       ai_gate?: { allowed?: boolean; violations?: Array<{ code?: string }> };
       next_action?: { reason?: string; command?: string };
     };
+    assert.equal(payload.pre_write_enforcement?.mode, 'strict');
+    assert.equal(payload.pre_write_enforcement?.blocking, true);
     assert.equal(payload.ai_gate?.allowed, false);
     assert.equal(
       (payload.ai_gate?.violations ?? []).some(
@@ -2887,12 +3566,14 @@ test('runLifecycleCli retorna 1 para update cuando doctor bloquea baseline inseg
 });
 
 test('runLifecycleCli analytics hotspots report devuelve ranking local en json', async () => {
+  const previousAnalytics = process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
   const repo = createGitRepo();
   const printed: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
   const previousCwd = process.cwd();
 
   try {
+    process.env.PUMUKI_EXPERIMENTAL_ANALYTICS = 'advisory';
     mkdirSync(join(repo, 'src'), { recursive: true });
     writeFileSync(join(repo, 'src', 'a.ts'), 'export const a = 1;\n', 'utf8');
     writeFileSync(join(repo, 'src', 'b.ts'), 'export const b = 1;\n', 'utf8');
@@ -2959,6 +3640,11 @@ test('runLifecycleCli analytics hotspots report devuelve ranking local en json',
     assert.equal(payload.hotspots?.[0]?.rank, 1);
     assert.equal(payload.hotspots?.[0]?.path, 'src/a.ts');
   } finally {
+    if (typeof previousAnalytics === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_ANALYTICS = previousAnalytics;
+    }
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });
@@ -2966,10 +3652,12 @@ test('runLifecycleCli analytics hotspots report devuelve ranking local en json',
 });
 
 test('runLifecycleCli analytics hotspots report exporta json y markdown en rutas locales', async () => {
+  const previousAnalytics = process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
   const repo = createGitRepo();
   const previousCwd = process.cwd();
 
   try {
+    process.env.PUMUKI_EXPERIMENTAL_ANALYTICS = 'advisory';
     mkdirSync(join(repo, 'src'), { recursive: true });
     writeFileSync(join(repo, 'src', 'a.ts'), 'export const a = 1;\n', 'utf8');
     runGit(repo, ['add', 'src/a.ts']);
@@ -3032,18 +3720,25 @@ test('runLifecycleCli analytics hotspots report exporta json y markdown en rutas
     assert.match(markdownPayload, /# Pumuki Hotspots Report/i);
     assert.match(markdownPayload, /src\/a\.ts/);
   } finally {
+    if (typeof previousAnalytics === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_ANALYTICS = previousAnalytics;
+    }
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });
   }
 });
 
 test('runLifecycleCli analytics hotspots diagnose genera diagnóstico y métricas de ingesta', async () => {
+  const previousSaasIngestion = process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION;
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
   try {
+    process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION = 'advisory';
     const payloadPath = resolveHotspotsSaasIngestionPayloadPath(repo);
     mkdirSync(dirname(payloadPath), { recursive: true });
     const payload = createHotspotsSaasIngestionPayload({
@@ -3103,6 +3798,120 @@ test('runLifecycleCli analytics hotspots diagnose genera diagnóstico y métrica
     assert.equal(diagnostics.metrics?.snapshot?.totals?.error, 0);
     assert.equal(existsSync(resolveHotspotsSaasIngestionMetricsPath(repo)), true);
   } finally {
+    if (typeof previousSaasIngestion === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION = previousSaasIngestion;
+    }
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli analytics hotspots diagnose queda desactivado por defecto con next_action canónica', async () => {
+  const repo = createGitRepo();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const previousCwd = process.cwd();
+  const previousSaasIngestion = process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION;
+
+  try {
+    delete process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION;
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const exitCode = await runLifecycleCli(['analytics', 'hotspots', 'diagnose', '--json']);
+
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      tool?: string;
+      executed?: boolean;
+      success?: boolean;
+      result?: {
+        code?: string;
+        experimental_feature?: string;
+        mode?: string;
+        source?: string;
+        activation_variable?: string;
+        next_action?: { reason?: string; command?: string };
+      };
+    };
+    assert.equal(payload.tool, 'analytics');
+    assert.equal(payload.executed, false);
+    assert.equal(payload.success, true);
+    assert.equal(payload.result?.code, 'SAAS_INGESTION_EXPERIMENTAL_DISABLED');
+    assert.equal(payload.result?.experimental_feature, 'saas_ingestion');
+    assert.equal(payload.result?.mode, 'off');
+    assert.equal(payload.result?.source, 'default');
+    assert.equal(payload.result?.activation_variable, 'PUMUKI_EXPERIMENTAL_SAAS_INGESTION');
+    assert.equal(payload.result?.next_action?.reason, 'SAAS_INGESTION_EXPERIMENTAL_DISABLED');
+    assert.match(
+      payload.result?.next_action?.command ?? '',
+      /PUMUKI_EXPERIMENTAL_SAAS_INGESTION=advisory/
+    );
+  } finally {
+    if (typeof previousSaasIngestion === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION = previousSaasIngestion;
+    }
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli analytics hotspots report queda desactivado por defecto con next_action canónica', async () => {
+  const repo = createGitRepo();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const previousCwd = process.cwd();
+  const previousAnalytics = process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
+
+  try {
+    delete process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const exitCode = await runLifecycleCli(['analytics', 'hotspots', 'report', '--json']);
+
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      tool?: string;
+      executed?: boolean;
+      success?: boolean;
+      result?: {
+        code?: string;
+        experimental_feature?: string;
+        mode?: string;
+        source?: string;
+        activation_variable?: string;
+        next_action?: { reason?: string; command?: string };
+      };
+    };
+    assert.equal(payload.tool, 'analytics');
+    assert.equal(payload.executed, false);
+    assert.equal(payload.success, true);
+    assert.equal(payload.result?.code, 'ANALYTICS_EXPERIMENTAL_DISABLED');
+    assert.equal(payload.result?.experimental_feature, 'analytics');
+    assert.equal(payload.result?.mode, 'off');
+    assert.equal(payload.result?.source, 'default');
+    assert.equal(payload.result?.activation_variable, 'PUMUKI_EXPERIMENTAL_ANALYTICS');
+    assert.equal(payload.result?.next_action?.reason, 'ANALYTICS_EXPERIMENTAL_DISABLED');
+    assert.match(payload.result?.next_action?.command ?? '', /PUMUKI_EXPERIMENTAL_ANALYTICS=advisory/);
+  } finally {
+    if (typeof previousAnalytics === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_ANALYTICS = previousAnalytics;
+    }
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });

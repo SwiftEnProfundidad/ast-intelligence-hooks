@@ -13,8 +13,17 @@ const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
 const withFixtureRepo = async (
   prefix: string,
   callback: (repoRoot: string) => Promise<void> | void
+): Promise<void> =>
+  withFixtureRepoExperimentalSddMode(prefix, 'strict', callback);
+
+const withFixtureRepoExperimentalSddMode = async (
+  prefix: string,
+  mode: 'off' | 'advisory' | 'strict',
+  callback: (repoRoot: string) => Promise<void> | void
 ): Promise<void> => {
   const repoRoot = mkdtempSync(join(tmpdir(), prefix));
+  const previousSddExperimental = process.env.PUMUKI_EXPERIMENTAL_SDD;
+  process.env.PUMUKI_EXPERIMENTAL_SDD = mode;
   runGit(repoRoot, ['init', '-b', 'main']);
   runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
   runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
@@ -22,6 +31,11 @@ const withFixtureRepo = async (
   try {
     await callback(repoRoot);
   } finally {
+    if (typeof previousSddExperimental === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_SDD;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_SDD = previousSddExperimental;
+    }
     rmSync(repoRoot, { recursive: true, force: true });
   }
 };
@@ -117,11 +131,31 @@ test('evaluateSddPolicy allows emergency bypass via PUMUKI_SDD_BYPASS=1', () => 
   });
 });
 
+test('evaluateSddPolicy deja SDD/OpenSpec en default-off cuando el feature experimental no está activado', () => {
+  return withFixtureRepoExperimentalSddMode('pumuki-sdd-experimental-off-', 'off', (repoRoot) => {
+    const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
+    assert.equal(result.decision.allowed, true);
+    assert.equal(result.decision.code, 'SDD_EXPERIMENTAL_DISABLED');
+    assert.equal(result.decision.details?.activation_env, 'PUMUKI_EXPERIMENTAL_SDD');
+    assert.match(result.decision.message, /namespace experimental/i);
+  });
+});
+
 test('evaluateSddPolicy bloquea con OPENSPEC_MISSING cuando no hay binario disponible', () => {
   return withFixtureRepo('pumuki-sdd-openspec-missing-', (repoRoot) => {
     const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
     assert.equal(result.decision.allowed, false);
     assert.equal(result.decision.code, 'OPENSPEC_MISSING');
+  });
+});
+
+test('evaluateSddPolicy degrada a advisory cuando SDD experimental está activado en modo advisory', () => {
+  return withFixtureRepoExperimentalSddMode('pumuki-sdd-openspec-advisory-', 'advisory', (repoRoot) => {
+    const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
+    assert.equal(result.decision.allowed, true);
+    assert.equal(result.decision.code, 'OPENSPEC_MISSING');
+    assert.equal(result.decision.details?.advisory, true);
+    assert.equal(result.decision.details?.experimentalMode, 'advisory');
   });
 });
 
@@ -346,7 +380,7 @@ test('evaluateSddPolicy permite PRE_COMMIT cuando degraded mode fail-open está 
   });
 });
 
-test('evaluateSddPolicy bloquea con SDD_CHANGE_INCOMPLETE en PRE_PUSH cuando falta contrato mínimo del change', () => {
+test('evaluateSddPolicy permite PRE_PUSH cuando falta contrato mínimo del change y la completitud sigue en advisory por defecto', () => {
   return withFixtureRepo('pumuki-sdd-change-incomplete-', (repoRoot) => {
     writeOpenSpecBinary(repoRoot, {
       validateExitCode: 0,
@@ -359,14 +393,51 @@ test('evaluateSddPolicy bloquea con SDD_CHANGE_INCOMPLETE en PRE_PUSH cuando fal
     openSddSession({ cwd: repoRoot, changeId, ttlMinutes: 30 });
 
     const result = evaluateSddPolicy({ stage: 'PRE_PUSH', repoRoot });
-    assert.equal(result.decision.allowed, false);
-    assert.equal(result.decision.code, 'SDD_CHANGE_INCOMPLETE');
-    assert.equal(result.decision.details?.changeId, 'add-auth-feature');
-    assert.equal(result.decision.details?.contractVersion, '1.0');
-    assert.deepEqual(result.decision.details?.missingRequirements, [
+    assert.equal(result.decision.allowed, true);
+    assert.equal(result.decision.code, 'ALLOWED');
+    assert.equal(result.decision.details?.completenessEnforcementMode, 'advisory');
+    assert.equal(result.decision.details?.completenessBlocking, false);
+    assert.equal(result.decision.details?.completenessStatus, 'incomplete-advisory');
+    assert.deepEqual(result.decision.details?.missingCompletenessRequirements, [
       'tasks.md',
       'scenario.feature',
     ]);
+  });
+});
+
+test('evaluateSddPolicy bloquea con SDD_CHANGE_INCOMPLETE en PRE_PUSH cuando la completitud estricta está activa', () => {
+  return withFixtureRepo('pumuki-sdd-change-incomplete-strict-', (repoRoot) => {
+    const previous = process.env.PUMUKI_SDD_ENFORCE_COMPLETENESS;
+    process.env.PUMUKI_SDD_ENFORCE_COMPLETENESS = 'strict';
+    writeOpenSpecBinary(repoRoot, {
+      validateExitCode: 0,
+      totals: { items: 2, failed: 0, passed: 2 },
+      issues: { errors: 0, warnings: 0, infos: 0 },
+    });
+    const changeId = createOpenSpecChange(repoRoot, 'add-auth-feature', {
+      withCompleteness: false,
+    });
+    openSddSession({ cwd: repoRoot, changeId, ttlMinutes: 30 });
+
+    try {
+      const result = evaluateSddPolicy({ stage: 'PRE_PUSH', repoRoot });
+      assert.equal(result.decision.allowed, false);
+      assert.equal(result.decision.code, 'SDD_CHANGE_INCOMPLETE');
+      assert.equal(result.decision.details?.changeId, 'add-auth-feature');
+      assert.equal(result.decision.details?.contractVersion, '1.0');
+      assert.equal(result.decision.details?.completenessEnforcementMode, 'strict');
+      assert.equal(result.decision.details?.completenessBlocking, true);
+      assert.deepEqual(result.decision.details?.missingRequirements, [
+        'tasks.md',
+        'scenario.feature',
+      ]);
+    } finally {
+      if (typeof previous === 'undefined') {
+        delete process.env.PUMUKI_SDD_ENFORCE_COMPLETENESS;
+      } else {
+        process.env.PUMUKI_SDD_ENFORCE_COMPLETENESS = previous;
+      }
+    }
   });
 });
 

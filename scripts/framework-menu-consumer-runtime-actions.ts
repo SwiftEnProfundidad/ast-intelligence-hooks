@@ -1,6 +1,7 @@
 import { createConsumerLegacyMenuActions } from './framework-menu-consumer-actions-lib';
 import { formatConsumerPreflight, runConsumerPreflight } from './framework-menu-consumer-preflight-lib';
 import {
+  buildConsumerRuntimeBlockedSummary,
   exportConsumerRuntimeMarkdown,
   notifyConsumerRuntimeAuditSummary,
   printConsumerRuntimeEmptyScopeHint,
@@ -16,14 +17,19 @@ type ConsumerRuntimeActionDependencies = {
   repoRoot: string;
   write: ConsumerRuntimeWrite;
   useColor: () => boolean;
-  runRepoGate: () => Promise<void>;
-  runRepoAndStagedGate: () => Promise<void>;
-  runStagedGate: () => Promise<void>;
-  runWorkingTreeGate: () => Promise<void>;
+  runRepoGate: () => Promise<ConsumerRuntimeGateResult | void>;
+  runRepoAndStagedGate: () => Promise<ConsumerRuntimeGateResult | void>;
+  runStagedGate: () => Promise<ConsumerRuntimeGateResult | void>;
+  runWorkingTreeGate: () => Promise<ConsumerRuntimeGateResult | void>;
   runPreflight?: (
     stage: 'PRE_COMMIT' | 'PRE_PUSH'
   ) => Promise<string | void> | string | void;
   emitNotification: ConsumerRuntimeEmitNotification;
+  clearSummaryOverride: () => void;
+  getSummaryOverride: () => import('./framework-menu-evidence-summary-lib').FrameworkMenuEvidenceSummary | null;
+  setSummaryOverride: (
+    summary: import('./framework-menu-evidence-summary-lib').FrameworkMenuEvidenceSummary | null
+  ) => void;
 };
 
 const runConsumerRuntimePreflight = async (
@@ -59,6 +65,7 @@ export const createConsumerRuntimeActions = (
     runFullAudit: async () => {
       await runConsumerRuntimePreflight(dependencies, 'PRE_COMMIT');
       await dependencies.runRepoGate();
+      dependencies.clearSummaryOverride();
       notifyConsumerRuntimeAuditSummary(
         {
           emitNotification: dependencies.emitNotification,
@@ -73,7 +80,14 @@ export const createConsumerRuntimeActions = (
     },
     runStrictRepoAndStaged: async () => {
       await runConsumerRuntimePreflight(dependencies, 'PRE_PUSH');
-      await dependencies.runRepoAndStagedGate();
+      const gateResult = await dependencies.runRepoAndStagedGate();
+      if (gateResult?.blocked) {
+        dependencies.setSummaryOverride(
+          buildConsumerRuntimeBlockedSummary(gateResult.blocked)
+        );
+      } else {
+        dependencies.clearSummaryOverride();
+      }
       notifyConsumerRuntimeAuditSummary(
         {
           emitNotification: dependencies.emitNotification,
@@ -83,12 +97,14 @@ export const createConsumerRuntimeActions = (
           repoRoot: dependencies.repoRoot,
           write: dependencies.write,
           useColor: dependencies.useColor,
+          summaryOverride: dependencies.getSummaryOverride(),
         })
       );
     },
     runStrictStagedOnly: async () => {
       await runConsumerRuntimePreflight(dependencies, 'PRE_COMMIT');
       await dependencies.runStagedGate();
+      dependencies.clearSummaryOverride();
       const summary = renderConsumerRuntimeSummary({
         repoRoot: dependencies.repoRoot,
         write: dependencies.write,
@@ -106,6 +122,7 @@ export const createConsumerRuntimeActions = (
     runStandardCriticalHigh: async () => {
       await runConsumerRuntimePreflight(dependencies, 'PRE_PUSH');
       await dependencies.runWorkingTreeGate();
+      dependencies.clearSummaryOverride();
       const summary = renderConsumerRuntimeSummary({
         repoRoot: dependencies.repoRoot,
         write: dependencies.write,
@@ -130,8 +147,11 @@ export const createConsumerRuntimeActions = (
       dependencies.write(`\n${renderConsumerRuntimeAstBreakdown(dependencies.repoRoot)}\n`);
     },
     runExportMarkdown: async () => {
-      const filePath = exportConsumerRuntimeMarkdown(dependencies.repoRoot);
-      dependencies.write(`\nMarkdown exported: ${filePath}\n`);
+      const filePath = exportConsumerRuntimeMarkdown(
+        dependencies.repoRoot,
+        dependencies.getSummaryOverride()
+      );
+      dependencies.write(`\nLegacy read-only markdown exported: ${filePath}\n`);
     },
     runFileDiagnostics: async () => {
       dependencies.write(`\n${renderConsumerRuntimeFileDiagnostics(dependencies.repoRoot)}\n`);

@@ -23,7 +23,14 @@ export const buildConsumerWorkflowLintMarkdown = (params: {
   if (params.lintResult.output.trim().length === 0) {
     lines.push('## Result');
     lines.push('');
-    lines.push('- No issues reported by actionlint.');
+    if (params.lintResult.exitCode === 0) {
+      lines.push('- No issues reported by actionlint.');
+    } else {
+      lines.push('- actionlint did not report findings, but the workflow lint command failed.');
+      lines.push(
+        '- Treat this as an execution problem (for example: missing binary, environment issue, or unsupported invocation) until the command succeeds with exit code `0`.'
+      );
+    }
     lines.push('');
     return `${lines.join('\n')}\n`;
   }

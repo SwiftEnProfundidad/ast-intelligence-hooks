@@ -111,6 +111,16 @@ test('hasSwiftCallbackStyleSignature ignora usos fuera de firmas callback', () =
   assert.equal(hasSwiftCallbackStyleSignature(source), false);
 });
 
+test('hasSwiftCallbackStyleSignature ignora closures async modernos con @Sendable', () => {
+  const source = `
+public init(publish: @escaping @Sendable ([AppRoute]) async -> Void) {
+  self.publish = publish
+}
+`;
+
+  assert.equal(hasSwiftCallbackStyleSignature(source), false);
+});
+
 test('detecta primitivas GCD y OperationQueue en codigo ejecutable', () => {
   const source = `
 DispatchQueue.main.async { }

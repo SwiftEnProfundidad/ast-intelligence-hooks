@@ -60,10 +60,12 @@ test('resolveAdvancedMenuLayout agrupa por dominios', () => {
   const actions = buildAdvancedActions();
   const groups = resolveAdvancedMenuLayout(actions);
   assert.equal(groups[0]?.title, 'Gates');
-  assert.deepEqual(groups[0]?.items.map((item) => item.id), ['1', '2', '3', '28', '29', '30', '4', '5', '6', '7', '8']);
+  assert.deepEqual(groups[0]?.items.map((item) => item.id), ['1', '2', '3', '4', '5', '6', '7', '8']);
   assert.equal(groups[1]?.title, 'Diagnostics');
-  assert.equal(groups[2]?.title, 'Maintenance');
-  assert.equal(groups[3]?.title, 'Validation');
-  assert.equal(groups[4]?.title, 'System');
-  assert.deepEqual(groups[4]?.items.map((item) => item.id), ['27']);
+  assert.equal(groups[2]?.title, 'Legacy Read-Only Audits');
+  assert.deepEqual(groups[2]?.items.map((item) => item.id), ['28', '29', '30', '32']);
+  assert.equal(groups[3]?.title, 'Maintenance');
+  assert.equal(groups[4]?.title, 'Validation');
+  assert.equal(groups[5]?.title, 'System');
+  assert.deepEqual(groups[5]?.items.map((item) => item.id), ['27']);
 });

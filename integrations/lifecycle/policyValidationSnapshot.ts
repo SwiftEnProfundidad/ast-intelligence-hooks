@@ -6,6 +6,9 @@ import {
 
 export type LifecyclePolicyValidationStageSnapshot = {
   source: ResolvedStagePolicy['trace']['source'];
+  layer: ResolvedStagePolicy['trace']['layer'];
+  activation: ResolvedStagePolicy['trace']['activation'];
+  activationSource: ResolvedStagePolicy['trace']['activationSource'];
   bundle: string;
   hash: string;
   version: string | null;
@@ -27,6 +30,9 @@ const toStageSnapshot = (
 ): LifecyclePolicyValidationStageSnapshot => {
   return {
     source: resolved.trace.source,
+    layer: resolved.trace.layer,
+    activation: resolved.trace.activation,
+    activationSource: resolved.trace.activationSource,
     bundle: resolved.trace.bundle,
     hash: resolved.trace.hash,
     version: resolved.trace.version ?? null,

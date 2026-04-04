@@ -6,6 +6,49 @@ import type {
   ConsumerSupportBundleWorkflowRun,
 } from './consumer-support-bundle-contract';
 
+const resolveSupportPayloadHeadline = (params: {
+  repoInfo?: ConsumerSupportBundleRepoResponse;
+  startupFailureCount: number;
+}): string => {
+  const visibility = params.repoInfo?.visibility ?? 'unknown';
+  if (params.startupFailureCount > 0) {
+    return `Observed GitHub Actions startup_failure runs in ${visibility} repository.`;
+  }
+
+  return `No startup_failure runs were observed in the sampled workflow runs for this ${visibility} repository.`;
+};
+
+const resolveSupportPayloadPattern = (params: {
+  startupFailureCount: number;
+  startupStalledCount: number;
+}): string => {
+  if (params.startupFailureCount > 0) {
+    return 'Observed pattern: workflow startup fails before jobs are created (jobs.total_count=0) and artifacts are absent (artifacts.total_count=0).';
+  }
+
+  if (params.startupStalledCount > 0) {
+    return 'Observed pattern: queued workflow runs remain stalled without reaching a terminal conclusion in the sampled window.';
+  }
+
+  return 'Observed pattern: the sampled workflow runs do not show startup_failure conclusions in the attached evidence window.';
+};
+
+const resolveSupportPayloadRequest = (params: {
+  repoInfo?: ConsumerSupportBundleRepoResponse;
+  startupFailureCount: number;
+}): string => {
+  const visibility = params.repoInfo?.visibility;
+  if (params.startupFailureCount > 0 && visibility === 'private') {
+    return 'Please verify account/repo-level restrictions for private Actions execution (policy, billing, quotas, or platform controls).';
+  }
+
+  if (params.startupFailureCount > 0) {
+    return 'Please review the attached diagnostics and identify the exact root cause behind the observed startup_failure runs.';
+  }
+
+  return 'Please reconcile the reported issue with the attached diagnostics. The current support bundle does not show startup_failure runs in the sampled evidence window.';
+};
+
 export const buildSupportPayloadSectionLines = (params: {
   options: ConsumerSupportBundleCliOptions;
   repoInfo?: ConsumerSupportBundleRepoResponse;
@@ -22,7 +65,12 @@ export const buildSupportPayloadSectionLines = (params: {
   lines.push('## Support Payload (Copy/Paste)');
   lines.push('');
   lines.push('```text');
-  lines.push('Persistent GitHub Actions startup_failure in private repository.');
+  lines.push(
+    resolveSupportPayloadHeadline({
+      repoInfo: params.repoInfo,
+      startupFailureCount: params.startupFailures.length,
+    })
+  );
   lines.push('');
   lines.push(`Repository: ${params.options.repo}`);
   if (params.repoInfo) {
@@ -49,10 +97,16 @@ export const buildSupportPayloadSectionLines = (params: {
   }
   lines.push('');
   lines.push(
-    'Observed pattern: workflow startup fails before jobs are created (jobs.total_count=0) and artifacts are absent (artifacts.total_count=0).'
+    resolveSupportPayloadPattern({
+      startupFailureCount: params.startupFailures.length,
+      startupStalledCount: params.startupStalledRuns.length,
+    })
   );
   lines.push(
-    'Please verify account/repo-level restrictions for private Actions execution (policy, billing, quotas, or platform controls).'
+    resolveSupportPayloadRequest({
+      repoInfo: params.repoInfo,
+      startupFailureCount: params.startupFailures.length,
+    })
   );
   lines.push('```');
   lines.push('');

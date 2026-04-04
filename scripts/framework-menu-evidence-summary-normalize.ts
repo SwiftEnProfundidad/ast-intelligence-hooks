@@ -85,3 +85,10 @@ export const normalizeEnterpriseSeverityCounts = (
     LOW: parse(record.LOW),
   };
 };
+
+export const asNonNegativeInt = (value: unknown): number => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.trunc(value));
+};

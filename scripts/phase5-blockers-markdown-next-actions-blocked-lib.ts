@@ -19,12 +19,12 @@ export const appendPhase5BlockersBlockedNextActions = (params: {
 }): void => {
   if (!params.hasAdapterReport && params.requireAdapterReport) {
     params.lines.push(
-      '- Generate Adapter report: `npm run validation:adapter-real-session-report -- --status-report .audit-reports/adapter/adapter-session-status.md --out .audit-reports/adapter/adapter-real-session-report.md`'
+      '- Generate Adapter report: `npm run toolkit:adapter-real-session-report -- --status-report .audit-reports/adapter/adapter-session-status.md --out .audit-reports/adapter/adapter-real-session-report.md`'
     );
   }
   if (!params.hasConsumerTriageReport) {
     params.lines.push(
-      '- Generate consumer triage report: `npm run validation:consumer-startup-triage -- --repo <owner>/<repo> --out-dir .audit-reports/consumer-triage --skip-workflow-lint`'
+      '- Generate consumer triage report: `npm run toolkit:consumer-startup-triage -- --repo <owner>/<repo> --out-dir .audit-reports/consumer-triage --skip-workflow-lint`'
     );
   }
   if (hasAdapterRuntimeBlocker(params.summary)) {
@@ -34,7 +34,7 @@ export const appendPhase5BlockersBlockedNextActions = (params: {
   }
   if (hasConsumerTriageBlocker(params.summary)) {
     params.lines.push(
-      '- Resolve failed consumer triage steps and rerun `validation:consumer-startup-triage` to refresh status.'
+      '- Resolve failed consumer triage steps and rerun `toolkit:consumer-startup-triage` to refresh status.'
     );
   }
   if (!params.hasAdapterReport && !params.requireAdapterReport) {

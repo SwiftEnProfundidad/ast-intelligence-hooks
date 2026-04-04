@@ -3,6 +3,7 @@ import type {
   Phase5ExecutionClosureOptions,
   Phase5ExecutionClosureOutputs,
 } from './phase5-execution-closure-plan-contract';
+import { DEFAULT_ACTIONLINT_BIN } from './framework-menu-runner-constants';
 
 const resolveTriageCommandConfig = (options: Phase5ExecutionClosureOptions): {
   script: string;
@@ -21,11 +22,9 @@ const resolveTriageCommandConfig = (options: Phase5ExecutionClosureOptions): {
 
   if (options.runWorkflowLint) {
     const repoPath = options.repoPath?.trim();
-    const actionlintBin = options.actionlintBin?.trim();
-    if (!repoPath || !actionlintBin) {
-      throw new Error(
-        'Workflow lint requires --repo-path and --actionlint-bin (or use --skip-workflow-lint).'
-      );
+    const actionlintBin = options.actionlintBin?.trim() || DEFAULT_ACTIONLINT_BIN;
+    if (!repoPath) {
+      throw new Error('Workflow lint requires --repo-path (or use --skip-workflow-lint).');
     }
     triageArgs.push('--repo-path', repoPath, '--actionlint-bin', actionlintBin);
   } else {
