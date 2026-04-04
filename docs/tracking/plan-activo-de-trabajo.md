@@ -19,7 +19,7 @@
 - Frente activo: `release-rollout-post-phase2`
 - Origen del frente: `ast-intelligence-hooks`
 - Objetivo: preparar el siguiente paso util tras cerrar `PUMUKI-GOV-002` y `phase2-swiftui-apis`.
-- Estado global: `RELEASE 6.3.61 EN PREPARACION`
+- Estado global: `RELEASE 6.3.61 LISTA PARA PUBLICACION`
 
 ## Cola externa real
 
@@ -42,6 +42,6 @@
 
 ## Siguiente frente
 
-- 🚧 Cerrar versionado y commit atomico del slice sobre `release/6.3.61`, con publicacion util pendiente de confirmacion final.
-- ⏳ Validar rollout de `RuralGo` tras publicar la release util.
+- ✅ Versionado y commit atomico del slice sobre `release/6.3.61`.
+- 🚧 Publicar release util de `pumuki` 6.3.61 y validar rollout inicial de `RuralGo`.
 - ⏳ Elegir el siguiente slice iOS a traducir a nodos AST de Pumuki.
