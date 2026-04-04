@@ -226,14 +226,70 @@ const normalizeKnownRuleTarget = (
     if (includes('navigationview') || includes('navigation view')) {
       return 'skills.ios.no-navigation-view';
     }
+    if (
+      includes('foregroundstyle instead of foregroundcolor') ||
+      includes('foregroundstyle over foregroundcolor') ||
+      includes('foregroundcolor') ||
+      includes('foreground color')
+    ) {
+      return 'skills.ios.no-foreground-color';
+    }
+    if (
+      includes('clipshape instead of cornerradius') ||
+      includes('clipshape rect cornerradius') ||
+      includes('cornerradius') ||
+      includes('corner radius')
+    ) {
+      return 'skills.ios.no-corner-radius';
+    }
+    if (includes('tab api') || includes('tabitem') || includes('tab item')) {
+      return 'skills.ios.no-tab-item';
+    }
     if (includes('ontapgesture') || includes('on tap gesture')) {
       return 'skills.ios.no-on-tap-gesture';
     }
     if (includes('string format') || includes('string(format')) {
       return 'skills.ios.no-string-format';
     }
+    if (
+      includes('scrollindicators hidden') ||
+      includes('scroll indicators hidden') ||
+      includes('showsindicators false') ||
+      includes('shows indicators false')
+    ) {
+      return 'skills.ios.no-scrollview-shows-indicators';
+    }
     if (includes('uiscreen main bounds') || includes('uiscreen.main.bounds')) {
       return 'skills.ios.no-uiscreen-main-bounds';
+    }
+    if (
+      includes('swift testing over xctest') ||
+      includes('prefer import testing') ||
+      includes('xctest only for ui') ||
+      includes('xctest only for ui performance')
+    ) {
+      return 'skills.ios.prefer-swift-testing';
+    }
+    if (includes('xctassert') || includes('prefer expect')) {
+      return 'skills.ios.no-xctassert';
+    }
+    if (includes('xctunwrap') || includes('prefer require')) {
+      return 'skills.ios.no-xctunwrap';
+    }
+    if (
+      includes('nsmanagedobject across boundaries') ||
+      includes('passing nsmanagedobject') ||
+      includes('nsmanagedobject through service') ||
+      includes('nsmanagedobject in shared function and property boundaries')
+    ) {
+      return 'skills.ios.no-nsmanagedobject-boundary';
+    }
+    if (
+      includes('async apis that return nsmanagedobject') ||
+      includes('nsmanagedobject in async function boundaries') ||
+      includes('avoid returning or accepting nsmanagedobject in async apis')
+    ) {
+      return 'skills.ios.no-nsmanagedobject-async-boundary';
     }
     return null;
   }

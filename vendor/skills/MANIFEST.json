@@ -31,6 +31,18 @@
       "sha256": "dc785e71742a9c215c0d70b2e7bfb1c4dd41553061663f7cf0a748018664b141"
     },
     {
+      "name": "swift-testing-expert",
+      "source": "https://skills.sh/avdlee/swift-testing-agent-skill/swift-testing-expert",
+      "file": "vendor/skills/swift-testing-expert/SKILL.md",
+      "sha256": "205000775dc2dc9ef8bfc4078020d6a731cb613085a6ee1860a29d19597b1c79"
+    },
+    {
+      "name": "core-data-expert",
+      "source": "https://skills.sh/avdlee/core-data-agent-skill/core-data-expert",
+      "file": "vendor/skills/core-data-expert/SKILL.md",
+      "sha256": "55d5a6902b5c474ebdd7442ea4a3c2bdf657f1966a5e5ddd3f7436c749b9faf8"
+    },
+    {
       "name": "android-enterprise-rules",
       "source": "/Users/juancarlosmerlosalbarracin/.agents/skills/android-enterprise-rules/SKILL.md",
       "file": "vendor/skills/android-enterprise-rules/SKILL.md",

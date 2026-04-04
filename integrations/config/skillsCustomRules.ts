@@ -379,10 +379,12 @@ const CANONICAL_IMPORTED_SKILL_NAMES: Readonly<Record<string, string>> = {
   'swiftui-expert-skill': 'ios-swiftui-expert-guidelines',
   'swiftui-guidelines': 'ios-swiftui-expert-guidelines',
   'ios-swiftui-expert-guidelines': 'ios-swiftui-expert-guidelines',
-  'windsurf-rules-android': 'android-guidelines',
-  'windsurf-rules-backend': 'backend-guidelines',
-  'windsurf-rules-frontend': 'frontend-guidelines',
-  'windsurf-rules-ios': 'ios-guidelines',
+  'swift-testing-expert': 'ios-swift-testing-guidelines',
+  'swift-testing-guidelines': 'ios-swift-testing-guidelines',
+  'ios-swift-testing-guidelines': 'ios-swift-testing-guidelines',
+  'core-data-expert': 'ios-core-data-guidelines',
+  'core-data-guidelines': 'ios-core-data-guidelines',
+  'ios-core-data-guidelines': 'ios-core-data-guidelines',
 };
 
 export const toCanonicalImportedSkillName = (rawName: string): string => {

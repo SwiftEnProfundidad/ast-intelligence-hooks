@@ -1,0 +1,77 @@
+{
+  "snapshotId": "ios-swiftui-modernization-v1",
+  "version": "1.0.0",
+  "generatedAt": "2026-03-31T00:00:00.000Z",
+  "sourceSkill": "swiftui-expert-skill",
+  "sourceReferences": [
+    "vendor/skills/swiftui-expert-skill/references/modern-apis.md",
+    "vendor/skills/swiftui-expert-skill/references/text-formatting.md",
+    "vendor/skills/swiftui-expert-skill/references/scroll-patterns.md"
+  ],
+  "entries": [
+    {
+      "id": "foreground-color",
+      "ruleId": "skills.ios.no-foreground-color",
+      "heuristicRuleId": "heuristics.ios.foreground-color.ast",
+      "category": "styling",
+      "legacyApi": ".foregroundColor(...)",
+      "modernApi": ".foregroundStyle(...)",
+      "rationale": "foregroundStyle supports hierarchical styles, gradients and materials.",
+      "confidence": "HIGH",
+      "minimumStage": "PRE_PUSH",
+      "minimumIos": "13.0",
+      "match": {
+        "kind": "regex",
+        "pattern": "\\.\\s*foregroundColor\\s*\\("
+      }
+    },
+    {
+      "id": "corner-radius",
+      "ruleId": "skills.ios.no-corner-radius",
+      "heuristicRuleId": "heuristics.ios.corner-radius.ast",
+      "category": "styling",
+      "legacyApi": ".cornerRadius(...)",
+      "modernApi": ".clipShape(.rect(cornerRadius: ...))",
+      "rationale": "cornerRadius is deprecated in modern SwiftUI and clipShape is explicit about the rendered shape.",
+      "confidence": "HIGH",
+      "minimumStage": "PRE_PUSH",
+      "minimumIos": "17.0",
+      "match": {
+        "kind": "regex",
+        "pattern": "\\.\\s*cornerRadius\\s*\\("
+      }
+    },
+    {
+      "id": "tab-item",
+      "ruleId": "skills.ios.no-tab-item",
+      "heuristicRuleId": "heuristics.ios.tab-item.ast",
+      "category": "tabs",
+      "legacyApi": ".tabItem { ... }",
+      "modernApi": "Tab { ... } label: { ... }",
+      "rationale": "The Tab API unlocks modern tab roles and avoids mixed syntax issues on iOS 18+.",
+      "confidence": "MEDIUM",
+      "minimumStage": "PRE_PUSH",
+      "minimumIos": "18.0",
+      "match": {
+        "kind": "regex",
+        "pattern": "\\.\\s*tabItem\\s*\\{"
+      }
+    },
+    {
+      "id": "scrollview-shows-indicators",
+      "ruleId": "skills.ios.no-scrollview-shows-indicators",
+      "heuristicRuleId": "heuristics.ios.scrollview-shows-indicators.ast",
+      "category": "scrolling",
+      "legacyApi": "ScrollView(..., showsIndicators: false)",
+      "modernApi": ".scrollIndicators(.hidden)",
+      "rationale": "The modifier-based API keeps the initializer clean and matches modern SwiftUI scrolling patterns.",
+      "confidence": "HIGH",
+      "minimumStage": "PRE_PUSH",
+      "minimumIos": "16.0",
+      "match": {
+        "kind": "regex",
+        "pattern": "\\bScrollView\\s*\\([\\s\\S]{0,80}showsIndicators\\s*:\\s*false\\b"
+      }
+    }
+  ]
+}

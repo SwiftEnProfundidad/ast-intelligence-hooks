@@ -23,6 +23,7 @@ import {
   resolveFactsForGateScope,
   type GateScope,
 } from './runPlatformGateFacts';
+import { evaluateBrownfieldHotspotFindings } from './brownfieldHotspots';
 import { emitPlatformGateEvidence } from './runPlatformGateEvidence';
 import { printGateFindings } from './runPlatformGateOutput';
 import { evaluateSddPolicy, type SddDecision } from '../sdd';
@@ -48,6 +49,7 @@ export type GateServices = {
 export type GateDependencies = {
   evaluateGate: typeof evaluateGate;
   evaluatePlatformGateFindings: typeof evaluatePlatformGateFindings;
+  evaluateBrownfieldHotspotFindings: typeof evaluateBrownfieldHotspotFindings;
   resolveFactsForGateScope: typeof resolveFactsForGateScope;
   emitPlatformGateEvidence: typeof emitPlatformGateEvidence;
   printGateFindings: typeof printGateFindings;
@@ -129,6 +131,7 @@ const buildDefaultMemoryShadowRecommendation = (params: {
 const defaultDependencies: GateDependencies = {
   evaluateGate,
   evaluatePlatformGateFindings,
+  evaluateBrownfieldHotspotFindings,
   resolveFactsForGateScope,
   emitPlatformGateEvidence,
   printGateFindings,
@@ -246,6 +249,8 @@ const PLATFORM_REQUIRED_SKILLS_BUNDLES: Record<
     'ios-guidelines',
     'ios-concurrency-guidelines',
     'ios-swiftui-expert-guidelines',
+    'ios-swift-testing-guidelines',
+    'ios-core-data-guidelines',
   ],
   android: ['android-guidelines'],
   backend: ['backend-guidelines'],
@@ -1115,6 +1120,11 @@ export async function runPlatformGate(params: {
           : Number((coverage.evaluatedRuleIds.length / coverage.activeRuleIds.length).toFixed(6)),
     }
     : createEmptySnapshotRulesCoverage(params.policy.stage);
+  const brownfieldHotspotFindings = dependencies.evaluateBrownfieldHotspotFindings({
+    repoRoot,
+    stage: params.policy.stage,
+    facts,
+  });
   const currentBranch = resolveCurrentBranch(git, repoRoot);
   const tddBddEvaluation = applyTddBddEnforcement(
     dependencies.enforceTddBddPolicy({
@@ -1176,6 +1186,7 @@ export async function runPlatformGate(params: {
       ...(effectiveIosTestsQualityFinding ? [effectiveIosTestsQualityFinding] : []),
       ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
+      ...brownfieldHotspotFindings,
       ...tddBddEvaluation.findings,
       ...findings,
     ]
@@ -1187,6 +1198,7 @@ export async function runPlatformGate(params: {
       || effectiveIosTestsQualityFinding
       || astIntelligenceDualFinding
       || coverageBlockingFinding
+      || brownfieldHotspotFindings.length > 0
       || policyAsCodeBlockingFinding
       || degradedModeFinding
       || tddBddEvaluation.findings.length > 0
@@ -1201,10 +1213,13 @@ export async function runPlatformGate(params: {
         ...(effectiveIosTestsQualityFinding ? [effectiveIosTestsQualityFinding] : []),
         ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
+        ...brownfieldHotspotFindings,
         ...tddBddEvaluation.findings,
         ...findings,
       ]
-      : findings;
+      : brownfieldHotspotFindings.length > 0
+        ? [...brownfieldHotspotFindings, ...findings]
+        : findings;
   const hasAstIntelligenceBlockingFinding = shouldBlockFromFinding(astIntelligenceDualFinding);
   const decision = dependencies.evaluateGate([...effectiveFindings], params.policy);
   const baseGateOutcome =
@@ -1219,6 +1234,7 @@ export async function runPlatformGate(params: {
     shouldBlockFromFinding(effectiveIosTestsQualityFinding) ||
     hasAstIntelligenceBlockingFinding ||
     shouldBlockFromFinding(coverageBlockingFinding) ||
+    brownfieldHotspotFindings.some((finding) => shouldBlockFromFinding(finding)) ||
     hasTddBddBlockingFinding
       ? 'BLOCK'
       : (decision.outcome === 'PASS' && tddBddSnapshot?.status === 'advisory'

@@ -128,6 +128,10 @@ const isSwiftTestPath = (path: string): boolean => {
   );
 };
 
+const isIOSSwiftTestPath = (path: string): boolean => {
+  return isIOSSwiftPath(path) && isSwiftTestPath(path);
+};
+
 const isKotlinTestPath = (path: string): boolean => {
   const normalized = path.toLowerCase();
   return (
@@ -594,9 +598,18 @@ const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftUncheckedSendableUsage, ruleId: 'heuristics.ios.unchecked-sendable.ast', code: 'HEURISTICS_IOS_UNCHECKED_SENDABLE_AST', message: 'AST heuristic detected @unchecked Sendable usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftObservableObjectUsage, ruleId: 'heuristics.ios.observable-object.ast', code: 'HEURISTICS_IOS_OBSERVABLE_OBJECT_AST', message: 'AST heuristic detected ObservableObject usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNavigationViewUsage, ruleId: 'heuristics.ios.navigation-view.ast', code: 'HEURISTICS_IOS_NAVIGATION_VIEW_AST', message: 'AST heuristic detected NavigationView usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftForegroundColorUsage, ruleId: 'heuristics.ios.foreground-color.ast', code: 'HEURISTICS_IOS_FOREGROUND_COLOR_AST', message: 'AST heuristic detected foregroundColor usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftCornerRadiusUsage, ruleId: 'heuristics.ios.corner-radius.ast', code: 'HEURISTICS_IOS_CORNER_RADIUS_AST', message: 'AST heuristic detected cornerRadius usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftTabItemUsage, ruleId: 'heuristics.ios.tab-item.ast', code: 'HEURISTICS_IOS_TAB_ITEM_AST', message: 'AST heuristic detected tabItem usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftOnTapGestureUsage, ruleId: 'heuristics.ios.on-tap-gesture.ast', code: 'HEURISTICS_IOS_ON_TAP_GESTURE_AST', message: 'AST heuristic detected onTapGesture usage where Button may be preferred.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftStringFormatUsage, ruleId: 'heuristics.ios.string-format.ast', code: 'HEURISTICS_IOS_STRING_FORMAT_AST', message: 'AST heuristic detected String(format:) usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftScrollViewShowsIndicatorsUsage, ruleId: 'heuristics.ios.scrollview-shows-indicators.ast', code: 'HEURISTICS_IOS_SCROLLVIEW_SHOWS_INDICATORS_AST', message: 'AST heuristic detected ScrollView(showsIndicators: false) usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftUIScreenMainBoundsUsage, ruleId: 'heuristics.ios.uiscreen-main-bounds.ast', code: 'HEURISTICS_IOS_UISCREEN_MAIN_BOUNDS_AST', message: 'AST heuristic detected UIScreen.main.bounds usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftLegacyXCTestImportUsage, ruleId: 'heuristics.ios.testing.xctest-import.ast', code: 'HEURISTICS_IOS_TESTING_XCTEST_IMPORT_AST', message: 'AST heuristic detected XCTest-only test usage where Swift Testing may be preferred.' },
+  { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftXCTestAssertionUsage, ruleId: 'heuristics.ios.testing.xctassert.ast', code: 'HEURISTICS_IOS_TESTING_XCTASSERT_AST', message: 'AST heuristic detected XCTest assertion usage where #expect may be preferred.' },
+  { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftXCTUnwrapUsage, ruleId: 'heuristics.ios.testing.xctunwrap.ast', code: 'HEURISTICS_IOS_TESTING_XCTUNWRAP_AST', message: 'AST heuristic detected XCTUnwrap usage where #require may be preferred.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNSManagedObjectBoundaryUsage, ruleId: 'heuristics.ios.core-data.nsmanagedobject-boundary.ast', code: 'HEURISTICS_IOS_CORE_DATA_NSMANAGEDOBJECT_BOUNDARY_AST', message: 'AST heuristic detected NSManagedObject in a shared boundary.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNSManagedObjectAsyncBoundaryUsage, ruleId: 'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast', code: 'HEURISTICS_IOS_CORE_DATA_NSMANAGEDOBJECT_ASYNC_BOUNDARY_AST', message: 'AST heuristic detected NSManagedObject in an async boundary.' },
 
   // Android
   { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinThreadSleepCall, ruleId: 'heuristics.android.thread-sleep.ast', code: 'HEURISTICS_ANDROID_THREAD_SLEEP_AST', message: 'AST heuristic detected Thread.sleep usage in production Kotlin code.' },
@@ -671,7 +684,7 @@ export const extractHeuristicFacts = (
       if (
         platformDetected &&
         entry.pathCheck(fileFact.path) &&
-        entry.excludePaths.every((exclude) => !exclude(fileFact.path)) &&
+        (entry.excludePaths ?? []).every((exclude) => !exclude(fileFact.path)) &&
         entry.detect(fileFact.content)
       ) {
         heuristicFacts.push(

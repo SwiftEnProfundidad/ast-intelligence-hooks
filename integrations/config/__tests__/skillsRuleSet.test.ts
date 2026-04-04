@@ -28,7 +28,7 @@ const sampleLock = {
     {
       name: 'ios-guidelines',
       version: '1.0.0',
-      source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+      source: 'file:docs/codex-skills/ios-enterprise-rules.md',
       hash: 'a'.repeat(64),
       rules: [
         {
@@ -37,7 +37,7 @@ const sampleLock = {
           severity: 'WARN',
           platform: 'ios',
           sourceSkill: 'ios-guidelines',
-          sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+          sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
           stage: 'PRE_PUSH',
           locked: true,
           confidence: 'HIGH',
@@ -59,7 +59,7 @@ const sampleLock = {
     {
       name: 'backend-guidelines',
       version: '1.0.0',
-      source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+      source: 'file:docs/codex-skills/backend-enterprise-rules.md',
       hash: 'b'.repeat(64),
       rules: [
         {
@@ -68,7 +68,7 @@ const sampleLock = {
           severity: 'CRITICAL',
           platform: 'backend',
           sourceSkill: 'backend-guidelines',
-          sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+          sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
           locked: true,
         },
       ],
@@ -80,6 +80,10 @@ const samplePolicy = {
   version: '1.0',
   defaultBundleEnabled: true,
   stages: {
+    PRE_WRITE: {
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
+    },
     PRE_COMMIT: {
       blockOnOrAbove: 'CRITICAL',
       warnOnOrAbove: 'ERROR',
@@ -227,7 +231,7 @@ test('marca reglas AUTO no mapeadas como unsupported y mantiene reglas mapeadas 
         {
           name: 'ios-guidelines',
           version: '1.0.0',
-          source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+          source: 'file:docs/codex-skills/ios-enterprise-rules.md',
           hash: 'a'.repeat(64),
           rules: [
             {
@@ -236,7 +240,7 @@ test('marca reglas AUTO no mapeadas como unsupported y mantiene reglas mapeadas 
               severity: 'WARN',
               platform: 'ios',
               sourceSkill: 'ios-guidelines',
-              sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+              sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
               locked: true,
               confidence: 'HIGH',
             },
@@ -246,7 +250,7 @@ test('marca reglas AUTO no mapeadas como unsupported y mantiene reglas mapeadas 
               severity: 'CRITICAL',
               platform: 'ios',
               sourceSkill: 'ios-guidelines',
-              sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+              sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
               evaluationMode: 'AUTO',
               locked: true,
               confidence: 'HIGH',
@@ -300,7 +304,7 @@ test('compila reglas AUTO con astNodeIds dinámicos aunque no existan en registr
           {
             name: 'backend-guidelines',
             version: '1.0.0',
-            source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
             hash: 'a'.repeat(64),
             rules: [
               {
@@ -309,7 +313,7 @@ test('compila reglas AUTO con astNodeIds dinámicos aunque no existan en registr
                 severity: 'ERROR',
                 platform: 'backend',
                 sourceSkill: 'backend-guidelines',
-                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
                 evaluationMode: 'AUTO',
                 astNodeIds: ['heuristics.ts.explicit-any.ast'],
                 locked: true,
@@ -360,7 +364,7 @@ test('scopes backend/frontend heuristic rules to platform file prefixes', async 
         {
           name: 'backend-guidelines',
           version: '1.0.0',
-          source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+          source: 'file:docs/codex-skills/backend-enterprise-rules.md',
           hash: 'a'.repeat(64),
           rules: [
             {
@@ -369,7 +373,7 @@ test('scopes backend/frontend heuristic rules to platform file prefixes', async 
               severity: 'WARN',
               platform: 'backend',
               sourceSkill: 'backend-guidelines',
-              sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+              sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
               locked: true,
             },
           ],
@@ -377,7 +381,7 @@ test('scopes backend/frontend heuristic rules to platform file prefixes', async 
         {
           name: 'frontend-guidelines',
           version: '1.0.0',
-          source: 'file:docs/codex-skills/windsurf-rules-frontend.md',
+          source: 'file:docs/codex-skills/frontend-enterprise-rules.md',
           hash: 'b'.repeat(64),
           rules: [
             {
@@ -386,7 +390,7 @@ test('scopes backend/frontend heuristic rules to platform file prefixes', async 
               severity: 'WARN',
               platform: 'frontend',
               sourceSkill: 'frontend-guidelines',
-              sourcePath: 'docs/codex-skills/windsurf-rules-frontend.md',
+              sourcePath: 'docs/codex-skills/frontend-enterprise-rules.md',
               locked: true,
             },
           ],
@@ -422,7 +426,7 @@ test('mapea reglas SOLID y God Class a detectores AST heuristics en backend', as
           {
             name: 'backend-guidelines',
             version: '1.0.0',
-            source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
             hash: 'd'.repeat(64),
             rules: [
               {
@@ -431,7 +435,7 @@ test('mapea reglas SOLID y God Class a detectores AST heuristics en backend', as
                 severity: 'ERROR',
                 platform: 'backend',
                 sourceSkill: 'backend-guidelines',
-                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
                 evaluationMode: 'AUTO',
                 locked: true,
               },
@@ -441,7 +445,7 @@ test('mapea reglas SOLID y God Class a detectores AST heuristics en backend', as
                 severity: 'ERROR',
                 platform: 'backend',
                 sourceSkill: 'backend-guidelines',
-                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
                 evaluationMode: 'AUTO',
                 locked: true,
               },
@@ -480,7 +484,7 @@ test('enriquce mensaje de no-solid-violations con criterios accionables y métri
           {
             name: 'frontend-guidelines',
             version: '1.0.0',
-            source: 'file:docs/codex-skills/windsurf-rules-frontend.md',
+            source: 'file:docs/codex-skills/frontend-enterprise-rules.md',
             hash: 'f'.repeat(64),
             rules: [
               {
@@ -489,7 +493,7 @@ test('enriquce mensaje de no-solid-violations con criterios accionables y métri
                 severity: 'ERROR',
                 platform: 'frontend',
                 sourceSkill: 'frontend-guidelines',
-                sourcePath: 'docs/codex-skills/windsurf-rules-frontend.md',
+                sourcePath: 'docs/codex-skills/frontend-enterprise-rules.md',
                 evaluationMode: 'AUTO',
                 locked: true,
               },
@@ -588,7 +592,7 @@ test('falls back to unscoped heuristic conditions when platform folders are not 
         {
           name: 'backend-guidelines',
           version: '1.0.0',
-          source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+          source: 'file:docs/codex-skills/backend-enterprise-rules.md',
           hash: 'a'.repeat(64),
           rules: [
             {
@@ -597,7 +601,7 @@ test('falls back to unscoped heuristic conditions when platform folders are not 
               severity: 'CRITICAL',
               platform: 'backend',
               sourceSkill: 'backend-guidelines',
-              sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+              sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
               locked: true,
             },
           ],
@@ -628,7 +632,7 @@ test('falls back to unscoped heuristic conditions when platform folders exist bu
           {
             name: 'backend-guidelines',
             version: '1.0.0',
-            source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
             hash: 'a'.repeat(64),
             rules: [
               {
@@ -637,7 +641,7 @@ test('falls back to unscoped heuristic conditions when platform folders exist bu
                 severity: 'CRITICAL',
                 platform: 'backend',
                 sourceSkill: 'backend-guidelines',
-                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
                 locked: true,
               },
             ],
@@ -682,7 +686,7 @@ test('filters platform-specific rules using detectedPlatforms from gate evaluati
         {
           name: 'ios-guidelines',
           version: '1.0.0',
-          source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+          source: 'file:docs/codex-skills/ios-enterprise-rules.md',
           hash: 'a'.repeat(64),
           rules: [
             {
@@ -691,7 +695,7 @@ test('filters platform-specific rules using detectedPlatforms from gate evaluati
               severity: 'WARN',
               platform: 'ios',
               sourceSkill: 'ios-guidelines',
-              sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+              sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
               locked: true,
             },
           ],
@@ -699,7 +703,7 @@ test('filters platform-specific rules using detectedPlatforms from gate evaluati
         {
           name: 'backend-guidelines',
           version: '1.0.0',
-          source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+          source: 'file:docs/codex-skills/backend-enterprise-rules.md',
           hash: 'b'.repeat(64),
           rules: [
             {
@@ -708,7 +712,7 @@ test('filters platform-specific rules using detectedPlatforms from gate evaluati
               severity: 'CRITICAL',
               platform: 'backend',
               sourceSkill: 'backend-guidelines',
-              sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+              sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
               locked: true,
             },
           ],
@@ -793,7 +797,7 @@ test('scopes backend and ios heuristic rules using observed file paths when defa
           {
             name: 'ios-guidelines',
             version: '1.0.0',
-            source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+            source: 'file:docs/codex-skills/ios-enterprise-rules.md',
             hash: 'a'.repeat(64),
             rules: [
               {
@@ -802,7 +806,7 @@ test('scopes backend and ios heuristic rules using observed file paths when defa
                 severity: 'WARN',
                 platform: 'ios',
                 sourceSkill: 'ios-guidelines',
-                sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+                sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
                 locked: true,
               },
             ],
@@ -810,7 +814,7 @@ test('scopes backend and ios heuristic rules using observed file paths when defa
           {
             name: 'backend-guidelines',
             version: '1.0.0',
-            source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
             hash: 'b'.repeat(64),
             rules: [
               {
@@ -819,7 +823,7 @@ test('scopes backend and ios heuristic rules using observed file paths when defa
                 severity: 'CRITICAL',
                 platform: 'backend',
                 sourceSkill: 'backend-guidelines',
-                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
                 locked: true,
               },
             ],
@@ -868,7 +872,7 @@ test('keeps stage semantics aligned across PRE_COMMIT, PRE_PUSH and CI for scope
           {
             name: 'ios-guidelines',
             version: '1.0.0',
-            source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+            source: 'file:docs/codex-skills/ios-enterprise-rules.md',
             hash: 'a'.repeat(64),
             rules: [
               {
@@ -877,7 +881,7 @@ test('keeps stage semantics aligned across PRE_COMMIT, PRE_PUSH and CI for scope
                 severity: 'WARN',
                 platform: 'ios',
                 sourceSkill: 'ios-guidelines',
-                sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+                sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
                 stage: 'PRE_PUSH',
                 locked: true,
               },
@@ -886,7 +890,7 @@ test('keeps stage semantics aligned across PRE_COMMIT, PRE_PUSH and CI for scope
           {
             name: 'backend-guidelines',
             version: '1.0.0',
-            source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
             hash: 'b'.repeat(64),
             rules: [
               {
@@ -895,7 +899,7 @@ test('keeps stage semantics aligned across PRE_COMMIT, PRE_PUSH and CI for scope
                 severity: 'CRITICAL',
                 platform: 'backend',
                 sourceSkill: 'backend-guidelines',
-                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
                 stage: 'PRE_PUSH',
                 locked: true,
               },

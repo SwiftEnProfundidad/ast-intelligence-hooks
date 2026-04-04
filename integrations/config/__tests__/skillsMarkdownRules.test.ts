@@ -5,7 +5,7 @@ import { extractCompiledRulesFromSkillMarkdown } from '../skillsMarkdownRules';
 test('normaliza reglas backend de SOLID/Clean Architecture/God Class a ids canonicos', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'backend-guidelines',
-    sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
     sourceContent: [
       '✅ Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)',
       '✅ Seguir Clean Architecture - Domain -> Application -> Infrastructure -> Presentation',
@@ -25,7 +25,7 @@ test('normaliza reglas backend de SOLID/Clean Architecture/God Class a ids canon
 test('normaliza regla frontend SOLID a id canonico', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'frontend-guidelines',
-    sourcePath: 'docs/codex-skills/windsurf-rules-frontend.md',
+    sourcePath: 'docs/codex-skills/frontend-enterprise-rules.md',
     sourceContent: '✅ Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP) en componentes',
   });
 
@@ -35,7 +35,7 @@ test('normaliza regla frontend SOLID a id canonico', () => {
 test('aplica stage canónico PRE_PUSH para no-solid-violations cuando markdown no define stage', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'backend-guidelines',
-    sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
     sourceContent: '✅ Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)',
   });
 
@@ -47,7 +47,7 @@ test('aplica stage canónico PRE_PUSH para no-solid-violations cuando markdown n
 test('respeta stage explícito en markdown para no-solid-violations', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'backend-guidelines',
-    sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
     sourceContent:
       '✅ PRE_COMMIT: Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)',
   });
@@ -57,10 +57,31 @@ test('respeta stage explícito en markdown para no-solid-violations', () => {
   assert.equal(rules[0]?.stage, 'PRE_COMMIT');
 });
 
+test('normaliza reglas SwiftUI modernas a ids canonicos de snapshot phase 2', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: [
+      '✅ Always use foregroundStyle() instead of foregroundColor().',
+      '✅ Always use clipShape(.rect(cornerRadius:)) instead of cornerRadius().',
+      '✅ For iOS 18 and later, prefer the Tab API over tabItem().',
+      '✅ Use .scrollIndicators(.hidden) modifier instead of showsIndicators: false.',
+    ].join('\n'),
+  });
+
+  const ids = rules.map((rule) => rule.id).sort();
+  assert.deepEqual(ids, [
+    'skills.ios.no-corner-radius',
+    'skills.ios.no-foreground-color',
+    'skills.ios.no-scrollview-shows-indicators',
+    'skills.ios.no-tab-item',
+  ]);
+});
+
 test('reglas no canonicas extraidas desde markdown se degradan a DECLARATIVE para evitar AUTO no mapeado', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'backend-guidelines',
-    sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
     sourceContent: '- Must avoid long transaction scripts across three bounded contexts.',
   });
 
@@ -72,7 +93,7 @@ test('reglas no canonicas extraidas desde markdown se degradan a DECLARATIVE par
 test('reglas no canonicas con nodos AST explicitos se compilan como AUTO con astNodeIds dinámicos', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'backend-guidelines',
-    sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
     sourceContent:
       '- Must enforce complex transaction boundary safety with AST nodes (`heuristics.ts.explicit-any.ast`) and (`heuristics.ts.empty-catch.ast`).',
   });

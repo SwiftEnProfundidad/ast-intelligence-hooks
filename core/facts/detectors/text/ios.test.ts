@@ -8,19 +8,28 @@ import {
   findSwiftPresentationSrpMatch,
   hasSwiftAnyViewUsage,
   hasSwiftCallbackStyleSignature,
+  hasSwiftCornerRadiusUsage,
   hasSwiftDispatchGroupUsage,
   hasSwiftDispatchQueueUsage,
   hasSwiftDispatchSemaphoreUsage,
   hasSwiftForceCastUsage,
+  hasSwiftForegroundColorUsage,
   hasSwiftForceTryUsage,
   hasSwiftForceUnwrap,
+  hasSwiftLegacyXCTestImportUsage,
+  hasSwiftNSManagedObjectAsyncBoundaryUsage,
+  hasSwiftNSManagedObjectBoundaryUsage,
   hasSwiftNavigationViewUsage,
   hasSwiftObservableObjectUsage,
   hasSwiftOnTapGestureUsage,
   hasSwiftOperationQueueUsage,
+  hasSwiftScrollViewShowsIndicatorsUsage,
   hasSwiftStringFormatUsage,
+  hasSwiftTabItemUsage,
   hasSwiftTaskDetachedUsage,
   hasSwiftUIScreenMainBoundsUsage,
+  hasSwiftXCTestAssertionUsage,
+  hasSwiftXCTUnwrapUsage,
   hasSwiftUncheckedSendableUsage,
 } from './ios';
 
@@ -159,15 +168,29 @@ test('detectores SwiftUI modernos detectan patrones legacy relevantes', () => {
   const source = `
 final class LegacyViewModel: ObservableObject {}
 NavigationView { Text("x") }
+Text("Primary").foregroundColor(.blue)
+Image("hero").cornerRadius(12)
+TabView {
+  HomeView().tabItem {
+    Label("Home", systemImage: "house")
+  }
+}
 Text("Tap").onTapGesture { }
 let value = String(format: "%d", 1)
 let width = UIScreen.main.bounds.width
+ScrollView(.horizontal, showsIndicators: false) {
+  Text("feed")
+}
 `;
   assert.equal(hasSwiftObservableObjectUsage(source), true);
   assert.equal(hasSwiftNavigationViewUsage(source), true);
+  assert.equal(hasSwiftForegroundColorUsage(source), true);
+  assert.equal(hasSwiftCornerRadiusUsage(source), true);
+  assert.equal(hasSwiftTabItemUsage(source), true);
   assert.equal(hasSwiftOnTapGestureUsage(source), true);
   assert.equal(hasSwiftStringFormatUsage(source), true);
   assert.equal(hasSwiftUIScreenMainBoundsUsage(source), true);
+  assert.equal(hasSwiftScrollViewShowsIndicatorsUsage(source), true);
 });
 
 test('detectores legacy ignoran strings y comentarios', () => {
@@ -177,11 +200,129 @@ let a = "Task.detached { }"
 let b = "NavigationView { }"
 let c = "String(format: \\\"%d\\\", 1)"
 let d = "UIScreen.main.bounds.width"
+let e = ".foregroundColor(.blue)"
+let f = ".cornerRadius(12)"
+let g = ".tabItem { Label(\\\"Home\\\", systemImage: \\\"house\\\") }"
+let h = "ScrollView(showsIndicators: false) { }"
 `;
   assert.equal(hasSwiftTaskDetachedUsage(source), false);
   assert.equal(hasSwiftNavigationViewUsage(source), false);
+  assert.equal(hasSwiftForegroundColorUsage(source), false);
+  assert.equal(hasSwiftCornerRadiusUsage(source), false);
+  assert.equal(hasSwiftTabItemUsage(source), false);
   assert.equal(hasSwiftStringFormatUsage(source), false);
   assert.equal(hasSwiftUIScreenMainBoundsUsage(source), false);
+  assert.equal(hasSwiftScrollViewShowsIndicatorsUsage(source), false);
+});
+
+test('detectores snapshot SwiftUI ignoran reemplazos modernos', () => {
+  const source = `
+Text("Primary").foregroundStyle(.blue)
+Image("hero").clipShape(.rect(cornerRadius: 12))
+TabView {
+  Tab("Home", systemImage: "house") {
+    HomeView()
+  }
+}
+ScrollView {
+  Text("feed")
+}
+.scrollIndicators(.hidden)
+`;
+  assert.equal(hasSwiftForegroundColorUsage(source), false);
+  assert.equal(hasSwiftCornerRadiusUsage(source), false);
+  assert.equal(hasSwiftTabItemUsage(source), false);
+  assert.equal(hasSwiftScrollViewShowsIndicatorsUsage(source), false);
+});
+
+test('hasSwiftLegacyXCTestImportUsage detecta XCTest unitario y excluye UI/performance', () => {
+  const unitTest = `
+import XCTest
+
+final class LoginTests: XCTestCase {}
+`;
+  const uiTest = `
+import XCTest
+
+final class LoginUITests: XCTestCase {
+  func testLoginFlow() {
+    let app = XCUIApplication()
+    app.launch()
+  }
+}
+`;
+  const performanceTest = `
+import XCTest
+
+final class SyncTests: XCTestCase {
+  func testPerformance() {
+    measure {
+      runSync()
+    }
+  }
+}
+`;
+
+  assert.equal(hasSwiftLegacyXCTestImportUsage(unitTest), true);
+  assert.equal(hasSwiftLegacyXCTestImportUsage(uiTest), false);
+  assert.equal(hasSwiftLegacyXCTestImportUsage(performanceTest), false);
+});
+
+test('hasSwiftXCTestAssertionUsage detecta XCTAssert y XCTFail reales', () => {
+  const source = `
+XCTAssertEqual(value, expected)
+XCTFail("boom")
+`;
+  const ignored = `
+// XCTAssertEqual(value, expected)
+let text = "XCTAssertEqual(value, expected)"
+`;
+
+  assert.equal(hasSwiftXCTestAssertionUsage(source), true);
+  assert.equal(hasSwiftXCTestAssertionUsage(ignored), false);
+});
+
+test('hasSwiftXCTUnwrapUsage detecta XCTUnwrap real y evita strings', () => {
+  const source = `
+let value = try XCTUnwrap(optionalValue)
+`;
+  const ignored = `
+let text = "XCTUnwrap(optionalValue)"
+`;
+
+  assert.equal(hasSwiftXCTUnwrapUsage(source), true);
+  assert.equal(hasSwiftXCTUnwrapUsage(ignored), false);
+});
+
+test('hasSwiftNSManagedObjectBoundaryUsage detecta boundaries con NSManagedObject y excluye IDs o subclases', () => {
+  const source = `
+func persist(_ entity: NSManagedObject) {}
+var selectedEntity: NSManagedObject?
+`;
+  const ignored = `
+final class TodoEntity: NSManagedObject {}
+var selectedID: NSManagedObjectID?
+let context: NSManagedObjectContext
+`;
+
+  assert.equal(hasSwiftNSManagedObjectBoundaryUsage(source), true);
+  assert.equal(hasSwiftNSManagedObjectBoundaryUsage(ignored), false);
+});
+
+test('hasSwiftNSManagedObjectAsyncBoundaryUsage detecta async APIs con NSManagedObject', () => {
+  const source = `
+func fetchEntity() async throws -> NSManagedObject {
+  fatalError()
+}
+`;
+  const ignored = `
+func fetchEntityID() async throws -> NSManagedObjectID {
+  fatalError()
+}
+`;
+
+  assert.equal(hasSwiftNSManagedObjectAsyncBoundaryUsage(source), true);
+  assert.equal(hasSwiftNSManagedObjectAsyncBoundaryUsage(ignored), false);
 });
 
 test('findSwiftPresentationSrpMatch devuelve payload semantico para SRP-iOS en presentation', () => {

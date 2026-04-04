@@ -10,6 +10,20 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.61] - 2026-03-31
+
+### Fixed
+
+- `PRE_WRITE` and `PRE_COMMIT` now block brownfield hotspots before structural debt accumulates.
+  - `BrownfieldHotspotGuard` enforces file-size thresholds plus required refactor plans and ADRs for flagged hotspots.
+  - Gate policy/profile wiring now treats `PRE_WRITE` as a first-class stage across skills and policy packs.
+
+### Changed
+
+- iOS enforcement now vendors `swift-testing-expert` and `core-data-expert` and adds a versioned SwiftUI modernization snapshot.
+  - New auditable rules detect legacy `foregroundColor`, `cornerRadius`, `tabItem`, and `ScrollView(..., showsIndicators: false)` usage.
+  - Skills compilation, evidence mapping, and iOS rule-pack docs stay aligned with the new enforcement bundle.
+
 ## [6.3.57] - 2026-03-11
 
 ### Changed

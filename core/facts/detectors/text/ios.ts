@@ -6,6 +6,7 @@ import {
   readIdentifierBackward,
   scanCodeLikeSource,
 } from './utils';
+import { getIosSwiftUiModernizationEntry } from './iosSwiftUiModernizationSnapshot';
 
 export type SwiftSemanticNodeMatch = {
   kind: 'class' | 'property' | 'call' | 'member';
@@ -83,6 +84,26 @@ const collectSwiftRegexLines = (source: string, regex: RegExp): readonly number[
     }
   });
   return matches;
+};
+
+const sanitizeSwiftSourceForMultilineRegex = (source: string): string => {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/\/\/.*$/gm, '')
+    .replace(/"(?:\\.|[^"\\])*"/g, '""');
+};
+
+const hasSwiftSanitizedRegexMatch = (source: string, regex: RegExp): boolean => {
+  regex.lastIndex = 0;
+  return regex.test(sanitizeSwiftSourceForMultilineRegex(source));
+};
+
+const hasSwiftUiModernizationSnapshotMatch = (source: string, entryId: string): boolean => {
+  const entry = getIosSwiftUiModernizationEntry(entryId);
+  if (!entry) {
+    return false;
+  }
+  return hasSwiftSanitizedRegexMatch(source, new RegExp(entry.match.pattern, 'g'));
 };
 
 const sortedUniqueLines = (lines: ReadonlyArray<number>): readonly number[] => {
@@ -370,6 +391,18 @@ export const hasSwiftNavigationViewUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftForegroundColorUsage = (source: string): boolean => {
+  return hasSwiftUiModernizationSnapshotMatch(source, 'foreground-color');
+};
+
+export const hasSwiftCornerRadiusUsage = (source: string): boolean => {
+  return hasSwiftUiModernizationSnapshotMatch(source, 'corner-radius');
+};
+
+export const hasSwiftTabItemUsage = (source: string): boolean => {
+  return hasSwiftUiModernizationSnapshotMatch(source, 'tab-item');
+};
+
 export const hasSwiftOnTapGestureUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'o') {
@@ -425,6 +458,48 @@ export const hasSwiftUIScreenMainBoundsUsage = (source: string): boolean => {
     const boundsIndex = nextNonWhitespaceIndex(swiftSource, dotBoundsIndex + 1);
     return boundsIndex >= 0 && hasIdentifierAt(swiftSource, boundsIndex, 'bounds');
   });
+};
+
+export const hasSwiftScrollViewShowsIndicatorsUsage = (source: string): boolean => {
+  return hasSwiftUiModernizationSnapshotMatch(source, 'scrollview-shows-indicators');
+};
+
+export const hasSwiftLegacyXCTestImportUsage = (source: string): boolean => {
+  const hasXCTestImport = collectSwiftRegexLines(source, /^\s*import\s+XCTest\b/).length > 0;
+  if (!hasXCTestImport) {
+    return false;
+  }
+
+  if (hasSwiftSanitizedRegexMatch(source, /\bXCUIApplication\b|\bXCTMetric\b|\bmeasure\s*(?:\(|\{)/)) {
+    return false;
+  }
+
+  return true;
+};
+
+export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
+  return (
+    collectSwiftRegexLines(source, /\bXCTAssert[A-Za-z0-9_]*\s*\(/).length > 0 ||
+    collectSwiftRegexLines(source, /\bXCTFail\s*\(/).length > 0
+  );
+};
+
+export const hasSwiftXCTUnwrapUsage = (source: string): boolean => {
+  return collectSwiftRegexLines(source, /\bXCTUnwrap\s*\(/).length > 0;
+};
+
+export const hasSwiftNSManagedObjectBoundaryUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bfunc\b[\s\S]{0,240}\([^)]*\bNSManagedObject\b(?!ID\b|Context\b)[^)]*\)|\b(?:var|let)\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*(?:\[[^\]]*NSManagedObject\b(?!ID\b|Context\b)[^\]]*\]|NSManagedObject\b(?!ID\b|Context\b))/g
+  );
+};
+
+export const hasSwiftNSManagedObjectAsyncBoundaryUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bfunc\b[\s\S]{0,240}\basync\b[\s\S]{0,200}(?:\([^)]*\bNSManagedObject\b(?!ID\b|Context\b)[^)]*\)|->\s*(?:\[[^\]]*NSManagedObject\b(?!ID\b|Context\b)[^\]]*\]|NSManagedObject\b(?!ID\b|Context\b)))/g
+  );
 };
 
 export const hasSwiftForceTryUsage = (source: string): boolean => {

@@ -19,10 +19,22 @@ export const REQUIRED_PACKAGE_PATHS = [
   'skills.sources.json',
   'docs/codex-skills/android-enterprise-rules.md',
   'docs/codex-skills/backend-enterprise-rules.md',
+  'docs/codex-skills/core-data-expert.md',
   'docs/codex-skills/frontend-enterprise-rules.md',
   'docs/codex-skills/ios-enterprise-rules.md',
+  'docs/codex-skills/swift-testing-expert.md',
   'docs/codex-skills/swift-concurrency.md',
   'docs/codex-skills/swiftui-expert-skill.md',
+  'vendor/skills/MANIFEST.json',
+  'vendor/skills/android-enterprise-rules/SKILL.md',
+  'vendor/skills/backend-enterprise-rules/SKILL.md',
+  'vendor/skills/core-data-expert/SKILL.md',
+  'vendor/skills/enterprise-operating-system/SKILL.md',
+  'vendor/skills/frontend-enterprise-rules/SKILL.md',
+  'vendor/skills/ios-enterprise-rules/SKILL.md',
+  'vendor/skills/swift-concurrency/SKILL.md',
+  'vendor/skills/swift-testing-expert/SKILL.md',
+  'vendor/skills/swiftui-expert-skill/SKILL.md',
 ];
 
 export const CANONICAL_ALLOWED_LEGACY_PATHS = new Set([

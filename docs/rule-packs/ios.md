@@ -12,6 +12,7 @@
 
 - `core/rules/presets/iosEnterpriseRuleSet.ts`
 - `integrations/config/skillsCompilerTemplates.ts`
+- `assets/rule-packs/ios-swiftui-modernization-v1.json`
 - `docs/codex-skills/ios-enterprise-rules.md`
 - `docs/codex-skills/swift-concurrency.md`
 - `docs/codex-skills/swiftui-expert-skill.md`
@@ -30,4 +31,5 @@
 - No `Task.detached` without explicit concurrency rationale
 - No `@unchecked Sendable` by default
 - No legacy `NavigationView` / `ObservableObject` in modern SwiftUI code paths
+- No `foregroundColor`, `cornerRadius`, `tabItem()` or `ScrollView(showsIndicators: false)` in modern SwiftUI paths covered by the versioned modernization snapshot
 - No `String(format:)` and no `UIScreen.main.bounds` in SwiftUI presentation/layout paths

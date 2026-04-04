@@ -56,3 +56,11 @@ test('inspectPackageManifestPaths permite superficies legacy oficiales canónica
   const report = inspectPackageManifestPaths(filePaths);
   assert.deepEqual(report.forbiddenMatches, []);
 });
+
+test('REQUIRED_PACKAGE_PATHS incluye la cadena vendorizada y skills iOS especializados', () => {
+  assert.equal(REQUIRED_PACKAGE_PATHS.includes('vendor/skills/MANIFEST.json'), true);
+  assert.equal(REQUIRED_PACKAGE_PATHS.includes('vendor/skills/core-data-expert/SKILL.md'), true);
+  assert.equal(REQUIRED_PACKAGE_PATHS.includes('vendor/skills/swift-testing-expert/SKILL.md'), true);
+  assert.equal(REQUIRED_PACKAGE_PATHS.includes('docs/codex-skills/core-data-expert.md'), true);
+  assert.equal(REQUIRED_PACKAGE_PATHS.includes('docs/codex-skills/swift-testing-expert.md'), true);
+});

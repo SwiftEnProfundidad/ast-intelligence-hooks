@@ -99,4 +99,6 @@ test('listPackFilesWithNpmPackDryRun devuelve listado real de paquete', () => {
   const paths = listPackFilesWithNpmPackDryRun(process.cwd());
   assert.ok(paths.includes('package.json'));
   assert.ok(paths.includes('integrations/lifecycle/cli.ts'));
+  assert.ok(paths.includes('vendor/skills/ios-enterprise-rules/SKILL.md'));
+  assert.ok(paths.includes('vendor/skills/core-data-expert/SKILL.md'));
 });

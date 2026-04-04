@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-03-09T22:17:59.427Z",
+  "generatedAt": "2026-04-04T18:34:00.495Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5602,10 +5602,68 @@
       ]
     },
     {
+      "name": "ios-core-data-guidelines",
+      "version": "1.0.0",
+      "source": "file:vendor/skills/core-data-expert/SKILL.md",
+      "hash": "e4993f58b642c163d230e08178107053b297b57fe6ba8d71c30378f5bdd0215e",
+      "rules": [
+        {
+          "id": "skills.ios.guideline.ios-core-data.pass-nsmanagedobjectid-when-a-different-context-must-resolve-the-entit",
+          "description": "Pass NSManagedObjectID when a different context must resolve the entity later.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "sourceSkill": "ios-core-data-guidelines",
+          "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
+          "confidence": "HIGH",
+          "locked": true,
+          "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.guideline.ios-core-data.use-repositories-that-map-managed-objects-into-domain-models-before-cr",
+          "description": "Use repositories that map managed objects into domain models before crossing module boundaries.",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-core-data-guidelines",
+          "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-nsmanagedobject-async-boundary",
+          "description": "Avoid NSManagedObject in async function boundaries; prefer object IDs or mapped models.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-core-data-guidelines",
+          "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-nsmanagedobject-boundary",
+          "description": "Avoid NSManagedObject in shared function and property boundaries; prefer object IDs or mapped models.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-core-data-guidelines",
+          "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        }
+      ]
+    },
+    {
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "4155fa695b3480fae0d21e630f1699df6b397d253e99e3522eca8aa26e35fc16",
+      "hash": "f886adfb9c9929b1159a66ef85bfc191334b7a88542231eeba39fe111d63ac70",
       "rules": [
         {
           "id": "skills.ios.guideline.ios.accessibility-identifiers-para-localizar-elementos",
@@ -5958,18 +6016,6 @@
         {
           "id": "skills.ios.guideline.ios.clean-por-feature-presentation-application-domain-infrastructure-domai",
           "description": "Clean por feature - presentation → application → domain, infrastructure → domain",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.clipshape-rect-cornerradius-en-lugar-de-cornerradius",
-          "description": "clipShape(.rect(cornerRadius:)) en lugar de cornerRadius()",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",
@@ -6510,18 +6556,6 @@
         {
           "id": "skills.ios.guideline.ios.filemanager-archivos-ima-genes-documents",
           "description": "FileManager - Archivos, imágenes, documents",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.foregroundstyle-en-lugar-de-foregroundcolor",
-          "description": "foregroundStyle() en lugar de foregroundColor()",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",
@@ -7565,18 +7599,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios.scrollindicators-hidden-en-lugar-de-showsindicators-false",
-          "description": "scrollIndicators(.hidden) en lugar de showsIndicators: false",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios.scrollviewreader-scroll-programa-tico",
           "description": "ScrollViewReader - Scroll programático",
           "severity": "WARN",
@@ -7973,18 +7995,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios.tab-api-en-lugar-de-tabitem",
-          "description": "Tab API en lugar de tabItem()",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios.task-para-lanzar-contextos-asi-ncronos-desde-co-digo-si-ncrono",
           "description": "Task {} - Para lanzar contextos asíncronos desde código síncrono",
           "severity": "WARN",
@@ -8370,6 +8380,18 @@
           "origin": "core"
         },
         {
+          "id": "skills.ios.no-corner-radius",
+          "description": "clipShape(.rect(cornerRadius:)) en lugar de cornerRadius()",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
           "id": "skills.ios.no-dispatchqueue",
           "description": "DispatchQueue - Usar async/await",
           "severity": "ERROR",
@@ -8418,6 +8440,18 @@
           "origin": "core"
         },
         {
+          "id": "skills.ios.no-foreground-color",
+          "description": "foregroundStyle() en lugar de foregroundColor()",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
           "id": "skills.ios.no-navigation-view",
           "description": "NavigationStack en lugar de NavigationView",
           "severity": "WARN",
@@ -8454,8 +8488,32 @@
           "origin": "core"
         },
         {
+          "id": "skills.ios.no-scrollview-shows-indicators",
+          "description": "scrollIndicators(.hidden) en lugar de showsIndicators: false",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
           "id": "skills.ios.no-string-format",
           "description": "String(localized:) + Text format en lugar de String(format:)",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-tab-item",
+          "description": "Tab API en lugar de tabItem()",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",
@@ -8504,10 +8562,69 @@
       ]
     },
     {
+      "name": "ios-swift-testing-guidelines",
+      "version": "1.0.0",
+      "source": "file:vendor/skills/swift-testing-expert/SKILL.md",
+      "hash": "c92c0cccaebc5d0ae133dd377a614d5493a5e88c5c30f3d7d739350d9b18a0ee",
+      "rules": [
+        {
+          "id": "skills.ios.guideline.ios-swift-testing.prefer-test-functions-over-test-methods-when-the-target-already-suppor",
+          "description": "Prefer @Test functions over test... methods when the target already supports Swift Testing.",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-swift-testing-guidelines",
+          "sourcePath": "vendor/skills/swift-testing-expert/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-xctassert",
+          "description": "Avoid XCTest assertion macros in modern Swift tests; prefer #expect.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swift-testing-guidelines",
+          "sourcePath": "vendor/skills/swift-testing-expert/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-xctunwrap",
+          "description": "Avoid XCTUnwrap in modern Swift tests; prefer #require.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swift-testing-guidelines",
+          "sourcePath": "vendor/skills/swift-testing-expert/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.prefer-swift-testing",
+          "description": "Prefer Swift Testing over XCTest-only unit and integration tests.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swift-testing-guidelines",
+          "sourcePath": "vendor/skills/swift-testing-expert/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        }
+      ]
+    },
+    {
       "name": "ios-swiftui-expert-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/swiftui-expert-skill/SKILL.md",
-      "hash": "98ef26c0221ad685df78764226a571c6786c22bb7183d10196e6c1f76b1183cd",
+      "hash": "8b1842e9f990594bc2d8e1235c7fe646766e57bdd272471ae36ddcecf9924207",
       "rules": [
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear",
@@ -8644,30 +8761,6 @@
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.references-state-management-md-property-wrappers-and-data-flow-prefer-",
           "description": "references/state-management.md - Property wrappers and data flow (prefer @Observable)",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-swiftui-expert-guidelines",
-          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios-swiftui-expert.use-clipshape-rect-cornerradius-instead-of-cornerradius",
-          "description": "Use clipShape(.rect(cornerRadius:)) instead of cornerRadius()",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-swiftui-expert-guidelines",
-          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios-swiftui-expert.use-foregroundstyle-instead-of-foregroundcolor",
-          "description": "Use foregroundStyle() instead of foregroundColor()",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-swiftui-expert-guidelines",
@@ -8870,18 +8963,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios-swiftui-expert.use-tab-api-instead-of-tabitem",
-          "description": "Use Tab API instead of tabItem()",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-swiftui-expert-guidelines",
-          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios-swiftui-expert.use-task-id-for-value-dependent-tasks",
           "description": "Use .task(id:) for value-dependent tasks",
           "severity": "WARN",
@@ -8954,6 +9035,32 @@
           "origin": "core"
         },
         {
+          "id": "skills.ios.no-corner-radius",
+          "description": "Avoid cornerRadius in modern SwiftUI code; prefer clipShape(.rect(cornerRadius:)).",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-foreground-color",
+          "description": "Avoid foregroundColor in modern SwiftUI code; prefer foregroundStyle.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
           "id": "skills.ios.no-navigation-view",
           "description": "Avoid NavigationView in modern iOS code; prefer NavigationStack.",
           "severity": "WARN",
@@ -8993,11 +9100,37 @@
           "origin": "core"
         },
         {
+          "id": "skills.ios.no-scrollview-shows-indicators",
+          "description": "Avoid ScrollView(showsIndicators: false) in SwiftUI code; prefer scrollIndicators(.hidden).",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
           "id": "skills.ios.no-string-format",
           "description": "Avoid String(format:) in SwiftUI presentation code; prefer modern formatting APIs.",
           "severity": "WARN",
           "platform": "ios",
           "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-tab-item",
+          "description": "Avoid tabItem in modern SwiftUI code paths that can adopt the new Tab API.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
           "stage": "PRE_PUSH",
           "locked": true,
           "sourceSkill": "ios-swiftui-expert-guidelines",

@@ -56,15 +56,45 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-navigation-view': heuristicDetector('ios.navigation-view', [
     'heuristics.ios.navigation-view.ast',
   ]),
+  'skills.ios.no-foreground-color': heuristicDetector('ios.foreground-color', [
+    'heuristics.ios.foreground-color.ast',
+  ]),
+  'skills.ios.no-corner-radius': heuristicDetector('ios.corner-radius', [
+    'heuristics.ios.corner-radius.ast',
+  ]),
+  'skills.ios.no-tab-item': heuristicDetector('ios.tab-item', [
+    'heuristics.ios.tab-item.ast',
+  ]),
   'skills.ios.no-on-tap-gesture': heuristicDetector('ios.on-tap-gesture', [
     'heuristics.ios.on-tap-gesture.ast',
   ]),
   'skills.ios.no-string-format': heuristicDetector('ios.string-format', [
     'heuristics.ios.string-format.ast',
   ]),
+  'skills.ios.no-scrollview-shows-indicators': heuristicDetector(
+    'ios.scrollview-shows-indicators',
+    ['heuristics.ios.scrollview-shows-indicators.ast']
+  ),
   'skills.ios.no-uiscreen-main-bounds': heuristicDetector('ios.uiscreen-main-bounds', [
     'heuristics.ios.uiscreen-main-bounds.ast',
   ]),
+  'skills.ios.prefer-swift-testing': heuristicDetector('ios.testing.xctest-import', [
+    'heuristics.ios.testing.xctest-import.ast',
+  ]),
+  'skills.ios.no-xctassert': heuristicDetector('ios.testing.xctassert', [
+    'heuristics.ios.testing.xctassert.ast',
+  ]),
+  'skills.ios.no-xctunwrap': heuristicDetector('ios.testing.xctunwrap', [
+    'heuristics.ios.testing.xctunwrap.ast',
+  ]),
+  'skills.ios.no-nsmanagedobject-boundary': heuristicDetector(
+    'ios.core-data.nsmanagedobject-boundary',
+    ['heuristics.ios.core-data.nsmanagedobject-boundary.ast']
+  ),
+  'skills.ios.no-nsmanagedobject-async-boundary': heuristicDetector(
+    'ios.core-data.nsmanagedobject-async-boundary',
+    ['heuristics.ios.core-data.nsmanagedobject-async-boundary.ast']
+  ),
   'skills.backend.no-empty-catch': heuristicDetector('typescript.empty-catch', [
     'heuristics.ts.empty-catch.ast',
   ]),

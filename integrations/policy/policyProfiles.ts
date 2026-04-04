@@ -66,6 +66,10 @@ const toGatePolicyRecordFromEnterpriseThresholds = (
   enterpriseThresholdsByStage: Record<SkillsStage, EnterpriseStageThresholds>
 ): Record<SkillsStage, GatePolicy> => {
   return {
+    PRE_WRITE: toGatePolicyFromEnterpriseThresholds(
+      'PRE_WRITE',
+      enterpriseThresholdsByStage.PRE_WRITE
+    ),
     PRE_COMMIT: toGatePolicyFromEnterpriseThresholds(
       'PRE_COMMIT',
       enterpriseThresholdsByStage.PRE_COMMIT
@@ -82,6 +86,11 @@ const toGatePolicyRecordFromEnterpriseThresholds = (
 };
 
 const defaultPolicyByStage: Record<SkillsStage, GatePolicy> = {
+  PRE_WRITE: {
+    stage: 'PRE_WRITE',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  },
   PRE_COMMIT: {
     stage: 'PRE_COMMIT',
     blockOnOrAbove: 'ERROR',
@@ -103,6 +112,10 @@ const hardModeEnterpriseThresholdsByStage: Record<
   SkillsStage,
   EnterpriseStageThresholds
 > = {
+  PRE_WRITE: {
+    blockOnOrAbove: 'MEDIUM',
+    warnOnOrAbove: 'LOW',
+  },
   PRE_COMMIT: {
     blockOnOrAbove: 'MEDIUM',
     warnOnOrAbove: 'LOW',
@@ -129,6 +142,10 @@ const hardModeEnterpriseThresholdsProfileByStage: Record<
   Record<SkillsStage, EnterpriseStageThresholds>
 > = {
   'critical-high': {
+    PRE_WRITE: {
+      blockOnOrAbove: 'HIGH',
+      warnOnOrAbove: 'MEDIUM',
+    },
     PRE_COMMIT: {
       blockOnOrAbove: 'HIGH',
       warnOnOrAbove: 'MEDIUM',
@@ -143,6 +160,10 @@ const hardModeEnterpriseThresholdsProfileByStage: Record<
     },
   },
   'all-severities': {
+    PRE_WRITE: {
+      blockOnOrAbove: 'LOW',
+      warnOnOrAbove: 'LOW',
+    },
     PRE_COMMIT: {
       blockOnOrAbove: 'LOW',
       warnOnOrAbove: 'LOW',
@@ -397,6 +418,10 @@ export const resolvePolicyProfileForStage = (
 
 export const policyForPreCommit = (): GatePolicy => {
   return resolveCorePolicyForStage('PRE_COMMIT');
+};
+
+export const policyForPreWrite = (): GatePolicy => {
+  return resolveCorePolicyForStage('PRE_WRITE');
 };
 
 export const policyForPrePush = (): GatePolicy => {

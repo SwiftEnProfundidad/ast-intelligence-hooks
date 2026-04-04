@@ -236,6 +236,60 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.foreground-color.ast',
+    description: 'Detects foregroundColor usage in modern SwiftUI code paths.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.foreground-color.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected foregroundColor usage.',
+      code: 'HEURISTICS_IOS_FOREGROUND_COLOR_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.corner-radius.ast',
+    description: 'Detects cornerRadius usage in modern SwiftUI code paths.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.corner-radius.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected cornerRadius usage.',
+      code: 'HEURISTICS_IOS_CORNER_RADIUS_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.tab-item.ast',
+    description: 'Detects tabItem usage where the modern Tab API may be preferred.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.tab-item.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected tabItem usage.',
+      code: 'HEURISTICS_IOS_TAB_ITEM_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.on-tap-gesture.ast',
     description: 'Detects onTapGesture usage in iOS production code where Button is preferred.',
     severity: 'WARN',
@@ -272,6 +326,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.scrollview-shows-indicators.ast',
+    description: 'Detects ScrollView initializer usage with showsIndicators: false in modern SwiftUI code paths.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.scrollview-shows-indicators.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected ScrollView(showsIndicators: false) usage.',
+      code: 'HEURISTICS_IOS_SCROLLVIEW_SHOWS_INDICATORS_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.uiscreen-main-bounds.ast',
     description: 'Detects UIScreen.main.bounds usage in iOS production code.',
     severity: 'WARN',
@@ -287,6 +359,96 @@ export const iosRules: RuleSet = [
       kind: 'Finding',
       message: 'AST heuristic detected UIScreen.main.bounds usage.',
       code: 'HEURISTICS_IOS_UISCREEN_MAIN_BOUNDS_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.testing.xctest-import.ast',
+    description: 'Detects legacy XCTest import usage in iOS unit and integration tests.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.testing.xctest-import.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected XCTest-only test usage where Swift Testing may be preferred.',
+      code: 'HEURISTICS_IOS_TESTING_XCTEST_IMPORT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.testing.xctassert.ast',
+    description: 'Detects XCTest assertion macros in modern iOS tests.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.testing.xctassert.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected XCTest assertion usage where #expect may be preferred.',
+      code: 'HEURISTICS_IOS_TESTING_XCTASSERT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.testing.xctunwrap.ast',
+    description: 'Detects XCTUnwrap usage in modern iOS tests.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.testing.xctunwrap.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected XCTUnwrap usage where #require may be preferred.',
+      code: 'HEURISTICS_IOS_TESTING_XCTUNWRAP_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.core-data.nsmanagedobject-boundary.ast',
+    description: 'Detects NSManagedObject usage in shared iOS boundaries.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.core-data.nsmanagedobject-boundary.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected NSManagedObject in a shared boundary.',
+      code: 'HEURISTICS_IOS_CORE_DATA_NSMANAGEDOBJECT_BOUNDARY_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
+    description: 'Detects async iOS APIs that expose NSManagedObject directly.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected NSManagedObject in an async boundary.',
+      code: 'HEURISTICS_IOS_CORE_DATA_NSMANAGEDOBJECT_ASYNC_BOUNDARY_AST',
     },
   },
 ];

@@ -267,9 +267,27 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
   ['skills.ios.no-unchecked-sendable', 'heuristics.ios.unchecked-sendable.ast'],
   ['skills.ios.no-observable-object', 'heuristics.ios.observable-object.ast'],
   ['skills.ios.no-navigation-view', 'heuristics.ios.navigation-view.ast'],
+  ['skills.ios.no-foreground-color', 'heuristics.ios.foreground-color.ast'],
+  ['skills.ios.no-corner-radius', 'heuristics.ios.corner-radius.ast'],
+  ['skills.ios.no-tab-item', 'heuristics.ios.tab-item.ast'],
   ['skills.ios.no-on-tap-gesture', 'heuristics.ios.on-tap-gesture.ast'],
   ['skills.ios.no-string-format', 'heuristics.ios.string-format.ast'],
+  [
+    'skills.ios.no-scrollview-shows-indicators',
+    'heuristics.ios.scrollview-shows-indicators.ast',
+  ],
   ['skills.ios.no-uiscreen-main-bounds', 'heuristics.ios.uiscreen-main-bounds.ast'],
+  ['skills.ios.prefer-swift-testing', 'heuristics.ios.testing.xctest-import.ast'],
+  ['skills.ios.no-xctassert', 'heuristics.ios.testing.xctassert.ast'],
+  ['skills.ios.no-xctunwrap', 'heuristics.ios.testing.xctunwrap.ast'],
+  [
+    'skills.ios.no-nsmanagedobject-boundary',
+    'heuristics.ios.core-data.nsmanagedobject-boundary.ast',
+  ],
+  [
+    'skills.ios.no-nsmanagedobject-async-boundary',
+    'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
+  ],
   [
     'backend.no-console-log',
     'frontend.no-console-log',

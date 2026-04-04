@@ -427,8 +427,12 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
           'Task.detached { }',
           'final class LegacyViewModel: ObservableObject {}',
           'NavigationView { Text("hello") }',
+          'Text("primary").foregroundColor(.blue)',
+          'Image("hero").cornerRadius(12)',
+          'TabView { HomeView().tabItem { Label("Home", systemImage: "house") } }',
           'Text("tap").onTapGesture { }',
           'let title = String(format: "%d", 1)',
+          'ScrollView(.vertical, showsIndicators: false) { Text("feed") }',
           'let width = UIScreen.main.bounds.width',
           'final class LegacyType: @unchecked Sendable {}',
         ].join('\n')
@@ -447,17 +451,21 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
   assert.deepEqual(toRuleIds(findings), [
     'heuristics.ios.anyview.ast',
     'heuristics.ios.callback-style.ast',
+    'heuristics.ios.corner-radius.ast',
     'heuristics.ios.dispatchgroup.ast',
     'heuristics.ios.dispatchqueue.ast',
     'heuristics.ios.dispatchsemaphore.ast',
     'heuristics.ios.force-cast.ast',
     'heuristics.ios.force-try.ast',
     'heuristics.ios.force-unwrap.ast',
+    'heuristics.ios.foreground-color.ast',
     'heuristics.ios.navigation-view.ast',
     'heuristics.ios.observable-object.ast',
     'heuristics.ios.on-tap-gesture.ast',
     'heuristics.ios.operation-queue.ast',
+    'heuristics.ios.scrollview-shows-indicators.ast',
     'heuristics.ios.string-format.ast',
+    'heuristics.ios.tab-item.ast',
     'heuristics.ios.task-detached.ast',
     'heuristics.ios.uiscreen-main-bounds.ast',
     'heuristics.ios.unchecked-sendable.ast',
@@ -486,6 +494,56 @@ test('does not detect iOS force-unwrap heuristic for safe nil comparisons', () =
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.force-unwrap.ast'), false);
+});
+
+test('detects iOS Swift Testing and Core Data boundary heuristics in scoped files', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/App/Tests/LoginFlowTests.swift',
+        [
+          'import XCTest',
+          '',
+          'final class LoginFlowTests: XCTestCase {',
+          '  func testLogin() throws {',
+          '    XCTAssertEqual(result, expected)',
+          '    let token = try XCTUnwrap(optionalToken)',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+      fileContentFact(
+        'apps/ios/App/Persistence/UserRepository.swift',
+        [
+          'import CoreData',
+          '',
+          'final class UserRepository {',
+          '  var selectedEntity: NSManagedObject?',
+          '',
+          '  func fetchEntity() async throws -> NSManagedObject {',
+          '    fatalError()',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctest-import.ast'), true);
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctassert.ast'), true);
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctunwrap.ast'), true);
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ios.core-data.nsmanagedobject-boundary.ast'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast'),
+    true
+  );
 });
 
 test('detects IOS-CANARY-001 semantic heuristic with primary_node and related_nodes', () => {

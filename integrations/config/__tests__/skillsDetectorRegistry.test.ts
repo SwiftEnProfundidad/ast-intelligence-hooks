@@ -21,6 +21,15 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-force-unwrap'), [
     'heuristics.ios.force-unwrap.ast',
   ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-foreground-color'), [
+    'heuristics.ios.foreground-color.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-xctassert'), [
+    'heuristics.ios.testing.xctassert.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-nsmanagedobject-async-boundary'), [
+    'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
+  ]);
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-globalscope'), [
     'heuristics.android.globalscope.ast',
   ]);

@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import test from 'node:test';
 import type { Fact } from '../../../core/facts/Fact';
 import type { Finding } from '../../../core/gate/Finding';
@@ -2242,6 +2244,20 @@ test('runPlatformGate permite cuando plataformas detectadas tienen bundles y reg
               rules: [],
             },
             {
+              name: 'ios-swift-testing-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swift-testing-expert.md',
+              hash: 'e'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-core-data-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/core-data-expert.md',
+              hash: 'f'.repeat(64),
+              rules: [],
+            },
+            {
               name: 'backend-guidelines',
               version: '1.0.0',
               source: 'file:docs/codex-skills/windsurf-rules-backend.md',
@@ -2391,6 +2407,20 @@ test('runPlatformGate mantiene advisory cuando una plataforma detectada no tiene
               rules: [],
             },
             {
+              name: 'ios-swift-testing-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swift-testing-expert.md',
+              hash: 'e'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-core-data-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/core-data-expert.md',
+              hash: 'f'.repeat(64),
+              rules: [],
+            },
+            {
               name: 'backend-guidelines',
               version: '1.0.0',
               source: 'file:docs/codex-skills/windsurf-rules-backend.md',
@@ -2522,6 +2552,20 @@ test('runPlatformGate permite cuando plataformas detectadas tienen reglas críti
               version: '1.0.0',
               source: 'file:docs/codex-skills/swiftui-expert-skill.md',
               hash: 'c'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-swift-testing-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swift-testing-expert.md',
+              hash: 'e'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-core-data-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/core-data-expert.md',
+              hash: 'f'.repeat(64),
               rules: [],
             },
             {
@@ -3765,57 +3809,57 @@ test('runPlatformGate bloquea por policy TDD/BDD en modo strict para cambios nue
     let emittedFindings: ReadonlyArray<Finding> = [];
     let emittedOutcome: 'ALLOW' | 'WARN' | 'BLOCK' | undefined;
 
-      const result = await runPlatformGate({
-        policy,
-        scope,
-        services: {
-          git,
-          evidence,
-        },
-        dependencies: {
-          evaluateSddForStage: () => ({
-            allowed: true,
-            code: 'ALLOWED',
-            message: 'ok',
-          }),
-          resolveFactsForGateScope: async () => facts,
-          evaluatePlatformGateFindings: () => ({
-            detectedPlatforms: { backend: { detected: true, confidence: 'HIGH' } },
-            skillsRuleSet: {
-              rules: [],
-              activeBundles: [],
-              mappedHeuristicRuleIds: new Set<string>(),
-              requiresHeuristicFacts: false,
-            },
-            projectRules: [] as RuleSet,
-            heuristicRules: [] as RuleSet,
-            coverage: {
-              factsTotal: facts.length,
-              filesScanned: 1,
-              rulesTotal: 1,
-              baselineRules: 1,
-              heuristicRules: 0,
-              skillsRules: 0,
-              projectRules: 1,
-              matchedRules: 1,
-              unmatchedRules: 0,
-              unevaluatedRules: 0,
-              activeRuleIds: ['rules.backend.dummy'],
-              evaluatedRuleIds: ['rules.backend.dummy'],
-              matchedRuleIds: ['rules.backend.dummy'],
-              unmatchedRuleIds: [],
-              unevaluatedRuleIds: [],
-            },
-            findings: [],
-          }),
-          evaluateGate: () => ({ outcome: 'ALLOW' }),
-          emitPlatformGateEvidence: (paramsArg) => {
-            emittedFindings = paramsArg.findings;
-            emittedOutcome = paramsArg.gateOutcome;
+    const result = await runPlatformGate({
+      policy,
+      scope,
+      services: {
+        git,
+        evidence,
+      },
+      dependencies: {
+        evaluateSddForStage: () => ({
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        }),
+        resolveFactsForGateScope: async () => facts,
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: { backend: { detected: true, confidence: 'HIGH' } },
+          skillsRuleSet: {
+            rules: [],
+            activeBundles: [],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
           },
-          printGateFindings: () => {},
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: facts.length,
+            filesScanned: 1,
+            rulesTotal: 1,
+            baselineRules: 1,
+            heuristicRules: 0,
+            skillsRules: 0,
+            projectRules: 1,
+            matchedRules: 1,
+            unmatchedRules: 0,
+            unevaluatedRules: 0,
+            activeRuleIds: ['rules.backend.dummy'],
+            evaluatedRuleIds: ['rules.backend.dummy'],
+            matchedRuleIds: ['rules.backend.dummy'],
+            unmatchedRuleIds: [],
+            unevaluatedRuleIds: [],
+          },
+          findings: [],
+        }),
+        evaluateGate: () => ({ outcome: 'ALLOW' }),
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedFindings = paramsArg.findings;
+          emittedOutcome = paramsArg.gateOutcome;
         },
-      });
+        printGateFindings: () => {},
+      },
+    });
 
       assert.equal(result, 1);
       assert.equal(emittedOutcome, 'BLOCK');
@@ -3828,6 +3872,330 @@ test('runPlatformGate bloquea por policy TDD/BDD en modo strict para cambios nue
         true
       );
     });
+  });
+});
+
+test('runPlatformGate bloquea PRE_WRITE en hotspot de Presentation por tamaño estructural', async () => {
+  await withTempDir('pumuki-run-platform-gate-hotspot-prewrite-', async (repoRoot) => {
+    const policy: GatePolicy = {
+      stage: 'PRE_WRITE',
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
+    };
+    const git = buildGitStub(repoRoot);
+    const evidence = buildEvidenceStub();
+    const oversizedContent = Array.from({ length: 901 }, (_, index) => `export const line${index} = ${index};`).join('\n');
+    const facts: ReadonlyArray<Fact> = [
+      {
+        kind: 'FileChange',
+        path: 'apps/frontend/presentation/AppShell.tsx',
+        changeType: 'modified',
+        source: 'git:working-tree',
+      },
+      {
+        kind: 'FileContent',
+        path: 'apps/frontend/presentation/AppShell.tsx',
+        content: oversizedContent,
+        source: 'git:working-tree',
+      },
+    ];
+
+    let emittedFindings: ReadonlyArray<Finding> = [];
+    let emittedOutcome: 'ALLOW' | 'WARN' | 'BLOCK' | undefined;
+
+    const result = await runPlatformGate({
+      policy,
+      scope: { kind: 'workingTree' },
+      services: {
+        git,
+        evidence,
+      },
+      dependencies: {
+        resolveFactsForGateScope: async () => facts,
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: { frontend: { detected: true, confidence: 'HIGH' } },
+          skillsRuleSet: {
+            rules: [],
+            activeBundles: [],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: facts.length,
+            filesScanned: 1,
+            rulesTotal: 1,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 1,
+            projectRules: 0,
+            matchedRules: 1,
+            unmatchedRules: 0,
+            unevaluatedRules: 0,
+            activeRuleIds: ['skills.frontend.no-empty-catch'],
+            evaluatedRuleIds: ['skills.frontend.no-empty-catch'],
+            matchedRuleIds: ['skills.frontend.no-empty-catch'],
+            unmatchedRuleIds: [],
+            unevaluatedRuleIds: [],
+          },
+          findings: [],
+        }),
+        evaluateGate: () => ({ outcome: 'ALLOW' }),
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedFindings = paramsArg.findings;
+          emittedOutcome = paramsArg.gateOutcome;
+        },
+        printGateFindings: () => {},
+        enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      },
+    });
+
+    assert.equal(result, 1);
+    assert.equal(emittedOutcome, 'BLOCK');
+    assert.equal(
+      emittedFindings.some((finding) => finding.ruleId === 'governance.hotspot.file_over_limit'),
+      true
+    );
+  });
+});
+
+test('runPlatformGate bloquea PRE_COMMIT cuando toca hotspot marcado sin plan ni ADR', async () => {
+  await withTempDir('pumuki-run-platform-gate-flagged-hotspot-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'config'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'config', 'pumuki-hotspots.json'),
+      `${JSON.stringify({
+        hotspots: [
+          {
+            path: 'apps/frontend/presentation/LegacyShell.tsx',
+            reason: 'legacy hotspot',
+            requires_refactor_plan: true,
+            requires_adr: true,
+          },
+        ],
+      }, null, 2)}\n`,
+      'utf8'
+    );
+
+    const policy: GatePolicy = {
+      stage: 'PRE_COMMIT',
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
+    };
+    const git = buildGitStub(repoRoot);
+    const evidence = buildEvidenceStub();
+    const facts: ReadonlyArray<Fact> = [
+      {
+        kind: 'FileChange',
+        path: 'apps/frontend/presentation/LegacyShell.tsx',
+        changeType: 'modified',
+        source: 'git:staged',
+      },
+      {
+        kind: 'FileContent',
+        path: 'apps/frontend/presentation/LegacyShell.tsx',
+        content: 'export const LegacyShell = () => null;',
+        source: 'git:staged',
+      },
+    ];
+
+    let emittedFindings: ReadonlyArray<Finding> = [];
+
+    const result = await runPlatformGate({
+      policy,
+      scope: { kind: 'staged' },
+      services: {
+        git,
+        evidence,
+      },
+      dependencies: {
+        evaluateSddForStage: () => ({
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        }),
+        resolveFactsForGateScope: async () => facts,
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: { frontend: { detected: true, confidence: 'HIGH' } },
+          skillsRuleSet: {
+            rules: [],
+            activeBundles: [],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: facts.length,
+            filesScanned: 1,
+            rulesTotal: 1,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 1,
+            projectRules: 0,
+            matchedRules: 1,
+            unmatchedRules: 0,
+            unevaluatedRules: 0,
+            activeRuleIds: ['skills.frontend.no-empty-catch'],
+            evaluatedRuleIds: ['skills.frontend.no-empty-catch'],
+            matchedRuleIds: ['skills.frontend.no-empty-catch'],
+            unmatchedRuleIds: [],
+            unevaluatedRuleIds: [],
+          },
+          findings: [],
+        }),
+        evaluateGate: () => ({ outcome: 'ALLOW' }),
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedFindings = paramsArg.findings;
+        },
+        printGateFindings: () => {},
+        enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+        resolveActiveGateWaiver: () => ({
+          kind: 'none',
+          path: '.pumuki/waivers/gate.json',
+        }),
+      },
+    });
+
+    assert.equal(result, 1);
+    assert.equal(
+      emittedFindings.some((finding) => finding.ruleId === 'governance.hotspot.flagged_file_without_plan'),
+      true
+    );
+    assert.equal(
+      emittedFindings.some((finding) => finding.ruleId === 'governance.hotspot.missing_adr_for_structural_change'),
+      true
+    );
+  });
+});
+
+test('runPlatformGate permite hotspot marcado cuando ADR y plan existen', async () => {
+  await withTempDir('pumuki-run-platform-gate-hotspot-allow-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'config'), { recursive: true });
+    mkdirSync(join(repoRoot, 'docs', 'architecture', 'adr'), { recursive: true });
+    mkdirSync(join(repoRoot, 'docs', 'refactor'), { recursive: true });
+    writeFileSync(join(repoRoot, 'docs', 'architecture', 'adr', 'ADR-042-hotspot.md'), '# adr\n', 'utf8');
+    writeFileSync(join(repoRoot, 'docs', 'refactor', 'legacy-shell-split-plan.md'), '# plan\n', 'utf8');
+    writeFileSync(
+      join(repoRoot, 'config', 'pumuki-hotspots.json'),
+      `${JSON.stringify({
+        hotspots: [
+          {
+            path: 'apps/frontend/presentation/LegacyShell.tsx',
+            reason: 'legacy hotspot',
+            requires_refactor_plan: true,
+            requires_adr: true,
+            refactor_plan_paths: ['docs/refactor/legacy-shell-split-plan.md'],
+            adr_paths: ['docs/architecture/adr/ADR-042-hotspot.md'],
+          },
+        ],
+      }, null, 2)}\n`,
+      'utf8'
+    );
+
+    const policy: GatePolicy = {
+      stage: 'PRE_COMMIT',
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
+    };
+    const git = buildGitStub(repoRoot);
+    const evidence = buildEvidenceStub();
+    const facts: ReadonlyArray<Fact> = [
+      {
+        kind: 'FileChange',
+        path: 'apps/frontend/presentation/LegacyShell.tsx',
+        changeType: 'modified',
+        source: 'git:staged',
+      },
+      {
+        kind: 'FileContent',
+        path: 'apps/frontend/presentation/LegacyShell.tsx',
+        content: 'export const LegacyShell = () => null;',
+        source: 'git:staged',
+      },
+    ];
+
+    let emittedFindings: ReadonlyArray<Finding> = [];
+    let emittedOutcome: 'ALLOW' | 'WARN' | 'BLOCK' | undefined;
+
+    const result = await runPlatformGate({
+      policy,
+      scope: { kind: 'staged' },
+      services: {
+        git,
+        evidence,
+      },
+      dependencies: {
+        evaluateSddForStage: () => ({
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        }),
+        resolveFactsForGateScope: async () => facts,
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: { frontend: { detected: true, confidence: 'HIGH' } },
+          skillsRuleSet: {
+            rules: [
+              createSkillRule({
+                id: 'skills.frontend.no-empty-catch',
+                severity: 'ERROR',
+                platform: 'frontend',
+              }),
+            ] as RuleSet,
+            activeBundles: [
+              {
+                name: 'frontend-guidelines',
+                version: '1.0.0',
+                source: 'file:docs/codex-skills/frontend-enterprise-rules.md',
+                hash: 'a'.repeat(64),
+                rules: [],
+              },
+            ],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: facts.length,
+            filesScanned: 1,
+            rulesTotal: 1,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 1,
+            projectRules: 0,
+            matchedRules: 1,
+            unmatchedRules: 0,
+            unevaluatedRules: 0,
+            activeRuleIds: ['skills.frontend.no-empty-catch'],
+            evaluatedRuleIds: ['skills.frontend.no-empty-catch'],
+            matchedRuleIds: ['skills.frontend.no-empty-catch'],
+            unmatchedRuleIds: [],
+            unevaluatedRuleIds: [],
+          },
+          findings: [],
+        }),
+        evaluateGate: () => ({ outcome: 'ALLOW' }),
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedFindings = paramsArg.findings;
+          emittedOutcome = paramsArg.gateOutcome;
+        },
+        printGateFindings: () => {},
+        enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+        resolveActiveGateWaiver: () => ({
+          kind: 'none',
+          path: '.pumuki/waivers/gate.json',
+        }),
+      },
+    });
+
+    assert.equal(result, 0);
+    assert.equal(emittedOutcome, 'ALLOW');
+    assert.equal(
+      emittedFindings.some((finding) => finding.ruleId.startsWith('governance.hotspot.')),
+      false
+    );
   });
 });
 

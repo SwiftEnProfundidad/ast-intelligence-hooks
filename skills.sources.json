@@ -23,6 +23,20 @@
       "enabled": true
     },
     {
+      "name": "ios-swift-testing-guidelines",
+      "version": "1.0.0",
+      "template": "ios-swift-testing-guidelines",
+      "sourcePath": "vendor/skills/swift-testing-expert/SKILL.md",
+      "enabled": true
+    },
+    {
+      "name": "ios-core-data-guidelines",
+      "version": "1.0.0",
+      "template": "ios-core-data-guidelines",
+      "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
+      "enabled": true
+    },
+    {
       "name": "android-guidelines",
       "version": "1.0.0",
       "template": "android-guidelines",

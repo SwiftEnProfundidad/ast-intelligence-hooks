@@ -24,6 +24,7 @@ export type SkillsRuleSetLoadResult = {
 };
 
 const STAGE_RANK: Record<Exclude<GateStage, 'STAGED'>, number> = {
+  PRE_WRITE: 30,
   PRE_COMMIT: 30,
   PRE_PUSH: 30,
   CI: 30,
