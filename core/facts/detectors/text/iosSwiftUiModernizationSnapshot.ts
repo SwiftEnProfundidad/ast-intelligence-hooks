@@ -1,8 +1,13 @@
-import rawSnapshot from '../../../../assets/rule-packs/ios-swiftui-modernization-v1.json';
+import rawSnapshot from '../../../../assets/rule-packs/ios-swiftui-modernization-v2.json';
 
 export type IosSwiftUiModernizationConfidence = 'HIGH' | 'MEDIUM';
 export type IosSwiftUiModernizationStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
-export type IosSwiftUiModernizationCategory = 'styling' | 'tabs' | 'scrolling';
+export type IosSwiftUiModernizationCategory =
+  | 'styling'
+  | 'tabs'
+  | 'scrolling'
+  | 'presentation'
+  | 'state';
 
 export type IosSwiftUiModernizationMatch = {
   kind: 'regex';
@@ -45,7 +50,11 @@ const isConfidence = (value: unknown): value is IosSwiftUiModernizationConfidenc
   value === 'HIGH' || value === 'MEDIUM';
 
 const isCategory = (value: unknown): value is IosSwiftUiModernizationCategory =>
-  value === 'styling' || value === 'tabs' || value === 'scrolling';
+  value === 'styling' ||
+  value === 'tabs' ||
+  value === 'scrolling' ||
+  value === 'presentation' ||
+  value === 'state';
 
 const isMatch = (value: unknown): value is IosSwiftUiModernizationMatch => {
   return (

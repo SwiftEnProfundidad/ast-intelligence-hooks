@@ -426,6 +426,15 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
           'OperationQueue()',
           'Task.detached { }',
           'final class LegacyViewModel: ObservableObject {}',
+          '@preconcurrency import LegacyFramework',
+          'nonisolated(unsafe) static var sharedBridge: LegacyViewModel?',
+          'MainActor.assumeIsolated { reload() }',
+          '@StateObject private var ownedViewModel = LegacyViewModel()',
+          '@ObservedObject var injectedViewModel: LegacyViewModel',
+          'GeometryReader { proxy in Text("layout").frame(width: proxy.size.width) }',
+          'Text("headline").fontWeight(.bold)',
+          'let filtered = items.filter { $0.title.contains(searchText) }',
+          'ForEach(items.indices, id: \\.self) { index in Text(items[index].title) }',
           'NavigationView { Text("hello") }',
           'Text("primary").foregroundColor(.blue)',
           'Image("hero").cornerRadius(12)',
@@ -433,8 +442,18 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
           'Text("tap").onTapGesture { }',
           'let title = String(format: "%d", 1)',
           'ScrollView(.vertical, showsIndicators: false) { Text("feed") }',
+          '.sheet(isPresented: $showDetails) { DetailView() }',
+          '.onChange(of: query) { newValue in print(newValue) }',
           'let width = UIScreen.main.bounds.width',
           'final class LegacyType: @unchecked Sendable {}',
+          'struct DetailView: View {',
+          '  @State private var filter: String',
+          '  @StateObject private var detailViewModel: LegacyViewModel',
+          '  init(filter: String, detailViewModel: LegacyViewModel) {',
+          '    _filter = State(initialValue: filter)',
+          '    _detailViewModel = StateObject(wrappedValue: detailViewModel)',
+          '  }',
+          '}',
         ].join('\n')
       ),
       fileContentFact(
@@ -450,20 +469,31 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   assert.deepEqual(toRuleIds(findings), [
     'heuristics.ios.anyview.ast',
+    'heuristics.ios.assume-isolated.ast',
     'heuristics.ios.callback-style.ast',
+    'heuristics.ios.contains-user-filter.ast',
     'heuristics.ios.corner-radius.ast',
     'heuristics.ios.dispatchgroup.ast',
     'heuristics.ios.dispatchqueue.ast',
     'heuristics.ios.dispatchsemaphore.ast',
+    'heuristics.ios.font-weight-bold.ast',
     'heuristics.ios.force-cast.ast',
     'heuristics.ios.force-try.ast',
     'heuristics.ios.force-unwrap.ast',
+    'heuristics.ios.foreach-indices.ast',
     'heuristics.ios.foreground-color.ast',
+    'heuristics.ios.geometryreader.ast',
+    'heuristics.ios.legacy-onchange.ast',
+    'heuristics.ios.legacy-swiftui-observable-wrapper.ast',
     'heuristics.ios.navigation-view.ast',
+    'heuristics.ios.nonisolated-unsafe.ast',
     'heuristics.ios.observable-object.ast',
     'heuristics.ios.on-tap-gesture.ast',
     'heuristics.ios.operation-queue.ast',
+    'heuristics.ios.passed-value-state-wrapper.ast',
+    'heuristics.ios.preconcurrency.ast',
     'heuristics.ios.scrollview-shows-indicators.ast',
+    'heuristics.ios.sheet-is-presented.ast',
     'heuristics.ios.string-format.ast',
     'heuristics.ios.tab-item.ast',
     'heuristics.ios.task-detached.ast',
@@ -505,10 +535,29 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
           'import XCTest',
           '',
           'final class LoginFlowTests: XCTestCase {',
-          '  func testLogin() throws {',
+          '  func testLogin() async throws {',
           '    XCTAssertEqual(result, expected)',
           '    let token = try XCTUnwrap(optionalToken)',
+          '    let loadExpectation = expectation(description: "Done")',
+          '    service.run { loadExpectation.fulfill() }',
+          '    waitForExpectations(timeout: 1)',
           '  }',
+          '}',
+        ].join('\n')
+      ),
+      fileContentFact(
+        'apps/ios/App/Tests/LoginHybridTests.swift',
+        [
+          'import XCTest',
+          'import Testing',
+          '',
+          'final class LoginLegacyTests: XCTestCase {',
+          '  func testLegacyLogin() {}',
+          '}',
+          '',
+          '@Suite',
+          'struct LoginModernTests {',
+          '  @Test func login() async {}',
           '}',
         ].join('\n')
       ),
@@ -526,6 +575,23 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
           '}',
         ].join('\n')
       ),
+      fileContentFact(
+        'apps/ios/App/Presentation/Feature/DetailView.swift',
+        [
+          'import CoreData',
+          '',
+          'final class TodoEntity: NSManagedObject {}',
+          '',
+          'struct DetailView: View {',
+          '  @Environment(\\.managedObjectContext) private var context',
+          '  @State private var selectedEntity: TodoEntity?',
+          '}',
+          '',
+          'final class DetailViewModel: ObservableObject {',
+          '  @Published var entity: TodoEntity?',
+          '}',
+        ].join('\n')
+      ),
     ],
     detectedPlatforms: {
       ios: { detected: true },
@@ -534,14 +600,38 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctest-import.ast'), true);
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctest-suite-modernizable.ast'),
+    true
+  );
   assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctassert.ast'), true);
   assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctunwrap.ast'), true);
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.wait-for-expectations.ast'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.legacy-expectation-description.ast'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.mixed-frameworks.ast'),
+    true
+  );
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ios.core-data.nsmanagedobject-boundary.ast'),
     true
   );
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ios.core-data.layer-leak.ast'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ios.core-data.nsmanagedobject-state-leak.ast'),
     true
   );
 });

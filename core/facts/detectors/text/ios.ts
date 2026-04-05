@@ -121,6 +121,10 @@ const countTokenOccurrences = (line: string, token: string): number => {
   return count;
 };
 
+const escapeRegex = (value: string): string => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
 type SwiftProtocolMember = {
   name: string;
   line: number;
@@ -193,6 +197,46 @@ const parseSwiftProtocolDeclarations = (source: string): readonly SwiftProtocolD
   }
 
   return declarations;
+};
+
+const visitSwiftTopLevelTypeBodyLines = (
+  sourceLines: readonly string[],
+  typeDeclaration: SwiftTypeDeclaration,
+  visitor: (params: { line: string; lineNumber: number }) => boolean
+): boolean => {
+  const declarationLine = stripSwiftLineForSemanticScan(
+    sourceLines[typeDeclaration.bodyStartLine - 1] ?? ''
+  );
+  let braceDepth =
+    countTokenOccurrences(declarationLine, '{') - countTokenOccurrences(declarationLine, '}');
+
+  for (
+    let lineIndex = typeDeclaration.bodyStartLine;
+    lineIndex < typeDeclaration.bodyEndLine && braceDepth > 0;
+    lineIndex += 1
+  ) {
+    const line = stripSwiftLineForSemanticScan(sourceLines[lineIndex] ?? '');
+    if (braceDepth === 1 && visitor({ line, lineNumber: lineIndex + 1 })) {
+      return true;
+    }
+
+    braceDepth += countTokenOccurrences(line, '{');
+    braceDepth -= countTokenOccurrences(line, '}');
+  }
+
+  return false;
+};
+
+const buildSwiftManagedObjectTypePatternSource = (source: string): string => {
+  const patternParts = new Set<string>(['NSManagedObject\\b(?!ID\\b|Context\\b)']);
+
+  for (const typeDeclaration of parseSwiftTypeDeclarations(source)) {
+    if (typeDeclaration.conformances.includes('NSManagedObject')) {
+      patternParts.add(`${escapeRegex(typeDeclaration.name)}\\b`);
+    }
+  }
+
+  return Array.from(patternParts).join('|');
 };
 
 const parseSwiftTypeDeclarations = (source: string): readonly SwiftTypeDeclaration[] => {
@@ -371,6 +415,18 @@ export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftPreconcurrencyUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /@\s*preconcurrency\b/);
+};
+
+export const hasSwiftNonisolatedUnsafeUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\bnonisolated\s*\(\s*unsafe\s*\)/);
+};
+
+export const hasSwiftAssumeIsolatedUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\bassumeIsolated\b/);
+};
+
 export const hasSwiftObservableObjectUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'O') {
@@ -379,6 +435,117 @@ export const hasSwiftObservableObjectUsage = (source: string): boolean => {
 
     return hasIdentifierAt(swiftSource, index, 'ObservableObject');
   });
+};
+
+export const hasSwiftForEachIndicesUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bForEach\s*\(\s*(?:Array\s*\(\s*)?[A-Za-z_][A-Za-z0-9_.]*\.indices\b/g
+  );
+};
+
+const isUserSearchIdentifier = (value: string): boolean => {
+  return /^(?:query|search(?:Text|Term|Query|Value)?|filter(?:Text|Value)?|text|term|input)$/i.test(
+    value
+  );
+};
+
+export const hasSwiftContainsUserFilterUsage = (source: string): boolean => {
+  return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
+    if (current !== 'c' || !hasIdentifierAt(swiftSource, index, 'contains')) {
+      return false;
+    }
+
+    const openingParenIndex = nextNonWhitespaceIndex(swiftSource, index + 'contains'.length);
+    if (openingParenIndex < 0 || swiftSource[openingParenIndex] !== '(') {
+      return false;
+    }
+
+    const argumentIndex = nextNonWhitespaceIndex(swiftSource, openingParenIndex + 1);
+    if (argumentIndex < 0 || !isIdentifierCharacter(swiftSource[argumentIndex] ?? '')) {
+      return false;
+    }
+
+    let argumentEnd = argumentIndex;
+    while (isIdentifierCharacter(swiftSource[argumentEnd + 1] ?? '')) {
+      argumentEnd += 1;
+    }
+
+    const argumentIdentifier = swiftSource.slice(argumentIndex, argumentEnd + 1);
+    return isUserSearchIdentifier(argumentIdentifier);
+  });
+};
+
+export const hasSwiftGeometryReaderUsage = (source: string): boolean => {
+  return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
+    if (current !== 'G') {
+      return false;
+    }
+
+    return hasIdentifierAt(swiftSource, index, 'GeometryReader');
+  });
+};
+
+export const hasSwiftFontWeightBoldUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\.\s*fontWeight\s*\(\s*\.bold\s*\)/g);
+};
+
+export const hasSwiftLegacySwiftUiObservableWrapperUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /@\s*(?:StateObject|ObservedObject)\b/);
+};
+
+const hasSwiftPassedValueWrapperInitialization = (
+  source: string,
+  options: {
+    wrapperAttribute: 'State' | 'StateObject';
+    wrapperFactoryPattern: string;
+  }
+): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const propertyPattern = new RegExp(
+    `@\\s*${options.wrapperAttribute}\\b[\\s\\S]{0,120}?\\b(?:var|let)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b`,
+    'g'
+  );
+
+  for (const propertyMatch of sanitized.matchAll(propertyPattern)) {
+    const propertyName = propertyMatch[1];
+    if (!propertyName) {
+      continue;
+    }
+
+    const initPattern = new RegExp(
+      `\\binit\\s*\\(([^)]*)\\)[\\s\\S]{0,400}?\\b(?:self\\.)?_${propertyName}\\s*=\\s*${options.wrapperFactoryPattern}\\s*([A-Za-z_][A-Za-z0-9_]*)\\b`,
+      'g'
+    );
+
+    for (const initMatch of sanitized.matchAll(initPattern)) {
+      const initParameters = initMatch[1] ?? '';
+      const assignedIdentifier = initMatch[2];
+      if (!assignedIdentifier) {
+        continue;
+      }
+
+      const parameterPattern = new RegExp(`\\b${assignedIdentifier}\\s*:`);
+      if (parameterPattern.test(initParameters)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+export const hasSwiftPassedValueStateWrapperUsage = (source: string): boolean => {
+  return (
+    hasSwiftPassedValueWrapperInitialization(source, {
+      wrapperAttribute: 'State',
+      wrapperFactoryPattern: 'State\\s*\\(\\s*initialValue\\s*:',
+    }) ||
+    hasSwiftPassedValueWrapperInitialization(source, {
+      wrapperAttribute: 'StateObject',
+      wrapperFactoryPattern: 'StateObject\\s*\\(\\s*wrappedValue\\s*:',
+    })
+  );
 };
 
 export const hasSwiftNavigationViewUsage = (source: string): boolean => {
@@ -464,17 +631,76 @@ export const hasSwiftScrollViewShowsIndicatorsUsage = (source: string): boolean 
   return hasSwiftUiModernizationSnapshotMatch(source, 'scrollview-shows-indicators');
 };
 
+export const hasSwiftSheetIsPresentedUsage = (source: string): boolean => {
+  return hasSwiftUiModernizationSnapshotMatch(source, 'sheet-is-presented');
+};
+
+export const hasSwiftLegacyOnChangeUsage = (source: string): boolean => {
+  return hasSwiftUiModernizationSnapshotMatch(source, 'legacy-onchange');
+};
+
+const hasSwiftXCTestImportUsage = (source: string): boolean => {
+  return collectSwiftRegexLines(source, /^\s*import\s+XCTest\b/).length > 0;
+};
+
+const hasSwiftLegacyXCTestUiOrPerformanceUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\bXCUIApplication\b|\bXCTMetric\b|\bmeasure\s*(?:\(|\{)/);
+};
+
+const hasSwiftTestingImportUsage = (source: string): boolean => {
+  return collectSwiftRegexLines(source, /^\s*import\s+Testing\b/).length > 0;
+};
+
+const hasSwiftTestingSuiteAttributeUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\B@(?:Test|Suite)\b/);
+};
+
+const hasSwiftXCTestCaseSubclassUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bclass\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*XCTestCase\b/
+  );
+};
+
+const hasSwiftLegacyXCTestMethodUsage = (source: string): boolean => {
+  return collectSwiftRegexLines(source, /^\s*(?:override\s+)?func\s+test[A-Za-z0-9_]*\s*\(/)
+    .length > 0;
+};
+
 export const hasSwiftLegacyXCTestImportUsage = (source: string): boolean => {
-  const hasXCTestImport = collectSwiftRegexLines(source, /^\s*import\s+XCTest\b/).length > 0;
-  if (!hasXCTestImport) {
+  if (!hasSwiftXCTestImportUsage(source)) {
     return false;
   }
 
-  if (hasSwiftSanitizedRegexMatch(source, /\bXCUIApplication\b|\bXCTMetric\b|\bmeasure\s*(?:\(|\{)/)) {
+  if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
     return false;
   }
 
   return true;
+};
+
+export const hasSwiftModernizableXCTestSuiteUsage = (source: string): boolean => {
+  if (!hasSwiftLegacyXCTestImportUsage(source)) {
+    return false;
+  }
+
+  if (!hasSwiftXCTestCaseSubclassUsage(source) || !hasSwiftLegacyXCTestMethodUsage(source)) {
+    return false;
+  }
+
+  if (hasSwiftTestingImportUsage(source) || hasSwiftTestingSuiteAttributeUsage(source)) {
+    return false;
+  }
+
+  return true;
+};
+
+export const hasSwiftMixedTestingFrameworksUsage = (source: string): boolean => {
+  if (!hasSwiftXCTestImportUsage(source) || !hasSwiftXCTestCaseSubclassUsage(source)) {
+    return false;
+  }
+
+  return hasSwiftTestingImportUsage(source) || hasSwiftTestingSuiteAttributeUsage(source);
 };
 
 export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
@@ -486,6 +712,38 @@ export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
 
 export const hasSwiftXCTUnwrapUsage = (source: string): boolean => {
   return collectSwiftRegexLines(source, /\bXCTUnwrap\s*\(/).length > 0;
+};
+
+const hasSwiftAwaitFulfillmentUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\bawait\s+fulfillment\s*\(\s*of\s*:/);
+};
+
+const hasSwiftConfirmationUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\bawait\s+confirmation\b/);
+};
+
+export const hasSwiftWaitForExpectationsUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bwait\s*\(\s*for\s*:|\bwaitForExpectations\s*\(/
+  );
+};
+
+export const hasSwiftLegacyExpectationDescriptionUsage = (source: string): boolean => {
+  const hasLegacyExpectation = collectSwiftRegexLines(
+    source,
+    /\bexpectation\s*\(\s*description\s*:/
+  ).length > 0;
+
+  if (!hasLegacyExpectation) {
+    return false;
+  }
+
+  if (hasSwiftAwaitFulfillmentUsage(source) || hasSwiftConfirmationUsage(source)) {
+    return false;
+  }
+
+  return true;
 };
 
 export const hasSwiftNSManagedObjectBoundaryUsage = (source: string): boolean => {
@@ -500,6 +758,67 @@ export const hasSwiftNSManagedObjectAsyncBoundaryUsage = (source: string): boole
     source,
     /\bfunc\b[\s\S]{0,240}\basync\b[\s\S]{0,200}(?:\([^)]*\bNSManagedObject\b(?!ID\b|Context\b)[^)]*\)|->\s*(?:\[[^\]]*NSManagedObject\b(?!ID\b|Context\b)[^\]]*\]|NSManagedObject\b(?!ID\b|Context\b)))/g
   );
+};
+
+export const hasSwiftCoreDataLayerLeakUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bimport\s+CoreData\b|@\s*FetchRequest\b|\b(?:FetchRequest|FetchedResults|NSPersistentContainer|NSManagedObjectContext|NSFetchRequest|NSFetchedResultsController|NSEntityDescription)\b|\.managedObjectContext\b/g
+  );
+};
+
+export const hasSwiftNSManagedObjectStateLeakUsage = (source: string): boolean => {
+  const typeDeclarations = parseSwiftTypeDeclarations(source);
+  if (typeDeclarations.length === 0) {
+    return false;
+  }
+
+  const managedObjectTypePatternSource = buildSwiftManagedObjectTypePatternSource(source);
+  const propertyPattern = new RegExp(
+    `\\b(?:var|let)\\s+[A-Za-z_][A-Za-z0-9_]*\\s*:\\s*(?:\\[[^\\]]*(?:${managedObjectTypePatternSource})[^\\]]*\\]|(?:${managedObjectTypePatternSource})(?:[?!])?)`
+  );
+  const stateWrapperPattern =
+    /@\s*(?:State|Binding|Bindable|StateObject|ObservedObject|EnvironmentObject|Published)\b/;
+  const sourceLines = source.split(/\r?\n/);
+
+  for (const typeDeclaration of typeDeclarations) {
+    const isSwiftUIView = typeDeclaration.conformances.includes('View');
+    const isViewModel =
+      typeDeclaration.name.endsWith('ViewModel') ||
+      typeDeclaration.conformances.includes('ObservableObject');
+
+    if (!isSwiftUIView && !isViewModel) {
+      continue;
+    }
+
+    let pendingStateWrapper = false;
+    const hasLeak = visitSwiftTopLevelTypeBodyLines(sourceLines, typeDeclaration, ({ line }) => {
+      const isWrapperLine = stateWrapperPattern.test(line);
+      const hasManagedObjectProperty = propertyPattern.test(line);
+
+      if (isViewModel && hasManagedObjectProperty) {
+        return true;
+      }
+
+      if (isSwiftUIView && hasManagedObjectProperty && (pendingStateWrapper || isWrapperLine)) {
+        return true;
+      }
+
+      if (isWrapperLine && !hasManagedObjectProperty) {
+        pendingStateWrapper = true;
+        return false;
+      }
+
+      pendingStateWrapper = false;
+      return false;
+    });
+
+    if (hasLeak) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 export const hasSwiftForceTryUsage = (source: string): boolean => {

@@ -200,6 +200,60 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.preconcurrency.ast',
+    description: 'Detects @preconcurrency usage in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.preconcurrency.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected @preconcurrency usage.',
+      code: 'HEURISTICS_IOS_PRECONCURRENCY_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.nonisolated-unsafe.ast',
+    description: 'Detects nonisolated(unsafe) usage in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.nonisolated-unsafe.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected nonisolated(unsafe) usage.',
+      code: 'HEURISTICS_IOS_NONISOLATED_UNSAFE_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.assume-isolated.ast',
+    description: 'Detects assumeIsolated usage in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.assume-isolated.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected assumeIsolated usage.',
+      code: 'HEURISTICS_IOS_ASSUME_ISOLATED_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.observable-object.ast',
     description: 'Detects ObservableObject usage in modern iOS production code.',
     severity: 'WARN',
@@ -215,6 +269,114 @@ export const iosRules: RuleSet = [
       kind: 'Finding',
       message: 'AST heuristic detected ObservableObject usage.',
       code: 'HEURISTICS_IOS_OBSERVABLE_OBJECT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.legacy-swiftui-observable-wrapper.ast',
+    description: 'Detects @StateObject and @ObservedObject usage in modern SwiftUI production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.legacy-swiftui-observable-wrapper.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected @StateObject/@ObservedObject usage in a modern SwiftUI path.',
+      code: 'HEURISTICS_IOS_LEGACY_SWIFTUI_OBSERVABLE_WRAPPER_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.passed-value-state-wrapper.ast',
+    description: 'Detects passed values stored as @State or @StateObject through init ownership in SwiftUI production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.passed-value-state-wrapper.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected a passed value stored as @State/@StateObject via init wrapper ownership.',
+      code: 'HEURISTICS_IOS_PASSED_VALUE_STATE_WRAPPER_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.foreach-indices.ast',
+    description: 'Detects ForEach(...indices...) usage in SwiftUI presentation code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.foreach-indices.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected ForEach(...indices...) usage where stable element identity may be preferred.',
+      code: 'HEURISTICS_IOS_FOREACH_INDICES_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.contains-user-filter.ast',
+    description: 'Detects contains() usage in user-facing filter flows where localizedStandardContains() may be preferred.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.contains-user-filter.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected contains() in a user-facing filter where localizedStandardContains() may be preferred.',
+      code: 'HEURISTICS_IOS_CONTAINS_USER_FILTER_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.geometryreader.ast',
+    description: 'Detects GeometryReader usage in SwiftUI presentation code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.geometryreader.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected GeometryReader usage that may be replaceable with modern layout APIs.',
+      code: 'HEURISTICS_IOS_GEOMETRYREADER_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.font-weight-bold.ast',
+    description: 'Detects fontWeight(.bold) usage in SwiftUI presentation code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.font-weight-bold.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fontWeight(.bold) usage where bold() may be preferred.',
+      code: 'HEURISTICS_IOS_FONT_WEIGHT_BOLD_AST',
     },
   },
   {
@@ -344,6 +506,42 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.sheet-is-presented.ast',
+    description: 'Detects .sheet(isPresented:) usage where .sheet(item:) may be preferred in SwiftUI flows.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.sheet-is-presented.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected .sheet(isPresented:) usage where .sheet(item:) may be preferred.',
+      code: 'HEURISTICS_IOS_SHEET_IS_PRESENTED_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.legacy-onchange.ast',
+    description: 'Detects legacy single-parameter onChange usage in modern SwiftUI code paths.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.legacy-onchange.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected legacy onChange usage where modern overloads may be preferred.',
+      code: 'HEURISTICS_IOS_LEGACY_ONCHANGE_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.uiscreen-main-bounds.ast',
     description: 'Detects UIScreen.main.bounds usage in iOS production code.',
     severity: 'WARN',
@@ -377,6 +575,26 @@ export const iosRules: RuleSet = [
       kind: 'Finding',
       message: 'AST heuristic detected XCTest-only test usage where Swift Testing may be preferred.',
       code: 'HEURISTICS_IOS_TESTING_XCTEST_IMPORT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.testing.xctest-suite-modernizable.ast',
+    description:
+      'Detects XCTestCase/test... suites that may be modernizable to Swift Testing in iOS unit and integration tests.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.testing.xctest-suite-modernizable.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected XCTestCase/test... suite that may be modernizable to Swift Testing with import Testing and @Test.',
+      code: 'HEURISTICS_IOS_TESTING_XCTEST_SUITE_MODERNIZABLE_AST',
     },
   },
   {
@@ -416,6 +634,62 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.testing.wait-for-expectations.ast',
+    description: 'Detects wait(for:) and waitForExpectations(timeout:) usage in async iOS tests.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.testing.wait-for-expectations.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected wait(for:)/waitForExpectations usage where await fulfillment(of:) may be preferred.',
+      code: 'HEURISTICS_IOS_TESTING_WAIT_FOR_EXPECTATIONS_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.testing.legacy-expectation-description.ast',
+    description: 'Detects expectation(description:) scaffolding without modern fulfillment or confirmation flow in iOS tests.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.testing.legacy-expectation-description.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected expectation(description:) usage without modern fulfillment/confirmation flow.',
+      code: 'HEURISTICS_IOS_TESTING_LEGACY_EXPECTATION_DESCRIPTION_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.testing.mixed-frameworks.ast',
+    description:
+      'Detects XCTestCase suites mixed with Swift Testing markers in the same iOS test file.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.testing.mixed-frameworks.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected XCTestCase and Swift Testing markers mixed in the same test file without explicit compatibility reason.',
+      code: 'HEURISTICS_IOS_TESTING_MIXED_FRAMEWORKS_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.core-data.nsmanagedobject-boundary.ast',
     description: 'Detects NSManagedObject usage in shared iOS boundaries.',
     severity: 'WARN',
@@ -449,6 +723,42 @@ export const iosRules: RuleSet = [
       kind: 'Finding',
       message: 'AST heuristic detected NSManagedObject in an async boundary.',
       code: 'HEURISTICS_IOS_CORE_DATA_NSMANAGEDOBJECT_ASYNC_BOUNDARY_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.core-data.layer-leak.ast',
+    description: 'Detects Core Data APIs leaking into iOS application or presentation layers.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.core-data.layer-leak.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Core Data APIs leaking into application/presentation code.',
+      code: 'HEURISTICS_IOS_CORE_DATA_LAYER_LEAK_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.core-data.nsmanagedobject-state-leak.ast',
+    description: 'Detects NSManagedObject leaking into SwiftUI state or ViewModel state.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.core-data.nsmanagedobject-state-leak.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected NSManagedObject leaking into SwiftUI state or a ViewModel.',
+      code: 'HEURISTICS_IOS_CORE_DATA_NSMANAGEDOBJECT_STATE_LEAK_AST',
     },
   },
 ];

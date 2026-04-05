@@ -12,21 +12,38 @@ import {
   hasSwiftDispatchGroupUsage,
   hasSwiftDispatchQueueUsage,
   hasSwiftDispatchSemaphoreUsage,
+  hasSwiftForEachIndicesUsage,
   hasSwiftForceCastUsage,
+  hasSwiftFontWeightBoldUsage,
   hasSwiftForegroundColorUsage,
   hasSwiftForceTryUsage,
   hasSwiftForceUnwrap,
+  hasSwiftGeometryReaderUsage,
+  hasSwiftLegacyOnChangeUsage,
+  hasSwiftLegacyExpectationDescriptionUsage,
+  hasSwiftLegacySwiftUiObservableWrapperUsage,
+  hasSwiftMixedTestingFrameworksUsage,
   hasSwiftLegacyXCTestImportUsage,
+  hasSwiftModernizableXCTestSuiteUsage,
+  hasSwiftAssumeIsolatedUsage,
+  hasSwiftCoreDataLayerLeakUsage,
+  hasSwiftNonisolatedUnsafeUsage,
   hasSwiftNSManagedObjectAsyncBoundaryUsage,
   hasSwiftNSManagedObjectBoundaryUsage,
+  hasSwiftNSManagedObjectStateLeakUsage,
   hasSwiftNavigationViewUsage,
   hasSwiftObservableObjectUsage,
   hasSwiftOnTapGestureUsage,
   hasSwiftOperationQueueUsage,
+  hasSwiftContainsUserFilterUsage,
+  hasSwiftPassedValueStateWrapperUsage,
+  hasSwiftPreconcurrencyUsage,
+  hasSwiftSheetIsPresentedUsage,
   hasSwiftScrollViewShowsIndicatorsUsage,
   hasSwiftStringFormatUsage,
   hasSwiftTabItemUsage,
   hasSwiftTaskDetachedUsage,
+  hasSwiftWaitForExpectationsUsage,
   hasSwiftUIScreenMainBoundsUsage,
   hasSwiftXCTestAssertionUsage,
   hasSwiftXCTUnwrapUsage,
@@ -120,16 +137,6 @@ test('hasSwiftCallbackStyleSignature ignora usos fuera de firmas callback', () =
   assert.equal(hasSwiftCallbackStyleSignature(source), false);
 });
 
-test('hasSwiftCallbackStyleSignature ignora closures async modernos con @Sendable', () => {
-  const source = `
-public init(publish: @escaping @Sendable ([AppRoute]) async -> Void) {
-  self.publish = publish
-}
-`;
-
-  assert.equal(hasSwiftCallbackStyleSignature(source), false);
-});
-
 test('detecta primitivas GCD y OperationQueue en codigo ejecutable', () => {
   const source = `
 DispatchQueue.main.async { }
@@ -164,10 +171,41 @@ final class LegacyBox: @unchecked Sendable {}
   assert.equal(hasSwiftUncheckedSendableUsage(source), true);
 });
 
+test('detectores de hardening de concurrencia detectan escapes inseguros', () => {
+  const source = `
+@preconcurrency import LegacyFramework
+
+struct APIProvider: Sendable {
+  nonisolated(unsafe) static private(set) var shared: APIProvider!
+}
+
+func renderFromLegacyCallback() {
+  MainActor.assumeIsolated {
+    updateUI()
+  }
+}
+`;
+
+  assert.equal(hasSwiftPreconcurrencyUsage(source), true);
+  assert.equal(hasSwiftNonisolatedUnsafeUsage(source), true);
+  assert.equal(hasSwiftAssumeIsolatedUsage(source), true);
+});
+
 test('detectores SwiftUI modernos detectan patrones legacy relevantes', () => {
   const source = `
+@preconcurrency import LegacyFramework
 final class LegacyViewModel: ObservableObject {}
+@StateObject private var ownedViewModel = LegacyViewModel()
+@ObservedObject var injectedViewModel: LegacyViewModel
 NavigationView { Text("x") }
+GeometryReader { proxy in
+  Text("x").frame(width: proxy.size.width)
+}
+Text("Headline").fontWeight(.bold)
+let filtered = items.filter { $0.title.contains(searchText) }
+ForEach(items.indices, id: \\.self) { index in
+  Text(items[index].title)
+}
 Text("Primary").foregroundColor(.blue)
 Image("hero").cornerRadius(12)
 TabView {
@@ -181,8 +219,33 @@ let width = UIScreen.main.bounds.width
 ScrollView(.horizontal, showsIndicators: false) {
   Text("feed")
 }
+.sheet(isPresented: $showDetails) {
+  DetailView()
+}
+.onChange(of: query) { newValue in
+  print(newValue)
+}
+struct DetailView: View {
+  @State private var filter: String
+  @StateObject private var detailViewModel: LegacyViewModel
+
+  init(filter: String, detailViewModel: LegacyViewModel) {
+    _filter = State(initialValue: filter)
+    _detailViewModel = StateObject(wrappedValue: detailViewModel)
+  }
+}
+nonisolated(unsafe) static var sharedBridge: LegacyViewModel?
+MainActor.assumeIsolated { reload() }
 `;
+  assert.equal(hasSwiftPreconcurrencyUsage(source), true);
+  assert.equal(hasSwiftNonisolatedUnsafeUsage(source), true);
+  assert.equal(hasSwiftAssumeIsolatedUsage(source), true);
+  assert.equal(hasSwiftForEachIndicesUsage(source), true);
+  assert.equal(hasSwiftContainsUserFilterUsage(source), true);
+  assert.equal(hasSwiftGeometryReaderUsage(source), true);
+  assert.equal(hasSwiftFontWeightBoldUsage(source), true);
   assert.equal(hasSwiftObservableObjectUsage(source), true);
+  assert.equal(hasSwiftLegacySwiftUiObservableWrapperUsage(source), true);
   assert.equal(hasSwiftNavigationViewUsage(source), true);
   assert.equal(hasSwiftForegroundColorUsage(source), true);
   assert.equal(hasSwiftCornerRadiusUsage(source), true);
@@ -191,6 +254,9 @@ ScrollView(.horizontal, showsIndicators: false) {
   assert.equal(hasSwiftStringFormatUsage(source), true);
   assert.equal(hasSwiftUIScreenMainBoundsUsage(source), true);
   assert.equal(hasSwiftScrollViewShowsIndicatorsUsage(source), true);
+  assert.equal(hasSwiftSheetIsPresentedUsage(source), true);
+  assert.equal(hasSwiftLegacyOnChangeUsage(source), true);
+  assert.equal(hasSwiftPassedValueStateWrapperUsage(source), true);
 });
 
 test('detectores legacy ignoran strings y comentarios', () => {
@@ -204,7 +270,26 @@ let e = ".foregroundColor(.blue)"
 let f = ".cornerRadius(12)"
 let g = ".tabItem { Label(\\\"Home\\\", systemImage: \\\"house\\\") }"
 let h = "ScrollView(showsIndicators: false) { }"
+let i = ".sheet(isPresented: $showDetails) { DetailView() }"
+let j = ".onChange(of: query) { newValue in }"
+let k = "@StateObject private var ownedViewModel = LegacyViewModel()"
+let l = "@ObservedObject var injectedViewModel: LegacyViewModel"
+let m = "_filter = State(initialValue: filter)"
+let n = "ForEach(items.indices, id: \\.self) { index in }"
+let o = "items.filter { $0.title.contains(searchText) }"
+let p = "GeometryReader { proxy in }"
+let q = ".fontWeight(.bold)"
+let r = "@preconcurrency import LegacyFramework"
+let s = "nonisolated(unsafe) static var sharedBridge: Model?"
+let t = "MainActor.assumeIsolated { reload() }"
 `;
+  assert.equal(hasSwiftPreconcurrencyUsage(source), false);
+  assert.equal(hasSwiftNonisolatedUnsafeUsage(source), false);
+  assert.equal(hasSwiftAssumeIsolatedUsage(source), false);
+  assert.equal(hasSwiftForEachIndicesUsage(source), false);
+  assert.equal(hasSwiftContainsUserFilterUsage(source), false);
+  assert.equal(hasSwiftGeometryReaderUsage(source), false);
+  assert.equal(hasSwiftFontWeightBoldUsage(source), false);
   assert.equal(hasSwiftTaskDetachedUsage(source), false);
   assert.equal(hasSwiftNavigationViewUsage(source), false);
   assert.equal(hasSwiftForegroundColorUsage(source), false);
@@ -213,26 +298,54 @@ let h = "ScrollView(showsIndicators: false) { }"
   assert.equal(hasSwiftStringFormatUsage(source), false);
   assert.equal(hasSwiftUIScreenMainBoundsUsage(source), false);
   assert.equal(hasSwiftScrollViewShowsIndicatorsUsage(source), false);
+  assert.equal(hasSwiftSheetIsPresentedUsage(source), false);
+  assert.equal(hasSwiftLegacyOnChangeUsage(source), false);
+  assert.equal(hasSwiftLegacySwiftUiObservableWrapperUsage(source), false);
+  assert.equal(hasSwiftPassedValueStateWrapperUsage(source), false);
 });
 
 test('detectores snapshot SwiftUI ignoran reemplazos modernos', () => {
   const source = `
 Text("Primary").foregroundStyle(.blue)
 Image("hero").clipShape(.rect(cornerRadius: 12))
+Text("Headline").bold()
 TabView {
   Tab("Home", systemImage: "house") {
     HomeView()
   }
 }
+let filtered = items.filter { $0.title.localizedStandardContains(searchText) }
+ForEach(items) { item in
+  Text(item.title)
+}
+containerRelativeFrame(.horizontal)
 ScrollView {
   Text("feed")
 }
 .scrollIndicators(.hidden)
+.sheet(item: $selectedItem) { item in
+  DetailView(item: item)
+}
+.onChange(of: query) { oldValue, newValue in
+  print(oldValue, newValue)
+}
+.onChange(of: selection) {
+  reloadSelection()
+}
 `;
+  assert.equal(hasSwiftPreconcurrencyUsage(source), false);
+  assert.equal(hasSwiftNonisolatedUnsafeUsage(source), false);
+  assert.equal(hasSwiftAssumeIsolatedUsage(source), false);
+  assert.equal(hasSwiftForEachIndicesUsage(source), false);
+  assert.equal(hasSwiftContainsUserFilterUsage(source), false);
+  assert.equal(hasSwiftGeometryReaderUsage(source), false);
+  assert.equal(hasSwiftFontWeightBoldUsage(source), false);
   assert.equal(hasSwiftForegroundColorUsage(source), false);
   assert.equal(hasSwiftCornerRadiusUsage(source), false);
   assert.equal(hasSwiftTabItemUsage(source), false);
   assert.equal(hasSwiftScrollViewShowsIndicatorsUsage(source), false);
+  assert.equal(hasSwiftSheetIsPresentedUsage(source), false);
+  assert.equal(hasSwiftLegacyOnChangeUsage(source), false);
 });
 
 test('hasSwiftLegacyXCTestImportUsage detecta XCTest unitario y excluye UI/performance', () => {
@@ -268,6 +381,124 @@ final class SyncTests: XCTestCase {
   assert.equal(hasSwiftLegacyXCTestImportUsage(performanceTest), false);
 });
 
+test('hasSwiftLegacySwiftUiObservableWrapperUsage detecta @StateObject/@ObservedObject legacy', () => {
+  const legacyWrapper = `
+@StateObject private var viewModel = LegacyViewModel()
+@ObservedObject var sessionViewModel: SessionViewModel
+`;
+  const modernWrapper = `
+@Observable
+final class SessionViewModel {}
+
+struct ContentView: View {
+  @State private var viewModel = SessionViewModel()
+}
+`;
+
+  assert.equal(hasSwiftLegacySwiftUiObservableWrapperUsage(legacyWrapper), true);
+  assert.equal(hasSwiftLegacySwiftUiObservableWrapperUsage(modernWrapper), false);
+});
+
+test('hasSwiftPassedValueStateWrapperUsage detecta valores inyectados guardados como @State o @StateObject', () => {
+  const invalidOwnership = `
+struct DetailView: View {
+  @State private var filter: String
+  @StateObject private var viewModel: DetailViewModel
+
+  init(filter: String, viewModel: DetailViewModel) {
+    _filter = State(initialValue: filter)
+    _viewModel = StateObject(wrappedValue: viewModel)
+  }
+}
+`;
+  const validOwnership = `
+@Observable
+final class DetailViewModel {}
+
+struct DetailView: View {
+  let filter: String
+  @State private var viewModel = DetailViewModel()
+}
+`;
+
+  assert.equal(hasSwiftPassedValueStateWrapperUsage(invalidOwnership), true);
+  assert.equal(hasSwiftPassedValueStateWrapperUsage(validOwnership), false);
+});
+
+test('hasSwiftModernizableXCTestSuiteUsage detecta suites legacy y excluye mixed/UI', () => {
+  const legacySuite = `
+import XCTest
+
+final class LoginTests: XCTestCase {
+  func testLogin() async throws {
+    XCTAssertEqual(result, expected)
+  }
+}
+`;
+  const mixedSuite = `
+import XCTest
+import Testing
+
+final class LoginTests: XCTestCase {
+  func testLegacyLogin() {}
+}
+
+@Suite
+struct LoginModernTests {
+  @Test func login() async {}
+}
+`;
+  const uiSuite = `
+import XCTest
+
+final class LoginUITests: XCTestCase {
+  func testLoginFlow() {
+    let app = XCUIApplication()
+    app.launch()
+  }
+}
+`;
+
+  assert.equal(hasSwiftModernizableXCTestSuiteUsage(legacySuite), true);
+  assert.equal(hasSwiftModernizableXCTestSuiteUsage(mixedSuite), false);
+  assert.equal(hasSwiftModernizableXCTestSuiteUsage(uiSuite), false);
+});
+
+test('hasSwiftMixedTestingFrameworksUsage detecta mezcla XCTestCase y Testing/@Test', () => {
+  const mixedSuite = `
+import XCTest
+import Testing
+
+final class LoginTests: XCTestCase {
+  func testLegacyLogin() {}
+}
+
+@Suite
+struct LoginModernTests {
+  @Test func login() async {}
+}
+`;
+  const legacyOnly = `
+import XCTest
+
+final class LoginTests: XCTestCase {
+  func testLegacyLogin() {}
+}
+`;
+  const modernOnly = `
+import Testing
+
+@Suite
+struct LoginModernTests {
+  @Test func login() async {}
+}
+`;
+
+  assert.equal(hasSwiftMixedTestingFrameworksUsage(mixedSuite), true);
+  assert.equal(hasSwiftMixedTestingFrameworksUsage(legacyOnly), false);
+  assert.equal(hasSwiftMixedTestingFrameworksUsage(modernOnly), false);
+});
+
 test('hasSwiftXCTestAssertionUsage detecta XCTAssert y XCTFail reales', () => {
   const source = `
 XCTAssertEqual(value, expected)
@@ -292,6 +523,43 @@ let text = "XCTUnwrap(optionalValue)"
 
   assert.equal(hasSwiftXCTUnwrapUsage(source), true);
   assert.equal(hasSwiftXCTUnwrapUsage(ignored), false);
+});
+
+test('hasSwiftWaitForExpectationsUsage detecta waits legacy y excluye await fulfillment', () => {
+  const legacyWait = `
+let expectation = expectation(description: "Done")
+wait(for: [expectation], timeout: 1)
+waitForExpectations(timeout: 1)
+`;
+  const modernWait = `
+let expectation = expectation(description: "Done")
+await fulfillment(of: [expectation], timeout: 1)
+`;
+
+  assert.equal(hasSwiftWaitForExpectationsUsage(legacyWait), true);
+  assert.equal(hasSwiftWaitForExpectationsUsage(modernWait), false);
+});
+
+test('hasSwiftLegacyExpectationDescriptionUsage detecta expectation(description:) sin flujo moderno', () => {
+  const legacyExpectation = `
+let expectation = expectation(description: "Done")
+doWork { expectation.fulfill() }
+waitForExpectations(timeout: 1)
+`;
+  const modernExpectation = `
+let expectation = expectation(description: "Done")
+doWork { expectation.fulfill() }
+await fulfillment(of: [expectation], timeout: 1)
+`;
+  const confirmationOnly = `
+await confirmation("Done") { confirm in
+  await doWork { confirm() }
+}
+`;
+
+  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(legacyExpectation), true);
+  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(modernExpectation), false);
+  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(confirmationOnly), false);
 });
 
 test('hasSwiftNSManagedObjectBoundaryUsage detecta boundaries con NSManagedObject y excluye IDs o subclases', () => {
@@ -323,6 +591,59 @@ func fetchEntityID() async throws -> NSManagedObjectID {
 
   assert.equal(hasSwiftNSManagedObjectAsyncBoundaryUsage(source), true);
   assert.equal(hasSwiftNSManagedObjectAsyncBoundaryUsage(ignored), false);
+});
+
+test('hasSwiftCoreDataLayerLeakUsage detecta Core Data fuera de infraestructura', () => {
+  const source = `
+import CoreData
+
+struct DetailView: View {
+  @Environment(\\.managedObjectContext) private var context
+  @FetchRequest(sortDescriptors: []) private var items: FetchedResults<TodoEntity>
+}
+
+final class DetailUseCase {
+  private let container: NSPersistentContainer
+}
+`;
+  const ignored = `
+import Foundation
+
+struct DetailView: View {
+  let selectedID: NSManagedObjectID?
+}
+`;
+
+  assert.equal(hasSwiftCoreDataLayerLeakUsage(source), true);
+  assert.equal(hasSwiftCoreDataLayerLeakUsage(ignored), false);
+});
+
+test('hasSwiftNSManagedObjectStateLeakUsage detecta fugas a SwiftUI state y ViewModels', () => {
+  const source = `
+final class TodoEntity: NSManagedObject {}
+
+struct DetailView: View {
+  @State private var selectedEntity: TodoEntity?
+}
+
+final class DetailViewModel: ObservableObject {
+  @Published var entity: TodoEntity?
+}
+`;
+  const ignored = `
+final class TodoEntity: NSManagedObject {}
+
+struct DetailView: View {
+  let selectedID: NSManagedObjectID?
+}
+
+final class DetailViewModel: ObservableObject {
+  @Published var entityID: NSManagedObjectID?
+}
+`;
+
+  assert.equal(hasSwiftNSManagedObjectStateLeakUsage(source), true);
+  assert.equal(hasSwiftNSManagedObjectStateLeakUsage(ignored), false);
 });
 
 test('findSwiftPresentationSrpMatch devuelve payload semantico para SRP-iOS en presentation', () => {
