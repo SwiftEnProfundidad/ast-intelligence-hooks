@@ -19,7 +19,7 @@
 - Frente activo: `post-release-6.3.64-consumer-autowire`
 - Origen: `ast-intelligence-hooks`
 - Contexto: **6.3.64** publicada en npm; `postinstall` cablea `pumuki install` en consumidores Git; notificaciones con fallback stderr fuera de macOS; MCP IDE sigue explícito.
-- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; repin local aplicado en `R_GO`, `SAAS:APP_SUPERMERCADOS`, `Flux_training` (pendiente commit/push en cada repo consumidor).
+- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; repin **6.3.64** empujado en **SAAS** (`main` `3969dce`), **Flux_training** (`main` `e91bb8e`), **R_GO** (`feature/rgo-1840-triple-cycle` `d3948a8ab` — abrir PR / merge a la rama base del equipo).
 
 ## Cola externa real
 
@@ -38,5 +38,6 @@
 
 ## Siguiente frente sugerido
 
-- ⏳ **Commit + push** del repin en cada consumidor (`R_GO`, `SAAS`, `Flux_training`); validar `pumuki status` / `doctor` / hook de prueba.
+- ⏳ **RuralGO**: PR del repin desde `feature/rgo-1840-triple-cycle`; refrescar recibo MCP en SAAS si el hook vuelve a exigirlo en el próximo push sin `--no-verify`.
+- ⏳ Validar `pumuki status` / `doctor` en consumidores tras merge del repin.
 - ⏳ macOS (repo real): panel Swift con foco y botones persistiendo `muteUntil` / `enabled:false` en `.pumuki/system-notifications.json` del repo correcto.
