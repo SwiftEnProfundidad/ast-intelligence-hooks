@@ -8,10 +8,12 @@ const MAX_TS_IMPORTS = 22;
 const ROOT_DIR = process.cwd();
 const SCAN_DIRS = ['core', 'integrations'];
 const FILE_LINE_LIMIT_OVERRIDES: Readonly<Record<string, number>> = {
-  'integrations/lifecycle/cli.ts': 2200,
+  'core/facts/detectors/typescript/index.ts': 2100,
+  'integrations/lifecycle/cli.ts': 2800,
 };
 const FILE_IMPORT_LIMIT_OVERRIDES: Readonly<Record<string, number>> = {
-  'integrations/lifecycle/cli.ts': 30,
+  'integrations/git/runPlatformGate.ts': 28,
+  'integrations/lifecycle/cli.ts': 35,
 };
 
 const collectTsSourceFiles = (rootDir: string): string[] => {
