@@ -89,12 +89,12 @@ test('buildSystemNotificationsConfigFromSelection soporta enabled true/false', (
   assert.deepEqual(buildSystemNotificationsConfigFromSelection(true), {
     enabled: true,
     channel: 'macos',
-    blockedDialogEnabled: true,
+    blockedDialogEnabled: false,
   });
   assert.deepEqual(buildSystemNotificationsConfigFromSelection(false), {
     enabled: false,
     channel: 'macos',
-    blockedDialogEnabled: true,
+    blockedDialogEnabled: false,
   });
 });
 
@@ -109,7 +109,7 @@ test('persistSystemNotificationsConfig guarda config en .pumuki/system-notificat
     assert.deepEqual(parsed, {
       enabled: false,
       channel: 'macos',
-      blockedDialogEnabled: true,
+      blockedDialogEnabled: false,
     });
   });
 });
@@ -176,7 +176,7 @@ test('accion 31 persiste toggle de notificaciones macOS desde prompts', async ()
       assert.deepEqual(parsed, {
         enabled: false,
         channel: 'macos',
-        blockedDialogEnabled: true,
+        blockedDialogEnabled: false,
       });
     } finally {
       process.chdir(previousCwd);

@@ -15,7 +15,7 @@ test('buildSystemNotificationsConfigFromSelection construye config macOS habilit
   assert.deepEqual(buildSystemNotificationsConfigFromSelection(true), {
     enabled: true,
     channel: 'macos',
-    blockedDialogEnabled: true,
+    blockedDialogEnabled: false,
   });
 });
 
@@ -36,13 +36,39 @@ test('normalizeSystemNotificationsConfig conserva muteUntil y blockedDialogEnabl
   );
 });
 
+test('normalizeSystemNotificationsConfig activa dialog solo con blockedDialogEnabled explícito true', () => {
+  assert.deepEqual(
+    normalizeSystemNotificationsConfig({
+      enabled: true,
+      channel: 'macos',
+    }),
+    {
+      enabled: true,
+      channel: 'macos',
+      blockedDialogEnabled: false,
+    }
+  );
+  assert.deepEqual(
+    normalizeSystemNotificationsConfig({
+      enabled: true,
+      channel: 'macos',
+      blockedDialogEnabled: true,
+    }),
+    {
+      enabled: true,
+      channel: 'macos',
+      blockedDialogEnabled: true,
+    }
+  );
+});
+
 test('readSystemNotificationsConfig habilita notificaciones por defecto cuando no hay config', async () => {
   await withTempDir('pumuki-notifications-defaults-', async (repoRoot) => {
     const config = readSystemNotificationsConfig(repoRoot);
     assert.deepEqual(config, {
       enabled: true,
       channel: 'macos',
-      blockedDialogEnabled: true,
+      blockedDialogEnabled: false,
     });
   });
 });
@@ -53,7 +79,7 @@ test('persistSystemNotificationsConfig persiste desactivación accionable', asyn
     const config = readSystemNotificationsConfig(repoRoot);
     assert.equal(config.enabled, false);
     assert.equal(config.channel, 'macos');
-    assert.equal(config.blockedDialogEnabled, true);
+    assert.equal(config.blockedDialogEnabled, false);
   });
 });
 
@@ -72,7 +98,7 @@ test('readSystemNotificationsConfig conserva muteUntil cuando existe', async () 
     assert.equal(config.enabled, true);
     assert.equal(config.channel, 'macos');
     assert.equal(config.muteUntil, muteUntil);
-    assert.equal(config.blockedDialogEnabled, true);
+    assert.equal(config.blockedDialogEnabled, false);
   });
 });
 

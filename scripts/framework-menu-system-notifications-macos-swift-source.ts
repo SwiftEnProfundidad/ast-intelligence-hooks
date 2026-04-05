@@ -32,7 +32,7 @@ func parseArguments() -> DialogConfig {
   )
 }
 
-final class DialogController: NSObject, NSApplicationDelegate {
+final class DialogController: NSObject, NSApplicationDelegate, NSWindowDelegate {
   private let config: DialogConfig
   private var window: NSWindow?
   private var chosenButton: String?
@@ -120,6 +120,8 @@ final class DialogController: NSObject, NSApplicationDelegate {
     panel.titlebarAppearsTransparent = true
     panel.isMovable = true
     panel.isReleasedWhenClosed = false
+    panel.delegate = self
+    panel.hidesOnDeactivate = false
     panel.standardWindowButton(.zoomButton)?.isHidden = true
     panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
 
@@ -194,6 +196,7 @@ final class DialogController: NSObject, NSApplicationDelegate {
     self.window = panel
     resizeWindowToContent(root: root, contentView: contentView)
     pinWindowToBottomRight()
+    panel.makeKeyAndOrderFront(nil)
     panel.orderFrontRegardless()
     NSApp.activate(ignoringOtherApps: true)
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
@@ -209,6 +212,10 @@ final class DialogController: NSObject, NSApplicationDelegate {
     Timer.scheduledTimer(withTimeInterval: config.timeoutSeconds, repeats: false) { [weak self] _ in
       self?.finish(with: self?.config.keepButton ?? "Mantener activas")
     }
+  }
+
+  func windowWillClose(_ notification: Notification) {
+    finish(with: config.keepButton)
   }
 
   @objc private func disablePressed() {

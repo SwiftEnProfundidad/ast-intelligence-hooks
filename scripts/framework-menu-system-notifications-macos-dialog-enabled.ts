@@ -16,5 +16,5 @@ export const resolveBlockedDialogEnabled = (params: {
   if (typeof raw === 'string' && raw.trim().length > 0) {
     return isTruthyFlag(raw);
   }
-  return params.config.blockedDialogEnabled !== false;
+  return params.config.blockedDialogEnabled === true;
 };

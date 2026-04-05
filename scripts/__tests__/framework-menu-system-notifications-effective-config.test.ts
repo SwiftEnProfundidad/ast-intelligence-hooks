@@ -29,6 +29,6 @@ test('resolveEffectiveSystemNotificationsConfig lee config persistida si hay rep
 
     const config = resolveEffectiveSystemNotificationsConfig({ repoRoot });
 
-    assert.deepEqual(config, { enabled: false, channel: 'macos', blockedDialogEnabled: true });
+    assert.deepEqual(config, { enabled: false, channel: 'macos', blockedDialogEnabled: false });
   });
 });
