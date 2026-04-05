@@ -19,7 +19,7 @@
 - Frente activo: `post-release-6.3.64-consumer-autowire`
 - Origen: `ast-intelligence-hooks`
 - Contexto: **6.3.64** publicada en npm; `postinstall` cablea `pumuki install` en consumidores Git; notificaciones con fallback stderr fuera de macOS; MCP IDE sigue explícito.
-- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; repin **6.3.64** empujado en **SAAS** (`main` `3969dce`), **Flux_training** (`main` `e91bb8e`), **R_GO** (`feature/rgo-1840-triple-cycle` `d3948a8ab` — abrir PR / merge a la rama base del equipo).
+- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; repin **6.3.64** en **SAAS** (`main` `3969dce`), **Flux_training** (`main` `e91bb8e`), **R_GO** **develop** vía PR https://github.com/SwiftEnProfundidad/R_GO/pull/1514 (merge `b899ee6a13a6caa37f850bbf3a5cc39deeb491b6`).
 
 ## Cola externa real
 
@@ -38,6 +38,7 @@
 
 ## Siguiente frente sugerido
 
-- ⏳ **RuralGO**: PR del repin desde `feature/rgo-1840-triple-cycle`; refrescar recibo MCP en SAAS si el hook vuelve a exigirlo en el próximo push sin `--no-verify`.
-- ⏳ Validar `pumuki status` / `doctor` en consumidores tras merge del repin.
+- ⏳ **RuralGO**: promoción `develop` → `main` cuando toque release de producto; Vercel en PR #1514 quedó en rojo (previews) — revisar si es ruido conocido.
+- ⏳ Refrescar recibo MCP en **SAAS** antes del próximo push con hooks estrictos (o política explícita para bumps de deps).
+- ⏳ Validar `pumuki status` / `doctor` en consumidores tras `git pull` en cada repo.
 - ⏳ macOS (repo real): panel Swift con foco y botones persistiendo `muteUntil` / `enabled:false` en `.pumuki/system-notifications.json` del repo correcto.
