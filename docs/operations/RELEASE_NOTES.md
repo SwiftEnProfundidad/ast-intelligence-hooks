@@ -6,7 +6,7 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-03 (enterprise hardening updates)
 
-### 2026-03-14 (unreleased)
+### 2026-03-14 (v6.3.61)
 
 - Support surface removed from product baseline:
   - consumer support bundle, startup triage, adapter readiness and phase5 closure helpers are now presented as auxiliary support toolkit,

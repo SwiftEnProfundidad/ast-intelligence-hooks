@@ -228,6 +228,9 @@ Load these files as needed for specific topics:
 5. **Handle cancellation** - Check Task.isCancelled in long-running operations
 6. **Avoid blocking** - Never use semaphores or locks in async contexts
 7. **Test concurrent code** - Use proper async test methods and consider timing issues
+8. **Avoid `@preconcurrency` in production code** - Only tolerate it with a documented safety invariant and a tracked removal ticket
+9. **Avoid `nonisolated(unsafe)` escape hatches** - Prefer real isolation boundaries or Sendable-safe designs
+10. **Prefer explicit isolation over `assumeIsolated`** - Use `@MainActor` or `await MainActor.run` instead of `MainActor.assumeIsolated`
 
 ## Verification Checklist (When You Change Concurrency Code)
 

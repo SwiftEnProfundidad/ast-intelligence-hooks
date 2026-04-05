@@ -31,9 +31,10 @@ Mapa corto y humano de la documentación oficial de Pumuki.
 
 - Quiero runbooks de validación:
   - `docs/validation/README.md`
+  - `docs/validation/ios-avdlee-parity-matrix.md`
 
 - Quiero saber en qué estamos ahora:
-  - `PUMUKI-RESET-MASTER-PLAN.md`
+  - `docs/tracking/plan-activo-de-trabajo.md`
 
 ## Estructura oficial
 
@@ -59,9 +60,10 @@ Mapa corto y humano de la documentación oficial de Pumuki.
 - `docs/codex-skills/`
   - Skills vendorizadas que el repo usa como contrato local.
 
-- Seguimiento operativo:
-  - Fuente viva única: `PUMUKI-RESET-MASTER-PLAN.md`
-  - Regla hard: no mantener MDs legacy de seguimiento dentro del repo.
+- `docs/tracking/`
+  - Seguimiento permitido y solo el imprescindible.
+  - Unica fuente de verdad: `docs/tracking/plan-activo-de-trabajo.md`
+  - Regla hard: solo puede existir una tarea `🚧` en el plan activo.
 
 ## Fuera de `docs/`
 
@@ -70,7 +72,6 @@ Mapa corto y humano de la documentación oficial de Pumuki.
 - `CHANGELOG.md`
 - `AGENTS.md`
 - `PUMUKI.md`
-- `PUMUKI-RESET-MASTER-PLAN.md`
 
 ## Lo que no se conserva
 

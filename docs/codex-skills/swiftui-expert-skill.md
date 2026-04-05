@@ -54,6 +54,7 @@ Use this skill to build, review, or improve SwiftUI features with correct state 
 ### Modern APIs
 - Use `foregroundStyle()` instead of `foregroundColor()`
 - Use `clipShape(.rect(cornerRadius:))` instead of `cornerRadius()`
+- Use `bold()` instead of `fontWeight(.bold)` for straightforward emphasis
 - Use `Tab` API instead of `tabItem()`
 - Use `Button` instead of `onTapGesture()` (unless need location/count)
 - Use `NavigationStack` instead of `NavigationView`
