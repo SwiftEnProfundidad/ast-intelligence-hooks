@@ -16,10 +16,10 @@
 
 ## Estado actual
 
-- Frente activo: `estabilidad-suite-y-notificaciones-macos`
+- Frente activo: `post-parity-ios-suite-y-ux-macos` (paridad iOS AST **cerrada** en línea publicada; rama local con suite + macOS al día).
 - Origen: `ast-intelligence-hooks`
-- Objetivo: suite `npm test` verde; notificaciones macOS sin spam en tests; dialog de bloqueo opt-in.
-- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; fix notificaciones macOS **ya commiteado** en esta rama; resto de ajustes de suite (PRE_WRITE, policy JSON, etc.) siguen **sin commitear** hasta segundo commit; push/PR opcional con confirmación explícita.
+- Objetivo reciente en rama `refactor/cli-complexity-reduction-phase4-rebase2`: suite `npm test` verde; commits **atómicos**; notificaciones macOS sin spam en tests; dialog de bloqueo opt-in.
+- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; cambios locales **commiteados** en cadena atómica; **push / PR a `develop`** solo con confirmación explícita.
 
 ## Cola externa real
 
@@ -31,8 +31,8 @@
 
 - ✅ Ajustes de tests (PRE_WRITE en `skills.policy`, doctor/cli JSON, Jest `evaluateRules`) y `npm test` verde en rama `refactor/cli-complexity-reduction-phase4-rebase2`.
 - ✅ Notificaciones macOS: dialog modal de anti-spam **desactivado por defecto**; activar con `PUMUKI_MACOS_BLOCKED_DIALOG=1` o `"blockedDialogEnabled": true` en `.pumuki/system-notifications.json`.
-- ✅ `git commit` del paquete macOS/notificaciones en esta rama (`fix(macos): opt-in blocked dialog...`).
-- ⏳ Opcional: segundo `git commit` con el resto de tests alineados (PRE_WRITE, doctor/cli, evaluateRules, menu layout) + `git push` / PR a `develop` (requiere confirmacion explicita del responsable).
+- ✅ Historial local en cadena atómica: `fix(macos)` + `docs(tracking)` + tests gate/git/lifecycle/scripts + guardrails + smoke 6.3.61 + `brownfieldHotspots`.
+- ⏳ Opcional: `git push` / PR a `develop` (requiere confirmacion explicita del responsable).
 
 ## Siguiente frente sugerido
 
