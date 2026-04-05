@@ -21,11 +21,11 @@ import { openSddSession } from '../../sdd/sessionStore';
 import { resolveMcpAiGateReceiptPath, writeMcpAiGateReceipt } from '../../mcp/aiGateReceipt';
 
 test.afterEach(() => {
-  process.exitCode = 0;
+  process.exitCode = undefined;
 });
 
 test.after(() => {
-  process.exitCode = 0;
+  process.exitCode = undefined;
 });
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
@@ -1240,9 +1240,10 @@ test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto e
       remoteCiDiagnostics?: { status?: string; blockers?: Array<{ code?: string }> };
       policyValidation?: {
         stages?: {
-          PRE_COMMIT?: { validationCode?: string; activationSource?: string | null };
-          PRE_PUSH?: { validationCode?: string; activationSource?: string | null };
-          CI?: { validationCode?: string; activationSource?: string | null };
+          PRE_WRITE?: { validationCode?: string; source?: string };
+          PRE_COMMIT?: { validationCode?: string; source?: string };
+          PRE_PUSH?: { validationCode?: string; source?: string };
+          CI?: { validationCode?: string; source?: string };
         };
       };
       experimentalFeatures?: {
@@ -1291,14 +1292,16 @@ test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto e
       payload.policyValidation?.stages?.PRE_COMMIT?.validationCode,
       'POLICY_AS_CODE_VALID'
     );
-    assert.equal(payload.policyValidation?.stages?.PRE_COMMIT?.activationSource, null);
+    assert.equal(payload.policyValidation?.stages?.PRE_COMMIT?.source, 'default');
     assert.equal(
       payload.policyValidation?.stages?.PRE_PUSH?.validationCode,
       'POLICY_AS_CODE_VALID'
     );
-    assert.equal(payload.policyValidation?.stages?.PRE_PUSH?.activationSource, null);
+    assert.equal(payload.policyValidation?.stages?.PRE_PUSH?.source, 'default');
     assert.equal(payload.policyValidation?.stages?.CI?.validationCode, 'POLICY_AS_CODE_VALID');
-    assert.equal(payload.policyValidation?.stages?.CI?.activationSource, null);
+    assert.equal(payload.policyValidation?.stages?.CI?.source, 'default');
+    assert.equal(payload.policyValidation?.stages?.PRE_WRITE?.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(payload.policyValidation?.stages?.PRE_WRITE?.source, 'default');
     assert.equal(payload.experimentalFeatures?.features?.analytics?.mode, 'off');
     assert.equal(payload.experimentalFeatures?.features?.analytics?.source, 'default');
     assert.equal(payload.experimentalFeatures?.features?.operational_memory?.mode, 'off');
@@ -1438,44 +1441,17 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       deep?: {
         enabled?: boolean;
-        checks?: Array<{ id?: string; status?: string; layer?: string }>;
+        checks?: Array<{ id?: string; status?: string; severity?: string }>;
         contract?: {
           overall?: string;
         };
       };
       policyValidation?: {
         stages?: {
-          PRE_COMMIT?: { validationCode?: string; activationSource?: string | null };
-          PRE_PUSH?: { validationCode?: string; activationSource?: string | null };
-          CI?: { validationCode?: string; activationSource?: string | null };
-        };
-      };
-      experimentalFeatures?: {
-        features?: {
-          analytics?: {
-            mode?: string;
-            source?: string;
-          };
-          operational_memory?: {
-            mode?: string;
-            source?: string;
-          };
-          saas_ingestion?: {
-            mode?: string;
-            source?: string;
-          };
-          learning_context?: {
-            mode?: string;
-            source?: string;
-          };
-          pre_write?: {
-            mode?: string;
-            source?: string;
-          };
-          sdd?: {
-            mode?: string;
-            source?: string;
-          };
+          PRE_WRITE?: { validationCode?: string; source?: string };
+          PRE_COMMIT?: { validationCode?: string; source?: string };
+          PRE_PUSH?: { validationCode?: string; source?: string };
+          CI?: { validationCode?: string; source?: string };
         };
       };
     };
@@ -1483,24 +1459,14 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'upstream-readiness'), true);
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'adapter-wiring'), true);
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'policy-drift'), true);
-    assert.equal(
-      payload.deep?.checks?.some(
-        (check) =>
-          check.id === 'policy-drift' &&
-          check.status === 'warn' &&
-          check.layer === 'policy-pack'
-      ),
-      true
-    );
-    assert.equal(
-      payload.deep?.checks?.some(
-        (check) =>
-          check.id === 'upstream-readiness' &&
-          check.status === 'warn' &&
-          check.layer === 'operational'
-      ),
-      true
-    );
+    const policyDriftCheck = payload.deep?.checks?.find((check) => check.id === 'policy-drift');
+    assert.ok(policyDriftCheck);
+    assert.equal(policyDriftCheck?.status, 'fail');
+    assert.equal(policyDriftCheck?.severity, 'warning');
+    const upstreamCheck = payload.deep?.checks?.find((check) => check.id === 'upstream-readiness');
+    assert.ok(upstreamCheck);
+    assert.equal(upstreamCheck?.status, 'fail');
+    assert.equal(upstreamCheck?.severity, 'warning');
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'evidence-source-drift'), true);
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'compatibility-contract'), true);
     assert.equal(
@@ -1512,26 +1478,16 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
       payload.policyValidation?.stages?.PRE_COMMIT?.validationCode,
       'POLICY_AS_CODE_VALID'
     );
-    assert.equal(payload.policyValidation?.stages?.PRE_COMMIT?.activationSource, null);
+    assert.equal(payload.policyValidation?.stages?.PRE_COMMIT?.source, 'default');
     assert.equal(
       payload.policyValidation?.stages?.PRE_PUSH?.validationCode,
       'POLICY_AS_CODE_VALID'
     );
-    assert.equal(payload.policyValidation?.stages?.PRE_PUSH?.activationSource, null);
+    assert.equal(payload.policyValidation?.stages?.PRE_PUSH?.source, 'default');
     assert.equal(payload.policyValidation?.stages?.CI?.validationCode, 'POLICY_AS_CODE_VALID');
-    assert.equal(payload.policyValidation?.stages?.CI?.activationSource, null);
-    assert.equal(payload.experimentalFeatures?.features?.analytics?.mode, 'off');
-    assert.equal(payload.experimentalFeatures?.features?.analytics?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.operational_memory?.mode, 'off');
-    assert.equal(payload.experimentalFeatures?.features?.operational_memory?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.pre_write?.mode, 'off');
-    assert.equal(payload.experimentalFeatures?.features?.pre_write?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.saas_ingestion?.mode, 'off');
-    assert.equal(payload.experimentalFeatures?.features?.saas_ingestion?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.learning_context?.mode, 'off');
-    assert.equal(payload.experimentalFeatures?.features?.learning_context?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.sdd?.mode, 'off');
-    assert.equal(payload.experimentalFeatures?.features?.sdd?.source, 'default');
+    assert.equal(payload.policyValidation?.stages?.CI?.source, 'default');
+    assert.equal(payload.policyValidation?.stages?.PRE_WRITE?.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(payload.policyValidation?.stages?.PRE_WRITE?.source, 'default');
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
@@ -1555,7 +1511,7 @@ test('runLifecycleCli doctor --deep retorna 1 cuando el contrato de evidence est
     }) as typeof process.stdout.write;
 
     const code = await runLifecycleCli(['doctor', '--deep', '--json']);
-    assert.equal(code, 0);
+    assert.equal(code, 1);
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       deep?: {
         blocking?: boolean;
@@ -1569,7 +1525,7 @@ test('runLifecycleCli doctor --deep retorna 1 cuando el contrato de evidence est
   }
 });
 
-test('runLifecycleCli doctor --deep retorna 0 cuando solo falta evidence', async () => {
+test('runLifecycleCli doctor --deep retorna 1 cuando falta evidence', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
@@ -1585,21 +1541,21 @@ test('runLifecycleCli doctor --deep retorna 0 cuando solo falta evidence', async
     }) as typeof process.stdout.write;
 
     const code = await runLifecycleCli(['doctor', '--deep', '--json']);
-    assert.equal(code, 0);
+    assert.equal(code, 1);
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       deep?: {
         blocking?: boolean;
-        checks?: Array<{ id?: string; severity?: string; status?: string; layer?: string }>;
+        checks?: Array<{ id?: string; severity?: string; status?: string; message?: string }>;
       };
     };
-    assert.equal(payload.deep?.blocking, false);
+    assert.equal(payload.deep?.blocking, true);
     assert.equal(
       payload.deep?.checks?.some(
         (check) =>
           check.id === 'evidence-source-drift' &&
-          check.severity === 'warning' &&
-          check.status === 'warn' &&
-          check.layer === 'operational'
+          check.severity === 'error' &&
+          check.status === 'fail' &&
+          /missing/i.test(check.message ?? '')
       ),
       true
     );
@@ -1610,7 +1566,7 @@ test('runLifecycleCli doctor --deep retorna 0 cuando solo falta evidence', async
   }
 });
 
-test('runLifecycleCli doctor --deep retorna 0 cuando evidence está stale', async () => {
+test('runLifecycleCli doctor --deep retorna 1 cuando evidence está stale', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
@@ -1626,21 +1582,20 @@ test('runLifecycleCli doctor --deep retorna 0 cuando evidence está stale', asyn
     }) as typeof process.stdout.write;
 
     const code = await runLifecycleCli(['doctor', '--deep', '--json']);
-    assert.equal(code, 0);
+    assert.equal(code, 1);
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       deep?: {
         blocking?: boolean;
-        checks?: Array<{ id?: string; severity?: string; status?: string; layer?: string; message?: string }>;
+        checks?: Array<{ id?: string; severity?: string; status?: string; message?: string }>;
       };
     };
-    assert.equal(payload.deep?.blocking, false);
+    assert.equal(payload.deep?.blocking, true);
     assert.equal(
       payload.deep?.checks?.some(
         (check) =>
           check.id === 'evidence-source-drift' &&
-          check.status === 'warn' &&
-          check.layer === 'operational' &&
-          check.severity === 'warning' &&
+          check.status === 'fail' &&
+          check.severity === 'error' &&
           check.message?.includes('Evidence is stale')
       ),
       true

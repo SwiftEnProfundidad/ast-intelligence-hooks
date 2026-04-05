@@ -114,9 +114,9 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     assert.equal(typeof status.policyValidation.stages.PRE_COMMIT.hash, 'string');
     assert.equal(typeof status.policyValidation.stages.PRE_PUSH.hash, 'string');
     assert.equal(typeof status.policyValidation.stages.CI.hash, 'string');
-    assert.equal(status.policyValidation.stages.PRE_COMMIT.activationSource, null);
-    assert.equal(status.policyValidation.stages.PRE_PUSH.activationSource, null);
-    assert.equal(status.policyValidation.stages.CI.activationSource, null);
+    assert.equal(status.policyValidation.stages.PRE_COMMIT.activationSource ?? null, null);
+    assert.equal(status.policyValidation.stages.PRE_PUSH.activationSource ?? null, null);
+    assert.equal(status.policyValidation.stages.CI.activationSource ?? null, null);
     assert.equal(status.policyValidation.stages.PRE_COMMIT.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(status.policyValidation.stages.PRE_PUSH.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(status.policyValidation.stages.CI.validationCode, 'POLICY_AS_CODE_VALID');

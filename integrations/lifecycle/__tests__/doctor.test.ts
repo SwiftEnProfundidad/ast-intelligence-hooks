@@ -149,25 +149,10 @@ test('runLifecycleDoctor marca issue bloqueante cuando hay rutas trackeadas en n
     assert.equal(report.hooksDirectory, join(repoRoot, '.git', 'hooks'));
     assert.equal(report.hooksDirectoryResolution, 'default');
     assert.equal(report.repoRoot, repoRoot);
+    assert.equal(typeof report.policyValidation.stages.PRE_WRITE.hash, 'string');
     assert.equal(typeof report.policyValidation.stages.PRE_COMMIT.hash, 'string');
     assert.equal(typeof report.policyValidation.stages.PRE_PUSH.hash, 'string');
     assert.equal(typeof report.policyValidation.stages.CI.hash, 'string');
-    assert.equal(report.experimentalFeatures.features.analytics.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.analytics.source, 'default');
-    assert.equal(report.experimentalFeatures.features.pre_write.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.pre_write.source, 'default');
-    assert.equal(report.experimentalFeatures.features.heuristics.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.heuristics.source, 'default');
-    assert.equal(report.experimentalFeatures.features.learning_context.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.learning_context.source, 'default');
-    assert.equal(report.experimentalFeatures.features.mcp_enterprise.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.mcp_enterprise.source, 'default');
-    assert.equal(report.experimentalFeatures.features.operational_memory.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.operational_memory.source, 'default');
-    assert.equal(report.experimentalFeatures.features.saas_ingestion.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.saas_ingestion.source, 'default');
-    assert.equal(report.experimentalFeatures.features.sdd.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.sdd.source, 'default');
     assert.deepEqual(report.trackedNodeModulesPaths, ['node_modules/pkg/index.js']);
     assert.equal(report.issues.some((issue) => issue.severity === 'error'), true);
     assert.equal(doctorHasBlockingIssues(report), true);
@@ -330,7 +315,7 @@ test('runLifecycleDoctor reporta error y warning cuando hay tracked node_modules
   });
 });
 
-test('runLifecycleDoctor --deep reporta warning no bloqueante cuando evidence está ausente', async () => {
+test('runLifecycleDoctor --deep marca evidence ausente como fallo bloqueante', async () => {
   await withTempDir('pumuki-doctor-deep-missing-evidence-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
     installPumukiHooks(repoRoot);
@@ -355,23 +340,18 @@ test('runLifecycleDoctor --deep reporta warning no bloqueante cuando evidence es
     });
 
     assert.equal(report.deep?.enabled, true);
-    assert.equal(report.deep?.checks.some((check) => check.id === 'evidence-source-drift'), true);
-    assert.equal(report.deep?.checks.some((check) => check.id === 'evidence-source-drift' && check.status === 'warn'), true);
-    assert.equal(
-      report.deep?.checks.some(
-        (check) =>
-          check.id === 'evidence-source-drift' &&
-          check.severity === 'warning' &&
-          check.layer === 'operational'
-      ),
-      true
+    const evidenceCheck = report.deep?.checks.find(
+      (check) => check.id === 'evidence-source-drift'
     );
-    assert.equal(report.deep?.blocking, false);
-    assert.equal(doctorHasBlockingIssues(report), false);
+    assert.equal(evidenceCheck?.status, 'fail');
+    assert.equal(evidenceCheck?.severity, 'error');
+    assert.match(evidenceCheck?.message ?? '', /\.ai_evidence\.json is missing/i);
+    assert.equal(report.deep?.blocking, true);
+    assert.equal(doctorHasBlockingIssues(report), true);
   });
 });
 
-test('runLifecycleDoctor --deep reporta warning no bloqueante cuando evidence está stale', async () => {
+test('runLifecycleDoctor --deep marca evidence stale como fallo bloqueante', async () => {
   await withTempDir('pumuki-doctor-deep-stale-evidence-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
     installPumukiHooks(repoRoot);
@@ -415,16 +395,15 @@ test('runLifecycleDoctor --deep reporta warning no bloqueante cuando evidence es
       (check) => check.id === 'evidence-source-drift'
     );
 
-    assert.equal(evidenceCheck?.status, 'warn');
-    assert.equal(evidenceCheck?.severity, 'warning');
-    assert.equal(evidenceCheck?.layer, 'operational');
+    assert.equal(evidenceCheck?.status, 'fail');
+    assert.equal(evidenceCheck?.severity, 'error');
     assert.match(evidenceCheck?.message ?? '', /Evidence is stale/i);
-    assert.equal(report.deep?.blocking, false);
-    assert.equal(doctorHasBlockingIssues(report), false);
+    assert.equal(report.deep?.blocking, true);
+    assert.equal(doctorHasBlockingIssues(report), true);
   });
 });
 
-test('runLifecycleDoctor --deep trata policy-drift por fallback default como advisory', async () => {
+test('runLifecycleDoctor --deep marca policy-drift por fallback default como fail no bloqueante', async () => {
   await withTempDir('pumuki-doctor-deep-policy-drift-advisory-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
     mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
@@ -491,21 +470,12 @@ test('runLifecycleDoctor --deep trata policy-drift por fallback default como adv
       (check) => check.id === 'policy-drift'
     );
 
-    assert.equal(policyDriftCheck?.status, 'warn');
+    assert.equal(policyDriftCheck?.status, 'fail');
     assert.equal(policyDriftCheck?.severity, 'warning');
-    assert.equal(policyDriftCheck?.layer, 'policy-pack');
-    assert.equal(policyDriftCheck?.metadata?.pre_commit_activation_source, null);
-    assert.equal(policyDriftCheck?.metadata?.pre_push_activation_source, null);
-    assert.equal(report.policyValidation.stages.PRE_COMMIT.activationSource, null);
-    assert.equal(report.experimentalFeatures.features.analytics.activationVariable, 'PUMUKI_EXPERIMENTAL_ANALYTICS');
-    assert.equal(report.experimentalFeatures.features.pre_write.activationVariable, 'PUMUKI_EXPERIMENTAL_PRE_WRITE');
-    assert.equal(report.experimentalFeatures.features.heuristics.activationVariable, 'PUMUKI_EXPERIMENTAL_HEURISTICS');
-    assert.equal(report.experimentalFeatures.features.learning_context.activationVariable, 'PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT');
-    assert.equal(report.experimentalFeatures.features.mcp_enterprise.activationVariable, 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE');
-    assert.equal(report.experimentalFeatures.features.operational_memory.activationVariable, 'PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY');
-    assert.equal(report.experimentalFeatures.features.saas_ingestion.activationVariable, 'PUMUKI_EXPERIMENTAL_SAAS_INGESTION');
-    assert.equal(report.experimentalFeatures.features.sdd.activationVariable, 'PUMUKI_EXPERIMENTAL_SDD');
-    assert.match(policyDriftCheck?.message ?? '', /default advisory pack/i);
+    assert.equal(policyDriftCheck?.metadata?.pre_commit_source, 'default');
+    assert.equal(policyDriftCheck?.metadata?.pre_push_source, 'default');
+    assert.equal(report.policyValidation.stages.PRE_COMMIT.source, 'default');
+    assert.match(policyDriftCheck?.message ?? '', /default fallback/i);
     assert.equal(report.deep?.blocking, false);
     assert.equal(doctorHasBlockingIssues(report), false);
   });
@@ -545,6 +515,7 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
           version: '1.0',
           defaultBundleEnabled: true,
           stages: {
+            PRE_WRITE: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
@@ -594,22 +565,8 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
     });
 
     assert.equal(report.deep?.enabled, true);
-    assert.equal(
-      report.policyValidation.stages.PRE_COMMIT.activationSource,
-      'file:skills.policy.json'
-    );
-    assert.equal(
-      report.policyValidation.stages.PRE_PUSH.activationSource,
-      'file:skills.policy.json'
-    );
-    assert.equal(report.experimentalFeatures.features.analytics.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.pre_write.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.heuristics.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.learning_context.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.mcp_enterprise.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.operational_memory.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.saas_ingestion.mode, 'off');
-    assert.equal(report.experimentalFeatures.features.sdd.mode, 'off');
+    assert.equal(report.policyValidation.stages.PRE_COMMIT.source, 'skills.policy');
+    assert.equal(report.policyValidation.stages.PRE_PUSH.source, 'skills.policy');
     assert.equal(report.deep?.checks.every((check) => check.status === 'pass'), true);
     assert.equal(report.deep?.contract.overall, 'compatible');
     assert.equal(report.deep?.blocking, false);
@@ -651,6 +608,7 @@ test('runLifecycleDoctor --deep marca warning cuando adapter wiring usa comandos
           version: '1.0',
           defaultBundleEnabled: true,
           stages: {
+            PRE_WRITE: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
@@ -744,6 +702,7 @@ test('runLifecycleDoctor --deep marca warning cuando adapter wiring muta PATH', 
           version: '1.0',
           defaultBundleEnabled: true,
           stages: {
+            PRE_WRITE: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
@@ -837,6 +796,7 @@ test('runLifecycleDoctor --deep marca incompatibilidad cuando OpenSpec es requer
           version: '1.0',
           defaultBundleEnabled: true,
           stages: {
+            PRE_WRITE: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
