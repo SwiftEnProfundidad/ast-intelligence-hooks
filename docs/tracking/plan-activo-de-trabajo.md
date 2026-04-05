@@ -36,10 +36,11 @@
 - ✅ Publicación **6.3.64** en npm; tag `v6.3.64` en origin.
 - ✅ Rama remota **`release/6.3.64`** creada en `origin` (apunta al `develop` actual post-merge).
 - ✅ **R_GO `develop` local** alineado con `origin/develop`; `pumuki doctor --json` → **6.3.64** sin drift (evidencia 2026-04-05).
+- ✅ **SAAS** `main` al día; `pumuki doctor --json` → **6.3.64** sin drift de versión; `pathExecutionHazard=true` por `:` en la ruta del repo — workaround: `node ./node_modules/pumuki/bin/pumuki.js` (comportamiento ya documentado en Pumuki 6.3.5x+).
+- ✅ **Flux_training** `main` al día; tras repin había **drift** `lifecycleInstalled` 6.3.57; resuelto con `pnpm exec pumuki install` → **6.3.64** sin drift (2026-04-05).
 
 ## Siguiente frente sugerido
 
 - ⏳ **RuralGO**: planificar promoción `develop` → `main` solo como **hit de release** (no mezclar con el solo repin de Pumuki); Vercel en PR #1514 en rojo — revisar previews si afectan criterio de merge futuro.
 - ⏳ Refrescar recibo MCP en **SAAS** antes del próximo push con hooks estrictos (o política explícita para bumps de deps).
-- ⏳ Validar `pumuki status` / `doctor` en **SAAS** y **Flux** tras `git pull` si aún no se hizo.
 - ⏳ macOS (repo real): panel Swift con foco y botones persistiendo `muteUntil` / `enabled:false` en `.pumuki/system-notifications.json` del repo correcto.
