@@ -19,7 +19,7 @@
 - Frente activo: `post-parity-ios-suite-y-ux-macos` (paridad iOS AST **cerrada** en línea publicada; rama local con suite + macOS al día).
 - Origen: `ast-intelligence-hooks`
 - Objetivo reciente en rama `refactor/cli-complexity-reduction-phase4-rebase2`: suite `npm test` verde; commits **atómicos**; notificaciones macOS sin spam en tests; dialog de bloqueo opt-in.
-- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; cambios locales **commiteados** en cadena atómica; **push / PR a `develop`** solo con confirmación explícita.
+- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; rama **pushed** y **PR abierta** hacia `develop` (ver enlace abajo).
 
 ## Cola externa real
 
@@ -32,7 +32,7 @@
 - ✅ Ajustes de tests (PRE_WRITE en `skills.policy`, doctor/cli JSON, Jest `evaluateRules`) y `npm test` verde en rama `refactor/cli-complexity-reduction-phase4-rebase2`.
 - ✅ Notificaciones macOS: dialog modal de anti-spam **desactivado por defecto**; activar con `PUMUKI_MACOS_BLOCKED_DIALOG=1` o `"blockedDialogEnabled": true` en `.pumuki/system-notifications.json`.
 - ✅ Historial local en cadena atómica: `fix(macos)` + `docs(tracking)` + tests gate/git/lifecycle/scripts + guardrails + smoke 6.3.61 + `brownfieldHotspots`.
-- ⏳ Opcional: `git push` / PR a `develop` (requiere confirmacion explicita del responsable).
+- ✅ Push a `origin/refactor/cli-complexity-reduction-phase4-rebase2` y PR a `develop`: https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/731
 
 ## Siguiente frente sugerido
 
