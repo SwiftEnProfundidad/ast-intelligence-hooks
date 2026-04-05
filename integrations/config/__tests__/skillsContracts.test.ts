@@ -77,6 +77,10 @@ const samplePolicy = (): SkillsPolicyV1 => {
     version: '1.0',
     defaultBundleEnabled: true,
     stages: {
+      PRE_WRITE: {
+        blockOnOrAbove: 'ERROR',
+        warnOnOrAbove: 'WARN',
+      },
       PRE_COMMIT: {
         blockOnOrAbove: 'CRITICAL',
         warnOnOrAbove: 'ERROR',

@@ -8,6 +8,7 @@ import type {
 } from './skillsLock';
 
 const CHECK_RULE_PREFIX = /^[✅❌]\s*/u;
+const BULLET_CHECK_RULE_PREFIX = /^[-*]\s+[✅❌]\s*/u;
 const BULLET_RULE_PREFIX = /^[-*]\s+/u;
 const MARKDOWN_LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g;
 const INLINE_CODE_PATTERN = /`([^`]+)`/g;
@@ -36,6 +37,7 @@ const slugify = (value: string): string => {
 
 const sanitizeRuleDescription = (value: string): string => {
   return value
+    .replace(BULLET_CHECK_RULE_PREFIX, '')
     .replace(CHECK_RULE_PREFIX, '')
     .replace(BULLET_RULE_PREFIX, '')
     .replace(MARKDOWN_LINK_PATTERN, '$1')
@@ -47,7 +49,7 @@ const sanitizeRuleDescription = (value: string): string => {
 
 const inferRuleSeverity = (raw: string): Severity => {
   const normalized = normalizeForLookup(raw);
-  if (/^\s*❌/u.test(raw)) {
+  if (/^\s*❌/u.test(raw) || /^\s*[-*]\s+❌/u.test(raw)) {
     return 'ERROR';
   }
   if (/\bcritical\b|\bbloqueante\b|\bblock\b/.test(normalized)) {
@@ -64,7 +66,7 @@ const inferRuleSeverity = (raw: string): Severity => {
 };
 
 const inferRuleConfidence = (raw: string): SkillsRuleConfidence => {
-  if (/^\s*❌/u.test(raw)) {
+  if (/^\s*❌/u.test(raw) || /^\s*[-*]\s+❌/u.test(raw)) {
     return 'HIGH';
   }
   if (/\bmust\b|\bobligatorio\b|\brequired\b|\bdisallow\b/i.test(raw)) {
@@ -108,6 +110,9 @@ const resolveDefaultStageForKnownRule = (
 
 const isRuleCandidateLine = (line: string): boolean => {
   if (CHECK_RULE_PREFIX.test(line)) {
+    return true;
+  }
+  if (BULLET_CHECK_RULE_PREFIX.test(line)) {
     return true;
   }
   if (!BULLET_RULE_PREFIX.test(line)) {
@@ -220,8 +225,36 @@ const normalizeKnownRuleTarget = (
     if (includes('unchecked sendable')) {
       return 'skills.ios.no-unchecked-sendable';
     }
+    if (includes('preconcurrency') || includes('@preconcurrency')) {
+      return 'skills.ios.no-preconcurrency';
+    }
+    if (includes('nonisolated unsafe') || includes('nonisolated(unsafe)')) {
+      return 'skills.ios.no-nonisolated-unsafe';
+    }
+    if (
+      includes('assumeisolated') ||
+      includes('assume isolated') ||
+      includes('mainactor.assumeisolated') ||
+      includes('main actor assume isolated')
+    ) {
+      return 'skills.ios.no-assume-isolated';
+    }
     if (includes('observableobject') || includes('observable object')) {
       return 'skills.ios.no-observable-object';
+    }
+    if (
+      includes('observedobject') ||
+      (includes('legacy') && includes('stateobject')) ||
+      (includes('not stateobject') && includes('observable'))
+    ) {
+      return 'skills.ios.no-legacy-swiftui-observable-wrapper';
+    }
+    if (
+      includes('passed values as state') ||
+      includes('passed values as state or stateobject') ||
+      includes('passed values as stateobject')
+    ) {
+      return 'skills.ios.no-passed-value-state-wrapper';
     }
     if (includes('navigationview') || includes('navigation view')) {
       return 'skills.ios.no-navigation-view';
@@ -252,6 +285,36 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-string-format';
     }
     if (
+      (includes('foreach') && includes('indices')) ||
+      includes('stable identity for foreach') ||
+      includes('never indices for dynamic content')
+    ) {
+      return 'skills.ios.no-foreach-indices';
+    }
+    if (
+      includes('localizedstandardcontains') ||
+      includes('localized standard contains') ||
+      (includes('user input filtering') && includes('contains')) ||
+      (includes('user-facing filter') && includes('contains'))
+    ) {
+      return 'skills.ios.no-contains-user-filter';
+    }
+    if (
+      includes('geometryreader') ||
+      includes('geometry reader') ||
+      includes('containerrelativeframe') ||
+      includes('visualeffect')
+    ) {
+      return 'skills.ios.no-geometryreader';
+    }
+    if (
+      includes('fontweight bold') ||
+      includes('fontweight(.bold)') ||
+      (includes('bold()') && includes('fontweight'))
+    ) {
+      return 'skills.ios.no-font-weight-bold';
+    }
+    if (
       includes('scrollindicators hidden') ||
       includes('scroll indicators hidden') ||
       includes('showsindicators false') ||
@@ -259,12 +322,40 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.ios.no-scrollview-shows-indicators';
     }
+    if (
+      includes('sheet item') ||
+      includes('sheet(item') ||
+      includes('sheet ispresented') ||
+      includes('sheet(ispresented') ||
+      includes('sheets basadas en modelo') ||
+      includes('sheets based on model')
+    ) {
+      return 'skills.ios.no-sheet-is-presented';
+    }
+    if (
+      includes('legacy onchange') ||
+      includes('legacy single parameter') ||
+      includes('single parameter onchange') ||
+      includes('onchange of value in') ||
+      includes('old new in') ||
+      (includes('onchange') &&
+        (includes('2 parametros') ||
+          includes('2 parameter') ||
+          includes('sin parametros') ||
+          includes('no parameter')))
+    ) {
+      return 'skills.ios.no-legacy-onchange';
+    }
     if (includes('uiscreen main bounds') || includes('uiscreen.main.bounds')) {
       return 'skills.ios.no-uiscreen-main-bounds';
     }
     if (
       includes('swift testing over xctest') ||
       includes('prefer import testing') ||
+      includes('prefer test functions over test methods') ||
+      includes('test functions over test methods') ||
+      includes('xctest-only unit tests') ||
+      includes('new xctest-only unit tests') ||
       includes('xctest only for ui') ||
       includes('xctest only for ui performance')
     ) {
@@ -275,6 +366,27 @@ const normalizeKnownRuleTarget = (
     }
     if (includes('xctunwrap') || includes('prefer require')) {
       return 'skills.ios.no-xctunwrap';
+    }
+    if (
+      includes('await fulfillment') ||
+      includes('waitforexpectations') ||
+      (includes('wait for') && includes('fulfillment'))
+    ) {
+      return 'skills.ios.no-wait-for-expectations';
+    }
+    if (
+      includes('expectation description') ||
+      includes('expectation(description') ||
+      includes('prefer confirmation')
+    ) {
+      return 'skills.ios.no-legacy-expectation-description';
+    }
+    if (
+      includes('mixing legacy xctest style') ||
+      includes('mixed xctest and swift testing') ||
+      includes('mixed testing frameworks')
+    ) {
+      return 'skills.ios.no-mixed-testing-frameworks';
     }
     if (
       includes('nsmanagedobject across boundaries') ||
@@ -290,6 +402,25 @@ const normalizeKnownRuleTarget = (
       includes('avoid returning or accepting nsmanagedobject in async apis')
     ) {
       return 'skills.ios.no-nsmanagedobject-async-boundary';
+    }
+    if (
+      includes('core data orchestration inside infrastructure') ||
+      includes('instead of presentation code') ||
+      includes('core data apis in application or presentation code') ||
+      includes('avoid core data apis in application or presentation code') ||
+      includes('fetchrequest') ||
+      includes('managedobjectcontext') ||
+      includes('persistence containers directly in application presentation code')
+    ) {
+      return 'skills.ios.no-core-data-layer-leak';
+    }
+    if (
+      includes('managed objects into swiftui state or view models') ||
+      includes('nsmanagedobject instances into swiftui state or view models') ||
+      includes('nsmanagedobject leaking into swiftui state') ||
+      includes('nsmanagedobject leaking into view models')
+    ) {
+      return 'skills.ios.no-nsmanagedobject-state-leak';
     }
     return null;
   }

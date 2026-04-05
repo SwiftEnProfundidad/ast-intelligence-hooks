@@ -19,7 +19,7 @@ const sampleLock = (): SkillsLockV1 => ({
     {
       name: 'ios-guidelines',
       version: '1.0.0',
-      source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+      source: 'file:docs/codex-skills/ios-enterprise-rules.md',
       hash: 'a'.repeat(64),
       rules: [
         {
@@ -28,7 +28,7 @@ const sampleLock = (): SkillsLockV1 => ({
           severity: 'ERROR',
           platform: 'ios',
           sourceSkill: 'ios-guidelines',
-          sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+          sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
           stage: 'PRE_PUSH',
           confidence: 'HIGH',
           locked: true,
@@ -105,7 +105,7 @@ test('createSkillsLockDeterministicHash es estable ante reordenación de bundles
       {
         name: 'backend-guidelines',
         version: '1.0.0',
-        source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+        source: 'file:docs/codex-skills/backend-enterprise-rules.md',
         hash: 'b'.repeat(64),
         rules: [],
       },

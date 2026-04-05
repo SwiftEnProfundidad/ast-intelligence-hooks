@@ -129,14 +129,14 @@ test('resolveSkillImportSources discovers REQUIRED SKILL names via vendor manife
   await withTempDir('pumuki-skills-custom-required-skill-', async (tempRoot) => {
     const backendSkillPath = join(
       tempRoot,
-      'vendor/skills/windsurf-rules-backend/SKILL.md'
+      'vendor/skills/backend-enterprise-rules/SKILL.md'
     );
     const concurrencySkillPath = join(
       tempRoot,
       'vendor/skills/swift-concurrency/SKILL.md'
     );
 
-    mkdirSync(join(tempRoot, 'vendor/skills/windsurf-rules-backend'), {
+    mkdirSync(join(tempRoot, 'vendor/skills/backend-enterprise-rules'), {
       recursive: true,
     });
     mkdirSync(join(tempRoot, 'vendor/skills/swift-concurrency'), {
@@ -158,8 +158,8 @@ test('resolveSkillImportSources discovers REQUIRED SKILL names via vendor manife
           version: 1,
           skills: [
             {
-              name: 'windsurf-rules-backend',
-              file: 'vendor/skills/windsurf-rules-backend/SKILL.md',
+              name: 'backend-enterprise-rules',
+              file: 'vendor/skills/backend-enterprise-rules/SKILL.md',
             },
             {
               name: 'swift-concurrency',
@@ -175,7 +175,7 @@ test('resolveSkillImportSources discovers REQUIRED SKILL names via vendor manife
       join(tempRoot, 'AGENTS.md'),
       [
         '# Skills',
-        "REQUIRED SKILL: 'windsurf-rules-backend'",
+        "REQUIRED SKILL: 'backend-enterprise-rules'",
         "REQUIRED SKILL: 'swift-concurrency'",
       ].join('\n')
     );
@@ -398,7 +398,7 @@ test('custom rules override repo lock rules by id when building effective skills
         {
           name: 'backend-guidelines',
           version: '1.0.0',
-          source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+          source: 'file:docs/codex-skills/backend-enterprise-rules.md',
           hash: 'a'.repeat(64),
           rules: [
             {
@@ -407,7 +407,7 @@ test('custom rules override repo lock rules by id when building effective skills
               severity: 'WARN',
               platform: 'backend',
               sourceSkill: 'backend-guidelines',
-              sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+              sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
               evaluationMode: 'AUTO',
               origin: 'core',
               locked: true,

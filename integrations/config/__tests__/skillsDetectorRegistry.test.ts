@@ -24,11 +24,64 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-foreground-color'), [
     'heuristics.ios.foreground-color.ast',
   ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-legacy-swiftui-observable-wrapper'), [
+    'heuristics.ios.legacy-swiftui-observable-wrapper.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-passed-value-state-wrapper'), [
+    'heuristics.ios.passed-value-state-wrapper.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-foreach-indices'), [
+    'heuristics.ios.foreach-indices.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-contains-user-filter'), [
+    'heuristics.ios.contains-user-filter.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-geometryreader'), [
+    'heuristics.ios.geometryreader.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-font-weight-bold'), [
+    'heuristics.ios.font-weight-bold.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-preconcurrency'), [
+    'heuristics.ios.preconcurrency.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-nonisolated-unsafe'), [
+    'heuristics.ios.nonisolated-unsafe.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-assume-isolated'), [
+    'heuristics.ios.assume-isolated.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-sheet-is-presented'), [
+    'heuristics.ios.sheet-is-presented.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-legacy-onchange'), [
+    'heuristics.ios.legacy-onchange.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.prefer-swift-testing'), [
+    'heuristics.ios.testing.xctest-import.ast',
+    'heuristics.ios.testing.xctest-suite-modernizable.ast',
+  ]);
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-xctassert'), [
     'heuristics.ios.testing.xctassert.ast',
   ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-wait-for-expectations'), [
+    'heuristics.ios.testing.wait-for-expectations.ast',
+  ]);
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),
+    ['heuristics.ios.testing.legacy-expectation-description.ast']
+  );
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-mixed-testing-frameworks'), [
+    'heuristics.ios.testing.mixed-frameworks.ast',
+  ]);
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-nsmanagedobject-async-boundary'), [
     'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-core-data-layer-leak'), [
+    'heuristics.ios.core-data.layer-leak.ast',
+  ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-nsmanagedobject-state-leak'), [
+    'heuristics.ios.core-data.nsmanagedobject-state-leak.ast',
   ]);
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-globalscope'), [
     'heuristics.android.globalscope.ast',

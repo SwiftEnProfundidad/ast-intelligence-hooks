@@ -117,6 +117,36 @@ export const skillsCompilerTemplates: Record<string, SkillsCompilerTemplate> = {
         stage: 'PRE_PUSH',
         locked: true,
       },
+      {
+        id: 'skills.ios.no-preconcurrency',
+        description:
+          'Avoid @preconcurrency in production iOS code without a documented safety invariant and a removal ticket.',
+        severity: 'ERROR',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-nonisolated-unsafe',
+        description:
+          'Avoid nonisolated(unsafe) in production iOS code without a documented safety invariant and a removal ticket.',
+        severity: 'ERROR',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-assume-isolated',
+        description:
+          'Avoid assumeIsolated in production iOS code; prefer explicit actor isolation or await MainActor.run.',
+        severity: 'ERROR',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
     ],
   },
   'ios-swiftui-expert-guidelines': {
@@ -130,6 +160,26 @@ export const skillsCompilerTemplates: Record<string, SkillsCompilerTemplate> = {
         severity: 'WARN',
         platform: 'ios',
         confidence: 'MEDIUM',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-legacy-swiftui-observable-wrapper',
+        description:
+          'Avoid @StateObject and @ObservedObject in modern SwiftUI code paths that can adopt @Observable with @State/@Bindable.',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'MEDIUM',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-passed-value-state-wrapper',
+        description:
+          'Avoid storing values injected from a parent as @State or @StateObject; prefer let, @Binding, or owned @State created locally.',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'HIGH',
         stage: 'PRE_PUSH',
         locked: true,
       },
@@ -188,8 +238,65 @@ export const skillsCompilerTemplates: Record<string, SkillsCompilerTemplate> = {
         locked: true,
       },
       {
+        id: 'skills.ios.no-foreach-indices',
+        description:
+          'Avoid ForEach over .indices in dynamic SwiftUI content; prefer stable element identity or explicit stable IDs.',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-contains-user-filter',
+        description:
+          'Avoid contains() in user-facing filter flows; prefer localizedStandardContains() for SwiftUI search text matching.',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'MEDIUM',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-geometryreader',
+        description:
+          'Avoid GeometryReader in modern SwiftUI layout code when containerRelativeFrame(), visualEffect(), or simpler layout APIs are enough.',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'MEDIUM',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-font-weight-bold',
+        description: 'Avoid fontWeight(.bold) in SwiftUI text styling; prefer bold() for straightforward emphasis.',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
         id: 'skills.ios.no-scrollview-shows-indicators',
         description: 'Avoid ScrollView(showsIndicators: false) in SwiftUI code; prefer scrollIndicators(.hidden).',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-sheet-is-presented',
+        description: 'Avoid .sheet(isPresented:) in SwiftUI presentation flows; prefer .sheet(item:) when possible.',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'MEDIUM',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-legacy-onchange',
+        description: 'Avoid legacy single-parameter onChange in modern SwiftUI code; prefer modern overloads.',
         severity: 'WARN',
         platform: 'ios',
         confidence: 'HIGH',
@@ -214,7 +321,8 @@ export const skillsCompilerTemplates: Record<string, SkillsCompilerTemplate> = {
     rules: [
       {
         id: 'skills.ios.prefer-swift-testing',
-        description: 'Prefer Swift Testing over XCTest-only unit and integration tests.',
+        description:
+          'Prefer Swift Testing over XCTest-only unit and integration tests, including suites that can migrate to import Testing and @Test.',
         severity: 'WARN',
         platform: 'ios',
         confidence: 'MEDIUM',
@@ -233,6 +341,34 @@ export const skillsCompilerTemplates: Record<string, SkillsCompilerTemplate> = {
       {
         id: 'skills.ios.no-xctunwrap',
         description: 'Avoid XCTUnwrap in modern Swift tests; prefer #require.',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-wait-for-expectations',
+        description: 'Avoid wait(for:) and waitForExpectations(timeout:) in async iOS tests; prefer await fulfillment(of:).',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-legacy-expectation-description',
+        description: 'Avoid expectation(description:) scaffolding without modern fulfillment or confirmation flow in iOS tests.',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'MEDIUM',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-mixed-testing-frameworks',
+        description:
+          'Avoid mixing XCTestCase suites with Swift Testing markers in the same iOS test file without explicit compatibility reason.',
         severity: 'WARN',
         platform: 'ios',
         confidence: 'HIGH',
@@ -260,6 +396,26 @@ export const skillsCompilerTemplates: Record<string, SkillsCompilerTemplate> = {
         id: 'skills.ios.no-nsmanagedobject-async-boundary',
         description:
           'Avoid NSManagedObject in async function boundaries; prefer object IDs or mapped models.',
+        severity: 'ERROR',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-core-data-layer-leak',
+        description:
+          'Keep Core Data orchestration inside infrastructure or repository layers; avoid Core Data APIs in application or presentation code.',
+        severity: 'ERROR',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.no-nsmanagedobject-state-leak',
+        description:
+          'Avoid leaking context-scoped NSManagedObject instances into SwiftUI state or view models; prefer object IDs or mapped models.',
         severity: 'ERROR',
         platform: 'ios',
         confidence: 'HIGH',

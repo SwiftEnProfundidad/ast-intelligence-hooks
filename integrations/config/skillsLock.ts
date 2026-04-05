@@ -48,7 +48,7 @@ const SHA256_PATTERN = /^[A-Fa-f0-9]{64}$/;
 const AST_NODE_ID_PATTERN = /^heuristics\.[A-Za-z0-9._-]+\.ast$/;
 
 const severityValues = new Set<Severity>(['INFO', 'WARN', 'ERROR', 'CRITICAL']);
-const stageValues = new Set<SkillsStage>(['PRE_COMMIT', 'PRE_PUSH', 'CI']);
+const stageValues = new Set<SkillsStage>(['PRE_WRITE', 'PRE_COMMIT', 'PRE_PUSH', 'CI']);
 const confidenceValues = new Set<SkillsRuleConfidence>(['HIGH', 'MEDIUM', 'LOW']);
 const evaluationModeValues = new Set<SkillsRuleEvaluationMode>(['AUTO', 'DECLARATIVE']);
 const originValues = new Set<SkillsRuleOrigin>(['core', 'custom']);

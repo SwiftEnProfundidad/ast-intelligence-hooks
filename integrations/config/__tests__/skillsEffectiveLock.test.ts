@@ -83,20 +83,20 @@ const createCustomRulesFixture = (repoRoot: string): void => {
 const createVendoredBackendSkillFixture = (repoRoot: string): void => {
   mkdirSync(join(repoRoot, 'docs/codex-skills'), { recursive: true });
   writeFileSync(
-    join(repoRoot, 'docs/codex-skills/windsurf-rules-backend.md'),
+    join(repoRoot, 'docs/codex-skills/backend-enterprise-rules.md'),
     ['- ❌ Avoid empty catch blocks in backend runtime code.'].join('\n')
   );
   writeFileSync(
     join(repoRoot, 'AGENTS.md'),
-    ['# Skills', '- `windsurf-rules-backend`: `docs/codex-skills/windsurf-rules-backend.md`'].join('\n')
+    ['# Skills', '- `backend-enterprise-rules`: `docs/codex-skills/backend-enterprise-rules.md`'].join('\n')
   );
 };
 
 const createRequiredSkillsManifestFixture = (repoRoot: string): void => {
   const skills = [
     {
-      name: 'windsurf-rules-ios',
-      file: 'vendor/skills/windsurf-rules-ios/SKILL.md',
+      name: 'ios-enterprise-rules',
+      file: 'vendor/skills/ios-enterprise-rules/SKILL.md',
       content: '- Keep ViewModels focused on a single feature boundary.\n',
     },
     {
@@ -110,18 +110,18 @@ const createRequiredSkillsManifestFixture = (repoRoot: string): void => {
       content: '- Use focused presentation state per view boundary.\n',
     },
     {
-      name: 'windsurf-rules-android',
-      file: 'vendor/skills/windsurf-rules-android/SKILL.md',
+      name: 'android-enterprise-rules',
+      file: 'vendor/skills/android-enterprise-rules/SKILL.md',
       content: '- Keep Compose screens aligned with feature boundaries.\n',
     },
     {
-      name: 'windsurf-rules-backend',
-      file: 'vendor/skills/windsurf-rules-backend/SKILL.md',
+      name: 'backend-enterprise-rules',
+      file: 'vendor/skills/backend-enterprise-rules/SKILL.md',
       content: '- ❌ Avoid empty catch blocks in backend runtime code.\n',
     },
     {
-      name: 'windsurf-rules-frontend',
-      file: 'vendor/skills/windsurf-rules-frontend/SKILL.md',
+      name: 'frontend-enterprise-rules',
+      file: 'vendor/skills/frontend-enterprise-rules/SKILL.md',
       content: '- ❌ Avoid explicit any in frontend runtime code.\n',
     },
   ];
@@ -149,12 +149,12 @@ const createRequiredSkillsManifestFixture = (repoRoot: string): void => {
     join(repoRoot, 'AGENTS.md'),
     [
       '# Required skills',
-      "REQUIRED SKILL: 'windsurf-rules-ios'",
+      "REQUIRED SKILL: 'ios-enterprise-rules'",
       "REQUIRED SKILL: 'swift-concurrency'",
       "REQUIRED SKILL: 'swiftui-expert-skill'",
-      "REQUIRED SKILL: 'windsurf-rules-android'",
-      "REQUIRED SKILL: 'windsurf-rules-backend'",
-      "REQUIRED SKILL: 'windsurf-rules-frontend'",
+      "REQUIRED SKILL: 'android-enterprise-rules'",
+      "REQUIRED SKILL: 'backend-enterprise-rules'",
+      "REQUIRED SKILL: 'frontend-enterprise-rules'",
     ].join('\n')
   );
 };

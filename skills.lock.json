@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-04-04T18:34:00.495Z",
+  "generatedAt": "2026-04-05T00:13:54.218Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5387,7 +5387,7 @@
       "name": "ios-concurrency-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/swift-concurrency/SKILL.md",
-      "hash": "09e98724c34b575d4c0776d52c58afc039fedc761cb5a83ca4121530ceddbb1f",
+      "hash": "6a1613d60c8ac35be8c39b15b98807e0ee7c81fa33a29e3262d225daa4598252",
       "rules": [
         {
           "id": "skills.ios.guideline.ios-concurrency.async-sequences-md-asyncsequence-asyncstream-when-to-use-vs-regular-as",
@@ -5498,18 +5498,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios-concurrency.use-references-testing-md-await-fulfillment-of-and-swift-testing-patte",
-          "description": "Use references/testing.md (await fulfillment(of:) and Swift Testing patterns)",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-concurrency-guidelines",
-          "sourcePath": "vendor/skills/swift-concurrency/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios-concurrency.use-references-threading-md-to-avoid-thread-centric-debugging-and-rely",
           "description": "Use references/threading.md to avoid thread-centric debugging and rely on isolation + Instruments",
           "severity": "ERROR",
@@ -5519,6 +5507,19 @@
           "confidence": "MEDIUM",
           "locked": true,
           "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-assume-isolated",
+          "description": "Avoid assumeIsolated in production iOS code; prefer explicit actor isolation or await MainActor.run.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-concurrency-guidelines",
+          "sourcePath": "vendor/skills/swift-concurrency/SKILL.md",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {
@@ -5561,11 +5562,37 @@
           "origin": "core"
         },
         {
+          "id": "skills.ios.no-nonisolated-unsafe",
+          "description": "Avoid nonisolated(unsafe) in production iOS code without a documented safety invariant and a removal ticket.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-concurrency-guidelines",
+          "sourcePath": "vendor/skills/swift-concurrency/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
           "id": "skills.ios.no-operation-queue",
           "description": "Avoid OperationQueue in production iOS code unless explicitly justified.",
           "severity": "WARN",
           "platform": "ios",
           "confidence": "MEDIUM",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-concurrency-guidelines",
+          "sourcePath": "vendor/skills/swift-concurrency/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-preconcurrency",
+          "description": "Avoid @preconcurrency in production iOS code without a documented safety invariant and a removal ticket.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "confidence": "HIGH",
           "stage": "PRE_PUSH",
           "locked": true,
           "sourceSkill": "ios-concurrency-guidelines",
@@ -5598,6 +5625,18 @@
           "sourcePath": "vendor/skills/swift-concurrency/SKILL.md",
           "evaluationMode": "AUTO",
           "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-wait-for-expectations",
+          "description": "Use references/testing.md (await fulfillment(of:) and Swift Testing patterns)",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-concurrency-guidelines",
+          "sourcePath": "vendor/skills/swift-concurrency/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
         }
       ]
     },
@@ -5605,8 +5644,20 @@
       "name": "ios-core-data-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/core-data-expert/SKILL.md",
-      "hash": "e4993f58b642c163d230e08178107053b297b57fe6ba8d71c30378f5bdd0215e",
+      "hash": "0f4f9e67e60990dea6f946d09b8d7314d759d8cb03a0a3806a172818e84cc31e",
       "rules": [
+        {
+          "id": "skills.ios.guideline.ios-core-data.make-context-ownership-explicit-and-keep-merge-boundaries-controlled",
+          "description": "Make context ownership explicit and keep merge boundaries controlled.",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-core-data-guidelines",
+          "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
         {
           "id": "skills.ios.guideline.ios-core-data.pass-nsmanagedobjectid-when-a-different-context-must-resolve-the-entit",
           "description": "Pass NSManagedObjectID when a different context must resolve the entity later.",
@@ -5615,6 +5666,18 @@
           "sourceSkill": "ios-core-data-guidelines",
           "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
           "confidence": "HIGH",
+          "locked": true,
+          "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.guideline.ios-core-data.treat-managed-objects-as-context-scoped-references-not-as-portable-dom",
+          "description": "Treat managed objects as context-scoped references, not as portable domain entities.",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-core-data-guidelines",
+          "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
+          "confidence": "MEDIUM",
           "locked": true,
           "evaluationMode": "DECLARATIVE",
           "origin": "core"
@@ -5629,6 +5692,19 @@
           "confidence": "MEDIUM",
           "locked": true,
           "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-core-data-layer-leak",
+          "description": "Keep Core Data orchestration inside infrastructure or repository layers; avoid Core Data APIs in application or presentation code.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-core-data-guidelines",
+          "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {
@@ -5656,6 +5732,19 @@
           "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
           "evaluationMode": "AUTO",
           "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-nsmanagedobject-state-leak",
+          "description": "Avoid leaking context-scoped NSManagedObject instances into SwiftUI state or view models; prefer object IDs or mapped models.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-core-data-guidelines",
+          "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
         }
       ]
     },
@@ -5663,7 +5752,7 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "f886adfb9c9929b1159a66ef85bfc191334b7a88542231eeba39fe111d63ac70",
+      "hash": "f2b2d9cee6e4b36785916bc98bd355b42afa9915e71938c02fd20d29d9b5c811",
       "rules": [
         {
           "id": "skills.ios.guideline.ios.accessibility-identifiers-para-localizar-elementos",
@@ -6122,18 +6211,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios.containerrelativeframe-para-sizing-relativo-al-contenedor",
-          "description": "containerRelativeFrame - Para sizing relativo al contenedor",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios.contraste-wcag-2-1-aa-mi-nimo",
           "description": "Contraste - WCAG 2.1 AA mínimo",
           "severity": "WARN",
@@ -6578,30 +6655,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios.geometryreader-con-moderacio-n-solo-cuando-sea-estrictamente-necesario",
-          "description": "GeometryReader con moderación - Solo cuando sea estrictamente necesario",
-          "severity": "ERROR",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "HIGH",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.geometryreader-moderacio-n-solo-cuando-sea-necesario",
-          "description": "GeometryReader moderación - Solo cuando sea necesario",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios.github-actions-bitrise-ci-cd-pipelines",
           "description": "GitHub Actions / Bitrise - CI/CD pipelines",
           "severity": "WARN",
@@ -6874,18 +6927,6 @@
           "sourceSkill": "ios-guidelines",
           "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
           "confidence": "HIGH",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.localizedstandardcontains-para-filtros-de-texto-de-usuario",
-          "description": "localizedStandardContains() para filtros de texto de usuario",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
           "locked": true,
           "evaluationMode": "DECLARATIVE",
           "origin": "core"
@@ -7683,18 +7724,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios.sheet-item-sheets-basadas-en-modelo-no-en-flags",
-          "description": ".sheet(item:) - Sheets basadas en modelo, no en flags",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios.siempre-responder-en-espan-ol",
           "description": "Siempre responder en español",
           "severity": "WARN",
@@ -8151,18 +8180,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios.usar-preconcurrency-solo-como-medida-temporal-de-migracio-n",
-          "description": "Usar @preconcurrency solo como medida temporal de migración",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios.use-cases-createorderusecase-updateorderstatususecase",
           "description": "Use Cases - CreateOrderUseCase, UpdateOrderStatusUseCase",
           "severity": "WARN",
@@ -8380,6 +8397,18 @@
           "origin": "core"
         },
         {
+          "id": "skills.ios.no-contains-user-filter",
+          "description": "localizedStandardContains() para filtros de texto de usuario",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
           "id": "skills.ios.no-corner-radius",
           "description": "clipShape(.rect(cornerRadius:)) en lugar de cornerRadius()",
           "severity": "WARN",
@@ -8452,6 +8481,18 @@
           "origin": "core"
         },
         {
+          "id": "skills.ios.no-geometryreader",
+          "description": "containerRelativeFrame - Para sizing relativo al contenedor",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
           "id": "skills.ios.no-navigation-view",
           "description": "NavigationStack en lugar de NavigationView",
           "severity": "WARN",
@@ -8488,8 +8529,32 @@
           "origin": "core"
         },
         {
+          "id": "skills.ios.no-preconcurrency",
+          "description": "Usar @preconcurrency solo como medida temporal de migración",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
           "id": "skills.ios.no-scrollview-shows-indicators",
           "description": "scrollIndicators(.hidden) en lugar de showsIndicators: false",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-sheet-is-presented",
+          "description": ".sheet(item:) - Sheets basadas en modelo, no en flags",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",
@@ -8565,11 +8630,11 @@
       "name": "ios-swift-testing-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/swift-testing-expert/SKILL.md",
-      "hash": "c92c0cccaebc5d0ae133dd377a614d5493a5e88c5c30f3d7d739350d9b18a0ee",
+      "hash": "f75a4765dafca2b9d6d174ccd13ad601ab8b5b0ebe70719073831b563ca9dfda",
       "rules": [
         {
-          "id": "skills.ios.guideline.ios-swift-testing.prefer-test-functions-over-test-methods-when-the-target-already-suppor",
-          "description": "Prefer @Test functions over test... methods when the target already supports Swift Testing.",
+          "id": "skills.ios.guideline.ios-swift-testing.keep-tests-isolated-expressive-and-aligned-with-swift-concurrency",
+          "description": "Keep tests isolated, expressive, and aligned with Swift Concurrency.",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-swift-testing-guidelines",
@@ -8577,6 +8642,69 @@
           "confidence": "MEDIUM",
           "locked": true,
           "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.guideline.ios-swift-testing.new-xctest-only-unit-tests-when-swift-testing-is-available",
+          "description": "New XCTest-only unit tests when Swift Testing is available.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "sourceSkill": "ios-swift-testing-guidelines",
+          "sourcePath": "vendor/skills/swift-testing-expert/SKILL.md",
+          "confidence": "HIGH",
+          "locked": true,
+          "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.guideline.ios-swift-testing.preserve-repository-specific-test-contracts-such-as-makesut-and-memory",
+          "description": "Preserve repository-specific test contracts such as makeSUT() and memory-leak tracking helpers when they are mandatory.",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-swift-testing-guidelines",
+          "sourcePath": "vendor/skills/swift-testing-expert/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-legacy-expectation-description",
+          "description": "Avoid expectation(description:) scaffolding without modern fulfillment or confirmation flow in iOS tests.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swift-testing-guidelines",
+          "sourcePath": "vendor/skills/swift-testing-expert/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-mixed-testing-frameworks",
+          "description": "Avoid mixing XCTestCase suites with Swift Testing markers in the same iOS test file without explicit compatibility reason.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swift-testing-guidelines",
+          "sourcePath": "vendor/skills/swift-testing-expert/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-wait-for-expectations",
+          "description": "Avoid wait(for:) and waitForExpectations(timeout:) in async iOS tests; prefer await fulfillment(of:).",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swift-testing-guidelines",
+          "sourcePath": "vendor/skills/swift-testing-expert/SKILL.md",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {
@@ -8607,7 +8735,7 @@
         },
         {
           "id": "skills.ios.prefer-swift-testing",
-          "description": "Prefer Swift Testing over XCTest-only unit and integration tests.",
+          "description": "Prefer Swift Testing over XCTest-only unit and integration tests, including suites that can migrate to import Testing and @Test.",
           "severity": "WARN",
           "platform": "ios",
           "confidence": "MEDIUM",
@@ -8624,7 +8752,7 @@
       "name": "ios-swiftui-expert-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/swiftui-expert-skill/SKILL.md",
-      "hash": "8b1842e9f990594bc2d8e1235c7fe646766e57bdd272471ae36ddcecf9924207",
+      "hash": "33a19bd25ca8546d49f2070956784e4fe3f653a25365c8a9734af5cd46b8ec60",
       "rules": [
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear",
@@ -8639,32 +8767,8 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios-swiftui-expert.avoid-geometryreader-when-alternatives-exist-e-g-containerrelativefram",
-          "description": "Avoid GeometryReader when alternatives exist (e.g., containerRelativeFrame())",
-          "severity": "ERROR",
-          "platform": "ios",
-          "sourceSkill": "ios-swiftui-expert-guidelines",
-          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios-swiftui-expert.avoid-inline-filtering-in-foreach-prefilter-and-cache",
           "description": "Avoid inline filtering in ForEach (prefilter and cache)",
-          "severity": "ERROR",
-          "platform": "ios",
-          "sourceSkill": "ios-swiftui-expert-guidelines",
-          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios-swiftui-expert.avoid-layout-thrash-deep-hierarchies-excessive-geometryreader",
-          "description": "Avoid layout thrash (deep hierarchies, excessive GeometryReader)",
           "severity": "ERROR",
           "platform": "ios",
           "sourceSkill": "ios-swiftui-expert-guidelines",
@@ -8690,18 +8794,6 @@
           "id": "skills.ios.guideline.ios-swiftui-expert.keep-view-body-simple-and-pure-no-side-effects-or-complex-logic",
           "description": "Keep view body simple and pure (no side effects or complex logic)",
           "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-swiftui-expert-guidelines",
-          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios-swiftui-expert.never-declare-passed-values-as-state-or-stateobject-they-only-accept-i",
-          "description": "Never declare passed values as @State or @StateObject (they only accept initial values)",
-          "severity": "ERROR",
           "platform": "ios",
           "sourceSkill": "ios-swiftui-expert-guidelines",
           "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
@@ -8831,18 +8923,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios-swiftui-expert.use-localizedstandardcontains-for-user-input-filtering-not-contains",
-          "description": "Use localizedStandardContains() for user-input filtering (not contains())",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-swiftui-expert-guidelines",
-          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios-swiftui-expert.use-modern-apis-no-deprecated-modifiers-or-patterns-see-references-mod",
           "description": "Use modern APIs (no deprecated modifiers or patterns, see references/modern-apis.md)",
           "severity": "WARN",
@@ -8927,42 +9007,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios-swiftui-expert.use-sheet-item-instead-of-sheet-ispresented-for-model-based-content",
-          "description": "Use .sheet(item:) instead of .sheet(isPresented:) for model-based content",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-swiftui-expert-guidelines",
-          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios-swiftui-expert.use-stable-identity-for-foreach-never-indices-for-dynamic-content",
-          "description": "Use stable identity for ForEach (never .indices for dynamic content)",
-          "severity": "ERROR",
-          "platform": "ios",
-          "sourceSkill": "ios-swiftui-expert-guidelines",
-          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios-swiftui-expert.use-state-with-observable-classes-not-stateobject",
-          "description": "Use @State with @Observable classes (not @StateObject)",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-swiftui-expert-guidelines",
-          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios-swiftui-expert.use-task-id-for-value-dependent-tasks",
           "description": "Use .task(id:) for value-dependent tasks",
           "severity": "WARN",
@@ -8977,18 +9021,6 @@
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.use-task-modifier-for-automatic-cancellation-of-async-work",
           "description": "Use .task modifier for automatic cancellation of async work",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-swiftui-expert-guidelines",
-          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios-swiftui-expert.use-two-parameter-or-no-parameter-onchange-variant",
-          "description": "Use two-parameter or no-parameter onChange() variant",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-swiftui-expert-guidelines",
@@ -9035,8 +9067,47 @@
           "origin": "core"
         },
         {
+          "id": "skills.ios.no-contains-user-filter",
+          "description": "Avoid contains() in user-facing filter flows; prefer localizedStandardContains() for SwiftUI search text matching.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
           "id": "skills.ios.no-corner-radius",
           "description": "Avoid cornerRadius in modern SwiftUI code; prefer clipShape(.rect(cornerRadius:)).",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-font-weight-bold",
+          "description": "Avoid fontWeight(.bold) in SwiftUI text styling; prefer bold() for straightforward emphasis.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-foreach-indices",
+          "description": "Avoid ForEach over .indices in dynamic SwiftUI content; prefer stable element identity or explicit stable IDs.",
           "severity": "WARN",
           "platform": "ios",
           "confidence": "HIGH",
@@ -9053,6 +9124,45 @@
           "severity": "WARN",
           "platform": "ios",
           "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-geometryreader",
+          "description": "Avoid GeometryReader in modern SwiftUI layout code when containerRelativeFrame(), visualEffect(), or simpler layout APIs are enough.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-legacy-onchange",
+          "description": "Avoid legacy single-parameter onChange in modern SwiftUI code; prefer modern overloads.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-legacy-swiftui-observable-wrapper",
+          "description": "Avoid @StateObject and @ObservedObject in modern SwiftUI code paths that can adopt @Observable with @State/@Bindable.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
           "stage": "PRE_PUSH",
           "locked": true,
           "sourceSkill": "ios-swiftui-expert-guidelines",
@@ -9100,11 +9210,37 @@
           "origin": "core"
         },
         {
+          "id": "skills.ios.no-passed-value-state-wrapper",
+          "description": "Avoid storing values injected from a parent as @State or @StateObject; prefer let, @Binding, or owned @State created locally.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
           "id": "skills.ios.no-scrollview-shows-indicators",
           "description": "Avoid ScrollView(showsIndicators: false) in SwiftUI code; prefer scrollIndicators(.hidden).",
           "severity": "WARN",
           "platform": "ios",
           "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.no-sheet-is-presented",
+          "description": "Avoid .sheet(isPresented:) in SwiftUI presentation flows; prefer .sheet(item:) when possible.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
           "stage": "PRE_PUSH",
           "locked": true,
           "sourceSkill": "ios-swiftui-expert-guidelines",

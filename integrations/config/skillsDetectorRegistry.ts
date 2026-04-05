@@ -50,8 +50,24 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),
+  'skills.ios.no-preconcurrency': heuristicDetector('ios.preconcurrency', [
+    'heuristics.ios.preconcurrency.ast',
+  ]),
+  'skills.ios.no-nonisolated-unsafe': heuristicDetector('ios.nonisolated-unsafe', [
+    'heuristics.ios.nonisolated-unsafe.ast',
+  ]),
+  'skills.ios.no-assume-isolated': heuristicDetector('ios.assume-isolated', [
+    'heuristics.ios.assume-isolated.ast',
+  ]),
   'skills.ios.no-observable-object': heuristicDetector('ios.observable-object', [
     'heuristics.ios.observable-object.ast',
+  ]),
+  'skills.ios.no-legacy-swiftui-observable-wrapper': heuristicDetector(
+    'ios.legacy-swiftui-observable-wrapper',
+    ['heuristics.ios.legacy-swiftui-observable-wrapper.ast']
+  ),
+  'skills.ios.no-passed-value-state-wrapper': heuristicDetector('ios.passed-value-state-wrapper', [
+    'heuristics.ios.passed-value-state-wrapper.ast',
   ]),
   'skills.ios.no-navigation-view': heuristicDetector('ios.navigation-view', [
     'heuristics.ios.navigation-view.ast',
@@ -71,21 +87,50 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-string-format': heuristicDetector('ios.string-format', [
     'heuristics.ios.string-format.ast',
   ]),
+  'skills.ios.no-foreach-indices': heuristicDetector('ios.foreach-indices', [
+    'heuristics.ios.foreach-indices.ast',
+  ]),
+  'skills.ios.no-contains-user-filter': heuristicDetector('ios.contains-user-filter', [
+    'heuristics.ios.contains-user-filter.ast',
+  ]),
+  'skills.ios.no-geometryreader': heuristicDetector('ios.geometryreader', [
+    'heuristics.ios.geometryreader.ast',
+  ]),
+  'skills.ios.no-font-weight-bold': heuristicDetector('ios.font-weight-bold', [
+    'heuristics.ios.font-weight-bold.ast',
+  ]),
   'skills.ios.no-scrollview-shows-indicators': heuristicDetector(
     'ios.scrollview-shows-indicators',
     ['heuristics.ios.scrollview-shows-indicators.ast']
   ),
+  'skills.ios.no-sheet-is-presented': heuristicDetector('ios.sheet-is-presented', [
+    'heuristics.ios.sheet-is-presented.ast',
+  ]),
+  'skills.ios.no-legacy-onchange': heuristicDetector('ios.legacy-onchange', [
+    'heuristics.ios.legacy-onchange.ast',
+  ]),
   'skills.ios.no-uiscreen-main-bounds': heuristicDetector('ios.uiscreen-main-bounds', [
     'heuristics.ios.uiscreen-main-bounds.ast',
   ]),
   'skills.ios.prefer-swift-testing': heuristicDetector('ios.testing.xctest-import', [
     'heuristics.ios.testing.xctest-import.ast',
+    'heuristics.ios.testing.xctest-suite-modernizable.ast',
   ]),
   'skills.ios.no-xctassert': heuristicDetector('ios.testing.xctassert', [
     'heuristics.ios.testing.xctassert.ast',
   ]),
   'skills.ios.no-xctunwrap': heuristicDetector('ios.testing.xctunwrap', [
     'heuristics.ios.testing.xctunwrap.ast',
+  ]),
+  'skills.ios.no-wait-for-expectations': heuristicDetector('ios.testing.wait-for-expectations', [
+    'heuristics.ios.testing.wait-for-expectations.ast',
+  ]),
+  'skills.ios.no-legacy-expectation-description': heuristicDetector(
+    'ios.testing.legacy-expectation-description',
+    ['heuristics.ios.testing.legacy-expectation-description.ast']
+  ),
+  'skills.ios.no-mixed-testing-frameworks': heuristicDetector('ios.testing.mixed-frameworks', [
+    'heuristics.ios.testing.mixed-frameworks.ast',
   ]),
   'skills.ios.no-nsmanagedobject-boundary': heuristicDetector(
     'ios.core-data.nsmanagedobject-boundary',
@@ -94,6 +139,13 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-nsmanagedobject-async-boundary': heuristicDetector(
     'ios.core-data.nsmanagedobject-async-boundary',
     ['heuristics.ios.core-data.nsmanagedobject-async-boundary.ast']
+  ),
+  'skills.ios.no-core-data-layer-leak': heuristicDetector('ios.core-data.layer-leak', [
+    'heuristics.ios.core-data.layer-leak.ast',
+  ]),
+  'skills.ios.no-nsmanagedobject-state-leak': heuristicDetector(
+    'ios.core-data.nsmanagedobject-state-leak',
+    ['heuristics.ios.core-data.nsmanagedobject-state-leak.ast']
   ),
   'skills.backend.no-empty-catch': heuristicDetector('typescript.empty-catch', [
     'heuristics.ts.empty-catch.ast',

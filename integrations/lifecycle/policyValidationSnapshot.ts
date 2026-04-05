@@ -6,9 +6,6 @@ import {
 
 export type LifecyclePolicyValidationStageSnapshot = {
   source: ResolvedStagePolicy['trace']['source'];
-  layer: ResolvedStagePolicy['trace']['layer'];
-  activation: ResolvedStagePolicy['trace']['activation'];
-  activationSource: ResolvedStagePolicy['trace']['activationSource'];
   bundle: string;
   hash: string;
   version: string | null;
@@ -23,16 +20,13 @@ export type LifecyclePolicyValidationSnapshot = {
   stages: Record<SkillsStage, LifecyclePolicyValidationStageSnapshot>;
 };
 
-const POLICY_STAGES: ReadonlyArray<SkillsStage> = ['PRE_COMMIT', 'PRE_PUSH', 'CI'];
+const POLICY_STAGES: ReadonlyArray<SkillsStage> = ['PRE_WRITE', 'PRE_COMMIT', 'PRE_PUSH', 'CI'];
 
 const toStageSnapshot = (
   resolved: ResolvedStagePolicy
 ): LifecyclePolicyValidationStageSnapshot => {
   return {
     source: resolved.trace.source,
-    layer: resolved.trace.layer,
-    activation: resolved.trace.activation,
-    activationSource: resolved.trace.activationSource,
     bundle: resolved.trace.bundle,
     hash: resolved.trace.hash,
     version: resolved.trace.version ?? null,

@@ -1530,30 +1530,6 @@ const printDoctorReport = (
     `PRE_PUSH=${report.policyValidation.stages.PRE_PUSH.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.PRE_PUSH.strict ? 'yes' : 'no'} ` +
     `CI=${report.policyValidation.stages.CI.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.CI.strict ? 'yes' : 'no'}`
   );
-  writeInfo(
-    `[pumuki] experimental: ANALYTICS=${report.experimentalFeatures.features.analytics.mode} source=${report.experimentalFeatures.features.analytics.source} layer=${report.experimentalFeatures.features.analytics.layer} blocking=${report.experimentalFeatures.features.analytics.blocking ? 'yes' : 'no'} env=${report.experimentalFeatures.features.analytics.activationVariable}`
-  );
-  writeInfo(
-    `[pumuki] experimental: HEURISTICS=${report.experimentalFeatures.features.heuristics.mode} source=${report.experimentalFeatures.features.heuristics.source} layer=${report.experimentalFeatures.features.heuristics.layer} blocking=${report.experimentalFeatures.features.heuristics.blocking ? 'yes' : 'no'} env=${report.experimentalFeatures.features.heuristics.activationVariable}`
-  );
-  writeInfo(
-    `[pumuki] experimental: LEARNING_CONTEXT=${report.experimentalFeatures.features.learning_context.mode} source=${report.experimentalFeatures.features.learning_context.source} layer=${report.experimentalFeatures.features.learning_context.layer} blocking=${report.experimentalFeatures.features.learning_context.blocking ? 'yes' : 'no'} env=${report.experimentalFeatures.features.learning_context.activationVariable}`
-  );
-  writeInfo(
-    `[pumuki] experimental: MCP_ENTERPRISE=${report.experimentalFeatures.features.mcp_enterprise.mode} source=${report.experimentalFeatures.features.mcp_enterprise.source} layer=${report.experimentalFeatures.features.mcp_enterprise.layer} blocking=${report.experimentalFeatures.features.mcp_enterprise.blocking ? 'yes' : 'no'} env=${report.experimentalFeatures.features.mcp_enterprise.activationVariable}`
-  );
-  writeInfo(
-    `[pumuki] experimental: OPERATIONAL_MEMORY=${report.experimentalFeatures.features.operational_memory.mode} source=${report.experimentalFeatures.features.operational_memory.source} layer=${report.experimentalFeatures.features.operational_memory.layer} blocking=${report.experimentalFeatures.features.operational_memory.blocking ? 'yes' : 'no'} env=${report.experimentalFeatures.features.operational_memory.activationVariable}`
-  );
-  writeInfo(
-    `[pumuki] experimental: PRE_WRITE=${report.experimentalFeatures.features.pre_write.mode} source=${report.experimentalFeatures.features.pre_write.source} layer=${report.experimentalFeatures.features.pre_write.layer} blocking=${report.experimentalFeatures.features.pre_write.blocking ? 'yes' : 'no'} env=${report.experimentalFeatures.features.pre_write.activationVariable}`
-  );
-  writeInfo(
-    `[pumuki] experimental: SAAS_INGESTION=${report.experimentalFeatures.features.saas_ingestion.mode} source=${report.experimentalFeatures.features.saas_ingestion.source} layer=${report.experimentalFeatures.features.saas_ingestion.layer} blocking=${report.experimentalFeatures.features.saas_ingestion.blocking ? 'yes' : 'no'} env=${report.experimentalFeatures.features.saas_ingestion.activationVariable}`
-  );
-  writeInfo(
-    `[pumuki] experimental: SDD=${report.experimentalFeatures.features.sdd.mode} source=${report.experimentalFeatures.features.sdd.source} layer=${report.experimentalFeatures.features.sdd.layer} blocking=${report.experimentalFeatures.features.sdd.blocking ? 'yes' : 'no'} env=${report.experimentalFeatures.features.sdd.activationVariable}`
-  );
 
   for (const issue of report.issues) {
     writeInfo(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
@@ -1562,7 +1538,7 @@ const printDoctorReport = (
   if (report.deep?.enabled) {
     for (const check of report.deep.checks) {
       writeInfo(
-        `[pumuki][doctor][deep] ${check.id}: layer=${check.layer.toUpperCase()} status=${check.status.toUpperCase()} severity=${check.severity.toUpperCase()} ${check.message}`
+        `[pumuki][doctor][deep] ${check.id}: status=${check.status.toUpperCase()} severity=${check.severity.toUpperCase()} ${check.message}`
       );
       if (check.status !== 'pass' && check.remediation) {
         writeInfo(`[pumuki][doctor][deep] remediation: ${check.remediation}`);

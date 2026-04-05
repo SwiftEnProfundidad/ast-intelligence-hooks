@@ -22,7 +22,7 @@ export type SkillsPolicyV1 = {
 const SKILLS_POLICY_FILE = 'skills.policy.json';
 
 const severityValues = new Set<Severity>(['INFO', 'WARN', 'ERROR', 'CRITICAL']);
-const stageValues = new Set<SkillsStage>(['PRE_COMMIT', 'PRE_PUSH', 'CI']);
+const stageValues = new Set<SkillsStage>(['PRE_WRITE', 'PRE_COMMIT', 'PRE_PUSH', 'CI']);
 
 const isObject = (value: unknown): value is Record<string, string | number | boolean | bigint | symbol | null | Date | object> => {
   return typeof value === 'object' && value !== null;
@@ -141,6 +141,7 @@ const normalizedPolicyForHash = (policy: SkillsPolicyV1): Record<string, string 
     version: policy.version,
     defaultBundleEnabled: policy.defaultBundleEnabled,
     stages: {
+      PRE_WRITE: policy.stages.PRE_WRITE,
       PRE_COMMIT: policy.stages.PRE_COMMIT,
       PRE_PUSH: policy.stages.PRE_PUSH,
       CI: policy.stages.CI,

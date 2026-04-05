@@ -66,6 +66,8 @@ test('normaliza reglas SwiftUI modernas a ids canonicos de snapshot phase 2', ()
       '✅ Always use clipShape(.rect(cornerRadius:)) instead of cornerRadius().',
       '✅ For iOS 18 and later, prefer the Tab API over tabItem().',
       '✅ Use .scrollIndicators(.hidden) modifier instead of showsIndicators: false.',
+      '✅ Use .sheet(item:) instead of .sheet(isPresented:) for model-based content.',
+      '✅ Use onChange(of:) { old, new in } or onChange(of:) { } instead of legacy single-parameter closures.',
     ].join('\n'),
   });
 
@@ -73,8 +75,118 @@ test('normaliza reglas SwiftUI modernas a ids canonicos de snapshot phase 2', ()
   assert.deepEqual(ids, [
     'skills.ios.no-corner-radius',
     'skills.ios.no-foreground-color',
+    'skills.ios.no-legacy-onchange',
     'skills.ios.no-scrollview-shows-indicators',
+    'skills.ios.no-sheet-is-presented',
     'skills.ios.no-tab-item',
+  ]);
+});
+
+test('normaliza reglas SwiftUI state ownership a ids canonicos del slice phase6', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: [
+      '- **Never declare passed values as `@State` or `@StateObject`** (they only accept initial values)',
+      '- Use `@State` with `@Observable` classes (not `@StateObject`)',
+    ].join('\n'),
+  });
+
+  const ids = rules.map((rule) => rule.id).sort();
+  assert.deepEqual(ids, [
+    'skills.ios.no-legacy-swiftui-observable-wrapper',
+    'skills.ios.no-passed-value-state-wrapper',
+  ]);
+});
+
+test('normaliza reglas SwiftUI list/search/layout a ids canonicos del slice phase7', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: [
+      '- Use stable identity for `ForEach` (never `.indices` for dynamic content)',
+      '- Use `localizedStandardContains()` for user-input filtering (not `contains()`)',
+      '- Avoid layout thrash (deep hierarchies, excessive `GeometryReader`)',
+      '- Use `bold()` instead of `fontWeight(.bold)` for straightforward text emphasis.',
+    ].join('\n'),
+  });
+
+  const ids = rules.map((rule) => rule.id).sort();
+  assert.deepEqual(ids, [
+    'skills.ios.no-contains-user-filter',
+    'skills.ios.no-font-weight-bold',
+    'skills.ios.no-foreach-indices',
+    'skills.ios.no-geometryreader',
+  ]);
+});
+
+test('normaliza reglas Core Data a ids canonicos del slice phase8', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-core-data-guidelines',
+    sourcePath: 'docs/codex-skills/core-data-expert.md',
+    sourceContent: [
+      '- ✅ Keep Core Data orchestration inside infrastructure or repository layers instead of presentation code.',
+      '- ❌ Leaking context-scoped managed objects into SwiftUI state or view models.',
+    ].join('\n'),
+  });
+
+  const ids = rules.map((rule) => rule.id).sort();
+  assert.deepEqual(ids, [
+    'skills.ios.no-core-data-layer-leak',
+    'skills.ios.no-nsmanagedobject-state-leak',
+  ]);
+});
+
+test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-concurrency-guidelines',
+    sourcePath: 'docs/codex-skills/swift-concurrency.md',
+    sourceContent: [
+      '- ✅ Avoid `@preconcurrency` in production code without a documented safety invariant and a removal ticket.',
+      '- ✅ Avoid `nonisolated(unsafe)` in production code without a documented safety invariant and a removal ticket.',
+      '- ✅ Prefer explicit actor isolation or `await MainActor.run` instead of `MainActor.assumeIsolated`.',
+    ].join('\n'),
+  });
+
+  const ids = rules.map((rule) => rule.id).sort();
+  assert.deepEqual(ids, [
+    'skills.ios.no-assume-isolated',
+    'skills.ios.no-nonisolated-unsafe',
+    'skills.ios.no-preconcurrency',
+  ]);
+});
+
+test('normaliza reglas Swift Testing async a ids canonicos del slice phase4', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swift-testing-guidelines',
+    sourcePath: 'docs/codex-skills/swift-testing-expert.md',
+    sourceContent: [
+      '✅ Prefer await fulfillment(of:) over wait(for:) and waitForExpectations(timeout:) in async XCTest migration paths.',
+      '✅ Prefer confirmation over expectation(description:) scaffolding when modern Swift Testing flow is available.',
+    ].join('\n'),
+  });
+
+  const ids = rules.map((rule) => rule.id).sort();
+  assert.deepEqual(ids, [
+    'skills.ios.no-legacy-expectation-description',
+    'skills.ios.no-wait-for-expectations',
+  ]);
+});
+
+test('normaliza reglas Swift Testing de suites a ids canonicos del slice phase5', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swift-testing-guidelines',
+    sourcePath: 'docs/codex-skills/swift-testing-expert.md',
+    sourceContent: [
+      '- ✅ Prefer `@Test` functions over `test...` methods when the target already supports Swift Testing.',
+      '- ❌ Mixing legacy XCTest style into new Swift Testing suites without an explicit compatibility reason.',
+    ].join('\n'),
+  });
+
+  const ids = rules.map((rule) => rule.id).sort();
+  assert.deepEqual(ids, [
+    'skills.ios.no-mixed-testing-frameworks',
+    'skills.ios.prefer-swift-testing',
   ]);
 });
 

@@ -184,8 +184,6 @@ export type GateTelemetryEventV1 = {
   };
   policy?: {
     source: PolicyTrace['source'];
-    layer: PolicyTrace['layer'];
-    activation: PolicyTrace['activation'];
     bundle: string;
     hash: string;
     version?: string;
@@ -268,8 +266,6 @@ const toTelemetryEvent = (params: {
       ? {
         policy: {
           source: params.policyTrace.source,
-          layer: params.policyTrace.layer,
-          activation: params.policyTrace.activation,
           bundle: params.policyTrace.bundle,
           hash: params.policyTrace.hash,
           ...(params.policyTrace.version ? { version: params.policyTrace.version } : {}),

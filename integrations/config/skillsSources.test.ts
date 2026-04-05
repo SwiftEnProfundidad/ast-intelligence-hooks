@@ -16,15 +16,15 @@ const sampleSources = (): SkillsSourcesV1 => ({
     {
       name: 'ios-guidelines',
       version: '1.0.0',
-      sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+      sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
       template: 'ios-guidelines',
-      source: '/Users/example/.codex/skills/public/windsurf-rules-ios/SKILL.md',
+      source: '/Users/example/.codex/skills/public/ios-enterprise-rules/SKILL.md',
       enabled: true,
     },
     {
       name: 'backend-guidelines',
       version: '1.2.3-beta.1',
-      sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+      sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
       template: 'backend-guidelines',
     },
   ],
@@ -103,7 +103,7 @@ test('loadSkillsSources devuelve undefined si el schema del manifiesto es invál
             {
               name: 'ios-guidelines',
               version: '1.0',
-              sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+              sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
               template: 'ios-guidelines',
             },
           ],

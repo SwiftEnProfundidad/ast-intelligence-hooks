@@ -55,6 +55,8 @@ test('skillsCompilerTemplates mantiene bundles iOS enterprise esperados', () => 
   const requiredIosBundles = [
     'ios-guidelines',
     'ios-concurrency-guidelines',
+    'ios-core-data-guidelines',
+    'ios-swift-testing-guidelines',
     'ios-swiftui-expert-guidelines',
   ];
 
