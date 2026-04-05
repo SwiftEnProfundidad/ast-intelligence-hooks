@@ -10,6 +10,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.64] - 2026-04-05
+
+### Fixed
+
+- **System notifications fuera de macOS**: el gate ya no bloquea por plataforma; en Linux/Windows/WSL (y similares) el payload se escribe en **stderr** por defecto (`reason: stderr-fallback`). Silenciar con `PUMUKI_DISABLE_STDERR_NOTIFICATIONS=1` (vuelve `unsupported-platform` sin escribir).
+- **macOS**: si el banner falla (`command-failed`), se aplica el mismo fallback a stderr salvo que el fallback esté desactivado. `PUMUKI_NOTIFICATION_STDERR_MIRROR=1` duplica el texto en stderr además del banner nativo.
+
 ## [6.3.63] - 2026-04-05
 
 ### Added

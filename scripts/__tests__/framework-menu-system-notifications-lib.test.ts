@@ -1,13 +1,41 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { mock, test } from 'node:test';
 import { emitSystemNotification } from '../framework-menu-system-notifications-lib';
 import { buildSystemNotificationsConfigFromSelection } from '../framework-menu-system-notifications-config';
 import type { PumukiCriticalNotificationEvent } from '../framework-menu-system-notifications-types';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 
-test('emitSystemNotification mantiene la fachada pública y devuelve unsupported-platform en linux', () => {
+test('emitSystemNotification usa stderr fallback en linux por defecto', (t) => {
+  const chunks: string[] = [];
+  const stderrWrite = mock.method(process.stderr, 'write', (chunk: string | Uint8Array) => {
+    chunks.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8'));
+    return true;
+  });
+  t.after(() => {
+    stderrWrite.mock.restore();
+  });
+
   const result = emitSystemNotification({
     platform: 'linux',
+    event: {
+      kind: 'gate.blocked',
+      stage: 'PRE_PUSH',
+      totalViolations: 2,
+    },
+    runCommand: () => 0,
+  });
+
+  assert.deepEqual(result, { delivered: true, reason: 'stderr-fallback' });
+  assert.ok(chunks.join('').includes('[pumuki]'));
+});
+
+test('emitSystemNotification devuelve unsupported-platform en linux si stderr fallback está desactivado', () => {
+  const result = emitSystemNotification({
+    platform: 'linux',
+    env: {
+      ...process.env,
+      PUMUKI_DISABLE_STDERR_NOTIFICATIONS: '1',
+    },
     event: {
       kind: 'gate.blocked',
       stage: 'PRE_PUSH',

@@ -48,7 +48,6 @@ export const emitSystemNotification = (params: {
   const gateResult = resolveSystemNotificationGate({
     config,
     nowMs,
-    platform,
     env: params.env ?? process.env,
   });
   if (gateResult) {
@@ -62,6 +61,7 @@ export const emitSystemNotification = (params: {
   return dispatchSystemNotification({
     event: params.event,
     payload,
+    platform,
     repoRoot: params.repoRoot,
     config,
     env: params.env ?? process.env,
