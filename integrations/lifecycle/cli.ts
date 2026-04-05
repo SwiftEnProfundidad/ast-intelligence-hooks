@@ -2143,6 +2143,11 @@ export const runLifecycleCli = async (
       }
       case 'install': {
         const result = runLifecycleInstall();
+        if (result.degradedDoctorBypass) {
+          writeInfo(
+            '[pumuki] install: hooks wired under best-effort mode (doctor reported blocking issues; fix baseline and run `pumuki doctor`).'
+          );
+        }
         writeInfo(
           `[pumuki] installed ${result.version} at ${result.repoRoot} (hooks changed: ${result.changedHooks.join(', ') || 'none'})`
         );

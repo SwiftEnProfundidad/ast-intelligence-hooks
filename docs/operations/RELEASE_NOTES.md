@@ -6,6 +6,11 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-05 (v6.3.63)
+
+- **Auto-wire on install**: el paquete npm ejecuta `postinstall` → `pumuki install` en el repo del consumidor (`INIT_CWD`) cuando hay `.git`. Saltar con `PUMUKI_SKIP_POSTINSTALL=1` o en CI. OpenSpec bootstrap sigue omitido en ese camino (`PUMUKI_SKIP_OPENSPEC_BOOTSTRAP` por defecto ahí). MCP en Cursor/Codex no se configura solo: usar `pumuki install --with-mcp` / adaptador cuando proceda.
+- **Best-effort**: si `doctor` bloquea, el postinstall puede cablear hooks en modo degradado para no dejar el paquete “muerto” en el hook chain.
+
 ### 2026-04-05 (v6.3.62)
 
 - Merged `refactor/cli-complexity-reduction-phase4-rebase2` into `develop` (PR #731); GitHub Actions quota may block CI—validate locally with `npm test` before consuming.

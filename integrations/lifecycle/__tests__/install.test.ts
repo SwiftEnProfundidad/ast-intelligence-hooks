@@ -181,6 +181,34 @@ test('runLifecycleInstall bloquea cuando hay node_modules trackeado y no persist
   }
 });
 
+test('runLifecycleInstall con bestEffortAfterDoctorBlock cablea hooks aunque doctor bloquee', () => {
+  const repo = createGitRepo();
+  try {
+    const trackedFile = join(repo, 'node_modules', 'tracked.txt');
+    mkdirSync(join(repo, 'node_modules'), { recursive: true });
+    writeFileSync(trackedFile, 'tracked\n', 'utf8');
+    runGit(repo, ['add', '-f', 'node_modules/tracked.txt']);
+    runGit(repo, ['commit', '-m', 'test: tracked node_modules']);
+
+    const result = runLifecycleInstall({
+      cwd: repo,
+      bestEffortAfterDoctorBlock: true,
+      bootstrapOpenSpec: false,
+    });
+
+    assert.equal(result.degradedDoctorBypass, true);
+    assert.deepEqual(result.changedHooks, ['pre-commit', 'pre-push']);
+    assert.match(
+      readFileSync(join(repo, '.git/hooks/pre-commit'), 'utf8'),
+      /pumuki-pre-commit/
+    );
+    assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.installed), 'true');
+    assert.equal(existsSync(join(repo, '.ai_evidence.json')), true);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('runLifecycleInstall es idempotente en segunda ejecución sobre repo ya instalado', () => {
   const repo = createGitRepo();
   try {

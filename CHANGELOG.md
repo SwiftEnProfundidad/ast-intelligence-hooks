@@ -10,6 +10,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.63] - 2026-04-05
+
+### Added
+
+- **`npm` postinstall (consumer)**: tras `npm install` en un repo Git, Pumuki ejecuta `pumuki install` de forma automática (`INIT_CWD`), sin OpenSpec bootstrap por defecto en ese camino. Desactivar con `PUMUKI_SKIP_POSTINSTALL=1` o en CI (`CI=true`). No sustituye la configuración manual de MCP en el IDE.
+- **Best-effort install**: si `doctor` bloquea el baseline pero `PUMUKI_AUTO_POSTINSTALL=1` (postinstall), se cablean igualmente hooks + estado + evidencia bootstrap con aviso de modo degradado.
+
 ## [6.3.62] - 2026-04-05
 
 ### Fixed

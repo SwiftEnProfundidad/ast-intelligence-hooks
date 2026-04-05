@@ -18,6 +18,7 @@ export type LifecycleInstallResult = {
   version: string;
   changedHooks: ReadonlyArray<string>;
   openSpecBootstrap?: OpenSpecBootstrapResult;
+  degradedDoctorBypass?: boolean;
 };
 
 const shouldBootstrapEvidence = (repoRoot: string): boolean =>
@@ -38,19 +39,59 @@ const writeBootstrapEvidence = (repoRoot: string): void => {
   });
 };
 
+const wireHooksLifecycleAndBootstrapEvidence = (params: {
+  git: ILifecycleGitService;
+  repoRoot: string;
+  version: string;
+  openSpecManagedArtifacts?: ReadonlyArray<string>;
+}): ReadonlyArray<string> => {
+  const hookResult = installPumukiHooks(params.repoRoot);
+  writeLifecycleState({
+    git: params.git,
+    repoRoot: params.repoRoot,
+    version: params.version,
+    openSpecManagedArtifacts: params.openSpecManagedArtifacts,
+  });
+  ensureRuntimeArtifactsIgnored(params.repoRoot);
+  if (shouldBootstrapEvidence(params.repoRoot)) {
+    writeBootstrapEvidence(params.repoRoot);
+  }
+  return hookResult.changedHooks;
+};
+
 export const runLifecycleInstall = (params?: {
   cwd?: string;
   git?: ILifecycleGitService;
   npm?: ILifecycleNpmService;
   bootstrapOpenSpec?: boolean;
+  bestEffortAfterDoctorBlock?: boolean;
 }): LifecycleInstallResult => {
   const git = params?.git ?? new LifecycleGitService();
+  const bestEffortAfterDoctorBlock =
+    params?.bestEffortAfterDoctorBlock ?? process.env.PUMUKI_AUTO_POSTINSTALL === '1';
   const report = runLifecycleDoctor({
     cwd: params?.cwd,
     git,
   });
 
   if (doctorHasBlockingIssues(report)) {
+    if (bestEffortAfterDoctorBlock) {
+      const version = getCurrentPumukiVersion();
+      const priorArtifacts = readOpenSpecManagedArtifacts(git, report.repoRoot);
+      const changedHooks = wireHooksLifecycleAndBootstrapEvidence({
+        git,
+        repoRoot: report.repoRoot,
+        version,
+        openSpecManagedArtifacts: priorArtifacts.length > 0 ? priorArtifacts : undefined,
+      });
+      return {
+        repoRoot: report.repoRoot,
+        version,
+        changedHooks,
+        openSpecBootstrap: undefined,
+        degradedDoctorBypass: true,
+      };
+    }
     const renderedIssues = report.issues.map((issue) => `- [${issue.severity}] ${issue.message}`).join('\n');
     throw new Error(
       `pumuki install blocked by repository safety checks.\n${renderedIssues}\n` +
@@ -68,7 +109,6 @@ export const runLifecycleInstall = (params?: {
     })
     : undefined;
 
-  const hookResult = installPumukiHooks(report.repoRoot);
   const version = getCurrentPumukiVersion();
   const mergedOpenSpecArtifacts = new Set(
     readOpenSpecManagedArtifacts(git, report.repoRoot)
@@ -76,22 +116,17 @@ export const runLifecycleInstall = (params?: {
   for (const artifact of openSpecBootstrap?.managedArtifacts ?? []) {
     mergedOpenSpecArtifacts.add(artifact);
   }
-  writeLifecycleState({
+  const changedHooks = wireHooksLifecycleAndBootstrapEvidence({
     git,
     repoRoot: report.repoRoot,
     version,
     openSpecManagedArtifacts: Array.from(mergedOpenSpecArtifacts),
   });
-  ensureRuntimeArtifactsIgnored(report.repoRoot);
-
-  if (shouldBootstrapEvidence(report.repoRoot)) {
-    writeBootstrapEvidence(report.repoRoot);
-  }
 
   return {
     repoRoot: report.repoRoot,
     version,
-    changedHooks: hookResult.changedHooks,
+    changedHooks,
     openSpecBootstrap,
   };
 };

@@ -16,9 +16,9 @@
 
 ## Estado actual
 
-- Frente activo: `post-release-6.3.62-rollout`
+- Frente activo: `post-release-6.3.63-consumer-autowire`
 - Origen: `ast-intelligence-hooks`
-- Contexto: paridad iOS AST **cerrada** en contrato; merge **#731** en `develop`; release **6.3.62** publicada en npm; CI GitHub **no** usada por cuota.
+- Contexto: **6.3.63** añade `postinstall` npm → `pumuki install` automático en repos Git consumidores; MCP IDE sigue explícito.
 - Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; pendiente repin de consumidores y QA macOS en repo real.
 
 ## Cola externa real
@@ -32,9 +32,9 @@
 - ✅ Ajustes de tests (PRE_WRITE en `skills.policy`, doctor/cli JSON, Jest `evaluateRules`) y `npm test` verde en rama `refactor/cli-complexity-reduction-phase4-rebase2`.
 - ✅ Notificaciones macOS: dialog modal de anti-spam **desactivado por defecto**; activar con `PUMUKI_MACOS_BLOCKED_DIALOG=1` o `"blockedDialogEnabled": true` en `.pumuki/system-notifications.json`.
 - ✅ Merge a `develop`: PR https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/731 (CI GitHub no disponible por cuota; validación local previa).
-- ✅ Release **6.3.62** publicada en npm; tag `v6.3.62`; consumidores: repin y revalidar `status` / `doctor` / hooks.
+- ⏳ Publicar **6.3.63** en npm y repinear consumidores; validar que `npm install` deja hooks activos sin script manual.
 
 ## Siguiente frente sugerido
 
-- ⏳ Repinear repos consumidores a `6.3.62` y validar `status` / `doctor` / hooks.
+- ⏳ `npm publish` **6.3.63** y repin consumidores; validar `status` / `doctor` / commit de prueba.
 - ⏳ macOS (repo real): panel Swift con foco y botones persistiendo `muteUntil` / `enabled:false` en `.pumuki/system-notifications.json` del repo correcto.
