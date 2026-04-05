@@ -41,7 +41,7 @@ test('verifyInstalledPumukiBinaryVersion valida npx --no-install pumuki status -
   const workspace = createWorkspace();
   try {
     await withFakeNpx(
-      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.61","version":{"effective":"6.3.61"}}\\n\'\nexit 0\n',
+      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.62","version":{"effective":"6.3.62"}}\\n\'\nexit 0\n',
       () => {
         verifyInstalledPumukiBinaryVersion(workspace);
       }
@@ -82,7 +82,7 @@ test('verifyInstalledPumukiBinaryVersion usa fallback local cuando npx --no-inst
     const localPumukiBin = join(localBinDir, 'pumuki');
     writeFileSync(
       localPumukiBin,
-      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.61","version":{"effective":"6.3.61"}}\\n\'\nexit 0\n',
+      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.62","version":{"effective":"6.3.62"}}\\n\'\nexit 0\n',
       'utf8'
     );
     chmodSync(localPumukiBin, 0o755);

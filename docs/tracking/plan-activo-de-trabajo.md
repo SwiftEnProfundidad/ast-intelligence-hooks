@@ -16,10 +16,10 @@
 
 ## Estado actual
 
-- Frente activo: `post-parity-ios-suite-y-ux-macos` (paridad iOS AST **cerrada** en línea publicada; rama local con suite + macOS al día).
+- Frente activo: `post-release-6.3.62-rollout`
 - Origen: `ast-intelligence-hooks`
-- Objetivo reciente en rama `refactor/cli-complexity-reduction-phase4-rebase2`: suite `npm test` verde; commits **atómicos**; notificaciones macOS sin spam en tests; dialog de bloqueo opt-in.
-- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; rama **pushed** y **PR abierta** hacia `develop` (ver enlace abajo).
+- Contexto: paridad iOS AST **cerrada** en contrato; merge **#731** en `develop`; release **6.3.62** publicada en npm; CI GitHub **no** usada por cuota.
+- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; pendiente repin de consumidores y QA macOS en repo real.
 
 ## Cola externa real
 
@@ -31,9 +31,10 @@
 
 - ✅ Ajustes de tests (PRE_WRITE en `skills.policy`, doctor/cli JSON, Jest `evaluateRules`) y `npm test` verde en rama `refactor/cli-complexity-reduction-phase4-rebase2`.
 - ✅ Notificaciones macOS: dialog modal de anti-spam **desactivado por defecto**; activar con `PUMUKI_MACOS_BLOCKED_DIALOG=1` o `"blockedDialogEnabled": true` en `.pumuki/system-notifications.json`.
-- ✅ Historial local en cadena atómica: `fix(macos)` + `docs(tracking)` + tests gate/git/lifecycle/scripts + guardrails + smoke 6.3.61 + `brownfieldHotspots`.
-- ✅ Push a `origin/refactor/cli-complexity-reduction-phase4-rebase2` y PR a `develop`: https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/731
+- ✅ Merge a `develop`: PR https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/731 (CI GitHub no disponible por cuota; validación local previa).
+- ✅ Release **6.3.62** publicada en npm; tag `v6.3.62`; consumidores: repin y revalidar `status` / `doctor` / hooks.
 
 ## Siguiente frente sugerido
 
-- ⏳ Tras publicar/consumir version con los cambios: validar en macOS que el panel Swift recibe foco y los botones escriben `muteUntil` / `enabled:false` en el repo correcto (no en carpetas temporales de tests).
+- ⏳ Repinear repos consumidores a `6.3.62` y validar `status` / `doctor` / hooks.
+- ⏳ macOS (repo real): panel Swift con foco y botones persistiendo `muteUntil` / `enabled:false` en `.pumuki/system-notifications.json` del repo correcto.

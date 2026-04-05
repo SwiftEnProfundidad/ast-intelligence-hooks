@@ -10,6 +10,18 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.62] - 2026-04-05
+
+### Fixed
+
+- macOS system notifications: anti-spam **blocked** dialog is now **opt-in** (`PUMUKI_MACOS_BLOCKED_DIALOG=1` or `"blockedDialogEnabled": true` in `.pumuki/system-notifications.json`); default path stays banner-only. Swift panel wiring hardened (focus, window lifecycle).
+
+### Changed
+
+- CLI / lifecycle test fixtures aligned with `PRE_WRITE` in policy payloads (`source` fields, doctor/status JSON shape).
+- Gate / git hook / framework-menu tests refreshed (stage policies, hook summaries, consumer menu layout group titles).
+- File-size guardrail overrides updated for current `cli` / gate sources; install smoke fixture version aligned with package semver.
+
 ## [6.3.61] - 2026-03-31
 
 ### Fixed

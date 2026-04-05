@@ -4,6 +4,15 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+## 2026-04 (CLI stability and macOS notifications)
+
+### 2026-04-05 (v6.3.62)
+
+- Merged `refactor/cli-complexity-reduction-phase4-rebase2` into `develop` (PR #731); GitHub Actions quota may block CI—validate locally with `npm test` before consuming.
+- macOS: blocked-notification **modal opt-in**; banner remains default; Swift notification panel behavior tightened.
+- Suite alignment for `PRE_WRITE` / policy JSON across lifecycle, gate, and git integration tests; `brownfieldHotspots` test coverage added.
+- Rollout: repin consumers to `pumuki@6.3.62`, then re-run `pumuki status` / `pumuki doctor` / hooks as applicable; manual macOS check recommended for notification actions writing `.pumuki/system-notifications.json` in the **real** repo root.
+
 ## 2026-03 (enterprise hardening updates)
 
 ### 2026-03-14 (v6.3.61)
