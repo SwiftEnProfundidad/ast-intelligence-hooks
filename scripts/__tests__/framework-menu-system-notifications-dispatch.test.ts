@@ -19,6 +19,7 @@ test('dispatchSystemNotification entrega al canal macOS manteniendo el contrato 
     const result = dispatchSystemNotification({
       event,
       payload,
+      platform: 'darwin',
       repoRoot,
       config: { enabled: true, channel: 'macos', blockedDialogEnabled: true },
       env: {} as NodeJS.ProcessEnv,

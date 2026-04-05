@@ -6,6 +6,11 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-05 (v6.3.64)
+
+- **Notificaciones multiplataforma**: fuera de macOS, avisos críticos van a **stderr** por defecto (terminal visible). `PUMUKI_DISABLE_STDERR_NOTIFICATIONS=1` lo silencia para CI/scripts. En macOS, `PUMUKI_NOTIFICATION_STDERR_MIRROR=1` añade copia en terminal; si `osascript`/banner falla, stderr actúa como respaldo.
+- Rollout: repin a `pumuki@6.3.64`; validar hooks y, si usáis notificaciones, comprobar salida en entorno no-macOS.
+
 ### 2026-04-05 (v6.3.63)
 
 - **Auto-wire on install**: el paquete npm ejecuta `postinstall` → `pumuki install` en el repo del consumidor (`INIT_CWD`) cuando hay `.git`. Saltar con `PUMUKI_SKIP_POSTINSTALL=1` o en CI. OpenSpec bootstrap sigue omitido en ese camino (`PUMUKI_SKIP_OPENSPEC_BOOTSTRAP` por defecto ahí). MCP en Cursor/Codex no se configura solo: usar `pumuki install --with-mcp` / adaptador cuando proceda.

@@ -242,6 +242,7 @@ Stage mapping:
 If a scope is empty, the menu prints an explicit operational hint (`Scope vacío`), so `PASS` with zero findings is distinguishable from a clean repository scan.
 
 System notifications (macOS) can be enabled from advanced menu option `31` (persisted in `.pumuki/system-notifications.json`).
+On non-macOS platforms, the same payloads are written to **stderr** by default (visible in the terminal) because there is no native banner API. Set `PUMUKI_DISABLE_STDERR_NOTIFICATIONS=1` to silence that path (delivery reports `unsupported-platform` on those OSes). On macOS, set `PUMUKI_NOTIFICATION_STDERR_MIRROR=1` to duplicate the banner text to stderr in addition to the system notification.
 Blocked notifications now use a native Swift floating modal (bottom-right) by default, with AppleScript fallback.
 Override mode with `PUMUKI_MACOS_BLOCKED_DIALOG_MODE=auto|swift-floating|applescript`.
 Custom skills import is available in advanced menu option `33` (writes `/.pumuki/custom-rules.json`).
