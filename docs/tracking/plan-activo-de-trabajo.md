@@ -16,9 +16,9 @@
 
 ## Estado actual
 
-- Frente activo: `post-release-6.3.64-closure` (repin consumidor cerrado en ramas activas; sin promoción masiva R_GO `develop`→`main`)
+- Frente activo: **`idle`** (ciclo **6.3.64** publicación + repin + doctor consumidores **cerrado**; `npm view pumuki version` → **6.3.64** @latest 2026-04-05).
 - Origen: `ast-intelligence-hooks`
-- Contexto: **6.3.64** publicada en npm; `postinstall` cablea `pumuki install` en consumidores Git; notificaciones con fallback stderr fuera de macOS; MCP IDE sigue explícito.
+- Contexto: línea **6.3.64** estable en npm y consumidores alineados en ramas de trabajo acordadas; siguiente trabajo es **producto** (R_GO release, SAAS MCP al commitear, panel macOS), no backlog PUMUKI-2xx.
 - Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; repin **6.3.64** en **SAAS** `main`, **Flux_training** `main`, **R_GO** `develop` (PR https://github.com/SwiftEnProfundidad/R_GO/pull/1514 → `b899ee6a1`). **R_GO `main`** sigue muy por detrás de `develop` (orden ~10³ commits); no es un fast-forward de producto: la promoción a `main` es release aparte.
 
 ## Cola externa real
@@ -39,8 +39,9 @@
 - ✅ **SAAS** `main` al día; `pumuki doctor --json` → **6.3.64** sin drift de versión; `pathExecutionHazard=true` por `:` en la ruta del repo — workaround: `node ./node_modules/pumuki/bin/pumuki.js` (comportamiento ya documentado en Pumuki 6.3.5x+).
 - ✅ **Flux_training** `main` al día; tras repin había **drift** `lifecycleInstalled` 6.3.57; resuelto con `pnpm exec pumuki install` → **6.3.64** sin drift (2026-04-05).
 
-## Siguiente frente sugerido
+## Siguiente frente sugerido (fuera del ciclo Pumuki 6.3.64)
 
-- ⏳ **RuralGO**: planificar promoción `develop` → `main` solo como **hit de release** (no mezclar con el solo repin de Pumuki); Vercel en PR #1514 en rojo — revisar previews si afectan criterio de merge futuro.
-- ⏳ Refrescar recibo MCP en **SAAS** antes del próximo push con hooks estrictos (o política explícita para bumps de deps).
-- ⏳ macOS (repo real): panel Swift con foco y botones persistiendo `muteUntil` / `enabled:false` en `.pumuki/system-notifications.json` del repo correcto.
+- ⏳ **R_GO**: `git stash list` — revisar `stash@{0}` (*wip antes de pull develop pumuki*); si `develop` ya cubre el repin, **`git stash drop stash@{0}`** o recuperar solo si aún aplica.
+- ⏳ **RuralGO**: promoción `develop` → `main` como **release de producto** (Vercel en #1514 en rojo — criterio aparte).
+- ⏳ **SAAS**: recibo MCP al abrir sesión IDE antes del próximo **push** con gate estricto (o bump de deps con política acordada).
+- ⏳ **macOS**: panel Swift notificaciones (foco + persistencia `.pumuki/system-notifications.json`) cuando se priorice UX.
