@@ -58,19 +58,22 @@ test('runPreCommitStage emite resumen mínimo del gate en éxito', async () => {
     });
 
     assert.equal(exitCode, 0);
-    assert.equal(summaries.length, 1);
-    assert.match(summaries[0] ?? '', /\[pumuki\]\[hook-gate\]/);
-    assert.match(summaries[0] ?? '', /stage=PRE_COMMIT/);
-    assert.match(summaries[0] ?? '', /decision=ALLOW/);
-    assert.match(summaries[0] ?? '', /policy_hash=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef/);
-    assert.match(summaries[0] ?? '', /policy_version=policy-as-code\/default@1.0/);
-    assert.match(summaries[0] ?? '', /policy_signature=a{64}/);
-    assert.match(summaries[0] ?? '', /policy_source=computed-local/);
-    assert.match(summaries[0] ?? '', /degraded_mode=enabled/);
-    assert.match(summaries[0] ?? '', /degraded_action=allow/);
-    assert.match(summaries[0] ?? '', /degraded_reason=offline-airgapped/);
-    assert.match(summaries[0] ?? '', /evidence_kind=valid/);
-    assert.match(summaries[0] ?? '', /evidence_age_seconds=30/);
+    assert.ok(summaries.length >= 2);
+    assert.match(summaries[0] ?? '', /status=STARTED/);
+    const summaryLine = summaries.find((line) => line.includes('policy_hash='));
+    assert.ok(summaryLine);
+    assert.match(summaryLine ?? '', /\[pumuki\]\[hook-gate\]/);
+    assert.match(summaryLine ?? '', /stage=PRE_COMMIT/);
+    assert.match(summaryLine ?? '', /decision=ALLOW/);
+    assert.match(summaryLine ?? '', /policy_hash=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef/);
+    assert.match(summaryLine ?? '', /policy_version=policy-as-code\/default@1.0/);
+    assert.match(summaryLine ?? '', /policy_signature=a{64}/);
+    assert.match(summaryLine ?? '', /policy_source=computed-local/);
+    assert.match(summaryLine ?? '', /degraded_mode=enabled/);
+    assert.match(summaryLine ?? '', /degraded_action=allow/);
+    assert.match(summaryLine ?? '', /degraded_reason=offline-airgapped/);
+    assert.match(summaryLine ?? '', /evidence_kind=valid/);
+    assert.match(summaryLine ?? '', /evidence_age_seconds=30/);
   } finally {
     if (typeof previousAtomicity === 'undefined') {
       delete process.env.PUMUKI_GIT_ATOMICITY_ENABLED;

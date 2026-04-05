@@ -19,7 +19,7 @@ export const applyDialogChoice = (params: {
     writeSystemNotificationsConfigFile(params.repoRoot, {
       enabled: false,
       channel: params.config.channel,
-      blockedDialogEnabled: params.config.blockedDialogEnabled !== false,
+      blockedDialogEnabled: params.config.blockedDialogEnabled === true,
     });
     return;
   }
@@ -29,7 +29,7 @@ export const applyDialogChoice = (params: {
       enabled: true,
       channel: params.config.channel,
       muteUntil,
-      blockedDialogEnabled: params.config.blockedDialogEnabled !== false,
+      blockedDialogEnabled: params.config.blockedDialogEnabled === true,
     });
   }
 };

@@ -10,7 +10,7 @@ import {
   withTempRepo,
 } from './helpers/gitTestUtils';
 
-type StageName = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+type StageName = 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 
 type StageThreshold = {
   blockOnOrAbove: 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL';
@@ -160,6 +160,7 @@ const writeSkillsPolicy = (
   overrides: Partial<Record<StageName, StageThreshold>>
 ): void => {
   const defaults: Record<StageName, StageThreshold> = {
+    PRE_WRITE: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
     PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
     PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
     CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
@@ -172,6 +173,7 @@ const writeSkillsPolicy = (
         version: '1.0',
         defaultBundleEnabled: true,
         stages: {
+          PRE_WRITE: overrides.PRE_WRITE ?? defaults.PRE_WRITE,
           PRE_COMMIT: overrides.PRE_COMMIT ?? defaults.PRE_COMMIT,
           PRE_PUSH: overrides.PRE_PUSH ?? defaults.PRE_PUSH,
           CI: overrides.CI ?? defaults.CI,

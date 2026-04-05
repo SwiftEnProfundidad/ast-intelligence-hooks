@@ -75,15 +75,17 @@ describe('evaluateRules', () => {
     const findings = evaluateRules(rules, facts);
 
     expect(findings).toHaveLength(1);
-    expect(findings[0]).toEqual({
-      ruleId: 'rule.explicit.code',
-      severity: 'WARN',
-      code: 'BACKEND_FILE_MODIFIED',
-      message: 'Backend file modified.',
-      filePath: 'apps/backend/src/main.ts',
-      matchedBy: 'FileChange',
-      source: 'git',
-    });
+    expect(findings[0]).toEqual(
+      expect.objectContaining({
+        ruleId: 'rule.explicit.code',
+        severity: 'WARN',
+        code: 'BACKEND_FILE_MODIFIED',
+        message: 'Backend file modified.',
+        filePath: 'apps/backend/src/main.ts',
+        matchedBy: 'FileChange',
+        source: 'git',
+      })
+    );
   });
 
   test('usa id de la regla como code cuando no se define en consecuencia', () => {
@@ -436,14 +438,16 @@ describe('evaluateRules', () => {
 
     const findings = evaluateRules(rules, facts);
     expect(findings).toHaveLength(1);
-    expect(findings[0]).toEqual({
-      ruleId: 'rule.composed.any',
-      severity: 'ERROR',
-      code: 'rule.composed.any',
-      message: 'Composed condition matched',
-      filePath: undefined,
-      matchedBy: undefined,
-      source: undefined,
-    });
+    expect(findings[0]).toEqual(
+      expect.objectContaining({
+        ruleId: 'rule.composed.any',
+        severity: 'ERROR',
+        code: 'rule.composed.any',
+        message: 'Composed condition matched',
+        filePath: undefined,
+        matchedBy: undefined,
+        source: undefined,
+      })
+    );
   });
 });

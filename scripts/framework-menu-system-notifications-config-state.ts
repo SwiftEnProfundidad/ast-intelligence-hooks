@@ -13,7 +13,7 @@ export const buildSystemNotificationsConfigFromSelection = (
 ): SystemNotificationsConfig => ({
   enabled,
   channel: 'macos',
-  blockedDialogEnabled: true,
+  blockedDialogEnabled: false,
 });
 
 export const normalizeSystemNotificationsConfig = (
@@ -22,7 +22,7 @@ export const normalizeSystemNotificationsConfig = (
   const config: SystemNotificationsConfig = {
     enabled: raw.enabled === true,
     channel: 'macos',
-    blockedDialogEnabled: raw.blockedDialogEnabled !== false,
+    blockedDialogEnabled: raw.blockedDialogEnabled === true,
   };
   if (typeof raw.muteUntil === 'string' && raw.muteUntil.trim().length > 0) {
     config.muteUntil = raw.muteUntil;

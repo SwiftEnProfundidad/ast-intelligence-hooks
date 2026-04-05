@@ -16,10 +16,10 @@
 
 ## Estado actual
 
-- Frente activo: `release-rollout-post-phase2`
-- Origen del frente: `ast-intelligence-hooks`
-- Objetivo: preparar el siguiente paso util tras cerrar `PUMUKI-GOV-002` y `phase2-swiftui-apis`.
-- Estado global: `RELEASE 6.3.61 LISTA PARA PUBLICACION`
+- Frente activo: `post-parity-ios-suite-y-ux-macos` (paridad iOS AST **cerrada** en línea publicada; rama local con suite + macOS al día).
+- Origen: `ast-intelligence-hooks`
+- Objetivo reciente en rama `refactor/cli-complexity-reduction-phase4-rebase2`: suite `npm test` verde; commits **atómicos**; notificaciones macOS sin spam en tests; dialog de bloqueo opt-in.
+- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; rama **pushed** y **PR abierta** hacia `develop` (ver enlace abajo).
 
 ## Cola externa real
 
@@ -27,21 +27,13 @@
 - ✅ `RuralGo · backlog externo cerrado: PUMUKI-GOV-002`
 - ✅ `Flux · backlog externo cerrado`
 
-## Cierre desbloqueante — `PUMUKI-GOV-002`
+## Donde estamos (operativo)
 
-- ✅ Regresion autocontenida para hotspot brownfield en `PRE_WRITE`.
-- ✅ Guard brownfield/hotspots con `file_over_limit`, `flagged_file_without_plan` y `missing_adr_for_structural_change`.
-- ✅ Paridad operativa de `PRE_WRITE` como stage de primer nivel con `SDD -> platform gate -> aiGate`.
-- ✅ Evidencia verde: `core/gate/GateStage.test.ts`, `integrations/git/__tests__/runPlatformGate.test.ts` y `npm run typecheck`.
+- ✅ Ajustes de tests (PRE_WRITE en `skills.policy`, doctor/cli JSON, Jest `evaluateRules`) y `npm test` verde en rama `refactor/cli-complexity-reduction-phase4-rebase2`.
+- ✅ Notificaciones macOS: dialog modal de anti-spam **desactivado por defecto**; activar con `PUMUKI_MACOS_BLOCKED_DIALOG=1` o `"blockedDialogEnabled": true` en `.pumuki/system-notifications.json`.
+- ✅ Historial local en cadena atómica: `fix(macos)` + `docs(tracking)` + tests gate/git/lifecycle/scripts + guardrails + smoke 6.3.61 + `brownfieldHotspots`.
+- ✅ Push a `origin/refactor/cli-complexity-reduction-phase4-rebase2` y PR a `develop`: https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/731
 
-## Slice iOS cerrado — `phase2-swiftui-apis`
+## Siguiente frente sugerido
 
-- ✅ Crear snapshot versionado `assets/rule-packs/ios-swiftui-modernization-v1.json`.
-- ✅ Añadir wiring AST/skills/evidence para `foregroundColor`, `cornerRadius`, `tabItem` y `ScrollView(showsIndicators: false)`.
-- ✅ Recompilar `skills.lock.json` y validar suite focal de SwiftUI phase 2.
-
-## Siguiente frente
-
-- ✅ Versionado y commit atomico del slice sobre `release/6.3.61`.
-- 🚧 Publicar release util de `pumuki` 6.3.61 y validar rollout inicial de `RuralGo`.
-- ⏳ Elegir el siguiente slice iOS a traducir a nodos AST de Pumuki.
+- ⏳ Tras publicar/consumir version con los cambios: validar en macOS que el panel Swift recibe foco y los botones escriben `muteUntil` / `enabled:false` en el repo correcto (no en carpetas temporales de tests).

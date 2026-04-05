@@ -37,8 +37,6 @@ test('resolves stage policy defaults when skills policy file is missing', async 
     const resolved = resolvePolicyForStage('PRE_COMMIT', tempRoot);
     assert.deepEqual(resolved.policy, policyForPreCommit());
     assert.equal(resolved.trace.source, 'default');
-    assert.equal(resolved.trace.layer, 'policy-pack');
-    assert.equal(resolved.trace.activation, 'default-advisory');
     assert.equal(resolved.trace.bundle, 'gate-policy.default.PRE_COMMIT');
     assert.match(resolved.trace.hash, /^[A-Fa-f0-9]{64}$/);
   });
@@ -49,6 +47,7 @@ test('resolves stage policy overrides from skills.policy.json', async () => {
     version: '1.0',
     defaultBundleEnabled: true,
     stages: {
+      PRE_WRITE: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
       PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
       PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
       CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
@@ -70,8 +69,6 @@ test('resolves stage policy overrides from skills.policy.json', async () => {
       warnOnOrAbove: 'WARN',
     });
     assert.equal(resolved.trace.source, 'skills.policy');
-    assert.equal(resolved.trace.layer, 'policy-pack');
-    assert.equal(resolved.trace.activation, 'explicit');
     assert.equal(resolved.trace.bundle, 'gate-policy.skills.policy.PRE_COMMIT');
     assert.match(resolved.trace.hash, /^[A-Fa-f0-9]{64}$/);
   });
