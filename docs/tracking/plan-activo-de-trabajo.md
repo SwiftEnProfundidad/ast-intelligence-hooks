@@ -16,10 +16,10 @@
 
 ## Estado actual
 
-- Frente activo: `post-release-6.3.64-consumer-autowire`
+- Frente activo: `post-release-6.3.64-closure` (repin consumidor cerrado en ramas activas; sin promoción masiva R_GO `develop`→`main`)
 - Origen: `ast-intelligence-hooks`
 - Contexto: **6.3.64** publicada en npm; `postinstall` cablea `pumuki install` en consumidores Git; notificaciones con fallback stderr fuera de macOS; MCP IDE sigue explícito.
-- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; repin **6.3.64** en **SAAS** (`main` `3969dce`), **Flux_training** (`main` `e91bb8e`), **R_GO** **develop** vía PR https://github.com/SwiftEnProfundidad/R_GO/pull/1514 (merge `b899ee6a13a6caa37f850bbf3a5cc39deeb491b6`).
+- Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; repin **6.3.64** en **SAAS** `main`, **Flux_training** `main`, **R_GO** `develop` (PR https://github.com/SwiftEnProfundidad/R_GO/pull/1514 → `b899ee6a1`). **R_GO `main`** sigue muy por detrás de `develop` (orden ~10³ commits); no es un fast-forward de producto: la promoción a `main` es release aparte.
 
 ## Cola externa real
 
@@ -35,10 +35,11 @@
 - ✅ Merge a `develop`: PR https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/732 (`merge` 2026-04-05, commit `413d5308db54dcdd483a5d4a5a5342cc32b51969`). Checks GitHub en rojo por cuota/entorno; merge ejecutado con evidencia local previa (`npm test` / typecheck en rama de release).
 - ✅ Publicación **6.3.64** en npm; tag `v6.3.64` en origin.
 - ✅ Rama remota **`release/6.3.64`** creada en `origin` (apunta al `develop` actual post-merge).
+- ✅ **R_GO `develop` local** alineado con `origin/develop`; `pumuki doctor --json` → **6.3.64** sin drift (evidencia 2026-04-05).
 
 ## Siguiente frente sugerido
 
-- ⏳ **RuralGO**: promoción `develop` → `main` cuando toque release de producto; Vercel en PR #1514 quedó en rojo (previews) — revisar si es ruido conocido.
+- ⏳ **RuralGO**: planificar promoción `develop` → `main` solo como **hit de release** (no mezclar con el solo repin de Pumuki); Vercel en PR #1514 en rojo — revisar previews si afectan criterio de merge futuro.
 - ⏳ Refrescar recibo MCP en **SAAS** antes del próximo push con hooks estrictos (o política explícita para bumps de deps).
-- ⏳ Validar `pumuki status` / `doctor` en consumidores tras `git pull` en cada repo.
+- ⏳ Validar `pumuki status` / `doctor` en **SAAS** y **Flux** tras `git pull` si aún no se hizo.
 - ⏳ macOS (repo real): panel Swift con foco y botones persistiendo `muteUntil` / `enabled:false` en `.pumuki/system-notifications.json` del repo correcto.
