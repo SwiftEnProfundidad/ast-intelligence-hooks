@@ -16,9 +16,10 @@
 
 ## Estado actual
 
-- Frente activo: **`idle`** (ciclo **6.3.64** publicación + repin + doctor consumidores **cerrado**; `npm view pumuki version` → **6.3.64** @latest 2026-04-05).
+- Frente activo: ver **Prioridad ordenada** (abajo); una sola fila `🚧`.
 - Origen: `ast-intelligence-hooks`
-- Contexto: línea **6.3.64** estable en npm y consumidores alineados en ramas de trabajo acordadas; siguiente trabajo es **producto** (R_GO release, SAAS MCP al commitear, panel macOS), no backlog PUMUKI-2xx.
+- Contexto: este archivo vive en el repo **Pumuki** pero el orden incluye **impacto en consumidores** (RuralGO, SAAS, Flux) cuando el ciclo de release lo exige; no es “solo un repo”, es el **espejo operativo** acordado en `AGENTS.md`.
+- Línea **6.3.64** en npm y repin aplicado en ramas acordadas; ciclo publicación+repin **cerrado** (`npm view pumuki version` → **6.3.64** @latest).
 - Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; repin **6.3.64** en **SAAS** `main`, **Flux_training** `main`, **R_GO** `develop` (PR https://github.com/SwiftEnProfundidad/R_GO/pull/1514 → `b899ee6a1`). **R_GO `main`** sigue muy por detrás de `develop` (orden ~10³ commits); no es un fast-forward de producto: la promoción a `main` es release aparte.
 
 ## Cola externa real
@@ -39,9 +40,23 @@
 - ✅ **SAAS** `main` al día; `pumuki doctor --json` → **6.3.64** sin drift de versión; `pathExecutionHazard=true` por `:` en la ruta del repo — workaround: `node ./node_modules/pumuki/bin/pumuki.js` (comportamiento ya documentado en Pumuki 6.3.5x+).
 - ✅ **Flux_training** `main` al día; tras repin había **drift** `lifecycleInstalled` 6.3.57; resuelto con `pnpm exec pumuki install` → **6.3.64** sin drift (2026-04-05).
 
-## Siguiente frente sugerido (fuera del ciclo Pumuki 6.3.64)
+## Veredicto técnico: `R_GO` `stash@{0}` (*wip antes de pull develop pumuki*)
 
-- ⏳ **R_GO**: `git stash list` — revisar `stash@{0}` (*wip antes de pull develop pumuki*); si `develop` ya cubre el repin, **`git stash drop stash@{0}`** o recuperar solo si aún aplica.
-- ⏳ **RuralGO**: promoción `develop` → `main` como **release de producto** (Vercel en #1514 en rojo — criterio aparte).
-- ⏳ **SAAS**: recibo MCP al abrir sesión IDE antes del próximo **push** con gate estricto (o bump de deps con política acordada).
-- ⏳ **macOS**: panel Swift notificaciones (foco + persistencia `.pumuki/system-notifications.json`) cuando se priorice UX.
+Archivos en el stash (solo referencia, no se aplica solo):
+
+| Archivo | Qué contiene | ¿Válido para recuperar? |
+|---------|----------------|-------------------------|
+| `package.json` | misma línea **`pumuki`** que **`develop` actual** (`^6.3.64`) | **No hace falta**: ya está cubierto en `origin/develop`. |
+| `.ai_evidence.json` | recorte masivo a snapshot **casi vacío** (métricas en cero / PASS local) | **No como fuente de verdad**: sobrescribiría evidencia rica con un run mínimo; solo útil si quisieras inspeccionar diff a mano. |
+| `docs/validation/refactor/last-run.json` | estado de última corrida local de validación | **Regenerable**; no es crítico conservarlo. |
+
+**Acción recomendada** (después de leer esto): en `R_GO`, si no investigas el diff a propósito, **`git stash drop stash@{0}`** para cerrar el cabo suelto. No implica pérdida del repin (ya en `develop`).
+
+## Prioridad ordenada (siguiente trabajo)
+
+Regla: **una sola** tarea `🚧`; el resto `⏳` hasta promover la siguiente.
+
+1. 🚧 **Housekeeping RuralGO**: ejecutar decisión sobre `stash@{0}` (recomendado: `drop` tras ver tabla arriba) o, si dudas, `git stash show -p stash@{0} | less` y decidir.
+2. ⏳ **RuralGO (producto)**: planificar promoción **`develop` → `main`** como release (miles de commits de diferencia con `main`; criterio Vercel / previews aparte).
+3. ⏳ **SAAS (operación)**: antes del próximo **push** con hooks estrictos, **recibo MCP** fresco en IDE (o política explícita para bumps de deps sin bloqueo).
+4. ⏳ **Pumuki (repo `ast-intelligence-hooks`)**: panel **Swift** notificaciones (foco + persistencia `.pumuki/system-notifications.json`) cuando se priorice UX en el propio producto Pumuki.
