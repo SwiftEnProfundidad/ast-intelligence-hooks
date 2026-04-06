@@ -37,7 +37,7 @@ npx --yes pumuki status
 npx --yes pumuki doctor --json
 ```
 
-Desde **6.3.63**, `npm install` en la raíz de un repo **Git** dispara un `postinstall` que ejecuta `pumuki install` automáticamente (hooks `pre-commit` / `pre-push`). No configura MCP del IDE por sí solo: usa `pumuki install --with-mcp` o el adaptador. Desactivar el postinstall: `PUMUKI_SKIP_POSTINSTALL=1`. En CI suele saltarse solo (`CI=true`). En **6.3.64+**, las notificaciones del sistema en plataformas sin banner nativo se reflejan en **stderr** por defecto (`PUMUKI_DISABLE_STDERR_NOTIFICATIONS=1` para silenciarlas).
+Desde **6.3.63**, `npm install` en la raíz de un repo **Git** dispara un `postinstall` que ejecuta `pumuki install` automáticamente (hooks `pre-commit` / `pre-push`). Desde **6.3.66**, ese mismo postinstall cablea por defecto **MCP y hooks Cursor en el repo** (`pumuki install --with-mcp --agent=cursor`, fusión en `.cursor/mcp.json` sin borrar otros servidores, más `.pumuki/adapter.json`). Sin MCP en postinstall: `PUMUKI_POSTINSTALL_WITH_MCP=0`. Otro agente: `PUMUKI_POSTINSTALL_AGENT=codex` (u otro soportado). En el **árbol fuente del propio paquete `pumuki`**, el postinstall se mantiene mínimo (sin OpenSpec/MCP automáticos). Desactivar el postinstall completo: `PUMUKI_SKIP_POSTINSTALL=1`. En CI suele saltarse solo (`CI=true`). En **6.3.64+**, las notificaciones del sistema en plataformas sin banner nativo se reflejan en **stderr** por defecto (`PUMUKI_DISABLE_STDERR_NOTIFICATIONS=1` para silenciarlas).
 
 Fallback (equivalent in pasos separados):
 

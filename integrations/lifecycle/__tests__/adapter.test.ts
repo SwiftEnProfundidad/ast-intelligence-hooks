@@ -74,6 +74,62 @@ test('runLifecycleAdapterInstall genera scaffolding para cursor', () => {
     assert.equal(result.agent, 'cursor');
     const cursorConfig = join(repo, '.cursor', 'mcp.json');
     assert.equal(existsSync(cursorConfig), true);
+    const payload = JSON.parse(readFileSync(cursorConfig, 'utf8')) as {
+      mcpServers?: Record<string, { command?: string }>;
+      pumukiHooks?: { pre_write?: { command?: string } };
+    };
+    assert.equal(payload.mcpServers?.['pumuki-enterprise']?.command, 'npx');
+    assert.equal(
+      payload.pumukiHooks?.pre_write?.command?.includes('pumuki-pre-write'),
+      true
+    );
+    const adapterPath = join(repo, '.pumuki', 'adapter.json');
+    assert.equal(existsSync(adapterPath), true);
+    const adapterPayload = JSON.parse(readFileSync(adapterPath, 'utf8')) as {
+      hooks?: { pre_write?: { command?: string } };
+    };
+    assert.equal(
+      adapterPayload.hooks?.pre_write?.command?.includes('pumuki-pre-write'),
+      true
+    );
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleAdapterInstall fusiona cursor en .cursor/mcp.json existente sin borrar otros MCP', () => {
+  const repo = createGitRepo();
+  const cursorDir = join(repo, '.cursor');
+  mkdirSync(cursorDir, { recursive: true });
+  writeFileSync(
+    join(cursorDir, 'mcp.json'),
+    JSON.stringify(
+      {
+        mcpServers: {
+          'Other Tool': {
+            command: 'npx',
+            args: ['-y', '@example/mcp'],
+          },
+        },
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+  try {
+    const result = runLifecycleAdapterInstall({
+      cwd: repo,
+      agent: 'cursor',
+    });
+    assert.equal(result.changedFiles.includes('.cursor/mcp.json'), true);
+    const payload = JSON.parse(readFileSync(join(cursorDir, 'mcp.json'), 'utf8')) as {
+      mcpServers?: Record<string, unknown>;
+    };
+    assert.ok(payload.mcpServers?.['Other Tool']);
+    assert.ok(payload.mcpServers?.['pumuki-enterprise']);
+    assert.ok(payload.mcpServers?.['pumuki-evidence']);
+    assert.equal(existsSync(join(repo, '.pumuki', 'adapter.json')), true);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

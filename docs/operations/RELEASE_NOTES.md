@@ -6,6 +6,13 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-06 (v6.3.66)
+
+- **Primera instalación menos manual**: el `postinstall` de npm ejecuta por defecto **`pumuki install --with-mcp --agent=cursor`** (repo-local `.cursor/mcp.json` con **merge**, sin pisar otros MCP, más `.pumuki/adapter.json`). Desactivar MCP en postinstall: `PUMUKI_POSTINSTALL_WITH_MCP=0`. Otro agente: `PUMUKI_POSTINSTALL_AGENT=codex` (u otro soportado).
+- **OpenSpec**: el postinstall ya no salta OpenSpec por defecto; omitir con `PUMUKI_SKIP_OPENSPEC_BOOTSTRAP=1` si el repo debe quedarse sin bootstrap.
+- **Árbol fuente `pumuki`**: postinstall mínimo (sin OpenSpec/MCP forzados) cuando `name=pumuki` y existe `integrations/lifecycle/cli.ts`.
+- Rollout: `pumuki@6.3.66`; re-ejecutar `npm install` en la raíz del consumer o `npx pumuki install`.
+
 ### 2026-04-06 (v6.3.65)
 
 - **pre-commit.com + `exec`**: Pumuki ya no inserta su bloque gestionado *después* del `exec` del hook generado por pre-commit (código inalcanzable). Tras actualizar a **6.3.65**, ejecutar `pumuki install` en el consumer para reordenar `.git/hooks/pre-commit`.

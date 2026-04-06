@@ -1,9 +1,22 @@
 #!/usr/bin/env node
 'use strict';
 
-const { existsSync } = require('node:fs');
+const { existsSync, readFileSync } = require('node:fs');
 const { join, resolve } = require('node:path');
 const { spawnSync } = require('node:child_process');
+
+const readConsumerPackageName = (consumerRoot) => {
+  try {
+    const raw = readFileSync(join(consumerRoot, 'package.json'), 'utf8');
+    const parsed = JSON.parse(raw);
+    return typeof parsed.name === 'string' ? parsed.name : '';
+  } catch {
+    return '';
+  }
+};
+
+const isPumukiFrameworkSourceTree = (consumerRoot) =>
+  existsSync(join(consumerRoot, 'integrations', 'lifecycle', 'cli.ts'));
 
 const skipReason = () => {
   if (process.env.PUMUKI_SKIP_POSTINSTALL === '1') {
@@ -35,13 +48,33 @@ const main = () => {
     return 0;
   }
 
+  const pkgName = readConsumerPackageName(consumerRoot);
+  const frameworkSelfInstall =
+    pkgName === 'pumuki' && isPumukiFrameworkSourceTree(consumerRoot);
+
+  const installArgs = ['install'];
   const env = {
     ...process.env,
     PUMUKI_AUTO_POSTINSTALL: '1',
-    PUMUKI_SKIP_OPENSPEC_BOOTSTRAP: process.env.PUMUKI_SKIP_OPENSPEC_BOOTSTRAP ?? '1',
   };
 
-  const result = spawnSync(process.execPath, [pumukiCli, 'install'], {
+  if (frameworkSelfInstall) {
+    env.PUMUKI_SKIP_OPENSPEC_BOOTSTRAP = '1';
+  } else if (process.env.PUMUKI_POSTINSTALL_WITH_MCP !== '0') {
+    installArgs.push('--with-mcp');
+    const agent =
+      typeof process.env.PUMUKI_POSTINSTALL_AGENT === 'string'
+      && process.env.PUMUKI_POSTINSTALL_AGENT.trim().length > 0
+        ? process.env.PUMUKI_POSTINSTALL_AGENT.trim()
+        : 'cursor';
+    installArgs.push(`--agent=${agent}`);
+  }
+
+  if (process.env.PUMUKI_SKIP_OPENSPEC_BOOTSTRAP === '1') {
+    env.PUMUKI_SKIP_OPENSPEC_BOOTSTRAP = '1';
+  }
+
+  const result = spawnSync(process.execPath, [pumukiCli, ...installArgs], {
     cwd: consumerRoot,
     env,
     stdio: 'inherit',

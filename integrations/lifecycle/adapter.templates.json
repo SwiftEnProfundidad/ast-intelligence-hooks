@@ -74,6 +74,7 @@
   "cursor": [
     {
       "path": ".cursor/mcp.json",
+      "mode": "json-merge",
       "payload": {
         "mcpServers": {
           "pumuki-enterprise": {
@@ -107,6 +108,33 @@
           },
           "ci": {
             "command": "npx --yes --package pumuki@latest pumuki-ci"
+          }
+        }
+      }
+    },
+    {
+      "path": ".pumuki/adapter.json",
+      "payload": {
+        "hooks": {
+          "pre_write": {
+            "command": "npx --yes --package pumuki@latest pumuki-pre-write"
+          },
+          "pre_commit": {
+            "command": "npx --yes --package pumuki@latest pumuki-pre-commit"
+          },
+          "pre_push": {
+            "command": "npx --yes --package pumuki@latest pumuki-pre-push"
+          },
+          "ci": {
+            "command": "npx --yes --package pumuki@latest pumuki-ci"
+          }
+        },
+        "mcp": {
+          "enterprise": {
+            "command": "npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio"
+          },
+          "evidence": {
+            "command": "npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio"
           }
         }
       }

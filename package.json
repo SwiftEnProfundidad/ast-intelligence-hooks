@@ -1,6 +1,6 @@
 {
   "name": "pumuki",
-  "version": "6.3.65",
+  "version": "6.3.66",
   "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
   "main": "index.js",
   "bin": {
@@ -212,6 +212,7 @@
     "@babel/preset-env": "^7.29.0",
     "@babel/preset-typescript": "^7.28.5",
     "@babel/traverse": "^7.28.5",
+    "@fission-ai/openspec": "1.2.0",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^8.55.0",
     "@typescript-eslint/parser": "^8.55.0",

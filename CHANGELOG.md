@@ -10,6 +10,18 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.66] - 2026-04-06
+
+### Changed
+
+- **`npm install` (postinstall) en repos Git**: además de cablear hooks, ejecuta por defecto **`pumuki install --with-mcp --agent=cursor`**, generando/actualizando **`.cursor/mcp.json` en el repo** (fusión JSON: no borra otros `mcpServers`). Así el primer uso no exige acordarse de `--with-mcp`.
+- **OpenSpec en postinstall**: ya no se fuerza `PUMUKI_SKIP_OPENSPEC_BOOTSTRAP=1` por defecto; el bootstrap de OpenSpec corre en el install salvo que definas `PUMUKI_SKIP_OPENSPEC_BOOTSTRAP=1`.
+
+### Added
+
+- Variables de entorno: `PUMUKI_POSTINSTALL_WITH_MCP=0` desactiva el cableado MCP en postinstall; `PUMUKI_POSTINSTALL_AGENT=codex|cursor|…` elige agente (por defecto `cursor`).
+- **Repo fuente `pumuki`**: si `package.json` es `name=pumuki` y existe `integrations/lifecycle/cli.ts`, el postinstall solo ejecuta `pumuki install` mínimo (sin OpenSpec/MCP automáticos) para no contaminar el árbol del framework.
+
 ## [6.3.65] - 2026-04-06
 
 ### Fixed
