@@ -17,7 +17,7 @@
 ## Estado actual
 
 - Frente activo: `rollout-6.3.71-consumers` (npm **pumuki@6.3.71** + tag **v6.3.71** en origin alineado con commit **`2af3962`**, 2026-04-06; rama upstream `release/6.3.65`; **`origin/develop`** en el mismo tip que release vía fast-forward; consumidores **R_GO** `develop`, **SAAS** `main`, **Flux_training** `main` con repin **6.3.71** ya **commiteado y pusheado**)
-- Detalle operativo: ver **Prioridad ordenada** (abajo); una sola fila `🚧`.
+- Detalle operativo: ver **Prioridad ordenada** (abajo); como mucho **una** fila `🚧` (puede ser **ninguna** si no hay trabajo activo).
 - Origen: `ast-intelligence-hooks`
 - Contexto: este archivo vive en el repo **Pumuki** pero el orden incluye **impacto en consumidores** (RuralGO, SAAS, Flux) cuando el ciclo de release lo exige; no es “solo un repo”, es el **espejo operativo** acordado en `AGENTS.md`.
 - Línea **6.3.71** (npm): paquete INC-069 + `operational_hints` + remediaciones compartidas + `PUMUKI_GATE_SCOPE_PATH_PREFIXES` + `doctor --parity`; **6.3.70** PRE_PUSH sin mutar evidencia trackeada ALLOW/WARN + modal macOS; **6.3.69** modal + stderr `gate.blocked` + git-flow/worktree en hooks; **6.3.68** PRE_WRITE encadenado + adapter por defecto; **6.3.65+** orden con pre-commit.com + `exec`.
@@ -44,23 +44,17 @@
 - ✅ **SAAS** `origin/main` con **6.3.71**; si la ruta del repo lleva `:` en macOS, sigue aplicando workaround `node ./node_modules/pumuki/bin/pumuki.js` donde haya `pathExecutionHazard`.
 - ✅ **Flux_training** `origin/main` con **6.3.71** (`pnpm-lock.yaml`); si aparece drift de lifecycle, `pnpm exec pumuki install` como antes.
 
-## Veredicto técnico: `R_GO` `stash@{0}` (*wip antes de pull develop pumuki*)
+## Nota sobre `git stash` en RuralGO
 
-Archivos en el stash (solo referencia, no se aplica solo):
-
-| Archivo | Qué contiene | ¿Válido para recuperar? |
-|---------|----------------|-------------------------|
-| `package.json` | línea **`pumuki`** antigua del stash vs **`6.3.71`** en `origin/develop` | **No hace falta** recuperar: el repin vigente ya está en remoto. |
-| `.ai_evidence.json` | recorte masivo a snapshot **casi vacío** (métricas en cero / PASS local) | **No como fuente de verdad**: sobrescribiría evidencia rica con un run mínimo; solo útil si quisieras inspeccionar diff a mano. |
-| `docs/validation/refactor/last-run.json` | estado de última corrida local de validación | **Regenerable**; no es crítico conservarlo. |
-
-**Acción recomendada** (después de leer esto): en `R_GO`, si no investigas el diff a propósito, **`git stash drop stash@{0}`** para cerrar el cabo suelto. No implica pérdida del repin (ya en `develop`).
+El índice **`stash@{0}` cambia** con el tiempo: **no** es un identificador estable. El antiguo WIP “antes de pull develop pumuki” **ya no aplica** como bloqueante: repin **6.3.71** está en **`origin/develop`**. Hoy `stash@{0}` en la máquina de referencia apunta a otro trabajo (p. ej. feature/docs); revisar siempre **`git stash list`** y el mensaje de cada entrada antes de `drop`/`pop`.
 
 ## Prioridad ordenada (siguiente trabajo)
 
-Regla: **una sola** tarea `🚧`; el resto `⏳` hasta promover la siguiente.
+Regla: **como mucho una** tarea `🚧`; el resto `⏳` hasta promover la siguiente. **Si no hay foco activo**, dejar **0× `🚧`** (solo backlog `⏳`).
 
-1. 🚧 **Housekeeping RuralGO**: ejecutar decisión sobre `stash@{0}` (recomendado: `drop` tras ver tabla arriba) o, si dudas, `git stash show -p stash@{0} | less` y decidir.
+1. ✅ **Rollout Pumuki 6.3.71** (npm, tag, repin R_GO/SAAS/Flux, `origin/develop`, tracking): **cerrado** — no cuenta como `🚧`.
 2. ⏳ **RuralGO (producto)**: planificar promoción **`develop` → `main`** como release (miles de commits de diferencia con `main`; criterio Vercel / previews aparte).
 3. ⏳ **SAAS (operación)**: antes del próximo **push** con hooks estrictos, **recibo MCP** fresco en IDE (o política explícita para bumps de deps sin bloqueo).
 4. ⏳ **Pumuki (repo `ast-intelligence-hooks`)**: panel **Swift** notificaciones (foco + persistencia `.pumuki/system-notifications.json`) cuando se priorice UX en el propio producto Pumuki.
+
+**Housekeeping stashes en R_GO**: fuera de esta cola única; tratar cada entrada con **`git stash list` / `show`** según rama y mensaje — **no** usar este MD como orden de `drop` sobre `stash@{0}` genérico.
