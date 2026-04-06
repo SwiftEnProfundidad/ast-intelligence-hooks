@@ -317,6 +317,10 @@ Environment variables:
 - `PUMUKI_PREWRITE_WORKTREE_WARN_THRESHOLD` (default: `12`)
 - `PUMUKI_PREWRITE_WORKTREE_BLOCK_THRESHOLD` (default: `24`)
 
+## Evidencia en PRE_PUSH con `.ai_evidence.json` trackeado
+
+- `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE` (`1|true|yes`): fuerza la escritura del snapshot en `PRE_PUSH` aunque `.ai_evidence.json` esté versionado. Por defecto (sin esta variable), si el fichero está en el índice de git y el outcome no es `BLOCK`, Pumuki **no** muta el archivo para no romper hooks encadenados (p. ej. `pre-commit` ejecutado desde `pre-push`).
+
 Codes emitted:
 
 - `EVIDENCE_PREWRITE_WORKTREE_WARN` (warning, still `ALLOWED`)

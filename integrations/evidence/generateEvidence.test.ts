@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../__tests__/helpers/tempDir';
@@ -58,6 +58,29 @@ test('generateEvidence compone build + write y persiste .ai_evidence.json', asyn
       assert.equal(persisted.snapshot.findings[0]?.ruleId, 'backend.no-console-log');
       assert.equal(persisted.ai_gate.status, 'ALLOWED');
     });
+  });
+});
+
+test('generateEvidence omite escritura a disco cuando skipDiskWrite y repoRoot son válidos', async () => {
+  await withTempDir('pumuki-generate-evidence-skip-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    const evidencePath = join(tempRoot, '.ai_evidence.json');
+    writeFileSync(evidencePath, '{"version":"2.1","pinned":true}\n', 'utf8');
+
+    const result = generateEvidence({
+      stage: 'PRE_PUSH',
+      gateOutcome: 'PASS',
+      findings: [],
+      detectedPlatforms: {},
+      loadedRulesets: [],
+      repoRoot: tempRoot,
+      skipDiskWrite: true,
+    });
+
+    assert.equal(result.evidence.snapshot.stage, 'PRE_PUSH');
+    assert.equal(result.write.ok, true);
+    assert.equal(result.write.skipped, true);
+    assert.equal(readFileSync(evidencePath, 'utf8'), '{"version":"2.1","pinned":true}\n');
   });
 });
 

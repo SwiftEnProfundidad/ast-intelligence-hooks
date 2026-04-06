@@ -991,6 +991,37 @@ test('runPreCommitStage no deja drift de working tree en .ai_evidence.json cuand
   });
 });
 
+test('runPrePushStage no reescribe .ai_evidence.json trackeado cuando el gate permite el push', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
+    runGit(repoRoot, ['checkout', '--quiet', '-b', 'feature/stage-runner-pre-push-evidence']);
+
+    stageBackendFile(repoRoot);
+    const firstPreCommit = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+    });
+    assert.equal(firstPreCommit, 0);
+    runGit(repoRoot, ['add', '-f', '.ai_evidence.json']);
+    runGit(repoRoot, ['commit', '-m', 'chore: track ai evidence fixture']);
+
+    runGit(repoRoot, ['branch', '--quiet', '--set-upstream-to=main']);
+
+    const evidenceBefore = readFileSync(join(repoRoot, '.ai_evidence.json'), 'utf8');
+
+    const prePushExit = await runPrePushStage({
+      resolveRepoRoot: () => repoRoot,
+    });
+    assert.equal(prePushExit, 0);
+
+    const evidenceAfter = readFileSync(join(repoRoot, '.ai_evidence.json'), 'utf8');
+    assert.equal(evidenceAfter, evidenceBefore);
+    assert.equal(runGit(repoRoot, ['diff', '--name-only', '--', '.ai_evidence.json']), '');
+    assert.equal(runGit(repoRoot, ['diff', '--cached', '--name-only', '--', '.ai_evidence.json']), '');
+  });
+});
+
 test('runPrePushStage dispara notificación de resumen tras evaluar el gate', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     setupBackendCommitRange(repoRoot);

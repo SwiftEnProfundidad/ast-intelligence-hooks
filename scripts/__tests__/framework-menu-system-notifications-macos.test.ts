@@ -67,8 +67,7 @@ test('deliverMacOsNotification mantiene la fachada pública para gate bloqueado'
     });
 
     assert.equal(result.delivered, true);
-    assert.equal(calls.length, 2);
-    assert.equal(calls[0]?.command, 'osascript');
-    assert.equal(calls[1]?.command, 'swift');
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0]?.command, 'swift');
   });
 });

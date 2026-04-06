@@ -5,13 +5,28 @@ import {
   type SystemNotificationCommandRunnerWithOutput,
   type SystemNotificationsConfig,
 } from './framework-menu-system-notifications-types';
-import { resolveBlockedDialogEnabled } from './framework-menu-system-notifications-macos-dialog';
+import { resolveBlockedDialogEnabled } from './framework-menu-system-notifications-macos-dialog-enabled';
 import { emitMacOsBannerStage } from './framework-menu-system-notifications-macos-banner-stage';
 import { emitMacOsBlockedDialogStage } from './framework-menu-system-notifications-macos-blocked-stage';
 import { finalizeMacOsNotificationDelivery } from './framework-menu-system-notifications-macos-result';
 
 export { runSystemCommand, runSystemCommandWithOutput } from './framework-menu-system-notifications-macos-runner';
 export { resolveBlockedDialogEnabled } from './framework-menu-system-notifications-macos-dialog';
+
+const shouldSkipMacOsBannerForInteractiveBlockedDialog = (params: {
+  event: PumukiCriticalNotificationEvent;
+  repoRoot?: string;
+  config: SystemNotificationsConfig;
+  env: NodeJS.ProcessEnv;
+}): boolean => {
+  if (params.event.kind !== 'gate.blocked') {
+    return false;
+  }
+  if (typeof params.repoRoot !== 'string') {
+    return false;
+  }
+  return resolveBlockedDialogEnabled({ env: params.env, config: params.config });
+};
 
 export const deliverMacOsNotification = (params: {
   event: PumukiCriticalNotificationEvent;
@@ -29,10 +44,19 @@ export const deliverMacOsNotification = (params: {
     nowMs: number;
   }) => void;
 }): SystemNotificationEmitResult => {
-  const bannerResult = emitMacOsBannerStage({
-    payload: params.payload,
-    runCommand: params.runCommand,
+  const skipBanner = shouldSkipMacOsBannerForInteractiveBlockedDialog({
+    event: params.event,
+    repoRoot: params.repoRoot,
+    config: params.config,
+    env: params.env,
   });
+
+  const bannerResult = skipBanner
+    ? { delivered: true as const, reason: 'delivered' as const }
+    : emitMacOsBannerStage({
+        payload: params.payload,
+        runCommand: params.runCommand,
+      });
 
   emitMacOsBlockedDialogStage({
     event: params.event,

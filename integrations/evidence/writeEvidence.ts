@@ -22,6 +22,7 @@ export type WriteEvidenceResult = {
   ok: boolean;
   path: string;
   error?: string;
+  skipped?: boolean;
 };
 
 const EVIDENCE_FILE_NAME = '.ai_evidence.json';

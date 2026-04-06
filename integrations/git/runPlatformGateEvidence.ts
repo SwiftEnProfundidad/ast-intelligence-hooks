@@ -1,6 +1,7 @@
 import type { Finding } from '../../core/gate/Finding';
 import type { GateOutcome } from '../../core/gate/GateOutcome';
 import type { GateStage } from '../../core/gate/GateStage';
+import { GitService } from './GitService';
 import { rulePackVersions } from '../../core/rules/presets/rulePackVersions';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import type { SkillsRuleSetLoadResult } from '../config/skillsRuleSet';
@@ -17,14 +18,51 @@ import { normalizeSnapshotRulesCoverage } from '../evidence/rulesCoverage';
 import type { TddBddSnapshot } from '../tdd/types';
 import { emitGateTelemetryEvent } from '../telemetry/gateTelemetry';
 
+const TRACKED_EVIDENCE_RELATIVE_PATH = '.ai_evidence.json';
+
+const isTruthyEnvFlag = (value?: string): boolean => {
+  if (!value) {
+    return false;
+  }
+  const normalized = value.trim().toLowerCase();
+  return normalized === '1' || normalized === 'true' || normalized === 'yes';
+};
+
+const defaultIsEvidencePathTracked = (repoRoot: string, relativePath: string): boolean => {
+  try {
+    new GitService().runGit(['ls-files', '--error-unmatch', '--', relativePath], repoRoot);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const shouldSkipPrePushTrackedEvidenceDiskWrite = (params: {
+  stage: GateStage;
+  gateOutcome: GateOutcome;
+  repoRoot: string;
+  isEvidencePathTracked: (repoRoot: string, relativePath: string) => boolean;
+}): boolean => {
+  if (isTruthyEnvFlag(process.env.PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE)) {
+    return false;
+  }
+  return (
+    params.stage === 'PRE_PUSH' &&
+    params.gateOutcome !== 'BLOCK' &&
+    params.isEvidencePathTracked(params.repoRoot, TRACKED_EVIDENCE_RELATIVE_PATH)
+  );
+};
+
 export type PlatformGateEvidenceDependencies = {
   generateEvidence: typeof generateEvidence;
   emitGateTelemetryEvent: typeof emitGateTelemetryEvent;
+  isEvidencePathTracked: (repoRoot: string, relativePath: string) => boolean;
 };
 
 const defaultDependencies: PlatformGateEvidenceDependencies = {
   generateEvidence,
   emitGateTelemetryEvent,
+  isEvidencePathTracked: defaultIsEvidencePathTracked,
 };
 
 export const emitPlatformGateEvidence = (params: {
@@ -58,6 +96,12 @@ export const emitPlatformGateEvidence = (params: {
   const evaluationMetrics = normalizeSnapshotEvaluationMetrics(params.evaluationMetrics);
   const rulesCoverage = normalizeSnapshotRulesCoverage(params.stage, params.rulesCoverage);
   const repoState = captureRepoState(params.repoRoot);
+  const skipDiskWrite = shouldSkipPrePushTrackedEvidenceDiskWrite({
+    stage: params.stage,
+    gateOutcome: params.gateOutcome,
+    repoRoot: params.repoRoot,
+    isEvidencePathTracked: activeDependencies.isEvidencePathTracked,
+  });
 
   activeDependencies.generateEvidence({
     stage: params.stage,
@@ -70,6 +114,7 @@ export const emitPlatformGateEvidence = (params: {
     ...(params.tddBdd ? { tddBdd: params.tddBdd } : {}),
     ...(params.memoryShadow ? { memoryShadow: params.memoryShadow } : {}),
     repoRoot: params.repoRoot,
+    ...(skipDiskWrite ? { skipDiskWrite: true } : {}),
     previousEvidence: params.evidenceService.loadPreviousEvidence(params.repoRoot),
     detectedPlatforms: params.evidenceService.toDetectedPlatformsRecord(params.detectedPlatforms),
     loadedRulesets: params.evidenceService.buildRulesetState({

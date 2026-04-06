@@ -61,6 +61,7 @@ type GenerateEvidenceParams = {
       message: string;
     };
   };
+  skipDiskWrite?: boolean;
 };
 
 test('emitPlatformGateEvidence construye payload y delega en generateEvidence', () => {
@@ -240,6 +241,7 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
       message: 'sdd ok',
     },
   });
+  assert.equal(capturedGenerateEvidenceParams?.skipDiskWrite, undefined);
 });
 
 test('emitPlatformGateEvidence inyecta evaluationMetrics vacio cuando no se informa cobertura', () => {
@@ -410,4 +412,86 @@ test('emitPlatformGateEvidence delega telemetría estructurada con stage/outcome
     policyBundle: 'gate-policy.default.PRE_PUSH',
     repoBranch: null,
   });
+});
+
+test('emitPlatformGateEvidence pide skipDiskWrite en PRE_PUSH PASS cuando .ai_evidence.json está trackeado', () => {
+  const findings: ReadonlyArray<Finding> = [];
+  const detectedPlatforms: DetectedPlatforms = {};
+  const skillsRuleSet: SkillsRuleSetLoadResult = {
+    rules: [],
+    activeBundles: [],
+    mappedHeuristicRuleIds: new Set<string>(),
+    requiresHeuristicFacts: false,
+  };
+  const evidenceService: IEvidenceService = {
+    loadPreviousEvidence: () => undefined,
+    toDetectedPlatformsRecord: () => ({}),
+    buildRulesetState: () => [],
+  };
+
+  let captured: GenerateEvidenceParams | undefined;
+  emitPlatformGateEvidence(
+    {
+      stage: 'PRE_PUSH',
+      findings,
+      gateOutcome: 'PASS',
+      filesScanned: 0,
+      repoRoot: '/repo/root',
+      detectedPlatforms,
+      skillsRuleSet,
+      projectRules: [],
+      heuristicRules: [],
+      evidenceService,
+    },
+    {
+      generateEvidence: (params) => {
+        captured = params;
+        return { evidence: { version: '2.1' } as never, write: { ok: true, path: '/x' } };
+      },
+      isEvidencePathTracked: () => true,
+    }
+  );
+
+  assert.equal(captured?.skipDiskWrite, true);
+});
+
+test('emitPlatformGateEvidence no pide skipDiskWrite en PRE_PUSH PASS si la evidencia no está trackeada', () => {
+  const findings: ReadonlyArray<Finding> = [];
+  const detectedPlatforms: DetectedPlatforms = {};
+  const skillsRuleSet: SkillsRuleSetLoadResult = {
+    rules: [],
+    activeBundles: [],
+    mappedHeuristicRuleIds: new Set<string>(),
+    requiresHeuristicFacts: false,
+  };
+  const evidenceService: IEvidenceService = {
+    loadPreviousEvidence: () => undefined,
+    toDetectedPlatformsRecord: () => ({}),
+    buildRulesetState: () => [],
+  };
+
+  let captured: GenerateEvidenceParams | undefined;
+  emitPlatformGateEvidence(
+    {
+      stage: 'PRE_PUSH',
+      findings,
+      gateOutcome: 'PASS',
+      filesScanned: 0,
+      repoRoot: '/repo/root',
+      detectedPlatforms,
+      skillsRuleSet,
+      projectRules: [],
+      heuristicRules: [],
+      evidenceService,
+    },
+    {
+      generateEvidence: (params) => {
+        captured = params;
+        return { evidence: { version: '2.1' } as never, write: { ok: true, path: '/x' } };
+      },
+      isEvidencePathTracked: () => false,
+    }
+  );
+
+  assert.equal(captured?.skipDiskWrite, undefined);
 });

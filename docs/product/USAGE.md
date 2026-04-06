@@ -679,6 +679,7 @@ npm run toolkit:clean-artifacts -- --dry-run
 - Fails safe (`exit 1`) with guidance when no upstream is configured.
 - Evaluates `upstream..HEAD` commit range.
 - Requires valid SDD/OpenSpec status (session + active change + validation).
+- Si `.ai_evidence.json` está **versionado** en git y el resultado del gate **no** es `BLOCK` (`PASS`/`WARN`), Pumuki **no reescribe** ese archivo en disco. Así se evita que integraciones tipo `pre-commit` (p. ej. como hook de `pre-push`) fallen con “files were modified by this hook” tras un `decision=ALLOW`. El snapshot en el último commit sigue siendo el generado en `PRE_COMMIT` hasta el siguiente commit. Para forzar la escritura del snapshot `PRE_PUSH` en un fichero trackeado, usa `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE=1` (puede exigir un flujo de commit/evidencia explícito).
 
 ### CI
 
@@ -706,9 +707,11 @@ Resolver source: `integrations/git/resolveGitRefs.ts`.
 
 ## Evidence output
 
-Each run writes deterministic evidence to:
+Cada ejecución del gate escribe evidencia determinista en:
 
 - `.ai_evidence.json`
+
+Excepción: en `PRE_PUSH`, si el fichero está trackeado y el outcome no es `BLOCK`, la escritura al path anterior se omite (ver sección PRE_PUSH arriba). La telemetría interna del gate sigue generándose; solo se evita mutar el árbol de trabajo.
 
 Schema and behavior:
 

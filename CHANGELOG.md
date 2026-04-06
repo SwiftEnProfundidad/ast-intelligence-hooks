@@ -10,6 +10,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.70] - 2026-04-06
+
+### Fixed
+
+- **PRE_PUSH + `.ai_evidence.json` trackeado**: si el fichero está en el índice de git y el outcome del gate **no** es `BLOCK` (`PASS`/`WARN`), Pumuki **ya no reescribe** `.ai_evidence.json` en disco. Evita que integraciones que ejecutan **pre-commit** dentro de **pre-push** fallen con *files were modified by this hook* pese a `decision=ALLOW`. La telemetría del gate sigue generándose; el snapshot versionado sigue siendo el último producido en **PRE_COMMIT** hasta el siguiente commit. Opt-in al comportamiento anterior: `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE=1`.
+- **macOS `gate.blocked` con modal activo**: no se envía el banner `osascript` duplicado cuando ya se muestra el diálogo interactivo (menos confusión con el Centro de notificaciones). Panel Swift: `KeyableFloatingPanel` + `becomesKeyOnlyIfNeeded = false` para que los botones **Desactivar / Silenciar 30 min / Mantener activas** reciban clics de forma fiable.
+
 ## [6.3.69] - 2026-04-05
 
 ### Changed

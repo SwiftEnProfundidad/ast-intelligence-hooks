@@ -1,6 +1,10 @@
 export const SWIFT_BLOCKED_DIALOG_SOURCE = String.raw`import AppKit
 import Foundation
 
+final class KeyableFloatingPanel: NSPanel {
+  override var canBecomeKey: Bool { true }
+}
+
 struct DialogConfig {
   let title: String
   let cause: String
@@ -108,12 +112,13 @@ final class DialogController: NSObject, NSApplicationDelegate, NSWindowDelegate 
       y: screenFrame.minY + margin
     )
 
-    let panel = NSPanel(
+    let panel = KeyableFloatingPanel(
       contentRect: NSRect(x: origin.x, y: origin.y, width: width, height: height),
       styleMask: [.titled, .closable, .fullSizeContentView],
       backing: .buffered,
       defer: false
     )
+    panel.becomesKeyOnlyIfNeeded = false
     panel.level = .floating
     panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
     panel.titleVisibility = .hidden

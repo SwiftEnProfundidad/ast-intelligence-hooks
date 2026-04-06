@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-06 (v6.3.70)
+
+- **Consumidores con pre-commit en pre-push**: con `.ai_evidence.json` **versionado**, `PRE_PUSH` en **ALLOW/WARN** omite persistir en disco para no ensuciar el árbol tras el gate; variable `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE=1` si necesitas el snapshot `PRE_PUSH` en fichero trackeado (puede exigir flujo de commit explícito).
+- **macOS bloqueo**: un solo canal interactivo cuando el modal está activo (sin banner `osascript` paralelo); panel Swift más fiable para foco y clics en botones.
+- **Rollout**: `pumuki@6.3.70`, repin en monorepos (p. ej. RuralGO); `npm test` / `git push` con hooks encadenados como validación.
+
 ### 2026-04-05 (v6.3.69)
 
 - **Hooks = política de repo**: `PRE_COMMIT` / `PRE_PUSH` / `CI` / `PRE_WRITE` incorporan **`GITFLOW_PROTECTED_BRANCH`** y **higiene de worktree** (`EVIDENCE_PREWRITE_WORKTREE_*`, env `PUMUKI_PREWRITE_WORKTREE_*`) vía fusión con `evaluateAiGate` en `runPlatformGate`.
