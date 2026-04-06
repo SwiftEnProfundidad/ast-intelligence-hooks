@@ -8,6 +8,10 @@
 ## Project mode
 - PROJECT MODE: brownfield
 
+## Producto Pumuki (baseline vs adaptadores)
+- MUST: La **línea base** de Pumuki en un repo debe ser **agnóstica al IDE** (Git hooks, gate, lifecycle, evidencia, políticas). No acoplar por defecto a Cursor, Codex, extensiones ni CLIs de editor.
+- MUST: **MCP, `.cursor/`, `.claude/`, etc.** son **capa opcional** (`pumuki install --with-mcp`, `bootstrap --enterprise`), explícita por equipo o documentación, nunca requisito silencioso del `postinstall` npm.
+
 ## Skills requeridos
 - REQUIRED SKILL: enterprise-operating-system
 - REQUIRED SKILL: ios-enterprise-rules

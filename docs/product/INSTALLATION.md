@@ -51,7 +51,7 @@ If both commands pass, the workspace is ready.
 npm install --save-exact pumuki
 ```
 
-From **6.3.66**, the package `postinstall` (when not in CI and not skipped) runs `pumuki install --with-mcp --agent=cursor` in the consumer Git root: hooks, **repo-local** `.cursor/mcp.json` (JSON merge with existing servers), and OpenSpec bootstrap unless `PUMUKI_SKIP_OPENSPEC_BOOTSTRAP=1`. Opt out of MCP wiring: `PUMUKI_POSTINSTALL_WITH_MCP=0`. Choose another agent: `PUMUKI_POSTINSTALL_AGENT=codex` (or another supported adapter).
+The package `postinstall` runs **`pumuki install` only** (Git hooks + lifecycle wiring). It does **not** configure any IDE or MCP; that is intentional so Pumuki stays **repo-generic**. Use step 2 or `pumuki install --with-mcp --agent=<name>` when you want IDE integration.
 
 ### 2) Bootstrap managed lifecycle (recommended single command)
 

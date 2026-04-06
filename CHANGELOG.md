@@ -10,17 +10,16 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
-## [6.3.66] - 2026-04-06
+## [6.3.67] - 2026-04-06
+
+### Fixed
+
+- **Línea base agnóstica al IDE**: el `postinstall` de npm **no** debe acoplar Pumuki a Cursor, Codex ni ningún IDE. Se revierte el experimento **6.3.66** que ejecutaba `pumuki install --with-mcp --agent=cursor` por defecto. El postinstall vuelve a ser solo **`pumuki install`** (hooks Git, estado de lifecycle, evidencia cuando aplica; OpenSpec sigue **omitido** por defecto en ese camino, como en **6.3.63+**).
+- **Adaptadores opcionales**: MCP, `.cursor/`, `.claude/`, etc. siguen disponibles con **`pumuki install --with-mcp --agent=<nombre>`** o **`pumuki bootstrap --enterprise`**, explícitos por repo/equipo.
 
 ### Changed
 
-- **`npm install` (postinstall) en repos Git**: además de cablear hooks, ejecuta por defecto **`pumuki install --with-mcp --agent=cursor`**, generando/actualizando **`.cursor/mcp.json` en el repo** (fusión JSON: no borra otros `mcpServers`). Así el primer uso no exige acordarse de `--with-mcp`.
-- **OpenSpec en postinstall**: ya no se fuerza `PUMUKI_SKIP_OPENSPEC_BOOTSTRAP=1` por defecto; el bootstrap de OpenSpec corre en el install salvo que definas `PUMUKI_SKIP_OPENSPEC_BOOTSTRAP=1`.
-
-### Added
-
-- Variables de entorno: `PUMUKI_POSTINSTALL_WITH_MCP=0` desactiva el cableado MCP en postinstall; `PUMUKI_POSTINSTALL_AGENT=codex|cursor|…` elige agente (por defecto `cursor`).
-- **Repo fuente `pumuki`**: si `package.json` es `name=pumuki` y existe `integrations/lifecycle/cli.ts`, el postinstall solo ejecuta `pumuki install` mínimo (sin OpenSpec/MCP automáticos) para no contaminar el árbol del framework.
+- Plantilla **Cursor** del adaptador: se mantienen **fusión JSON** en `.cursor/mcp.json` y **`.pumuki/adapter.json`** cuando el usuario elige `--agent=cursor` (no en postinstall).
 
 ## [6.3.65] - 2026-04-06
 
