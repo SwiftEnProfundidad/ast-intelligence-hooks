@@ -16,7 +16,7 @@
 
 ## Estado actual
 
-- Frente activo: `rollout-6.3.70-consumers` (push `origin/release/6.3.65` → `ad53a3c`; R_GO `feature/rgo-1840-triple-cycle` → `2a7d15a5e` con pin **6.3.70**)
+- Frente activo: `rollout-6.3.70-consumers` (tag **v6.3.70** → `ad53a3c`; rama `release/6.3.65` en origin; R_GO PR [#1515](https://github.com/SwiftEnProfundidad/R_GO/pull/1515) merge squash a `develop` → `90067cea`)
 - Detalle operativo: ver **Prioridad ordenada** (abajo); una sola fila `🚧`.
 - Origen: `ast-intelligence-hooks`
 - Contexto: este archivo vive en el repo **Pumuki** pero el orden incluye **impacto en consumidores** (RuralGO, SAAS, Flux) cuando el ciclo de release lo exige; no es “solo un repo”, es el **espejo operativo** acordado en `AGENTS.md`.
