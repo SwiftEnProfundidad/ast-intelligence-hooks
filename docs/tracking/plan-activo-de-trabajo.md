@@ -16,10 +16,11 @@
 
 ## Estado actual
 
-- Frente activo: ver **Prioridad ordenada** (abajo); una sola fila `🚧`.
+- Frente activo: `release-6.3.65-pre-commit-exec-fix`
+- Detalle operativo: ver **Prioridad ordenada** (abajo); una sola fila `🚧`.
 - Origen: `ast-intelligence-hooks`
 - Contexto: este archivo vive en el repo **Pumuki** pero el orden incluye **impacto en consumidores** (RuralGO, SAAS, Flux) cuando el ciclo de release lo exige; no es “solo un repo”, es el **espejo operativo** acordado en `AGENTS.md`.
-- Línea **6.3.64** en npm y repin aplicado en ramas acordadas; ciclo publicación+repin **cerrado** (`npm view pumuki version` → **6.3.64** @latest).
+- Línea **6.3.65** en preparación (fix hook `pre-commit` + pre-commit.com); tras `npm publish`, repin consumidores y `pumuki install`. Hasta entonces @latest npm sigue en **6.3.64**.
 - Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; repin **6.3.64** en **SAAS** `main`, **Flux_training** `main`, **R_GO** `develop` (PR https://github.com/SwiftEnProfundidad/R_GO/pull/1514 → `b899ee6a1`). **R_GO `main`** sigue muy por detrás de `develop` (orden ~10³ commits); no es un fast-forward de producto: la promoción a `main` es release aparte.
 
 ## Cola externa real
