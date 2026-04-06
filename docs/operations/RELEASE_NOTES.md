@@ -6,6 +6,14 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-06 (v6.3.71)
+
+- **Evidencia v2.1**: bloque `operational_hints` (`requires_second_pass`, resumen operativo, desglose por severidad de reglas). Alineado con PRE_COMMIT solo-docs + evidencia trackeada (INC-069) cuando no se re-stagea el JSON automáticamente.
+- **Monorepo**: `PUMUKI_GATE_SCOPE_PATH_PREFIXES` acota el primer alcance de hechos por prefijos de ruta.
+- **Paridad CI/local**: `pumuki doctor --parity` y fichero opcional `.pumuki/ci-parity-expected.json` (fallo con exit 1 si hay drift respecto al esperado).
+- **MCP y hooks**: mismas pistas de remediación por código de violación vía catálogo compartido.
+- **Rollout**: `pumuki@6.3.71`; repin en consumidores cuando se publique npm; validar hooks y `doctor --parity` si fijáis expectativas de CI.
+
 ### 2026-04-06 (v6.3.70)
 
 - **Consumidores con pre-commit en pre-push**: con `.ai_evidence.json` **versionado**, `PRE_PUSH` en **ALLOW/WARN** omite persistir en disco para no ensuciar el árbol tras el gate; variable `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE=1` si necesitas el snapshot `PRE_PUSH` en fichero trackeado (puede exigir flujo de commit explícito).

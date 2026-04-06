@@ -10,6 +10,19 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.71] - 2026-04-06
+
+### Added
+
+- **`operational_hints` en `.ai_evidence.json` (v2.1)**: `requires_second_pass`, `second_pass_reason`, `human_summary_lines` (resumen corto) y `rule_execution_breakdown` (evaluadas / bloqueo / warn / info / fuera de alcance). Tras PRE_COMMIT con índice solo documentación y evidencia trackeada, si no se auto-stagea el fichero, se reescribe la evidencia con `requires_second_pass=true` y motivo estable.
+- **`PUMUKI_GATE_SCOPE_PATH_PREFIXES`**: lista separada por comas o `;` con prefijos de ruta; el gate filtra hechos de archivo del **primer** alcance (staged/range/worktree) para reducir ruido en monorepos (los heurísticos sin `filePath` y dependencias siguen pasando).
+- **`pumuki doctor --parity`**: emite `parity_profile` (versión instalada + bundle/hash/signature de policy PRE_COMMIT). Si existe `.pumuki/ci-parity-expected.json` con `pumuki_package_version` / `pre_commit_policy_hash` / `pre_commit_policy_bundle`, añade `parity_comparison`; discrepancias hacen fallar el comando (exit 1) además del veredicto doctor habitual.
+
+### Changed
+
+- **Remediaciones compartidas**: `integrations/gate/remediationCatalog.ts` unifica textos de remediación usados por hooks y por `ai_gate_check` (MCP) para los mismos códigos de violación.
+- **PRE_COMMIT + `.ai_evidence.json` trackeado** (PUMUKI-INC-069): si el índice solo contiene documentación (`*.md` / `*.mdx`, aparte de la evidencia), el hook no hace `git add` automático tras un gate no bloqueante; opt-in: `PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1`.
+
 ## [6.3.70] - 2026-04-06
 
 ### Fixed

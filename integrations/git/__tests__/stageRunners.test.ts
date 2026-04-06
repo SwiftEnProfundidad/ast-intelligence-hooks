@@ -907,6 +907,81 @@ test('runPreCommitStage restagea .ai_evidence.json cuando ya estaba trackeado', 
   });
 });
 
+test('runPreCommitStage no auto-restaguea evidencia trackeada si el índice solo tiene Markdown', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
+    runGit(repoRoot, ['checkout', '-b', 'feature/doc-only-evidence-restage']);
+
+    stageBackendFile(repoRoot);
+    const firstExit = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+    });
+    assert.equal(firstExit, 0);
+    runGit(repoRoot, ['add', '-f', '.ai_evidence.json']);
+    runGit(repoRoot, ['commit', '-m', 'chore: track ai evidence']);
+
+    mkdirSync(join(repoRoot, 'docs'), { recursive: true });
+    writeFileSync(join(repoRoot, 'docs', 'operational-summary.md'), '# ops\n', 'utf8');
+    runGit(repoRoot, ['add', 'docs/operational-summary.md']);
+
+    const stagedPaths: string[] = [];
+    const secondExit = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+      stagePath: (_r, relativePath) => {
+        stagedPaths.push(relativePath);
+      },
+    });
+
+    assert.equal(secondExit, 0);
+    assert.deepEqual(stagedPaths, []);
+  });
+});
+
+test('runPreCommitStage restaguea evidencia con índice solo Markdown si ALWAYS_RESTAGE_TRACKED_EVIDENCE', async () => {
+  const previous = process.env.PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE;
+  process.env.PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE = '1';
+  try {
+    await withStageRunnerRepo(async (repoRoot) => {
+      writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
+      runGit(repoRoot, ['add', 'README.md']);
+      runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
+      runGit(repoRoot, ['checkout', '-b', 'feature/doc-only-evidence-force-restage']);
+
+      stageBackendFile(repoRoot);
+      assert.equal(
+        await runPreCommitStage({ resolveRepoRoot: () => repoRoot }),
+        0
+      );
+      runGit(repoRoot, ['add', '-f', '.ai_evidence.json']);
+      runGit(repoRoot, ['commit', '-m', 'chore: track ai evidence']);
+
+      mkdirSync(join(repoRoot, 'docs'), { recursive: true });
+      writeFileSync(join(repoRoot, 'docs', 'note.md'), '# n\n', 'utf8');
+      runGit(repoRoot, ['add', 'docs/note.md']);
+
+      const stagedPaths: string[] = [];
+      const exitCode = await runPreCommitStage({
+        resolveRepoRoot: () => repoRoot,
+        isPathTracked: (_r, p) => p === '.ai_evidence.json',
+        stagePath: (_r, p) => {
+          stagedPaths.push(p);
+        },
+      });
+
+      assert.equal(exitCode, 0);
+      assert.deepEqual(stagedPaths, ['.ai_evidence.json']);
+    });
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env.PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE;
+    } else {
+      process.env.PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE = previous;
+    }
+  }
+});
+
 test('runPreCommitStage no intenta trackear .ai_evidence.json cuando no estaba versionado', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     stageBackendFile(repoRoot);

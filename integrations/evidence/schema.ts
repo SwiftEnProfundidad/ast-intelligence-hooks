@@ -206,10 +206,26 @@ export type EvidenceChain = {
   sequence: number;
 };
 
+export type EvidenceRuleExecutionBreakdown = {
+  evaluated_count: number;
+  matched_blocking_count: number;
+  matched_warn_count: number;
+  matched_info_count: number;
+  skipped_out_of_scope_count: number;
+};
+
+export type EvidenceOperationalHints = {
+  requires_second_pass: boolean;
+  second_pass_reason: string | null;
+  human_summary_lines: string[];
+  rule_execution_breakdown?: EvidenceRuleExecutionBreakdown;
+};
+
 export type AiEvidenceV2_1 = {
   version: '2.1';
   timestamp: string;
   evidence_chain?: EvidenceChain;
+  operational_hints?: EvidenceOperationalHints;
   snapshot: Snapshot;
   ledger: LedgerEntry[];
   platforms: Record<string, PlatformState>;

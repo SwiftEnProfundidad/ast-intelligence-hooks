@@ -342,6 +342,9 @@ const toStableEvidence = (
   return {
     version: '2.1',
     timestamp: evidence.timestamp,
+    ...(typeof evidence.operational_hints !== 'undefined'
+      ? { operational_hints: evidence.operational_hints }
+      : {}),
     snapshot: {
       stage: evidence.snapshot.stage,
       audit_mode: normalizedAuditMode,

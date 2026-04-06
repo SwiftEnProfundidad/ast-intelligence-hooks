@@ -69,6 +69,22 @@ export type DoctorCompatibilityContract = {
   };
 };
 
+export type DoctorParityProfile = {
+  schema_version: '1';
+  pumuki_package_version: string;
+  pre_commit_policy_bundle: string;
+  pre_commit_policy_hash: string;
+  pre_commit_policy_signature: string | null;
+  pre_commit_policy_version: string | null;
+  skills_policy_present: boolean;
+};
+
+export type DoctorParityComparison = {
+  expected_path: string;
+  matches: boolean;
+  mismatches: ReadonlyArray<{ field: string; expected: string; actual: string }>;
+};
+
 export type LifecycleDoctorReport = {
   repoRoot: string;
   packageVersion: string;
@@ -81,6 +97,8 @@ export type LifecycleDoctorReport = {
   policyValidation: LifecyclePolicyValidationSnapshot;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
+  parity_profile?: DoctorParityProfile;
+  parity_comparison?: DoctorParityComparison;
 };
 
 const buildDoctorIssues = (params: {
@@ -698,10 +716,87 @@ const buildDoctorDeepReport = (params: {
   };
 };
 
+const buildDoctorParityProfile = (params: {
+  repoRoot: string;
+  packageVersion: string;
+}): DoctorParityProfile => {
+  const policy = resolvePolicyForStage('PRE_COMMIT', params.repoRoot);
+  const skillsPolicyPath = join(params.repoRoot, 'skills.policy.json');
+  return {
+    schema_version: '1',
+    pumuki_package_version: params.packageVersion,
+    pre_commit_policy_bundle: policy.trace.bundle,
+    pre_commit_policy_hash: policy.trace.hash,
+    pre_commit_policy_signature: policy.trace.signature ?? null,
+    pre_commit_policy_version: policy.trace.version ?? null,
+    skills_policy_present: existsSync(skillsPolicyPath),
+  };
+};
+
+const compareDoctorParityProfile = (params: {
+  repoRoot: string;
+  actual: DoctorParityProfile;
+}): DoctorParityComparison | undefined => {
+  const expectedPath = join(params.repoRoot, '.pumuki', 'ci-parity-expected.json');
+  if (!existsSync(expectedPath)) {
+    return undefined;
+  }
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(expectedPath, 'utf8')) as unknown;
+  } catch {
+    return {
+      expected_path: expectedPath,
+      matches: false,
+      mismatches: [
+        {
+          field: 'ci-parity-expected.json',
+          expected: 'valid-json',
+          actual: 'parse-error',
+        },
+      ],
+    };
+  }
+  if (!isRecord(raw)) {
+    return {
+      expected_path: expectedPath,
+      matches: false,
+      mismatches: [{ field: 'root', expected: 'object', actual: 'non-object' }],
+    };
+  }
+  const mismatches: Array<{ field: string; expected: string; actual: string }> = [];
+  const expectField = (field: string, expected: unknown, actual: string) => {
+    if (typeof expected === 'string' && expected.trim().length > 0 && expected !== actual) {
+      mismatches.push({ field, expected, actual });
+    }
+  };
+  expectField(
+    'pumuki_package_version',
+    raw.pumuki_package_version,
+    params.actual.pumuki_package_version
+  );
+  expectField(
+    'pre_commit_policy_hash',
+    raw.pre_commit_policy_hash,
+    params.actual.pre_commit_policy_hash
+  );
+  expectField(
+    'pre_commit_policy_bundle',
+    raw.pre_commit_policy_bundle,
+    params.actual.pre_commit_policy_bundle
+  );
+  return {
+    expected_path: expectedPath,
+    matches: mismatches.length === 0,
+    mismatches,
+  };
+};
+
 export const runLifecycleDoctor = (params?: {
   cwd?: string;
   git?: ILifecycleGitService;
   deep?: boolean;
+  parity?: boolean;
 }): LifecycleDoctorReport => {
   const git = params?.git ?? new LifecycleGitService();
   const cwd = params?.cwd ?? process.cwd();
@@ -730,6 +825,18 @@ export const runLifecycleDoctor = (params?: {
     lifecycleVersion: lifecycleState.version,
   });
 
+  const parity_profile =
+    params?.parity === true
+      ? buildDoctorParityProfile({
+        repoRoot,
+        packageVersion: version.effective,
+      })
+      : undefined;
+  const parity_comparison =
+    typeof parity_profile !== 'undefined'
+      ? compareDoctorParityProfile({ repoRoot, actual: parity_profile })
+      : undefined;
+
   return {
     repoRoot,
     packageVersion: version.effective,
@@ -742,8 +849,13 @@ export const runLifecycleDoctor = (params?: {
     policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
     issues,
     deep,
+    parity_profile,
+    parity_comparison,
   };
 };
 
 export const doctorHasBlockingIssues = (report: LifecycleDoctorReport): boolean =>
   report.issues.some((issue) => issue.severity === 'error') || report.deep?.blocking === true;
+
+export const doctorHasParityMismatch = (report: LifecycleDoctorReport): boolean =>
+  typeof report.parity_comparison !== 'undefined' && report.parity_comparison.matches === false;

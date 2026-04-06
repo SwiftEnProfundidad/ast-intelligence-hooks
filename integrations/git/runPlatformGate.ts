@@ -35,6 +35,10 @@ import type { TddBddSnapshot } from '../tdd/types';
 import { resolveSkillsEnforcement } from '../policy/skillsEnforcement';
 import { applyTddBddEnforcement } from '../policy/tddBddEnforcement';
 import { collectAiGateRepoPolicyFindings } from './aiGateRepoPolicyFindings';
+import {
+  filterFactsByPathPrefixes,
+  resolveGateScopePathPrefixesFromEnv,
+} from './filterFactsByPathPrefixes';
 
 export type OperationalMemoryShadowRecommendation = {
   recommendedOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
@@ -911,10 +915,14 @@ export async function runPlatformGate(params: {
     }
   }
 
-  const facts = await dependencies.resolveFactsForGateScope({
-    scope: params.scope,
-    git,
-  });
+  const gateScopePathPrefixes = resolveGateScopePathPrefixesFromEnv();
+  const facts = filterFactsByPathPrefixes(
+    await dependencies.resolveFactsForGateScope({
+      scope: params.scope,
+      git,
+    }),
+    gateScopePathPrefixes
+  );
   const stagedPaths = collectStagedPaths(git, repoRoot);
   const factsForPlatformEvaluation = shouldAugmentStagedSkillsContractFactsWithRepoFacts({
     scope: params.scope,

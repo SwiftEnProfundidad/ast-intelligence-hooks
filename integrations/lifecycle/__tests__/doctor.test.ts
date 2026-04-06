@@ -9,7 +9,11 @@ import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { PUMUKI_CONFIG_KEYS } from '../constants';
 import type { ILifecycleGitService } from '../gitService';
 import { installPumukiHooks } from '../hookManager';
-import { doctorHasBlockingIssues, runLifecycleDoctor } from '../doctor';
+import {
+  doctorHasBlockingIssues,
+  doctorHasParityMismatch,
+  runLifecycleDoctor,
+} from '../doctor';
 import { getCurrentPumukiVersion } from '../packageInfo';
 
 const withCwd = <T>(cwd: string, fn: () => T): T => {
@@ -855,5 +859,68 @@ test('runLifecycleDoctor --deep marca incompatibilidad cuando OpenSpec es requer
     assert.equal(compatibilityCheck?.status, 'fail');
     assert.equal(compatibilityCheck?.severity, 'warning');
     assert.equal(report.deep?.blocking, false);
+  });
+});
+
+test('runLifecycleDoctor --parity expone perfil y compara .pumuki/ci-parity-expected.json', async () => {
+  await withTempDir('pumuki-doctor-parity-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const report = withCwd(repoRoot, () =>
+      runLifecycleDoctor({ cwd: repoRoot, git, parity: true })
+    );
+    assert.ok(report.parity_profile);
+    assert.equal(report.parity_profile?.schema_version, '1');
+    assert.ok((report.parity_profile?.pre_commit_policy_hash.length ?? 0) > 0);
+    assert.equal(report.parity_comparison, undefined);
+    assert.equal(doctorHasParityMismatch(report), false);
+
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'ci-parity-expected.json'),
+      JSON.stringify(
+        {
+          pumuki_package_version: '0.0.0-not-real',
+          pre_commit_policy_hash: 'deadbeef',
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const reportMismatch = withCwd(repoRoot, () =>
+      runLifecycleDoctor({ cwd: repoRoot, git, parity: true })
+    );
+    assert.equal(reportMismatch.parity_comparison?.matches, false);
+    assert.ok((reportMismatch.parity_comparison?.mismatches.length ?? 0) >= 1);
+    assert.equal(doctorHasParityMismatch(reportMismatch), true);
+
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'ci-parity-expected.json'),
+      JSON.stringify(
+        {
+          pumuki_package_version: reportMismatch.parity_profile?.pumuki_package_version,
+          pre_commit_policy_hash: reportMismatch.parity_profile?.pre_commit_policy_hash,
+          pre_commit_policy_bundle: reportMismatch.parity_profile?.pre_commit_policy_bundle,
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const reportOk = withCwd(repoRoot, () =>
+      runLifecycleDoctor({ cwd: repoRoot, git, parity: true })
+    );
+    assert.equal(reportOk.parity_comparison?.matches, true);
+    assert.equal(doctorHasParityMismatch(reportOk), false);
   });
 });

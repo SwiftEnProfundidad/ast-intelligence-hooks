@@ -20,7 +20,9 @@ import {
 } from '../notifications/emitAuditSummaryNotification';
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { buildEvidenceOperationalHints } from '../evidence/operationalHints';
 import { readEvidence, readEvidenceResult } from '../evidence/readEvidence';
+import { writeEvidence } from '../evidence/writeEvidence';
 import type { EvidenceReadResult } from '../evidence/readEvidence';
 import type { SnapshotFinding } from '../evidence/schema';
 import { ensureRuntimeArtifactsIgnored } from '../lifecycle/artifacts';
@@ -31,6 +33,10 @@ import {
   resolveGitAtomicityEnforcement,
   type GitAtomicityEnforcementResolution,
 } from '../policy/gitAtomicityEnforcement';
+import {
+  DEFAULT_GATE_REMEDIATION as DEFAULT_BLOCKED_REMEDIATION,
+  REMEDIATION_HINT_BY_CODE as BLOCKED_REMEDIATION_BY_CODE,
+} from '../gate/remediationCatalog';
 
 const PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE =
   'pumuki pre-push blocked: branch has no upstream tracking reference. Configure upstream first (for example: git push --set-upstream origin <branch>) and retry.';
@@ -40,38 +46,42 @@ const PRE_PUSH_MANUAL_FALLBACK_MESSAGE =
   '[pumuki][pre-push] branch has no upstream and stdin is empty; using working-tree fallback scope.';
 const PRE_PUSH_UPSTREAM_MISALIGNED_AHEAD_THRESHOLD = 5;
 
+const isTruthyEnvFlag = (value?: string): boolean => {
+  if (!value) {
+    return false;
+  }
+  const normalized = value.trim().toLowerCase();
+  return normalized === '1' || normalized === 'true' || normalized === 'yes';
+};
+
+const isDocumentationOnlyStagedPath = (relativePath: string): boolean => {
+  const normalized = relativePath.replace(/\\/g, '/').trim();
+  if (normalized.length === 0) {
+    return false;
+  }
+  return /\.(md|mdx)$/i.test(normalized);
+};
+
+const shouldSkipRestagingTrackedEvidenceForDocumentationOnlyScope = (params: {
+  listStagedIndexPaths: (repoRoot: string) => ReadonlyArray<string>;
+  repoRoot: string;
+}): boolean => {
+  if (isTruthyEnvFlag(process.env.PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE)) {
+    return false;
+  }
+  const paths = params.listStagedIndexPaths(params.repoRoot).filter(
+    (p) => p !== '.ai_evidence.json' && p !== '.AI_EVIDENCE.json'
+  );
+  if (paths.length === 0) {
+    return true;
+  }
+  return paths.every(isDocumentationOnlyStagedPath);
+};
+
 const PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS = 900;
 const PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS = 1800;
 const HOOK_GATE_PROGRESS_REMINDER_MS = 2000;
-const DEFAULT_BLOCKED_REMEDIATION = 'Corrige la causa del bloqueo y vuelve a ejecutar el gate.';
 const EVIDENCE_FILE_PATH = '.ai_evidence.json';
-
-const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
-  EVIDENCE_MISSING: 'Regenera .ai_evidence.json ejecutando una auditoría.',
-  EVIDENCE_INVALID: 'Corrige/regenera .ai_evidence.json y vuelve a ejecutar el gate.',
-  EVIDENCE_CHAIN_INVALID: 'Regenera evidencia para restaurar la cadena criptográfica.',
-  EVIDENCE_STAGE_SYNC_FAILED:
-    'Sincroniza la evidencia trackeada y reintenta: git add -- .ai_evidence.json && git commit --amend --no-edit',
-  EVIDENCE_STALE: 'Refresca evidencia antes de continuar.',
-  EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera evidencia desde este mismo repositorio.',
-  EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual y reintenta.',
-  EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
-  EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura coverage_ratio=1 y unevaluated=0.',
-  ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
-    'Reconcilia policy/skills y reintenta PRE_COMMIT: npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki-pre-commit',
-  EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
-    'Reconcilia policy/skills y revalida PRE_WRITE: npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
-  GITFLOW_PROTECTED_BRANCH: 'Trabaja en feature/* y evita ramas protegidas.',
-  EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
-    'Reduce archivos staged/unstaged por debajo del umbral (o ajusta PUMUKI_PREWRITE_WORKTREE_*); divide el trabajo en commits más pequeños.',
-  EVIDENCE_PREWRITE_WORKTREE_WARN:
-    'El worktree supera el umbral de aviso; reduce alcance antes del siguiente commit/push.',
-  PRE_PUSH_UPSTREAM_MISSING: 'Ejecuta: git push --set-upstream origin <branch>',
-  PRE_PUSH_UPSTREAM_MISALIGNED:
-    'Alinea upstream con la rama actual: git branch --unset-upstream && git push --set-upstream origin <branch>',
-  MANIFEST_MUTATION_DETECTED:
-    'Los hooks/gates no deben modificar manifests. Revisa wiring y ejecuta upgrade explícito solo cuando aplique (por ejemplo: pumuki update --latest).',
-};
 
 const HOOK_POLICY_RECONCILE_CODES = new Set<string>([
   'SKILLS_PLATFORM_COVERAGE_INCOMPLETE_HIGH',
@@ -123,6 +133,7 @@ type StageRunnerDependencies = {
   ensureRuntimeArtifactsIgnored: (repoRoot: string) => void;
   runPolicyReconcile: typeof runPolicyReconcile;
   isPathTracked: (repoRoot: string, relativePath: string) => boolean;
+  listStagedIndexPaths: (repoRoot: string) => ReadonlyArray<string>;
   stagePath: (repoRoot: string, relativePath: string) => void;
   resolveHeadOid: (repoRoot: string) => string | null;
   resolveGitAtomicityEnforcement: () => GitAtomicityEnforcementResolution;
@@ -201,6 +212,13 @@ const defaultDependencies: StageRunnerDependencies = {
     } catch {
       return false;
     }
+  },
+  listStagedIndexPaths: (repoRoot) => {
+    const raw = new GitService().runGit(['diff', '--cached', '--name-only'], repoRoot);
+    return raw
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
   },
   stagePath: (repoRoot, relativePath) => {
     new GitService().runGit(['add', '--', relativePath], repoRoot);
@@ -489,6 +507,26 @@ const runHookGateWithPolicyRetry = async (params: {
   }
 };
 
+const patchOperationalHintsAfterDocumentationOnlyEvidenceSync = (repoRoot: string): void => {
+  const evidenceRead = readEvidenceResult(repoRoot);
+  if (evidenceRead.kind !== 'valid') {
+    return;
+  }
+  const evidence = evidenceRead.evidence;
+  const hints = buildEvidenceOperationalHints({
+    stage: evidence.snapshot.stage,
+    outcome: evidence.snapshot.outcome,
+    findings: evidence.snapshot.findings,
+    rulesCoverage: evidence.snapshot.rules_coverage,
+    evaluationMetrics: evidence.snapshot.evaluation_metrics,
+    extra: {
+      requires_second_pass: true,
+      second_pass_reason: 'tracked_evidence_refreshed_on_disk_not_staged_documentation_only_commit',
+    },
+  });
+  writeEvidence({ ...evidence, operational_hints: hints }, { repoRoot });
+};
+
 const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
   dependencies: StageRunnerDependencies;
   repoRoot: string;
@@ -498,6 +536,22 @@ const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
     return false;
   }
   if (!params.dependencies.isPathTracked(params.repoRoot, EVIDENCE_FILE_PATH)) {
+    return false;
+  }
+  if (
+    shouldSkipRestagingTrackedEvidenceForDocumentationOnlyScope({
+      repoRoot: params.repoRoot,
+      listStagedIndexPaths: params.dependencies.listStagedIndexPaths,
+    })
+  ) {
+    if (!params.dependencies.isQuietMode()) {
+      process.stderr.write(
+        `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} updated on disk but not auto-staged (documentation-only staged paths: *.md / *.mdx). ` +
+          `Include in this commit if needed: git add -- ${EVIDENCE_FILE_PATH}. ` +
+          `Force previous behavior: PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1\n`
+      );
+    }
+    patchOperationalHintsAfterDocumentationOnlyEvidenceSync(params.repoRoot);
     return false;
   }
   try {

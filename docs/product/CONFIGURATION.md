@@ -317,6 +317,18 @@ Environment variables:
 - `PUMUKI_PREWRITE_WORKTREE_WARN_THRESHOLD` (default: `12`)
 - `PUMUKI_PREWRITE_WORKTREE_BLOCK_THRESHOLD` (default: `24`)
 
+## Alcance del gate por prefijos (monorepos)
+
+- `PUMUKI_GATE_SCOPE_PATH_PREFIXES`: prefijos de ruta separados por **coma** o **punto y coma** (p. ej. `apps/backend,apps/web-app`). Se normalizan barras invertidas a `/`. El **primer** conjunto de hechos del alcance del stage (p. ej. staged o rango de commits) se filtra a rutas bajo esos prefijos. Hechos sin ruta de archivo reconocible (p. ej. algunas dependencias) se conservan para no romper reglas transversales.
+
+## Paridad local vs CI (`pumuki doctor`)
+
+- Fichero opcional **`.pumuki/ci-parity-expected.json`** (commit en el repo consumer): JSON mínimo con los campos que quieras fijar, p. ej. `pumuki_package_version`, `pre_commit_policy_hash`, `pre_commit_policy_bundle`. Con `pumuki doctor --parity` (y opcionalmente `--json`), Pumuki calcula el perfil actual y, si existe el fichero esperado, rellena `parity_comparison`; cualquier desajuste hace **exit code 1**.
+
+## Evidencia en PRE_COMMIT con índice solo documentación
+
+- `PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE` (`1|true|yes`): fuerza el `git add` automático de `.ai_evidence.json` después de un `PRE_COMMIT` exitoso aunque el índice solo contenga rutas `*.md` / `*.mdx` (además de la propia evidencia). Por defecto, en ese alcance Pumuki **no** ensarta la evidencia en el commit: el snapshot se refresca en disco y puedes decidir si lo incluyes (`git add -- .ai_evidence.json`). Cubre el caso de commits puramente documentales sin mezclar un diff grande de evidencia (p. ej. informes upstream tipo PUMUKI-INC-069).
+
 ## Evidencia en PRE_PUSH con `.ai_evidence.json` trackeado
 
 - `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE` (`1|true|yes`): fuerza la escritura del snapshot en `PRE_PUSH` aunque `.ai_evidence.json` esté versionado. Por defecto (sin esta variable), si el fichero está en el índice de git y el outcome no es `BLOCK`, Pumuki **no** muta el archivo para no romper hooks encadenados (p. ej. `pre-commit` ejecutado desde `pre-push`).

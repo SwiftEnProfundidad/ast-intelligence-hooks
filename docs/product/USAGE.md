@@ -287,6 +287,8 @@ npx --yes pumuki install --with-mcp --agent=codex
 npx --yes pumuki doctor
 # include deterministic adapter/mcp wiring health checks
 npx --yes pumuki doctor --deep --json
+# parity profile vs .pumuki/ci-parity-expected.json (CI/local alignment)
+npx --yes pumuki doctor --parity --json
 
 # show lifecycle status
 npx --yes pumuki status
@@ -671,7 +673,9 @@ npm run toolkit:clean-artifacts -- --dry-run
 
 - Reads staged changes with `git diff --cached --name-status`.
 - Builds facts from staged content.
+- Opcional: `PUMUKI_GATE_SCOPE_PATH_PREFIXES` acota el primer alcance de hechos a prefijos del monorepo (ver `docs/product/CONFIGURATION.md`).
 - Requires valid SDD/OpenSpec status (session + active change + validation).
+- Si `.ai_evidence.json` está **versionado** y el hook refresca el snapshot en disco tras un gate **no** bloqueante, por defecto Pumuki vuelve a hacer `git add` de ese fichero **salvo** que lo único en el índice (ignorando `.ai_evidence.json` / `.AI_EVIDENCE.json`) sean rutas de documentación (`*.md`, `*.mdx`). En ese caso la evidencia se actualiza en disco pero **no** se ensarta en el commit: puedes añadirla manualmente (`git add -- .ai_evidence.json`) o activar el comportamiento anterior con `PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1` (ver `docs/product/CONFIGURATION.md`). En stderr (si no va en modo silencioso) verás un aviso `[pumuki][evidence-sync]`.
 
 ### PRE_PUSH
 
@@ -711,11 +715,15 @@ Cada ejecución del gate escribe evidencia determinista en:
 
 - `.ai_evidence.json`
 
-Excepción: en `PRE_PUSH`, si el fichero está trackeado y el outcome no es `BLOCK`, la escritura al path anterior se omite (ver sección PRE_PUSH arriba). La telemetría interna del gate sigue generándose; solo se evita mutar el árbol de trabajo.
+Excepciones:
+
+- En `PRE_PUSH`, si el fichero está trackeado y el outcome no es `BLOCK`, la escritura al path anterior se omite (ver sección PRE_PUSH arriba). La telemetría interna del gate sigue generándose; solo se evita mutar el árbol de trabajo.
+- En `PRE_COMMIT`, si el fichero está trackeado y el índice es solo documentación (`*.md` / `*.mdx`), el fichero puede actualizarse en disco sin auto-`git add` (ver sección PRE_COMMIT arriba).
 
 Schema and behavior:
 
 - `version: "2.1"` is the source of truth
+- `operational_hints` (opcional pero recomendado en runs recientes): `requires_second_pass` (boolean), `second_pass_reason` (string o null), `human_summary_lines` (1–4 líneas legibles), `rule_execution_breakdown` (conteos evaluated / blocking / warn / info / skipped out-of-scope). Útil para tooling y para entender el resultado sin abrir todo el snapshot.
 - `snapshot` + `ledger`
 - `platforms` and `rulesets` tracking
 - `snapshot.sdd_metrics` tracks stage-level SDD enforcement metadata

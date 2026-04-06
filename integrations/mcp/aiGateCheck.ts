@@ -1,16 +1,7 @@
 import { evaluateAiGate, type AiGateStage } from '../gate/evaluateAiGate';
+import { resolveRemediationHintForViolationCode } from '../gate/remediationCatalog';
 import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
-
-const AUTO_FIX_BY_CODE: Readonly<Record<string, string>> = {
-  EVIDENCE_MISSING: 'Ejecuta una auditoría para generar .ai_evidence.json.',
-  EVIDENCE_INVALID: 'Regenera .ai_evidence.json y vuelve a evaluar.',
-  EVIDENCE_STALE: 'Refresca evidencia antes de continuar.',
-  EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual.',
-  EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera evidencia desde este repositorio.',
-  PRE_PUSH_UPSTREAM_MISSING: 'Ejecuta git push --set-upstream origin <branch>.',
-  GITFLOW_PROTECTED_BRANCH: 'Crea una rama feature/* y mueve el trabajo allí.',
-};
 
 const PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
 
@@ -112,7 +103,7 @@ const buildAutoFixes = (
     if (emittedCodes.has(violation.code)) {
       continue;
     }
-    const fix = AUTO_FIX_BY_CODE[violation.code];
+    const fix = resolveRemediationHintForViolationCode(violation.code);
     if (!fix) {
       continue;
     }

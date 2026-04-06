@@ -7,6 +7,7 @@ import type {
   ConsolidationSuppressedFinding,
   CompatibilityViolation,
   EvidenceLines,
+  EvidenceOperationalHints,
   HumanIntentState,
   LedgerEntry,
   PlatformState,
@@ -23,6 +24,7 @@ import { buildSnapshotPlatformSummaries } from './platformSummary';
 import { resolveHumanIntent } from './humanIntent';
 import { normalizeSnapshotEvaluationMetrics } from './evaluationMetrics';
 import { normalizeSnapshotRulesCoverage } from './rulesCoverage';
+import { buildEvidenceOperationalHints } from './operationalHints';
 
 type BuildFindingInput = Finding & {
   file?: string;
@@ -50,6 +52,9 @@ export type BuildEvidenceParams = {
   };
   sddMetrics?: SddMetrics;
   repoState?: RepoState;
+  operationalHintsExtra?: Partial<
+    Pick<EvidenceOperationalHints, 'requires_second_pass' | 'second_pass_reason'>
+  >;
 };
 
 const normalizeLines = (lines?: EvidenceLines): EvidenceLines | undefined => {
@@ -766,9 +771,19 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
     previousEvidence: params.previousEvidence,
   });
 
+  const operational_hints = buildEvidenceOperationalHints({
+    stage: params.stage,
+    outcome,
+    findings: normalizedFindings,
+    rulesCoverage: normalizedRulesCoverage,
+    evaluationMetrics: normalizedEvaluationMetrics,
+    extra: params.operationalHintsExtra,
+  });
+
   return {
     version: '2.1',
     timestamp: now,
+    operational_hints,
     snapshot: {
       stage: params.stage,
       audit_mode: params.auditMode ?? 'gate',

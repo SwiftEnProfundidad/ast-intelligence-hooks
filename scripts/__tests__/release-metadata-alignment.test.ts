@@ -33,7 +33,7 @@ const extractReleaseNotesVersion = (source: string): string | undefined => {
 };
 
 const extractTrackingFront = (source: string): string | undefined => {
-  const match = source.match(/^- Frente activo: `([^`]+)`$/m);
+  const match = source.match(/^- Frente activo: `([^`]+)`/m);
   return match?.[1];
 };
 

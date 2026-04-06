@@ -5,6 +5,7 @@ import { runPlatformGate } from '../git/runPlatformGate';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
 import {
   doctorHasBlockingIssues,
+  doctorHasParityMismatch,
   runLifecycleDoctor,
   type LifecycleDoctorReport,
 } from './doctor';
@@ -115,6 +116,7 @@ export type ParsedArgs = {
   installMcpAgent?: AdapterAgent;
   remoteChecks?: boolean;
   doctorDeep?: boolean;
+  doctorParity?: boolean;
   sddCommand?: SddCommand;
   loopCommand?: LoopCommand;
   loopSessionId?: string;
@@ -180,7 +182,7 @@ Pumuki lifecycle commands:
   pumuki uninstall [--purge-artifacts]
   pumuki remove
   pumuki update [--latest|--spec=<package-spec>]
-  pumuki doctor [--remote-checks] [--deep] [--json]
+  pumuki doctor [--remote-checks] [--deep] [--parity] [--json]
   pumuki status [--json] [--remote-checks]
   pumuki watch [--stage=PRE_COMMIT|PRE_PUSH|CI] [--scope=workingTree|staged|repoAndStaged|repo] [--severity=critical|high|medium|low] [--interval-ms=<n>] [--notify-cooldown-ms=<n>] [--no-notify] [--once|--iterations=<n>] [--json]
   pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]
@@ -567,6 +569,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let installMcpAgent: ParsedArgs['installMcpAgent'];
   let remoteChecks = false;
   let doctorDeep = false;
+  let doctorParity = false;
   let watchStage: ParsedArgs['watchStage'];
   let watchScope: ParsedArgs['watchScope'];
   let watchIntervalMs: ParsedArgs['watchIntervalMs'];
@@ -1395,6 +1398,10 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       doctorDeep = true;
       continue;
     }
+    if (arg === '--parity') {
+      doctorParity = true;
+      continue;
+    }
     if (arg === '--purge-artifacts') {
       purgeArtifacts = true;
       continue;
@@ -1416,6 +1423,9 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   }
   if (doctorDeep && commandRaw !== 'doctor') {
     throw new Error(`--deep is only supported with "pumuki doctor".\n\n${HELP_TEXT}`);
+  }
+  if (doctorParity && commandRaw !== 'doctor') {
+    throw new Error(`--parity is only supported with "pumuki doctor".\n\n${HELP_TEXT}`);
   }
   if (commandRaw !== 'bootstrap' && bootstrapEnterprise) {
     throw new Error(`--enterprise is only supported with "pumuki bootstrap".\n\n${HELP_TEXT}`);
@@ -1444,6 +1454,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
     ...(installMcpAgent ? { installMcpAgent } : {}),
     ...(remoteChecks ? { remoteChecks: true } : {}),
     ...(doctorDeep ? { doctorDeep: true } : {}),
+    ...(doctorParity ? { doctorParity: true } : {}),
   };
 };
 
@@ -1516,6 +1527,22 @@ const printDoctorReport = (
     writeInfo(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
   }
 
+  if (report.parity_profile) {
+    writeInfo(
+      `[pumuki][doctor][parity] pumuki=${report.parity_profile.pumuki_package_version} bundle=${report.parity_profile.pre_commit_policy_bundle} hash=${report.parity_profile.pre_commit_policy_hash}`
+    );
+  }
+  if (report.parity_comparison) {
+    writeInfo(
+      `[pumuki][doctor][parity] expected_file=${report.parity_comparison.expected_path} matches=${report.parity_comparison.matches ? 'yes' : 'no'}`
+    );
+    for (const mismatch of report.parity_comparison.mismatches) {
+      writeInfo(
+        `[pumuki][doctor][parity] mismatch ${mismatch.field}: expected=${mismatch.expected} actual=${mismatch.actual}`
+      );
+    }
+  }
+
   if (report.deep?.enabled) {
     for (const check of report.deep.checks) {
       writeInfo(
@@ -1527,7 +1554,8 @@ const printDoctorReport = (
     }
   }
 
-  const hasBlocking = doctorHasBlockingIssues(report);
+  const hasBlocking =
+    doctorHasBlockingIssues(report) || doctorHasParityMismatch(report);
   const hasWarnings =
     report.issues.length > 0 ||
     report.deep?.checks.some((check) => check.status !== 'pass') === true;
@@ -2225,6 +2253,7 @@ export const runLifecycleCli = async (
       case 'doctor': {
         const report = runLifecycleDoctor({
           deep: parsed.doctorDeep === true,
+          parity: parsed.doctorParity === true,
         });
         const remoteCiDiagnostics = parsed.remoteChecks
           ? activeDependencies.collectRemoteCiDiagnostics({
@@ -2247,7 +2276,7 @@ export const runLifecycleCli = async (
         } else {
           printDoctorReport(report, remoteCiDiagnostics);
         }
-        return doctorHasBlockingIssues(report) ? 1 : 0;
+        return doctorHasBlockingIssues(report) || doctorHasParityMismatch(report) ? 1 : 0;
       }
       case 'status': {
         const status = readLifecycleStatus();
