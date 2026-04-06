@@ -10,6 +10,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.65] - 2026-04-06
+
+### Fixed
+
+- **Integración con pre-commit.com**: si el hook `pre-commit` termina en `exec … pre_commit`, el bloque gestionado por Pumuki se insertaba **después** y nunca se ejecutaba. Ahora se detecta esa plantilla y el bloque Pumuki se coloca **justo después del shebang**, antes del `exec`. Tras actualizar, ejecutar `pumuki install` en el consumer para reescribir `.git/hooks/pre-commit`.
+
 ## [6.3.64] - 2026-04-05
 
 ### Fixed

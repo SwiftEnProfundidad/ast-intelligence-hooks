@@ -6,6 +6,11 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-06 (v6.3.65)
+
+- **pre-commit.com + `exec`**: Pumuki ya no inserta su bloque gestionado *después* del `exec` del hook generado por pre-commit (código inalcanzable). Tras actualizar a **6.3.65**, ejecutar `pumuki install` en el consumer para reordenar `.git/hooks/pre-commit`.
+- Rollout: repin a `pumuki@6.3.65`; validar que un `git commit` dispara el gate (salida `[pumuki]` / policy) antes de que corra pre-commit.
+
 ### 2026-04-05 (v6.3.64)
 
 - **Notificaciones multiplataforma**: fuera de macOS, avisos críticos van a **stderr** por defecto (terminal visible). `PUMUKI_DISABLE_STDERR_NOTIFICATIONS=1` lo silencia para CI/scripts. En macOS, `PUMUKI_NOTIFICATION_STDERR_MIRROR=1` añade copia en terminal; si `osascript`/banner falla, stderr actúa como respaldo.
