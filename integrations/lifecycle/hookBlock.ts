@@ -82,23 +82,58 @@ const ensureExecutableHeader = (contents: string): string => {
   return contents;
 };
 
+const isPreCommitFrameworkWithExecTerminator = (contents: string): boolean => {
+  if (!contents.includes('pre-commit.com') && !contents.includes('pre_commit')) {
+    return false;
+  }
+  return /\bexec\b/.test(contents);
+};
+
+const prependManagedBlockAfterShebang = (params: {
+  contents: string;
+  block: string;
+}): string => {
+  const trimmed = trimTrailingWhitespace(params.contents);
+  const firstNewline = trimmed.indexOf('\n');
+  const shebangLine = firstNewline === -1 ? trimmed : trimmed.slice(0, firstNewline);
+  const rest =
+    firstNewline === -1 ? '' : trimmed.slice(firstNewline + 1).replace(/^\n+/, '');
+  const header = shebangLine.startsWith('#!') ? shebangLine : '#!/usr/bin/env sh';
+  const bodyAfterShebang = shebangLine.startsWith('#!') ? rest : trimmed;
+  const tail = trimTrailingWhitespace(bodyAfterShebang);
+  return tail.length > 0
+    ? `${header}\n${params.block}\n\n${tail}\n`
+    : `${header}\n${params.block}\n`;
+};
+
 export const upsertPumukiManagedBlock = (params: {
   contents: string;
   hook: PumukiManagedHook;
 }): string => {
   const block = buildPumukiManagedHookBlock(params.hook);
   const baseline = ensureExecutableHeader(params.contents);
+  const hadManagedBlock = hasPumukiManagedBlock(baseline);
+  const core = collapseBlankLines(
+    trimTrailingWhitespace(
+      hadManagedBlock ? baseline.replace(managedBlockPattern, '\n') : baseline
+    )
+  );
 
-  if (hasPumukiManagedBlock(baseline)) {
-    const replaced = baseline.replace(managedBlockPattern, `${block}\n`);
-    return `${trimTrailingWhitespace(replaced)}\n`;
+  if (
+    params.hook === 'pre-commit' &&
+    core.length > 0 &&
+    isPreCommitFrameworkWithExecTerminator(core)
+  ) {
+    const merged = prependManagedBlockAfterShebang({ contents: core, block });
+    return `${trimTrailingWhitespace(merged)}\n`;
   }
 
-  const withSeparator =
-    trimTrailingWhitespace(baseline).length > 0
-      ? `${trimTrailingWhitespace(baseline)}\n\n${block}`
-      : block;
-  return `${withSeparator}\n`;
+  if (hadManagedBlock || core.length > 0) {
+    const withSeparator = core.length > 0 ? `${core}\n\n${block}` : block;
+    return `${trimTrailingWhitespace(withSeparator)}\n`;
+  }
+
+  return `${block}\n`;
 };
 
 export const removePumukiManagedBlock = (contents: string): {
