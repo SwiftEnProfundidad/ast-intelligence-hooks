@@ -17,3 +17,10 @@ test('extractDialogButton devuelve el botón cuando el helper lo imprime', () =>
     'Mantener activas'
   );
 });
+
+test('extractDialogButton usa la última coincidencia y limpia sufijos tipo AppleScript', () => {
+  assert.equal(
+    extractDialogButton('noise\nbutton returned:Silenciar 30 min,\n'),
+    'Silenciar 30 min'
+  );
+});

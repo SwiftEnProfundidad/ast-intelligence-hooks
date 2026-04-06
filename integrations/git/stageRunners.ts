@@ -62,6 +62,10 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
     'Reconcilia policy/skills y revalida PRE_WRITE: npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
   GITFLOW_PROTECTED_BRANCH: 'Trabaja en feature/* y evita ramas protegidas.',
+  EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
+    'Reduce archivos staged/unstaged por debajo del umbral (o ajusta PUMUKI_PREWRITE_WORKTREE_*); divide el trabajo en commits más pequeños.',
+  EVIDENCE_PREWRITE_WORKTREE_WARN:
+    'El worktree supera el umbral de aviso; reduce alcance antes del siguiente commit/push.',
   PRE_PUSH_UPSTREAM_MISSING: 'Ejecuta: git push --set-upstream origin <branch>',
   PRE_PUSH_UPSTREAM_MISALIGNED:
     'Alinea upstream con la rama actual: git branch --unset-upstream && git push --set-upstream origin <branch>',
@@ -186,6 +190,7 @@ const defaultDependencies: StageRunnerDependencies = {
     try {
       ensureRuntimeArtifactsIgnored(repoRoot);
     } catch {
+      undefined;
     }
   },
   runPolicyReconcile,

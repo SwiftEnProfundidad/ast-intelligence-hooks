@@ -307,9 +307,9 @@ Blocking code:
 
 - `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE` (when contract is incomplete outside PRE_WRITE)
 
-## PRE_WRITE worktree hygiene guard
+## Worktree hygiene guard (PRE_WRITE + Git hooks)
 
-AI Gate can enforce early worktree hygiene in `PRE_WRITE` to reduce non-atomic changes before commit time.
+AI Gate enforces worktree hygiene using **pending_changes** (or `staged + unstaged`) to reduce oversized batches before commit/push. The same thresholds apply to **`PRE_WRITE`**, **`PRE_COMMIT`**, **`PRE_PUSH`**, and **`CI`** when `.ai_evidence.json` is readable and valid (hooks merge these violations into `runPlatformGate`). Git-flow protected-branch checks (`GITFLOW_PROTECTED_BRANCH`) are also merged into hook runs.
 
 Environment variables:
 

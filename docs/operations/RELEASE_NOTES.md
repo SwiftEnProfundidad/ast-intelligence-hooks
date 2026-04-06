@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-05 (v6.3.69)
+
+- **Hooks = política de repo**: `PRE_COMMIT` / `PRE_PUSH` / `CI` / `PRE_WRITE` incorporan **`GITFLOW_PROTECTED_BRANCH`** y **higiene de worktree** (`EVIDENCE_PREWRITE_WORKTREE_*`, env `PUMUKI_PREWRITE_WORKTREE_*`) vía fusión con `evaluateAiGate` en `runPlatformGate`.
+- **macOS bloqueos**: modal **Desactivar / Silenciar 30 min / Mantener activas** **on by default** si las notificaciones están habilitadas; normalización de etiquetas y parseo `osascript` más robusto; `gate.blocked` duplica payload en **stderr** por defecto (`PUMUKI_DISABLE_GATE_BLOCKED_STDERR_MIRROR=1` para opt-out).
+- **Rollout**: `pumuki@6.3.69`, **`pumuki install`** en consumidores si quieren hooks reescritos tras cambios previos; revisar `.pumuki/system-notifications.json` si asumías modal apagado sin clave `blockedDialogEnabled`.
+
 ### 2026-04-06 (v6.3.68)
 
 - **PRE_WRITE sin depender del IDE**: `pre-commit` y `pre-push` gestionados ejecutan **`pumuki-pre-write`** antes del gate del stage principal. Opt-out: `PUMUKI_SKIP_CHAINED_PRE_WRITE=1`.

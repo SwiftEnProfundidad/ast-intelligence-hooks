@@ -45,6 +45,24 @@ test('applyDialogChoice permite silenciar 30 min', async () => {
   });
 });
 
+test('applyDialogChoice normaliza etiquetas con espacios o mayúsculas (AppleScript/Swift)', async () => {
+  await withTempDir('pumuki-notifications-dialog-fuzzy-', async (repoRoot) => {
+    applyDialogChoice({
+      repoRoot,
+      config: {
+        enabled: true,
+        channel: 'macos',
+        blockedDialogEnabled: true,
+      },
+      button: '  desactivar  ',
+      nowMs: Date.parse('2026-03-04T12:00:00.000Z'),
+    });
+
+    const config = readSystemNotificationsConfig(repoRoot);
+    assert.equal(config.enabled, false);
+  });
+});
+
 test('applyDialogChoice permite desactivar notificaciones', async () => {
   await withTempDir('pumuki-notifications-dialog-disable-', async (repoRoot) => {
     applyDialogChoice({

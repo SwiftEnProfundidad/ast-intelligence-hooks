@@ -34,6 +34,7 @@ import { enforceTddBddPolicy } from '../tdd/enforcement';
 import type { TddBddSnapshot } from '../tdd/types';
 import { resolveSkillsEnforcement } from '../policy/skillsEnforcement';
 import { applyTddBddEnforcement } from '../policy/tddBddEnforcement';
+import { collectAiGateRepoPolicyFindings } from './aiGateRepoPolicyFindings';
 
 export type OperationalMemoryShadowRecommendation = {
   recommendedOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
@@ -151,13 +152,19 @@ const defaultDependencies: GateDependencies = {
     }),
 };
 
-const resolveCurrentBranch = (git: IGitService, repoRoot: string): string | null => {
+const readSymbolicBranchRef = (git: IGitService, repoRoot: string): string | null => {
   try {
     const symbolicBranch = git.runGit(['symbolic-ref', '--short', 'HEAD'], repoRoot).trim();
-    if (symbolicBranch.length > 0) {
-      return symbolicBranch;
-    }
+    return symbolicBranch.length > 0 ? symbolicBranch : null;
   } catch {
+    return null;
+  }
+};
+
+const resolveCurrentBranch = (git: IGitService, repoRoot: string): string | null => {
+  const symbolic = readSymbolicBranchRef(git, repoRoot);
+  if (symbolic !== null) {
+    return symbolic;
   }
   try {
     const branch = git.runGit(['rev-parse', '--abbrev-ref', 'HEAD'], repoRoot).trim();
@@ -927,6 +934,15 @@ export async function runPlatformGate(params: {
   const filesScanned = countScannedFilesFromFacts(factsForPlatformEvaluation);
   const observedCodePaths = collectObservedCodePathsFromFacts(facts);
 
+  const platformEvaluation = dependencies.evaluatePlatformGateFindings({
+    facts: factsForPlatformEvaluation,
+    stage: params.policy.stage,
+    repoRoot,
+  });
+  const aiGateRepoPolicyFindings = collectAiGateRepoPolicyFindings({
+    repoRoot,
+    stage: params.policy.stage,
+  });
   const {
     detectedPlatforms,
     skillsRuleSet,
@@ -934,12 +950,9 @@ export async function runPlatformGate(params: {
     heuristicRules,
     coverage,
     evaluationFacts = factsForPlatformEvaluation,
-    findings,
-  } = dependencies.evaluatePlatformGateFindings({
-    facts: factsForPlatformEvaluation,
-    stage: params.policy.stage,
-    repoRoot,
-  });
+    findings: ruleEngineFindings,
+  } = platformEvaluation;
+  const findings = [...aiGateRepoPolicyFindings, ...ruleEngineFindings];
   const evaluationMetrics: SnapshotEvaluationMetrics = coverage
     ? {
       facts_total: coverage.factsTotal,

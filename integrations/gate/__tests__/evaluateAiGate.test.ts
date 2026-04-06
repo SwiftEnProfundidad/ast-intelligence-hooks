@@ -427,6 +427,36 @@ test('evaluateAiGate permite continuar cuando evidencia está fresca y rama cump
   });
 });
 
+test('evaluateAiGate bloquea PRE_COMMIT cuando la higiene de worktree supera umbral crítico', () => {
+  const repoState = sampleEvidence().repo_state!;
+  repoState.git.dirty = true;
+  repoState.git.staged = 15;
+  repoState.git.unstaged = 10;
+
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_COMMIT',
+      preWriteWorktreeHygiene: {
+        warnThreshold: 8,
+        blockThreshold: 20,
+      },
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
+      captureRepoState: () => repoState,
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
+  assert.equal(
+    result.violations.some((item) => item.code === 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT'),
+    true
+  );
+});
+
 test('evaluateAiGate bloquea PRE_WRITE cuando la higiene de worktree supera umbral crítico', () => {
   const repoState = sampleEvidence().repo_state!;
   repoState.git.dirty = true;

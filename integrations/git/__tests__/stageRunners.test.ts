@@ -965,6 +965,7 @@ test('runPreCommitStage no deja drift de working tree en .ai_evidence.json cuand
     writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
     runGit(repoRoot, ['add', 'README.md']);
     runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
+    runGit(repoRoot, ['checkout', '-b', 'feature/stage-runner-evidence-sync']);
 
     stageBackendFile(repoRoot);
     const firstExitCode = await runPreCommitStage({

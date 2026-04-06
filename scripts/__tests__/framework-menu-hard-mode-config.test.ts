@@ -89,7 +89,7 @@ test('buildSystemNotificationsConfigFromSelection soporta enabled true/false', (
   assert.deepEqual(buildSystemNotificationsConfigFromSelection(true), {
     enabled: true,
     channel: 'macos',
-    blockedDialogEnabled: false,
+    blockedDialogEnabled: true,
   });
   assert.deepEqual(buildSystemNotificationsConfigFromSelection(false), {
     enabled: false,

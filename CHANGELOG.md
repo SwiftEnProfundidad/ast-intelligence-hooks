@@ -10,6 +10,18 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.69] - 2026-04-05
+
+### Changed
+
+- **`gate.blocked` (macOS)**: además del banner/`osascript`, el mismo payload se escribe en **stderr** por defecto para que un bloqueo PRE_COMMIT/PRE_PUSH/CI sea visible aunque macOS no muestre la notificación (Focus, permisos del terminal, etc.). Silenciar solo ese duplicado: `PUMUKI_DISABLE_GATE_BLOCKED_STDERR_MIRROR=1`. Sigue aplicando `PUMUKI_DISABLE_STDERR_NOTIFICATIONS=1` para cortar cualquier vía stderr.
+- **Modal de bloqueo (macOS)**: con notificaciones activas, el diálogo flotante/AppleScript con **Desactivar / Silenciar 30 min / Mantener activas** vuelve a estar **habilitado por defecto** (antes `blockedDialogEnabled` caía en `false` si no venía en JSON). Para desactivar solo el modal sin cortar banners: `"blockedDialogEnabled": false` en `.pumuki/system-notifications.json` o `PUMUKI_MACOS_BLOCKED_DIALOG=0`. Los clics se normalizan mejor (mayúsculas/espacios y salida ruidosa de `osascript`) para que mute/disable persistan en disco.
+- **Hooks Git (`runPlatformGate`)**: se fusionan violaciones de política de repo desde `evaluateAiGate` que antes solo impactaban MCP/menú: **`GITFLOW_PROTECTED_BRANCH`** y **higiene de worktree** (`EVIDENCE_PREWRITE_WORKTREE_*`, mismos umbrales `PUMUKI_PREWRITE_WORKTREE_*`) ahora aplican también en **PRE_COMMIT**, **PRE_PUSH** y **CI** cuando la evidencia es válida (git-flow y pending_changes siguen activos aunque falte evidencia vía `evaluateAiGate`).
+
+### Migration
+
+- Si tenías `.pumuki/system-notifications.json` con `"enabled": true` y **omitías** `blockedDialogEnabled` asumiendo que el modal estaba apagado, ahora el modal queda **encendido**. Fija explícitamente `"blockedDialogEnabled": false` para recuperar el comportamiento anterior.
+
 ## [6.3.68] - 2026-04-06
 
 ### Added

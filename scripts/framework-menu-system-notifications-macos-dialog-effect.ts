@@ -1,4 +1,5 @@
 import type { SystemNotificationsConfig } from './framework-menu-system-notifications-types';
+import { normalizeBlockedDialogButtonLabel } from './framework-menu-system-notifications-config-choice';
 
 export const applyBlockedDialogSelection = (params: {
   repoRoot: string;
@@ -19,7 +20,7 @@ export const applyBlockedDialogSelection = (params: {
   params.applyDialogChoice({
     repoRoot: params.repoRoot,
     config: params.config,
-    button: params.selectedButton,
+    button: normalizeBlockedDialogButtonLabel(params.selectedButton),
     nowMs: params.nowMs,
   });
 };

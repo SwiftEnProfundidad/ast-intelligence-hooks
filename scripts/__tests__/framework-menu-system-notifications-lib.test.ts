@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { mock, test } from 'node:test';
 import { emitSystemNotification } from '../framework-menu-system-notifications-lib';
-import { buildSystemNotificationsConfigFromSelection } from '../framework-menu-system-notifications-config';
 import type { PumukiCriticalNotificationEvent } from '../framework-menu-system-notifications-types';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 
@@ -82,7 +81,11 @@ test('emitSystemNotification mantiene la fachada pública y entrega por macOS cu
       platform: 'darwin',
       repoRoot,
       event,
-      config: buildSystemNotificationsConfigFromSelection(true),
+      config: {
+        enabled: true,
+        channel: 'macos',
+        blockedDialogEnabled: false,
+      },
       now: () => Date.parse('2026-03-04T12:00:00.000Z'),
       runCommand: (command, args) => {
         calls.push({ command, args });

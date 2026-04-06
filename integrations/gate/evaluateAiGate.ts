@@ -1093,25 +1093,6 @@ const collectPreWriteCoherenceViolations = (params: {
     );
   }
 
-  if (params.preWriteWorktreeHygiene.enabled && params.repoState.git.available) {
-    const pendingChanges = resolvePendingChanges(params.repoState) ?? 0;
-    if (pendingChanges >= params.preWriteWorktreeHygiene.blockThreshold) {
-      violations.push(
-        toErrorViolation(
-          'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT',
-          `PRE_WRITE hygiene exceeded: pending_changes=${pendingChanges} (block_threshold=${params.preWriteWorktreeHygiene.blockThreshold}). Split worktree into atomic slices.`
-        )
-      );
-    } else if (pendingChanges >= params.preWriteWorktreeHygiene.warnThreshold) {
-      violations.push(
-        toWarnViolation(
-          'EVIDENCE_PREWRITE_WORKTREE_WARN',
-          `PRE_WRITE hygiene warning: pending_changes=${pendingChanges} (warn_threshold=${params.preWriteWorktreeHygiene.warnThreshold}). Consider splitting worktree into smaller slices.`
-        )
-      );
-    }
-  }
-
   return violations;
 };
 
@@ -1178,6 +1159,8 @@ const collectEvidenceViolations = (
     );
   }
 
+  appendWorktreeHygieneViolations(violations, repoState, preWriteWorktreeHygiene, stage);
+
   return { violations, ageSeconds };
 };
 
@@ -1226,6 +1209,33 @@ const resolvePendingChanges = (repoState: RepoState): number | null => {
     return null;
   }
   return repoState.git.pending_changes ?? (repoState.git.staged + repoState.git.unstaged);
+};
+
+const appendWorktreeHygieneViolations = (
+  violations: AiGateViolation[],
+  repoState: RepoState,
+  policy: PreWriteWorktreeHygienePolicy,
+  stageLabel: AiGateStage
+): void => {
+  if (!policy.enabled || !repoState.git.available) {
+    return;
+  }
+  const pendingChanges = resolvePendingChanges(repoState) ?? 0;
+  if (pendingChanges >= policy.blockThreshold) {
+    violations.push(
+      toErrorViolation(
+        'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT',
+        `${stageLabel} worktree hygiene exceeded: pending_changes=${pendingChanges} (block_threshold=${policy.blockThreshold}). Split worktree into atomic slices.`
+      )
+    );
+  } else if (pendingChanges >= policy.warnThreshold) {
+    violations.push(
+      toWarnViolation(
+        'EVIDENCE_PREWRITE_WORKTREE_WARN',
+        `${stageLabel} worktree hygiene warning: pending_changes=${pendingChanges} (warn_threshold=${policy.warnThreshold}). Consider smaller staged/unstaged batches.`
+      )
+    );
+  }
 };
 
 const toPolicyStage = (stage: AiGateStage): SkillsStage => {

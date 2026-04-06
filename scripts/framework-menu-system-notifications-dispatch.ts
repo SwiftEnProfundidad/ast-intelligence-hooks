@@ -14,6 +14,19 @@ import {
   isStderrNotificationFallbackDisabled,
 } from './framework-menu-system-notifications-stdio-fallback';
 
+const shouldMirrorGateBlockedToStderr = (
+  event: PumukiCriticalNotificationEvent,
+  env: NodeJS.ProcessEnv
+): boolean => {
+  if (event.kind !== 'gate.blocked') {
+    return false;
+  }
+  if (isTruthyEnvValue(env.PUMUKI_DISABLE_GATE_BLOCKED_STDERR_MIRROR)) {
+    return false;
+  }
+  return true;
+};
+
 export const dispatchSystemNotification = (params: {
   event: PumukiCriticalNotificationEvent;
   payload: SystemNotificationPayload;
@@ -46,7 +59,12 @@ export const dispatchSystemNotification = (params: {
     applyDialogChoice,
   });
 
-  if (macResult.delivered && isTruthyEnvValue(params.env.PUMUKI_NOTIFICATION_STDERR_MIRROR)) {
+  const mirrorStderrForVisibility =
+    macResult.delivered &&
+    !stderrOff &&
+    (isTruthyEnvValue(params.env.PUMUKI_NOTIFICATION_STDERR_MIRROR) ||
+      shouldMirrorGateBlockedToStderr(params.event, params.env));
+  if (mirrorStderrForVisibility) {
     deliverStderrNotificationBanner({ payload: params.payload });
   }
 
