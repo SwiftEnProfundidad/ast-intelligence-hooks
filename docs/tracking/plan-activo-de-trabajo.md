@@ -16,7 +16,7 @@
 
 ## Estado actual
 
-- Frente activo: **`ruralgo-develop-to-main-release-charter`** (ver `🚧` en prioridad); rollout **6.3.71** ya **cerrado** (npm + tag + repin **R_GO** / **SAAS** / **Flux** + `origin/develop` Pumuki alineado).
+- Frente activo: **`ruralgo-develop-to-main-release-execution`** (ver `🚧` en prioridad); charter RuralGO con tabla + SHA candidato; rollout **6.3.71** **cerrado** en Pumuki/consumidores.
 - Detalle operativo: ver **Prioridad ordenada** (abajo); **exactamente una** fila `🚧` mientras el charter RuralGO esté abierto.
 - Origen: `ast-intelligence-hooks`
 - Contexto: este archivo vive en el repo **Pumuki** pero el orden incluye **impacto en consumidores** (RuralGO, SAAS, Flux) cuando el ciclo de release lo exige; no es “solo un repo”, es el **espejo operativo** acordado en `AGENTS.md`.
@@ -53,7 +53,7 @@ El índice **`stash@{0}` cambia** con el tiempo: **no** es un identificador esta
 Regla: **una** tarea `🚧` (foco único); el resto `⏳` hasta promover la siguiente.
 
 1. ✅ **Rollout Pumuki 6.3.71** (npm, tag, repin R_GO/SAAS/Flux, `origin/develop`, tracking): **cerrado**.
-2. 🚧 **RuralGO (producto) — charter release `develop` → `main`**: **foco arquitectónico actual**. **Entregable creado:** en repo RuralGO, [`docs/technical/06-ci-cd/DEVELOP_TO_MAIN_RELEASE_CHARTER.md`](https://github.com/SwiftEnProfundidad/R_GO/blob/develop/docs/technical/06-ci-cd/DEVELOP_TO_MAIN_RELEASE_CHARTER.md) (índice en `docs/README.md`). **Siguiente paso:** completar la tabla “Próximo paso concreto” del charter + marcar checklist; luego plan de ejecución (PR/rama). **Prohibido** merge masivo sin checklist cerrada.
+2. 🚧 **RuralGO (producto) — ejecución release `develop` → `main`**: **foco actual**. Charter + tabla de decisión + SHA candidato en [`DEVELOP_TO_MAIN_RELEASE_CHARTER.md`](https://github.com/SwiftEnProfundidad/R_GO/blob/develop/docs/technical/06-ci-cd/DEVELOP_TO_MAIN_RELEASE_CHARTER.md). **Hacer ahora:** (1) **nombrar owner + backup** en el charter, (2) **crear `release/<semver>`** desde el SHA vigente, (3) **marcar checklist** con evidencia (CI/Vercel/Pumuki/etc.), (4) PR/revisión hacia `main`. **Prohibido** merge sin checklist completo y owner nominal.
 3. ⏳ **SAAS (operación)**: antes del próximo **push** con hooks estrictos, **recibo MCP** fresco en IDE (o política explícita para bumps de deps sin bloqueo) — **promover a `🚧`** solo si hay push bloqueado o bump de deps inminente.
 4. ⏳ **Pumuki (repo `ast-intelligence-hooks`)**: panel **Swift** notificaciones (foco + persistencia `.pumuki/system-notifications.json`) cuando se priorice UX en el propio producto Pumuki — **después** de despejar el charter RuralGO o si queda tiempo de equipo dedicado a producto Pumuki.
 
