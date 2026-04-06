@@ -16,8 +16,8 @@
 
 ## Estado actual
 
-- Frente activo: `rollout-6.3.71-consumers` (npm **pumuki@6.3.71** + tag **v6.3.71** en origin alineado con commit **`2af3962`**, 2026-04-06; rama upstream `release/6.3.65`; **`origin/develop`** en el mismo tip que release vía fast-forward; consumidores **R_GO** `develop`, **SAAS** `main`, **Flux_training** `main` con repin **6.3.71** ya **commiteado y pusheado**)
-- Detalle operativo: ver **Prioridad ordenada** (abajo); como mucho **una** fila `🚧` (puede ser **ninguna** si no hay trabajo activo).
+- Frente activo: **`ruralgo-develop-to-main-release-charter`** (ver `🚧` en prioridad); rollout **6.3.71** ya **cerrado** (npm + tag + repin **R_GO** / **SAAS** / **Flux** + `origin/develop` Pumuki alineado).
+- Detalle operativo: ver **Prioridad ordenada** (abajo); **exactamente una** fila `🚧` mientras el charter RuralGO esté abierto.
 - Origen: `ast-intelligence-hooks`
 - Contexto: este archivo vive en el repo **Pumuki** pero el orden incluye **impacto en consumidores** (RuralGO, SAAS, Flux) cuando el ciclo de release lo exige; no es “solo un repo”, es el **espejo operativo** acordado en `AGENTS.md`.
 - Línea **6.3.71** (npm): paquete INC-069 + `operational_hints` + remediaciones compartidas + `PUMUKI_GATE_SCOPE_PATH_PREFIXES` + `doctor --parity`; **6.3.70** PRE_PUSH sin mutar evidencia trackeada ALLOW/WARN + modal macOS; **6.3.69** modal + stderr `gate.blocked` + git-flow/worktree en hooks; **6.3.68** PRE_WRITE encadenado + adapter por defecto; **6.3.65+** orden con pre-commit.com + `exec`.
@@ -50,11 +50,11 @@ El índice **`stash@{0}` cambia** con el tiempo: **no** es un identificador esta
 
 ## Prioridad ordenada (siguiente trabajo)
 
-Regla: **como mucho una** tarea `🚧`; el resto `⏳` hasta promover la siguiente. **Si no hay foco activo**, dejar **0× `🚧`** (solo backlog `⏳`).
+Regla: **una** tarea `🚧` (foco único); el resto `⏳` hasta promover la siguiente.
 
-1. ✅ **Rollout Pumuki 6.3.71** (npm, tag, repin R_GO/SAAS/Flux, `origin/develop`, tracking): **cerrado** — no cuenta como `🚧`.
-2. ⏳ **RuralGO (producto)**: planificar promoción **`develop` → `main`** como release (miles de commits de diferencia con `main`; criterio Vercel / previews aparte).
-3. ⏳ **SAAS (operación)**: antes del próximo **push** con hooks estrictos, **recibo MCP** fresco en IDE (o política explícita para bumps de deps sin bloqueo).
-4. ⏳ **Pumuki (repo `ast-intelligence-hooks`)**: panel **Swift** notificaciones (foco + persistencia `.pumuki/system-notifications.json`) cuando se priorice UX en el propio producto Pumuki.
+1. ✅ **Rollout Pumuki 6.3.71** (npm, tag, repin R_GO/SAAS/Flux, `origin/develop`, tracking): **cerrado**.
+2. 🚧 **RuralGO (producto) — charter release `develop` → `main`**: **foco arquitectónico actual**. Objetivo de esta fase: **documento único** en RuralGO (p. ej. `docs/` o ADR corto) con **criterios de salida** (Vercel/previews, apps móviles si aplica, QA mínimo, versión semver/marketing), **estrategia** (release branch intermedia vs merge train por cortes), **riesgos** (delta grande con `main`) y **siguiente paso concreto** (quién ejecuta, cuándo). **Prohibido** tratar esta fila como “hacer el merge masivo ya” sin checklist cerrada.
+3. ⏳ **SAAS (operación)**: antes del próximo **push** con hooks estrictos, **recibo MCP** fresco en IDE (o política explícita para bumps de deps sin bloqueo) — **promover a `🚧`** solo si hay push bloqueado o bump de deps inminente.
+4. ⏳ **Pumuki (repo `ast-intelligence-hooks`)**: panel **Swift** notificaciones (foco + persistencia `.pumuki/system-notifications.json`) cuando se priorice UX en el propio producto Pumuki — **después** de despejar el charter RuralGO o si queda tiempo de equipo dedicado a producto Pumuki.
 
 **Housekeeping stashes en R_GO**: fuera de esta cola única; tratar cada entrada con **`git stash list` / `show`** según rama y mensaje — **no** usar este MD como orden de `drop` sobre `stash@{0}` genérico.
