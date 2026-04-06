@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-06 (v6.3.68)
+
+- **PRE_WRITE sin depender del IDE**: `pre-commit` y `pre-push` gestionados ejecutan **`pumuki-pre-write`** antes del gate del stage principal. Opt-out: `PUMUKI_SKIP_CHAINED_PRE_WRITE=1`.
+- **`.pumuki/adapter.json`**: se crea en `pumuki install` si faltaba, con comandos de **MCP stdio** y hooks (plantilla `repo`); sigue sin imponer Cursor ni otros IDEs.
+- Rollout: `pumuki@6.3.68` y **`pumuki install`** en consumidores para reescribir hooks.
+
 ### 2026-04-06 (v6.3.67)
 
 - **Corrección de producto**: el `postinstall` **no** acopla Pumuki a Cursor ni a ningún IDE. Vuelve a ejecutar solo **`pumuki install`** (baseline Git + lifecycle). IDE/MCP: opt-in con `pumuki install --with-mcp --agent=…` o `bootstrap --enterprise`.

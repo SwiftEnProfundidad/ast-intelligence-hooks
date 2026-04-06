@@ -28,6 +28,35 @@
       }
     }
   ],
+  "repo": [
+    {
+      "path": ".pumuki/adapter.json",
+      "payload": {
+        "hooks": {
+          "pre_write": {
+            "command": "npx --yes --package pumuki@latest pumuki-pre-write"
+          },
+          "pre_commit": {
+            "command": "npx --yes --package pumuki@latest pumuki-pre-commit"
+          },
+          "pre_push": {
+            "command": "npx --yes --package pumuki@latest pumuki-pre-push"
+          },
+          "ci": {
+            "command": "npx --yes --package pumuki@latest pumuki-ci"
+          }
+        },
+        "mcp": {
+          "enterprise": {
+            "command": "npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio"
+          },
+          "evidence": {
+            "command": "npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio"
+          }
+        }
+      }
+    }
+  ],
   "claude": [
     {
       "path": ".claude/settings.json",

@@ -60,8 +60,17 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
     const prePushPath = join(repo, '.git/hooks/pre-push');
     assert.equal(existsSync(preCommitPath), true);
     assert.equal(existsSync(prePushPath), true);
+    assert.match(readFileSync(preCommitPath, 'utf8'), /pumuki-pre-write/);
     assert.match(readFileSync(preCommitPath, 'utf8'), /pumuki-pre-commit/);
+    assert.match(readFileSync(prePushPath, 'utf8'), /pumuki-pre-write/);
     assert.match(readFileSync(prePushPath, 'utf8'), /pumuki-pre-push/);
+
+    const adapterPath = join(repo, '.pumuki', 'adapter.json');
+    assert.equal(existsSync(adapterPath), true);
+    const adapter = JSON.parse(readFileSync(adapterPath, 'utf8')) as {
+      mcp?: { enterprise?: { command?: string } };
+    };
+    assert.match(adapter.mcp?.enterprise?.command ?? '', /pumuki-mcp-enterprise/);
 
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.installed), 'true');
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.version), getCurrentPumukiVersion());
@@ -198,10 +207,10 @@ test('runLifecycleInstall con bestEffortAfterDoctorBlock cablea hooks aunque doc
 
     assert.equal(result.degradedDoctorBypass, true);
     assert.deepEqual(result.changedHooks, ['pre-commit', 'pre-push']);
-    assert.match(
-      readFileSync(join(repo, '.git/hooks/pre-commit'), 'utf8'),
-      /pumuki-pre-commit/
-    );
+    const hookText = readFileSync(join(repo, '.git/hooks/pre-commit'), 'utf8');
+    assert.match(hookText, /pumuki-pre-write/);
+    assert.match(hookText, /pumuki-pre-commit/);
+    assert.equal(existsSync(join(repo, '.pumuki', 'adapter.json')), true);
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.installed), 'true');
     assert.equal(existsSync(join(repo, '.ai_evidence.json')), true);
   } finally {

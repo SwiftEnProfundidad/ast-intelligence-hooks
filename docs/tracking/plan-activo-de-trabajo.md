@@ -16,11 +16,11 @@
 
 ## Estado actual
 
-- Frente activo: `release-6.3.67-ide-agnostic-baseline`
+- Frente activo: `release-6.3.68-pre-write-git-chain`
 - Detalle operativo: ver **Prioridad ordenada** (abajo); una sola fila `🚧`.
 - Origen: `ast-intelligence-hooks`
 - Contexto: este archivo vive en el repo **Pumuki** pero el orden incluye **impacto en consumidores** (RuralGO, SAAS, Flux) cuando el ciclo de release lo exige; no es “solo un repo”, es el **espejo operativo** acordado en `AGENTS.md`.
-- Línea **6.3.67**: postinstall **IDE-neutral** (solo `pumuki install`); publicar y repin. **6.3.65+** para fix `pre-commit`+`exec` con pre-commit.com.
+- Línea **6.3.68**: PRE_WRITE encadenado en hooks Git + `.pumuki/adapter.json` por defecto; publicar y repin. **6.3.65+** para orden con pre-commit.com + `exec`.
 - Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; repin **6.3.64** en **SAAS** `main`, **Flux_training** `main`, **R_GO** `develop` (PR https://github.com/SwiftEnProfundidad/R_GO/pull/1514 → `b899ee6a1`). **R_GO `main`** sigue muy por detrás de `develop` (orden ~10³ commits); no es un fast-forward de producto: la promoción a `main` es release aparte.
 
 ## Cola externa real

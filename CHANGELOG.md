@@ -10,6 +10,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - No user-facing changes yet.
 
+## [6.3.68] - 2026-04-06
+
+### Added
+
+- **PRE_WRITE en la cadena Git (sin IDE)**: los hooks gestionados **`pre-commit`** y **`pre-push`** ejecutan **`pumuki-pre-write`** antes del binario principal. Así el stage **PRE_WRITE** forma parte del flujo real de cualquier repo con Git. Desactivar solo esa parte: `PUMUKI_SKIP_CHAINED_PRE_WRITE=1`.
+- **`.pumuki/adapter.json` por defecto**: en **`pumuki install`**, si el fichero no existe, se genera con plantilla **`repo`** (comandos de hooks + MCP enterprise/evidence) para que los procesos stdio y la documentación del repo no dependan de Cursor/Codex.
+
 ## [6.3.67] - 2026-04-06
 
 ### Fixed

@@ -9,6 +9,10 @@ const HOOK_COMMANDS: Record<PumukiManagedHook, string> = {
   'pre-push': 'pumuki-pre-push',
 };
 
+const PRE_WRITE_CLI = 'pumuki-pre-write';
+
+type ResolverPhase = 'pre-write' | 'main';
+
 const trimTrailingWhitespace = (value: string): string =>
   value.replace(/[ \t]+\n/g, '\n').trimEnd();
 
@@ -24,54 +28,72 @@ const managedBlockPattern = new RegExp(
   'g'
 );
 
-const toHookRunner = (params: {
-  hook: PumukiManagedHook;
-  runner: string;
-}): string => {
-  if (params.hook === 'pre-push') {
-    return `  PUMUKI_PRE_PUSH_STDIN="$PUMUKI_PRE_PUSH_STDIN" ${params.runner} "$@"`;
+const runnerLine = (
+  parentHook: PumukiManagedHook,
+  phase: ResolverPhase,
+  runner: string
+): string => {
+  if (parentHook === 'pre-push' && phase === 'main') {
+    return `  PUMUKI_PRE_PUSH_STDIN="$PUMUKI_PRE_PUSH_STDIN" ${runner} "$@"`;
   }
-  return `  ${params.runner}`;
+  return `  ${runner}`;
 };
 
-export const buildPumukiManagedHookBlock = (hook: PumukiManagedHook): string => {
-  const cli = HOOK_COMMANDS[hook];
+const buildCliResolver = (params: {
+  cli: string;
+  parentHook: PumukiManagedHook;
+  phase: ResolverPhase;
+}): string[] => {
+  const { cli, parentHook, phase } = params;
   const localBinPath = `./node_modules/.bin/${cli}`;
   const localNodeEntry = `./node_modules/pumuki/bin/${cli}.js`;
-
   return [
-    PUMUKI_MANAGED_BLOCK_START,
-    ...(hook === 'pre-push' ? ['PUMUKI_PRE_PUSH_STDIN="$(cat)"'] : []),
     `if [ -x "${localBinPath}" ]; then`,
-    toHookRunner({
-      hook,
-      runner: localBinPath,
-    }),
+    runnerLine(parentHook, phase, localBinPath),
     `elif [ -f "${localNodeEntry}" ] && command -v node >/dev/null 2>&1; then`,
-    toHookRunner({
-      hook,
-      runner: `node ${localNodeEntry}`,
-    }),
+    runnerLine(parentHook, phase, `node ${localNodeEntry}`),
     `elif command -v ${cli} >/dev/null 2>&1; then`,
-    toHookRunner({
-      hook,
-      runner: cli,
-    }),
+    runnerLine(parentHook, phase, cli),
     'elif command -v npx >/dev/null 2>&1; then',
-    toHookRunner({
-      hook,
-      runner: `npx --yes --package pumuki@latest ${cli}`,
-    }),
+    runnerLine(parentHook, phase, `npx --yes --package pumuki@latest ${cli}`),
     'else',
     `  echo "[pumuki] unable to resolve ${cli} runner. Install dependencies or ensure npx is available." >&2`,
     '  exit 1',
     'fi',
-    '  status=$?',
-    '  if [ "$status" -ne 0 ]; then',
-    '    exit "$status"',
-    '  fi',
-    PUMUKI_MANAGED_BLOCK_END,
-  ].join('\n');
+  ];
+};
+
+export const buildPumukiManagedHookBlock = (hook: PumukiManagedHook): string => {
+  const mainCli = HOOK_COMMANDS[hook];
+  const lines: string[] = [PUMUKI_MANAGED_BLOCK_START];
+
+  lines.push('if [ "${PUMUKI_SKIP_CHAINED_PRE_WRITE:-}" != "1" ]; then');
+  lines.push(...buildCliResolver({
+    cli: PRE_WRITE_CLI,
+    parentHook: hook,
+    phase: 'pre-write',
+  }));
+  lines.push('  status=$?');
+  lines.push('  if [ "$status" -ne 0 ]; then');
+  lines.push('    exit "$status"');
+  lines.push('  fi');
+  lines.push('fi');
+
+  if (hook === 'pre-push') {
+    lines.push('PUMUKI_PRE_PUSH_STDIN="$(cat)"');
+  }
+
+  lines.push(...buildCliResolver({
+    cli: mainCli,
+    parentHook: hook,
+    phase: 'main',
+  }));
+  lines.push('  status=$?');
+  lines.push('  if [ "$status" -ne 0 ]; then');
+  lines.push('    exit "$status"');
+  lines.push('  fi');
+  lines.push(PUMUKI_MANAGED_BLOCK_END);
+  return lines.join('\n');
 };
 
 const ensureExecutableHeader = (contents: string): string => {

@@ -51,7 +51,7 @@ If both commands pass, the workspace is ready.
 npm install --save-exact pumuki
 ```
 
-The package `postinstall` runs **`pumuki install` only** (Git hooks + lifecycle wiring). It does **not** configure any IDE or MCP; that is intentional so Pumuki stays **repo-generic**. Use step 2 or `pumuki install --with-mcp --agent=<name>` when you want IDE integration.
+The package `postinstall` runs **`pumuki install` only** (Git hooks + lifecycle wiring). Hooks chain **`pumuki-pre-write`** then **`pumuki-pre-commit`** / **`pumuki-pre-push`** (IDE-agnostic). When missing, **`.pumuki/adapter.json`** is created with hook + **MCP stdio** command lines (any MCP client can use them). It does **not** write IDE-specific files; use step 2 or `pumuki install --with-mcp --agent=<name>` for that.
 
 ### 2) Bootstrap managed lifecycle (recommended single command)
 

@@ -30,6 +30,25 @@ test('parseLifecycleCliArgs soporta comando adapter install', () => {
   assert.equal(parsed.adapterDryRun, false);
 });
 
+test('runLifecycleAdapterInstall genera scaffolding para repo (solo .pumuki/adapter.json)', () => {
+  const repo = createGitRepo();
+  try {
+    const result = runLifecycleAdapterInstall({
+      cwd: repo,
+      agent: 'repo',
+    });
+
+    assert.equal(result.agent, 'repo');
+    assert.equal(result.changedFiles.includes('.pumuki/adapter.json'), true);
+    const payload = JSON.parse(
+      readFileSync(join(repo, '.pumuki', 'adapter.json'), 'utf8')
+    ) as { mcp?: { enterprise?: { command?: string } } };
+    assert.match(payload.mcp?.enterprise?.command ?? '', /pumuki-mcp-enterprise/);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('runLifecycleAdapterInstall genera scaffolding para codex', () => {
   const repo = createGitRepo();
   try {

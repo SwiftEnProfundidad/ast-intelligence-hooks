@@ -9,8 +9,9 @@
 - PROJECT MODE: brownfield
 
 ## Producto Pumuki (baseline vs adaptadores)
-- MUST: La **línea base** de Pumuki en un repo debe ser **agnóstica al IDE** (Git hooks, gate, lifecycle, evidencia, políticas). No acoplar por defecto a Cursor, Codex, extensiones ni CLIs de editor.
-- MUST: **MCP, `.cursor/`, `.claude/`, etc.** son **capa opcional** (`pumuki install --with-mcp`, `bootstrap --enterprise`), explícita por equipo o documentación, nunca requisito silencioso del `postinstall` npm.
+- MUST: La **línea base** es **agnóstica al IDE**: hooks Git gestionados, gate, lifecycle, evidencia, políticas. En **`pre-commit`** y **`pre-push`**, el bloque gestionado ejecuta **primero** `pumuki-pre-write` (SDD / stage **PRE_WRITE**) y **después** `pumuki-pre-commit` o `pumuki-pre-push`. Opt-out: `PUMUKI_SKIP_CHAINED_PRE_WRITE=1`.
+- MUST: Tras **`pumuki install`**, si no existe, se genera **`.pumuki/adapter.json`** con comandos canónicos de hooks y **MCP stdio** (referencia en el repo para cualquier cliente MCP; no sustituye registrar el servidor en un IDE).
+- MUST: **Ficheros propios de un IDE** (p. ej. `.cursor/mcp.json`) siguen siendo **opt-in** (`pumuki install --with-mcp --agent=…`, `bootstrap --enterprise`).
 
 ## Skills requeridos
 - REQUIRED SKILL: enterprise-operating-system

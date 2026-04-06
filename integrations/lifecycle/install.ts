@@ -12,6 +12,7 @@ import { captureRepoState } from '../evidence/repoState';
 import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { readOpenSpecManagedArtifacts, writeLifecycleState } from './state';
 import { ensureRuntimeArtifactsIgnored } from './artifacts';
+import { runLifecycleAdapterInstall } from './adapter';
 
 export type LifecycleInstallResult = {
   repoRoot: string;
@@ -59,6 +60,23 @@ const wireHooksLifecycleAndBootstrapEvidence = (params: {
   return hookResult.changedHooks;
 };
 
+const ensureRepoBaselineAdapter = (repoRoot: string): void => {
+  const adapterPath = join(repoRoot, '.pumuki', 'adapter.json');
+  if (existsSync(adapterPath)) {
+    return;
+  }
+  try {
+    runLifecycleAdapterInstall({
+      cwd: repoRoot,
+      agent: 'repo',
+    });
+  } catch (cause: unknown) {
+    if (process.env.PUMUKI_VERBOSE_INSTALL === '1') {
+      console.debug('[pumuki] adapter scaffold skipped', cause);
+    }
+  }
+};
+
 export const runLifecycleInstall = (params?: {
   cwd?: string;
   git?: ILifecycleGitService;
@@ -84,6 +102,7 @@ export const runLifecycleInstall = (params?: {
         version,
         openSpecManagedArtifacts: priorArtifacts.length > 0 ? priorArtifacts : undefined,
       });
+      ensureRepoBaselineAdapter(report.repoRoot);
       return {
         repoRoot: report.repoRoot,
         version,
@@ -122,6 +141,7 @@ export const runLifecycleInstall = (params?: {
     version,
     openSpecManagedArtifacts: Array.from(mergedOpenSpecArtifacts),
   });
+  ensureRepoBaselineAdapter(report.repoRoot);
 
   return {
     repoRoot: report.repoRoot,

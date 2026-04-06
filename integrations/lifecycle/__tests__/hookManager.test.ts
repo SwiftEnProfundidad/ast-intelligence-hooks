@@ -30,7 +30,9 @@ test('installPumukiHooks instala hooks gestionados y es idempotente', async () =
 
     const preCommit = readFileSync(join(repoRoot, '.git/hooks/pre-commit'), 'utf8');
     const prePush = readFileSync(join(repoRoot, '.git/hooks/pre-push'), 'utf8');
+    assert.match(preCommit, /pumuki-pre-write/);
     assert.match(preCommit, /pumuki-pre-commit/);
+    assert.match(prePush, /pumuki-pre-write/);
     assert.match(prePush, /pumuki-pre-push/);
 
     const status = getPumukiHooksStatus(repoRoot);
@@ -104,6 +106,7 @@ test('installPumukiHooks conserva script custom al insertar bloque gestionado', 
     assert.deepEqual(result.changedHooks, ['pre-commit', 'pre-push']);
     const preCommitAfter = readFileSync(preCommitPath, 'utf8');
     assert.match(preCommitAfter, /echo "legacy-custom"/);
+    assert.match(preCommitAfter, /pumuki-pre-write/);
     assert.match(preCommitAfter, /pumuki-pre-commit/);
     assert.equal(hasPumukiManagedBlock(preCommitAfter), true);
   });
