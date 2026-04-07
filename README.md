@@ -12,6 +12,12 @@ Pumuki gives engineering teams one deterministic execution model across local de
 
 `Facts -> Rules -> Gate -> .ai_evidence.json (v2.1)`
 
+## Qué NO es Pumuki
+
+- **No** es el producto de negocio de tu repositorio (la app, el marketplace, el servicio que entregas a usuarios): es **gobernanza y contrato de entrega** sobre el código.
+- **No** sustituye tests de dominio, contratos de API ni E2E: el gate ayuda a **cumplir políticas y evidencias**; la calidad funcional la define tu equipo con pruebas y criterios de aceptación.
+- **No** garantiza por sí solo “un producto excelente”: sin reglas de equipo, revisión humana y criterios claros, solo obtienes **cumplimiento de lo que configuraste**.
+
 ## Who This README Is For
 
 | Profile | Use this path first |
@@ -19,6 +25,30 @@ Pumuki gives engineering teams one deterministic execution model across local de
 | Consumer repository team | [5-Minute Quick Start (Consumer)](#5-minute-quick-start-consumer) |
 | Framework maintainers (this repo) | [Framework Maintainer Flow](#framework-maintainer-flow-this-repo) |
 | Platform/architecture owners | [Enterprise Operations Baseline](#enterprise-operations-baseline) |
+
+## Rutas de adopción
+
+Elige un perfil y profundiza en los enlaces; **no** repite aquí reglas largas (skills, GitFlow, políticas) — están en `AGENTS.md` y en la documentación enlazada.
+
+| Perfil | Qué instalar / arrancar | Stages habituales | Opcional típico |
+|--------|-------------------------|-------------------|-----------------|
+| **Mínimo** | `npm install --save-exact pumuki` (en repos Git el `postinstall` puede ejecutar `pumuki install` para hooks y lifecycle). | Hooks Git: **PRE_COMMIT**, **PRE_PUSH**; cadena **PRE_WRITE** cuando el hook lo encadena (según versión y config). | Evidencia [`.ai_evidence.json` v2.1](docs/mcp/ai-evidence-v2.1-contract.md); reglas core embebidas. |
+| **Estándar** | Lo anterior + flujo **OpenSpec/SDD** bajo `openspec/` según tu política. | Lo anterior + validación SDD por stage (`pumuki sdd validate --stage=…`). | Sesiones SDD, cambios versionados bajo `openspec/changes/`. |
+| **Enterprise completo** | `pumuki bootstrap --enterprise` (o equivalente documentado) + `skills.lock.json` / reglas custom / [policy-as-code](docs/product/CONFIGURATION.md) donde aplique. | Lo anterior + **CI** (`pumuki-ci`) y comprobaciones de alineación (`doctor`, parity). | [Skills / MCP](docs/mcp/mcp-servers-overview.md), `pumuki doctor --parity`, notificaciones, [hard mode](docs/product/CONFIGURATION.md). |
+
+Referencias canónicas (profundizar aquí): [Instalación](docs/product/INSTALLATION.md), [Uso y gates](docs/product/USAGE.md), [Configuración](docs/product/CONFIGURATION.md), [AGENTS.md](AGENTS.md) (contrato agentes/skills/GitFlow en repos que lo adopten), [índice de documentación](docs/README.md).
+
+## Comandos esenciales
+
+Cinco entradas que cubren el 80 % del día a día en un consumidor; el detalle está en los enlaces.
+
+1. **`npx pumuki doctor --json`** — Versión efectiva, drift, lifecycle, parity y avisos (p. ej. `pathExecutionHazard`). Detalle: [API_REFERENCE](docs/product/API_REFERENCE.md), [USAGE](docs/product/USAGE.md).
+2. **`npx pumuki status --json`** — Estado resumido del menú/lifecycle y alineación de versión. Detalle: [USAGE](docs/product/USAGE.md).
+3. **`npx pumuki install`** (o deja que el `postinstall` lo ejecute en Git) — Hooks y lifecycle en el repo. Detalle: [INSTALLATION](docs/product/INSTALLATION.md).
+4. **Gates locales** — `npx pumuki-pre-write`, `npx pumuki-pre-commit` (y `pumuki-pre-push` cuando toque push). Detalle: [USAGE](docs/product/USAGE.md), [Troubleshooting (USAGE)](docs/product/USAGE.md#troubleshooting).
+5. **SDD por stage (enterprise)** — `npx pumuki sdd validate --stage=PRE_COMMIT` (u otro stage). Detalle: [USAGE](docs/product/USAGE.md), [INSTALLATION](docs/product/INSTALLATION.md#troubleshooting) si falla el bootstrap.
+
+Si algo bloquea o el mensaje no es claro: [Troubleshooting](#troubleshooting) (más abajo en este README), [USAGE § Troubleshooting](docs/product/USAGE.md#troubleshooting) y [GitHub Issues](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues).
 
 ## 5-Minute Quick Start (Consumer)
 
