@@ -4,6 +4,8 @@ Mapa corto y humano de la documentación oficial de Pumuki.
 
 ## Si buscas algo concreto
 
+- Quiero límites del producto, perfil de adopción y comandos mínimos (sin leer todo el README largo):
+  - `README.md` (secciones **Qué NO es Pumuki**, **Rutas de adopción**, **Comandos esenciales**)
 - Quiero instalar y arrancar Pumuki en un repo consumidor:
   - `README.md`
   - `docs/product/INSTALLATION.md`
