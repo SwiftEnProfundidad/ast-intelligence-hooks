@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import test from 'node:test';
-import { startEvidenceContextServer } from '../evidenceContextServer';
+import type { AiEvidenceV2_1 } from '../../evidence/schema';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
+import { startEvidenceContextServer } from '../evidenceContextServer';
+import { sealEvidenceV21ForTests } from './sealEvidenceV21ForTests';
 
-const createEvidencePayload = () => {
-  return {
+const createEvidencePayload = (): AiEvidenceV2_1 => {
+  const evidence: AiEvidenceV2_1 = {
     version: '2.1',
     timestamp: '2026-02-01T10:00:00.000Z',
     snapshot: {
@@ -43,6 +45,7 @@ const createEvidencePayload = () => {
       ],
     },
   };
+  return sealEvidenceV21ForTests(evidence);
 };
 
 const withEvidenceServer = async (
@@ -77,4 +80,11 @@ const safeFetchRequest = async (url: string, init?: RequestInit): Promise<Respon
   }
 };
 
-export { createEvidencePayload, safeFetchRequest, withEvidenceServer, test, withTempDir };
+export {
+  createEvidencePayload,
+  safeFetchRequest,
+  sealEvidenceV21ForTests,
+  withEvidenceServer,
+  test,
+  withTempDir,
+};

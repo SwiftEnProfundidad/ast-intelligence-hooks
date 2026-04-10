@@ -59,6 +59,7 @@ test('pumuki enterprise stdio bridge responde initialize y tools/list', async ()
       ...process.env,
       PUMUKI_ENTERPRISE_MCP_PORT: '0',
       PUMUKI_ENTERPRISE_MCP_HOST: '127.0.0.1',
+      PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE: 'advisory',
     },
     stdio: ['pipe', 'pipe', 'pipe'],
   });
