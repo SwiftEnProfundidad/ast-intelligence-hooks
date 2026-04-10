@@ -22,6 +22,7 @@
 - Contexto: este archivo vive en el repo **Pumuki** pero el orden incluye **impacto en consumidores** (RuralGO, SAAS, Flux) cuando el ciclo de release lo exige; no es “solo un repo”, es el **espejo operativo** acordado en `AGENTS.md`.
 - Línea **6.3.71** (npm): paquete INC-069 + `operational_hints` + remediaciones compartidas + `PUMUKI_GATE_SCOPE_PATH_PREFIXES` + `doctor --parity`; **6.3.70** PRE_PUSH sin mutar evidencia trackeada ALLOW/WARN + modal macOS; **6.3.69** modal + stderr `gate.blocked` + git-flow/worktree en hooks; **6.3.68** PRE_WRITE encadenado + adapter por defecto; **6.3.65+** orden con pre-commit.com + `exec`.
 - Estado global: **sin tareas PUMUKI-2xx abiertas en este espejo**; repin **6.3.71** en **R_GO**, **SAAS**, **Flux_training** en **remoto** (`package.json` + lockfile). Tras `git pull`, validar `pumuki doctor --json` (versión efectiva **6.3.71**). **R_GO `main`** puede seguir por detrás de `develop`; promoción a `main` es release aparte.
+- **CI (GitHub Actions):** la org **no** tiene cuota útil para Actions → los workflows remotos **no son operativos** ni bloquean el flujo: **merge cuando toque**, con calidad asegurada en **local** (hooks Pumuki, `npm test`, `npm run test:mcp`, etc.).
 
 ## Cola externa real
 
@@ -31,7 +32,7 @@
 
 ## Donde estamos (operativo)
 
-- ✅ **PR #748 → `develop`** (squash `cfbcc9b`): tests MCP con evidencia v2.1 sellada (`validateEvidenceChain`) + `PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE=advisory` en stdio enterprise; tracking enlazado en este MD en la rama del PR. **GitHub Actions** en la PR falló de forma masiva (jobs ~3 s, sin pasos ejecutados en API → coherente con **cuota/billing** u org sin runners); **merge admin** para desbloquear `develop` pese a checks rojos.
+- ✅ **PR #748 → `develop`** (`cfbcc9b`): tests MCP con evidencia v2.1 sellada + stdio enterprise con `PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE=advisory`; merge aplicado **sin depender de CI remoto** (véase política de Actions en **Estado actual**).
 - ✅ Ajustes de tests (PRE_WRITE en `skills.policy`, doctor/cli JSON, Jest `evaluateRules`) y `npm test` verde en rama `refactor/cli-complexity-reduction-phase4-rebase2`.
 - ✅ Notificaciones macOS: modal de bloqueo **activo por defecto** si las notificaciones están habilitadas; desactivar modal con `"blockedDialogEnabled": false` o `PUMUKI_MACOS_BLOCKED_DIALOG=0`. Botones Desactivar / Silenciar 30 min / Mantener activas normalizados + parseo `osascript` más robusto.
 - ✅ **Bug consumidor (RuralGO / pre-commit en pre-push)** — publicado en **6.3.70** (npm): con `.ai_evidence.json` **trackeado**, `PRE_PUSH` en **ALLOW/WARN** ya **no reescribe** el fichero (evita “files were modified by this hook”). Opt-in legado: `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE=1`. En `gate.blocked` con modal activo se omite el banner `osascript` duplicado; panel Swift `KeyableFloatingPanel` + `becomesKeyOnlyIfNeeded=false` para aceptar clics.
