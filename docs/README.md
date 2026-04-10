@@ -37,6 +37,8 @@ Mapa corto y humano de la documentación oficial de Pumuki.
 
 - Quiero saber en qué estamos ahora:
   - `docs/tracking/plan-activo-de-trabajo.md`
+- Quiero el seguimiento del curso Stack My Architecture (Pumuki), iniciativa formativa aparte del espejo operativo:
+  - `docs/tracking/plan-curso-pumuki-stack-my-architecture.md`
 
 ## Estructura oficial
 
@@ -64,8 +66,9 @@ Mapa corto y humano de la documentación oficial de Pumuki.
 
 - `docs/tracking/`
   - Seguimiento permitido y solo el imprescindible.
-  - Unica fuente de verdad: `docs/tracking/plan-activo-de-trabajo.md`
-  - Regla hard: solo puede existir una tarea `🚧` en el plan activo.
+  - Espejo operativo de producto y consumidores: `docs/tracking/plan-activo-de-trabajo.md` (unica fuente de verdad para ese ambito).
+  - Iniciativa formativa (curso Pumuki en Stack My Architecture): `docs/tracking/plan-curso-pumuki-stack-my-architecture.md` (no sustituye al plan activo).
+  - Regla hard: solo puede existir una tarea `🚧` en cada documento de seguimiento que lo use.
 
 ## Fuera de `docs/`
 
