@@ -26,6 +26,7 @@ Iniciativa formativa: quinto curso del ecosistema Stack My Architecture. **No** 
 ## Estado actual
 
 - **Cierre local y release gate:** `build-hub.sh --mode strict` + smoke runtime en verde.
+- **Origen en GitHub:** el repo **`stack-my-architecture-hub`** tiene en **`main`** la carpeta estática **`pumuki/`** y el pipeline `build-hub` que la genera (sincronizado con remoto; despliegue a producción con el workflow cuando toque).
 - **Publicación Vercel:** deploy del proyecto `stack-my-architecture-hub` con verificación de rutas contra el alias **`https://stack-my-architecture-hub.vercel.app`** (incluye `/pumuki/` → 200). El script `publish-architecture-stack.sh` infiere la base de comprobación desde la línea `Aliased:` del output de Vercel (o `SMA_PUBLISH_VERIFY_BASE_URL`) y escribe **`.runtime/publish-verify-base.url`** para que el workflow **Hub Production Release Gate** ejecute `post-deploy-checks.sh` contra la misma base que pasó la verificación de rutas.
 - Si **`https://architecture-stack.vercel.app`** debe exponer el mismo árbol estático que el hub, sincroniza proyecto/CNAME según tu setup (nota emitida por el script al publicar).
 
