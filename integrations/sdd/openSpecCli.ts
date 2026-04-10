@@ -17,20 +17,29 @@ type OpenSpecCommandResult = {
   stderr: string;
 };
 
-const resolveOpenSpecBinary = (repoRoot: string): string => {
+const resolveOpenSpecBinary = (repoRoot: string): string | undefined => {
   const binaryName = process.platform === 'win32' ? 'openspec.cmd' : 'openspec';
   const localBinaryPath = join(repoRoot, 'node_modules', '.bin', binaryName);
   if (existsSync(localBinaryPath)) {
     return localBinaryPath;
   }
-  return 'openspec';
+  return undefined;
 };
 
 const runOpenSpecCommand = (
   args: ReadonlyArray<string>,
   cwd: string
 ): OpenSpecCommandResult => {
-  const result = runSpawnSync(resolveOpenSpecBinary(cwd), [...args], {
+  const binary = resolveOpenSpecBinary(cwd);
+  if (!binary) {
+    return {
+      exitCode: 127,
+      stdout: '',
+      stderr:
+        'OpenSpec CLI not found under repo node_modules/.bin (add @fission-ai/openspec to this repository).',
+    };
+  }
+  const result = runSpawnSync(binary, [...args], {
     cwd,
     encoding: 'utf8',
   });
