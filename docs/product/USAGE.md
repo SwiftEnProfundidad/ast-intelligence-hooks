@@ -72,6 +72,8 @@ Platform activation:
 
 Pumuki enforces OpenSpec policy/session before allowing normal gate execution.
 
+OpenSpec CLI resolution is **repo-local only**: Pumuki runs `openspec` from **`node_modules/.bin`** in the repository under check. A binary named `openspec` elsewhere on your **`PATH`** (global install, another tool) is **not** used. Add **`@fission-ai/openspec`** to the consumer project (for example via `pumuki install` / `bootstrap`) so laptops and CI behave the same; otherwise you may see **`OPENSPEC_MISSING`** even when `openspec --version` succeeds in an interactive shell.
+
 Minimal daily flow:
 
 ```bash
@@ -565,6 +567,7 @@ npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts \
 
 OpenSpec integration behavior:
 - `pumuki bootstrap --enterprise --agent=<name>` orquesta `install + adapter wiring + doctor --deep` en un solo paso.
+- SDD/OpenSpec enforcement invokes the CLI only from **`{repo}/node_modules/.bin/openspec`** (no fallback to a generic `openspec` on `PATH`).
 - `pumuki install` auto-bootstraps OpenSpec (`@fission-ai/openspec`) when missing/incompatible and scaffolds `openspec/` project baseline when absent.
 - `pumuki install --with-mcp` adds adapter/MCP wiring bootstrap and prints MCP health summary on completion.
 - `pumuki update --latest` migrates legacy `openspec` package to `@fission-ai/openspec` before hook reinstall.
@@ -805,6 +808,8 @@ Inspect status and decision:
 npx --yes pumuki sdd status
 npx --yes pumuki sdd validate --stage=PRE_COMMIT
 ```
+
+If the gate reports **`OPENSPEC_MISSING`** but `openspec --version` works in the terminal, you are likely using a **global** OpenSpec install. Pumuki does not use that path; install the package in the repo (`npm install`, `pumuki install`, or `pumuki bootstrap`) so `node_modules/.bin/openspec` exists.
 
 Open or refresh session if needed:
 

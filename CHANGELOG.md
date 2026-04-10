@@ -8,7 +8,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **OpenSpec / SDD**: detección y ejecución del CLI OpenSpec solo usan `node_modules/.bin/openspec` **del repositorio** (ya no se resuelve un `openspec` genérico del `PATH`). Instala `@fission-ai/openspec` en el consumidor para SDD estricto; evita resultados distintos entre máquinas con CLI global y CI limpio.
+- **OpenSpec / SDD**: detección y ejecución del CLI OpenSpec solo usan `node_modules/.bin/openspec` **del repositorio** (ya no se resuelve un `openspec` genérico del `PATH`). Instala `@fission-ai/openspec` en el consumidor para SDD estricto; evita resultados distintos entre máquinas con CLI global y CI limpio. Documentado en `docs/product/USAGE.md` (flujo SDD obligatorio, integración OpenSpec y troubleshooting).
 
 ### Security
 
