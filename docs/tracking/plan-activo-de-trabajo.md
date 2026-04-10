@@ -31,6 +31,7 @@
 
 ## Donde estamos (operativo)
 
+- ✅ **PR #748 → `develop`** (squash `cfbcc9b`): tests MCP con evidencia v2.1 sellada (`validateEvidenceChain`) + `PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE=advisory` en stdio enterprise; tracking enlazado en este MD en la rama del PR. **GitHub Actions** en la PR falló de forma masiva (jobs ~3 s, sin pasos ejecutados en API → coherente con **cuota/billing** u org sin runners); **merge admin** para desbloquear `develop` pese a checks rojos.
 - ✅ Ajustes de tests (PRE_WRITE en `skills.policy`, doctor/cli JSON, Jest `evaluateRules`) y `npm test` verde en rama `refactor/cli-complexity-reduction-phase4-rebase2`.
 - ✅ Notificaciones macOS: modal de bloqueo **activo por defecto** si las notificaciones están habilitadas; desactivar modal con `"blockedDialogEnabled": false` o `PUMUKI_MACOS_BLOCKED_DIALOG=0`. Botones Desactivar / Silenciar 30 min / Mantener activas normalizados + parseo `osascript` más robusto.
 - ✅ **Bug consumidor (RuralGO / pre-commit en pre-push)** — publicado en **6.3.70** (npm): con `.ai_evidence.json` **trackeado**, `PRE_PUSH` en **ALLOW/WARN** ya **no reescribe** el fichero (evita “files were modified by this hook”). Opt-in legado: `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE=1`. En `gate.blocked` con modal activo se omite el banner `osascript` duplicado; panel Swift `KeyableFloatingPanel` + `becomesKeyOnlyIfNeeded=false` para aceptar clics.
