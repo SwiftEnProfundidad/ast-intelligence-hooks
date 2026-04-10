@@ -70,6 +70,7 @@ scripts/hooks-system/.hook-system/
 **/*CORRECCIONES*.md
 !docs/tracking/estado-ejecutivo.md
 !docs/tracking/plan-activo-de-trabajo.md
+!docs/tracking/plan-curso-pumuki-stack-my-architecture.md
 !docs/tracking/historico-*.md
 ast-summary.json
 .AI_EVIDENCE_SUMMARY.md

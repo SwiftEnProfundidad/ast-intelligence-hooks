@@ -38,6 +38,8 @@ Elige un perfil y profundiza en los enlaces; **no** repite aquí reglas largas (
 
 Referencias canónicas (profundizar aquí): [Instalación](docs/product/INSTALLATION.md), [Uso y gates](docs/product/USAGE.md), [Configuración](docs/product/CONFIGURATION.md), [AGENTS.md](AGENTS.md) (contrato agentes/skills/GitFlow en repos que lo adopten), [índice de documentación](docs/README.md).
 
+Formación opcional (curso **Pumuki** dentro del hub *Stack My Architecture*): [https://stack-my-architecture-hub.vercel.app/pumuki/](https://stack-my-architecture-hub.vercel.app/pumuki/) · seguimiento de la iniciativa en [docs/tracking/plan-curso-pumuki-stack-my-architecture.md](docs/tracking/plan-curso-pumuki-stack-my-architecture.md).
+
 ## Comandos esenciales
 
 Cinco entradas que cubren el 80 % del día a día en un consumidor; el detalle está en los enlaces.
