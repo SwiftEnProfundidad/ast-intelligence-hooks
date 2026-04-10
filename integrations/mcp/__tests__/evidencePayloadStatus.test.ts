@@ -6,8 +6,10 @@ import { withTempDir } from '../../__tests__/helpers/tempDir';
 import type { AiEvidenceV2_1 } from '../../evidence/schema';
 import { CONTEXT_API_CAPABILITIES } from '../evidencePayloadConfig';
 import { toStatusPayload } from '../evidencePayloadStatus';
+import { sealEvidenceV21ForTests } from './sealEvidenceV21ForTests';
 
-const createEvidence = (): AiEvidenceV2_1 => ({
+const createEvidence = (): AiEvidenceV2_1 => {
+  const evidence: AiEvidenceV2_1 = {
   version: '2.1',
   timestamp: '2026-02-19T09:00:00.000Z',
   snapshot: {
@@ -76,7 +78,9 @@ const createEvidence = (): AiEvidenceV2_1 => ({
       },
     ],
   },
-});
+};
+  return sealEvidenceV21ForTests(evidence);
+};
 
 test('toStatusPayload devuelve degraded cuando falta .ai_evidence.json', async () => {
   await withTempDir('pumuki-status-payload-missing-', async (repoRoot) => {
