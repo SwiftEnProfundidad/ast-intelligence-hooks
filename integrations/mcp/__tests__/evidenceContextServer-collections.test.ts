@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   createEvidencePayload,
   safeFetchRequest,
+  sealEvidenceV21ForTests,
   test,
   withEvidenceServer,
   withTempDir,
@@ -17,6 +18,7 @@ test('returns rulesets endpoint sorted deterministically', async () => {
       { platform: 'backend', bundle: 'backend', hash: 'bbb' },
       { platform: 'ios', bundle: 'ios', hash: 'aaa' },
     ];
+    sealEvidenceV21ForTests(payload);
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {
@@ -125,6 +127,7 @@ test('returns platforms endpoint with detectedOnly toggle', async () => {
       backend: { detected: true, confidence: 'HIGH' },
       ios: { detected: true, confidence: 'MEDIUM' },
     };
+    sealEvidenceV21ForTests(payload);
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {
@@ -260,6 +263,7 @@ test('returns ledger endpoint sorted deterministically', async () => {
         lastSeen: '2026-02-01T10:00:00.000Z',
       },
     ];
+    sealEvidenceV21ForTests(payload);
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {
@@ -405,6 +409,7 @@ test('returns snapshot endpoint with deterministic findings ordering', async () 
         lines: [10],
       },
     ];
+    sealEvidenceV21ForTests(payload);
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {

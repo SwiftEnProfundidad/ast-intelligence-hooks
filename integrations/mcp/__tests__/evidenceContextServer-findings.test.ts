@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   createEvidencePayload,
   safeFetchRequest,
+  sealEvidenceV21ForTests,
   test,
   withEvidenceServer,
   withTempDir,
@@ -36,6 +37,7 @@ test('returns findings endpoint with deterministic ordering and filters', async 
         lines: [10],
       },
     ];
+    sealEvidenceV21ForTests(payload);
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {

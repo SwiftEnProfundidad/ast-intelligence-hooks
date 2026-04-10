@@ -14,9 +14,10 @@ import {
   toStatusPayload,
   toSummaryPayload,
 } from '../evidencePayloads';
+import { sealEvidenceV21ForTests } from './sealEvidenceV21ForTests';
 
 const createEvidence = (): AiEvidenceV2_1 => {
-  return {
+  const evidence: AiEvidenceV2_1 = {
     version: '2.1',
     timestamp: '2026-02-01T10:00:00.000Z',
     snapshot: {
@@ -90,6 +91,7 @@ const createEvidence = (): AiEvidenceV2_1 => {
       ],
     },
   };
+  return sealEvidenceV21ForTests(evidence);
 };
 
 test('parseBooleanQuery normaliza valores truthy/falsy', () => {
