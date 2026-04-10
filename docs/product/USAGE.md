@@ -14,6 +14,11 @@ Production operations baseline (SLA/SLO, incident response and alerting):
 Visual walkthrough for menu Option 1 captures:
 - `docs/operations/framework-menu-consumer-walkthrough.md`
 
+Stack My Architecture (optional training hub; includes the dedicated Pumuki course):
+
+- Public static site: `https://stack-my-architecture-hub.vercel.app/pumuki/`
+- Initiative tracking in this repo: `docs/tracking/plan-curso-pumuki-stack-my-architecture.md`
+
 ## Prerequisites
 
 - Node.js `>=18`
