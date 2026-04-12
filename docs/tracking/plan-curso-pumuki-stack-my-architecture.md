@@ -21,6 +21,13 @@ No sustituye el espejo de producto en [`plan-activo-de-trabajo.md`](./plan-activ
 
 **Éxito del curso:** tras cerrarlo, en un repo real puede (1) nombrar el **stage** y el **scope** de un fallo, (2) leer **`.ai_evidence.json`** y relacionarlo con stderr, (3) distinguir **enforcement** (hooks/CI) de **lectura/agente** (MCP), (4) ejecutar el **flujo SDD mínimo** sin confundirlo con “arreglar reglas”, (5) instalar, actualizar o **retirar** Pumuki sin dejar hooks huérfanos.
 
+- **Cierre local y release gate:** `build-hub.sh --mode strict` + smoke runtime en verde.
+- **Origen en GitHub:** el repo **`stack-my-architecture-hub`** tiene en **`main`** la carpeta estática **`pumuki/`** y el pipeline `build-hub` que la genera (sincronizado con remoto; despliegue a producción con el workflow cuando toque).
+- **Repo Pumuki (ramas):** la documentación del curso en este repositorio está integrada en **`develop`** (**PR #746**, merge `428f10d`). La rama **`main`** del producto va **muy por detrás** de `develop` (del orden de **~600** commits a fecha de integración del plan); promover `develop` → `main` es un **release de producto** aparte, no parte del cierre de este plan formativo.
+- **GitHub Actions:** la org **no** dispone de cuota útil para Actions → el **Hub Production Release Gate** en CI **no** se usa como gate; publicación y comprobaciones **en local** con `./scripts/publish-architecture-stack.sh` en el repo del hub (Vercel CLI + mismos scripts).
+- **Publicación Vercel:** deploy del proyecto `stack-my-architecture-hub` con verificación de rutas contra el alias **`https://stack-my-architecture-hub.vercel.app`** (incluye `/pumuki/` → 200). El script `publish-architecture-stack.sh` infiere la base desde `Aliased:` (o `SMA_PUBLISH_VERIFY_BASE_URL`) y escribe **`.runtime/publish-verify-base.url`** para alinear `post-deploy-checks.sh` con la URL verificada (localmente o cuando Actions vuelva a estar disponible).
+- Si **`https://architecture-stack.vercel.app`** debe exponer el mismo árbol estático que el hub, sincroniza proyecto/CNAME según tu setup (nota emitida por el script al publicar).
+
 Si eso no se cumple, el curso falla aunque el HTML sea bonito.
 
 ---
