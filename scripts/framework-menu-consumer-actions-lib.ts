@@ -9,6 +9,10 @@ export type ConsumerLegacyMenuContext = {
   runStrictRepoAndStaged: () => Promise<void>;
   runStrictStagedOnly: () => Promise<void>;
   runStandardCriticalHigh: () => Promise<void>;
+  runEngineStagedNoPreflight: () => Promise<void>;
+  runEngineUnstagedNoPreflight: () => Promise<void>;
+  runEngineStagedAndUnstagedNoPreflight: () => Promise<void>;
+  runEngineFullRepoNoPreflight: () => Promise<void>;
   runPatternChecks: () => Promise<void>;
   runEslintAudit: () => Promise<void>;
   runAstIntelligence: () => Promise<void>;
@@ -22,23 +26,43 @@ export const createConsumerLegacyMenuActions = (
   return [
     {
       id: '1',
-      label: 'Read-only full audit (repo analysis · PRE_COMMIT)',
+      label: 'Consumer preflight + gate: ALL tracked files (PRE_COMMIT · writes evidence)',
       execute: params.runFullAudit,
     },
     {
       id: '2',
-      label: 'Read-only strict REPO+STAGING (CI/CD · PRE_PUSH)',
+      label: 'Consumer preflight + gate: REPO+index contract (PRE_PUSH · disk skip risk if evidence tracked)',
       execute: params.runStrictRepoAndStaged,
     },
     {
       id: '3',
-      label: 'Read-only strict STAGING only (dev · PRE_COMMIT)',
+      label: 'Consumer preflight + gate: STAGED only (PRE_COMMIT)',
       execute: params.runStrictStagedOnly,
     },
     {
       id: '4',
-      label: 'Read-only audit of STAGED+UNSTAGED working tree (PRE_PUSH policy)',
+      label: 'Consumer preflight + gate: working tree (PRE_PUSH policy · disk skip risk if evidence tracked)',
       execute: params.runStandardCriticalHigh,
+    },
+    {
+      id: '11',
+      label: 'Engine audit · STAGED only (no preflight · PRE_COMMIT)',
+      execute: params.runEngineStagedNoPreflight,
+    },
+    {
+      id: '12',
+      label: 'Engine audit · UNSTAGED only (no preflight · PRE_COMMIT)',
+      execute: params.runEngineUnstagedNoPreflight,
+    },
+    {
+      id: '13',
+      label: 'Engine audit · STAGED + UNSTAGED (no preflight · PRE_COMMIT)',
+      execute: params.runEngineStagedAndUnstagedNoPreflight,
+    },
+    {
+      id: '14',
+      label: 'Engine audit · FULL tracked repo (no preflight · PRE_COMMIT)',
+      execute: params.runEngineFullRepoNoPreflight,
     },
     {
       id: '5',

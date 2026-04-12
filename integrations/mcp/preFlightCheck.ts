@@ -4,7 +4,8 @@ import { resolveLearningContextExperimentalFeature } from '../policy/experimenta
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
 
 const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
-  EVIDENCE_MISSING: 'Ejecuta una auditoría (1/2/3/4) para regenerar .ai_evidence.json.',
+  EVIDENCE_MISSING:
+    'Ejecuta una auditoría (1/2/3/4 u opciones de motor 11–14) para regenerar .ai_evidence.json.',
   EVIDENCE_INVALID: 'Regenera .ai_evidence.json desde una opción de auditoría.',
   EVIDENCE_INTEGRITY_MISSING: 'Refresca evidencia para regenerar metadatos de integridad.',
   EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:

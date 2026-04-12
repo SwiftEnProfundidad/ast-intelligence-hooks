@@ -33,7 +33,9 @@ export type ConsumerMenuRuntimeParams = {
   runRepoGate: () => Promise<ConsumerRuntimeGateResult | void>;
   runRepoAndStagedGate: () => Promise<ConsumerRuntimeGateResult | void>;
   runStagedGate: () => Promise<ConsumerRuntimeGateResult | void>;
+  runUnstagedGate: () => Promise<ConsumerRuntimeGateResult | void>;
   runWorkingTreeGate: () => Promise<ConsumerRuntimeGateResult | void>;
+  runWorkingTreePreCommitGate: () => Promise<ConsumerRuntimeGateResult | void>;
   runPreflight?: (
     stage: 'PRE_COMMIT' | 'PRE_PUSH'
   ) => Promise<string | void> | string | void;
@@ -47,7 +49,7 @@ export type ConsumerMenuRuntime = {
   readCurrentSummary: () => FrameworkMenuEvidenceSummary | null;
 };
 
-export type ConsumerRuntimeScope = 'staged' | 'workingTree';
+export type ConsumerRuntimeScope = 'staged' | 'unstaged' | 'workingTree';
 
 export type ConsumerRuntimeSummaryDependencies = {
   repoRoot: string;

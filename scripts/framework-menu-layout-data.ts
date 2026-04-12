@@ -7,6 +7,11 @@ export const CONSUMER_MENU_LAYOUT: ReadonlyArray<MenuLayoutGroup> = [
     itemIds: ['1', '2', '3', '4'],
   },
   {
+    key: 'engine-working-tree-no-preflight',
+    title: 'Engine · working tree (no preflight)',
+    itemIds: ['11', '12', '13', '14'],
+  },
+  {
     key: 'export',
     title: 'Legacy Read-Only Export',
     itemIds: ['8'],

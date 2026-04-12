@@ -36,7 +36,9 @@ test('consumer runtime printMenu agrupa opciones por shell mínima y diagnóstic
       runRepoGate: async () => {},
       runRepoAndStagedGate: async () => {},
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);
@@ -46,10 +48,13 @@ test('consumer runtime printMenu agrupa opciones por shell mínima y diagnóstic
     runtime.printMenu();
     const rendered = output.join('\n');
     assert.match(rendered, /Read-Only Gate Flows/i);
+    assert.match(rendered, /Engine · working tree \(no preflight\)/i);
+    assert.match(rendered, /11\)\s+Engine audit · STAGED only/i);
+    assert.match(rendered, /14\)\s+Engine audit · FULL tracked repo/i);
     assert.match(rendered, /Legacy Read-Only Export/i);
     assert.match(rendered, /Legacy Read-Only Diagnostics/i);
     assert.match(rendered, /System/i);
-    assert.match(rendered, /1\)\s+Read-only full audit/i);
+    assert.match(rendered, /1\)\s+Consumer preflight \+ gate: ALL tracked files/i);
     assert.match(rendered, /8\)\s+Export legacy read-only evidence snapshot/i);
     assert.match(rendered, /10\)\s+Exit/i);
   } finally {
@@ -104,7 +109,9 @@ test('consumer runtime printMenu muestra badge de estado PASS/WARN/BLOCK', { con
       runRepoGate: async () => {},
       runRepoAndStagedGate: async () => {},
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);
@@ -132,7 +139,9 @@ test('consumer runtime printMenu usa vista clásica agrupada por shell mínima c
       runRepoGate: async () => {},
       runRepoAndStagedGate: async () => {},
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);
@@ -163,7 +172,9 @@ test('consumer runtime exposes blocked summary so advanced menu can stay aligned
       },
     }),
     runStagedGate: async () => {},
+    runUnstagedGate: async () => {},
     runWorkingTreeGate: async () => {},
+    runWorkingTreePreCommitGate: async () => {},
     runPreflight: async () => {},
     write: () => {},
   });

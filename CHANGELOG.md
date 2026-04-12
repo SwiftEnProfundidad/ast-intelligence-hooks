@@ -6,8 +6,28 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.72] - 2026-04-11
+
+### Fixed
+
+- **Tests `cli` (macOS):** la suite `integrations/lifecycle/__tests__/cli.test.ts` activaba **`emitGateBlockedNotification`** real en escenarios PRE_WRITE **strict** (p. ej. `OPENSPEC_MISSING`), lo que podía **bloquear** `npm test` indefinidamente al abrir notificación/diálogo del sistema. Los tests fijan **`PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS=1`** en `beforeEach` y restauran el env en `afterEach` (misma variable que el producto ya documenta para desactivar notificaciones).
+- **macOS notificaciones en `gate.blocked`**: por defecto vuelve a mostrarse el **banner** de Notification Center además del modal interactivo cuando el modal está activo. Antes, si el modal (Swift/AppleScript) no llegaba a mostrarse desde un hook en un repo consumidor, podía no verse **ninguna** notificación. Opt-in al comportamiento previo (solo modal, sin banner duplicado): `PUMUKI_MACOS_GATE_BLOCKED_BANNER_DEDUPE=1`.
+- **Consumer repin + MCP (IDE-agnóstico)**: el `postinstall` del paquete ejecuta **`pumuki install --with-mcp --agent=repo`** por defecto, actualizando **`.pumuki/adapter.json`** (hooks + comandos MCP stdio) sin depender de Cursor ni de ningún IDE. La plantilla `repo` usa **`json-merge`** para no pisar claves extra del consumidor. Opt-out: `PUMUKI_POSTINSTALL_SKIP_MCP=1`. Opt-in a ficheros de IDE en postinstall: `PUMUKI_POSTINSTALL_MCP_AGENT=cursor|claude|codex`.
+- **macOS diálogo `gate.blocked` (Swift)**: el helper deja de usar un `NSPanel` flotante personalizado y pasa a **`NSAlert.runModal()`**, de modo que **Desactivar / Silenciar 30 min / Mantener activas** respondan de forma fiable a clics y teclado (el panel flotante podía no entregar eventos según foco de otras apps, p. ej. el IDE).
+
+### Added
+
+- **Smoke de superficie CLI**: `npm run smoke:pumuki-surface` (~29 invocaciones) y `smoke:pumuki-surface-installed` con `PUMUKI_SMOKE_REPO_ROOT` + `PUMUKI_SMOKE_BIN_STRATEGY=installed` para validar el bin bajo `node_modules/pumuki` del consumidor. Ver `docs/validation/README.md`.
+- **Barra local sin GitHub Actions**: `npm run validation:local-merge-bar` (`typecheck` + smoke + `npm test`) como sustituto operativo cuando la org no tiene cuota útil de Actions.
+- **Tarball npm**: el paquete publicado incluye también `AGENTS.md`, `CHANGELOG.md` y `docs/tracking/plan-curso-pumuki-stack-my-architecture.md` (listados en `package.json` → `files`), de modo que la misma versión en **npm** / **jsDelivr** / `node_modules` expone contrato de agentes, historial de release y el plan formativo del curso Pumuki sin depender solo de GitHub.
+- **Menú consumer (`npm run framework:menu`)**: opciones `11` (solo **staged**), `12` (solo **unstaged**: `git diff` + untracked), `13` (**staged + unstaged** con política **PRE_COMMIT** sobre el working tree), `14` (**todo el repo trackeado** sin preflight). Ejecutan el motor de gate **sin preflight** consumer. Nuevo alcance de hechos `unstaged` y `GitService.getUnstagedFacts`.
+- **Vista “classic” en consola**: segundo panel tras el resumen consumer con severidades coloreadas (enterprise + legacy), hasta 45 hallazgos ordenados, filas **platform** si existen en la evidencia, y nota sobre heurística `Other`. Variable `PUMUKI_MENU_VINTAGE_REPORT=0` para desactivar.
+- **Transparencia PRE_PUSH**: tras opciones `2` y `4` con outcome **PASS/WARN**, mensaje sobre posible **no escritura** en disco de `.ai_evidence.json` trackeado y variable `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE`.
+- **Etiquetas consumer** para opciones `1–4` y hints de evidencia/preflight alineados con alcance real (preflight vs motor, riesgo de skip en disco).
+
 ### Changed
 
+- **`runConsumerMenuMatrix` / baseline / summary**: la matriz consumer incluye también las opciones `11–14` (misma semántica que el menú: staged, unstaged, working tree **PRE_COMMIT**, repo completo, sin preflight), junto a `1–4` y `9`. Se exporta `MATRIX_MENU_OPTION_IDS` como lista canónica de ids.
 - **OpenSpec / SDD**: detección y ejecución del CLI OpenSpec solo usan `node_modules/.bin/openspec` **del repositorio** (ya no se resuelve un `openspec` genérico del `PATH`). Instala `@fission-ai/openspec` en el consumidor para SDD estricto; evita resultados distintos entre máquinas con CLI global y CI limpio. Documentado en `docs/product/USAGE.md` (flujo SDD obligatorio, integración OpenSpec y troubleshooting).
 
 ### Security

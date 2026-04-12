@@ -20,13 +20,27 @@ export type GateScope =
     extensions?: string[];
   }
   | {
+    kind: 'unstaged';
+    extensions?: string[];
+  }
+  | {
     kind: 'range';
     fromRef: string;
     toRef: string;
     extensions?: string[];
   };
 
-const DEFAULT_EXTENSIONS = ['.swift', '.ts', '.tsx', '.js', '.jsx', '.kt', '.kts'];
+export const DEFAULT_FACT_FILE_EXTENSIONS: ReadonlyArray<string> = [
+  '.swift',
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.kt',
+  '.kts',
+];
+
+const DEFAULT_EXTENSIONS = DEFAULT_FACT_FILE_EXTENSIONS;
 
 export const countScannedFilesFromFacts = (facts: ReadonlyArray<Fact>): number => {
   const contentPaths = new Set<string>();
@@ -65,6 +79,9 @@ export const resolveFactsForGateScope = async (params: {
   }
   if (params.scope.kind === 'workingTree') {
     return params.git.getStagedAndUnstagedFacts(extensions);
+  }
+  if (params.scope.kind === 'unstaged') {
+    return params.git.getUnstagedFacts(extensions);
   }
 
   return getFactsForCommitRange({

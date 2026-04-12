@@ -99,7 +99,10 @@ npm run typecheck
 npm run test
 npm run test:deterministic
 npm run validation:package-manifest
+npm run validation:local-merge-bar
 ```
+
+Smoke opcional de toda la superficie CLI (y bin instalado en un consumidor con `PUMUKI_SMOKE_REPO_ROOT`): `npm run smoke:pumuki-surface`, `npm run smoke:pumuki-surface-installed`. Ver `docs/validation/README.md`.
 
 Use menu when needed:
 

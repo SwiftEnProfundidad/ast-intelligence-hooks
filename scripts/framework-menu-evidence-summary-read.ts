@@ -1,4 +1,8 @@
-import type { FrameworkMenuEvidenceSummary } from './framework-menu-evidence-summary-types';
+import type {
+  EvidenceSnapshot,
+  FrameworkMenuEvidencePlatformRow,
+  FrameworkMenuEvidenceSummary,
+} from './framework-menu-evidence-summary-types';
 import { readEvidenceSummaryFile } from './framework-menu-evidence-summary-file';
 import {
   asFindings,
@@ -16,9 +20,55 @@ import {
   toTopFiles,
 } from './framework-menu-evidence-summary-severity';
 
+export type ReadEvidenceSummaryForMenuOptions = {
+  topFindingsLimit?: number;
+  topFileLocationsLimit?: number;
+  topFilesLimit?: number;
+};
+
+const sumLegacySeverityBand = (row: { by_severity?: unknown }): number => {
+  const bands = row.by_severity;
+  if (!bands || typeof bands !== 'object') {
+    return 0;
+  }
+  const b = bands as Record<string, unknown>;
+  const keys = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const;
+  let total = 0;
+  for (const key of keys) {
+    const value = b[key];
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      total += value;
+    }
+  }
+  return total;
+};
+
+const parsePlatformAuditRows = (
+  snapshot: EvidenceSnapshot
+): ReadonlyArray<FrameworkMenuEvidencePlatformRow> => {
+  const raw = snapshot.platforms;
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const rows: FrameworkMenuEvidencePlatformRow[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') {
+      continue;
+    }
+    const platform = toStringOrNull((entry as { platform?: unknown }).platform) ?? 'Other';
+    const violations = sumLegacySeverityBand(entry as { by_severity?: unknown });
+    rows.push({ platform, violations });
+  }
+  return rows;
+};
+
 export const readEvidenceSummaryForMenu = (
-  repoRoot: string = process.cwd()
+  repoRoot: string = process.cwd(),
+  options?: ReadEvidenceSummaryForMenuOptions
 ): FrameworkMenuEvidenceSummary => {
+  const topFindingsLimit = options?.topFindingsLimit ?? 10;
+  const topFileLocationsLimit = options?.topFileLocationsLimit ?? 10;
+  const topFilesLimit = options?.topFilesLimit ?? 5;
   const evidence = readEvidenceSummaryFile(repoRoot);
 
   if (evidence.status === 'missing') {
@@ -65,12 +115,13 @@ export const readEvidenceSummaryForMenu = (
     evidence.snapshot.files_affected ?? evidence.snapshot.filesAffected
   );
   const topFileLocations = countFiles({ findings, repoRoot })
-    .slice(0, 10)
+    .slice(0, topFileLocationsLimit)
     .map((entry) => ({
       file: entry.file,
       line: entry.line,
     }));
-  const topFindings = buildTopFindings({ findings, repoRoot, maxItems: 10 });
+  const topFindings = buildTopFindings({ findings, repoRoot, maxItems: topFindingsLimit });
+  const platformAuditRows = parsePlatformAuditRows(evidence.snapshot);
 
   return {
     status: 'ok',
@@ -81,8 +132,9 @@ export const readEvidenceSummaryForMenu = (
     filesAffected,
     bySeverity,
     byEnterpriseSeverity,
-    topFiles: toTopFiles({ findings, repoRoot }),
+    topFiles: toTopFiles({ findings, repoRoot, maxItems: topFilesLimit }),
     topFileLocations,
     topFindings,
+    ...(platformAuditRows.length > 0 ? { platformAuditRows } : {}),
   };
 };

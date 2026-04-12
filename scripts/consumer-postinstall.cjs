@@ -4,6 +4,7 @@
 const { existsSync } = require('node:fs');
 const { join, resolve } = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { resolveConsumerPostinstallInstallExtras } = require('./consumer-postinstall-resolve-args.cjs');
 
 const skipReason = () => {
   if (process.env.PUMUKI_SKIP_POSTINSTALL === '1') {
@@ -41,7 +42,15 @@ const main = () => {
     PUMUKI_SKIP_OPENSPEC_BOOTSTRAP: process.env.PUMUKI_SKIP_OPENSPEC_BOOTSTRAP ?? '1',
   };
 
-  const result = spawnSync(process.execPath, [pumukiCli, 'install'], {
+  const { extras: installExtras, reason: mcpReason } = resolveConsumerPostinstallInstallExtras(
+    consumerRoot,
+    env
+  );
+  if (installExtras.length > 0 && env.PUMUKI_VERBOSE_INSTALL === '1') {
+    console.debug(`[pumuki] postinstall: mcp wiring (${mcpReason}): ${installExtras.join(' ')}`);
+  }
+
+  const result = spawnSync(process.execPath, [pumukiCli, 'install', ...installExtras], {
     cwd: consumerRoot,
     env,
     stdio: 'inherit',

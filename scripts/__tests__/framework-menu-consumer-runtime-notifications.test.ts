@@ -38,7 +38,9 @@ test('consumer runtime emite notificación audit summary tras opción 1', { conc
       },
       runRepoAndStagedGate: async () => {},
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       emitSystemNotification: ({ event }) => {
         events.push(event);
@@ -95,7 +97,9 @@ test('consumer runtime emite notificación audit summary tras opción 2', { conc
         );
       },
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       emitSystemNotification: ({ event }) => {
         events.push(event);
@@ -149,7 +153,9 @@ test('consumer runtime emite notificación audit summary tras opción 3', { conc
           )
         );
       },
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       emitSystemNotification: ({ event }) => {
         events.push(event);
@@ -185,6 +191,7 @@ test('consumer runtime emite notificación audit summary tras opción 4', { conc
       runRepoGate: async () => {},
       runRepoAndStagedGate: async () => {},
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {
         writeFileSync(
           join(temp, '.ai_evidence.json'),
@@ -207,6 +214,7 @@ test('consumer runtime emite notificación audit summary tras opción 4', { conc
           )
         );
       },
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       emitSystemNotification: ({ event }) => {
         events.push(event);

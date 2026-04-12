@@ -4,6 +4,10 @@ Mapa corto y humano de la documentación oficial de Pumuki.
 
 ## Si buscas algo concreto
 
+- Quiero la **intención de producto canónica** (qué debe cumplir Pumuki en cualquier repo, sin repetir manifiesto en cada sesión):
+  - `docs/product/USAGE.md` (sección **Product intent**)
+- Quiero **auditar todo el árbol trackeado** desde CLI (no solo staged):
+  - `docs/product/USAGE.md` (sección **Full-repository audit**), comando `pumuki audit`
 - Quiero límites del producto, perfil de adopción y comandos mínimos (sin leer todo el README largo):
   - `README.md` (secciones **Qué NO es Pumuki**, **Rutas de adopción**, **Comandos esenciales**)
 - Quiero instalar y arrancar Pumuki en un repo consumidor:
@@ -34,6 +38,8 @@ Mapa corto y humano de la documentación oficial de Pumuki.
 - Quiero runbooks de validación:
   - `docs/validation/README.md`
   - `docs/validation/ios-avdlee-parity-matrix.md`
+  - Smoke de superficie CLI + hooks (`npm run smoke:pumuki-surface`, opcional consumidor / bins instalados: ver `docs/validation/README.md`)
+  - Barra local sin Actions: `npm run -s validation:local-merge-bar` (ver `docs/validation/README.md` § GitHub Actions y cuota)
 
 - Quiero saber en qué estamos ahora:
   - `docs/tracking/plan-activo-de-trabajo.md`
@@ -67,7 +73,7 @@ Mapa corto y humano de la documentación oficial de Pumuki.
 - `docs/tracking/`
   - Seguimiento permitido y solo el imprescindible.
   - Espejo operativo de producto y consumidores: `docs/tracking/plan-activo-de-trabajo.md` (unica fuente de verdad para ese ambito).
-  - Iniciativa formativa (curso Pumuki en Stack My Architecture): `docs/tracking/plan-curso-pumuki-stack-my-architecture.md` (no sustituye al plan activo).
+  - Curso Pumuki (Stack My Architecture): diseño pedagógico + seguimiento de entrega en `docs/tracking/plan-curso-pumuki-stack-my-architecture.md` (no sustituye al plan activo).
   - Regla hard: solo puede existir una tarea `🚧` en cada documento de seguimiento que lo use.
 
 ## Fuera de `docs/`

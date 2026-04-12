@@ -20,7 +20,19 @@ import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
 import { openSddSession } from '../../sdd/sessionStore';
 import { resolveMcpAiGateReceiptPath, writeMcpAiGateReceipt } from '../../mcp/aiGateReceipt';
 
+const notificationEnvSnapshot: { prev?: string } = {};
+
+test.beforeEach(() => {
+  notificationEnvSnapshot.prev = process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS;
+  process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS = '1';
+});
+
 test.afterEach(() => {
+  if (notificationEnvSnapshot.prev === undefined) {
+    delete process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS;
+  } else {
+    process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS = notificationEnvSnapshot.prev;
+  }
   process.exitCode = undefined;
 });
 
@@ -785,6 +797,29 @@ test('parseLifecycleCliArgs soporta analytics hotspots diagnose', () => {
     analyticsCommand: 'hotspots',
     analyticsHotspotsCommand: 'diagnose',
   });
+});
+
+test('parseLifecycleCliArgs soporta audit por defecto', () => {
+  assert.deepEqual(parseLifecycleCliArgs(['audit']), {
+    command: 'audit',
+    purgeArtifacts: false,
+    json: false,
+    auditStage: 'PRE_COMMIT',
+  });
+});
+
+test('parseLifecycleCliArgs soporta audit con stage CI engine y json', () => {
+  assert.deepEqual(parseLifecycleCliArgs(['audit', '--stage=CI', '--engine', '--json']), {
+    command: 'audit',
+    purgeArtifacts: false,
+    json: true,
+    auditStage: 'CI',
+    auditEngine: true,
+  });
+});
+
+test('parseLifecycleCliArgs audit rechaza PRE_WRITE', () => {
+  assert.throws(() => parseLifecycleCliArgs(['audit', '--stage=PRE_WRITE']), /PRE_WRITE is not supported/);
 });
 
 test('parseLifecycleCliArgs soporta policy reconcile', () => {

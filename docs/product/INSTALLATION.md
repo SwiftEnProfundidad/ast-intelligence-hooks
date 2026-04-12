@@ -51,7 +51,7 @@ If both commands pass, the workspace is ready.
 npm install --save-exact pumuki
 ```
 
-The package `postinstall` runs **`pumuki install` only** (Git hooks + lifecycle wiring). Hooks chain **`pumuki-pre-write`** then **`pumuki-pre-commit`** / **`pumuki-pre-push`** (IDE-agnostic). When missing, **`.pumuki/adapter.json`** is created with hook + **MCP stdio** command lines (any MCP client can use them). It does **not** write IDE-specific files; use step 2 or `pumuki install --with-mcp --agent=<name>` for that.
+The package `postinstall` runs **`pumuki install`** plus **`--with-mcp --agent=repo`** by default (Git hooks + lifecycle wiring + **solo** **`.pumuki/adapter.json`**: hooks + **MCP stdio** command lines). Eso es **agnóstico de IDE/CLI/extensión**: cualquier cliente MCP puede leer esas líneas o enlazarlas manualmente. En cada `npm install` que actualice `pumuki` (repin), el adapter se **fusiona** (`json-merge`) para no pisar claves propias del consumidor. Opt out del bloque MCP+wiring: `PUMUKI_POSTINSTALL_SKIP_MCP=1`. Ficheros propios de un IDE (p. ej. `.cursor/mcp.json`, `.claude/settings.json`): **`pumuki install --with-mcp --agent=cursor|claude|codex`** a mano o **`PUMUKI_POSTINSTALL_MCP_AGENT=cursor`** (u otro agente soportado) si quieres que el postinstall también los escriba.
 
 ### 2) Bootstrap managed lifecycle (recommended single command)
 

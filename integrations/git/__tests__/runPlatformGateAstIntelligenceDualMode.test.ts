@@ -12,6 +12,7 @@ import { runPlatformGate } from '../runPlatformGate';
 const buildGitStub = (repoRoot: string): IGitService => ({
   runGit: () => '',
   getStagedFacts: () => [],
+  getUnstagedFacts: () => [],
   getRepoFacts: () => [],
   getRepoAndStagedFacts: () => [],
   getStagedAndUnstagedFacts: () => [],

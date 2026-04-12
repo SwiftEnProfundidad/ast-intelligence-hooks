@@ -6,6 +6,17 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-11 (v6.3.72)
+
+- **Tarball npm**: `package.json` → `files` incluye `AGENTS.md`, `CHANGELOG.md` y `docs/tracking/plan-curso-pumuki-stack-my-architecture.md` para lectura canónica vía npm / jsDelivr sin depender solo del repo Git.
+- **`gate.blocked` (macOS)**: banner de Notification Center **y** modal por defecto (evita cero notificaciones si el modal no llega a mostrarse desde un hook); dedupe opcional: `PUMUKI_MACOS_GATE_BLOCKED_BANNER_DEDUPE=1`.
+- **Modal Swift**: `NSAlert.runModal()` en lugar de panel flotante para que los botones del diálogo respondan de forma fiable.
+- **Postinstall consumer**: por defecto `pumuki install --with-mcp --agent=repo` y fusión conservadora en `.pumuki/adapter.json` (`json-merge`); opt-out `PUMUKI_POSTINSTALL_SKIP_MCP=1`.
+- **Validación local**: `smoke:pumuki-surface` / `smoke:pumuki-surface-installed` y `validation:local-merge-bar` (sin depender de minutos de Actions). Detalle en `docs/validation/README.md`.
+- **Tests en macOS:** `integrations/lifecycle/__tests__/cli.test.ts` evita notificaciones reales del sistema (`PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS` en hooks) para que `npm test` / la barra local no queden colgados en PRE_WRITE strict.
+- **Menú / matriz consumer**: opciones motor `11–14`, matriz baseline alineada, vista classic opcional, etc. (ver `CHANGELOG.md`).
+- **Rollout**: `pumuki@6.3.72`; `npm publish` cuando el tarball incluya lo anterior; luego `pumuki doctor --json` + repin en consumidores (p. ej. RuralGO).
+
 ### 2026-04-06 (v6.3.71)
 
 - **Evidencia v2.1**: bloque `operational_hints` (`requires_second_pass`, resumen operativo, desglose por severidad de reglas). Alineado con PRE_COMMIT solo-docs + evidencia trackeada (INC-069) cuando no se re-stagea el JSON automáticamente.

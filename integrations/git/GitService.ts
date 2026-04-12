@@ -9,6 +9,7 @@ export { parseNameStatus } from './gitDiffUtils';
 export interface IGitService {
   runGit(args: ReadonlyArray<string>, cwd?: string): string;
   getStagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact>;
+  getUnstagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact>;
   getRepoFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact>;
   getRepoAndStagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact>;
   getStagedAndUnstagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact>;
@@ -41,6 +42,30 @@ export class GitService implements IGitService {
 
     return buildFactsFromChanges(changes, 'git:staged', (filePath) =>
       this.runGit(['show', `:${filePath}`])
+    );
+  }
+
+  getUnstagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact> {
+    const nameStatus = this.runGit(['diff', '--name-status']);
+    const changes = parseNameStatus(nameStatus).filter((change) =>
+      hasAllowedExtension(change.path, extensions)
+    );
+    const untrackedPaths = this.runGit(['ls-files', '--others', '--exclude-standard'])
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .filter((path) => hasAllowedExtension(path, extensions));
+    const unstagedPaths = new Set(changes.map((change) => change.path));
+    const untrackedChanges = untrackedPaths
+      .filter((path) => !unstagedPaths.has(path))
+      .map((path) => ({
+        path,
+        changeType: 'added' as const,
+      }));
+    const mergedChanges = [...changes, ...untrackedChanges];
+    const repoRoot = this.resolveRepoRoot();
+    return buildFactsFromChanges(mergedChanges, 'git:unstaged', (filePath) =>
+      this.readWorkingTreeFile(repoRoot, filePath)
     );
   }
 

@@ -4,10 +4,11 @@ import type {
   ConsumerMenuMatrixReport,
   MatrixOptionId,
 } from './framework-menu-matrix-baseline-lib';
+import { MATRIX_MENU_OPTION_IDS } from './framework-menu-matrix-evidence-lib';
 import type { DoctorDeepCheckLayer, LifecycleDoctorReport } from '../integrations/lifecycle/doctor';
 import type { LifecycleStatus } from '../integrations/lifecycle/status';
 
-const OPTION_IDS: ReadonlyArray<MatrixOptionId> = ['1', '2', '3', '4', '9'];
+const OPTION_IDS: ReadonlyArray<MatrixOptionId> = [...MATRIX_MENU_OPTION_IDS];
 const DOCTOR_LAYERS: ReadonlyArray<DoctorDeepCheckLayer> = [
   'core',
   'operational',
@@ -51,45 +52,19 @@ export type ConsumerMenuMatrixBaselineSnapshot = {
   };
 };
 
+const UNKNOWN_OPTION_REPORT = {
+  stage: 'UNKNOWN',
+  outcome: 'UNKNOWN',
+  filesScanned: 0,
+  totalViolations: 0,
+  diagnosis: 'unknown' as const,
+};
+
 const buildEmptyRound = (): ConsumerMenuMatrixReport => {
   return {
-    byOption: {
-      '1': {
-        stage: 'UNKNOWN',
-        outcome: 'UNKNOWN',
-        filesScanned: 0,
-        totalViolations: 0,
-        diagnosis: 'unknown',
-      },
-      '2': {
-        stage: 'UNKNOWN',
-        outcome: 'UNKNOWN',
-        filesScanned: 0,
-        totalViolations: 0,
-        diagnosis: 'unknown',
-      },
-      '3': {
-        stage: 'UNKNOWN',
-        outcome: 'UNKNOWN',
-        filesScanned: 0,
-        totalViolations: 0,
-        diagnosis: 'unknown',
-      },
-      '4': {
-        stage: 'UNKNOWN',
-        outcome: 'UNKNOWN',
-        filesScanned: 0,
-        totalViolations: 0,
-        diagnosis: 'unknown',
-      },
-      '9': {
-        stage: 'UNKNOWN',
-        outcome: 'UNKNOWN',
-        filesScanned: 0,
-        totalViolations: 0,
-        diagnosis: 'unknown',
-      },
-    },
+    byOption: Object.fromEntries(
+      MATRIX_MENU_OPTION_IDS.map((id) => [id, { ...UNKNOWN_OPTION_REPORT }])
+    ) as ConsumerMenuMatrixReport['byOption'],
   };
 };
 

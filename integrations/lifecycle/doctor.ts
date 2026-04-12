@@ -95,6 +95,7 @@ export type LifecycleDoctorReport = {
   hooksDirectory: string;
   hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   policyValidation: LifecyclePolicyValidationSnapshot;
+  policy_signature_remediation?: string;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
   parity_profile?: DoctorParityProfile;
@@ -792,6 +793,15 @@ const compareDoctorParityProfile = (params: {
   };
 };
 
+const buildPolicySignatureRemediation = (
+  policyValidation: LifecyclePolicyValidationSnapshot
+): string | undefined => {
+  const mismatch = Object.values(policyValidation.stages).some(
+    (stage) => stage.validationCode === 'POLICY_AS_CODE_SIGNATURE_MISMATCH'
+  );
+  return mismatch ? 'pumuki policy reconcile --apply' : undefined;
+};
+
 export const runLifecycleDoctor = (params?: {
   cwd?: string;
   git?: ILifecycleGitService;
@@ -837,6 +847,9 @@ export const runLifecycleDoctor = (params?: {
       ? compareDoctorParityProfile({ repoRoot, actual: parity_profile })
       : undefined;
 
+  const policyValidation = readLifecyclePolicyValidationSnapshot(repoRoot);
+  const policySignatureRemediation = buildPolicySignatureRemediation(policyValidation);
+
   return {
     repoRoot,
     packageVersion: version.effective,
@@ -846,7 +859,10 @@ export const runLifecycleDoctor = (params?: {
     hookStatus,
     hooksDirectory: hooksDirectory.path,
     hooksDirectoryResolution: hooksDirectory.source,
-    policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
+    policyValidation,
+    ...(policySignatureRemediation
+      ? { policy_signature_remediation: policySignatureRemediation }
+      : {}),
     issues,
     deep,
     parity_profile,

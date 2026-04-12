@@ -193,6 +193,62 @@ test('GitService.getRepoFacts ignora paths trackeados que ya no existen en worki
   });
 });
 
+test('GitService.getUnstagedFacts incluye diff indice→working tree y untracked', async () => {
+  await withTempDir('pumuki-git-unstaged-facts-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'src'), { recursive: true });
+    writeFileSync(join(repoRoot, 'src', 'wip.ts'), 'export const x = 1;\n', 'utf8');
+    writeFileSync(join(repoRoot, 'src', 'new.ts'), 'export const y = 2;\n', 'utf8');
+    const service = new GitService();
+    const calls: string[] = [];
+    const mutableService = service as GitService & {
+      runGit(args: ReadonlyArray<string>, cwd?: string): string;
+      resolveRepoRoot(): string;
+    };
+    mutableService.runGit = (args: ReadonlyArray<string>): string => {
+      const command = args.join(' ');
+      calls.push(command);
+      if (command === 'diff --name-status') {
+        return ['M\tsrc/wip.ts'].join('\n');
+      }
+      if (command === 'ls-files --others --exclude-standard') {
+        return ['src/new.ts', 'src/ignored.swift'].join('\n');
+      }
+      throw new Error(`comando git no esperado: ${command}`);
+    };
+    mutableService.resolveRepoRoot = () => repoRoot;
+
+    const result = service.getUnstagedFacts(['.ts']);
+
+    assert.deepEqual(result, [
+      {
+        kind: 'FileChange',
+        path: 'src/wip.ts',
+        changeType: 'modified',
+        source: 'git:unstaged',
+      },
+      {
+        kind: 'FileContent',
+        path: 'src/wip.ts',
+        content: 'export const x = 1;\n',
+        source: 'git:unstaged',
+      },
+      {
+        kind: 'FileChange',
+        path: 'src/new.ts',
+        changeType: 'added',
+        source: 'git:unstaged',
+      },
+      {
+        kind: 'FileContent',
+        path: 'src/new.ts',
+        content: 'export const y = 2;\n',
+        source: 'git:unstaged',
+      },
+    ]);
+    assert.deepEqual(calls, ['diff --name-status', 'ls-files --others --exclude-standard']);
+  });
+});
+
 test('GitService.getRepoAndStagedFacts carga snapshot del index', () => {
   const service = new GitService();
   const calls: string[] = [];

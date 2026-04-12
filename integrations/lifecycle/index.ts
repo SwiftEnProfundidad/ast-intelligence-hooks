@@ -1,4 +1,6 @@
 export { runLifecycleDoctor, doctorHasBlockingIssues } from './doctor';
+export { runLifecycleAudit } from './audit';
+export type { LifecycleAuditResult, LifecycleAuditStage } from './audit';
 export { runLifecycleInstall } from './install';
 export { runLifecycleUninstall } from './uninstall';
 export { runLifecycleRemove } from './remove';

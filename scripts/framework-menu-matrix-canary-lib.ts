@@ -6,6 +6,8 @@ import {
   runRepoAndStagedPrePushGateSilent,
   runRepoGateSilent,
   runStagedGateSilent,
+  runUnstagedGateSilent,
+  runWorkingTreeGateSilent,
   runWorkingTreePrePushGateSilent,
 } from './framework-menu-gate-lib';
 import { readMatrixOptionReport, type MatrixOptionId } from './framework-menu-matrix-evidence-lib';
@@ -70,6 +72,25 @@ const runGateByOption = async (option: MatrixOptionId): Promise<void> => {
   }
   if (option === '4') {
     await runWorkingTreePrePushGateSilent();
+    return;
+  }
+  if (option === '9') {
+    return;
+  }
+  if (option === '11') {
+    await runStagedGateSilent();
+    return;
+  }
+  if (option === '12') {
+    await runUnstagedGateSilent();
+    return;
+  }
+  if (option === '13') {
+    await runWorkingTreeGateSilent();
+    return;
+  }
+  if (option === '14') {
+    await runRepoGateSilent();
   }
 };
 
@@ -104,7 +125,7 @@ export const runConsumerMenuCanary = async (params?: {
       scenario.canarySource,
       'utf8'
     );
-    if (scenario.option === '1' || scenario.option === '2') {
+    if (scenario.option === '1' || scenario.option === '2' || scenario.option === '3' || scenario.option === '11') {
       stageCanaryPath(repoRoot, canaryRelativePath);
     }
 

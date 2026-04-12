@@ -72,6 +72,7 @@ import {
   type RemoteCiDiagnostics,
 } from './remoteCiDiagnostics';
 import { runPolicyReconcile } from './policyReconcile';
+import { runLifecycleAudit, type LifecycleAuditStage } from './audit';
 import { resolvePreWriteEnforcement, type PreWriteEnforcementResolution } from '../policy/preWriteEnforcement';
 
 type LifecycleCommand =
@@ -87,7 +88,8 @@ type LifecycleCommand =
   | 'sdd'
   | 'adapter'
   | 'analytics'
-  | 'policy';
+  | 'policy'
+  | 'audit';
 
 type SddCommand =
   | 'status'
@@ -173,6 +175,8 @@ export type ParsedArgs = {
   policyCommand?: PolicyCommand;
   policyStrict?: boolean;
   policyApply?: boolean;
+  auditStage?: LifecycleAuditStage;
+  auditEngine?: boolean;
 };
 
 const HELP_TEXT = `
@@ -183,6 +187,7 @@ Pumuki lifecycle commands:
   pumuki remove
   pumuki update [--latest|--spec=<package-spec>]
   pumuki doctor [--remote-checks] [--deep] [--parity] [--json]
+  pumuki audit [--stage=PRE_COMMIT|PRE_PUSH|CI] [--engine] [--json]
   pumuki status [--json] [--remote-checks]
   pumuki watch [--stage=PRE_COMMIT|PRE_PUSH|CI] [--scope=workingTree|staged|repoAndStaged|repo] [--severity=critical|high|medium|low] [--interval-ms=<n>] [--notify-cooldown-ms=<n>] [--no-notify] [--once|--iterations=<n>] [--json]
   pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]
@@ -228,7 +233,8 @@ const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'sdd' ||
   value === 'adapter' ||
   value === 'analytics' ||
-  value === 'policy';
+  value === 'policy' ||
+  value === 'audit';
 
 const parseAdapterAgent = (value?: string): AdapterAgent => {
   const normalized = (value ?? '').trim();
@@ -256,6 +262,16 @@ const parseSddStage = (value?: string): SddStage => {
     return mapped;
   }
   throw new Error(`Unsupported SDD stage "${value}". Use PRE_WRITE, PRE_COMMIT, PRE_PUSH or CI.`);
+};
+
+const parseAuditStage = (value?: string): LifecycleAuditStage => {
+  const stage = parseSddStage(value);
+  if (stage === 'PRE_WRITE') {
+    throw new Error(
+      'PRE_WRITE is not supported for "pumuki audit". Use PRE_COMMIT, PRE_PUSH or CI (aliases GREEN, REFACTOR, CLOSE).'
+    );
+  }
+  return stage;
 };
 
 const parseSddEvidencePath = (value: string): string => {
@@ -623,6 +639,8 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let analyticsSinceDays: ParsedArgs['analyticsSinceDays'];
   let analyticsJsonOutputPath: ParsedArgs['analyticsJsonOutputPath'];
   let analyticsMarkdownOutputPath: ParsedArgs['analyticsMarkdownOutputPath'];
+  let auditStage: LifecycleAuditStage | undefined;
+  let auditEngine = false;
 
   if (commandRaw === 'watch') {
     for (const arg of argv.slice(1)) {
@@ -803,6 +821,31 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       policyCommand: 'reconcile',
       policyStrict,
       policyApply,
+    };
+  }
+
+  if (commandRaw === 'audit') {
+    for (const arg of argv.slice(1)) {
+      if (arg === '--json') {
+        json = true;
+        continue;
+      }
+      if (arg === '--engine') {
+        auditEngine = true;
+        continue;
+      }
+      if (arg.startsWith('--stage=')) {
+        auditStage = parseAuditStage(arg.slice('--stage='.length));
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    }
+    return {
+      command: commandRaw,
+      purgeArtifacts: false,
+      json,
+      auditStage: auditStage ?? 'PRE_COMMIT',
+      ...(auditEngine ? { auditEngine: true } : {}),
     };
   }
 
@@ -2249,6 +2292,24 @@ export const runLifecycleCli = async (
           `[pumuki] openspec compatibility: migrated-legacy=${result.openSpecCompatibility.migratedLegacyPackage ? 'yes' : 'no'} actions=${result.openSpecCompatibility.actions.join(', ') || 'none'}`
         );
         return 0;
+      }
+      case 'audit': {
+        const result = await runLifecycleAudit({
+          stage: parsed.auditStage ?? 'PRE_COMMIT',
+          auditMode: parsed.auditEngine === true ? 'engine' : 'gate',
+        });
+        if (parsed.json) {
+          writeInfo(JSON.stringify(result, null, 2));
+        } else {
+          writeInfo(
+            `[pumuki] audit: repo=${result.repo_root} stage=${result.stage} mode=${result.audit_mode} exit=${result.gate_exit_code}`
+          );
+          writeInfo(
+            `[pumuki] audit: files_scanned=${result.files_scanned ?? 'n/a'} untracked_matching_extensions=${result.untracked_matching_extensions_count} outcome=${result.snapshot_outcome ?? 'n/a'}`
+          );
+          writeInfo(`[pumuki] audit: hint=${result.policy_reconcile_hint}`);
+        }
+        return result.gate_exit_code;
       }
       case 'doctor': {
         const report = runLifecycleDoctor({

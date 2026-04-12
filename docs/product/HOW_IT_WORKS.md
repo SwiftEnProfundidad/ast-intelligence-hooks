@@ -51,6 +51,12 @@ Pipeline:
 
 Policy source: `integrations/gate/stagePolicies.ts`.
 
+### `pumuki audit` (full tracked tree)
+
+The lifecycle command **`pumuki audit`** runs `runPlatformGate` with **`GateScope` = `repo`**: facts come from **`git ls-files`** filtered by the default code extensions, using the working tree contents of those paths. It is **not** the same as the `PRE_COMMIT` hook, which uses **`staged`** scope only.
+
+JSON output includes how many **untracked** paths would have matched those extensions (`untracked_matching_extensions_count`); they are still excluded from facts unless you use a different scope (for example consumer menu options that include unstaged paths).
+
 ## Main runtime components
 
 - `integrations/git/runPlatformGate.ts`
