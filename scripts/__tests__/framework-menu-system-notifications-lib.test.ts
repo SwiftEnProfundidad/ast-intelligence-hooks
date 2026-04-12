@@ -4,6 +4,12 @@ import { emitSystemNotification } from '../framework-menu-system-notifications-l
 import type { PumukiCriticalNotificationEvent } from '../framework-menu-system-notifications-types';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 
+const envForDefaultNotificationBehavior = (): NodeJS.ProcessEnv => {
+  const next = { ...process.env };
+  delete next.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS;
+  return next;
+};
+
 test('emitSystemNotification usa stderr fallback en linux por defecto', (t) => {
   const chunks: string[] = [];
   const stderrWrite = mock.method(process.stderr, 'write', (chunk: string | Uint8Array) => {
@@ -16,6 +22,7 @@ test('emitSystemNotification usa stderr fallback en linux por defecto', (t) => {
 
   const result = emitSystemNotification({
     platform: 'linux',
+    env: envForDefaultNotificationBehavior(),
     event: {
       kind: 'gate.blocked',
       stage: 'PRE_PUSH',
@@ -32,7 +39,7 @@ test('emitSystemNotification devuelve unsupported-platform en linux si stderr fa
   const result = emitSystemNotification({
     platform: 'linux',
     env: {
-      ...process.env,
+      ...envForDefaultNotificationBehavior(),
       PUMUKI_DISABLE_STDERR_NOTIFICATIONS: '1',
     },
     event: {
@@ -80,6 +87,7 @@ test('emitSystemNotification mantiene la fachada pública y entrega por macOS cu
     const result = emitSystemNotification({
       platform: 'darwin',
       repoRoot,
+      env: envForDefaultNotificationBehavior(),
       event,
       config: {
         enabled: true,
