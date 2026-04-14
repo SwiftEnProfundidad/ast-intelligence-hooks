@@ -180,6 +180,99 @@ test('pre_flight_check expone phase/message GREEN cuando no hay bloqueos', () =>
   }
 });
 
+test('pre_flight_check bloquea cuando el tracking canónico entra en conflicto con la documentación del repo', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-preflight-tracking-conflict-'));
+  try {
+    runGit(repoRoot, ['init', '-b', 'feature/tracking-conflict']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    mkdirSync(join(repoRoot, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      [
+        '# AGENTS',
+        '',
+        '- La unica fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`.',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'README.md'),
+      [
+        '# Docs',
+        '',
+        '- Fuente viva del tracking interno: `docs/tracking/plan-activo-de-trabajo.md`',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'), '- Estado: 🚧\n', 'utf8');
+
+    const evidence: AiEvidenceV2_1 = {
+      version: '2.1',
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_COMMIT',
+        outcome: 'PASS',
+        rules_coverage: {
+          stage: 'PRE_COMMIT',
+          active_rule_ids: ['skills.backend.no-empty-catch'],
+          evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      ai_gate: {
+        status: 'ALLOWED',
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED',
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      platforms: {},
+      rulesets: [],
+      ledger: [],
+      human_intent: null,
+    };
+    evidence.evidence_chain = buildEvidenceChain({ evidence });
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    const result = runEnterprisePreFlightCheck({
+      repoRoot,
+      stage: 'PRE_COMMIT',
+    });
+
+    assert.equal(result.result.allowed, false);
+    assert.equal(result.result.repo_state.lifecycle.tracking.conflict, true);
+    assert.equal(
+      result.result.violations.some((violation) => violation.code === 'TRACKING_CANONICAL_SOURCE_CONFLICT'),
+      true
+    );
+    assert.equal(
+      result.result.hints.some((hint) => hint.includes('TRACKING_CANONICAL_SOURCE_CONFLICT')),
+      true
+    );
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test('pre_flight_check incorpora learning_context cuando existe learning.json del cambio activo', async () => {
   await withLearningContextMode('advisory', async () => {
     const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-preflight-learning-'));

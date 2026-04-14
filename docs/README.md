@@ -36,9 +36,11 @@ Mapa corto y humano de la documentación oficial de Pumuki.
   - `docs/validation/ios-avdlee-parity-matrix.md`
 
 - Quiero saber en qué estamos ahora:
-  - `docs/tracking/plan-activo-de-trabajo.md`
-- Quiero el seguimiento del curso Stack My Architecture (Pumuki), iniciativa formativa aparte del espejo operativo:
-  - `docs/tracking/plan-curso-pumuki-stack-my-architecture.md`
+  - `PUMUKI-RESET-MASTER-PLAN.md` en la raíz del repo como artefacto operativo local y única fuente viva del tracking interno
+- Quiero contexto histórico o materiales de seguimiento retirados:
+  - Referencia histórica: `docs/tracking/plan-activo-de-trabajo.md`
+  - Quiero el seguimiento del curso Stack My Architecture (Pumuki), iniciativa formativa aparte del espejo operativo:
+  - Curso Stack My Architecture: `docs/tracking/plan-curso-pumuki-stack-my-architecture.md`
 
 ## Estructura oficial
 
@@ -65,10 +67,10 @@ Mapa corto y humano de la documentación oficial de Pumuki.
   - Skills vendorizadas que el repo usa como contrato local.
 
 - `docs/tracking/`
-  - Seguimiento permitido y solo el imprescindible.
-  - Espejo operativo de producto y consumidores: `docs/tracking/plan-activo-de-trabajo.md` (unica fuente de verdad para ese ambito).
-  - Iniciativa formativa (curso Pumuki en Stack My Architecture): `docs/tracking/plan-curso-pumuki-stack-my-architecture.md` (no sustituye al plan activo).
-  - Regla hard: solo puede existir una tarea `🚧` en cada documento de seguimiento que lo use.
+  - Material histórico o formativo; no actúa como backlog vivo del producto.
+  - Fuente viva del tracking interno: `PUMUKI-RESET-MASTER-PLAN.md` en la raíz del repo.
+  - Documento retirado: `docs/tracking/plan-activo-de-trabajo.md`.
+  - Material del curso: `docs/tracking/plan-curso-pumuki-stack-my-architecture.md`.
 
 ## Fuera de `docs/`
 

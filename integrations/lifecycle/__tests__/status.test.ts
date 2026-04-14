@@ -277,6 +277,51 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
   });
 });
 
+test('readLifecycleStatus incorpora tracking canónico y expone conflicto documental en governanceObservation', async () => {
+  await withTempDir('pumuki-lifecycle-status-tracking-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      [
+        '# AGENTS',
+        '',
+        '- La unica fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`.',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'README.md'),
+      [
+        '# Docs',
+        '',
+        '- Fuente viva del tracking interno: `docs/tracking/plan-activo-de-trabajo.md`',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'), '- Estado: 🚧\n', 'utf8');
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {});
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.governanceObservation.tracking.enforced, true);
+    assert.equal(status.governanceObservation.tracking.canonical_path, 'PUMUKI-RESET-MASTER-PLAN.md');
+    assert.equal(status.governanceObservation.tracking.conflict, true);
+    assert.equal(
+      status.governanceObservation.attention_codes.includes('TRACKING_CANONICAL_SOURCE_CONFLICT'),
+      true
+    );
+    assert.equal(
+      status.governanceObservation.agent_bootstrap_hints.some((hint) =>
+        hint.includes('Tracking canónico en conflicto')
+      ),
+      true
+    );
+  });
+});
+
 test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no hay instalación', async () => {
   await withTempDir('pumuki-lifecycle-status-empty-', async (repoRoot) => {
     const git = new FakeLifecycleGitService(repoRoot, [], {});
