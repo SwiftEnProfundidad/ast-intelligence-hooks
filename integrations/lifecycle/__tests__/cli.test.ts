@@ -2914,10 +2914,18 @@ test('runLifecycleCli bootstrap --enterprise orquesta install + mcp wiring + doc
       enterprise?: boolean;
       install?: {
         repo_root?: string;
+        bootstrap_manifest?: {
+          path?: string;
+          changed?: boolean;
+        };
       };
       mcp?: {
         agent?: string;
         changed_files?: string[];
+        bootstrap_manifest?: {
+          path?: string;
+          changed?: boolean;
+        };
       };
       doctor?: {
         blocking?: boolean;
@@ -2927,10 +2935,14 @@ test('runLifecycleCli bootstrap --enterprise orquesta install + mcp wiring + doc
     assert.equal(payload.enterprise, true);
     assert.equal(typeof payload.install?.repo_root, 'string');
     assert.equal(payload.install?.repo_root?.endsWith(repo), true);
+    assert.equal(payload.install?.bootstrap_manifest?.path?.endsWith('.pumuki/bootstrap-manifest.json'), true);
+    assert.equal(typeof payload.install?.bootstrap_manifest?.changed, 'boolean');
     assert.equal(payload.mcp?.agent, 'codex');
     assert.equal(Array.isArray(payload.mcp?.changed_files), true);
+    assert.equal(payload.mcp?.bootstrap_manifest?.path?.endsWith('.pumuki/bootstrap-manifest.json'), true);
     assert.equal(typeof payload.doctor?.blocking, 'boolean');
     assert.equal(existsSync(join(repo, '.pumuki', 'adapter.json')), true);
+    assert.equal(existsSync(join(repo, '.pumuki', 'bootstrap-manifest.json')), true);
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);

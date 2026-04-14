@@ -2113,6 +2113,10 @@ export const runLifecycleCli = async (
                   repo_root: installResult.repoRoot,
                   version: installResult.version,
                   hooks_changed: installResult.changedHooks,
+                  bootstrap_manifest: {
+                    path: installResult.bootstrapManifest.path,
+                    changed: installResult.bootstrapManifest.changed,
+                  },
                   openspec: installResult.openSpecBootstrap
                     ? {
                         installed: installResult.openSpecBootstrap.packageInstalled,
@@ -2125,6 +2129,10 @@ export const runLifecycleCli = async (
                 mcp: {
                   agent: adapterResult.agent,
                   changed_files: adapterResult.changedFiles,
+                  bootstrap_manifest: {
+                    path: adapterResult.bootstrapManifest.path,
+                    changed: adapterResult.bootstrapManifest.changed,
+                  },
                   adapter_health: adapterCheck
                     ? {
                         status: adapterCheck.status,
@@ -2150,6 +2158,9 @@ export const runLifecycleCli = async (
           );
           writeInfo(
             `[pumuki] bootstrap install: hooks changed=${installResult.changedHooks.join(', ') || 'none'}`
+          );
+          writeInfo(
+            `[pumuki] bootstrap manifest: path=${installResult.bootstrapManifest.path} changed=${installResult.bootstrapManifest.changed ? 'yes' : 'no'}`
           );
           if (installResult.openSpecBootstrap) {
             writeInfo(
@@ -2191,6 +2202,9 @@ export const runLifecycleCli = async (
         writeInfo(
           `[pumuki] installed ${result.version} at ${result.repoRoot} (hooks changed: ${result.changedHooks.join(', ') || 'none'})`
         );
+        writeInfo(
+          `[pumuki] bootstrap manifest: path=${result.bootstrapManifest.path} changed=${result.bootstrapManifest.changed ? 'yes' : 'no'}`
+        );
         if (result.openSpecBootstrap) {
           writeInfo(
             `[pumuki] openspec bootstrap: installed=${result.openSpecBootstrap.packageInstalled ? 'yes' : 'no'} project=${result.openSpecBootstrap.projectInitialized ? 'yes' : 'no'} actions=${result.openSpecBootstrap.actions.join(', ') || 'none'}`
@@ -2205,6 +2219,9 @@ export const runLifecycleCli = async (
           });
           writeInfo(
             `[pumuki] mcp wiring: agent=${adapterResult.agent} changed=${adapterResult.changedFiles.length}`
+          );
+          writeInfo(
+            `[pumuki] mcp manifest: path=${adapterResult.bootstrapManifest.path} changed=${adapterResult.bootstrapManifest.changed ? 'yes' : 'no'}`
           );
           if (adapterResult.changedFiles.length > 0) {
             writeInfo(`[pumuki] mcp files: ${adapterResult.changedFiles.join(', ')}`);
@@ -2714,6 +2731,9 @@ export const runLifecycleCli = async (
                 `[pumuki] adapter files: ${result.changedFiles.join(', ')}`
               );
             }
+            writeInfo(
+              `[pumuki] adapter manifest: path=${result.bootstrapManifest.path} changed=${result.bootstrapManifest.changed ? 'yes' : 'no'}`
+            );
           }
           return 0;
         }
