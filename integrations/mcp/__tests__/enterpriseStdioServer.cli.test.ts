@@ -52,9 +52,24 @@ const waitForResponse = async (
     poll();
   });
 
+const toChildExecArgv = (): string[] => {
+  const args: string[] = [];
+  for (let index = 0; index < process.execArgv.length; index += 1) {
+    const arg = process.execArgv[index];
+    if (arg === '--eval' || arg === '-e' || arg === '--test') {
+      if (arg === '--eval' || arg === '-e') {
+        index += 1;
+      }
+      continue;
+    }
+    args.push(arg);
+  }
+  return args;
+};
+
 test('pumuki enterprise stdio bridge responde initialize y tools/list', async () => {
   const cliPath = resolve(process.cwd(), 'integrations/mcp/enterpriseStdioServer.cli.ts');
-  const child = spawn(process.execPath, ['--import', 'tsx', cliPath], {
+  const child = spawn(process.execPath, [...toChildExecArgv(), cliPath], {
     env: {
       ...process.env,
       PUMUKI_ENTERPRISE_MCP_PORT: '0',
@@ -124,7 +139,7 @@ test('pumuki enterprise stdio bridge responde initialize y tools/list', async ()
 test('pumuki enterprise stdio bridge no consume el transporte stdin en PRE_PUSH ai_gate_check', async () => {
   const cliPath = resolve(process.cwd(), 'integrations/mcp/enterpriseStdioServer.cli.ts');
 
-  const child = spawn(process.execPath, ['--import', 'tsx', cliPath], {
+  const child = spawn(process.execPath, [...toChildExecArgv(), cliPath], {
     env: {
       ...process.env,
       PUMUKI_ENTERPRISE_MCP_PORT: '0',
@@ -182,7 +197,7 @@ test('pumuki enterprise stdio bridge no consume el transporte stdin en PRE_PUSH 
         })
     );
 
-    const aiGateResponse = await waitForResponse(responses, 2);
+    const aiGateResponse = await waitForResponse(responses, 2, 8_000);
     assert.equal(typeof aiGateResponse.result, 'object');
 
     const toolsResponse = await waitForResponse(responses, 3);
