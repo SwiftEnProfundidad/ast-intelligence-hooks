@@ -42,6 +42,8 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
     'Mapea todas las reglas AUTO a detectores AST antes de continuar.',
   EVIDENCE_TIMESTAMP_FUTURE: 'Corrige la hora del sistema y regenera evidencia.',
   GITFLOW_PROTECTED_BRANCH: 'Evita trabajo directo en ramas protegidas (usa feature/*).',
+  GITFLOW_BRANCH_NAMING_INVALID:
+    'La rama actual no cumple GitFlow. Usa feature/*, bugfix/*, hotfix/*, release/*, chore/*, refactor/* o docs/*.',
 };
 
 const normalizeGovernanceCatalogCode = (code: string): string => {
@@ -51,6 +53,8 @@ const normalizeGovernanceCatalogCode = (code: string): string => {
       return 'EVIDENCE_INVALID_OR_CHAIN';
     case 'GITFLOW_PROTECTED_BRANCH':
       return 'GITFLOW_PROTECTED_BRANCH_CONTEXT';
+    case 'GITFLOW_BRANCH_NAMING_INVALID':
+      return 'GITFLOW_BRANCH_NAMING_INVALID_CONTEXT';
     default:
       return code;
   }

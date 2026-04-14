@@ -54,7 +54,10 @@ const confidenceFromViolation = (violationCode: string | null): number => {
   if (isEvidenceCode(violationCode)) {
     return 65;
   }
-  if (violationCode === 'GITFLOW_PROTECTED_BRANCH') {
+  if (
+    violationCode === 'GITFLOW_PROTECTED_BRANCH'
+    || violationCode === 'GITFLOW_BRANCH_NAMING_INVALID'
+  ) {
     return 40;
   }
   return 50;
@@ -67,6 +70,8 @@ const normalizeGovernanceCatalogCode = (code: string): string => {
       return 'EVIDENCE_INVALID_OR_CHAIN';
     case 'GITFLOW_PROTECTED_BRANCH':
       return 'GITFLOW_PROTECTED_BRANCH_CONTEXT';
+    case 'GITFLOW_BRANCH_NAMING_INVALID':
+      return 'GITFLOW_BRANCH_NAMING_INVALID_CONTEXT';
     default:
       return code;
   }

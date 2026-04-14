@@ -394,6 +394,30 @@ test('evaluateAiGate bloquea en ramas protegidas por gitflow', () => {
   assert.equal(result.violations.some((item) => item.code === 'GITFLOW_PROTECTED_BRANCH'), true);
 });
 
+test('evaluateAiGate bloquea cuando la rama no cumple naming GitFlow', () => {
+  const repoState = sampleEvidence().repo_state!;
+  repoState.git.branch = 'topic/inc-076';
+
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
+      captureRepoState: () => repoState,
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
+  assert.equal(
+    result.violations.some((item) => item.code === 'GITFLOW_BRANCH_NAMING_INVALID'),
+    true
+  );
+});
+
 test('evaluateAiGate permite continuar cuando evidencia está fresca y rama cumple gitflow', () => {
   const result = evaluateAiGate(
     {
