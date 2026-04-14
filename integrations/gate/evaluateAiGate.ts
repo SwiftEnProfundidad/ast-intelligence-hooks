@@ -1,7 +1,7 @@
 import type { EvidenceReadResult } from '../evidence/readEvidence';
 import { readEvidenceResult } from '../evidence/readEvidence';
 import { captureRepoState } from '../evidence/repoState';
-import type { RepoState } from '../evidence/schema';
+import type { RepoState, RepoTrackingState } from '../evidence/schema';
 import { resolvePolicyForStage } from './stagePolicies';
 import { execFileSync } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
@@ -1310,8 +1310,19 @@ const collectGitflowViolations = (
   return violations;
 };
 
+const DEFAULT_TRACKING_STATE: RepoTrackingState = {
+  enforced: false,
+  canonical_path: null,
+  canonical_present: false,
+  source_file: null,
+  in_progress_count: null,
+  single_in_progress_valid: null,
+  conflict: false,
+  declarations: [],
+};
+
 const collectTrackingViolations = (repoState: RepoState): AiGateViolation[] => {
-  const tracking = repoState.lifecycle.tracking;
+  const tracking = repoState.lifecycle.tracking ?? DEFAULT_TRACKING_STATE;
   if (!tracking.enforced) {
     return [];
   }
