@@ -119,6 +119,18 @@ export const resolveGovernanceCatalogAction = (params: {
           command: 'git checkout -b feature/<descripcion-kebab-case>',
         },
       };
+    case 'GITFLOW_BRANCH_NAMING_INVALID':
+    case 'GITFLOW_BRANCH_NAMING_INVALID_CONTEXT':
+      return {
+        reason_code: 'GITFLOW_BRANCH_NAMING_INVALID_CONTEXT',
+        instruction:
+          'Renombra o recrea la rama actual con un prefijo GitFlow válido antes de continuar.',
+        next_action: {
+          kind: 'run_command',
+          message: 'Crea una rama válida y mueve el trabajo a esa rama antes de seguir.',
+          command: 'git checkout -b feature/<descripcion-kebab-case>',
+        },
+      };
     case 'POLICY_STAGE_NOT_STRICT':
       return {
         reason_code: 'POLICY_STAGE_NOT_STRICT',

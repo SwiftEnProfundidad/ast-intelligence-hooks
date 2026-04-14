@@ -412,3 +412,75 @@ test('runEnterpriseAiGateCheck incluye warning explícito en ramas protegidas', 
     rmSync(repoRoot, { recursive: true, force: true });
   }
 });
+
+test('runEnterpriseAiGateCheck bloquea rama con naming GitFlow inválido y expone auto-fix', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-aigate-invalid-branch-'));
+  try {
+    runGit(repoRoot, ['init', '-b', 'topic/inc-076']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    writeFileSync(join(repoRoot, 'README.md'), '# invalid-branch\n', 'utf8');
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: bootstrap invalid branch']);
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    const evidence: AiEvidenceV2_1 = {
+      version: '2.1',
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_WRITE',
+        outcome: 'PASS',
+        rules_coverage: {
+          stage: 'PRE_WRITE',
+          active_rule_ids: ['skills.backend.no-empty-catch'],
+          evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      ai_gate: {
+        status: 'ALLOWED',
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED',
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      platforms: {},
+      rulesets: [],
+      ledger: [],
+      human_intent: null,
+    };
+    evidence.evidence_chain = buildEvidenceChain({ evidence });
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    const result = runEnterpriseAiGateCheck({
+      repoRoot,
+      stage: 'PRE_WRITE',
+    });
+
+    assert.equal(result.success, false);
+    assert.equal(result.result.status, 'BLOCKED');
+    assert.equal(result.result.violations[0]?.code, 'GITFLOW_BRANCH_NAMING_INVALID');
+    assert.equal(
+      result.result.auto_fixes.some((item) => item.includes('prefijo GitFlow válido')),
+      true
+    );
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});

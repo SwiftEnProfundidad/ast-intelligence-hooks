@@ -133,6 +133,10 @@ const PREWRITE_WORKTREE_HYGIENE_WARN_THRESHOLD_ENV = 'PUMUKI_PREWRITE_WORKTREE_W
 const PREWRITE_WORKTREE_HYGIENE_BLOCK_THRESHOLD_ENV = 'PUMUKI_PREWRITE_WORKTREE_BLOCK_THRESHOLD';
 
 const DEFAULT_PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
+const DEFAULT_GITFLOW_BRANCH_PATTERNS = [
+  /^(?:feature|bugfix|hotfix|chore|refactor|docs)\/[a-z0-9]+(?:-[a-z0-9]+)*$/,
+  /^release\/\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/,
+] as const;
 const PREWRITE_SKILLS_PLATFORMS = ['ios', 'android', 'backend', 'frontend'] as const;
 type PreWriteSkillsPlatform = (typeof PREWRITE_SKILLS_PLATFORMS)[number];
 const PLATFORM_SKILLS_RULE_PREFIXES: Readonly<Record<PreWriteSkillsPlatform, string>> = {
@@ -1281,11 +1285,25 @@ const collectGitflowViolations = (
   if (!repoState.git.available) {
     return violations;
   }
-  if (repoState.git.branch && protectedBranches.has(repoState.git.branch)) {
+  const branch = repoState.git.branch?.trim() ?? null;
+  const normalizedBranch = branch?.toLowerCase() ?? null;
+  if (branch && normalizedBranch && protectedBranches.has(normalizedBranch)) {
     violations.push(
       toErrorViolation(
         'GITFLOW_PROTECTED_BRANCH',
-        `Direct work on protected branch "${repoState.git.branch}" is not allowed.`
+        `Direct work on protected branch "${branch}" is not allowed.`
+      )
+    );
+    return violations;
+  }
+  if (
+    branch
+    && !DEFAULT_GITFLOW_BRANCH_PATTERNS.some((pattern) => pattern.test(branch))
+  ) {
+    violations.push(
+      toErrorViolation(
+        'GITFLOW_BRANCH_NAMING_INVALID',
+        `Branch "${branch}" does not comply with GitFlow naming. Use feature/*, bugfix/*, hotfix/*, release/*, chore/*, refactor/* or docs/*.`
       )
     );
   }
