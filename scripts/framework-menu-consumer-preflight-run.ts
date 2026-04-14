@@ -2,6 +2,11 @@ import {
   evaluateAiGate,
   type AiGateCheckResult,
 } from '../integrations/gate/evaluateAiGate';
+import { readLifecycleExperimentalFeaturesSnapshot } from '../integrations/lifecycle/experimentalFeaturesSnapshot';
+import { LifecycleGitService } from '../integrations/lifecycle/gitService';
+import { readGovernanceObservationSnapshot } from '../integrations/lifecycle/governanceObservationSnapshot';
+import { readGovernanceNextAction } from '../integrations/lifecycle/governanceNextAction';
+import { readLifecyclePolicyValidationSnapshot } from '../integrations/lifecycle/policyValidationSnapshot';
 import {
   emitSystemNotification,
   type PumukiCriticalNotificationEvent,
@@ -28,6 +33,7 @@ const defaultDependencies: ConsumerPreflightDependencies = {
       event: params.event,
       repoRoot: params.repoRoot,
     }),
+  readGovernanceNextAction,
 };
 
 const buildNotificationEvents = (
@@ -86,6 +92,17 @@ export const runConsumerPreflight = (
     repoRoot,
     stage: params.stage,
   });
+  const governanceObservation = readGovernanceObservationSnapshot({
+    repoRoot,
+    experimentalFeatures: readLifecycleExperimentalFeaturesSnapshot(),
+    policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
+    git: new LifecycleGitService(),
+  });
+  const governanceNextAction = activeDependencies.readGovernanceNextAction({
+    repoRoot,
+    stage: params.stage,
+    governanceObservation,
+  });
   const hints = buildConsumerPreflightHints(result, params.stage);
   const notificationEvents = buildNotificationEvents(result);
   const notificationResults = notificationEvents.map((event) =>
@@ -99,6 +116,8 @@ export const runConsumerPreflight = (
     stage: params.stage,
     status: result.status,
     result,
+    governanceObservation,
+    governanceNextAction,
     hints,
     notificationResults,
   };

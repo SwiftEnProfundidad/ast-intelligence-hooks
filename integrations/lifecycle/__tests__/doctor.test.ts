@@ -10,6 +10,8 @@ import { PUMUKI_CONFIG_KEYS } from '../constants';
 import type { ILifecycleGitService } from '../gitService';
 import { installPumukiHooks } from '../hookManager';
 import {
+  doctorCommandShouldFailExit,
+  doctorHasGovernanceAttention,
   doctorHasBlockingIssues,
   doctorHasParityMismatch,
   runLifecycleDoctor,
@@ -158,8 +160,13 @@ test('runLifecycleDoctor marca issue bloqueante cuando hay rutas trackeadas en n
     assert.equal(typeof report.policyValidation.stages.PRE_PUSH.hash, 'string');
     assert.equal(typeof report.policyValidation.stages.CI.hash, 'string');
     assert.deepEqual(report.trackedNodeModulesPaths, ['node_modules/pkg/index.js']);
+    assert.equal(report.governanceNextAction.stage, 'PRE_WRITE');
+    assert.equal(typeof report.governanceNextAction.reason_code, 'string');
+    assert.equal(report.governanceObservation.evidence.readable, 'missing');
     assert.equal(report.issues.some((issue) => issue.severity === 'error'), true);
     assert.equal(doctorHasBlockingIssues(report), true);
+    assert.equal(doctorHasGovernanceAttention(report), true);
+    assert.equal(doctorCommandShouldFailExit(report), true);
   });
 });
 
@@ -184,6 +191,7 @@ test('runLifecycleDoctor marca warning si lifecycle dice instalado y falta bloqu
     assert.match(report.issues[0]?.message ?? '', /installed=true/i);
     assert.match(report.issues[0]?.message ?? '', /core\.hooksPath/i);
     assert.equal(doctorHasBlockingIssues(report), false);
+    assert.equal(doctorHasGovernanceAttention(report), true);
   });
 });
 

@@ -149,6 +149,7 @@
     "validation:lifecycle-smoke": "node --import tsx scripts/package-install-smoke.ts --mode=minimal",
     "validation:contract-suite:enterprise": "node --import tsx scripts/run-enterprise-contract-suite.ts",
     "validation:consumer-matrix-baseline": "node --import tsx scripts/build-consumer-menu-matrix-baseline.ts",
+    "validation:ruralgo-s1-evidence-pack": "npx --yes tsx@4.21.0 scripts/build-ruralgo-s1-evidence-pack.ts",
     "validation:c020-benchmark": "node --import tsx scripts/run-c020-benchmark.ts",
     "validation:clean-artifacts": "npx --yes tsx@4.21.0 scripts/clean-validation-artifacts.ts",
     "skills:compile": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts",

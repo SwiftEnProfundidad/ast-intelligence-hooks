@@ -187,6 +187,16 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
       'PUMUKI_EXPERIMENTAL_SDD'
     );
     assert.equal(status.experimentalFeatures.features.sdd.legacyActivationVariable, null);
+    assert.equal(status.governanceObservation.schema_version, '1');
+    assert.equal(status.governanceNextAction.stage, 'PRE_WRITE');
+    assert.equal(typeof status.governanceNextAction.reason_code, 'string');
+    assert.equal(status.governanceObservation.evidence.readable, 'missing');
+    assert.equal(status.governanceObservation.git.current_branch, null);
+    assert.equal(status.governanceObservation.contract_surface.agents_md, false);
+    assert.equal(
+      status.governanceObservation.attention_codes.includes('POLICY_PRE_WRITE_NOT_STRICT'),
+      true
+    );
 
     assert.deepEqual(git.resolveCalls, ['/tmp/ignored-cwd']);
     assert.deepEqual(git.listTrackedCalls, [repoRoot]);
@@ -262,6 +272,8 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
     assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
+    assert.equal(status.governanceNextAction.stage, 'PRE_WRITE');
+    assert.equal(status.governanceObservation.governance_effective, 'attention');
   });
 });
 
@@ -300,5 +312,8 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
     assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
+    assert.equal(status.governanceNextAction.stage, 'PRE_WRITE');
+    assert.equal(status.governanceObservation.evidence.readable, 'missing');
+    assert.equal(status.governanceObservation.governance_effective, 'attention');
   });
 });

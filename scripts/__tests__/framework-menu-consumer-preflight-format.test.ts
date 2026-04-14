@@ -61,6 +61,9 @@ test('formatConsumerPreflight incluye causas accionables cuando gate está bloqu
     color: false,
   });
 
+  assert.match(rendered, /Governance truth:/);
+  assert.match(rendered, /Governance next action:/);
+  assert.match(rendered, /Governance: BLOCKED|Governance: ATTENTION/);
   assert.match(rendered, /Blocking causes:/);
   assert.match(rendered, /EVIDENCE_GATE_BLOCKED: Evidence AI gate status is BLOCKED\./);
   assert.match(rendered, /Action: corrige primero las violaciones bloqueantes y vuelve a auditar\./);
@@ -123,4 +126,7 @@ test('formatConsumerPreflight renderiza panel legacy con estado de repo e hints'
   assert.match(rendered, /PRE-FLIGHT CHECK/);
   assert.match(rendered, /Branch: feature\/menu/);
   assert.match(rendered, /Gate: ALLOWED/);
+  assert.match(rendered, /Governance truth:/);
+  assert.match(rendered, /Governance next action:/);
+  assert.match(rendered, /Contract: AGENTS=/);
 });

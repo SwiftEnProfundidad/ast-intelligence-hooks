@@ -6,6 +6,7 @@ import {
 } from '../consumer-menu-matrix-baseline-report-lib';
 import type { ConsumerMenuMatrixBaselineReport } from '../framework-menu-matrix-baseline-lib';
 import type { LifecycleDoctorReport } from '../../integrations/lifecycle/doctor';
+import type { GovernanceObservationSnapshot } from '../../integrations/lifecycle/governanceObservationSnapshot';
 import type { LifecycleStatus } from '../../integrations/lifecycle/status';
 
 const buildBaseline = (): ConsumerMenuMatrixBaselineReport => {
@@ -63,6 +64,47 @@ const buildBaseline = (): ConsumerMenuMatrixBaselineReport => {
     },
   };
 };
+
+const buildGovernanceObservation = (): GovernanceObservationSnapshot => ({
+  schema_version: '1',
+  sdd: {
+    experimental_raw: null,
+    effective_mode: 'off',
+    experimental_source: 'default',
+  },
+  sdd_session: {
+    active: false,
+    valid: false,
+    change_id: null,
+    remaining_seconds: null,
+  },
+  policy_strict: {
+    pre_write: false,
+    pre_commit: false,
+    pre_push: false,
+    ci: false,
+  },
+  enterprise_warn_as_block_env: false,
+  evidence: {
+    path: '/tmp/ios-architecture-showcase/.ai_evidence.json',
+    readable: 'missing',
+    human_summary_preview: [],
+  },
+  git: {
+    current_branch: 'feature/s1-governance-console',
+    on_protected_branch_hint: false,
+  },
+  contract_surface: {
+    agents_md: true,
+    skills_lock_json: true,
+    skills_sources_json: true,
+    vendor_skills_dir: true,
+    pumuki_adapter_json: true,
+  },
+  attention_codes: ['POLICY_PRE_WRITE_NOT_STRICT'],
+  governance_effective: 'attention',
+  agent_bootstrap_hints: ['AGENTS.md presente.'],
+});
 
 const buildStatus = (): LifecycleStatus => {
   return {
@@ -204,6 +246,7 @@ const buildStatus = (): LifecycleStatus => {
         },
       },
     },
+    governanceObservation: buildGovernanceObservation(),
   };
 };
 
@@ -232,6 +275,7 @@ const buildDoctor = (): LifecycleDoctorReport => {
     hooksDirectoryResolution: 'default',
     policyValidation: status.policyValidation,
     experimentalFeatures: status.experimentalFeatures,
+    governanceObservation: buildGovernanceObservation(),
     issues: [],
     deep: {
       enabled: true,

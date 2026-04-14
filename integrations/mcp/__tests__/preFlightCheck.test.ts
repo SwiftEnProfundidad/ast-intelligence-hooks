@@ -102,6 +102,8 @@ test('pre_flight_check comparte evaluador con ai_gate_check y mantiene mismo ver
     assert.equal(preFlightResult.result.phase, 'RED');
     assert.equal(preFlightResult.result.message.length > 0, true);
     assert.equal(preFlightResult.result.instruction.length > 0, true);
+    assert.equal(preFlightResult.result.reason_code.length > 0, true);
+    assert.equal(preFlightResult.result.next_action.message.length > 0, true);
     assert.equal(preFlightResult.result.ast_analysis, null);
     assert.equal(preFlightResult.result.tdd_status, null);
     assert.equal(preFlightResult.result.hints.length > 0, true);
@@ -170,7 +172,9 @@ test('pre_flight_check expone phase/message GREEN cuando no hay bloqueos', () =>
     assert.equal(preFlightResult.result.allowed, true);
     assert.equal(preFlightResult.result.phase, 'GREEN');
     assert.match(preFlightResult.result.message, /pre-flight aprobado/i);
-    assert.match(preFlightResult.result.instruction, /implementa el cambio mínimo/i);
+    assert.equal(preFlightResult.result.instruction.length > 0, true);
+    assert.equal(preFlightResult.result.reason_code.length > 0, true);
+    assert.equal(preFlightResult.result.next_action.kind, 'info');
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }
@@ -409,6 +413,8 @@ test('pre_flight_check expone hint accionable cuando falta cobertura de skills p
 
     assert.equal(preFlightResult.result.allowed, true);
     assert.equal(preFlightResult.result.phase, 'GREEN');
+    assert.equal(preFlightResult.result.reason_code, 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE');
+    assert.equal(preFlightResult.result.next_action.kind, 'info');
     assert.equal(
       preFlightResult.result.violations.some(
         (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
@@ -506,6 +512,8 @@ test('pre_flight_check expone hint accionable de reconcile estricto cuando falta
 
     assert.equal(preFlightResult.result.allowed, true);
     assert.equal(preFlightResult.result.phase, 'GREEN');
+    assert.equal(preFlightResult.result.reason_code, 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING');
+    assert.equal(preFlightResult.result.next_action.kind, 'info');
     assert.equal(
       preFlightResult.result.violations.some(
         (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'

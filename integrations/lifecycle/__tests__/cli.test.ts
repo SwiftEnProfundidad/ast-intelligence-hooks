@@ -1136,6 +1136,8 @@ test('runLifecycleCli status imprime remediation de versión cuando detecta drif
     const output = printed.join('\n');
     assert.match(output, /version drift:/i);
     assert.match(output, /version remediation:/i);
+    assert.match(output, /governance truth/i);
+    assert.match(output, /governance next action/i);
     assert.match(output, new RegExp(`pumuki@${getCurrentPumukiVersion().replace(/\./g, '\\.')}`));
     assert.match(output, /pumuki install/i);
   } finally {
@@ -1389,6 +1391,9 @@ test('runLifecycleCli doctor --remote-checks imprime resumen de bloqueadores rem
     });
     assert.equal(code, 0);
     const output = printed.join('\n');
+    assert.match(output, /governance truth/i);
+    assert.match(output, /governance next action/i);
+    assert.match(output, /doctor verdict: WARN/i);
     assert.match(output, /\[pumuki\]\[remote-ci\] status=BLOCKED/i);
     assert.match(output, /REMOTE_CI_PROVIDER_QUOTA/i);
     assert.match(output, /remediation: increase quota/i);
@@ -3452,7 +3457,7 @@ test('runLifecycleCli ejecuta flujo install/doctor/status/remove/uninstall en re
     assert.equal(installCode, 0);
     assert.equal(existsSync(join(repo, '.pumuki', 'adapter.json')), true);
 
-    writeFileSync(join(repo, '.ai_evidence.json'), '{}\n', 'utf8');
+    writePreWriteEvidence(repo, 'main');
     const doctorCode = await withSilentConsole(() => runLifecycleCli(['doctor']));
     assert.equal(doctorCode, 0);
 

@@ -4,11 +4,16 @@ import type { GatePolicy } from '../../core/gate/GatePolicy';
 import { runPlatformGate } from '../git/runPlatformGate';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
 import {
+  doctorCommandShouldFailExit,
+  doctorCommandShouldWarnHuman,
   doctorHasBlockingIssues,
+  doctorHasGovernanceAttention,
   doctorHasParityMismatch,
   runLifecycleDoctor,
   type LifecycleDoctorReport,
 } from './doctor';
+import { printGovernanceObservationHuman } from './governanceObservationSnapshot';
+import { printGovernanceNextActionHuman } from './governanceNextAction';
 import { runLifecycleInstall } from './install';
 import { runLifecycleRemove } from './remove';
 import { readLifecycleStatus } from './status';
@@ -1517,6 +1522,8 @@ const printDoctorReport = (
   writeInfo(
     `[pumuki] hook pre-push: ${report.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
   );
+  printGovernanceObservationHuman(report.governanceObservation);
+  printGovernanceNextActionHuman(report.governanceNextAction);
   writeInfo(
     `[pumuki] policy-as-code: PRE_COMMIT=${report.policyValidation.stages.PRE_COMMIT.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.PRE_COMMIT.strict ? 'yes' : 'no'} ` +
     `PRE_PUSH=${report.policyValidation.stages.PRE_PUSH.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.PRE_PUSH.strict ? 'yes' : 'no'} ` +
@@ -1554,16 +1561,18 @@ const printDoctorReport = (
     }
   }
 
-  const hasBlocking =
-    doctorHasBlockingIssues(report) || doctorHasParityMismatch(report);
-  const hasWarnings =
-    report.issues.length > 0 ||
-    report.deep?.checks.some((check) => check.status !== 'pass') === true;
+  const hasBlocking = doctorCommandShouldFailExit(report);
+  const hasWarnings = doctorCommandShouldWarnHuman(report);
 
   if (!hasWarnings && !hasBlocking) {
     writeInfo('[pumuki] doctor verdict: PASS');
   } else {
     writeInfo(`[pumuki] doctor verdict: ${hasBlocking ? 'BLOCKED' : 'WARN'}`);
+  }
+  if (!hasBlocking && doctorHasGovernanceAttention(report)) {
+    writeInfo(
+      '[pumuki] doctor: governance_effective is not GREEN (see governance truth).'
+    );
   }
 
   if (remoteCiDiagnostics) {
@@ -2276,7 +2285,7 @@ export const runLifecycleCli = async (
         } else {
           printDoctorReport(report, remoteCiDiagnostics);
         }
-        return doctorHasBlockingIssues(report) || doctorHasParityMismatch(report) ? 1 : 0;
+        return doctorCommandShouldFailExit(report) ? 1 : 0;
       }
       case 'status': {
         const status = readLifecycleStatus();
@@ -2329,6 +2338,8 @@ export const runLifecycleCli = async (
           writeInfo(
             `[pumuki] hooks: pre-commit=${status.hookStatus['pre-commit'].managedBlockPresent ? 'managed' : 'missing'}, pre-push=${status.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
           );
+          printGovernanceObservationHuman(status.governanceObservation);
+          printGovernanceNextActionHuman(status.governanceNextAction);
           writeInfo(
             `[pumuki] tracked node_modules paths: ${status.trackedNodeModulesCount}`
           );

@@ -6,9 +6,24 @@ import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { buildLifecycleVersionReport, getCurrentPumukiVersion } from './packageInfo';
 import {
+  readLifecycleExperimentalFeaturesSnapshot,
+  type LifecycleExperimentalFeaturesSnapshot,
+} from './experimentalFeaturesSnapshot';
+import {
   readLifecyclePolicyValidationSnapshot,
   type LifecyclePolicyValidationSnapshot,
 } from './policyValidationSnapshot';
+import {
+  doctorGovernanceIsBlocking,
+  doctorGovernanceNeedsAttention,
+  readGovernanceObservationSnapshot,
+  type GovernanceObservationSnapshot,
+} from './governanceObservationSnapshot';
+import {
+  readGovernanceNextAction,
+  type GovernanceNextActionReader,
+  type GovernanceNextActionSummary,
+} from './governanceNextAction';
 import { readLifecycleState, type LifecycleState } from './state';
 import {
   detectOpenSpecInstallation,
@@ -95,6 +110,9 @@ export type LifecycleDoctorReport = {
   hooksDirectory: string;
   hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   policyValidation: LifecyclePolicyValidationSnapshot;
+  experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
+  governanceObservation: GovernanceObservationSnapshot;
+  governanceNextAction: GovernanceNextActionSummary;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
   parity_profile?: DoctorParityProfile;
@@ -797,6 +815,7 @@ export const runLifecycleDoctor = (params?: {
   git?: ILifecycleGitService;
   deep?: boolean;
   parity?: boolean;
+  governanceNextActionReader?: GovernanceNextActionReader;
 }): LifecycleDoctorReport => {
   const git = params?.git ?? new LifecycleGitService();
   const cwd = params?.cwd ?? process.cwd();
@@ -824,6 +843,19 @@ export const runLifecycleDoctor = (params?: {
     repoRoot,
     lifecycleVersion: lifecycleState.version,
   });
+  const policyValidation = readLifecyclePolicyValidationSnapshot(repoRoot);
+  const experimentalFeatures = readLifecycleExperimentalFeaturesSnapshot();
+  const governanceObservation = readGovernanceObservationSnapshot({
+    repoRoot,
+    experimentalFeatures,
+    policyValidation,
+    git,
+  });
+  const governanceNextAction = (params?.governanceNextActionReader ?? readGovernanceNextAction)({
+    repoRoot,
+    stage: 'PRE_WRITE',
+    governanceObservation,
+  });
 
   const parity_profile =
     params?.parity === true
@@ -846,7 +878,10 @@ export const runLifecycleDoctor = (params?: {
     hookStatus,
     hooksDirectory: hooksDirectory.path,
     hooksDirectoryResolution: hooksDirectory.source,
-    policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
+    policyValidation,
+    experimentalFeatures,
+    governanceNextAction,
+    governanceObservation,
     issues,
     deep,
     parity_profile,
@@ -859,3 +894,16 @@ export const doctorHasBlockingIssues = (report: LifecycleDoctorReport): boolean 
 
 export const doctorHasParityMismatch = (report: LifecycleDoctorReport): boolean =>
   typeof report.parity_comparison !== 'undefined' && report.parity_comparison.matches === false;
+
+export const doctorHasGovernanceAttention = (report: LifecycleDoctorReport): boolean =>
+  doctorGovernanceNeedsAttention(report.governanceObservation);
+
+export const doctorCommandShouldWarnHuman = (report: LifecycleDoctorReport): boolean =>
+  report.issues.length > 0
+  || report.deep?.checks.some((check) => check.status !== 'pass') === true
+  || doctorHasGovernanceAttention(report);
+
+export const doctorCommandShouldFailExit = (report: LifecycleDoctorReport): boolean =>
+  doctorHasBlockingIssues(report)
+  || doctorHasParityMismatch(report)
+  || doctorGovernanceIsBlocking(report.governanceObservation);
