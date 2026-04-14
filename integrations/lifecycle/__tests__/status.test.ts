@@ -121,7 +121,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     assert.equal(status.policyValidation.stages.PRE_PUSH.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(status.policyValidation.stages.CI.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(status.experimentalFeatures.features.pre_write.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.pre_write.source, 'default');
     assert.equal(status.experimentalFeatures.features.analytics.layer, 'experimental');
     assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
@@ -266,7 +266,7 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     assert.equal(status.hooksDirectoryResolution, 'default');
     assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
     assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
@@ -306,7 +306,7 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
     assert.equal(status.hooksDirectoryResolution, 'default');
     assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
     assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');

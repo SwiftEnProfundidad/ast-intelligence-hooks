@@ -42,7 +42,7 @@ const withEnv = async <T>(
   }
 };
 
-test('resolvePreWriteExperimentalFeature defaults to default-off with canonical activation variable', async () => {
+test('resolvePreWriteExperimentalFeature defaults to strict baseline with canonical activation variable', async () => {
   await withEnv('PUMUKI_EXPERIMENTAL_PRE_WRITE', undefined, async () => {
     await withEnv('PUMUKI_PREWRITE_ENFORCEMENT', undefined, () => {
       const resolved = resolvePreWriteExperimentalFeature();
@@ -50,9 +50,9 @@ test('resolvePreWriteExperimentalFeature defaults to default-off with canonical 
       assert.deepEqual(resolved, {
         feature: 'pre_write',
         layer: 'experimental',
-        mode: 'off',
+        mode: 'strict',
         source: 'default',
-        blocking: false,
+        blocking: true,
         activationVariable: 'PUMUKI_EXPERIMENTAL_PRE_WRITE',
         legacyActivationVariable: 'PUMUKI_PREWRITE_ENFORCEMENT',
       });
