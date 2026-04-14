@@ -40,7 +40,7 @@ type ExperimentalFeatureConfig = {
 
 const EXPERIMENTAL_FEATURES: Record<ExperimentalFeatureId, ExperimentalFeatureConfig> = {
   pre_write: {
-    defaultMode: 'off',
+    defaultMode: 'strict',
     activationVariable: 'PUMUKI_EXPERIMENTAL_PRE_WRITE',
     legacyActivationVariable: 'PUMUKI_PREWRITE_ENFORCEMENT',
   },

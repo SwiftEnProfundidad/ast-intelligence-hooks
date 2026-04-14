@@ -36,7 +36,7 @@ import {
   buildPreWriteExperimentalDisabledResult,
   buildSddExperimentalEnableAdvisoryCommand,
   runRawPreWriteAiGateCheck,
-  PRE_WRITE_ENABLE_ADVISORY_COMMAND,
+  PRE_WRITE_ENABLE_STRICT_COMMAND,
 } from './cli';
 
 export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: LifecycleCliDependencies): Promise<number> => {
@@ -84,6 +84,7 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             const disabledResult = buildPreWriteExperimentalDisabledResult({
               stage: requestedStage,
               status: readSddStatus(process.cwd()),
+              source: preWriteEnforcement.source,
             });
             if (parsed.json) {
               writeInfo(
@@ -106,7 +107,7 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
                     },
                     next_action: {
                       reason: 'PRE_WRITE_EXPERIMENTAL_DISABLED',
-                      command: PRE_WRITE_ENABLE_ADVISORY_COMMAND,
+                      command: PRE_WRITE_ENABLE_STRICT_COMMAND,
                     },
                   },
                   null,
@@ -127,7 +128,7 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
                 `[pumuki][sdd] pre-write enforcement: mode=${preWriteEnforcement.mode} source=${preWriteEnforcement.source} blocking=no`
               );
               writeInfo(
-                `[pumuki][sdd] next action (PRE_WRITE_EXPERIMENTAL_DISABLED): ${PRE_WRITE_ENABLE_ADVISORY_COMMAND}`
+                `[pumuki][sdd] next action (PRE_WRITE_EXPERIMENTAL_DISABLED): ${PRE_WRITE_ENABLE_STRICT_COMMAND}`
               );
             }
             return 0;

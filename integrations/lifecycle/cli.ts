@@ -1619,8 +1619,8 @@ export type PreWriteOpenSpecBootstrapTrace = {
   details?: string;
 };
 
-export const PRE_WRITE_ENABLE_ADVISORY_COMMAND =
-  'PUMUKI_EXPERIMENTAL_PRE_WRITE=advisory npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json';
+export const PRE_WRITE_ENABLE_STRICT_COMMAND =
+  'PUMUKI_EXPERIMENTAL_PRE_WRITE=strict npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json';
 export const buildSddExperimentalEnableAdvisoryCommand = (stage: SddStage): string =>
   `PUMUKI_EXPERIMENTAL_SDD=advisory npx --yes --package pumuki@latest pumuki sdd validate --stage=${stage} --json`;
 const buildAnalyticsExperimentalEnableCommand = (action: AnalyticsHotspotsCommand): string =>
@@ -1714,6 +1714,7 @@ const buildSaasIngestionExperimentalDisabledEnvelope = (
 export const buildPreWriteExperimentalDisabledResult = (params: {
   stage: SddStage;
   status: SddEvaluateResult['status'];
+  source: 'env' | 'legacy-env' | 'default';
 }): SddEvaluateResult => ({
   stage: params.stage,
   status: params.status,
@@ -1721,14 +1722,16 @@ export const buildPreWriteExperimentalDisabledResult = (params: {
     allowed: true,
     code: 'PRE_WRITE_EXPERIMENTAL_DISABLED',
     message:
-      'PRE_WRITE pertenece al namespace experimental y está desactivado por defecto. Actívalo explícitamente con PUMUKI_EXPERIMENTAL_PRE_WRITE=advisory o strict si necesitas este flujo.',
+      'PRE_WRITE está desactivado explícitamente. Reactívalo con PUMUKI_EXPERIMENTAL_PRE_WRITE=strict si necesitas recuperar el gate previo a escritura.',
     details: {
       experimental: true,
-      default_off: true,
+      default_off: false,
+      disabled_explicitly: true,
+      disabled_source: params.source,
       layer: 'experimental',
       activation_env: 'PUMUKI_EXPERIMENTAL_PRE_WRITE',
       legacy_activation_env: 'PUMUKI_PREWRITE_ENFORCEMENT',
-      activation_command: PRE_WRITE_ENABLE_ADVISORY_COMMAND,
+      activation_command: PRE_WRITE_ENABLE_STRICT_COMMAND,
     },
   },
 });
