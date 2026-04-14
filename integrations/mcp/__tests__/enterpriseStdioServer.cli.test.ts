@@ -120,3 +120,83 @@ test('pumuki enterprise stdio bridge responde initialize y tools/list', async ()
     });
   }
 });
+
+test('pumuki enterprise stdio bridge no consume el transporte stdin en PRE_PUSH ai_gate_check', async () => {
+  const cliPath = resolve(process.cwd(), 'integrations/mcp/enterpriseStdioServer.cli.ts');
+
+  const child = spawn(process.execPath, ['--import', 'tsx', cliPath], {
+    env: {
+      ...process.env,
+      PUMUKI_ENTERPRISE_MCP_PORT: '0',
+      PUMUKI_ENTERPRISE_MCP_HOST: '127.0.0.1',
+      PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE: 'advisory',
+      PUMUKI_MCP_AI_GATE_CHECK_MODE: 'full',
+    },
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+
+  const responses: JsonRpcResponse[] = [];
+  const parseLines = createLineReader((message) => {
+    responses.push(message);
+  });
+  child.stdout.on('data', (chunk) => {
+    parseLines(Buffer.from(chunk));
+  });
+
+  try {
+    child.stdin.write(
+      encodeLine({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: {},
+          clientInfo: {
+            name: 'test-client',
+            version: '1.0.0',
+          },
+        },
+      })
+    );
+
+    await waitForResponse(responses, 1);
+
+    child.stdin.write(
+      encodeLine({
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'tools/call',
+        params: {
+          name: 'ai_gate_check',
+          arguments: {
+            stage: 'PRE_PUSH',
+          },
+        },
+      }) +
+        encodeLine({
+          jsonrpc: '2.0',
+          id: 3,
+          method: 'tools/list',
+          params: {},
+        })
+    );
+
+    const aiGateResponse = await waitForResponse(responses, 2);
+    assert.equal(typeof aiGateResponse.result, 'object');
+
+    const toolsResponse = await waitForResponse(responses, 3);
+    assert.equal(typeof toolsResponse.result, 'object');
+    const toolsResult = toolsResponse.result as {
+      tools?: Array<{ name?: string }>;
+    };
+    const toolNames = (toolsResult.tools ?? []).map((entry) => entry.name).filter(Boolean);
+    assert.equal(toolNames.includes('ai_gate_check'), true);
+  } finally {
+    child.kill('SIGTERM');
+    await new Promise((resolvePromise) => {
+      child.once('exit', () => resolvePromise(undefined));
+      setTimeout(() => resolvePromise(undefined), 1_000);
+    });
+  }
+});

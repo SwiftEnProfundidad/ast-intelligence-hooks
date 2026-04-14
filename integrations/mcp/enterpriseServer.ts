@@ -9,7 +9,7 @@ import { resolveMcpEnterpriseExperimentalFeature } from '../policy/experimentalF
 import { evaluateSddPolicy, readSddStatus } from '../sdd';
 import type { SddStage } from '../sdd';
 import { toStatusPayload } from './evidencePayloads';
-import { runEnterpriseAiGateCheck } from './aiGateCheck';
+import { runEnterpriseAiGateCheckAsync } from './aiGateCheck';
 import { runEnterprisePreFlightCheck } from './preFlightCheck';
 import { runEnterpriseAutoExecuteAiStart } from './autoExecuteAiStart';
 import { writeMcpAiGateReceipt } from './aiGateReceipt';
@@ -382,16 +382,16 @@ const evaluateCriticalToolGuard = (
   }
 };
 
-const executeEnterpriseTool = (
+const executeEnterpriseTool = async (
   repoRoot: string,
   toolName: EnterpriseToolName,
   args: Record<string, string | number | boolean | bigint | symbol | null | Date | object>,
   dryRun: boolean
-): EnterpriseToolExecution => {
+): Promise<EnterpriseToolExecution> => {
   switch (toolName) {
     case 'ai_gate_check': {
       const stage = toSddStage(args.stage, 'PRE_COMMIT');
-      const execution = runEnterpriseAiGateCheck({
+      const execution = await runEnterpriseAiGateCheckAsync({
         repoRoot,
         stage,
       });
@@ -741,7 +741,7 @@ export const startEnterpriseMcpServer = (
         return;
       }
       void readJsonBody(req)
-        .then((body) => {
+        .then(async (body) => {
           if (typeof body !== 'object' || body === null) {
             sendJson(res, 400, {
               error: 'Invalid request body.',
@@ -814,7 +814,7 @@ export const startEnterpriseMcpServer = (
           }
           let result: EnterpriseToolExecution;
           try {
-            result = executeEnterpriseTool(
+            result = await executeEnterpriseTool(
               repoRoot,
               toolName,
               args,
