@@ -6,6 +6,7 @@ import { resolvePolicyForStage } from './stagePolicies';
 import { execFileSync } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { isSeverityAtLeast } from '../../core/rules/Severity';
 import type { SkillsLockV1, SkillsStage } from '../config/skillsLock';
 import {
   loadEffectiveSkillsLock,
@@ -1194,6 +1195,63 @@ const collectEvidenceViolations = (
   return { violations, ageSeconds };
 };
 
+const severityOrder: ReadonlyArray<'CRITICAL' | 'ERROR' | 'WARN' | 'INFO'> = [
+  'CRITICAL',
+  'ERROR',
+  'WARN',
+  'INFO',
+];
+
+const toHighestTriggeredSeverity = (
+  severityCounts: Readonly<Record<'INFO' | 'WARN' | 'ERROR' | 'CRITICAL', number>>,
+  threshold: 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL'
+): 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | null => {
+  for (const severity of severityOrder) {
+    if (severityCounts[severity] > 0 && isSeverityAtLeast(severity, threshold)) {
+      return severity;
+    }
+  }
+  return null;
+};
+
+const collectEvidencePolicyThresholdViolations = (params: {
+  evidenceResult: EvidenceReadResult;
+  policy: ReturnType<typeof resolvePolicyForStage>['policy'];
+}): AiGateViolation[] => {
+  if (params.evidenceResult.kind !== 'valid') {
+    return [];
+  }
+
+  const severityCounts = params.evidenceResult.evidence.severity_metrics.by_severity;
+  const blockSeverity = toHighestTriggeredSeverity(
+    severityCounts,
+    params.policy.blockOnOrAbove
+  );
+  if (blockSeverity && params.evidenceResult.evidence.ai_gate.status !== 'BLOCKED') {
+    return [
+      toErrorViolation(
+        'EVIDENCE_POLICY_THRESHOLD_BLOCK',
+        `Evidence severities exceed block_on_or_above=${params.policy.blockOnOrAbove} (highest=${blockSeverity}).`
+      ),
+    ];
+  }
+
+  const warnSeverity = toHighestTriggeredSeverity(
+    severityCounts,
+    params.policy.warnOnOrAbove
+  );
+  if (warnSeverity && params.evidenceResult.evidence.ai_gate.status === 'ALLOWED') {
+    return [
+      toWarnViolation(
+        'EVIDENCE_POLICY_THRESHOLD_WARN',
+        `Evidence severities exceed warn_on_or_above=${params.policy.warnOnOrAbove} (highest=${warnSeverity}).`
+      ),
+    ];
+  }
+
+  return [];
+};
+
 const toEvidenceSourceDescriptor = (
   result: EvidenceReadResult,
   repoRoot: string
@@ -1475,8 +1533,13 @@ export const evaluateAiGate = (
             `Skills contract incomplete for ${params.stage}: ${skillsContract.violations.map((violation) => violation.code).join(', ')}.`
           ),
         ];
+  const policyThresholdViolations = collectEvidencePolicyThresholdViolations({
+    evidenceResult,
+    policy: resolvedPolicy.policy,
+  });
   const violations = [
     ...evidenceAssessment.violations,
+    ...policyThresholdViolations,
     ...stageSkillsContractViolations,
     ...gitflowViolations,
     ...mcpReceiptAssessment.violations,
