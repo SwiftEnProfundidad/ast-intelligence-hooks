@@ -1,5 +1,9 @@
 # Seguimiento Activo Pumuki
 
+> Documento retirado como backlog fuente.
+> La única fuente viva del tracking interno del producto es `PUMUKI-RESET-MASTER-PLAN.md` en la raíz local del repo.
+> Este archivo se conserva solo como referencia histórica y no debe usarse para priorizar, demostrar avance ni abrir/cerrar tareas activas.
+
 ## Leyenda
 
 - ✅ Cerrado
@@ -9,10 +13,9 @@
 
 ## Regla de uso
 
-- Este es el unico MD interno de seguimiento permitido.
-- Es un espejo operativo subordinado a los backlogs externos de `SAAS`, `RuralGo` y `Flux`.
-- Solo puede existir una tarea `🚧`.
-- Si los MDs externos mandan otra prioridad, este archivo se actualiza en el mismo turno.
+- Archivo retirado del circuito operativo actual.
+- Se conserva solo como referencia histórica del periodo previo al reset.
+- La gobernanza vigente se rige por `AGENTS.md`, los backlogs externos de `SAAS` / `RuralGo` / `Flux` y el tracking vivo `PUMUKI-RESET-MASTER-PLAN.md`.
 
 ## Estado actual
 

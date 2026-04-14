@@ -171,6 +171,23 @@ export type RepoHardModeState = {
   config_path: string;
 };
 
+export type RepoTrackingDeclaration = {
+  source_file: string;
+  declared_path: string;
+  resolved_path: string;
+};
+
+export type RepoTrackingState = {
+  enforced: boolean;
+  canonical_path: string | null;
+  canonical_present: boolean;
+  source_file: string | null;
+  in_progress_count: number | null;
+  single_in_progress_valid: boolean | null;
+  conflict: boolean;
+  declarations: ReadonlyArray<RepoTrackingDeclaration>;
+};
+
 export type RepoState = {
   repo_root: string;
   git: {
@@ -196,6 +213,7 @@ export type RepoState = {
       pre_push: RepoHookState;
     };
     hard_mode?: RepoHardModeState;
+    tracking: RepoTrackingState;
   };
 };
 

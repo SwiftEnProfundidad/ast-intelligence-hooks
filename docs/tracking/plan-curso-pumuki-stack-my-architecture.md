@@ -1,6 +1,6 @@
 # Seguimiento — Curso Pumuki (Stack My Architecture)
 
-Iniciativa formativa: quinto curso del ecosistema Stack My Architecture. **No** sustituye el espejo operativo de producto en [`plan-activo-de-trabajo.md`](./plan-activo-de-trabajo.md).
+Iniciativa formativa: quinto curso del ecosistema Stack My Architecture. **No** sustituye la fuente viva del tracking interno del producto (`PUMUKI-RESET-MASTER-PLAN.md` en la raíz del repo) y **no** actúa como backlog operativo de Pumuki.
 
 ## Leyenda
 

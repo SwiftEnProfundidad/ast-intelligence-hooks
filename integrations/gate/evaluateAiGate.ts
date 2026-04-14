@@ -1310,6 +1310,45 @@ const collectGitflowViolations = (
   return violations;
 };
 
+const collectTrackingViolations = (repoState: RepoState): AiGateViolation[] => {
+  const tracking = repoState.lifecycle.tracking;
+  if (!tracking.enforced) {
+    return [];
+  }
+
+  if (tracking.conflict) {
+    const declaredPaths = tracking.declarations
+      .map((entry) => `${entry.source_file}:${entry.resolved_path}`)
+      .join(', ');
+    return [
+      toErrorViolation(
+        'TRACKING_CANONICAL_SOURCE_CONFLICT',
+        `Tracking canonical source conflict detected (${declaredPaths}).`
+      ),
+    ];
+  }
+
+  if (!tracking.canonical_path || !tracking.canonical_present) {
+    return [
+      toErrorViolation(
+        'TRACKING_CANONICAL_FILE_MISSING',
+        `Tracking canonical file is missing (${tracking.canonical_path ?? 'undeclared'}).`
+      ),
+    ];
+  }
+
+  if (tracking.single_in_progress_valid === false) {
+    return [
+      toErrorViolation(
+        'TRACKING_CANONICAL_IN_PROGRESS_INVALID',
+        `Tracking canonical file must contain exactly one in-progress task (count=${tracking.in_progress_count ?? 'n/a'}).`
+      ),
+    ];
+  }
+
+  return [];
+};
+
 const resolvePendingChanges = (repoState: RepoState): number | null => {
   if (!repoState.git.available) {
     return null;
@@ -1528,6 +1567,7 @@ export const evaluateAiGate = (
     readMcpAiGateReceipt: activeDependencies.readMcpAiGateReceipt,
   });
   const gitflowViolations = collectGitflowViolations(repoState, protectedBranches);
+  const trackingViolations = collectTrackingViolations(repoState);
   const skillsContract = toSkillsContractAssessment({
     stage: params.stage,
     repoRoot: params.repoRoot,
@@ -1560,6 +1600,7 @@ export const evaluateAiGate = (
     ...policyThresholdViolations,
     ...stageSkillsContractViolations,
     ...gitflowViolations,
+    ...trackingViolations,
     ...mcpReceiptAssessment.violations,
   ];
   const blocked = violations.some((violation) => violation.severity === 'ERROR');

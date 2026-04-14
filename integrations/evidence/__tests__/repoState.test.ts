@@ -74,3 +74,109 @@ test('captureRepoState prioriza versión instalada del consumer sobre lifecycle 
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+test('captureRepoState prioriza AGENTS.md como fuente canónica de tracking y detecta conflicto documental', () => {
+  const repo = createGitRepo();
+  try {
+    mkdirSync(join(repo, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repo, 'AGENTS.md'),
+      [
+        '# AGENTS',
+        '',
+        '- La unica fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`.',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repo, 'docs', 'README.md'),
+      [
+        '# Docs',
+        '',
+        '- Fuente viva del tracking interno: `docs/tracking/plan-activo-de-trabajo.md`',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(join(repo, 'PUMUKI-RESET-MASTER-PLAN.md'), '- Estado: 🚧\n', 'utf8');
+
+    const repoState = captureRepoState(repo);
+
+    assert.equal(repoState.lifecycle.tracking.enforced, true);
+    assert.equal(repoState.lifecycle.tracking.canonical_path, 'PUMUKI-RESET-MASTER-PLAN.md');
+    assert.equal(repoState.lifecycle.tracking.source_file, 'AGENTS.md');
+    assert.equal(repoState.lifecycle.tracking.canonical_present, true);
+    assert.equal(repoState.lifecycle.tracking.in_progress_count, 1);
+    assert.equal(repoState.lifecycle.tracking.single_in_progress_valid, true);
+    assert.equal(repoState.lifecycle.tracking.conflict, true);
+    assert.equal(
+      repoState.lifecycle.tracking.declarations.some(
+        (entry) =>
+          entry.source_file === 'docs/README.md'
+          && entry.resolved_path === 'docs/tracking/plan-activo-de-trabajo.md'
+      ),
+      true
+    );
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('captureRepoState marca tracking inválido cuando la fuente canónica deja más de una tarea en construcción', () => {
+  const repo = createGitRepo();
+  try {
+    writeFileSync(
+      join(repo, 'AGENTS.md'),
+      [
+        '# AGENTS',
+        '',
+        '- La unica fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`.',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repo, 'PUMUKI-RESET-MASTER-PLAN.md'),
+      ['- Estado: 🚧', '- Estado: 🚧'].join('\n'),
+      'utf8'
+    );
+
+    const repoState = captureRepoState(repo);
+
+    assert.equal(repoState.lifecycle.tracking.canonical_path, 'PUMUKI-RESET-MASTER-PLAN.md');
+    assert.equal(repoState.lifecycle.tracking.conflict, false);
+    assert.equal(repoState.lifecycle.tracking.in_progress_count, 2);
+    assert.equal(repoState.lifecycle.tracking.single_in_progress_valid, false);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('captureRepoState reconoce la fila tabular del plan canónico como única tarea en construcción', () => {
+  const repo = createGitRepo();
+  try {
+    writeFileSync(
+      join(repo, 'AGENTS.md'),
+      [
+        '# AGENTS',
+        '',
+        '- La unica fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`.',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repo, 'PUMUKI-RESET-MASTER-PLAN.md'),
+      [
+        '| Documento | Tarea 🚧 actual |',
+        '|-----------|-----------------|',
+        '| Este plan | 🚧 **Bug externo prioritario** |',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const repoState = captureRepoState(repo);
+
+    assert.equal(repoState.lifecycle.tracking.in_progress_count, 1);
+    assert.equal(repoState.lifecycle.tracking.single_in_progress_valid, true);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});

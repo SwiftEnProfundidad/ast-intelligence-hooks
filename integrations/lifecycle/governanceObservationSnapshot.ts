@@ -1,6 +1,8 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { readEvidenceResult } from '../evidence/readEvidence';
+import { readRepoTrackingState } from '../evidence/trackingContract';
+import type { RepoTrackingState } from '../evidence/schema';
 import { readSddStatus } from '../sdd';
 import type { SddStatusPayload } from '../sdd/types';
 import type { LifecycleExperimentalFeaturesSnapshot } from './experimentalFeaturesSnapshot';
@@ -57,6 +59,7 @@ export type GovernanceObservationSnapshot = {
     on_protected_branch_hint: boolean;
   };
   contract_surface: GovernanceContractSurface;
+  tracking: RepoTrackingState;
   attention_codes: ReadonlyArray<string>;
   governance_effective: 'green' | 'attention' | 'blocked';
   agent_bootstrap_hints: ReadonlyArray<string>;
@@ -142,7 +145,8 @@ const summarizeEvidence = (repoRoot: string): GovernanceEvidenceSummary => {
 const buildHints = (
   surface: GovernanceContractSurface,
   branch: string | null,
-  protectedBranchHint: boolean
+  protectedBranchHint: boolean,
+  tracking: RepoTrackingState
 ): string[] => {
   const hints: string[] = [];
   if (surface.agents_md) {
@@ -156,6 +160,17 @@ const buildHints = (
   }
   if (protectedBranchHint && branch) {
     hints.push(`La rama "${branch}" cae en el set protegido por defecto: usa feature/* o refactor/*.`);
+  }
+  if (tracking.conflict) {
+    hints.push('Tracking canónico en conflicto: AGENTS.md y los README del repo no apuntan al mismo MD.');
+  }
+  if (tracking.enforced && !tracking.canonical_present) {
+    hints.push(`Falta el tracking canónico declarado (${tracking.canonical_path ?? 'sin resolver'}).`);
+  }
+  if (tracking.enforced && tracking.single_in_progress_valid === false) {
+    hints.push(
+      `El tracking canónico debe dejar exactamente una 🚧 (actual=${tracking.in_progress_count ?? 'n/a'}).`
+    );
   }
   hints.push('SDD/OpenSpec: usa PUMUKI_EXPERIMENTAL_SDD=advisory|strict cuando el loop SDD esté activo.');
   hints.push('WARN-as-BLOCK: activa PUMUKI_ENTERPRISE_STRICT_WARN_AS_BLOCK=1 si el repo exige promoción dura.');
@@ -176,6 +191,7 @@ export const readGovernanceObservationSnapshot = (params: {
   const branch = readCurrentBranch(git, repoRoot);
   const onProtected = typeof branch === 'string' && DEFAULT_PROTECTED_BRANCHES.has(branch.trim().toLowerCase());
   const surface = buildContractSurface(repoRoot);
+  const tracking = readRepoTrackingState(repoRoot);
   const warnAsBlock = truthyEnv(process.env.PUMUKI_ENTERPRISE_STRICT_WARN_AS_BLOCK);
 
   const attention: string[] = [];
@@ -208,6 +224,15 @@ export const readGovernanceObservationSnapshot = (params: {
   }
   if (onProtected) {
     attention.push('GITFLOW_PROTECTED_BRANCH_CONTEXT');
+  }
+  if (tracking.conflict) {
+    attention.push('TRACKING_CANONICAL_SOURCE_CONFLICT');
+  }
+  if (tracking.enforced && !tracking.canonical_present) {
+    attention.push('TRACKING_CANONICAL_FILE_MISSING');
+  }
+  if (tracking.enforced && tracking.single_in_progress_valid === false) {
+    attention.push('TRACKING_CANONICAL_IN_PROGRESS_INVALID');
   }
 
   let governanceEffective: GovernanceObservationSnapshot['governance_effective'] = 'green';
@@ -248,9 +273,10 @@ export const readGovernanceObservationSnapshot = (params: {
       on_protected_branch_hint: onProtected,
     },
     contract_surface: surface,
+    tracking,
     attention_codes: attention,
     governance_effective: governanceEffective,
-    agent_bootstrap_hints: buildHints(surface, branch, onProtected),
+    agent_bootstrap_hints: buildHints(surface, branch, onProtected, tracking),
   };
 };
 
@@ -263,6 +289,7 @@ export const buildGovernanceObservationSummaryLines = (
     `SDD: env=${snapshot.sdd.experimental_raw ?? '(unset)'} effective=${snapshot.sdd.effective_mode} session_active=${snapshot.sdd_session.active} session_valid=${snapshot.sdd_session.valid} change=${snapshot.sdd_session.change_id ?? 'none'}`,
     `Evidence: readable=${snapshot.evidence.readable} stage=${snapshot.evidence.snapshot_stage ?? 'n/a'} outcome=${snapshot.evidence.snapshot_outcome ?? 'n/a'} ai_gate=${snapshot.evidence.ai_gate_status ?? 'n/a'} findings=${snapshot.evidence.findings_count ?? 'n/a'}`,
     `GitFlow: branch=${snapshot.git.current_branch ?? 'unknown'} protected_hint=${snapshot.git.on_protected_branch_hint ? 'yes' : 'no'}`,
+    `Tracking: enforced=${snapshot.tracking.enforced} canonical=${snapshot.tracking.canonical_path ?? 'none'} present=${snapshot.tracking.canonical_present} single_active=${snapshot.tracking.single_in_progress_valid ?? 'n/a'} count=${snapshot.tracking.in_progress_count ?? 'n/a'} conflict=${snapshot.tracking.conflict}`,
     `Policy strict: PRE_WRITE=${snapshot.policy_strict.pre_write} PRE_COMMIT=${snapshot.policy_strict.pre_commit} PRE_PUSH=${snapshot.policy_strict.pre_push} CI=${snapshot.policy_strict.ci}`,
   ];
   if (snapshot.attention_codes.length > 0) {

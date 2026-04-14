@@ -716,6 +716,20 @@ const normalizeRepoState = (repoState?: RepoState): RepoState | undefined => {
           config_path: repoState.lifecycle.hard_mode.config_path,
         }
         : undefined,
+      tracking: {
+        enforced: repoState.lifecycle.tracking.enforced,
+        canonical_path: repoState.lifecycle.tracking.canonical_path,
+        canonical_present: repoState.lifecycle.tracking.canonical_present,
+        source_file: repoState.lifecycle.tracking.source_file,
+        in_progress_count: repoState.lifecycle.tracking.in_progress_count,
+        single_in_progress_valid: repoState.lifecycle.tracking.single_in_progress_valid,
+        conflict: repoState.lifecycle.tracking.conflict,
+        declarations: repoState.lifecycle.tracking.declarations.map((entry) => ({
+          source_file: entry.source_file,
+          declared_path: entry.declared_path,
+          resolved_path: entry.resolved_path,
+        })),
+      },
     },
   };
 };
