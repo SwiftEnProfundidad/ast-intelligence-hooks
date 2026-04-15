@@ -39,6 +39,14 @@ type EnterpriseStatusPayload = {
   evidence: ReturnType<typeof toStatusPayload>;
 };
 
+type EnterpriseHealthPayload = {
+  status: 'ok';
+  repoRoot: string;
+  experimentalFeatures: {
+    mcp_enterprise: ReturnType<typeof resolveMcpEnterpriseExperimentalFeature>;
+  };
+};
+
 const ENTERPRISE_RESOURCES = [
   'evidence://status',
   'gitflow://state',
@@ -650,6 +658,14 @@ const buildStatusPayload = (repoRoot: string): EnterpriseStatusPayload => ({
   evidence: toStatusPayload(repoRoot),
 });
 
+const buildHealthPayload = (repoRoot: string): EnterpriseHealthPayload => ({
+  status: 'ok',
+  repoRoot,
+  experimentalFeatures: {
+    mcp_enterprise: readMcpEnterpriseExperimentalState(),
+  },
+});
+
 export const startEnterpriseMcpServer = (
   options: EnterpriseServerOptions = {}
 ): EnterpriseServerHandle => {
@@ -680,7 +696,7 @@ export const startEnterpriseMcpServer = (
         sendJson(res, 405, { error: 'Method not allowed' });
         return;
       }
-      sendJson(res, 200, { status: 'ok' });
+      sendJson(res, 200, buildHealthPayload(repoRoot));
       return;
     }
 

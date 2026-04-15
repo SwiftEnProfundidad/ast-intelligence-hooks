@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 import { resolve } from 'node:path';
 import test from 'node:test';
+import { startEnterpriseMcpServer } from '../enterpriseServer';
+
+const waitForExit = async (child: ReturnType<typeof spawn>): Promise<void> =>
+  await new Promise((resolvePromise) => {
+    child.once('exit', () => resolvePromise());
+    setTimeout(() => resolvePromise(), 1_000);
+  });
 
 type JsonRpcResponse = {
   id?: string | number | null;
@@ -52,9 +60,24 @@ const waitForResponse = async (
     poll();
   });
 
+const toChildExecArgv = (): string[] => {
+  const args: string[] = [];
+  for (let index = 0; index < process.execArgv.length; index += 1) {
+    const arg = process.execArgv[index];
+    if (arg === '--eval' || arg === '-e' || arg === '--test') {
+      if (arg === '--eval' || arg === '-e') {
+        index += 1;
+      }
+      continue;
+    }
+    args.push(arg);
+  }
+  return args;
+};
+
 test('pumuki enterprise stdio bridge responde initialize y tools/list', async () => {
   const cliPath = resolve(process.cwd(), 'integrations/mcp/enterpriseStdioServer.cli.ts');
-  const child = spawn(process.execPath, ['--import', 'tsx', cliPath], {
+  const child = spawn(process.execPath, [...toChildExecArgv(), cliPath], {
     env: {
       ...process.env,
       PUMUKI_ENTERPRISE_MCP_PORT: '0',
@@ -114,9 +137,82 @@ test('pumuki enterprise stdio bridge responde initialize y tools/list', async ()
     assert.equal(toolNames.includes('ai_gate_check'), true);
   } finally {
     child.kill('SIGTERM');
+    await waitForExit(child);
+  }
+});
+
+test('pumuki enterprise stdio bridge no reutiliza un server vivo con modo experimental distinto', async () => {
+  const stdioCliPath = resolve(process.cwd(), 'integrations/mcp/enterpriseStdioServer.cli.ts');
+  const host = '127.0.0.1';
+  const port = 7419;
+
+  const staleServer = startEnterpriseMcpServer({
+    host,
+    port,
+    repoRoot: process.cwd(),
+  });
+  if (!staleServer.server.listening) {
+    await once(staleServer.server, 'listening');
+  }
+
+  const child = spawn(process.execPath, [...toChildExecArgv(), stdioCliPath], {
+    env: {
+      ...process.env,
+      PUMUKI_ENTERPRISE_MCP_HOST: host,
+      PUMUKI_ENTERPRISE_MCP_PORT: String(port),
+      PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE: 'advisory',
+    },
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+
+  const responses: JsonRpcResponse[] = [];
+  const parseLines = createLineReader((message) => {
+    responses.push(message);
+  });
+  child.stdout.on('data', (chunk) => {
+    parseLines(Buffer.from(chunk));
+  });
+
+  try {
+    child.stdin.write(
+      encodeLine({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: {},
+          clientInfo: {
+            name: 'test-client',
+            version: '1.0.0',
+          },
+        },
+      })
+    );
+
+    await waitForResponse(responses, 1);
+
+    child.stdin.write(
+      encodeLine({
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'tools/list',
+        params: {},
+      })
+    );
+
+    const toolsResponse = await waitForResponse(responses, 2);
+    assert.equal(typeof toolsResponse.result, 'object');
+    const toolsResult = toolsResponse.result as {
+      tools?: Array<{ name?: string }>;
+    };
+    const toolNames = (toolsResult.tools ?? []).map((entry) => entry.name).filter(Boolean);
+    assert.equal(toolNames.includes('ai_gate_check'), true);
+  } finally {
+    child.kill('SIGTERM');
+    await waitForExit(child);
     await new Promise((resolvePromise) => {
-      child.once('exit', () => resolvePromise(undefined));
-      setTimeout(() => resolvePromise(undefined), 1_000);
+      staleServer.server.close(() => resolvePromise(undefined));
     });
   }
 });
