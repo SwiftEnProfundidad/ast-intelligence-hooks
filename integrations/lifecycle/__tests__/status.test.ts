@@ -322,6 +322,44 @@ test('readLifecycleStatus incorpora tracking canónico y expone conflicto docume
   });
 });
 
+test('readLifecycleStatus no marca tracking inválido cuando la board canónica usa la 🚧 en la primera columna', async () => {
+  await withTempDir('pumuki-lifecycle-status-ruralgo-board-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'docs', 'README.md'),
+      [
+        '# Docs',
+        '',
+        '- Fuente viva del tracking interno: `docs/RURALGO_SEGUIMIENTO.md`',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'RURALGO_SEGUIMIENTO.md'),
+      [
+        '| Estado | Task | Resumen |',
+        '|--------|------|---------|',
+        '| 🚧 | RGO-1900-01 | Slice activa |',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {});
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.governanceObservation.tracking.canonical_path, 'docs/RURALGO_SEGUIMIENTO.md');
+    assert.equal(status.governanceObservation.tracking.in_progress_count, 1);
+    assert.equal(status.governanceObservation.tracking.single_in_progress_valid, true);
+    assert.equal(
+      status.governanceObservation.attention_codes.includes('TRACKING_CANONICAL_IN_PROGRESS_INVALID'),
+      false
+    );
+  });
+});
+
 test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no hay instalación', async () => {
   await withTempDir('pumuki-lifecycle-status-empty-', async (repoRoot) => {
     const git = new FakeLifecycleGitService(repoRoot, [], {});
