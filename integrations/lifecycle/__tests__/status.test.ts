@@ -121,7 +121,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     assert.equal(status.policyValidation.stages.PRE_PUSH.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(status.policyValidation.stages.CI.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(status.experimentalFeatures.features.pre_write.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.pre_write.source, 'default');
     assert.equal(status.experimentalFeatures.features.analytics.layer, 'experimental');
     assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
@@ -266,7 +266,7 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     assert.equal(status.hooksDirectoryResolution, 'default');
     assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
     assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
@@ -274,6 +274,51 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
     assert.equal(status.governanceNextAction.stage, 'PRE_WRITE');
     assert.equal(status.governanceObservation.governance_effective, 'attention');
+  });
+});
+
+test('readLifecycleStatus incorpora tracking canónico y expone conflicto documental en governanceObservation', async () => {
+  await withTempDir('pumuki-lifecycle-status-tracking-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      [
+        '# AGENTS',
+        '',
+        '- La unica fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`.',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'README.md'),
+      [
+        '# Docs',
+        '',
+        '- Fuente viva del tracking interno: `docs/tracking/plan-activo-de-trabajo.md`',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'), '- Estado: 🚧\n', 'utf8');
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {});
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.governanceObservation.tracking.enforced, true);
+    assert.equal(status.governanceObservation.tracking.canonical_path, 'PUMUKI-RESET-MASTER-PLAN.md');
+    assert.equal(status.governanceObservation.tracking.conflict, true);
+    assert.equal(
+      status.governanceObservation.attention_codes.includes('TRACKING_CANONICAL_SOURCE_CONFLICT'),
+      true
+    );
+    assert.equal(
+      status.governanceObservation.agent_bootstrap_hints.some((hint) =>
+        hint.includes('Tracking canónico en conflicto')
+      ),
+      true
+    );
   });
 });
 
@@ -306,7 +351,7 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
     assert.equal(status.hooksDirectoryResolution, 'default');
     assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
     assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');

@@ -13,6 +13,7 @@ import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { readOpenSpecManagedArtifacts, writeLifecycleState } from './state';
 import { ensureRuntimeArtifactsIgnored } from './artifacts';
 import { runLifecycleAdapterInstall } from './adapter';
+import { writeLifecycleBootstrapManifest } from './bootstrapManifest';
 
 export type LifecycleInstallResult = {
   repoRoot: string;
@@ -20,6 +21,10 @@ export type LifecycleInstallResult = {
   changedHooks: ReadonlyArray<string>;
   openSpecBootstrap?: OpenSpecBootstrapResult;
   degradedDoctorBypass?: boolean;
+  bootstrapManifest: {
+    path: string;
+    changed: boolean;
+  };
 };
 
 const shouldBootstrapEvidence = (repoRoot: string): boolean =>
@@ -103,12 +108,20 @@ export const runLifecycleInstall = (params?: {
         openSpecManagedArtifacts: priorArtifacts.length > 0 ? priorArtifacts : undefined,
       });
       ensureRepoBaselineAdapter(report.repoRoot);
+      const bootstrapManifest = writeLifecycleBootstrapManifest({
+        git,
+        repoRoot: report.repoRoot,
+      });
       return {
         repoRoot: report.repoRoot,
         version,
         changedHooks,
         openSpecBootstrap: undefined,
         degradedDoctorBypass: true,
+        bootstrapManifest: {
+          path: bootstrapManifest.path,
+          changed: bootstrapManifest.changed,
+        },
       };
     }
     const renderedIssues = report.issues.map((issue) => `- [${issue.severity}] ${issue.message}`).join('\n');
@@ -142,11 +155,19 @@ export const runLifecycleInstall = (params?: {
     openSpecManagedArtifacts: Array.from(mergedOpenSpecArtifacts),
   });
   ensureRepoBaselineAdapter(report.repoRoot);
+  const bootstrapManifest = writeLifecycleBootstrapManifest({
+    git,
+    repoRoot: report.repoRoot,
+  });
 
   return {
     repoRoot: report.repoRoot,
     version,
     changedHooks,
     openSpecBootstrap,
+    bootstrapManifest: {
+      path: bootstrapManifest.path,
+      changed: bootstrapManifest.changed,
+    },
   };
 };

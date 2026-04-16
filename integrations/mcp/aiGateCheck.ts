@@ -2,8 +2,16 @@ import { evaluateAiGate, type AiGateStage } from '../gate/evaluateAiGate';
 import { resolveRemediationHintForViolationCode } from '../gate/remediationCatalog';
 import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
+import { runMcpAlignedPlatformGate } from './alignedPlatformGate';
 
 const PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
+
+type PlatformGateAlignment = {
+  mode: 'full' | 'policy';
+  exit_code: number;
+  aligned: boolean;
+  skip_reason: string | null;
+};
 
 export type EnterpriseAiGateCheckResult = {
   tool: 'ai_gate_check';
@@ -31,6 +39,7 @@ export type EnterpriseAiGateCheckResult = {
       reason_code: 'HOOK_RUNNER_CAN_REFRESH_EVIDENCE' | null;
       message: string;
     };
+    platform_gate_alignment?: PlatformGateAlignment;
   };
 };
 
@@ -41,23 +50,18 @@ const isHookRefreshableEvidenceCode = (code: string): boolean =>
 
 type AiGateCheckDependencies = {
   evaluateAiGate: typeof evaluateAiGate;
+  runMcpAlignedPlatformGate: typeof runMcpAlignedPlatformGate;
 };
 
 const defaultDependencies: AiGateCheckDependencies = {
   evaluateAiGate,
+  runMcpAlignedPlatformGate,
 };
 
 const buildConsistencyHint = (
-  evaluation: ReturnType<typeof evaluateAiGate>
+  evaluation: ReturnType<typeof evaluateAiGate>,
+  platform?: { exitCode: number; aligned: boolean; skipReason: string | null }
 ): EnterpriseAiGateCheckResult['result']['consistency_hint'] => {
-  if (!HOOK_STAGE_SET.has(evaluation.stage)) {
-    return {
-      comparable_with_hook_runner: true,
-      reason_code: null,
-      message: 'Stage is directly comparable with ai_gate_check semantics.',
-    };
-  }
-
   const hasRefreshableEvidenceViolation = evaluation.violations.some((violation) =>
     isHookRefreshableEvidenceCode(violation.code)
   );
@@ -69,6 +73,24 @@ const buildConsistencyHint = (
       message:
         'ai_gate_check is blocking on evidence integrity/freshness. ' +
         'Hook stage runners may regenerate evidence before final verdict.',
+    };
+  }
+
+  if (platform?.aligned) {
+    return {
+      comparable_with_hook_runner: true,
+      reason_code: null,
+      message:
+        `ai_gate_check ejecutó runPlatformGate después de leer la evidencia actual (exit_code=${platform.exitCode}); ` +
+        'alineación hook-like habilitada explícitamente para este stage.',
+    };
+  }
+
+  if (!HOOK_STAGE_SET.has(evaluation.stage)) {
+    return {
+      comparable_with_hook_runner: true,
+      reason_code: null,
+      message: 'Stage is directly comparable with ai_gate_check semantics.',
     };
   }
 
@@ -118,7 +140,14 @@ const buildAutoFixes = (
   return fixes;
 };
 
-const buildMessage = (evaluation: ReturnType<typeof evaluateAiGate>): string => {
+const buildMessage = (
+  evaluation: ReturnType<typeof evaluateAiGate>,
+  platform?: { exitCode: number; skipReason: string | null }
+): string => {
+  if (platform && platform.exitCode !== 0) {
+    const suffix = platform.skipReason ? ` (${platform.skipReason})` : '';
+    return `🔴 runPlatformGate exit_code=${platform.exitCode}${suffix}.`;
+  }
   if (evaluation.allowed) {
     return `✅ Gate ${evaluation.stage} ALLOWED.`;
   }
@@ -127,6 +156,26 @@ const buildMessage = (evaluation: ReturnType<typeof evaluateAiGate>): string => 
     return `🔴 Gate ${evaluation.stage} BLOCKED.`;
   }
   return `🔴 ${firstViolation.code}: ${firstViolation.message}`;
+};
+
+const resolveAiGateCheckMode = (): PlatformGateAlignment['mode'] => {
+  const raw = process.env.PUMUKI_MCP_AI_GATE_CHECK_MODE?.trim().toLowerCase();
+  return raw === 'full' || raw === 'aligned' ? 'full' : 'policy';
+};
+
+const toPlatformGateAlignment = (
+  mode: PlatformGateAlignment['mode'],
+  platform?: { exitCode: number; aligned: boolean; skipReason: string | null }
+): PlatformGateAlignment | undefined => {
+  if (mode !== 'full' || !platform) {
+    return undefined;
+  }
+  return {
+    mode,
+    exit_code: platform.exitCode,
+    aligned: platform.aligned,
+    skip_reason: platform.skipReason,
+  };
 };
 
 export const runEnterpriseAiGateCheck = (params: {
@@ -177,6 +226,87 @@ export const runEnterpriseAiGateCheck = (params: {
       skills_contract: evaluation.skills_contract,
       repo_state: evaluation.repo_state,
       consistency_hint: buildConsistencyHint(evaluation),
+    },
+  };
+};
+
+export const runEnterpriseAiGateCheckAsync = async (params: {
+  repoRoot: string;
+  stage: AiGateStage;
+  requireMcpReceipt?: boolean;
+}, dependencies: Partial<AiGateCheckDependencies> = {}): Promise<EnterpriseAiGateCheckResult> => {
+  const mode = resolveAiGateCheckMode();
+  const activeDependencies: AiGateCheckDependencies = {
+    ...defaultDependencies,
+    ...dependencies,
+  };
+  const evaluation = activeDependencies.evaluateAiGate({
+    repoRoot: params.repoRoot,
+    stage: params.stage,
+    requireMcpReceipt: params.requireMcpReceipt ?? false,
+  });
+
+  let platform:
+    | { exitCode: number; aligned: boolean; skipReason: string | null }
+    | undefined;
+  if (mode === 'full') {
+    platform = await activeDependencies.runMcpAlignedPlatformGate({
+      repoRoot: params.repoRoot,
+      stage: params.stage,
+    });
+  }
+
+  const platformBlocks = Boolean(platform && platform.exitCode !== 0);
+  const allowed = evaluation.allowed && !platformBlocks;
+  const status: 'ALLOWED' | 'BLOCKED' = allowed ? 'ALLOWED' : 'BLOCKED';
+  const violations = platformBlocks && platform
+    ? [
+      ...evaluation.violations,
+      {
+        code: 'PLATFORM_GATE_EXIT_NON_ZERO',
+        message:
+          `runPlatformGate devolvió exit_code=${platform.exitCode}` +
+          (platform.skipReason ? ` (${platform.skipReason})` : ''),
+        severity: 'ERROR' as const,
+      },
+    ]
+    : evaluation.violations;
+  const branch = evaluation.repo_state.git.branch;
+  const timestamp = evaluation.evidence.source.generated_at;
+  const learningContextFeature = resolveLearningContextExperimentalFeature();
+  const learningContext = learningContextFeature.mode === 'off'
+    ? null
+    : readSddLearningContext({
+      repoRoot: params.repoRoot,
+    });
+  const evaluationForHints = { ...evaluation, allowed, status, violations };
+  const warnings = buildWarnings(evaluationForHints);
+  const autoFixes = buildAutoFixes(evaluationForHints, learningContext);
+  const message = buildMessage(evaluationForHints, platform);
+
+  return {
+    tool: 'ai_gate_check',
+    dryRun: true,
+    executed: true,
+    success: allowed,
+    result: {
+      allowed,
+      status,
+      timestamp,
+      branch,
+      message,
+      stage: evaluation.stage,
+      policy: evaluation.policy,
+      violations,
+      warnings,
+      auto_fixes: autoFixes,
+      learning_context: learningContext,
+      evidence: evaluation.evidence,
+      mcp_receipt: evaluation.mcp_receipt,
+      skills_contract: evaluation.skills_contract,
+      repo_state: evaluation.repo_state,
+      consistency_hint: buildConsistencyHint(evaluationForHints, platform),
+      platform_gate_alignment: toPlatformGateAlignment(mode, platform),
     },
   };
 };

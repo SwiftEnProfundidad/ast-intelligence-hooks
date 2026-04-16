@@ -42,6 +42,14 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
     'Mapea todas las reglas AUTO a detectores AST antes de continuar.',
   EVIDENCE_TIMESTAMP_FUTURE: 'Corrige la hora del sistema y regenera evidencia.',
   GITFLOW_PROTECTED_BRANCH: 'Evita trabajo directo en ramas protegidas (usa feature/*).',
+  GITFLOW_BRANCH_NAMING_INVALID:
+    'La rama actual no cumple GitFlow. Usa feature/*, bugfix/*, hotfix/*, release/*, chore/*, refactor/* o docs/*.',
+  TRACKING_CANONICAL_SOURCE_CONFLICT:
+    'AGENTS.md y los README del repo no apuntan a la misma fuente canónica de tracking.',
+  TRACKING_CANONICAL_FILE_MISSING:
+    'El repo declara un MD de tracking canónico que ahora mismo no existe.',
+  TRACKING_CANONICAL_IN_PROGRESS_INVALID:
+    'El MD canónico de tracking debe dejar exactamente una task o fase en construcción.',
 };
 
 const normalizeGovernanceCatalogCode = (code: string): string => {
@@ -51,6 +59,8 @@ const normalizeGovernanceCatalogCode = (code: string): string => {
       return 'EVIDENCE_INVALID_OR_CHAIN';
     case 'GITFLOW_PROTECTED_BRANCH':
       return 'GITFLOW_PROTECTED_BRANCH_CONTEXT';
+    case 'GITFLOW_BRANCH_NAMING_INVALID':
+      return 'GITFLOW_BRANCH_NAMING_INVALID_CONTEXT';
     default:
       return code;
   }

@@ -95,8 +95,18 @@ test('enterprise server exposes health endpoint', async () => {
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
       const response = await safeFetchRequest(`${baseUrl}/health`);
       assert.equal(response.status, 200);
-      const payload = (await response.json()) as { status?: string };
+      const payload = (await response.json()) as {
+        status?: string;
+        repoRoot?: string;
+        experimentalFeatures?: {
+          mcp_enterprise?: {
+            mode?: string;
+          };
+        };
+      };
       assert.equal(payload.status, 'ok');
+      assert.equal(payload.repoRoot, repoRoot);
+      assert.equal(payload.experimentalFeatures?.mcp_enterprise?.mode, 'off');
     });
   });
 });

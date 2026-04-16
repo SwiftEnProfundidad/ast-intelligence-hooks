@@ -119,6 +119,51 @@ export const resolveGovernanceCatalogAction = (params: {
           command: 'git checkout -b feature/<descripcion-kebab-case>',
         },
       };
+    case 'GITFLOW_BRANCH_NAMING_INVALID':
+    case 'GITFLOW_BRANCH_NAMING_INVALID_CONTEXT':
+      return {
+        reason_code: 'GITFLOW_BRANCH_NAMING_INVALID_CONTEXT',
+        instruction:
+          'Renombra o recrea la rama actual con un prefijo GitFlow válido antes de continuar.',
+        next_action: {
+          kind: 'run_command',
+          message: 'Crea una rama válida y mueve el trabajo a esa rama antes de seguir.',
+          command: 'git checkout -b feature/<descripcion-kebab-case>',
+        },
+      };
+    case 'TRACKING_CANONICAL_SOURCE_CONFLICT':
+      return {
+        reason_code: 'TRACKING_CANONICAL_SOURCE_CONFLICT',
+        instruction:
+          'Alinea AGENTS.md y los README canónicos para que todos apunten al mismo MD de seguimiento.',
+        next_action: {
+          kind: 'info',
+          message:
+            'Deja una única fuente canónica de tracking y elimina referencias legacy o contradictorias.',
+        },
+      };
+    case 'TRACKING_CANONICAL_FILE_MISSING':
+      return {
+        reason_code: 'TRACKING_CANONICAL_FILE_MISSING',
+        instruction:
+          'Crea o restaura el MD de seguimiento canónico declarado por el repo antes de continuar.',
+        next_action: {
+          kind: 'info',
+          message:
+            'Restaura el archivo canónico de tracking y vuelve a validar governance.',
+        },
+      };
+    case 'TRACKING_CANONICAL_IN_PROGRESS_INVALID':
+      return {
+        reason_code: 'TRACKING_CANONICAL_IN_PROGRESS_INVALID',
+        instruction:
+          'El tracking canónico debe tener exactamente una tarea o fase en construcción.',
+        next_action: {
+          kind: 'info',
+          message:
+            'Corrige el MD canónico para dejar exactamente una `🚧` antes de continuar.',
+        },
+      };
     case 'POLICY_STAGE_NOT_STRICT':
       return {
         reason_code: 'POLICY_STAGE_NOT_STRICT',
