@@ -92,10 +92,12 @@ export const runConsumerPreflight = (
     repoRoot,
     stage: params.stage,
   });
+  const experimentalFeatures = readLifecycleExperimentalFeaturesSnapshot();
+  const policyValidation = readLifecyclePolicyValidationSnapshot(repoRoot);
   const governanceObservation = readGovernanceObservationSnapshot({
     repoRoot,
-    experimentalFeatures: readLifecycleExperimentalFeaturesSnapshot(),
-    policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
+    experimentalFeatures,
+    policyValidation,
     git: new LifecycleGitService(),
   });
   const governanceNextAction = activeDependencies.readGovernanceNextAction({
@@ -118,6 +120,8 @@ export const runConsumerPreflight = (
     result,
     governanceObservation,
     governanceNextAction,
+    policyValidation,
+    experimentalFeatures,
     hints,
     notificationResults,
   };

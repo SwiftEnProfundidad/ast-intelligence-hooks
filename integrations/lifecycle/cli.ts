@@ -12,8 +12,7 @@ import {
   runLifecycleDoctor,
   type LifecycleDoctorReport,
 } from './doctor';
-import { printGovernanceObservationHuman } from './governanceObservationSnapshot';
-import { printGovernanceNextActionHuman } from './governanceNextAction';
+import { printGovernanceConsoleHuman } from './cliGovernanceConsole';
 import { runLifecycleInstall } from './install';
 import { runLifecycleRemove } from './remove';
 import { readLifecycleStatus } from './status';
@@ -1522,13 +1521,12 @@ const printDoctorReport = (
   writeInfo(
     `[pumuki] hook pre-push: ${report.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
   );
-  printGovernanceObservationHuman(report.governanceObservation);
-  printGovernanceNextActionHuman(report.governanceNextAction);
-  writeInfo(
-    `[pumuki] policy-as-code: PRE_COMMIT=${report.policyValidation.stages.PRE_COMMIT.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.PRE_COMMIT.strict ? 'yes' : 'no'} ` +
-    `PRE_PUSH=${report.policyValidation.stages.PRE_PUSH.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.PRE_PUSH.strict ? 'yes' : 'no'} ` +
-    `CI=${report.policyValidation.stages.CI.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.CI.strict ? 'yes' : 'no'}`
-  );
+  printGovernanceConsoleHuman({
+    governanceObservation: report.governanceObservation,
+    governanceNextAction: report.governanceNextAction,
+    policyValidation: report.policyValidation,
+    experimentalFeatures: report.experimentalFeatures,
+  });
 
   for (const issue of report.issues) {
     writeInfo(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
@@ -2358,39 +2356,14 @@ export const runLifecycleCli = async (
           writeInfo(
             `[pumuki] hooks: pre-commit=${status.hookStatus['pre-commit'].managedBlockPresent ? 'managed' : 'missing'}, pre-push=${status.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
           );
-          printGovernanceObservationHuman(status.governanceObservation);
-          printGovernanceNextActionHuman(status.governanceNextAction);
+          printGovernanceConsoleHuman({
+            governanceObservation: status.governanceObservation,
+            governanceNextAction: status.governanceNextAction,
+            policyValidation: status.policyValidation,
+            experimentalFeatures: status.experimentalFeatures,
+          });
           writeInfo(
             `[pumuki] tracked node_modules paths: ${status.trackedNodeModulesCount}`
-          );
-          writeInfo(
-            `[pumuki] policy-as-code: PRE_COMMIT=${status.policyValidation.stages.PRE_COMMIT.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.PRE_COMMIT.strict ? 'yes' : 'no'} ` +
-            `PRE_PUSH=${status.policyValidation.stages.PRE_PUSH.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.PRE_PUSH.strict ? 'yes' : 'no'} ` +
-            `CI=${status.policyValidation.stages.CI.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.CI.strict ? 'yes' : 'no'}`
-          );
-          writeInfo(
-            `[pumuki] experimental: ANALYTICS=${status.experimentalFeatures.features.analytics.mode} source=${status.experimentalFeatures.features.analytics.source} layer=${status.experimentalFeatures.features.analytics.layer} blocking=${status.experimentalFeatures.features.analytics.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.analytics.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: HEURISTICS=${status.experimentalFeatures.features.heuristics.mode} source=${status.experimentalFeatures.features.heuristics.source} layer=${status.experimentalFeatures.features.heuristics.layer} blocking=${status.experimentalFeatures.features.heuristics.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.heuristics.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: LEARNING_CONTEXT=${status.experimentalFeatures.features.learning_context.mode} source=${status.experimentalFeatures.features.learning_context.source} layer=${status.experimentalFeatures.features.learning_context.layer} blocking=${status.experimentalFeatures.features.learning_context.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.learning_context.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: MCP_ENTERPRISE=${status.experimentalFeatures.features.mcp_enterprise.mode} source=${status.experimentalFeatures.features.mcp_enterprise.source} layer=${status.experimentalFeatures.features.mcp_enterprise.layer} blocking=${status.experimentalFeatures.features.mcp_enterprise.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.mcp_enterprise.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: OPERATIONAL_MEMORY=${status.experimentalFeatures.features.operational_memory.mode} source=${status.experimentalFeatures.features.operational_memory.source} layer=${status.experimentalFeatures.features.operational_memory.layer} blocking=${status.experimentalFeatures.features.operational_memory.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.operational_memory.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: PRE_WRITE=${status.experimentalFeatures.features.pre_write.mode} source=${status.experimentalFeatures.features.pre_write.source} layer=${status.experimentalFeatures.features.pre_write.layer} blocking=${status.experimentalFeatures.features.pre_write.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.pre_write.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: SAAS_INGESTION=${status.experimentalFeatures.features.saas_ingestion.mode} source=${status.experimentalFeatures.features.saas_ingestion.source} layer=${status.experimentalFeatures.features.saas_ingestion.layer} blocking=${status.experimentalFeatures.features.saas_ingestion.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.saas_ingestion.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: SDD=${status.experimentalFeatures.features.sdd.mode} source=${status.experimentalFeatures.features.sdd.source} layer=${status.experimentalFeatures.features.sdd.layer} blocking=${status.experimentalFeatures.features.sdd.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.sdd.activationVariable}`
           );
           if (remoteCiDiagnostics) {
             printRemoteCiDiagnostics(remoteCiDiagnostics);

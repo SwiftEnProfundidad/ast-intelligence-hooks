@@ -7,6 +7,8 @@ import type {
   GovernanceNextActionSummary,
 } from '../integrations/lifecycle/governanceNextAction';
 import type { GovernanceObservationSnapshot } from '../integrations/lifecycle/governanceObservationSnapshot';
+import type { LifecycleExperimentalFeaturesSnapshot } from '../integrations/lifecycle/experimentalFeaturesSnapshot';
+import type { LifecyclePolicyValidationSnapshot } from '../integrations/lifecycle/policyValidationSnapshot';
 import type {
   PumukiCriticalNotificationEvent,
   SystemNotificationEmitResult,
@@ -20,6 +22,8 @@ export type ConsumerPreflightResult = {
   result: AiGateCheckResult;
   governanceObservation: GovernanceObservationSnapshot;
   governanceNextAction: GovernanceNextActionSummary;
+  policyValidation: LifecyclePolicyValidationSnapshot;
+  experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
   hints: ReadonlyArray<string>;
   notificationResults: ReadonlyArray<SystemNotificationEmitResult>;
 };
