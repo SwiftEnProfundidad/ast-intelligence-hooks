@@ -1,4 +1,5 @@
 import type { FrameworkMenuEvidenceSummary } from './framework-menu-evidence-summary-lib';
+import type { ConsumerPreflightResult } from './framework-menu-consumer-preflight-types';
 import type {
   PumukiCriticalNotificationEvent,
   SystemNotificationEmitResult,
@@ -45,6 +46,7 @@ export type ConsumerMenuRuntime = {
   actions: ReadonlyArray<ConsumerAction>;
   printMenu: () => void;
   readCurrentSummary: () => FrameworkMenuEvidenceSummary | null;
+  readLastPreflight: () => ConsumerPreflightResult | null;
 };
 
 export type ConsumerRuntimeScope = 'staged' | 'workingTree';
