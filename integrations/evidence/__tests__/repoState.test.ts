@@ -180,3 +180,37 @@ test('captureRepoState reconoce la fila tabular del plan canónico como única t
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+test('captureRepoState reconoce una board tabular estilo RuralGo con la 🚧 en la primera columna', () => {
+  const repo = createGitRepo();
+  try {
+    mkdirSync(join(repo, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repo, 'docs', 'README.md'),
+      [
+        '# Docs',
+        '',
+        '- Fuente viva del tracking interno: `docs/RURALGO_SEGUIMIENTO.md`',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repo, 'docs', 'RURALGO_SEGUIMIENTO.md'),
+      [
+        '| Estado | Task | Resumen |',
+        '|--------|------|---------|',
+        '| 🚧 | RGO-1900-01 | Slice activa |',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const repoState = captureRepoState(repo);
+
+    assert.equal(repoState.lifecycle.tracking.canonical_path, 'docs/RURALGO_SEGUIMIENTO.md');
+    assert.equal(repoState.lifecycle.tracking.canonical_present, true);
+    assert.equal(repoState.lifecycle.tracking.in_progress_count, 1);
+    assert.equal(repoState.lifecycle.tracking.single_in_progress_valid, true);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
