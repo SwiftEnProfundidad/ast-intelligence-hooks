@@ -687,6 +687,16 @@ const normalizeRepoState = (repoState?: RepoState): RepoState | undefined => {
   if (!repoState) {
     return undefined;
   }
+  const tracking = repoState.lifecycle.tracking ?? {
+    enforced: false,
+    canonical_path: null,
+    canonical_present: false,
+    source_file: null,
+    in_progress_count: null,
+    single_in_progress_valid: null,
+    conflict: false,
+    declarations: [],
+  };
   return {
     repo_root: repoState.repo_root,
     git: {
@@ -717,14 +727,14 @@ const normalizeRepoState = (repoState?: RepoState): RepoState | undefined => {
         }
         : undefined,
       tracking: {
-        enforced: repoState.lifecycle.tracking.enforced,
-        canonical_path: repoState.lifecycle.tracking.canonical_path,
-        canonical_present: repoState.lifecycle.tracking.canonical_present,
-        source_file: repoState.lifecycle.tracking.source_file,
-        in_progress_count: repoState.lifecycle.tracking.in_progress_count,
-        single_in_progress_valid: repoState.lifecycle.tracking.single_in_progress_valid,
-        conflict: repoState.lifecycle.tracking.conflict,
-        declarations: repoState.lifecycle.tracking.declarations.map((entry) => ({
+        enforced: tracking.enforced,
+        canonical_path: tracking.canonical_path,
+        canonical_present: tracking.canonical_present,
+        source_file: tracking.source_file,
+        in_progress_count: tracking.in_progress_count,
+        single_in_progress_valid: tracking.single_in_progress_valid,
+        conflict: tracking.conflict,
+        declarations: tracking.declarations.map((entry) => ({
           source_file: entry.source_file,
           declared_path: entry.declared_path,
           resolved_path: entry.resolved_path,

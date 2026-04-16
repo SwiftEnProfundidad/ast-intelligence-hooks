@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { verifyInstalledPumukiBinaryVersion } from '../package-install-smoke-consumer-npm-lib';
 import type { SmokeWorkspace } from '../package-install-smoke-workspace-contract';
+import packageJson from '../../package.json';
 
 const createWorkspace = (): SmokeWorkspace => {
   const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-consumer-npm-lib-'));
@@ -41,7 +42,7 @@ test('verifyInstalledPumukiBinaryVersion valida npx --no-install pumuki status -
   const workspace = createWorkspace();
   try {
     await withFakeNpx(
-      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.71","version":{"effective":"6.3.71"}}\\n\'\nexit 0\n',
+      `#!/usr/bin/env sh\nprintf '{"packageVersion":"${packageJson.version}","version":{"effective":"${packageJson.version}"}}\\n'\nexit 0\n`,
       () => {
         verifyInstalledPumukiBinaryVersion(workspace);
       }
@@ -82,13 +83,47 @@ test('verifyInstalledPumukiBinaryVersion usa fallback local cuando npx --no-inst
     const localPumukiBin = join(localBinDir, 'pumuki');
     writeFileSync(
       localPumukiBin,
-      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.71","version":{"effective":"6.3.71"}}\\n\'\nexit 0\n',
+      `#!/usr/bin/env sh\nprintf '{"packageVersion":"${packageJson.version}","version":{"effective":"${packageJson.version}"}}\\n'\nexit 0\n`,
       'utf8'
     );
     chmodSync(localPumukiBin, 0o755);
 
     await withFakeNpx(
       '#!/usr/bin/env sh\necho \"Error: Cannot find module ../telemetry/gateTelemetry\" 1>&2\nexit 0\n',
+      () => {
+        verifyInstalledPumukiBinaryVersion(workspace);
+      }
+    );
+
+    assert.equal(workspace.commandLog.length, 2);
+    assert.equal(
+      workspace.commandLog[0]?.includes('npx --no-install pumuki status --json'),
+      true
+    );
+    assert.equal(
+      workspace.commandLog[1]?.includes('node_modules/.bin/pumuki status --json'),
+      true
+    );
+  } finally {
+    rmSync(workspace.tmpRoot, { recursive: true, force: true });
+  }
+});
+
+test('verifyInstalledPumukiBinaryVersion usa fallback local cuando npx --no-install resuelve otra versión', async () => {
+  const workspace = createWorkspace();
+  try {
+    const localBinDir = join(workspace.consumerRepo, 'node_modules', '.bin');
+    mkdirSync(localBinDir, { recursive: true });
+    const localPumukiBin = join(localBinDir, 'pumuki');
+    writeFileSync(
+      localPumukiBin,
+      `#!/usr/bin/env sh\nprintf '{"packageVersion":"${packageJson.version}","version":{"effective":"${packageJson.version}"}}\\n'\nexit 0\n`,
+      'utf8'
+    );
+    chmodSync(localPumukiBin, 0o755);
+
+    await withFakeNpx(
+      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.72","version":{"effective":"6.3.72"}}\\n\'\nexit 0\n',
       () => {
         verifyInstalledPumukiBinaryVersion(workspace);
       }

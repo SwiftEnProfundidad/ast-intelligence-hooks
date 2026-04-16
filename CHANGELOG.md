@@ -14,6 +14,22 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Dependencias transitivas al día vía `npm audit fix` (p. ej. `ajv`, `brace-expansion`, `flatted`, `picomatch`).
 
+## [6.3.78] - 2026-04-16
+
+### Added
+
+- **Consola de gobernanza unificada (S1)**: `pumuki status`, `pumuki doctor`, `PRE-FLIGHT CHECK`, el menú `Consumer` y el menú `Advanced` comparten ya el mismo bloque visible de governance (`truth`, `next action`, `policy-as-code`, `experimental`) a través de una capa canónica reutilizable.
+- **`cliGovernanceConsole.ts`**: nueva capa compartida para resumir governance sin duplicar fuentes de verdad entre CLI y superficies de menú.
+
+### Changed
+
+- **Paridad cross-surface**: el runtime `Consumer` conserva el último `preflight` y lo propaga a `Consumer`, `Advanced` y `PRE-FLIGHT CHECK`, evitando recomputar snapshots divergentes.
+- **Promoción sobre línea viva**: esta release se corta sobre la rama `develop` ya realineada con `release/6.3.77`, para no perder fixes previos del framework antes de publicar S1.
+
+### Validation
+
+- No-regression package preparado con la batería S1 de `status`, `doctor`, `framework-menu` y smoke de imports antes del rollout controlado en consumers activos.
+
 ## [6.3.71] - 2026-04-06
 
 ### Added

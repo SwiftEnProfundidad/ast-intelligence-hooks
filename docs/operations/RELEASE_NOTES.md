@@ -6,6 +6,13 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-16 (v6.3.78)
+
+- **Slice S1 consolidada**: `status`, `doctor`, `PRE-FLIGHT CHECK`, menú `Consumer` y menú `Advanced` muestran el mismo bloque canónico de governance sin duplicar lógica de cálculo.
+- **Runtime del menú**: `Consumer` conserva `lastPreflight` y lo reutiliza en superficies derivadas para mantener paridad visible de `truth / next action / policy-as-code / experimentales`.
+- **Base de release correcta**: la publicación se prepara desde `release/6.3.78` recortada sobre `develop` ya alineado con la línea viva `release/6.3.77`.
+- **Rollout recomendado**: publicar `pumuki@6.3.78` y repin ordenado `RuralGo -> SAAS -> Flux`, validando después `pumuki status`, `pumuki doctor` y hooks Git en cada consumer.
+
 ### 2026-04-06 (v6.3.71)
 
 - **Evidencia v2.1**: bloque `operational_hints` (`requires_second_pass`, resumen operativo, desglose por severidad de reglas). Alineado con PRE_COMMIT solo-docs + evidencia trackeada (INC-069) cuando no se re-stagea el JSON automáticamente.
