@@ -394,6 +394,30 @@ test('evaluateAiGate bloquea en ramas protegidas por gitflow', () => {
   assert.equal(result.violations.some((item) => item.code === 'GITFLOW_PROTECTED_BRANCH'), true);
 });
 
+test('evaluateAiGate bloquea cuando la rama no cumple naming GitFlow', () => {
+  const repoState = sampleEvidence().repo_state!;
+  repoState.git.branch = 'topic/inc-076';
+
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
+      captureRepoState: () => repoState,
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
+  assert.equal(
+    result.violations.some((item) => item.code === 'GITFLOW_BRANCH_NAMING_INVALID'),
+    true
+  );
+});
+
 test('evaluateAiGate permite continuar cuando evidencia está fresca y rama cumple gitflow', () => {
   const result = evaluateAiGate(
     {
@@ -425,6 +449,124 @@ test('evaluateAiGate permite continuar cuando evidencia está fresca y rama cump
     digest: 'sha256:abc123',
     generated_at: '2026-02-20T12:00:00.000Z',
   });
+});
+
+test('evaluateAiGate bloquea cuando la policy promociona WARN a BLOCK aunque ai_gate siga ALLOWED', () => {
+  const baseEvidence = sampleEvidence();
+  const evidence = sampleEvidence({
+    snapshot: {
+      ...baseEvidence.snapshot,
+      findings: [
+        {
+          ruleId: 'heuristics.large-worktree',
+          severity: 'WARN',
+          code: 'HEURISTICS_LARGE_WORKTREE',
+          message: 'large worktree detected',
+          file: 'apps/ios/BuyerShellView.swift',
+        },
+      ],
+    },
+    severity_metrics: {
+      gate_status: 'ALLOWED',
+      total_violations: 1,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 1,
+        INFO: 0,
+      },
+    },
+  });
+
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(evidence),
+      captureRepoState: () => evidence.repo_state!,
+      resolvePolicyForStage: () => ({
+        policy: {
+          stage: 'PRE_COMMIT',
+          blockOnOrAbove: 'WARN',
+          warnOnOrAbove: 'INFO',
+        },
+        trace: {
+          source: 'default',
+          bundle: 'gate-policy.default.PRE_COMMIT',
+          hash: 'a'.repeat(64),
+        },
+      }),
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
+  assert.equal(
+    result.violations.some((item) => item.code === 'EVIDENCE_POLICY_THRESHOLD_BLOCK'),
+    true
+  );
+});
+
+test('evaluateAiGate emite WARN cuando la policy solo requiere aviso por severidad', () => {
+  const baseEvidence = sampleEvidence();
+  const evidence = sampleEvidence({
+    snapshot: {
+      ...baseEvidence.snapshot,
+      findings: [
+        {
+          ruleId: 'heuristics.large-worktree',
+          severity: 'WARN',
+          code: 'HEURISTICS_LARGE_WORKTREE',
+          message: 'large worktree detected',
+          file: 'apps/ios/BuyerShellView.swift',
+        },
+      ],
+    },
+    severity_metrics: {
+      gate_status: 'ALLOWED',
+      total_violations: 1,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 1,
+        INFO: 0,
+      },
+    },
+  });
+
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(evidence),
+      captureRepoState: () => evidence.repo_state!,
+      resolvePolicyForStage: () => ({
+        policy: {
+          stage: 'PRE_COMMIT',
+          blockOnOrAbove: 'ERROR',
+          warnOnOrAbove: 'WARN',
+        },
+        trace: {
+          source: 'default',
+          bundle: 'gate-policy.default.PRE_COMMIT',
+          hash: 'b'.repeat(64),
+        },
+      }),
+    }
+  );
+
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some((item) => item.code === 'EVIDENCE_POLICY_THRESHOLD_WARN'),
+    true
+  );
 });
 
 test('evaluateAiGate bloquea PRE_COMMIT cuando la higiene de worktree supera umbral crítico', () => {
@@ -1963,6 +2105,90 @@ test('evaluateAiGate detecta plataformas requeridas desde el árbol del repo cua
       result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
       false
     );
+  } finally {
+    rmSync(tmpRoot, { recursive: true, force: true });
+  }
+});
+
+test('evaluateAiGate detecta plataformas activas desde paths cambiados en PRE_WRITE y limita el contrato al scope del diff', async () => {
+  const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-prewrite-worktree-'));
+  mkdirSync(join(tmpRoot, 'apps/ios'), { recursive: true });
+  mkdirSync(join(tmpRoot, 'apps/backend'), { recursive: true });
+
+  try {
+    execFileSync('git', ['init'], { cwd: tmpRoot, stdio: 'ignore' });
+    writeFileSync(join(tmpRoot, 'apps/ios', 'BuyerView.swift'), 'struct BuyerView {}\n');
+
+    await withSkillsEnforcementEnv('strict', async () => {
+      const base = sampleEvidence();
+      const result = evaluateAiGate(
+        {
+          repoRoot: tmpRoot,
+          stage: 'PRE_WRITE',
+        },
+        {
+          now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+          readEvidenceResult: () =>
+            validEvidenceResult({
+              ...base,
+              platforms: {},
+              rulesets: [],
+              repo_state: {
+                ...base.repo_state!,
+                repo_root: tmpRoot,
+              },
+              snapshot: {
+                ...base.snapshot,
+                stage: 'PRE_WRITE',
+                rules_coverage: {
+                  ...base.snapshot.rules_coverage!,
+                  stage: 'PRE_WRITE',
+                  active_rule_ids: ['project.rules.audit'],
+                  evaluated_rule_ids: ['project.rules.audit'],
+                  matched_rule_ids: [],
+                  unevaluated_rule_ids: [],
+                  counts: {
+                    active: 1,
+                    evaluated: 1,
+                    matched: 0,
+                    unevaluated: 0,
+                  },
+                  coverage_ratio: 1,
+                },
+              },
+            }),
+          captureRepoState: () => ({
+            ...sampleEvidence().repo_state!,
+            repo_root: tmpRoot,
+            git: {
+              ...sampleEvidence().repo_state!.git,
+              dirty: true,
+              pending_changes: 1,
+              unstaged: 1,
+            },
+          }),
+          loadRequiredSkillsLock: () => sampleMultiPlatformSkillsLock(),
+        }
+      );
+
+      assert.equal(result.skills_contract?.enforced, true);
+      assert.equal(result.skills_contract?.status, 'FAIL');
+      assert.deepEqual(result.skills_contract?.detected_platforms, ['ios']);
+      assert.deepEqual(
+        result.skills_contract?.requirements.map((item) => item.platform),
+        ['ios']
+      );
+      assert.equal(
+        result.skills_contract?.violations.some(
+          (item) => item.code === 'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED'
+        ),
+        false
+      );
+      assert.equal(
+        result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
+        true
+      );
+    });
   } finally {
     rmSync(tmpRoot, { recursive: true, force: true });
   }

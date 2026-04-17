@@ -1,3 +1,7 @@
+import {
+  resolveGovernanceCatalogAction,
+  type GovernanceCatalogNextAction,
+} from '../gate/governanceActionCatalog';
 import { evaluateAiGate, type AiGateStage, type AiGateViolation } from '../gate/evaluateAiGate';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
 import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
@@ -38,6 +42,28 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
     'Mapea todas las reglas AUTO a detectores AST antes de continuar.',
   EVIDENCE_TIMESTAMP_FUTURE: 'Corrige la hora del sistema y regenera evidencia.',
   GITFLOW_PROTECTED_BRANCH: 'Evita trabajo directo en ramas protegidas (usa feature/*).',
+  GITFLOW_BRANCH_NAMING_INVALID:
+    'La rama actual no cumple GitFlow. Usa feature/*, bugfix/*, hotfix/*, release/*, chore/*, refactor/* o docs/*.',
+  TRACKING_CANONICAL_SOURCE_CONFLICT:
+    'AGENTS.md y los README del repo no apuntan a la misma fuente canónica de tracking.',
+  TRACKING_CANONICAL_FILE_MISSING:
+    'El repo declara un MD de tracking canónico que ahora mismo no existe.',
+  TRACKING_CANONICAL_IN_PROGRESS_INVALID:
+    'El MD canónico de tracking debe dejar exactamente una task o fase en construcción.',
+};
+
+const normalizeGovernanceCatalogCode = (code: string): string => {
+  switch (code) {
+    case 'EVIDENCE_INVALID':
+    case 'EVIDENCE_CHAIN_INVALID':
+      return 'EVIDENCE_INVALID_OR_CHAIN';
+    case 'GITFLOW_PROTECTED_BRANCH':
+      return 'GITFLOW_PROTECTED_BRANCH_CONTEXT';
+    case 'GITFLOW_BRANCH_NAMING_INVALID':
+      return 'GITFLOW_BRANCH_NAMING_INVALID_CONTEXT';
+    default:
+      return code;
+  }
 };
 
 const buildPreFlightHints = (params: {
@@ -114,6 +140,8 @@ export type EnterprisePreFlightCheckResult = {
     phase: 'GREEN' | 'RED';
     message: string;
     instruction: string;
+    reason_code: string;
+    next_action: GovernanceCatalogNextAction;
     stage: ReturnType<typeof evaluateAiGate>['stage'];
     policy: ReturnType<typeof evaluateAiGate>['policy'];
     violations: ReturnType<typeof evaluateAiGate>['violations'];
@@ -153,13 +181,30 @@ export const runEnterprisePreFlightCheck = (params: {
     upstream: evaluation.repo_state.git.upstream,
     learningContext,
   });
+  const firstViolation = evaluation.violations[0];
+  const reasonCode = firstViolation?.code ?? 'READY';
+  const governanceAction = firstViolation
+    ? resolveGovernanceCatalogAction({
+      code: normalizeGovernanceCatalogCode(firstViolation.code),
+      stage: evaluation.stage,
+    })
+    : resolveGovernanceCatalogAction({
+      code: 'READY',
+      stage: evaluation.stage,
+    });
   const phase: 'GREEN' | 'RED' = evaluation.allowed ? 'GREEN' : 'RED';
   const message = evaluation.allowed
     ? '✅ Pre-flight aprobado: puedes continuar con la implementación.'
-    : `🔴 Pre-flight bloqueado: corrige ${evaluation.violations[0]?.code ?? 'la causa'} y vuelve a ejecutar.`;
-  const instruction = evaluation.allowed
+    : `🔴 Pre-flight bloqueado: corrige ${reasonCode} y vuelve a ejecutar.`;
+  const instruction = !firstViolation && evaluation.allowed
     ? 'Implementa el cambio mínimo para pasar en verde y vuelve a validar.'
-    : hints[0] ?? 'Corrige la causa bloqueante y vuelve a ejecutar el pre-flight.';
+    : governanceAction.instruction;
+  const nextAction: GovernanceCatalogNextAction = evaluation.allowed
+    ? {
+      kind: 'info',
+      message: governanceAction.next_action.message,
+    }
+    : governanceAction.next_action;
 
   return {
     tool: 'pre_flight_check',
@@ -172,6 +217,8 @@ export const runEnterprisePreFlightCheck = (params: {
       phase,
       message,
       instruction,
+      reason_code: reasonCode,
+      next_action: nextAction,
       stage: evaluation.stage,
       policy: evaluation.policy,
       violations: evaluation.violations,

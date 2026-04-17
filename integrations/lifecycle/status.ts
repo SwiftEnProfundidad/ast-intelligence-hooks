@@ -9,6 +9,15 @@ import {
   readLifecyclePolicyValidationSnapshot,
   type LifecyclePolicyValidationSnapshot,
 } from './policyValidationSnapshot';
+import {
+  readGovernanceObservationSnapshot,
+  type GovernanceObservationSnapshot,
+} from './governanceObservationSnapshot';
+import {
+  readGovernanceNextAction,
+  type GovernanceNextActionReader,
+  type GovernanceNextActionSummary,
+} from './governanceNextAction';
 import { readLifecycleState, type LifecycleState } from './state';
 
 export type LifecycleStatus = {
@@ -22,11 +31,14 @@ export type LifecycleStatus = {
   trackedNodeModulesCount: number;
   policyValidation: LifecyclePolicyValidationSnapshot;
   experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
+  governanceObservation: GovernanceObservationSnapshot;
+  governanceNextAction: GovernanceNextActionSummary;
 };
 
 export const readLifecycleStatus = (params?: {
   cwd?: string;
   git?: ILifecycleGitService;
+  governanceNextActionReader?: GovernanceNextActionReader;
 }): LifecycleStatus => {
   const git = params?.git ?? new LifecycleGitService();
   const cwd = params?.cwd ?? process.cwd();
@@ -38,6 +50,19 @@ export const readLifecycleStatus = (params?: {
     repoRoot,
     lifecycleVersion: lifecycleState.version,
   });
+  const policyValidation = readLifecyclePolicyValidationSnapshot(repoRoot);
+  const experimentalFeatures = readLifecycleExperimentalFeaturesSnapshot();
+  const governanceObservation = readGovernanceObservationSnapshot({
+    repoRoot,
+    experimentalFeatures,
+    policyValidation,
+    git,
+  });
+  const governanceNextAction = (params?.governanceNextActionReader ?? readGovernanceNextAction)({
+    repoRoot,
+    stage: 'PRE_WRITE',
+    governanceObservation,
+  });
 
   return {
     repoRoot,
@@ -48,7 +73,9 @@ export const readLifecycleStatus = (params?: {
     hooksDirectory: hooksDirectory.path,
     hooksDirectoryResolution: hooksDirectory.source,
     trackedNodeModulesCount,
-    policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
-    experimentalFeatures: readLifecycleExperimentalFeaturesSnapshot(),
+    policyValidation,
+    experimentalFeatures,
+    governanceNextAction,
+    governanceObservation,
   };
 };

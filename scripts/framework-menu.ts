@@ -73,6 +73,7 @@ const menu = async (): Promise<void> => {
         consumerRuntime.printMenu();
       } else {
         const currentSummary = consumerRuntime.readCurrentSummary();
+        const lastPreflight = consumerRuntime.readLastPreflight();
         if (!isMenuUiV2Enabled()) {
           output.write(
             `\n${formatAdvancedMenuClassicView(advancedActions, {
@@ -84,6 +85,7 @@ const menu = async (): Promise<void> => {
             output.write(
               `\n${formatAdvancedMenuView(advancedActions, {
                 evidenceSummary: currentSummary ?? undefined,
+                preflight: lastPreflight ?? undefined,
               })}\n`
             );
           } catch {

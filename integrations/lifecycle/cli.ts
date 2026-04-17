@@ -4,11 +4,15 @@ import type { GatePolicy } from '../../core/gate/GatePolicy';
 import { runPlatformGate } from '../git/runPlatformGate';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
 import {
+  doctorCommandShouldFailExit,
+  doctorCommandShouldWarnHuman,
   doctorHasBlockingIssues,
+  doctorHasGovernanceAttention,
   doctorHasParityMismatch,
   runLifecycleDoctor,
   type LifecycleDoctorReport,
 } from './doctor';
+import { printGovernanceConsoleHuman } from './cliGovernanceConsole';
 import { runLifecycleInstall } from './install';
 import { runLifecycleRemove } from './remove';
 import { readLifecycleStatus } from './status';
@@ -1517,11 +1521,12 @@ const printDoctorReport = (
   writeInfo(
     `[pumuki] hook pre-push: ${report.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
   );
-  writeInfo(
-    `[pumuki] policy-as-code: PRE_COMMIT=${report.policyValidation.stages.PRE_COMMIT.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.PRE_COMMIT.strict ? 'yes' : 'no'} ` +
-    `PRE_PUSH=${report.policyValidation.stages.PRE_PUSH.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.PRE_PUSH.strict ? 'yes' : 'no'} ` +
-    `CI=${report.policyValidation.stages.CI.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.CI.strict ? 'yes' : 'no'}`
-  );
+  printGovernanceConsoleHuman({
+    governanceObservation: report.governanceObservation,
+    governanceNextAction: report.governanceNextAction,
+    policyValidation: report.policyValidation,
+    experimentalFeatures: report.experimentalFeatures,
+  });
 
   for (const issue of report.issues) {
     writeInfo(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
@@ -1554,16 +1559,18 @@ const printDoctorReport = (
     }
   }
 
-  const hasBlocking =
-    doctorHasBlockingIssues(report) || doctorHasParityMismatch(report);
-  const hasWarnings =
-    report.issues.length > 0 ||
-    report.deep?.checks.some((check) => check.status !== 'pass') === true;
+  const hasBlocking = doctorCommandShouldFailExit(report);
+  const hasWarnings = doctorCommandShouldWarnHuman(report);
 
   if (!hasWarnings && !hasBlocking) {
     writeInfo('[pumuki] doctor verdict: PASS');
   } else {
     writeInfo(`[pumuki] doctor verdict: ${hasBlocking ? 'BLOCKED' : 'WARN'}`);
+  }
+  if (!hasBlocking && doctorHasGovernanceAttention(report)) {
+    writeInfo(
+      '[pumuki] doctor: governance_effective is not GREEN (see governance truth).'
+    );
   }
 
   if (remoteCiDiagnostics) {
@@ -1610,8 +1617,8 @@ export type PreWriteOpenSpecBootstrapTrace = {
   details?: string;
 };
 
-export const PRE_WRITE_ENABLE_ADVISORY_COMMAND =
-  'PUMUKI_EXPERIMENTAL_PRE_WRITE=advisory npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json';
+export const PRE_WRITE_ENABLE_STRICT_COMMAND =
+  'PUMUKI_EXPERIMENTAL_PRE_WRITE=strict npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json';
 export const buildSddExperimentalEnableAdvisoryCommand = (stage: SddStage): string =>
   `PUMUKI_EXPERIMENTAL_SDD=advisory npx --yes --package pumuki@latest pumuki sdd validate --stage=${stage} --json`;
 const buildAnalyticsExperimentalEnableCommand = (action: AnalyticsHotspotsCommand): string =>
@@ -1705,6 +1712,7 @@ const buildSaasIngestionExperimentalDisabledEnvelope = (
 export const buildPreWriteExperimentalDisabledResult = (params: {
   stage: SddStage;
   status: SddEvaluateResult['status'];
+  source: 'env' | 'legacy-env' | 'default';
 }): SddEvaluateResult => ({
   stage: params.stage,
   status: params.status,
@@ -1712,14 +1720,16 @@ export const buildPreWriteExperimentalDisabledResult = (params: {
     allowed: true,
     code: 'PRE_WRITE_EXPERIMENTAL_DISABLED',
     message:
-      'PRE_WRITE pertenece al namespace experimental y está desactivado por defecto. Actívalo explícitamente con PUMUKI_EXPERIMENTAL_PRE_WRITE=advisory o strict si necesitas este flujo.',
+      'PRE_WRITE está desactivado explícitamente. Reactívalo con PUMUKI_EXPERIMENTAL_PRE_WRITE=strict si necesitas recuperar el gate previo a escritura.',
     details: {
       experimental: true,
-      default_off: true,
+      default_off: false,
+      disabled_explicitly: true,
+      disabled_source: params.source,
       layer: 'experimental',
       activation_env: 'PUMUKI_EXPERIMENTAL_PRE_WRITE',
       legacy_activation_env: 'PUMUKI_PREWRITE_ENFORCEMENT',
-      activation_command: PRE_WRITE_ENABLE_ADVISORY_COMMAND,
+      activation_command: PRE_WRITE_ENABLE_STRICT_COMMAND,
     },
   },
 });
@@ -2101,6 +2111,10 @@ export const runLifecycleCli = async (
                   repo_root: installResult.repoRoot,
                   version: installResult.version,
                   hooks_changed: installResult.changedHooks,
+                  bootstrap_manifest: {
+                    path: installResult.bootstrapManifest.path,
+                    changed: installResult.bootstrapManifest.changed,
+                  },
                   openspec: installResult.openSpecBootstrap
                     ? {
                         installed: installResult.openSpecBootstrap.packageInstalled,
@@ -2113,6 +2127,10 @@ export const runLifecycleCli = async (
                 mcp: {
                   agent: adapterResult.agent,
                   changed_files: adapterResult.changedFiles,
+                  bootstrap_manifest: {
+                    path: adapterResult.bootstrapManifest.path,
+                    changed: adapterResult.bootstrapManifest.changed,
+                  },
                   adapter_health: adapterCheck
                     ? {
                         status: adapterCheck.status,
@@ -2138,6 +2156,9 @@ export const runLifecycleCli = async (
           );
           writeInfo(
             `[pumuki] bootstrap install: hooks changed=${installResult.changedHooks.join(', ') || 'none'}`
+          );
+          writeInfo(
+            `[pumuki] bootstrap manifest: path=${installResult.bootstrapManifest.path} changed=${installResult.bootstrapManifest.changed ? 'yes' : 'no'}`
           );
           if (installResult.openSpecBootstrap) {
             writeInfo(
@@ -2179,6 +2200,9 @@ export const runLifecycleCli = async (
         writeInfo(
           `[pumuki] installed ${result.version} at ${result.repoRoot} (hooks changed: ${result.changedHooks.join(', ') || 'none'})`
         );
+        writeInfo(
+          `[pumuki] bootstrap manifest: path=${result.bootstrapManifest.path} changed=${result.bootstrapManifest.changed ? 'yes' : 'no'}`
+        );
         if (result.openSpecBootstrap) {
           writeInfo(
             `[pumuki] openspec bootstrap: installed=${result.openSpecBootstrap.packageInstalled ? 'yes' : 'no'} project=${result.openSpecBootstrap.projectInitialized ? 'yes' : 'no'} actions=${result.openSpecBootstrap.actions.join(', ') || 'none'}`
@@ -2193,6 +2217,9 @@ export const runLifecycleCli = async (
           });
           writeInfo(
             `[pumuki] mcp wiring: agent=${adapterResult.agent} changed=${adapterResult.changedFiles.length}`
+          );
+          writeInfo(
+            `[pumuki] mcp manifest: path=${adapterResult.bootstrapManifest.path} changed=${adapterResult.bootstrapManifest.changed ? 'yes' : 'no'}`
           );
           if (adapterResult.changedFiles.length > 0) {
             writeInfo(`[pumuki] mcp files: ${adapterResult.changedFiles.join(', ')}`);
@@ -2276,7 +2303,7 @@ export const runLifecycleCli = async (
         } else {
           printDoctorReport(report, remoteCiDiagnostics);
         }
-        return doctorHasBlockingIssues(report) || doctorHasParityMismatch(report) ? 1 : 0;
+        return doctorCommandShouldFailExit(report) ? 1 : 0;
       }
       case 'status': {
         const status = readLifecycleStatus();
@@ -2329,37 +2356,14 @@ export const runLifecycleCli = async (
           writeInfo(
             `[pumuki] hooks: pre-commit=${status.hookStatus['pre-commit'].managedBlockPresent ? 'managed' : 'missing'}, pre-push=${status.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
           );
+          printGovernanceConsoleHuman({
+            governanceObservation: status.governanceObservation,
+            governanceNextAction: status.governanceNextAction,
+            policyValidation: status.policyValidation,
+            experimentalFeatures: status.experimentalFeatures,
+          });
           writeInfo(
             `[pumuki] tracked node_modules paths: ${status.trackedNodeModulesCount}`
-          );
-          writeInfo(
-            `[pumuki] policy-as-code: PRE_COMMIT=${status.policyValidation.stages.PRE_COMMIT.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.PRE_COMMIT.strict ? 'yes' : 'no'} ` +
-            `PRE_PUSH=${status.policyValidation.stages.PRE_PUSH.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.PRE_PUSH.strict ? 'yes' : 'no'} ` +
-            `CI=${status.policyValidation.stages.CI.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.CI.strict ? 'yes' : 'no'}`
-          );
-          writeInfo(
-            `[pumuki] experimental: ANALYTICS=${status.experimentalFeatures.features.analytics.mode} source=${status.experimentalFeatures.features.analytics.source} layer=${status.experimentalFeatures.features.analytics.layer} blocking=${status.experimentalFeatures.features.analytics.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.analytics.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: HEURISTICS=${status.experimentalFeatures.features.heuristics.mode} source=${status.experimentalFeatures.features.heuristics.source} layer=${status.experimentalFeatures.features.heuristics.layer} blocking=${status.experimentalFeatures.features.heuristics.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.heuristics.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: LEARNING_CONTEXT=${status.experimentalFeatures.features.learning_context.mode} source=${status.experimentalFeatures.features.learning_context.source} layer=${status.experimentalFeatures.features.learning_context.layer} blocking=${status.experimentalFeatures.features.learning_context.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.learning_context.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: MCP_ENTERPRISE=${status.experimentalFeatures.features.mcp_enterprise.mode} source=${status.experimentalFeatures.features.mcp_enterprise.source} layer=${status.experimentalFeatures.features.mcp_enterprise.layer} blocking=${status.experimentalFeatures.features.mcp_enterprise.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.mcp_enterprise.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: OPERATIONAL_MEMORY=${status.experimentalFeatures.features.operational_memory.mode} source=${status.experimentalFeatures.features.operational_memory.source} layer=${status.experimentalFeatures.features.operational_memory.layer} blocking=${status.experimentalFeatures.features.operational_memory.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.operational_memory.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: PRE_WRITE=${status.experimentalFeatures.features.pre_write.mode} source=${status.experimentalFeatures.features.pre_write.source} layer=${status.experimentalFeatures.features.pre_write.layer} blocking=${status.experimentalFeatures.features.pre_write.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.pre_write.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: SAAS_INGESTION=${status.experimentalFeatures.features.saas_ingestion.mode} source=${status.experimentalFeatures.features.saas_ingestion.source} layer=${status.experimentalFeatures.features.saas_ingestion.layer} blocking=${status.experimentalFeatures.features.saas_ingestion.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.saas_ingestion.activationVariable}`
-          );
-          writeInfo(
-            `[pumuki] experimental: SDD=${status.experimentalFeatures.features.sdd.mode} source=${status.experimentalFeatures.features.sdd.source} layer=${status.experimentalFeatures.features.sdd.layer} blocking=${status.experimentalFeatures.features.sdd.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.sdd.activationVariable}`
           );
           if (remoteCiDiagnostics) {
             printRemoteCiDiagnostics(remoteCiDiagnostics);
@@ -2700,6 +2704,9 @@ export const runLifecycleCli = async (
                 `[pumuki] adapter files: ${result.changedFiles.join(', ')}`
               );
             }
+            writeInfo(
+              `[pumuki] adapter manifest: path=${result.bootstrapManifest.path} changed=${result.bootstrapManifest.changed ? 'yes' : 'no'}`
+            );
           }
           return 0;
         }

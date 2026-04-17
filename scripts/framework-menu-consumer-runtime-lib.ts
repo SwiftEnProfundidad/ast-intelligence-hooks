@@ -5,6 +5,7 @@ import {
   resolveConsumerRuntimeUseColor,
 } from './framework-menu-consumer-runtime-audit';
 import type { FrameworkMenuEvidenceSummary } from './framework-menu-evidence-summary-lib';
+import type { ConsumerPreflightResult } from './framework-menu-consumer-preflight-types';
 import type {
   ConsumerAction,
   ConsumerMenuRuntime,
@@ -22,6 +23,7 @@ export const createConsumerMenuRuntime = (
 ): ConsumerMenuRuntime => {
   const repoRoot = process.cwd();
   let summaryOverride: FrameworkMenuEvidenceSummary | null = null;
+  let lastPreflight: ConsumerPreflightResult | null = null;
   const emitNotification =
     params.emitSystemNotification
     ?? ((payload: Parameters<typeof emitSystemNotification>[0]) =>
@@ -45,6 +47,12 @@ export const createConsumerMenuRuntime = (
     setSummaryOverride: (summary) => {
       summaryOverride = summary;
     },
+    clearLastPreflight: () => {
+      lastPreflight = null;
+    },
+    setLastPreflight: (result) => {
+      lastPreflight = result;
+    },
   });
 
   return {
@@ -55,9 +63,11 @@ export const createConsumerMenuRuntime = (
         repoRoot,
         useColor,
         write: params.write,
+        preflight: lastPreflight,
       });
     },
     readCurrentSummary: () => summaryOverride,
+    readLastPreflight: () => lastPreflight,
   };
 };
 

@@ -1,11 +1,12 @@
 import type { EvidenceReadResult } from '../evidence/readEvidence';
 import { readEvidenceResult } from '../evidence/readEvidence';
 import { captureRepoState } from '../evidence/repoState';
-import type { RepoState } from '../evidence/schema';
+import type { RepoState, RepoTrackingState } from '../evidence/schema';
 import { resolvePolicyForStage } from './stagePolicies';
 import { execFileSync } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { isSeverityAtLeast } from '../../core/rules/Severity';
 import type { SkillsLockV1, SkillsStage } from '../config/skillsLock';
 import {
   loadEffectiveSkillsLock,
@@ -132,6 +133,10 @@ const PREWRITE_WORKTREE_HYGIENE_WARN_THRESHOLD_ENV = 'PUMUKI_PREWRITE_WORKTREE_W
 const PREWRITE_WORKTREE_HYGIENE_BLOCK_THRESHOLD_ENV = 'PUMUKI_PREWRITE_WORKTREE_BLOCK_THRESHOLD';
 
 const DEFAULT_PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
+const DEFAULT_GITFLOW_BRANCH_PATTERNS = [
+  /^(?:feature|bugfix|hotfix|chore|refactor|docs)\/[a-z0-9]+(?:-[a-z0-9]+)*$/,
+  /^release\/\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/,
+] as const;
 const PREWRITE_SKILLS_PLATFORMS = ['ios', 'android', 'backend', 'frontend'] as const;
 type PreWriteSkillsPlatform = (typeof PREWRITE_SKILLS_PLATFORMS)[number];
 const PLATFORM_SKILLS_RULE_PREFIXES: Readonly<Record<PreWriteSkillsPlatform, string>> = {
@@ -457,6 +462,27 @@ const hasWorktreeCodePlatforms = (params: {
   );
 };
 
+const toWorktreeDetectedPlatforms = (params: {
+  repoRoot: string;
+  requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
+}): ReadonlyArray<PreWriteSkillsPlatform> => {
+  const changedPaths = collectWorktreeChangedPaths(params.repoRoot);
+  if (changedPaths.length === 0) {
+    return [];
+  }
+
+  const detected = new Set<PreWriteSkillsPlatform>();
+  for (const filePath of changedPaths) {
+    for (const platform of params.requiredPlatforms) {
+      if (isPlatformPath(platform, filePath)) {
+        detected.add(platform);
+      }
+    }
+  }
+
+  return PREWRITE_SKILLS_PLATFORMS.filter((platform) => detected.has(platform));
+};
+
 const toLockRequiredPlatforms = (
   requiredLock: SkillsLockV1 | undefined
 ): ReadonlyArray<PreWriteSkillsPlatform> => {
@@ -748,6 +774,13 @@ const toSkillsContractAssessment = (params: {
   const coverage = params.evidenceResult.evidence.snapshot.rules_coverage;
   const explicitlyDetectedPlatforms = toDetectedSkillsPlatforms(params.evidenceResult.evidence.platforms);
   const inferredPlatforms = toCoverageInferredPlatforms(coverage);
+  const worktreeDetectedPlatforms =
+    params.stage === 'PRE_WRITE' && requiredPlatforms.length > 0
+      ? toWorktreeDetectedPlatforms({
+          repoRoot: params.repoRoot,
+          requiredPlatforms,
+        })
+      : [];
   const repoTreeDetectedPlatforms =
     params.stage !== 'PRE_WRITE' && requiredPlatforms.length > 0
       ? toRepoTreeDetectedPlatforms({
@@ -767,6 +800,8 @@ const toSkillsContractAssessment = (params: {
       ? explicitlyDetectedEffectivePlatforms
       : inferredPlatforms.length > 0
         ? inferredPlatforms
+        : worktreeDetectedPlatforms.length > 0
+          ? worktreeDetectedPlatforms
         : repoTreeDetectedPlatforms;
   const pendingChanges = resolvePendingChanges(params.repoState);
   const detectedPlatformSet = new Set(detectedPlatforms);
@@ -1164,6 +1199,63 @@ const collectEvidenceViolations = (
   return { violations, ageSeconds };
 };
 
+const severityOrder: ReadonlyArray<'CRITICAL' | 'ERROR' | 'WARN' | 'INFO'> = [
+  'CRITICAL',
+  'ERROR',
+  'WARN',
+  'INFO',
+];
+
+const toHighestTriggeredSeverity = (
+  severityCounts: Readonly<Record<'INFO' | 'WARN' | 'ERROR' | 'CRITICAL', number>>,
+  threshold: 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL'
+): 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | null => {
+  for (const severity of severityOrder) {
+    if (severityCounts[severity] > 0 && isSeverityAtLeast(severity, threshold)) {
+      return severity;
+    }
+  }
+  return null;
+};
+
+const collectEvidencePolicyThresholdViolations = (params: {
+  evidenceResult: EvidenceReadResult;
+  policy: ReturnType<typeof resolvePolicyForStage>['policy'];
+}): AiGateViolation[] => {
+  if (params.evidenceResult.kind !== 'valid') {
+    return [];
+  }
+
+  const severityCounts = params.evidenceResult.evidence.severity_metrics.by_severity;
+  const blockSeverity = toHighestTriggeredSeverity(
+    severityCounts,
+    params.policy.blockOnOrAbove
+  );
+  if (blockSeverity && params.evidenceResult.evidence.ai_gate.status !== 'BLOCKED') {
+    return [
+      toErrorViolation(
+        'EVIDENCE_POLICY_THRESHOLD_BLOCK',
+        `Evidence severities exceed block_on_or_above=${params.policy.blockOnOrAbove} (highest=${blockSeverity}).`
+      ),
+    ];
+  }
+
+  const warnSeverity = toHighestTriggeredSeverity(
+    severityCounts,
+    params.policy.warnOnOrAbove
+  );
+  if (warnSeverity && params.evidenceResult.evidence.ai_gate.status === 'ALLOWED') {
+    return [
+      toWarnViolation(
+        'EVIDENCE_POLICY_THRESHOLD_WARN',
+        `Evidence severities exceed warn_on_or_above=${params.policy.warnOnOrAbove} (highest=${warnSeverity}).`
+      ),
+    ];
+  }
+
+  return [];
+};
+
 const toEvidenceSourceDescriptor = (
   result: EvidenceReadResult,
   repoRoot: string
@@ -1193,15 +1285,79 @@ const collectGitflowViolations = (
   if (!repoState.git.available) {
     return violations;
   }
-  if (repoState.git.branch && protectedBranches.has(repoState.git.branch)) {
+  const branch = repoState.git.branch?.trim() ?? null;
+  const normalizedBranch = branch?.toLowerCase() ?? null;
+  if (branch && normalizedBranch && protectedBranches.has(normalizedBranch)) {
     violations.push(
       toErrorViolation(
         'GITFLOW_PROTECTED_BRANCH',
-        `Direct work on protected branch "${repoState.git.branch}" is not allowed.`
+        `Direct work on protected branch "${branch}" is not allowed.`
+      )
+    );
+    return violations;
+  }
+  if (
+    branch
+    && !DEFAULT_GITFLOW_BRANCH_PATTERNS.some((pattern) => pattern.test(branch))
+  ) {
+    violations.push(
+      toErrorViolation(
+        'GITFLOW_BRANCH_NAMING_INVALID',
+        `Branch "${branch}" does not comply with GitFlow naming. Use feature/*, bugfix/*, hotfix/*, release/*, chore/*, refactor/* or docs/*.`
       )
     );
   }
   return violations;
+};
+
+const DEFAULT_TRACKING_STATE: RepoTrackingState = {
+  enforced: false,
+  canonical_path: null,
+  canonical_present: false,
+  source_file: null,
+  in_progress_count: null,
+  single_in_progress_valid: null,
+  conflict: false,
+  declarations: [],
+};
+
+const collectTrackingViolations = (repoState: RepoState): AiGateViolation[] => {
+  const tracking = repoState.lifecycle.tracking ?? DEFAULT_TRACKING_STATE;
+  if (!tracking.enforced) {
+    return [];
+  }
+
+  if (tracking.conflict) {
+    const declaredPaths = tracking.declarations
+      .map((entry) => `${entry.source_file}:${entry.resolved_path}`)
+      .join(', ');
+    return [
+      toErrorViolation(
+        'TRACKING_CANONICAL_SOURCE_CONFLICT',
+        `Tracking canonical source conflict detected (${declaredPaths}).`
+      ),
+    ];
+  }
+
+  if (!tracking.canonical_path || !tracking.canonical_present) {
+    return [
+      toErrorViolation(
+        'TRACKING_CANONICAL_FILE_MISSING',
+        `Tracking canonical file is missing (${tracking.canonical_path ?? 'undeclared'}).`
+      ),
+    ];
+  }
+
+  if (tracking.single_in_progress_valid === false) {
+    return [
+      toErrorViolation(
+        'TRACKING_CANONICAL_IN_PROGRESS_INVALID',
+        `Tracking canonical file must contain exactly one in-progress task (count=${tracking.in_progress_count ?? 'n/a'}).`
+      ),
+    ];
+  }
+
+  return [];
 };
 
 const resolvePendingChanges = (repoState: RepoState): number | null => {
@@ -1422,6 +1578,7 @@ export const evaluateAiGate = (
     readMcpAiGateReceipt: activeDependencies.readMcpAiGateReceipt,
   });
   const gitflowViolations = collectGitflowViolations(repoState, protectedBranches);
+  const trackingViolations = collectTrackingViolations(repoState);
   const skillsContract = toSkillsContractAssessment({
     stage: params.stage,
     repoRoot: params.repoRoot,
@@ -1445,10 +1602,16 @@ export const evaluateAiGate = (
             `Skills contract incomplete for ${params.stage}: ${skillsContract.violations.map((violation) => violation.code).join(', ')}.`
           ),
         ];
+  const policyThresholdViolations = collectEvidencePolicyThresholdViolations({
+    evidenceResult,
+    policy: resolvedPolicy.policy,
+  });
   const violations = [
     ...evidenceAssessment.violations,
+    ...policyThresholdViolations,
     ...stageSkillsContractViolations,
     ...gitflowViolations,
+    ...trackingViolations,
     ...mcpReceiptAssessment.violations,
   ];
   const blocked = violations.some((violation) => violation.severity === 'ERROR');

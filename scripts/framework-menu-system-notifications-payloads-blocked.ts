@@ -22,7 +22,7 @@ export const buildGateBlockedPayload = (
     resolveBlockedCauseSummary(event, causeCode),
     72
   );
-  const remediation = resolveBlockedRemediation(event, causeCode);
+  const remediation = resolveBlockedRemediation(event, causeCode, { variant: 'banner' });
   return {
     title: '🔴 Pumuki bloqueado',
     subtitle: `${projectPrefix}${event.stage} · ${causeSummary}`,

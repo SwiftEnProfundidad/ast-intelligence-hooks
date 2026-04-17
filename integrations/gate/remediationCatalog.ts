@@ -17,6 +17,14 @@ export const REMEDIATION_HINT_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
     'Reconcilia policy/skills y revalida PRE_WRITE: npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
   GITFLOW_PROTECTED_BRANCH: 'Trabaja en feature/* y evita ramas protegidas.',
+  GITFLOW_BRANCH_NAMING_INVALID:
+    'Renombra o recrea la rama con un prefijo GitFlow válido (feature/*, bugfix/*, hotfix/*, release/*, chore/*, refactor/* o docs/*).',
+  TRACKING_CANONICAL_SOURCE_CONFLICT:
+    'Alinea AGENTS.md y los README canónicos para que todos apunten al mismo MD de seguimiento.',
+  TRACKING_CANONICAL_FILE_MISSING:
+    'Crea o restaura el archivo canónico de tracking declarado por el repo.',
+  TRACKING_CANONICAL_IN_PROGRESS_INVALID:
+    'Deja exactamente una tarea o fase `🚧` en el MD canónico de seguimiento antes de continuar.',
   EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
     'Reduce archivos staged/unstaged por debajo del umbral (o ajusta PUMUKI_PREWRITE_WORKTREE_*); divide el trabajo en commits más pequeños.',
   EVIDENCE_PREWRITE_WORKTREE_WARN:

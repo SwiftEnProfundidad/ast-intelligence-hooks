@@ -13,10 +13,9 @@ import {
   renderBadge,
 } from './framework-menu-ui-components-lib';
 import { isMenuUiV2Enabled } from './framework-menu-ui-version-lib';
-import type {
-  ConsumerAction,
-  ConsumerRuntimeWrite,
-} from './framework-menu-consumer-runtime-types';
+import { buildGovernanceConsoleSummaryLines } from '../integrations/lifecycle/cliGovernanceConsole';
+import type { ConsumerPreflightResult } from './framework-menu-consumer-preflight-types';
+import type { ConsumerAction, ConsumerRuntimeWrite } from './framework-menu-consumer-runtime-types';
 
 const buildConsumerRuntimeMenuStatus = (
   menuSummary: FrameworkMenuEvidenceSummary
@@ -58,6 +57,7 @@ export const renderConsumerRuntimeModernMenu = (
     actions: ReadonlyArray<ConsumerAction>;
     repoRoot: string;
     useColor: () => boolean;
+    preflight?: ConsumerPreflightResult | null;
   }
 ): string => {
   const menuSummary = readEvidenceSummaryForMenu(params.repoRoot);
@@ -71,6 +71,18 @@ export const renderConsumerRuntimeModernMenu = (
     'PUMUKI — Hook-System (run: npx ast-hooks)',
     'AST Intelligence System Overview',
     `Status: ${renderBadge(menuStatus.label, menuStatus.level, tokens)}`,
+    ...(params.preflight
+      ? [
+        '',
+        'Governance Console',
+        ...buildGovernanceConsoleSummaryLines({
+          governanceObservation: params.preflight.governanceObservation,
+          governanceNextAction: params.preflight.governanceNextAction,
+          policyValidation: params.preflight.policyValidation,
+          experimentalFeatures: params.preflight.experimentalFeatures,
+        }).map((line) => `  ${line}`),
+      ]
+      : []),
     'A. Switch to advanced menu',
     '',
     ...groupedActions.flatMap((group) => [
@@ -93,6 +105,7 @@ export const printConsumerRuntimeMenu = (params: {
   repoRoot: string;
   useColor: () => boolean;
   write: ConsumerRuntimeWrite;
+  preflight?: ConsumerPreflightResult | null;
 }): void => {
   const classicMenu = renderConsumerRuntimeClassicMenu(params.actions, params.useColor);
   if (!isMenuUiV2Enabled()) {
@@ -105,6 +118,7 @@ export const printConsumerRuntimeMenu = (params: {
       actions: params.actions,
       repoRoot: params.repoRoot,
       useColor: params.useColor,
+      preflight: params.preflight,
     })}\n`);
   } catch {
     params.write('\n[pumuki][menu-ui-v2] Render failed. Falling back to classic menu.\n');

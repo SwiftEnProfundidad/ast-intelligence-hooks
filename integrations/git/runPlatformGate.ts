@@ -1372,7 +1372,15 @@ export async function runPlatformGate(params: {
 
   if (gateOutcome === 'BLOCK') {
     if (params.silent !== true) {
-    dependencies.printGateFindings(findingsWithWaiver);
+      const renderStage =
+        params.policy.stage === 'PRE_PUSH'
+          ? 'PRE_PUSH'
+          : params.policy.stage === 'CI'
+            ? 'CI'
+            : 'PRE_COMMIT';
+      dependencies.printGateFindings(findingsWithWaiver, {
+        stage: renderStage,
+      });
     }
     return 1;
   }
