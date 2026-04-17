@@ -34,3 +34,20 @@ test('buildGateBlockedPayload incluye proyecto en subtítulo cuando hay prefijo'
   assert.match(payload.subtitle ?? '', /SAAS:APP_SUPERMERCADOS/);
   assert.match(payload.subtitle ?? '', /PRE_COMMIT/);
 });
+
+test('buildGateBlockedPayload emite remediación corta y en español para banners', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_PUSH',
+      totalViolations: 1,
+      causeCode: 'GIT_ATOMICITY_TOO_MANY_SCOPES',
+      remediation: 'Split the change into smaller commits.',
+    },
+    ''
+  );
+
+  assert.match(payload.message, /^Solución: Divide el cambio/i);
+  assert.doesNotMatch(payload.message, /Split the change/i);
+  assert.ok(payload.message.length <= 131);
+});

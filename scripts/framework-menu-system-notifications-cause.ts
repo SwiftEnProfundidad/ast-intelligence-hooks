@@ -18,6 +18,8 @@ const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
   OPENSPEC_MISSING: 'OpenSpec no está instalado en este repositorio.',
   MCP_ENTERPRISE_RECEIPT_MISSING: 'Falta el recibo enterprise de MCP.',
   BACKEND_AVOID_EXPLICIT_ANY: 'Se detectó uso de "any" explícito en backend.',
+  GIT_ATOMICITY_TOO_MANY_SCOPES: 'Se han cambiado demasiados scopes en el mismo commit.',
+  SOLID_HEURISTIC: 'Se detectó una violación estructural en el cambio actual.',
 };
 
 const toKnownSpanishCauseFromMessage = (message: string): string | null => {
@@ -30,6 +32,12 @@ const toKnownSpanishCauseFromMessage = (message: string): string | null => {
   }
   if (normalized.includes('no upstream tracking reference')) {
     return BLOCKED_CAUSE_SUMMARY_BY_CODE.PRE_PUSH_UPSTREAM_MISSING;
+  }
+  if (normalized.includes('too many scopes changed') || normalized.includes('atomicity budget exceeded')) {
+    return BLOCKED_CAUSE_SUMMARY_BY_CODE.GIT_ATOMICITY_TOO_MANY_SCOPES;
+  }
+  if (normalized.includes('heuristic violation')) {
+    return BLOCKED_CAUSE_SUMMARY_BY_CODE.SOLID_HEURISTIC;
   }
   return null;
 };
