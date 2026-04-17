@@ -214,6 +214,7 @@ test('resolveFactsForGateScope resuelve facts para scope staged+unstaged', async
 
 test('resolveFactsForGateScope resuelve facts para scope unstaged', async () => {
   let capturedExtensions: ReadonlyArray<string> = [];
+  let capturedIncludeUntracked = false;
   const unstagedFacts: ReadonlyArray<Fact> = [
     {
       kind: 'FileChange',
@@ -223,8 +224,9 @@ test('resolveFactsForGateScope resuelve facts para scope unstaged', async () => 
     },
   ];
   const git = buildGitStub({
-    getUnstagedFacts: (extensions) => {
+    getUnstagedFacts: (extensions, includeUntracked = false) => {
       capturedExtensions = extensions;
+      capturedIncludeUntracked = includeUntracked;
       return unstagedFacts;
     },
   });
@@ -235,7 +237,25 @@ test('resolveFactsForGateScope resuelve facts para scope unstaged', async () => 
   });
 
   assert.deepEqual(capturedExtensions, DEFAULT_EXTENSIONS);
+  assert.equal(capturedIncludeUntracked, false);
   assert.deepEqual(result, unstagedFacts);
+});
+
+test('resolveFactsForGateScope soporta includeUntracked=true en scope unstaged', async () => {
+  let capturedIncludeUntracked = false;
+  const git = buildGitStub({
+    getUnstagedFacts: (extensions, includeUntracked = false) => {
+      capturedIncludeUntracked = includeUntracked;
+      return [];
+    },
+  });
+
+  await resolveFactsForGateScope({
+    scope: { kind: 'unstaged', includeUntracked: true },
+    git,
+  });
+
+  assert.equal(capturedIncludeUntracked, true);
 });
 
 test('countScannedFilesFromFacts prioriza FileContent y deduplica paths', () => {

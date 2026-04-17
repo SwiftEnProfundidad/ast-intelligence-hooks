@@ -21,10 +21,27 @@ const testNormalizeExplicitAgent = () => {
   assert.equal(normalizeExplicitAgent('unknown-agent'), '');
 };
 
-const testResolveDefaultRepoAdapter = () => {
+const testResolveNoMcpByDefault = () => {
   const r = resolveConsumerPostinstallInstallExtras('/any/root', {});
+  assert.deepEqual(r.extras, []);
+  assert.equal(r.reason, 'disabled_default');
+};
+
+const testResolveOptInDefaultRepoMcpFlag = () => {
+  const r = resolveConsumerPostinstallInstallExtras('/any/root', {
+    PUMUKI_POSTINSTALL_WITH_MCP: '1',
+  });
   assert.deepEqual(r.extras, ['--with-mcp', '--agent=repo']);
-  assert.equal(r.reason, 'default_repo_adapter');
+  assert.equal(r.reason, 'explicit_repo_flag');
+};
+
+const testResolveExplicitAgentPrecedesFlag = () => {
+  const r = resolveConsumerPostinstallInstallExtras('/any/root', {
+    PUMUKI_POSTINSTALL_WITH_MCP: '1',
+    PUMUKI_POSTINSTALL_MCP_AGENT: 'codex',
+  });
+  assert.deepEqual(r.extras, ['--with-mcp', '--agent=codex']);
+  assert.equal(r.reason, 'explicit_agent');
 };
 
 const testResolveExplicitAgent = () => {
@@ -44,6 +61,8 @@ const testResolveSkipMcp = () => {
 };
 
 testNormalizeExplicitAgent();
-testResolveDefaultRepoAdapter();
+testResolveNoMcpByDefault();
+testResolveOptInDefaultRepoMcpFlag();
+testResolveExplicitAgentPrecedesFlag();
 testResolveExplicitAgent();
 testResolveSkipMcp();

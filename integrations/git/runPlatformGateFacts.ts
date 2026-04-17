@@ -22,6 +22,7 @@ export type GateScope =
   | {
     kind: 'unstaged';
     extensions?: string[];
+    includeUntracked?: boolean;
   }
   | {
     kind: 'range';
@@ -81,7 +82,7 @@ export const resolveFactsForGateScope = async (params: {
     return params.git.getStagedAndUnstagedFacts(extensions);
   }
   if (params.scope.kind === 'unstaged') {
-    return params.git.getUnstagedFacts(extensions);
+    return params.git.getUnstagedFacts(extensions, params.scope.includeUntracked);
   }
 
   return getFactsForCommitRange({

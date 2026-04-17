@@ -611,7 +611,7 @@ OpenSpec integration behavior:
 - SDD/OpenSpec enforcement invokes the CLI only from **`{repo}/node_modules/.bin/openspec`** (no fallback to a generic `openspec` on `PATH`).
 - `pumuki install` auto-bootstraps OpenSpec (`@fission-ai/openspec`) when missing/incompatible and scaffolds `openspec/` project baseline when absent.
 - `pumuki install --with-mcp` adds adapter/MCP wiring bootstrap and prints MCP health summary on completion.
-- The **`pumuki` package `postinstall`** runs `pumuki install --with-mcp --agent=repo` from the consumer root (hooks + **`.pumuki/adapter.json`** con comandos MCP stdio, **sin** rutas de IDE). Repins refrescan ese contrato de forma **independiente de Cursor/CLI/extensión**. Disable MCP wiring en postinstall: `PUMUKI_POSTINSTALL_SKIP_MCP=1`. Escribir también ficheros de IDE en postinstall: `PUMUKI_POSTINSTALL_MCP_AGENT=cursor|claude|codex` (ver `docs/product/INSTALLATION.md`).
+- The **`pumuki` package `postinstall`** runs baseline `pumuki install` from the consumer root (hooks + **`.pumuki/adapter.json`** con comandos MCP stdio, **sin** rutas de IDE). MCP wiring is opt-in via `PUMUKI_POSTINSTALL_WITH_MCP=1` or `PUMUKI_POSTINSTALL_MCP_AGENT=repo|cursor|claude|codex`. Repins refrescan ese contrato de forma **independiente de Cursor/CLI/extensión**. Disable MCP wiring en postinstall: `PUMUKI_POSTINSTALL_SKIP_MCP=1`. Escribir también ficheros de IDE en postinstall: `PUMUKI_POSTINSTALL_MCP_AGENT=cursor|claude|codex` (ver `docs/product/INSTALLATION.md`).
 - `pumuki update --latest` migrates legacy `openspec` package to `@fission-ai/openspec` before hook reinstall.
 
 Safety rule:

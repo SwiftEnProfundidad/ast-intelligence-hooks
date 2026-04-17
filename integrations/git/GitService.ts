@@ -9,12 +9,18 @@ export { parseNameStatus } from './gitDiffUtils';
 export interface IGitService {
   runGit(args: ReadonlyArray<string>, cwd?: string): string;
   getStagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact>;
-  getUnstagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact>;
+  getUnstagedFacts(
+    extensions: ReadonlyArray<string>,
+    includeUntracked?: boolean
+  ): ReadonlyArray<Fact>;
   getRepoFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact>;
   getRepoAndStagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact>;
   getStagedAndUnstagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact>;
   resolveRepoRoot(): string;
 }
+
+const shouldIncludeUntrackedFacts = (env = process.env) =>
+  env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE === '1';
 
 const assertSafeGitArgs = (args: ReadonlyArray<string>): void => {
   for (const arg of args) {
@@ -45,16 +51,21 @@ export class GitService implements IGitService {
     );
   }
 
-  getUnstagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact> {
+  getUnstagedFacts(
+    extensions: ReadonlyArray<string>,
+    includeUntracked = shouldIncludeUntrackedFacts()
+  ): ReadonlyArray<Fact> {
     const nameStatus = this.runGit(['diff', '--name-status']);
     const changes = parseNameStatus(nameStatus).filter((change) =>
       hasAllowedExtension(change.path, extensions)
     );
-    const untrackedPaths = this.runGit(['ls-files', '--others', '--exclude-standard'])
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0)
-      .filter((path) => hasAllowedExtension(path, extensions));
+    const untrackedPaths = includeUntracked
+      ? this.runGit(['ls-files', '--others', '--exclude-standard'])
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .filter((path) => hasAllowedExtension(path, extensions))
+      : [];
     const unstagedPaths = new Set(changes.map((change) => change.path));
     const untrackedChanges = untrackedPaths
       .filter((path) => !unstagedPaths.has(path))
@@ -108,6 +119,7 @@ export class GitService implements IGitService {
 
   getStagedAndUnstagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact> {
     const hasHeadCommit = this.hasHeadCommit();
+    const includeUntracked = shouldIncludeUntrackedFacts();
     const trackedNameStatus = hasHeadCommit
       ? this.runGit(['diff', '--name-status', 'HEAD'])
       : [
@@ -118,11 +130,13 @@ export class GitService implements IGitService {
         .join('\n');
     const trackedChanges = this.deduplicateChangesByPath(parseNameStatus(trackedNameStatus))
       .filter((change) => hasAllowedExtension(change.path, extensions));
-    const untrackedPaths = this.runGit(['ls-files', '--others', '--exclude-standard'])
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0)
-      .filter((path) => hasAllowedExtension(path, extensions));
+    const untrackedPaths = includeUntracked
+      ? this.runGit(['ls-files', '--others', '--exclude-standard'])
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .filter((path) => hasAllowedExtension(path, extensions))
+      : [];
     const existingTracked = new Set(trackedChanges.map((change) => change.path));
     const repoRoot = this.resolveRepoRoot();
 

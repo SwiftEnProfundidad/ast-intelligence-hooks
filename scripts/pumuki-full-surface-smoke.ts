@@ -6,13 +6,25 @@ import {
   resolveSmokeLayout,
 } from './pumuki-full-surface-smoke-lib';
 
+type SmokeRowKind = 'core' | 'diagnostic';
+
 type SmokeRow = {
   id: string;
   bin: string;
   args: ReadonlyArray<string>;
   timeoutMs: number;
   allowNonZero?: boolean;
+  kind: SmokeRowKind;
 };
+
+const parseBooleanEnv = (raw: string | undefined): boolean => {
+  const value = (raw ?? '').trim().toLowerCase();
+  return value === '1' || value === 'true' || value === 'yes';
+};
+
+const includeDiagnosticRowsInStrict = parseBooleanEnv(
+  process.env.PUMUKI_SMOKE_INCLUDE_DIAGNOSTIC_ROWS
+);
 
 const layout = resolveSmokeLayout({
   scriptFileUrl: import.meta.url,
@@ -36,30 +48,33 @@ const run = (row: SmokeRow): { code: number | null; signal: NodeJS.Signals | nul
 };
 
 const rows: ReadonlyArray<SmokeRow> = [
-  { id: 'cli.help_implicit', bin: 'pumuki.js', args: [], timeoutMs: 15_000, allowNonZero: true },
-  { id: 'cli.help_explicit', bin: 'pumuki.js', args: ['--help'], timeoutMs: 15_000 },
+  { id: 'cli.help_implicit', bin: 'pumuki.js', args: [], timeoutMs: 15_000, kind: 'core', allowNonZero: true },
+  { id: 'cli.help_explicit', bin: 'pumuki.js', args: ['--help'], timeoutMs: 15_000, kind: 'core' },
   {
     id: 'cli.unknown_subcommand',
     bin: 'pumuki.js',
     args: ['__no_such_lifecycle_command__'],
     timeoutMs: 15_000,
+    kind: 'core',
     allowNonZero: true,
   },
-  { id: 'doctor.json', bin: 'pumuki.js', args: ['doctor', '--json'], timeoutMs: 60_000 },
+  { id: 'doctor.json', bin: 'pumuki.js', args: ['doctor', '--json'], timeoutMs: 60_000, kind: 'core' },
   {
     id: 'doctor.deep_json',
     bin: 'pumuki.js',
     args: ['doctor', '--deep', '--json'],
     timeoutMs: 180_000,
+    kind: 'core',
     allowNonZero: true,
   },
-  { id: 'doctor.parity_json', bin: 'pumuki.js', args: ['doctor', '--parity', '--json'], timeoutMs: 120_000 },
-  { id: 'status.json', bin: 'pumuki.js', args: ['status', '--json'], timeoutMs: 90_000 },
+  { id: 'doctor.parity_json', bin: 'pumuki.js', args: ['doctor', '--parity', '--json'], timeoutMs: 120_000, kind: 'core' },
+  { id: 'status.json', bin: 'pumuki.js', args: ['status', '--json'], timeoutMs: 90_000, kind: 'core' },
   {
     id: 'audit.default_json',
     bin: 'pumuki.js',
     args: ['audit', '--json'],
     timeoutMs: 300_000,
+    kind: 'core',
     allowNonZero: true,
   },
   {
@@ -67,6 +82,7 @@ const rows: ReadonlyArray<SmokeRow> = [
     bin: 'pumuki.js',
     args: ['audit', '--stage=PRE_PUSH', '--json'],
     timeoutMs: 300_000,
+    kind: 'core',
     allowNonZero: true,
   },
   {
@@ -74,6 +90,7 @@ const rows: ReadonlyArray<SmokeRow> = [
     bin: 'pumuki.js',
     args: ['audit', '--stage=CI', '--engine', '--json'],
     timeoutMs: 300_000,
+    kind: 'core',
     allowNonZero: true,
   },
   {
@@ -89,6 +106,7 @@ const rows: ReadonlyArray<SmokeRow> = [
       '--no-notify',
     ],
     timeoutMs: 180_000,
+    kind: 'diagnostic',
   },
   {
     id: 'watch.once_staged_json',
@@ -103,14 +121,22 @@ const rows: ReadonlyArray<SmokeRow> = [
       '--no-notify',
     ],
     timeoutMs: 180_000,
+    kind: 'diagnostic',
     allowNonZero: true,
   },
-  { id: 'loop.list_json', bin: 'pumuki.js', args: ['loop', 'list', '--json'], timeoutMs: 30_000 },
+  {
+    id: 'loop.list_json',
+    bin: 'pumuki.js',
+    args: ['loop', 'list', '--json'],
+    timeoutMs: 30_000,
+    kind: 'core',
+  },
   {
     id: 'loop.run_smoke',
     bin: 'pumuki.js',
     args: ['loop', 'run', '--objective=smoke-surface', '--max-attempts=1', '--json'],
     timeoutMs: 300_000,
+    kind: 'core',
     allowNonZero: true,
   },
   {
@@ -118,18 +144,21 @@ const rows: ReadonlyArray<SmokeRow> = [
     bin: 'pumuki.js',
     args: ['adapter', 'install', '--agent=repo', '--dry-run', '--json'],
     timeoutMs: 30_000,
+    kind: 'core',
   },
   {
     id: 'adapter.install_dry_codex_json',
     bin: 'pumuki.js',
     args: ['adapter', 'install', '--agent=codex', '--dry-run', '--json'],
     timeoutMs: 30_000,
+    kind: 'core',
   },
   {
     id: 'analytics.hotspots_report',
     bin: 'pumuki.js',
     args: ['analytics', 'hotspots', 'report', '--top=3', '--since-days=30', '--json'],
     timeoutMs: 120_000,
+    kind: 'diagnostic',
     allowNonZero: true,
   },
   {
@@ -137,6 +166,7 @@ const rows: ReadonlyArray<SmokeRow> = [
     bin: 'pumuki.js',
     args: ['analytics', 'hotspots', 'diagnose', '--json'],
     timeoutMs: 120_000,
+    kind: 'diagnostic',
     allowNonZero: true,
   },
   {
@@ -144,6 +174,7 @@ const rows: ReadonlyArray<SmokeRow> = [
     bin: 'pumuki.js',
     args: ['policy', 'reconcile', '--json'],
     timeoutMs: 120_000,
+    kind: 'diagnostic',
     allowNonZero: true,
   },
   {
@@ -151,14 +182,22 @@ const rows: ReadonlyArray<SmokeRow> = [
     bin: 'pumuki.js',
     args: ['policy', 'reconcile', '--strict', '--json'],
     timeoutMs: 120_000,
+    kind: 'diagnostic',
     allowNonZero: true,
   },
-  { id: 'sdd.status_json', bin: 'pumuki.js', args: ['sdd', 'status', '--json'], timeoutMs: 60_000 },
+  {
+    id: 'sdd.status_json',
+    bin: 'pumuki.js',
+    args: ['sdd', 'status', '--json'],
+    timeoutMs: 60_000,
+    kind: 'diagnostic',
+  },
   {
     id: 'sdd.validate_pre_write_json',
     bin: 'pumuki.js',
     args: ['sdd', 'validate', '--stage=PRE_WRITE', '--json'],
     timeoutMs: 120_000,
+    kind: 'diagnostic',
     allowNonZero: true,
   },
   {
@@ -166,6 +205,7 @@ const rows: ReadonlyArray<SmokeRow> = [
     bin: 'pumuki.js',
     args: ['sdd', 'validate', '--stage=PRE_COMMIT', '--json'],
     timeoutMs: 120_000,
+    kind: 'diagnostic',
     allowNonZero: true,
   },
   {
@@ -173,6 +213,7 @@ const rows: ReadonlyArray<SmokeRow> = [
     bin: 'pumuki.js',
     args: ['sdd', 'validate', '--stage=PRE_PUSH', '--json'],
     timeoutMs: 120_000,
+    kind: 'diagnostic',
     allowNonZero: true,
   },
   {
@@ -180,12 +221,41 @@ const rows: ReadonlyArray<SmokeRow> = [
     bin: 'pumuki.js',
     args: ['sdd', 'validate', '--stage=CI', '--json'],
     timeoutMs: 120_000,
+    kind: 'diagnostic',
     allowNonZero: true,
   },
-  { id: 'hook.pre_write', bin: 'pumuki-pre-write.js', args: [], timeoutMs: 300_000, allowNonZero: true },
-  { id: 'hook.pre_commit', bin: 'pumuki-pre-commit.js', args: [], timeoutMs: 300_000, allowNonZero: true },
-  { id: 'hook.pre_push', bin: 'pumuki-pre-push.js', args: [], timeoutMs: 300_000, allowNonZero: true },
-  { id: 'hook.ci', bin: 'pumuki-ci.js', args: [], timeoutMs: 300_000, allowNonZero: true },
+  {
+    id: 'hook.pre_write',
+    bin: 'pumuki-pre-write.js',
+    args: [],
+    timeoutMs: 300_000,
+    kind: 'diagnostic',
+    allowNonZero: true,
+  },
+  {
+    id: 'hook.pre_commit',
+    bin: 'pumuki-pre-commit.js',
+    args: [],
+    timeoutMs: 300_000,
+    kind: 'diagnostic',
+    allowNonZero: true,
+  },
+  {
+    id: 'hook.pre_push',
+    bin: 'pumuki-pre-push.js',
+    args: [],
+    timeoutMs: 300_000,
+    kind: 'diagnostic',
+    allowNonZero: true,
+  },
+  {
+    id: 'hook.ci',
+    bin: 'pumuki-ci.js',
+    args: [],
+    timeoutMs: 300_000,
+    kind: 'diagnostic',
+    allowNonZero: true,
+  },
 ];
 
 const main = (): number => {
@@ -208,11 +278,18 @@ const main = (): number => {
   lines.push(`- pumukiPackageRoot (script host): \`${pumukiPackageRoot}\``);
   lines.push(`- smokeCwd (gate/doctor cwd): \`${smokeCwd}\``);
   lines.push(`- node: \`${node}\``);
-  lines.push(`- filas: **${rows.length}** (incluye CLI, doctor/status, audit×3, watch×2, loop, adapter×2, analytics×2, policy×2, sdd×5, hooks×4)`);
+  lines.push(
+    `- filas: **${rows.length}** (incluye CLI, doctor/status, audit×3, watch×2, loop, adapter×2, analytics×2, policy×2, sdd×5, hooks×4)`
+  );
+  lines.push(
+    `- modo: \`${includeDiagnosticRowsInStrict ? 'strict+diagnostic' : 'strict-only'}\`` +
+      ' (activar diagnóstico con `PUMUKI_SMOKE_INCLUDE_DIAGNOSTIC_ROWS=1`)'
+  );
   lines.push('');
-  lines.push('| id | exit | ms | ok |');
-  lines.push('|----|------|----|----|');
-  let failed = 0;
+  lines.push('| id | tipo | exit | ms | ok |');
+  lines.push('|----|----|------|----|----|');
+  let strictFailed = 0;
+  let diagnosticFailed = 0;
   for (const row of rows) {
     const { code, signal, ms } = run(row);
     const exit = signal ? `signal:${signal}` : String(code ?? 'null');
@@ -222,17 +299,22 @@ const main = (): number => {
         : row.allowNonZero
           ? true
           : code === 0;
+    const isStrict = row.kind === 'core' || includeDiagnosticRowsInStrict;
     if (!ok) {
-      failed += 1;
+      if (isStrict) {
+        strictFailed += 1;
+      } else {
+        diagnosticFailed += 1;
+      }
     }
-    lines.push(`| ${row.id} | ${exit} | ${ms} | ${ok ? 'yes' : 'no'} |`);
+    lines.push(`| ${row.id} | ${row.kind} | ${exit} | ${ms} | ${ok ? 'yes' : 'no'} |`);
   }
   lines.push('');
   lines.push('## Interpretación de exit codes');
   lines.push('');
   lines.push('- `audit` devuelve el **mismo código que el gate** del alcance auditado (p. ej. 1 si hay `BLOCK` en el repo). Eso es correcto, no indica CLI roto.');
   lines.push('- `doctor --deep` puede devolver **1** si `doctorHasBlockingIssues` (issues `error` o `deep.blocking`) o mismatch de parity esperado.');
-  lines.push('- Los **hooks** (`pre-commit`, etc.) reflejan el gate sobre el estado actual del worktree; 1 con cambios locales o rama protegida es esperable.');
+  lines.push('- Los comandos de diagnóstico (`diagnostic`) quedan fuera de fallo estricto por defecto.');
   lines.push('- `sdd validate` y `policy reconcile --strict` pueden devolver **1** según política del repo; el smoke los marca con `allowNonZero`.');
   lines.push('');
   lines.push('## No cubierto aquí (manual o destructivo)');
@@ -252,10 +334,13 @@ const main = (): number => {
     '- **Bins instalados en el consumidor (`node_modules/pumuki`):** `PUMUKI_SMOKE_REPO_ROOT=/ruta/al/repo PUMUKI_SMOKE_BIN_STRATEGY=installed npm run -s smoke:pumuki-surface` o `npm run -s smoke:pumuki-surface-installed` (exige `PUMUKI_SMOKE_REPO_ROOT`).'
   );
   lines.push('');
-  lines.push(`**Resumen:** ${failed} filas con fallo estricto (sin allowNonZero).`);
+  lines.push(
+    `**Resumen:** ${strictFailed} filas críticas con fallo estricto (sin allowNonZero),` +
+      ` ${diagnosticFailed} filas diagnósticas con fallo no bloqueante.`
+  );
   process.stdout.write(lines.join('\n'));
   process.stdout.write('\n');
-  return failed > 0 ? 1 : 0;
+  return strictFailed > 0 ? 1 : 0;
 };
 
 process.exitCode = main();

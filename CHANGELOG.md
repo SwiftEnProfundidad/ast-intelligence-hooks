@@ -6,6 +6,15 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.82] - 2026-04-17
+
+### Fixed
+
+- **Postinstall sin MCP por defecto:** `pumuki` vuelve a ejecutar `pumuki install` en baseline y no agrega wiring MCP/IDE por defecto en postinstall. MCP explícito con `PUMUKI_POSTINSTALL_WITH_MCP=1` o `PUMUKI_POSTINSTALL_MCP_AGENT=<agent>`.
+- **Errores de postinstall visibles:** si `pumuki install` falla durante `npm postinstall`, `scripts/consumer-postinstall.cjs` devuelve el código de salida real y deja trazabilidad en logs, evitando falsas instalaciones completas.
+- **Smoke de superficie:** el comando separa filas de validación críticas (`core`) y diagnósticas (`diagnostic`), por lo que por defecto falla solo por regresiones funcionales y no por diagnósticos no deterministas.
+- **Alcance git no trazado por defecto:** `GitService.getUnstagedFacts` y `getStagedAndUnstagedFacts` dejan fuera archivos `untracked` salvo `PUMUKI_INCLUDE_UNTRACKED_WORKTREE=1`.
+
 ## [6.3.72] - 2026-04-11
 
 ### Fixed
