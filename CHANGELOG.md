@@ -14,6 +14,19 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Dependencias transitivas al día vía `npm audit fix` (p. ej. `ajv`, `brace-expansion`, `flatted`, `picomatch`).
 
+## [6.3.80] - 2026-04-17
+
+### Fixed
+
+- **Tracking canónico**: el parser interno y el guardrail `check-tracking-single-active.sh` aceptan ya el formato hard `[🚧] - tarea`, incluso cuando la task viva aparece dentro de celdas de tabla con backticks en `PUMUKI-RESET-MASTER-PLAN.md`.
+- **Notificaciones bloqueantes**: `gate.blocked` normaliza remediaciones legacy al español, prioriza textos válidos por `causeCode` cuando llega copy en inglés y compacta banners por palabra para no cortar la solución a mitad de frase.
+
+### Validation
+
+- `npx --yes tsx@4.21.0 --test integrations/evidence/__tests__/repoState.test.ts scripts/__tests__/framework-menu-system-notifications-text.test.ts scripts/__tests__/framework-menu-system-notifications-remediation.test.ts scripts/__tests__/framework-menu-system-notifications-cause.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-blocked.test.ts scripts/__tests__/framework-menu-system-notifications-dispatch.test.ts` (`24 pass / 0 fail`)
+- `npm run -s typecheck` (`PASS`)
+- `bash scripts/check-tracking-single-active.sh` (`PASS`)
+
 ## [6.3.78] - 2026-04-16
 
 ### Added

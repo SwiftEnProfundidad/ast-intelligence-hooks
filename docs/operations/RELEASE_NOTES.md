@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-17 (v6.3.80)
+
+- **Tracking canónico**: la línea viva acepta el formato contractual `[🚧] - tarea` en el plan maestro y en tablas con backticks, tanto en el parser de tracking como en el guardrail shell de una sola task activa.
+- **Notificaciones bloqueantes**: copy y remediaciones de `gate.blocked` salen en español cuando el payload legacy llega en inglés; el banner macOS corta por palabra y conserva una solución breve y accionable.
+- **Rollout recomendado**: publicar `pumuki@6.3.80` y repin ordenado `RuralGo -> SAAS -> Flux`, revalidando después `pumuki status`, `pumuki doctor` y hooks Git en cada consumer.
+
 ### 2026-04-16 (v6.3.78)
 
 - **Slice S1 consolidada**: `status`, `doctor`, `PRE-FLIGHT CHECK`, menú `Consumer` y menú `Advanced` muestran el mismo bloque canónico de governance sin duplicar lógica de cálculo.
