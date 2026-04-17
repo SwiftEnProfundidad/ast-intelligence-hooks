@@ -7,6 +7,7 @@ import {
 type BlockedRemediationVariant = 'banner' | 'dialog';
 
 const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
+  EVIDENCE_GATE_BLOCKED: 'Corrige las violaciones bloqueantes detectadas en la evidencia y vuelve a ejecutar el gate.',
   EVIDENCE_MISSING: 'Genera la evidencia del slice actual y vuelve a validar esta fase.',
   EVIDENCE_INVALID: 'Regenera la evidencia de esta iteración y repite la validación.',
   EVIDENCE_CHAIN_INVALID: 'Regenera la evidencia para restaurar la cadena de integridad y vuelve a validar.',
@@ -68,6 +69,9 @@ const toKnownSpanishRemediationFromMessage = (message: string, causeCode: string
   }
   if (normalized.includes('refresh evidence') || normalized.includes('evidence is stale')) {
     return BLOCKED_REMEDIATION_BY_CODE.EVIDENCE_STALE;
+  }
+  if (normalized.includes('evidence ai gate status is blocked')) {
+    return BLOCKED_REMEDIATION_BY_CODE.EVIDENCE_GATE_BLOCKED;
   }
   if (normalized.includes('split the change')) {
     return BLOCKED_REMEDIATION_BY_CODE.GIT_ATOMICITY_TOO_MANY_SCOPES;

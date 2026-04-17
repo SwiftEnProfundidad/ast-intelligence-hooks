@@ -33,6 +33,22 @@ test('resolveBlockedRemediation usa fallback conocido por causeCode', () => {
   assert.match(result, /evidencia/i);
 });
 
+test('resolveBlockedRemediation traduce EVIDENCE_GATE_BLOCKED a una solución válida en español', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      remediation: 'Evidence AI gate status is BLOCKED.',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /violaciones bloqueantes/i);
+  assert.match(result, /vuelve a ejecutar el gate/i);
+  assert.doesNotMatch(result, /evidence ai gate status is blocked/i);
+});
+
 test('resolveBlockedRemediation traduce remediaciones legacy en inglés a una salida accionable en español', () => {
   const result = resolveBlockedRemediation(
     {
