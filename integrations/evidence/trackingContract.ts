@@ -15,8 +15,10 @@ const TRACKING_PRIORITY_SOURCE = new Set(['AGENTS.md']);
 const IN_PROGRESS_PATTERNS = [
   /^- Estado:\s*🚧/m,
   /^- 🚧 (\`?P[0-9A-Za-z.-]+\`?)/m,
+  /^\`?\[\s*🚧\s*\]\s*-\`?/m,
   /^\|\s*🚧(?:\s|\|)/m,
   /^\|[^|\n]+\|\s*🚧(?:\s|\|)/m,
+  /^\|[^|\n]+\|\s*\`?\[\s*🚧\s*\]\s*-\`?/m,
 ] as const;
 
 const toRepoRelativePath = (repoRoot: string, absolutePath: string): string => {
