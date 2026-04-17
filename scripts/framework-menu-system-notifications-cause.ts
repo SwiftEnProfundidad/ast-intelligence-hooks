@@ -5,6 +5,7 @@ import {
 } from './framework-menu-system-notifications-text';
 
 const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
+  EVIDENCE_GATE_BLOCKED: 'El gate de evidencia de IA está bloqueado.',
   EVIDENCE_MISSING: 'Falta evidencia para validar este paso.',
   EVIDENCE_INVALID: 'La evidencia actual es inválida.',
   EVIDENCE_CHAIN_INVALID: 'La cadena de evidencia no es válida.',
@@ -29,6 +30,9 @@ const toKnownSpanishCauseFromMessage = (message: string): string | null => {
   }
   if (normalized.includes('evidence is stale')) {
     return BLOCKED_CAUSE_SUMMARY_BY_CODE.EVIDENCE_STALE;
+  }
+  if (normalized.includes('evidence ai gate status is blocked')) {
+    return BLOCKED_CAUSE_SUMMARY_BY_CODE.EVIDENCE_GATE_BLOCKED;
   }
   if (normalized.includes('no upstream tracking reference')) {
     return BLOCKED_CAUSE_SUMMARY_BY_CODE.PRE_PUSH_UPSTREAM_MISSING;
