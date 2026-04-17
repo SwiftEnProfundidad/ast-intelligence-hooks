@@ -118,8 +118,8 @@ const startOrReuseEnterpriseHttp = async (): Promise<{
         startedByThisProcess: false,
       };
     }
-  } catch {
-    // Intentionally ignored: endpoint not available yet.
+  } catch (error) {
+    void error;
   }
 
   const portInUse = await isPortInUse(host, requestedPort);
