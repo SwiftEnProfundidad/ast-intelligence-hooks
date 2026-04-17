@@ -14,6 +14,17 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Dependencias transitivas al día vía `npm audit fix` (p. ej. `ajv`, `brace-expansion`, `flatted`, `picomatch`).
 
+## [6.3.81] - 2026-04-17
+
+### Fixed
+
+- **Notificaciones bloqueantes**: `gate.blocked` traduce ya la causa `EVIDENCE_GATE_BLOCKED` al español y deja de mostrar el texto raw `Evidence AI gate status is BLOCKED.` en banners o modales de macOS.
+
+### Validation
+
+- `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-cause.test.ts scripts/__tests__/framework-menu-system-notifications-remediation.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-blocked.test.ts` (`14 pass / 0 fail`)
+- `npm run -s typecheck` (`PASS`)
+
 ## [6.3.80] - 2026-04-17
 
 ### Fixed

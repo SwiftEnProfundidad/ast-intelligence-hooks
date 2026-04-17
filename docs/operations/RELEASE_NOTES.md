@@ -6,6 +6,11 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-17 (v6.3.81)
+
+- **Causa 100% en español**: la notificación `gate.blocked` traduce explícitamente `EVIDENCE_GATE_BLOCKED` y también los mensajes legacy equivalentes, evitando el spanglish `Cause: Evidence AI gate status is BLOCKED.` en macOS.
+- **Rollout recomendado**: publicar `pumuki@6.3.81` y repin rápido `RuralGo -> SAAS -> Flux`, revalidando la notificación bloqueante y `status/doctor` en cada consumer.
+
 ### 2026-04-17 (v6.3.80)
 
 - **Tracking canónico**: la línea viva acepta el formato contractual `[🚧] - tarea` en el plan maestro y en tablas con backticks, tanto en el parser de tracking como en el guardrail shell de una sola task activa.
