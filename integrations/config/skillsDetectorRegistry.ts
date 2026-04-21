@@ -174,6 +174,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.backend.no-god-classes': heuristicDetector('typescript.god-class', [
     'heuristics.ts.god-class-large-class.ast',
   ]),
+  'skills.backend.guideline.backend.callback-hell-usar-async-await': heuristicDetector(
+    'typescript.new-promise-async',
+    ['heuristics.ts.new-promise-async.ast']
+  ),
   'skills.frontend.no-empty-catch': heuristicDetector('typescript.empty-catch', [
     'heuristics.ts.empty-catch.ast',
   ]),

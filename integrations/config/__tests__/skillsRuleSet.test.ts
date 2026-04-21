@@ -471,6 +471,68 @@ test('mapea reglas SOLID y God Class a detectores AST heuristics en backend', as
   );
 });
 
+test('mapea el primer backend guideline foundation a heuristic AST reusable', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-callback-hell-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'a'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.callback-hell-usar-async-await',
+                description: 'Avoid callback hell in backend runtime code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ts.new-promise-async.ast'),
+        true
+      );
+
+      const callbackHellRule = result.rules[0];
+      assert.ok(callbackHellRule);
+      assert.equal(
+        callbackHellRule.id,
+        'skills.backend.guideline.backend.callback-hell-usar-async-await'
+      );
+      assert.equal(callbackHellRule.when.kind, 'Heuristic');
+      if (callbackHellRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend callback hell guideline.');
+      }
+      assert.equal(callbackHellRule.when.where?.ruleId, 'heuristics.ts.new-promise-async.ast');
+      assert.deepEqual(collectHeuristicPrefixes(callbackHellRule.when), ['apps/backend/']);
+      assert.equal(
+        callbackHellRule.then.source?.includes('ast_nodes=[heuristics.ts.new-promise-async.ast]'),
+        true
+      );
+    })
+  );
+});
+
 test('enriquce mensaje de no-solid-violations con criterios accionables y métricas observadas', async () => {
   await withCoreSkillsDisabled(async () =>
     withTempDir('pumuki-skills-ruleset-solid-actionable-message-', async (tempRoot) => {
