@@ -31,7 +31,7 @@ for FILE in "${FILES[@]}"; do
   fi
 
   if [[ "${FILE}" == "PUMUKI-RESET-MASTER-PLAN.md" ]]; then
-    ACTIVE_PATTERN='^- Estado: 🚧'
+    ACTIVE_PATTERN='(^- Estado:\s*🚧(?:\s|$))|(^`?\[\s*🚧\s*\]\s*-`?)|(^\|\s*[^|]+\|\s*`?\[\s*🚧\s*\]\s*-`?)|(^\|\s*🚧(?:\s|\|))'
   else
     ACTIVE_PATTERN='^- 🚧 (`?P[0-9A-Za-z.-]+`?)'
   fi

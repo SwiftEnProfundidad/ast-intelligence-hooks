@@ -322,6 +322,86 @@ test('readLifecycleStatus incorpora tracking canónico y expone conflicto docume
   });
 });
 
+test('readLifecycleStatus no marca tracking inválido cuando la board canónica usa la 🚧 en la primera columna', async () => {
+  await withTempDir('pumuki-lifecycle-status-ruralgo-board-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'docs', 'README.md'),
+      [
+        '# Docs',
+        '',
+        '- Fuente viva del tracking interno: `docs/RURALGO_SEGUIMIENTO.md`',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'RURALGO_SEGUIMIENTO.md'),
+      [
+        '| Estado | Task | Resumen |',
+        '|--------|------|---------|',
+        '| 🚧 | RGO-1900-01 | Slice activa |',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {});
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.governanceObservation.tracking.canonical_path, 'docs/RURALGO_SEGUIMIENTO.md');
+    assert.equal(status.governanceObservation.tracking.in_progress_count, 1);
+    assert.equal(status.governanceObservation.tracking.single_in_progress_valid, true);
+    assert.equal(
+      status.governanceObservation.attention_codes.includes('TRACKING_CANONICAL_IN_PROGRESS_INVALID'),
+      false
+    );
+  });
+});
+
+test('readLifecycleStatus expone el tracking canónico del repo en la raíz del payload', async () => {
+  await withTempDir('pumuki-lifecycle-status-top-level-tracking-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'docs'), { recursive: true });
+    mkdirSync(join(repoRoot, 'docs', 'validation', 'refactor'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      '# fixture\n- la única fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'),
+      '# plan\n\n[🚧] - PUMUKI-INC-078 (RuralGo) corregir tracking canónico\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'validation', 'refactor', 'last-run.json'),
+      JSON.stringify({
+        status: 'IN_PROGRESS',
+        plan_file: 'PUMUKI-RESET-MASTER-PLAN.md',
+        next: 'PUMUKI-INC-078',
+      }),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {});
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.tracking.enforced, true);
+    assert.equal(status.tracking.canonical_path, 'PUMUKI-RESET-MASTER-PLAN.md');
+    assert.equal(status.tracking.canonical_present, true);
+    assert.equal(status.tracking.source_file, 'AGENTS.md');
+    assert.equal(status.tracking.in_progress_count, 1);
+    assert.equal(status.tracking.single_in_progress_valid, true);
+    assert.equal(status.tracking.conflict, false);
+    assert.equal(status.tracking.active_task_id, 'PUMUKI-INC-078');
+    assert.equal(status.tracking.last_run_status, 'IN_PROGRESS');
+  });
+});
+
 test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no hay instalación', async () => {
   await withTempDir('pumuki-lifecycle-status-empty-', async (repoRoot) => {
     const git = new FakeLifecycleGitService(repoRoot, [], {});

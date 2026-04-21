@@ -19,6 +19,7 @@ import {
   type GovernanceNextActionSummary,
 } from './governanceNextAction';
 import { readLifecycleState, type LifecycleState } from './state';
+import { resolveRepoTrackingState, type RepoTrackingState } from './trackingState';
 
 export type LifecycleStatus = {
   repoRoot: string;
@@ -33,6 +34,7 @@ export type LifecycleStatus = {
   experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
   governanceObservation: GovernanceObservationSnapshot;
   governanceNextAction: GovernanceNextActionSummary;
+  tracking: RepoTrackingState;
 };
 
 export const readLifecycleStatus = (params?: {
@@ -63,6 +65,7 @@ export const readLifecycleStatus = (params?: {
     stage: 'PRE_WRITE',
     governanceObservation,
   });
+  const tracking = resolveRepoTrackingState(repoRoot);
 
   return {
     repoRoot,
@@ -77,5 +80,6 @@ export const readLifecycleStatus = (params?: {
     experimentalFeatures,
     governanceNextAction,
     governanceObservation,
+    tracking,
   };
 };
