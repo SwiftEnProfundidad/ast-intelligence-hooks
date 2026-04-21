@@ -1820,3 +1820,27 @@ test('detects magic number heuristic facts in backend production path', () => {
   assert.ok(magicNumberFact);
   assert.deepEqual(magicNumberFact?.lines, [2, 3]);
 });
+
+test('detects production mock artifact heuristic facts in backend production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/service.ts',
+        [
+          'import { buildRepository } from "../mocks/user-repository";',
+          'const sinon = require("sinon");',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const productionMockFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.production-mock-artifact.ast'
+  );
+
+  assert.ok(productionMockFact);
+  assert.deepEqual(productionMockFact?.lines, [1, 2]);
+});

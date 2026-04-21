@@ -182,6 +182,24 @@ export const typescriptRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.production-mock-artifact.ast',
+    description: 'Detects imports or requires of mocks/fakes/spies/stubs in TypeScript/TSX runtime code.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.production-mock-artifact.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected test doubles imported or required in production backend code.',
+      code: 'HEURISTICS_PRODUCTION_MOCK_ARTIFACT_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.with-statement.ast',
     description: 'Detects with-statement usage in TypeScript/TSX production files.',
     severity: 'WARN',

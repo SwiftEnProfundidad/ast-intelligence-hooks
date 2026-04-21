@@ -22,6 +22,8 @@ const concreteDependencyNames = new Set<string>([
 const GOD_CLASS_MAX_LINES = 300;
 const networkCallCalleePattern = /^(fetch|axios|get|post|put|patch|delete|request)$/i;
 const ignoredMagicNumberValues = new Set<number>([0, 1]);
+const runtimeTestDoubleLibraryPattern = /^(sinon|testdouble|ts-mockito|jest-mock|vitest)$/i;
+const runtimeTestDoublePathPattern = /(^|\/)(__mocks__|mocks|fakes|spies|stubs)(\/|$)|\.(mock|fake|spy|stub)$/i;
 type AstNode = Record<string, string | number | boolean | bigint | symbol | null | Date | object>;
 type TypeScriptSemanticNode = {
   kind: 'class' | 'property' | 'call' | 'member';
@@ -1555,6 +1557,52 @@ export const hasMagicNumberLiteral = (node: unknown): boolean => {
 
 export const findMagicNumberLiteralLines = (node: unknown): readonly number[] => {
   return collectRepeatedMagicNumberLines(node);
+};
+
+const runtimeTestDoubleSpecifier = (node: unknown): string | undefined => {
+  if (!isObject(node) || node.type !== 'StringLiteral' || typeof node.value !== 'string') {
+    return undefined;
+  }
+  return node.value;
+};
+
+const matchesRuntimeTestDoubleImport = (specifier: string): boolean => {
+  return (
+    runtimeTestDoubleLibraryPattern.test(specifier) ||
+    runtimeTestDoublePathPattern.test(specifier)
+  );
+};
+
+const isRuntimeTestDoubleImportNode = (value: AstNode): boolean => {
+  if (value.type === 'ImportDeclaration') {
+    const specifier = runtimeTestDoubleSpecifier(value.source);
+    return typeof specifier === 'string' && matchesRuntimeTestDoubleImport(specifier);
+  }
+
+  if (
+    value.type === 'CallExpression' &&
+    isObject(value.callee) &&
+    value.callee.type === 'Identifier' &&
+    value.callee.name === 'require' &&
+    Array.isArray(value.arguments)
+  ) {
+    return value.arguments.some((argument) => {
+      const specifier = runtimeTestDoubleSpecifier(argument);
+      return typeof specifier === 'string' && matchesRuntimeTestDoubleImport(specifier);
+    });
+  }
+
+  return false;
+};
+
+export const hasProductionMockArtifactUsage = (node: unknown): boolean => {
+  return hasNode(node, (value) => isRuntimeTestDoubleImportNode(value));
+};
+
+export const findProductionMockArtifactUsageLines = (node: unknown): readonly number[] => {
+  return collectLineMatchesWithAncestors(node, (value) => isRuntimeTestDoubleImportNode(value), {
+    max: 8,
+  });
 };
 
 export const hasWithStatement = (node: unknown): boolean => {

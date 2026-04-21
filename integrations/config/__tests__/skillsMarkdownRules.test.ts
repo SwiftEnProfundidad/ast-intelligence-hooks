@@ -70,6 +70,23 @@ test('normaliza magic numbers backend al guideline foundation canonico', () => {
   assert.equal(rules[0]?.platform, 'backend');
 });
 
+test('normaliza mocks en producción backend al guideline foundation canonico', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+    sourceContent:
+      '❌ Mocks en producción - Usar fakes/spies de test; en runtime productivo, solo adaptadores y datos reales',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.backend.guideline.backend.mocks-en-produccion-usar-fakes-spies-de-test'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.equal(rules[0]?.platform, 'backend');
+});
+
 test('normaliza regla frontend SOLID a id canonico', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'frontend-guidelines',
