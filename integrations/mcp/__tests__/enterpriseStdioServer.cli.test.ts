@@ -291,8 +291,7 @@ test('pumuki enterprise stdio bridge no consume el transporte stdin en PRE_PUSH 
   } finally {
     child.kill('SIGTERM');
     await new Promise((resolvePromise) => {
-      child.once('exit', () => resolvePromise(undefined));
-      setTimeout(() => resolvePromise(undefined), 1_000);
+      staleServer.server.close(() => resolvePromise(undefined));
     });
   }
 });

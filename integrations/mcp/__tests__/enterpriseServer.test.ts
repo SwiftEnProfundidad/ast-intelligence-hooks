@@ -269,11 +269,25 @@ test('enterprise server ejecuta tools enterprise en safe mode cuando MCP enterpr
           success?: boolean;
           dryRun?: boolean;
           executed?: boolean;
+          result?: {
+            reason_code?: string;
+            instruction?: string;
+            next_action?: {
+              reason?: string;
+              kind?: string;
+              message?: string;
+            };
+          };
         };
         assert.equal(aiGatePayload.tool, 'ai_gate_check');
         assert.equal(aiGatePayload.success, false);
         assert.equal(aiGatePayload.dryRun, true);
         assert.equal(aiGatePayload.executed, true);
+        assert.equal(typeof aiGatePayload.result?.reason_code, 'string');
+        assert.equal((aiGatePayload.result?.instruction ?? '').length > 0, true);
+        assert.equal(typeof aiGatePayload.result?.next_action?.reason, 'string');
+        assert.equal(aiGatePayload.result?.next_action?.kind, 'info');
+        assert.equal((aiGatePayload.result?.next_action?.message ?? '').length > 0, true);
 
         const preFlightResponse = await safeFetchRequest(`${baseUrl}/tool`, {
           method: 'POST',
@@ -499,10 +513,22 @@ test('enterprise server ai_gate_check bloquea branch protegida aunque evidencia 
         const aiGatePayload = (await aiGateResponse.json()) as {
           success?: boolean;
           result?: {
+            reason_code?: string;
+            instruction?: string;
+            next_action?: {
+              reason?: string;
+              kind?: string;
+              message?: string;
+            };
             violations?: Array<{ code?: string }>;
           };
         };
         assert.equal(aiGatePayload.success, false);
+        assert.equal(aiGatePayload.result?.reason_code, 'GITFLOW_PROTECTED_BRANCH');
+        assert.equal((aiGatePayload.result?.instruction ?? '').length > 0, true);
+        assert.equal(aiGatePayload.result?.next_action?.reason, 'GITFLOW_PROTECTED_BRANCH');
+        assert.equal(aiGatePayload.result?.next_action?.kind, 'info');
+        assert.equal((aiGatePayload.result?.next_action?.message ?? '').length > 0, true);
         assert.equal(
           (aiGatePayload.result?.violations ?? []).some(
             (violation) => violation.code === 'GITFLOW_PROTECTED_BRANCH'

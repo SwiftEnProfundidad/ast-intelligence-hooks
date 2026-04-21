@@ -159,6 +159,8 @@ test('runLifecycleCli PRE_WRITE en modo texto anuncia que el gate fue desactivad
       assert.match(rendered, /PRE_WRITE_EXPERIMENTAL_DISABLED/);
       assert.match(rendered, /está desactivado explícitamente/i);
       assert.match(rendered, /pre-write enforcement: mode=off source=env blocking=no/i);
+      assert.match(rendered, /\[pumuki\]\[sdd\] reason_code=PRE_WRITE_EXPERIMENTAL_DISABLED/);
+      assert.match(rendered, /\[pumuki\]\[sdd\] instruction=Activa PRE_WRITE en modo estricto/);
       assert.doesNotMatch(rendered, /\[pumuki\]\[ai-gate\]/);
     } finally {
       process.stdout.write = originalStdoutWrite;
@@ -213,6 +215,8 @@ test('runLifecycleCli PRE_WRITE --json expone payload determinista cuando el gat
         reason?: string;
         command?: string;
       };
+      reason_code?: string;
+      instruction?: string;
       ai_gate?: object;
       };
       assert.equal(payload.sdd?.decision?.code, 'PRE_WRITE_EXPERIMENTAL_DISABLED');
@@ -232,6 +236,8 @@ test('runLifecycleCli PRE_WRITE --json expone payload determinista cuando el gat
         payload.experimental_features?.features?.sdd?.activationVariable,
         'PUMUKI_EXPERIMENTAL_SDD'
       );
+      assert.equal(payload.reason_code, 'PRE_WRITE_EXPERIMENTAL_DISABLED');
+      assert.match(payload.instruction ?? '', /PUMUKI_EXPERIMENTAL_PRE_WRITE=strict/);
       assert.equal(payload.next_action?.reason, 'PRE_WRITE_EXPERIMENTAL_DISABLED');
       assert.match(payload.next_action?.command ?? '', /PUMUKI_EXPERIMENTAL_PRE_WRITE=strict/);
       assert.equal(typeof payload.ai_gate, 'undefined');
