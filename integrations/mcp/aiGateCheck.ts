@@ -24,6 +24,13 @@ export type EnterpriseAiGateCheckResult = {
     timestamp: string | null;
     branch: string | null;
     message: string;
+    reason_code: string;
+    instruction: string;
+    next_action: {
+      kind: 'info';
+      reason: string;
+      message: string;
+    };
     stage: ReturnType<typeof evaluateAiGate>['stage'];
     policy: ReturnType<typeof evaluateAiGate>['policy'];
     violations: ReturnType<typeof evaluateAiGate>['violations'];
@@ -140,6 +147,23 @@ const buildAutoFixes = (
   return fixes;
 };
 
+const buildReasonCode = (evaluation: ReturnType<typeof evaluateAiGate>): string =>
+  evaluation.violations[0]?.code ?? 'AI_GATE_ALLOWED';
+
+const buildInstruction = (evaluation: ReturnType<typeof evaluateAiGate>): string =>
+  evaluation.allowed
+    ? 'Continúa con el stage actual manteniendo el vocabulario canónico de governance.'
+    : 'Corrige el bloqueante primario y vuelve a ejecutar ai_gate_check en el mismo stage.';
+
+const buildNextAction = (
+  evaluation: ReturnType<typeof evaluateAiGate>,
+  autoFixes: ReadonlyArray<string>
+): EnterpriseAiGateCheckResult['result']['next_action'] => ({
+  kind: 'info',
+  reason: buildReasonCode(evaluation),
+  message: autoFixes[0] ?? buildInstruction(evaluation),
+});
+
 const buildMessage = (
   evaluation: ReturnType<typeof evaluateAiGate>,
   platform?: { exitCode: number; skipReason: string | null }
@@ -215,6 +239,9 @@ export const runEnterpriseAiGateCheck = (params: {
       timestamp,
       branch,
       message,
+      reason_code: buildReasonCode(evaluation),
+      instruction: buildInstruction(evaluation),
+      next_action: buildNextAction(evaluation, autoFixes),
       stage: evaluation.stage,
       policy: evaluation.policy,
       violations: evaluation.violations,
@@ -295,6 +322,9 @@ export const runEnterpriseAiGateCheckAsync = async (params: {
       timestamp,
       branch,
       message,
+      reason_code: buildReasonCode(evaluationForHints),
+      instruction: buildInstruction(evaluationForHints),
+      next_action: buildNextAction(evaluationForHints, autoFixes),
       stage: evaluation.stage,
       policy: evaluation.policy,
       violations,

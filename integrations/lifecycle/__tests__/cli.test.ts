@@ -2171,6 +2171,8 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
       sdd?: { decision?: { code?: string; allowed?: boolean } };
       pre_write_enforcement?: { mode?: string; blocking?: boolean };
       bootstrap?: { enabled?: boolean; attempted?: boolean; status?: string; details?: string };
+      reason_code?: string;
+      instruction?: string;
       next_action?: { reason?: string; command?: string };
     };
     assert.equal(payload.sdd?.decision?.allowed, false);
@@ -2181,6 +2183,8 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
     assert.equal(payload.bootstrap?.attempted, false);
     assert.equal(payload.bootstrap?.status, 'SKIPPED');
     assert.match(payload.bootstrap?.details ?? '', /PUMUKI_PREWRITE_AUTO_BOOTSTRAP=0/);
+    assert.equal(payload.reason_code, 'OPENSPEC_MISSING');
+    assert.match(payload.instruction ?? '', /pumuki install/);
     assert.equal(payload.next_action?.reason, 'OPENSPEC_MISSING');
     assert.equal(payload.next_action?.command, 'npx --yes --package pumuki@latest pumuki install');
     } finally {

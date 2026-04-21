@@ -1598,6 +1598,8 @@ type PreWriteValidationEnvelope = {
     actions: ReadonlyArray<string>;
     details?: string;
   };
+  reason_code: string;
+  instruction: string;
   next_action?: {
     reason: string;
     command: string;
@@ -1858,6 +1860,25 @@ export const resolvePreWriteBlockedRemediation = (params: {
   return PRE_WRITE_HINTS_BY_CODE[params.causeCode] ?? PRE_WRITE_DEFAULT_REMEDIATION;
 };
 
+export const buildPreWriteReasonCode = (params: {
+  sdd: SddEvaluateResult;
+  aiGate: ReturnType<typeof evaluateAiGate>;
+}): string => params.aiGate.violations[0]?.code ?? params.sdd.decision.code;
+
+export const buildPreWriteInstruction = (params: {
+  sdd: SddEvaluateResult;
+  aiGate: ReturnType<typeof evaluateAiGate>;
+  nextAction?: PreWriteValidationEnvelope['next_action'];
+}): string => {
+  if (params.nextAction?.command) {
+    return `Ejecuta la remediación canónica y vuelve a validar PRE_WRITE: ${params.nextAction.command}`;
+  }
+  if (!params.sdd.decision.allowed) {
+    return `Corrige la decisión SDD ${params.sdd.decision.code} y vuelve a validar PRE_WRITE.`;
+  }
+  return 'Corrige el bloqueante primario y vuelve a validar PRE_WRITE.';
+};
+
 const wrapPreWritePanelLine = (value: string, width: number): string[] => {
   if (width < 20 || value.length <= width) {
     return [value];
@@ -2006,6 +2027,15 @@ export const buildPreWriteValidationEnvelope = (
     actions: [...bootstrap.actions],
     details: bootstrap.details,
   },
+  reason_code: buildPreWriteReasonCode({
+    sdd: result,
+    aiGate,
+  }),
+  instruction: buildPreWriteInstruction({
+    sdd: result,
+    aiGate,
+    nextAction,
+  }),
   next_action: nextAction,
   telemetry: {
     chain: PRE_WRITE_TELEMETRY_CHAIN,

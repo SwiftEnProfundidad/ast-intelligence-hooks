@@ -858,6 +858,7 @@ const toSkillsContractAssessment = (params: {
           requiredPlatforms,
         })
       : [];
+  const worktreeDetectedPlatforms = stageScopedDetectedPlatforms;
   const repoTreeDetectedPlatforms =
     params.stage === 'CI' && requiredPlatforms.length > 0
       ? toRepoTreeDetectedPlatforms({

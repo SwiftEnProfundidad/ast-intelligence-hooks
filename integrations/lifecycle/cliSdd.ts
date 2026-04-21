@@ -105,6 +105,9 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
                       actions: [],
                       details: 'PRE_WRITE experimental/default-off.',
                     },
+                    reason_code: 'PRE_WRITE_EXPERIMENTAL_DISABLED',
+                    instruction:
+                      `Activa PRE_WRITE en modo estricto y vuelve a ejecutar la validación: ${PRE_WRITE_ENABLE_STRICT_COMMAND}`,
                     next_action: {
                       reason: 'PRE_WRITE_EXPERIMENTAL_DISABLED',
                       command: PRE_WRITE_ENABLE_STRICT_COMMAND,
@@ -126,6 +129,10 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
               );
               writeInfo(
                 `[pumuki][sdd] pre-write enforcement: mode=${preWriteEnforcement.mode} source=${preWriteEnforcement.source} blocking=no`
+              );
+              writeInfo('[pumuki][sdd] reason_code=PRE_WRITE_EXPERIMENTAL_DISABLED');
+              writeInfo(
+                `[pumuki][sdd] instruction=Activa PRE_WRITE en modo estricto y vuelve a ejecutar la validación: ${PRE_WRITE_ENABLE_STRICT_COMMAND}`
               );
               writeInfo(
                 `[pumuki][sdd] next action (PRE_WRITE_EXPERIMENTAL_DISABLED): ${PRE_WRITE_ENABLE_STRICT_COMMAND}`
@@ -282,6 +289,8 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
               writeInfo(
                 `[pumuki][ai-gate] stage=${aiGate.stage} status=${aiGate.status} violations=${aiGate.violations.length}`
               );
+              writeInfo(`[pumuki][ai-gate] reason_code=${aiGate.reason_code}`);
+              writeInfo(`[pumuki][ai-gate] instruction=${aiGate.instruction}`);
               for (const violation of aiGate.violations) {
                 writeInfo(
                   withOptionalLocation(
