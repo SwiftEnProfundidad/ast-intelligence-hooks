@@ -21,16 +21,66 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
 
 const BLOCKED_REMEDIATION_MAX_LENGTH = 220;
 
-const toKnownSpanishRemediationFromMessage = (message: string): string | null => {
+const GENERIC_BLOCKED_REMEDIATION =
+  'Corrige el bloqueo indicado y vuelve a ejecutar el comando.';
+
+const normalizeBlockedRemediation = (value: string): string =>
+  normalizeNotificationText(value)
+    .replace(/^cómo solucionarlo:\s*/i, '')
+    .replace(/^remediation:\s*/i, '')
+    .replace(/^solution:\s*/i, '')
+    .replace(/^fix:\s*/i, '');
+
+const resolveFallbackRemediation = (causeCode: string): string =>
+  BLOCKED_REMEDIATION_BY_CODE[causeCode] ?? GENERIC_BLOCKED_REMEDIATION;
+
+const hasEnglishHints = (message: string): boolean => {
+  const normalized = message.toLowerCase();
+  return [
+    'detected',
+    'avoid explicit any',
+    'set-upstream',
+    'refresh evidence',
+    'fix and retry',
+    'split the change',
+    'smaller commits',
+    're-run',
+    'rerun',
+    'retry',
+    'to continue',
+    'protected branch',
+    'open spec',
+    'openspec',
+    'session',
+    'missing',
+    'invalid',
+    'failed',
+    'worktree',
+    'callback usage',
+    'usage.',
+    'run ',
+  ].some((hint) => normalized.includes(hint));
+};
+
+const toKnownSpanishRemediationFromMessage = (message: string, causeCode: string): string | null => {
   const normalized = message.toLowerCase();
   if (normalized.includes('avoid explicit any')) {
     return BLOCKED_REMEDIATION_BY_CODE.BACKEND_AVOID_EXPLICIT_ANY;
   }
-  if (normalized.includes('set-upstream')) {
+  if (normalized.includes('set-upstream') || normalized.includes('no upstream tracking reference')) {
     return BLOCKED_REMEDIATION_BY_CODE.PRE_PUSH_UPSTREAM_MISSING;
   }
-  if (normalized.includes('refresh evidence')) {
+  if (normalized.includes('refresh evidence') || normalized.includes('evidence is stale')) {
     return BLOCKED_REMEDIATION_BY_CODE.EVIDENCE_STALE;
+  }
+  if (normalized.includes('evidence ai gate status is blocked')) {
+    return BLOCKED_REMEDIATION_BY_CODE.EVIDENCE_GATE_BLOCKED;
+  }
+  if (normalized.includes('split the change')) {
+    return BLOCKED_REMEDIATION_BY_CODE.GIT_ATOMICITY_TOO_MANY_SCOPES;
+  }
+  if (normalized.includes('fix and retry') || normalized.includes('retry')) {
+    return resolveFallbackRemediation(causeCode);
   }
   return null;
 };
@@ -39,20 +89,20 @@ export const resolveBlockedRemediation = (
   event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>,
   causeCode: string
 ): string => {
+  const variant = options?.variant ?? 'dialog';
+  const maxLength = BLOCKED_REMEDIATION_MAX_LENGTH_BY_VARIANT[variant];
   const fromEvent = event.remediation
-    ? normalizeNotificationText(event.remediation)
-        .replace(/^cómo solucionarlo:\s*/i, '')
-        .replace(/^remediation:\s*/i, '')
+    ? normalizeBlockedRemediation(event.remediation)
     : '';
   if (fromEvent.length > 0) {
-    const translated = toKnownSpanishRemediationFromMessage(fromEvent);
+    const translated = toKnownSpanishRemediationFromMessage(fromEvent, causeCode);
     if (translated) {
-      return truncateNotificationText(translated, BLOCKED_REMEDIATION_MAX_LENGTH);
+      return truncateNotificationText(translated, maxLength);
     }
-    return truncateNotificationText(fromEvent, BLOCKED_REMEDIATION_MAX_LENGTH);
+    if (hasEnglishHints(fromEvent)) {
+      return truncateNotificationText(resolveFallbackRemediation(causeCode), maxLength);
+    }
+    return truncateNotificationText(fromEvent, maxLength);
   }
-  const fallback =
-    BLOCKED_REMEDIATION_BY_CODE[causeCode]
-    ?? 'Corrige el bloqueo indicado y vuelve a ejecutar el comando.';
-  return truncateNotificationText(fallback, BLOCKED_REMEDIATION_MAX_LENGTH);
+  return truncateNotificationText(resolveFallbackRemediation(causeCode), maxLength);
 };
