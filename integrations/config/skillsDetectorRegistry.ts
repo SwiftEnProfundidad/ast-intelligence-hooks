@@ -186,6 +186,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     ]),
   'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos':
     heuristicDetector('typescript.magic-number', ['heuristics.ts.magic-number.ast']),
+  'skills.backend.guideline.backend.mocks-en-produccion-usar-fakes-spies-de-test':
+    heuristicDetector('typescript.production-mock-artifact', [
+      'heuristics.ts.production-mock-artifact.ast',
+    ]),
   'skills.frontend.no-empty-catch': heuristicDetector('typescript.empty-catch', [
     'heuristics.ts.empty-catch.ast',
   ]),

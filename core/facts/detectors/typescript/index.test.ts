@@ -14,6 +14,7 @@ import {
   findUnknownWithoutGuardLines,
   findUnknownTypeAssertionLines,
   findMagicNumberLiteralLines,
+  findProductionMockArtifactUsageLines,
   hasAsyncPromiseExecutor,
   hasConcreteDependencyInstantiation,
   hasConsoleErrorCall,
@@ -26,6 +27,7 @@ import {
   hasFrameworkDependencyImport,
   hasFunctionConstructorUsage,
   hasMagicNumberLiteral,
+  hasProductionMockArtifactUsage,
   hasNetworkCallWithoutErrorHandling,
   hasMixedCommandQueryClass,
   hasMixedCommandQueryInterface,
@@ -950,6 +952,40 @@ test('hasMagicNumberLiteral detecta literales numericos repetidos en contexto ej
   assert.deepEqual(findMagicNumberLiteralLines(magicAst), [3, 7]);
   assert.equal(hasMagicNumberLiteral(ignoredAst), false);
   assert.deepEqual(findMagicNumberLiteralLines(ignoredAst), []);
+});
+
+test('hasProductionMockArtifactUsage detecta imports/requires de doubles en runtime productivo', () => {
+  const importAst = {
+    type: 'ImportDeclaration',
+    source: { type: 'StringLiteral', value: '../mocks/user-repository', loc: { start: { line: 3 }, end: { line: 3 } } },
+    specifiers: [],
+    loc: { start: { line: 3 }, end: { line: 3 } },
+  };
+  const requireAst = {
+    type: 'CallExpression',
+    callee: { type: 'Identifier', name: 'require' },
+    arguments: [{ type: 'StringLiteral', value: 'sinon', loc: { start: { line: 7 }, end: { line: 7 } } }],
+    loc: { start: { line: 7 }, end: { line: 7 } },
+  };
+  const cleanAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ImportDeclaration',
+        source: { type: 'StringLiteral', value: '../adapters/user-repository', loc: { start: { line: 1 }, end: { line: 1 } } },
+        specifiers: [],
+      },
+    ],
+  };
+  const mixedAst = {
+    type: 'Program',
+    body: [importAst, { type: 'ExpressionStatement', expression: requireAst }],
+  };
+
+  assert.equal(hasProductionMockArtifactUsage(importAst), true);
+  assert.equal(hasProductionMockArtifactUsage(requireAst), true);
+  assert.equal(hasProductionMockArtifactUsage(cleanAst), false);
+  assert.deepEqual(findProductionMockArtifactUsageLines(mixedAst), [3, 7]);
 });
 
 test('hasRecordStringUnknownType detecta Record<string, unknown>', () => {

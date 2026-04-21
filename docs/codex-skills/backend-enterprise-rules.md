@@ -250,9 +250,9 @@ const { data } = await supabase
 
 ### Anti-patterns a EVITAR:
 ❌ **God classes** - Servicios con >500 líneas
-❌ **Anemic domain models** - Entidades solo con getters/setters
 ❌ **Magic numbers** - Usar constantes con nombres descriptivos
 ❌ **Mocks en producción** - Usar fakes/spies de test; en runtime productivo, solo adaptadores y datos reales
+❌ **Anemic domain models** - Entidades con comportamiento, no solo getters/setters
 ❌ **Callback hell** - Usar async/await
 ❌ **Hardcoded values** - Config en variables de entorno
 ❌ **try-catch silenciosos** - Siempre loggear o propagar (AST: common.error.empty_catch)

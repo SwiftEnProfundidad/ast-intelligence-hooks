@@ -465,6 +465,16 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos';
     }
+    if (
+      platform === 'backend' &&
+      (includes('mocks en producción') ||
+        includes('mocks en produccion') ||
+        includes('usar fakes/spies de test') ||
+        includes('runtime productivo') ||
+        includes('solo adaptadores y datos reales'))
+    ) {
+      return 'skills.backend.guideline.backend.mocks-en-produccion-usar-fakes-spies-de-test';
+    }
     if (includes('solid') || includes('single responsibility') || includes('srp')) {
       return `${prefix}.no-solid-violations`;
     }

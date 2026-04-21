@@ -718,6 +718,73 @@ test('mapea magic numbers al heuristic AST nuevo del slice backend', async () =>
   );
 });
 
+test('mapea mocks en producción al heuristic AST nuevo del slice backend', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-production-mocks-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'd'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.mocks-en-produccion-usar-fakes-spies-de-test',
+                description: 'Avoid runtime mocks, fakes, spies or stubs in backend code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ts.production-mock-artifact.ast'),
+        true
+      );
+
+      const runtimeMocksRule = result.rules[0];
+      assert.ok(runtimeMocksRule);
+      assert.equal(
+        runtimeMocksRule.id,
+        'skills.backend.guideline.backend.mocks-en-produccion-usar-fakes-spies-de-test'
+      );
+      assert.equal(runtimeMocksRule.when.kind, 'Heuristic');
+      if (runtimeMocksRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend runtime test doubles guideline.');
+      }
+      assert.equal(
+        runtimeMocksRule.when.where?.ruleId,
+        'heuristics.ts.production-mock-artifact.ast'
+      );
+      assert.deepEqual(collectHeuristicPrefixes(runtimeMocksRule.when), ['apps/backend/']);
+      assert.equal(
+        runtimeMocksRule.then.source?.includes(
+          'ast_nodes=[heuristics.ts.production-mock-artifact.ast]'
+        ),
+        true
+      );
+    })
+  );
+});
+
 test('enriquce mensaje de no-solid-violations con criterios accionables y métricas observadas', async () => {
   await withCoreSkillsDisabled(async () =>
     withTempDir('pumuki-skills-ruleset-solid-actionable-message-', async (tempRoot) => {
