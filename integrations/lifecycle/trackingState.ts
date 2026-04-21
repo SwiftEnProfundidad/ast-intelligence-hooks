@@ -41,7 +41,7 @@ const TRACKING_DECLARATION_SOURCES: ReadonlyArray<TrackingDeclarationSource> = [
     sourceFile: 'AGENTS.md',
     priority: 100,
     patterns: [
-      /única fuente viva del tracking interno es [`']([^`'\n]+)[`']/i,
+      /[uú]nica fuente viva del tracking interno es [`']([^`'\n]+)[`']/i,
       /ningun documento de seguimiento fuera de [`']([^`'\n]+)[`']/i,
     ],
   },
@@ -50,14 +50,15 @@ const TRACKING_DECLARATION_SOURCES: ReadonlyArray<TrackingDeclarationSource> = [
     priority: 80,
     patterns: [
       /todo el seguimiento operativo[\s\S]{0,240}?\[[^\]]+\]\(([^)]+)\)/i,
-      /única fuente de verdad[^`\n]*[`']([^`'\n]+)[`']/i,
+      /[uú]nica fuente de verdad[^`\n]*[`']([^`'\n]+)[`']/i,
+      /fuente viva del tracking interno:\s*[`']([^`'\n]+)[`']/i,
       /quiero saber en qué estamos ahora:\s*[\s\S]{0,80}[-*]\s*[`']([^`'\n]+)[`']/i,
     ],
   },
   {
     sourceFile: 'docs/validation/README.md',
     priority: 60,
-    patterns: [/única fuente de seguimiento:\s*[`']([^`'\n]+)[`']/i],
+    patterns: [/[uú]nica fuente de seguimiento:\s*[`']([^`'\n]+)[`']/i],
   },
 ];
 
@@ -87,7 +88,9 @@ const resolveDeclaredPath = (params: {
   if (candidate.length === 0) {
     return null;
   }
-  const resolved = resolve(dirname(sourceAbsolutePath), candidate);
+  const resolved = candidate.startsWith('./') || candidate.startsWith('../')
+    ? resolve(dirname(sourceAbsolutePath), candidate)
+    : resolve(params.repoRoot, candidate);
   return toRepoRelativePath(params.repoRoot, resolved);
 };
 
@@ -177,9 +180,18 @@ const collectInProgressEntries = (markdown: string): ReadonlyArray<InProgressEnt
         });
         return;
       }
+      const emojiCell = cells.find((cell) => /^🚧(?:\b|\s|[*_`])/.test(cell));
+      if (emojiCell) {
+        const taskCell = cells.find((cell) => cell !== emojiCell && !/^[:\- ]+$/.test(cell)) ?? emojiCell;
+        entries.push({
+          lineNumber: index + 1,
+          taskId: extractTaskId(taskCell),
+        });
+        return;
+      }
     }
 
-    if (/^- Estado:\s*🚧\b/.test(trimmed) || /\[\s*🚧\s*\]\s*-/.test(trimmed)) {
+    if (/^- Estado:\s*🚧(?:\s|$)/.test(trimmed) || /\[\s*🚧\s*\]\s*-/.test(trimmed)) {
       entries.push({
         lineNumber: index + 1,
         taskId: extractTaskId(trimmed),
@@ -193,10 +205,13 @@ const collectInProgressEntries = (markdown: string): ReadonlyArray<InProgressEnt
 const readActiveTaskHeader = (markdown: string): string | null => {
   const explicitHeader = markdown.match(/- Tarea activa principal:\s*`([^`]+)`/i)?.[1]?.trim();
   if (explicitHeader && explicitHeader.length > 0) {
-    return explicitHeader;
+    return extractTaskId(explicitHeader) ?? explicitHeader;
   }
-  const bracketTask = markdown.match(/`\[\s*🚧\s*\]\s*-\s*([^`]+)`/)?.[1]?.trim();
-  return bracketTask && bracketTask.length > 0 ? bracketTask : null;
+  const bracketTask = markdown.match(/\[\s*🚧\s*\]\s*-\s*(.+)$/m)?.[1]?.trim();
+  if (!bracketTask || bracketTask.length === 0) {
+    return null;
+  }
+  return extractTaskId(bracketTask) ?? bracketTask;
 };
 
 const readLastRunAlignment = (params: {
@@ -306,6 +321,9 @@ export const resolveRepoTrackingState = (repoRoot: string): RepoTrackingState =>
   const uniqueCanonicalPaths = Array.from(
     new Set(highestPriorityDeclarations.map((declaration) => declaration.resolved_path))
   );
+  const allDeclaredPaths = Array.from(
+    new Set(declarations.map((declaration) => declaration.resolved_path))
+  );
   const canonicalPath = uniqueCanonicalPaths.length === 1 ? uniqueCanonicalPaths[0] : null;
   const canonicalPresent =
     typeof canonicalPath === 'string' && canonicalPath.length > 0
@@ -326,7 +344,7 @@ export const resolveRepoTrackingState = (repoRoot: string): RepoTrackingState =>
       source_file: sourceFile,
       in_progress_count: 0,
       single_in_progress_valid: false,
-      conflict: uniqueCanonicalPaths.length > 1,
+      conflict: allDeclaredPaths.length > 1,
       declarations: declarations.map(({ priority: _priority, ...declaration }) => declaration),
       active_task_id: null,
       last_run_path: null,
@@ -355,7 +373,7 @@ export const resolveRepoTrackingState = (repoRoot: string): RepoTrackingState =>
     in_progress_count: inProgressCount,
     single_in_progress_valid:
       uniqueCanonicalPaths.length === 1 && lastRunAlignment.valid,
-    conflict: uniqueCanonicalPaths.length > 1,
+    conflict: allDeclaredPaths.length > 1,
     declarations: declarations.map(({ priority: _priority, ...declaration }) => declaration),
     active_task_id: activeTaskId,
     last_run_path: lastRunAlignment.path,
