@@ -24,6 +24,7 @@ const networkCallCalleePattern = /^(fetch|axios|get|post|put|patch|delete|reques
 const ignoredMagicNumberValues = new Set<number>([0, 1]);
 const runtimeTestDoubleLibraryPattern = /^(sinon|testdouble|ts-mockito|jest-mock|vitest)$/i;
 const runtimeTestDoublePathPattern = /(^|\/)(__mocks__|mocks|fakes|spies|stubs)(\/|$)|\.(mock|fake|spy|stub)$/i;
+const anemicDomainClassNamePattern = /(Entity|Aggregate|Model)$/i;
 type AstNode = Record<string, string | number | boolean | bigint | symbol | null | Date | object>;
 type TypeScriptSemanticNode = {
   kind: 'class' | 'property' | 'call' | 'member';
@@ -408,6 +409,28 @@ const collectClassMethodDescriptors = (classNode: AstNode): readonly ClassMethod
   }
 
   return descriptors;
+};
+
+const isAccessorLikeMethodName = (name: string): boolean => {
+  return name === 'constructor' || /^(get|set)[A-Z_]/.test(name);
+};
+
+const isAnemicDomainClassNode = (value: AstNode): boolean => {
+  if (value.type !== 'ClassDeclaration' && value.type !== 'ClassExpression') {
+    return false;
+  }
+
+  const className = classNameFromNode(value);
+  if (!anemicDomainClassNamePattern.test(className)) {
+    return false;
+  }
+
+  const descriptors = collectClassMethodDescriptors(value);
+  if (descriptors.length < 2) {
+    return false;
+  }
+
+  return descriptors.every((descriptor) => isAccessorLikeMethodName(descriptor.name));
 };
 
 const interfaceNameFromNode = (node: AstNode): string => {
@@ -1601,6 +1624,16 @@ export const hasProductionMockArtifactUsage = (node: unknown): boolean => {
 
 export const findProductionMockArtifactUsageLines = (node: unknown): readonly number[] => {
   return collectLineMatchesWithAncestors(node, (value) => isRuntimeTestDoubleImportNode(value), {
+    max: 8,
+  });
+};
+
+export const hasAnemicDomainModel = (node: unknown): boolean => {
+  return hasNode(node, (value) => isAnemicDomainClassNode(value));
+};
+
+export const findAnemicDomainModelLines = (node: unknown): readonly number[] => {
+  return collectLineMatchesWithAncestors(node, (value) => isAnemicDomainClassNode(value), {
     max: 8,
   });
 };

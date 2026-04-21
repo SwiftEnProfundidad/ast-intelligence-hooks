@@ -1844,3 +1844,30 @@ test('detects production mock artifact heuristic facts in backend production pat
   assert.ok(productionMockFact);
   assert.deepEqual(productionMockFact?.lines, [1, 2]);
 });
+
+test('detects anemic domain model heuristic facts in backend production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/domain/order.entity.ts',
+        [
+          'export class OrderEntity {',
+          '  constructor(private status: string) {}',
+          '  getStatus() { return this.status; }',
+          '  setStatus(status: string) { this.status = status; }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const anemicDomainFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.anemic-domain-model.ast'
+  );
+
+  assert.ok(anemicDomainFact);
+  assert.deepEqual(anemicDomainFact?.lines, [1]);
+});

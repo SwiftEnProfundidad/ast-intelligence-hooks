@@ -475,6 +475,14 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.backend.guideline.backend.mocks-en-produccion-usar-fakes-spies-de-test';
     }
+    if (
+      platform === 'backend' &&
+      (includes('anemic domain models') ||
+        includes('entidades con comportamiento') ||
+        includes('no solo getters/setters'))
+    ) {
+      return 'skills.backend.guideline.backend.anemic-domain-models-entidades-con-comportamiento';
+    }
     if (includes('solid') || includes('single responsibility') || includes('srp')) {
       return `${prefix}.no-solid-violations`;
     }

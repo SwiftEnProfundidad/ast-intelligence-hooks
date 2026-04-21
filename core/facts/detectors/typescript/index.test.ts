@@ -13,8 +13,10 @@ import {
   findUndefinedInBaseTypeUnionLines,
   findUnknownWithoutGuardLines,
   findUnknownTypeAssertionLines,
+  findAnemicDomainModelLines,
   findMagicNumberLiteralLines,
   findProductionMockArtifactUsageLines,
+  hasAnemicDomainModel,
   hasAsyncPromiseExecutor,
   hasConcreteDependencyInstantiation,
   hasConsoleErrorCall,
@@ -986,6 +988,53 @@ test('hasProductionMockArtifactUsage detecta imports/requires de doubles en runt
   assert.equal(hasProductionMockArtifactUsage(requireAst), true);
   assert.equal(hasProductionMockArtifactUsage(cleanAst), false);
   assert.deepEqual(findProductionMockArtifactUsageLines(mixedAst), [3, 7]);
+});
+
+test('hasAnemicDomainModel detecta clases de dominio con solo accessors y sin comportamiento', () => {
+  const anemicAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrderEntity' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        { type: 'ClassMethod', kind: 'constructor', key: { type: 'Identifier', name: 'constructor' }, loc: { start: { line: 3 }, end: { line: 3 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'getStatus' }, loc: { start: { line: 5 }, end: { line: 5 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'setStatus' }, loc: { start: { line: 7 }, end: { line: 7 } } },
+      ],
+    },
+    loc: { start: { line: 1 }, end: { line: 9 } },
+  };
+  const richAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrderEntity' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        { type: 'ClassMethod', kind: 'constructor', key: { type: 'Identifier', name: 'constructor' }, loc: { start: { line: 3 }, end: { line: 3 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'getStatus' }, loc: { start: { line: 5 }, end: { line: 5 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'confirm' }, loc: { start: { line: 7 }, end: { line: 7 } } },
+      ],
+    },
+    loc: { start: { line: 1 }, end: { line: 9 } },
+  };
+  const serviceAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrderService' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        { type: 'ClassMethod', kind: 'constructor', key: { type: 'Identifier', name: 'constructor' }, loc: { start: { line: 3 }, end: { line: 3 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'getStatus' }, loc: { start: { line: 5 }, end: { line: 5 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'setStatus' }, loc: { start: { line: 7 }, end: { line: 7 } } },
+      ],
+    },
+    loc: { start: { line: 1 }, end: { line: 9 } },
+  };
+
+  assert.equal(hasAnemicDomainModel(anemicAst), true);
+  assert.deepEqual(findAnemicDomainModelLines(anemicAst), [1]);
+  assert.equal(hasAnemicDomainModel(richAst), false);
+  assert.equal(hasAnemicDomainModel(serviceAst), false);
 });
 
 test('hasRecordStringUnknownType detecta Record<string, unknown>', () => {

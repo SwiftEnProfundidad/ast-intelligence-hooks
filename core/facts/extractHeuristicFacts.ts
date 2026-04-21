@@ -403,6 +403,7 @@ const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
   { detect: TS.hasAsyncPromiseExecutor, ruleId: 'heuristics.ts.new-promise-async.ast', code: 'HEURISTICS_NEW_PROMISE_ASYNC_AST', message: 'AST heuristic detected async Promise executor usage.' },
   { detect: TS.hasMagicNumberLiteral, locateLines: TS.findMagicNumberLiteralLines, ruleId: 'heuristics.ts.magic-number.ast', code: 'HEURISTICS_MAGIC_NUMBER_AST', message: 'AST heuristic detected magic number usage.' },
   { detect: TS.hasProductionMockArtifactUsage, locateLines: TS.findProductionMockArtifactUsageLines, ruleId: 'heuristics.ts.production-mock-artifact.ast', code: 'HEURISTICS_PRODUCTION_MOCK_ARTIFACT_AST', message: 'AST heuristic detected test doubles imported or required in production backend code.' },
+  { detect: TS.hasAnemicDomainModel, locateLines: TS.findAnemicDomainModelLines, ruleId: 'heuristics.ts.anemic-domain-model.ast', code: 'HEURISTICS_ANEMIC_DOMAIN_MODEL_AST', message: 'AST heuristic detected an anemic domain model.' },
   { detect: TS.hasWithStatement, ruleId: 'heuristics.ts.with-statement.ast', code: 'HEURISTICS_WITH_STATEMENT_AST', message: 'AST heuristic detected with-statement usage.' },
   { detect: TS.hasDeleteOperator, ruleId: 'heuristics.ts.delete-operator.ast', code: 'HEURISTICS_DELETE_OPERATOR_AST', message: 'AST heuristic detected delete-operator usage.' },
   { detect: TS.hasDebuggerStatement, ruleId: 'heuristics.ts.debugger.ast', code: 'HEURISTICS_DEBUGGER_AST', message: 'AST heuristic detected debugger statement usage.' },
