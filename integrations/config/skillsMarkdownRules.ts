@@ -483,6 +483,20 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.backend.guideline.backend.anemic-domain-models-entidades-con-comportamiento';
     }
+    if (
+      platform === 'backend' &&
+      (includes('lógica en controllers') ||
+        includes('logica en controllers') ||
+        includes('lo gica en controllers') ||
+        includes('mover lógica de negocio a casos de uso/servicios') ||
+        includes('mover logica de negocio a casos de uso/servicios') ||
+        includes('mover lo gica de negocio a casos de uso/servicios') ||
+        (includes('controllers') &&
+          includes('casos de uso') &&
+          includes('servicios')))
+    ) {
+      return 'skills.backend.guideline.backend.logica-en-controllers-mover-logica-de-negocio-a-casos-de-uso-servicios';
+    }
     if (includes('solid') || includes('single responsibility') || includes('srp')) {
       return `${prefix}.no-solid-violations`;
     }

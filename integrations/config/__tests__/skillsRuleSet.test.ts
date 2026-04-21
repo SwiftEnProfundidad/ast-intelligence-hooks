@@ -849,6 +849,73 @@ test('mapea anemic domain models al heuristic AST nuevo del slice backend', asyn
   );
 });
 
+test('mapea lógica en controllers al heuristic AST nuevo del slice backend', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-controller-business-logic-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'f'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.logica-en-controllers-mover-logica-de-negocio-a-casos-de-uso-servicios',
+                description: 'Avoid business logic inside backend controllers.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ts.controller-business-logic.ast'),
+        true
+      );
+
+      const controllerLogicRule = result.rules[0];
+      assert.ok(controllerLogicRule);
+      assert.equal(
+        controllerLogicRule.id,
+        'skills.backend.guideline.backend.logica-en-controllers-mover-logica-de-negocio-a-casos-de-uso-servicios'
+      );
+      assert.equal(controllerLogicRule.when.kind, 'Heuristic');
+      if (controllerLogicRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend controller logic guideline.');
+      }
+      assert.equal(
+        controllerLogicRule.when.where?.ruleId,
+        'heuristics.ts.controller-business-logic.ast'
+      );
+      assert.deepEqual(collectHeuristicPrefixes(controllerLogicRule.when), ['apps/backend/']);
+      assert.equal(
+        controllerLogicRule.then.source?.includes(
+          'ast_nodes=[heuristics.ts.controller-business-logic.ast]'
+        ),
+        true
+      );
+    })
+  );
+});
+
 test('enriquce mensaje de no-solid-violations con criterios accionables y métricas observadas', async () => {
   await withCoreSkillsDisabled(async () =>
     withTempDir('pumuki-skills-ruleset-solid-actionable-message-', async (tempRoot) => {

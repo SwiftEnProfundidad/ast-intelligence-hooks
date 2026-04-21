@@ -25,6 +25,9 @@ const ignoredMagicNumberValues = new Set<number>([0, 1]);
 const runtimeTestDoubleLibraryPattern = /^(sinon|testdouble|ts-mockito|jest-mock|vitest)$/i;
 const runtimeTestDoublePathPattern = /(^|\/)(__mocks__|mocks|fakes|spies|stubs)(\/|$)|\.(mock|fake|spy|stub)$/i;
 const anemicDomainClassNamePattern = /(Entity|Aggregate|Model)$/i;
+const controllerClassNamePattern = /Controller$/i;
+const controllerRoutingDecoratorPattern =
+  /^(Get|Post|Put|Patch|Delete|All|Head|Options|MessagePattern|EventPattern)$/;
 type AstNode = Record<string, string | number | boolean | bigint | symbol | null | Date | object>;
 type TypeScriptSemanticNode = {
   kind: 'class' | 'property' | 'call' | 'member';
@@ -431,6 +434,79 @@ const isAnemicDomainClassNode = (value: AstNode): boolean => {
   }
 
   return descriptors.every((descriptor) => isAccessorLikeMethodName(descriptor.name));
+};
+
+const hasDecoratorNamed = (node: unknown, decoratorName: RegExp): boolean => {
+  if (!isObject(node) || !Array.isArray(node.decorators)) {
+    return false;
+  }
+
+  return node.decorators.some((decorator) => {
+    if (!isObject(decorator)) {
+      return false;
+    }
+    const expression = decorator.expression;
+    if (!isObject(expression)) {
+      return false;
+    }
+    const callee = expression.type === 'CallExpression' ? expression.callee : expression;
+    const name = methodNameFromNode(callee) ?? memberExpressionPropertyName(callee);
+    return typeof name === 'string' && decoratorName.test(name);
+  });
+};
+
+const isControllerHandlerMethodNode = (node: AstNode): boolean => {
+  return node.type === 'ClassMethod' && node.kind !== 'constructor';
+};
+
+const statementCountFromMethodNode = (node: AstNode): number => {
+  if (!isObject(node.body) || !Array.isArray(node.body.body)) {
+    return 0;
+  }
+  return node.body.body.filter((statement) => isObject(statement)).length;
+};
+
+const hasControllerBusinessFlow = (node: AstNode): boolean => {
+  return hasNode(node, (value) => {
+    return (
+      value.type === 'IfStatement' ||
+      value.type === 'SwitchStatement' ||
+      value.type === 'ForStatement' ||
+      value.type === 'ForInStatement' ||
+      value.type === 'ForOfStatement' ||
+      value.type === 'WhileStatement' ||
+      value.type === 'DoWhileStatement' ||
+      value.type === 'TryStatement' ||
+      value.type === 'ConditionalExpression'
+    );
+  });
+};
+
+const isControllerBusinessLogicMethodNode = (node: AstNode): boolean => {
+  if (!isControllerHandlerMethodNode(node)) {
+    return false;
+  }
+  if (statementCountFromMethodNode(node) < 2) {
+    return false;
+  }
+  return hasControllerBusinessFlow(node);
+};
+
+const isControllerClassNode = (value: AstNode): boolean => {
+  if (value.type !== 'ClassDeclaration' && value.type !== 'ClassExpression') {
+    return false;
+  }
+  return controllerClassNamePattern.test(classNameFromNode(value));
+};
+
+const findControllerBusinessLogicMethod = (node: AstNode): AstNode | undefined => {
+  const classBody = node.body;
+  if (!isObject(classBody) || !Array.isArray(classBody.body)) {
+    return undefined;
+  }
+  return classBody.body.find((member): member is AstNode => {
+    return isObject(member) && isControllerBusinessLogicMethodNode(member);
+  });
 };
 
 const interfaceNameFromNode = (node: AstNode): string => {
@@ -1636,6 +1712,30 @@ export const findAnemicDomainModelLines = (node: unknown): readonly number[] => 
   return collectLineMatchesWithAncestors(node, (value) => isAnemicDomainClassNode(value), {
     max: 8,
   });
+};
+
+export const hasControllerBusinessLogic = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (!isControllerClassNode(value)) {
+      return false;
+    }
+    return Boolean(findControllerBusinessLogicMethod(value));
+  });
+};
+
+export const findControllerBusinessLogicLines = (node: unknown): readonly number[] => {
+  return collectLineMatchesWithAncestors(
+    node,
+    (value) => {
+      if (!isControllerClassNode(value)) {
+        return false;
+      }
+      return Boolean(findControllerBusinessLogicMethod(value));
+    },
+    {
+      max: 8,
+    }
+  );
 };
 
 export const hasWithStatement = (node: unknown): boolean => {

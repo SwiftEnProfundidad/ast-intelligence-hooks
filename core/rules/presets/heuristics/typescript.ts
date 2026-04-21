@@ -218,6 +218,24 @@ export const typescriptRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.controller-business-logic.ast',
+    description: 'Detects controller handlers with branching or business flow in TypeScript backend code.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.controller-business-logic.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected business logic inside a controller.',
+      code: 'HEURISTICS_CONTROLLER_BUSINESS_LOGIC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.with-statement.ast',
     description: 'Detects with-statement usage in TypeScript/TSX production files.',
     severity: 'WARN',

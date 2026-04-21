@@ -194,6 +194,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('typescript.anemic-domain-model', [
       'heuristics.ts.anemic-domain-model.ast',
     ]),
+  'skills.backend.guideline.backend.logica-en-controllers-mover-logica-de-negocio-a-casos-de-uso-servicios':
+    heuristicDetector('typescript.controller-business-logic', [
+      'heuristics.ts.controller-business-logic.ast',
+    ]),
   'skills.frontend.no-empty-catch': heuristicDetector('typescript.empty-catch', [
     'heuristics.ts.empty-catch.ast',
   ]),

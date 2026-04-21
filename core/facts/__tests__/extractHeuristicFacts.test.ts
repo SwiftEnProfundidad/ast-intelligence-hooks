@@ -1871,3 +1871,34 @@ test('detects anemic domain model heuristic facts in backend production path', (
   assert.ok(anemicDomainFact);
   assert.deepEqual(anemicDomainFact?.lines, [1]);
 });
+
+test('detects controller business logic heuristic facts in backend production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/OrdersController.ts',
+        [
+          'export class OrdersController {',
+          '  createOrder(dto: CreateOrderDto) {',
+          '    const normalized = dto.priority ?? "normal";',
+          '    if (normalized === "high") {',
+          '      return this.ordersService.createPriority(dto);',
+          '    }',
+          '    return this.ordersService.create(dto);',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const controllerLogicFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.controller-business-logic.ast'
+  );
+
+  assert.ok(controllerLogicFact);
+  assert.deepEqual(controllerLogicFact?.lines, [1]);
+});
