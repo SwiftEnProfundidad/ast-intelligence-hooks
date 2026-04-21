@@ -184,6 +184,8 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('typescript.hardcoded-secret-token', [
       'heuristics.ts.hardcoded-secret-token.ast',
     ]),
+  'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos':
+    heuristicDetector('typescript.magic-number', ['heuristics.ts.magic-number.ast']),
   'skills.frontend.no-empty-catch': heuristicDetector('typescript.empty-catch', [
     'heuristics.ts.empty-catch.ast',
   ]),

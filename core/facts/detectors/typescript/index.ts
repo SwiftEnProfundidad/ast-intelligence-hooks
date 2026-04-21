@@ -21,6 +21,7 @@ const concreteDependencyNames = new Set<string>([
 ]);
 const GOD_CLASS_MAX_LINES = 300;
 const networkCallCalleePattern = /^(fetch|axios|get|post|put|patch|delete|request)$/i;
+const ignoredMagicNumberValues = new Set<number>([0, 1]);
 type AstNode = Record<string, string | number | boolean | bigint | symbol | null | Date | object>;
 type TypeScriptSemanticNode = {
   kind: 'class' | 'property' | 'call' | 'member';
@@ -1546,6 +1547,16 @@ export const hasAsyncPromiseExecutor = (node: unknown): boolean => {
   });
 };
 
+export const hasMagicNumberLiteral = (node: unknown): boolean => {
+  return [...collectMagicNumberOccurrences(node).values()].some(
+    (occurrence) => occurrence.count >= 2
+  );
+};
+
+export const findMagicNumberLiteralLines = (node: unknown): readonly number[] => {
+  return collectRepeatedMagicNumberLines(node);
+};
+
 export const hasWithStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'WithStatement');
 };
@@ -1757,6 +1768,92 @@ const nodeLineSpan = (node: unknown): number => {
     return 0;
   }
   return Math.max(0, end - start + 1);
+};
+
+type MagicNumberOccurrence = {
+  count: number;
+  lines: number[];
+};
+
+const magicNumberValueFromNode = (node: unknown): number | undefined => {
+  if (!isObject(node) || node.type !== 'NumericLiteral' || typeof node.value !== 'number') {
+    return undefined;
+  }
+  if (!Number.isFinite(node.value) || ignoredMagicNumberValues.has(node.value)) {
+    return undefined;
+  }
+  return node.value;
+};
+
+const isExecutableMagicNumberContext = (
+  value: AstNode,
+  ancestors: ReadonlyArray<AstNode>
+): boolean => {
+  const parent = ancestors[ancestors.length - 1];
+  if (!isObject(parent)) {
+    return false;
+  }
+
+  switch (parent.type) {
+    case 'BinaryExpression':
+      return parent.left === value || parent.right === value;
+    case 'CallExpression':
+    case 'NewExpression':
+      return Array.isArray(parent.arguments) && parent.arguments.includes(value);
+    case 'AssignmentExpression':
+      return parent.right === value;
+    case 'ReturnStatement':
+      return parent.argument === value;
+    case 'SwitchCase':
+      return parent.test === value;
+    default:
+      return false;
+  }
+};
+
+const collectMagicNumberOccurrences = (
+  node: unknown
+): ReadonlyMap<number, MagicNumberOccurrence> => {
+  const occurrences = new Map<number, MagicNumberOccurrence>();
+
+  const walk = (value: unknown, ancestors: ReadonlyArray<AstNode>): void => {
+    if (!isObject(value)) {
+      return;
+    }
+
+    const numericValue = magicNumberValueFromNode(value);
+    if (typeof numericValue === 'number' && isExecutableMagicNumberContext(value, ancestors)) {
+      const current = occurrences.get(numericValue) ?? { count: 0, lines: [] };
+      current.count += 1;
+      const line = toPositiveLine(value);
+      if (typeof line === 'number') {
+        current.lines.push(line);
+      }
+      occurrences.set(numericValue, current);
+    }
+
+    const nextAncestors = [...ancestors, value];
+    for (const child of Object.values(value)) {
+      if (Array.isArray(child)) {
+        for (const entry of child) {
+          walk(entry, nextAncestors);
+        }
+        continue;
+      }
+      walk(child, nextAncestors);
+    }
+  };
+
+  walk(node, []);
+  return occurrences;
+};
+
+const collectRepeatedMagicNumberLines = (node: unknown): readonly number[] => {
+  return sortedUniqueLines(
+    [...collectMagicNumberOccurrences(node).values()]
+      .filter((occurrence) => occurrence.count >= 2)
+      .flatMap((occurrence) => occurrence.lines)
+  );
 };
 
 export const hasLargeClassDeclaration = (node: unknown): boolean => {

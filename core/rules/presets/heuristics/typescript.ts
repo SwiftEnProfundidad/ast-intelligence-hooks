@@ -164,6 +164,24 @@ export const typescriptRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.magic-number.ast',
+    description: 'Detects repeated magic number usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.magic-number.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected magic number usage.',
+      code: 'HEURISTICS_MAGIC_NUMBER_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.with-statement.ast',
     description: 'Detects with-statement usage in TypeScript/TSX production files.',
     severity: 'WARN',

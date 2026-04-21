@@ -13,6 +13,7 @@ import {
   findUndefinedInBaseTypeUnionLines,
   findUnknownWithoutGuardLines,
   findUnknownTypeAssertionLines,
+  findMagicNumberLiteralLines,
   hasAsyncPromiseExecutor,
   hasConcreteDependencyInstantiation,
   hasConsoleErrorCall,
@@ -24,6 +25,7 @@ import {
   hasExplicitAnyType,
   hasFrameworkDependencyImport,
   hasFunctionConstructorUsage,
+  hasMagicNumberLiteral,
   hasNetworkCallWithoutErrorHandling,
   hasMixedCommandQueryClass,
   hasMixedCommandQueryInterface,
@@ -882,6 +884,72 @@ test('hasLargeClassDeclaration detecta clases con 300 lineas o mas', () => {
   assert.equal(hasLargeClassDeclaration(oversizedClassAst), true);
   assert.equal(hasLargeClassDeclaration(thresholdClassAst), true);
   assert.equal(hasLargeClassDeclaration(compactClassAst), false);
+});
+
+test('hasMagicNumberLiteral detecta literales numericos repetidos en contexto ejecutable y descarta declarativos', () => {
+  const magicAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'CallExpression',
+          callee: { type: 'Identifier', name: 'retry' },
+          arguments: [{ type: 'NumericLiteral', value: 42, loc: { start: { line: 3 }, end: { line: 3 } } }],
+        },
+      },
+      {
+        type: 'VariableDeclaration',
+        kind: 'const',
+        declarations: [
+          {
+            type: 'VariableDeclarator',
+            id: { type: 'Identifier', name: 'timeoutMs' },
+            init: { type: 'NumericLiteral', value: 42, loc: { start: { line: 5 }, end: { line: 5 } } },
+          },
+        ],
+      },
+      {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'BinaryExpression',
+          operator: '>',
+          left: { type: 'Identifier', name: 'elapsedMs' },
+          right: { type: 'NumericLiteral', value: 42, loc: { start: { line: 7 }, end: { line: 7 } } },
+        },
+      },
+      {
+        type: 'ReturnStatement',
+        argument: { type: 'NumericLiteral', value: 1, loc: { start: { line: 9 }, end: { line: 9 } } },
+      },
+    ],
+  };
+
+  const ignoredAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'VariableDeclaration',
+        kind: 'const',
+        declarations: [
+          {
+            type: 'VariableDeclarator',
+            id: { type: 'Identifier', name: 'port' },
+            init: { type: 'NumericLiteral', value: 3000, loc: { start: { line: 2 }, end: { line: 2 } } },
+          },
+        ],
+      },
+      {
+        type: 'ReturnStatement',
+        argument: { type: 'NumericLiteral', value: 1, loc: { start: { line: 4 }, end: { line: 4 } } },
+      },
+    ],
+  };
+
+  assert.equal(hasMagicNumberLiteral(magicAst), true);
+  assert.deepEqual(findMagicNumberLiteralLines(magicAst), [3, 7]);
+  assert.equal(hasMagicNumberLiteral(ignoredAst), false);
+  assert.deepEqual(findMagicNumberLiteralLines(ignoredAst), []);
 });
 
 test('hasRecordStringUnknownType detecta Record<string, unknown>', () => {

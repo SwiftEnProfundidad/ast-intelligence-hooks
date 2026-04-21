@@ -172,6 +172,7 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
     'heuristics.ts.jwt-decode-without-verify.ast',
     'heuristics.ts.jwt-sign-no-expiration.ast',
     'heuristics.ts.jwt-verify-ignore-expiration.ast',
+    'heuristics.ts.magic-number.ast',
     'heuristics.ts.new-promise-async.ast',
     'heuristics.ts.process-env-mutation.ast',
     'heuristics.ts.process-exit.ast',
@@ -346,6 +347,7 @@ test('detects backend TypeScript heuristic findings in production path', () => {
     'heuristics.ts.jwt-decode-without-verify.ast',
     'heuristics.ts.jwt-sign-no-expiration.ast',
     'heuristics.ts.jwt-verify-ignore-expiration.ast',
+    'heuristics.ts.magic-number.ast',
     'heuristics.ts.new-promise-async.ast',
     'heuristics.ts.process-env-mutation.ast',
     'heuristics.ts.process-exit.ast',
@@ -1788,7 +1790,33 @@ test('extracts typed heuristic facts with expected metadata', () => {
     },
   });
 
-  assert.equal(extracted.length, 150);
+  assert.equal(extracted.length, 151);
   assert.equal(extracted.every((fact) => fact.kind === 'Heuristic'), true);
   assert.equal(extracted.every((fact) => fact.source === 'heuristics:ast'), true);
+});
+
+test('detects magic number heuristic facts in backend production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/service.ts',
+        [
+          'export const retry = (attempts: number) => {',
+          '  if (attempts > 3) return 3;',
+          '  return notify(3);',
+          '};',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const magicNumberFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.magic-number.ast'
+  );
+
+  assert.ok(magicNumberFact);
+  assert.deepEqual(magicNumberFact?.lines, [2, 3]);
 });

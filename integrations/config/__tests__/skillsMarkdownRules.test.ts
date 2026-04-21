@@ -54,6 +54,22 @@ test('normaliza hardcoded values backend al guideline foundation canonico', () =
   assert.equal(rules[0]?.platform, 'backend');
 });
 
+test('normaliza magic numbers backend al guideline foundation canonico', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+    sourceContent: '❌ Magic numbers - Usar constantes con nombres descriptivos',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.equal(rules[0]?.platform, 'backend');
+});
+
 test('normaliza regla frontend SOLID a id canonico', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'frontend-guidelines',
