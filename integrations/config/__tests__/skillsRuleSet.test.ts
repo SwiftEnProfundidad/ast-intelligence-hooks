@@ -533,6 +533,65 @@ test('mapea el primer backend guideline foundation a heuristic AST reusable', as
   );
 });
 
+test('mapea try-catch silenciosos al heuristic AST reusable de empty catch', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-empty-catch-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'b'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.try-catch-silenciosos-siempre-loggear-o-propagar',
+                description: 'Avoid silent catch blocks in backend runtime code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(result.mappedHeuristicRuleIds.has('heuristics.ts.empty-catch.ast'), true);
+
+      const silentCatchRule = result.rules[0];
+      assert.ok(silentCatchRule);
+      assert.equal(
+        silentCatchRule.id,
+        'skills.backend.guideline.backend.try-catch-silenciosos-siempre-loggear-o-propagar'
+      );
+      assert.equal(silentCatchRule.when.kind, 'Heuristic');
+      if (silentCatchRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend silent catch guideline.');
+      }
+      assert.equal(silentCatchRule.when.where?.ruleId, 'heuristics.ts.empty-catch.ast');
+      assert.deepEqual(collectHeuristicPrefixes(silentCatchRule.when), ['apps/backend/']);
+      assert.equal(
+        silentCatchRule.then.source?.includes('ast_nodes=[heuristics.ts.empty-catch.ast]'),
+        true
+      );
+    })
+  );
+});
+
 test('enriquce mensaje de no-solid-violations con criterios accionables y métricas observadas', async () => {
   await withCoreSkillsDisabled(async () =>
     withTempDir('pumuki-skills-ruleset-solid-actionable-message-', async (tempRoot) => {

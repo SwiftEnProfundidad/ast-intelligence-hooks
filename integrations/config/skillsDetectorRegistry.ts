@@ -178,6 +178,8 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'typescript.new-promise-async',
     ['heuristics.ts.new-promise-async.ast']
   ),
+  'skills.backend.guideline.backend.try-catch-silenciosos-siempre-loggear-o-propagar':
+    heuristicDetector('typescript.empty-catch', ['heuristics.ts.empty-catch.ast']),
   'skills.frontend.no-empty-catch': heuristicDetector('typescript.empty-catch', [
     'heuristics.ts.empty-catch.ast',
   ]),
