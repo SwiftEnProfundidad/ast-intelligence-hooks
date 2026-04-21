@@ -592,6 +592,73 @@ test('mapea try-catch silenciosos al heuristic AST reusable de empty catch', asy
   );
 });
 
+test('mapea hardcoded values al heuristic AST reusable más cercano', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-hardcoded-values-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'c'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.hardcoded-values-config-en-variables-de-entorno',
+                description: 'Avoid hardcoded backend configuration values.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'MEDIUM',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ts.hardcoded-secret-token.ast'),
+        true
+      );
+
+      const hardcodedValuesRule = result.rules[0];
+      assert.ok(hardcodedValuesRule);
+      assert.equal(
+        hardcodedValuesRule.id,
+        'skills.backend.guideline.backend.hardcoded-values-config-en-variables-de-entorno'
+      );
+      assert.equal(hardcodedValuesRule.when.kind, 'Heuristic');
+      if (hardcodedValuesRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend hardcoded values guideline.');
+      }
+      assert.equal(
+        hardcodedValuesRule.when.where?.ruleId,
+        'heuristics.ts.hardcoded-secret-token.ast'
+      );
+      assert.deepEqual(collectHeuristicPrefixes(hardcodedValuesRule.when), ['apps/backend/']);
+      assert.equal(
+        hardcodedValuesRule.then.source?.includes(
+          'ast_nodes=[heuristics.ts.hardcoded-secret-token.ast]'
+        ),
+        true
+      );
+    })
+  );
+});
+
 test('enriquce mensaje de no-solid-violations con criterios accionables y métricas observadas', async () => {
   await withCoreSkillsDisabled(async () =>
     withTempDir('pumuki-skills-ruleset-solid-actionable-message-', async (tempRoot) => {
