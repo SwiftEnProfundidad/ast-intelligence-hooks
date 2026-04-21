@@ -1793,22 +1793,22 @@ const isExecutableMagicNumberContext = (
   if (!isObject(parent)) {
     return false;
   }
-
-  switch (parent.type) {
-    case 'BinaryExpression':
-      return parent.left === value || parent.right === value;
-    case 'CallExpression':
-    case 'NewExpression':
-      return Array.isArray(parent.arguments) && parent.arguments.includes(value);
-    case 'AssignmentExpression':
-      return parent.right === value;
-    case 'ReturnStatement':
-      return parent.argument === value;
-    case 'SwitchCase':
-      return parent.test === value;
-    default:
-      return false;
+  if (parent.type === 'BinaryExpression') {
+    return parent.left === value || parent.right === value;
   }
+  if (parent.type === 'CallExpression' || parent.type === 'NewExpression') {
+    return Array.isArray(parent.arguments) && parent.arguments.includes(value);
+  }
+  if (parent.type === 'AssignmentExpression') {
+    return parent.right === value;
+  }
+  if (parent.type === 'ReturnStatement') {
+    return parent.argument === value;
+  }
+  if (parent.type === 'SwitchCase') {
+    return parent.test === value;
+  }
+  return false;
 };
 
 const collectMagicNumberOccurrences = (
