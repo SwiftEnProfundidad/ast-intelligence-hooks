@@ -449,6 +449,14 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.backend.guideline.backend.try-catch-silenciosos-siempre-loggear-o-propagar';
     }
+    if (
+      platform === 'backend' &&
+      (includes('hardcoded values') ||
+        includes('config en variables de entorno') ||
+        includes('hardcoded values - config en variables de entorno'))
+    ) {
+      return 'skills.backend.guideline.backend.hardcoded-values-config-en-variables-de-entorno';
+    }
     if (includes('solid') || includes('single responsibility') || includes('srp')) {
       return `${prefix}.no-solid-violations`;
     }

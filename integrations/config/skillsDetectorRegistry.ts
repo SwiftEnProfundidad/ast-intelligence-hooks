@@ -180,6 +180,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   ),
   'skills.backend.guideline.backend.try-catch-silenciosos-siempre-loggear-o-propagar':
     heuristicDetector('typescript.empty-catch', ['heuristics.ts.empty-catch.ast']),
+  'skills.backend.guideline.backend.hardcoded-values-config-en-variables-de-entorno':
+    heuristicDetector('typescript.hardcoded-secret-token', [
+      'heuristics.ts.hardcoded-secret-token.ast',
+    ]),
   'skills.frontend.no-empty-catch': heuristicDetector('typescript.empty-catch', [
     'heuristics.ts.empty-catch.ast',
   ]),
