@@ -659,6 +659,65 @@ test('mapea hardcoded values al heuristic AST reusable más cercano', async () =
   );
 });
 
+test('mapea magic numbers al heuristic AST nuevo del slice backend', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-magic-numbers-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'c'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos',
+                description: 'Avoid magic numbers in backend runtime code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(result.mappedHeuristicRuleIds.has('heuristics.ts.magic-number.ast'), true);
+
+      const magicNumbersRule = result.rules[0];
+      assert.ok(magicNumbersRule);
+      assert.equal(
+        magicNumbersRule.id,
+        'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos'
+      );
+      assert.equal(magicNumbersRule.when.kind, 'Heuristic');
+      if (magicNumbersRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend magic numbers guideline.');
+      }
+      assert.equal(magicNumbersRule.when.where?.ruleId, 'heuristics.ts.magic-number.ast');
+      assert.deepEqual(collectHeuristicPrefixes(magicNumbersRule.when), ['apps/backend/']);
+      assert.equal(
+        magicNumbersRule.then.source?.includes('ast_nodes=[heuristics.ts.magic-number.ast]'),
+        true
+      );
+    })
+  );
+});
+
 test('enriquce mensaje de no-solid-violations con criterios accionables y métricas observadas', async () => {
   await withCoreSkillsDisabled(async () =>
     withTempDir('pumuki-skills-ruleset-solid-actionable-message-', async (tempRoot) => {

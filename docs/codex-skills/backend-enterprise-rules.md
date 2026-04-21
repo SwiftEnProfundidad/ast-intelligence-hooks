@@ -252,9 +252,9 @@ const { data } = await supabase
 ❌ **God classes** - Servicios con >500 líneas
 ❌ **Anemic domain models** - Entidades solo con getters/setters
 ❌ **Magic numbers** - Usar constantes con nombres descriptivos
+❌ **Mocks en producción** - Usar fakes/spies de test; en runtime productivo, solo adaptadores y datos reales
 ❌ **Callback hell** - Usar async/await
 ❌ **Hardcoded values** - Config en variables de entorno
-❌ **Mocks en producción** - Solo datos reales
 ❌ **try-catch silenciosos** - Siempre loggear o propagar (AST: common.error.empty_catch)
 ❌ **Lógica en controllers** - Mover a servicios/use cases
 

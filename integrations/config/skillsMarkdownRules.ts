@@ -457,6 +457,14 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.backend.guideline.backend.hardcoded-values-config-en-variables-de-entorno';
     }
+    if (
+      platform === 'backend' &&
+      (includes('magic numbers') ||
+        includes('usar constantes con nombres descriptivos') ||
+        includes('magic numbers - usar constantes con nombres descriptivos'))
+    ) {
+      return 'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos';
+    }
     if (includes('solid') || includes('single responsibility') || includes('srp')) {
       return `${prefix}.no-solid-violations`;
     }
