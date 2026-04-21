@@ -30,6 +30,7 @@ import {
   evaluateOpenSpecCompatibility,
   isOpenSpecProjectInitialized,
 } from '../sdd/openSpecCli';
+import { resolveRepoTrackingState, type RepoTrackingState } from './trackingState';
 
 export type DoctorIssueSeverity = 'warning' | 'error';
 
@@ -113,6 +114,7 @@ export type LifecycleDoctorReport = {
   experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
   governanceObservation: GovernanceObservationSnapshot;
   governanceNextAction: GovernanceNextActionSummary;
+  tracking: RepoTrackingState;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
   parity_profile?: DoctorParityProfile;
@@ -124,6 +126,7 @@ const buildDoctorIssues = (params: {
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
   hooksDirectory: string;
   lifecycleState: LifecycleState;
+  tracking: RepoTrackingState;
 }): ReadonlyArray<DoctorIssue> => {
   const issues: DoctorIssue[] = [];
 
@@ -161,6 +164,28 @@ const buildDoctorIssues = (params: {
       message:
         'Managed hook blocks exist but lifecycle state is not marked as installed.',
     });
+  }
+
+  if (params.tracking.enforced) {
+    if (!params.tracking.canonical_path || !params.tracking.canonical_present) {
+      issues.push({
+        severity: 'warning',
+        message:
+          'Tracking contract is declared but the canonical tracking file is missing or unresolved.',
+      });
+    } else if (params.tracking.conflict) {
+      issues.push({
+        severity: 'warning',
+        message:
+          `Tracking contract has conflicting canonical declarations (${params.tracking.declarations.map((declaration) => declaration.resolved_path).join(', ')}).`,
+      });
+    } else if (!params.tracking.single_in_progress_valid) {
+      issues.push({
+        severity: 'warning',
+        message:
+          `Canonical tracking is inconsistent for ${params.tracking.canonical_path} (in_progress_count=${params.tracking.in_progress_count}, active_task=${params.tracking.active_task_id ?? 'unknown'}, last_run_status=${params.tracking.last_run_status ?? 'absent'}).`,
+      });
+    }
   }
 
   return issues;
@@ -824,12 +849,14 @@ export const runLifecycleDoctor = (params?: {
   const hooksDirectory = resolvePumukiHooksDirectory(repoRoot);
   const hookStatus = getPumukiHooksStatus(repoRoot);
   const lifecycleState = readLifecycleState(git, repoRoot);
+  const tracking = resolveRepoTrackingState(repoRoot);
 
   const issues = buildDoctorIssues({
     trackedNodeModulesPaths,
     hookStatus,
     hooksDirectory: hooksDirectory.path,
     lifecycleState,
+    tracking,
   });
   const deep = params?.deep
     ? buildDoctorDeepReport({
@@ -882,6 +909,7 @@ export const runLifecycleDoctor = (params?: {
     experimentalFeatures,
     governanceNextAction,
     governanceObservation,
+    tracking,
     issues,
     deep,
     parity_profile,

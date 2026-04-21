@@ -235,6 +235,56 @@ test('runLifecycleDoctor queda limpio cuando estado y hooks son consistentes', a
   });
 });
 
+test('runLifecycleDoctor marca warning cuando el tracking canónico tiene más de una task activa', async () => {
+  await withTempDir('pumuki-doctor-tracking-invalid-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    mkdirSync(join(repoRoot, 'docs', 'validation', 'refactor'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      '# fixture\n- la única fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'),
+      [
+        '# plan',
+        '',
+        '[🚧] - PUMUKI-INC-078 (RuralGo) corregir tracking canónico',
+        '[🚧] - PUMUKI-INC-079 (RuralGo) task inválida simultánea',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'validation', 'refactor', 'last-run.json'),
+      JSON.stringify({
+        status: 'IN_PROGRESS',
+        plan_file: 'PUMUKI-RESET-MASTER-PLAN.md',
+        next: 'PUMUKI-INC-078',
+      }),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: '6.3.11',
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.tracking.in_progress_count, 2);
+    assert.equal(report.tracking.single_in_progress_valid, false);
+    assert.equal(report.issues.length, 1);
+    assert.equal(report.issues[0]?.severity, 'warning');
+    assert.match(report.issues[0]?.message ?? '', /Canonical tracking is inconsistent/i);
+    assert.equal(doctorHasBlockingIssues(report), false);
+  });
+});
+
 test('runLifecycleDoctor usa process.cwd por defecto y conserva metadatos de lifecycle', async () => {
   await withTempDir('pumuki-doctor-default-cwd-', async (repoRoot) => {
     const git = new FakeLifecycleGitService(repoRoot, [], {
