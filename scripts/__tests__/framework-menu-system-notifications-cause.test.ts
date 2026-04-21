@@ -17,6 +17,21 @@ test('resolveBlockedCauseSummary usa mapping conocido por causeCode', () => {
   assert.match(result, /desactualizada/i);
 });
 
+test('resolveBlockedCauseSummary traduce EVIDENCE_GATE_BLOCKED al español', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeMessage: 'Evidence AI gate status is BLOCKED.',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /gate de evidencia/i);
+  assert.doesNotMatch(result, /evidence ai gate status is blocked/i);
+});
+
 test('resolveBlockedCauseSummary traduce mensajes legacy conocidos', () => {
   const result = resolveBlockedCauseSummary(
     {
@@ -44,4 +59,19 @@ test('resolveBlockedCauseSummary usa fallback por stage cuando no hay detalles',
 
   assert.match(result, /7/);
   assert.match(result, /PRE_COMMIT/);
+});
+
+test('resolveBlockedCauseSummary traduce causas legacy de atomicidad a español', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_PUSH',
+      totalViolations: 1,
+      causeMessage: 'Atomicity budget exceeded.',
+    },
+    'GATE_BLOCKED'
+  );
+
+  assert.match(result, /demasiados scopes/i);
+  assert.doesNotMatch(result, /atomicity/i);
 });
