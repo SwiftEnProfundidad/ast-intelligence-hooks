@@ -3,7 +3,7 @@ import test from 'node:test';
 import { typescriptRules } from './typescript';
 
 test('typescriptRules define reglas heurísticas locked para plataforma generic', () => {
-  assert.equal(typescriptRules.length, 21);
+  assert.equal(typescriptRules.length, 22);
 
   const ids = typescriptRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -18,6 +18,7 @@ test('typescriptRules define reglas heurísticas locked para plataforma generic'
     'heuristics.ts.new-promise-async.ast',
     'heuristics.ts.magic-number.ast',
     'heuristics.ts.production-mock-artifact.ast',
+    'heuristics.ts.anemic-domain-model.ast',
     'heuristics.ts.with-statement.ast',
     'heuristics.ts.delete-operator.ast',
     'heuristics.ts.debugger.ast',
@@ -42,6 +43,10 @@ test('typescriptRules define reglas heurísticas locked para plataforma generic'
   assert.equal(
     byId.get('heuristics.ts.production-mock-artifact.ast')?.then.code,
     'HEURISTICS_PRODUCTION_MOCK_ARTIFACT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ts.anemic-domain-model.ast')?.then.code,
+    'HEURISTICS_ANEMIC_DOMAIN_MODEL_AST'
   );
   assert.equal(
     byId.get('heuristics.ts.debugger.ast')?.then.code,

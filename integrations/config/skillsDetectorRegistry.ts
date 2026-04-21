@@ -190,6 +190,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('typescript.production-mock-artifact', [
       'heuristics.ts.production-mock-artifact.ast',
     ]),
+  'skills.backend.guideline.backend.anemic-domain-models-entidades-con-comportamiento':
+    heuristicDetector('typescript.anemic-domain-model', [
+      'heuristics.ts.anemic-domain-model.ast',
+    ]),
   'skills.frontend.no-empty-catch': heuristicDetector('typescript.empty-catch', [
     'heuristics.ts.empty-catch.ast',
   ]),

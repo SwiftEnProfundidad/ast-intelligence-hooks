@@ -87,6 +87,23 @@ test('normaliza mocks en producción backend al guideline foundation canonico', 
   assert.equal(rules[0]?.platform, 'backend');
 });
 
+test('normaliza anemic domain models backend al guideline foundation canonico', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+    sourceContent:
+      '❌ Anemic domain models - Entidades con comportamiento, no solo getters/setters',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.backend.guideline.backend.anemic-domain-models-entidades-con-comportamiento'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.equal(rules[0]?.platform, 'backend');
+});
+
 test('normaliza regla frontend SOLID a id canonico', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'frontend-guidelines',

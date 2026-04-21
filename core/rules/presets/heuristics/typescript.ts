@@ -200,6 +200,24 @@ export const typescriptRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.anemic-domain-model.ast',
+    description: 'Detects domain classes with only constructor/getters/setters and no behavior.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.anemic-domain-model.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected an anemic domain model.',
+      code: 'HEURISTICS_ANEMIC_DOMAIN_MODEL_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.with-statement.ast',
     description: 'Detects with-statement usage in TypeScript/TSX production files.',
     severity: 'WARN',

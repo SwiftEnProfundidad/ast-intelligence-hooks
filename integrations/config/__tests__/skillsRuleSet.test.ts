@@ -785,6 +785,70 @@ test('mapea mocks en producción al heuristic AST nuevo del slice backend', asyn
   );
 });
 
+test('mapea anemic domain models al heuristic AST nuevo del slice backend', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-anemic-domain-model-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'e'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.anemic-domain-models-entidades-con-comportamiento',
+                description: 'Avoid anemic domain models in backend runtime code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(result.mappedHeuristicRuleIds.has('heuristics.ts.anemic-domain-model.ast'), true);
+
+      const anemicDomainRule = result.rules[0];
+      assert.ok(anemicDomainRule);
+      assert.equal(
+        anemicDomainRule.id,
+        'skills.backend.guideline.backend.anemic-domain-models-entidades-con-comportamiento'
+      );
+      assert.equal(anemicDomainRule.when.kind, 'Heuristic');
+      if (anemicDomainRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend anemic domain model guideline.');
+      }
+      assert.equal(
+        anemicDomainRule.when.where?.ruleId,
+        'heuristics.ts.anemic-domain-model.ast'
+      );
+      assert.deepEqual(collectHeuristicPrefixes(anemicDomainRule.when), ['apps/backend/']);
+      assert.equal(
+        anemicDomainRule.then.source?.includes(
+          'ast_nodes=[heuristics.ts.anemic-domain-model.ast]'
+        ),
+        true
+      );
+    })
+  );
+});
+
 test('enriquce mensaje de no-solid-violations con criterios accionables y métricas observadas', async () => {
   await withCoreSkillsDisabled(async () =>
     withTempDir('pumuki-skills-ruleset-solid-actionable-message-', async (tempRoot) => {
