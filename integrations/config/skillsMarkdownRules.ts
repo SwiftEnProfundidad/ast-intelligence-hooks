@@ -440,6 +440,15 @@ const normalizeKnownRuleTarget = (
 
   if (platform === 'backend' || platform === 'frontend') {
     const prefix = platform === 'backend' ? 'skills.backend' : 'skills.frontend';
+    if (
+      platform === 'backend' &&
+      (includes('try-catch silenciosos') ||
+        includes('try catch silenciosos') ||
+        includes('silenciosos siempre loggear o propagar') ||
+        includes('siempre loggear o propagar'))
+    ) {
+      return 'skills.backend.guideline.backend.try-catch-silenciosos-siempre-loggear-o-propagar';
+    }
     if (includes('solid') || includes('single responsibility') || includes('srp')) {
       return `${prefix}.no-solid-violations`;
     }
