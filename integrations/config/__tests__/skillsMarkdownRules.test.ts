@@ -104,6 +104,23 @@ test('normaliza anemic domain models backend al guideline foundation canonico', 
   assert.equal(rules[0]?.platform, 'backend');
 });
 
+test('normaliza lógica en controllers backend al guideline foundation canonico', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+    sourceContent:
+      '❌ Lógica en controllers - Mover lógica de negocio a casos de uso/servicios',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.backend.guideline.backend.logica-en-controllers-mover-logica-de-negocio-a-casos-de-uso-servicios'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.equal(rules[0]?.platform, 'backend');
+});
+
 test('normaliza regla frontend SOLID a id canonico', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'frontend-guidelines',

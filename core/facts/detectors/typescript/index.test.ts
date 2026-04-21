@@ -14,9 +14,11 @@ import {
   findUnknownWithoutGuardLines,
   findUnknownTypeAssertionLines,
   findAnemicDomainModelLines,
+  findControllerBusinessLogicLines,
   findMagicNumberLiteralLines,
   findProductionMockArtifactUsageLines,
   hasAnemicDomainModel,
+  hasControllerBusinessLogic,
   hasAsyncPromiseExecutor,
   hasConcreteDependencyInstantiation,
   hasConsoleErrorCall,
@@ -1035,6 +1037,80 @@ test('hasAnemicDomainModel detecta clases de dominio con solo accessors y sin co
   assert.deepEqual(findAnemicDomainModelLines(anemicAst), [1]);
   assert.equal(hasAnemicDomainModel(richAst), false);
   assert.equal(hasAnemicDomainModel(serviceAst), false);
+});
+
+test('hasControllerBusinessLogic detecta flow control dentro de handlers en clases Controller', () => {
+  const controllerAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrdersController' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'createOrder' },
+          decorators: [{ expression: { type: 'Identifier', name: 'Post' } }],
+          body: {
+            type: 'BlockStatement',
+            body: [
+              {
+                type: 'VariableDeclaration',
+                declarations: [{ type: 'VariableDeclarator', id: { type: 'Identifier', name: 'status' } }],
+              },
+              {
+                type: 'IfStatement',
+                test: { type: 'Identifier', name: 'isPriority' },
+                consequent: { type: 'BlockStatement', body: [] },
+              },
+            ],
+          },
+          loc: { start: { line: 4 }, end: { line: 10 } },
+        },
+      ],
+    },
+    loc: { start: { line: 1 }, end: { line: 12 } },
+  };
+  const delegatedControllerAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrdersController' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'createOrder' },
+          decorators: [{ expression: { type: 'Identifier', name: 'Post' } }],
+          body: {
+            type: 'BlockStatement',
+            body: [
+              {
+                type: 'ReturnStatement',
+                argument: {
+                  type: 'CallExpression',
+                  callee: {
+                    type: 'MemberExpression',
+                    object: {
+                      type: 'MemberExpression',
+                      object: { type: 'ThisExpression' },
+                      property: { type: 'Identifier', name: 'ordersService' },
+                    },
+                    property: { type: 'Identifier', name: 'create' },
+                  },
+                  arguments: [],
+                },
+              },
+            ],
+          },
+          loc: { start: { line: 4 }, end: { line: 8 } },
+        },
+      ],
+    },
+    loc: { start: { line: 1 }, end: { line: 10 } },
+  };
+
+  assert.equal(hasControllerBusinessLogic(controllerAst), true);
+  assert.deepEqual(findControllerBusinessLogicLines(controllerAst), [1]);
+  assert.equal(hasControllerBusinessLogic(delegatedControllerAst), false);
 });
 
 test('hasRecordStringUnknownType detecta Record<string, unknown>', () => {
