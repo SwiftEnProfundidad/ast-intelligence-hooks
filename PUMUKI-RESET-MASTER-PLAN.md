@@ -1032,9 +1032,9 @@ Decisión hard de cierre:
 
 Último cierre: `[✅] - Adopción útil de pumuki@6.3.98 cerrada en consumers` la release publicada ya quedó integrada en `SAAS`, `Flux` y `RuralGo` y no quedan bugs externos abiertos en los tres MDs consumidores.
 
-Último cierre operativo: `[✅] - Slice S1.a del menú Consumer cerrada` el menú `Consumer` ya muestra el bloque canónico de governance incluso sin `preflight`, reutilizando el mismo renderer compartido que usan `status` y `doctor`; la implementación quedó aislada en `refactor/s1-governance-console-v2` con tests dirigidos en verde (`8/8`) sobre `scripts/__tests__/framework-menu-consumer-runtime-menu.test.ts` e `integrations/lifecycle/__tests__/cliGovernanceConsole.test.ts`.
+Último cierre operativo: `[✅] - Slice S1.b alineada en status, doctor y menú` el bloque canónico compartido ya converge en orden y labels visibles entre `status`, `doctor` y el menú `Consumer`: `Contract`, `Governance`, `Platforms`, `GitFlow`, `SDD`, `Evidence` y `Pre-write` salen del mismo renderer y quedan cubiertos con tests dirigidos en verde (`8/8`) dentro de `refactor/s1-governance-console-v2`.
 
-Tarea activa única: `[🚧] - Slice S1.b — Alinear el orden/semántica visible del bloque canónico en status, doctor y menú` tras cerrar el primer corte perceptible de S1, el siguiente paso real del frente es endurecer la semántica visible del bloque compartido para que el orden y los labels canónicos converjan en las tres superficies sin abrir todavía un rediseño completo de MCP ni del menú avanzado.
+Tarea activa única: `[🚧] - Slice S1.c — Unificar next_action y prewrite_effective entre hooks, CLI y MCP con vocabulario canónico compartido` tras cerrar la convergencia visual del bloque canónico, el siguiente corte mínimo con más valor visible es unificar la narrativa accionable de bloqueo/remediación entre hooks, CLI y MCP sin abrir todavía un rediseño completo de `Advanced` ni de MCP.
 
 Barrido de consumers cerrado:
 - SAAS (`pumuki@6.3.98`): rollout ejecutado en `chore/pumuki-6-3-98-rollout`, follow-up de pin exacto (`52bb5d3`) y PR [#11](https://github.com/SwiftEnProfundidad/app-supermercados/pull/11) ya mergeada en `main` con squash `6bdd18404358319b20b594c3a2193799eabe4dab` (`2026-04-21T19:04:27Z`). `install/status/doctor` convergieron en verde y el hilo de review sobre `^6.3.98` quedó resuelto antes del merge.
