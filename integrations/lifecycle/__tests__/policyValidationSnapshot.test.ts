@@ -38,6 +38,16 @@ test('readLifecyclePolicyValidationSnapshot trata PRE_WRITE como estricto cuando
   }
 });
 
+test('readLifecyclePolicyValidationSnapshot trata PRE_WRITE como estricto por defecto cuando no hay override explícito', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-policy-validation-prewrite-default-'));
+  try {
+    const snapshot = readLifecyclePolicyValidationSnapshot(repoRoot);
+    assert.equal(snapshot.stages.PRE_WRITE.strict, true);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test('readLifecyclePolicyValidationSnapshot refleja PRE_WRITE no estricto cuando el enforcement efectivo está en advisory', async () => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-policy-validation-prewrite-advisory-'));
   try {
