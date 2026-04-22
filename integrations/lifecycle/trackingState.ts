@@ -16,6 +16,10 @@ export type RepoTrackingState = {
   single_in_progress_valid: boolean;
   conflict: boolean;
   declarations: ReadonlyArray<TrackingDeclaration>;
+  in_progress_entries?: ReadonlyArray<{
+    line_number: number;
+    task_id: string | null;
+  }>;
   active_task_id?: string | null;
   last_run_path?: string | null;
   last_run_status?: string | null;
@@ -308,6 +312,7 @@ export const resolveRepoTrackingState = (repoRoot: string): RepoTrackingState =>
       single_in_progress_valid: false,
       conflict: false,
       declarations: [],
+      in_progress_entries: [],
       active_task_id: null,
       last_run_path: null,
       last_run_status: null,
@@ -346,6 +351,7 @@ export const resolveRepoTrackingState = (repoRoot: string): RepoTrackingState =>
       single_in_progress_valid: false,
       conflict: allDeclaredPaths.length > 1,
       declarations: declarations.map(({ priority: _priority, ...declaration }) => declaration),
+      in_progress_entries: [],
       active_task_id: null,
       last_run_path: null,
       last_run_status: null,
@@ -375,6 +381,10 @@ export const resolveRepoTrackingState = (repoRoot: string): RepoTrackingState =>
       uniqueCanonicalPaths.length === 1 && lastRunAlignment.valid,
     conflict: allDeclaredPaths.length > 1,
     declarations: declarations.map(({ priority: _priority, ...declaration }) => declaration),
+    in_progress_entries: inProgressEntries.map((entry) => ({
+      line_number: entry.lineNumber,
+      task_id: entry.taskId,
+    })),
     active_task_id: activeTaskId,
     last_run_path: lastRunAlignment.path,
     last_run_status: lastRunAlignment.status,

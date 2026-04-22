@@ -1,6 +1,7 @@
 import type { Finding } from '../../core/gate/Finding';
 import type { GateStage } from '../../core/gate/GateStage';
 import { evaluateAiGate, type AiGateStage } from '../gate/evaluateAiGate';
+import { resolveRepoTrackingState } from '../lifecycle/trackingState';
 
 const AI_GATE_STAGES = new Set<AiGateStage>(['PRE_WRITE', 'PRE_COMMIT', 'PRE_PUSH', 'CI']);
 
@@ -27,6 +28,18 @@ const toRepoPolicyFinding = (params: {
   source: 'ai_gate:repo_policy',
 });
 
+const appendTrackingActionableContext = (repoRoot: string, message: string): string => {
+  const tracking = resolveRepoTrackingState(repoRoot);
+  const activeEntries = (tracking.in_progress_entries ?? [])
+    .map((entry) => `${entry.task_id ?? 'UNKNOWN'}@L${entry.line_number}`)
+    .join(', ');
+  if (!activeEntries) {
+    return message;
+  }
+  const lastRunStatus = tracking.last_run_status ?? 'absent';
+  return `${message} active_entries=${activeEntries} last_run_status=${lastRunStatus}.`;
+};
+
 export const collectAiGateRepoPolicyFindings = (params: {
   repoRoot: string;
   stage: GateStage;
@@ -43,7 +56,10 @@ export const collectAiGateRepoPolicyFindings = (params: {
     .map((v) =>
       toRepoPolicyFinding({
         code: v.code,
-        message: v.message,
+        message:
+          v.code === 'TRACKING_CANONICAL_IN_PROGRESS_INVALID'
+            ? appendTrackingActionableContext(params.repoRoot, v.message)
+            : v.message,
         severity: v.severity === 'ERROR' ? 'ERROR' : 'WARN',
       })
     );

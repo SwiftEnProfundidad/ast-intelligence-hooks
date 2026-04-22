@@ -30,6 +30,9 @@ const resolvePrimaryFinding = (findings: ReadonlyArray<Finding>): Finding => {
   return primary ?? findings[0]!;
 };
 
+const sortFindingsBySeverity = (findings: ReadonlyArray<Finding>): ReadonlyArray<Finding> =>
+  [...findings].sort((left, right) => severityWeight(right.severity) - severityWeight(left.severity));
+
 const normalizeAnchorLine = (lines: Finding['lines']): number => {
   if (Array.isArray(lines)) {
     const candidates = lines
@@ -115,7 +118,16 @@ export const printGateFindings = (
   if (action.next_action.command) {
     process.stdout.write(`[pumuki][block-summary] command=${action.next_action.command}\n`);
   }
-  for (const finding of findings) {
+  const orderedFindings = sortFindingsBySeverity(findings);
+  const secondaryWarnings = orderedFindings.filter(
+    (finding) => finding !== primary && finding.severity.toUpperCase() === 'WARN'
+  );
+  for (const warning of secondaryWarnings) {
+    process.stdout.write(
+      `[pumuki][warning-summary] secondary=${warning.code} severity=${warning.severity.toUpperCase()} rule=${warning.ruleId}\n`
+    );
+  }
+  for (const finding of orderedFindings) {
     process.stdout.write(`${formatFinding(finding)}\n`);
   }
 };
