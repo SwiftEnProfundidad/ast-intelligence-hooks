@@ -9,6 +9,7 @@ import { formatAdvancedMenuView } from '../framework-menu-advanced-view-lib';
 import { createFrameworkMenuActions } from '../framework-menu-actions';
 import { createFrameworkMenuPrompts } from '../framework-menu-prompts';
 import type { ConsumerPreflightResult } from '../framework-menu-consumer-preflight-types';
+import type { GovernanceConsoleSnapshot } from '../../integrations/lifecycle/cliGovernanceConsole';
 
 const buildConsumerPreflightResult = (): ConsumerPreflightResult => ({
   stage: 'PRE_COMMIT',
@@ -183,6 +184,16 @@ const buildConsumerPreflightResult = (): ConsumerPreflightResult => ({
   notificationResults: [],
 });
 
+const buildGovernanceConsoleSnapshot = (): GovernanceConsoleSnapshot => {
+  const preflight = buildConsumerPreflightResult();
+  return {
+    governanceObservation: preflight.governanceObservation,
+    governanceNextAction: preflight.governanceNextAction,
+    policyValidation: preflight.policyValidation,
+    experimentalFeatures: preflight.experimentalFeatures,
+  };
+};
+
 const buildAdvancedActions = () => {
   const fakeRl = {
     question: async () => '',
@@ -318,6 +329,27 @@ test('renderConsumerRuntimeModernMenu muestra bloque visible de governance cuand
   assert.match(rendered, /Governance next action:/);
   assert.match(rendered, /Policy-as-code: PRE_WRITE=POLICY_AS_CODE_VALID strict=yes/);
   assert.match(rendered, /Experimental: ANALYTICS=off/);
+});
+
+test('renderConsumerRuntimeModernMenu muestra bloque visible de governance aunque todavía no exista preflight', () => {
+  const rendered = renderConsumerRuntimeModernMenu({
+    actions: createConsumerMenuRuntime({
+      runRepoGate: async () => {},
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runPreflight: async () => {},
+      write: () => {},
+      readGovernanceConsole: () => buildGovernanceConsoleSnapshot(),
+    }).actions,
+    repoRoot: '/tmp/repo',
+    useColor: () => false,
+    governanceConsole: buildGovernanceConsoleSnapshot(),
+  });
+
+  assert.match(rendered, /Governance Console/);
+  assert.match(rendered, /Governance truth:/);
+  assert.match(rendered, /Governance next action:/);
 });
 
 test('consumer runtime printMenu usa vista clásica agrupada por shell mínima cuando PUMUKI_MENU_UI_V2 no está activo', async () => {

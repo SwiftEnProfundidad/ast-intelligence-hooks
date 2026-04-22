@@ -6,6 +6,8 @@ import {
 } from './framework-menu-consumer-runtime-audit';
 import type { FrameworkMenuEvidenceSummary } from './framework-menu-evidence-summary-lib';
 import type { ConsumerPreflightResult } from './framework-menu-consumer-preflight-types';
+import type { GovernanceConsoleSnapshot } from '../integrations/lifecycle/cliGovernanceConsole';
+import { readLifecycleStatus } from '../integrations/lifecycle/status';
 import type {
   ConsumerAction,
   ConsumerMenuRuntime,
@@ -17,6 +19,22 @@ export type {
   ConsumerMenuRuntime,
   ConsumerMenuRuntimeParams,
 } from './framework-menu-consumer-runtime-types';
+
+const readMenuGovernanceConsoleSnapshot = (
+  repoRoot: string
+): GovernanceConsoleSnapshot | null => {
+  try {
+    const status = readLifecycleStatus({ cwd: repoRoot });
+    return {
+      governanceObservation: status.governanceObservation,
+      governanceNextAction: status.governanceNextAction,
+      policyValidation: status.policyValidation,
+      experimentalFeatures: status.experimentalFeatures,
+    };
+  } catch {
+    return null;
+  }
+};
 
 export const createConsumerMenuRuntime = (
   params: ConsumerMenuRuntimeParams
@@ -58,12 +76,22 @@ export const createConsumerMenuRuntime = (
   return {
     actions: actions as ReadonlyArray<ConsumerAction>,
     printMenu: () => {
+      const governanceConsole =
+        lastPreflight
+          ? {
+              governanceObservation: lastPreflight.governanceObservation,
+              governanceNextAction: lastPreflight.governanceNextAction,
+              policyValidation: lastPreflight.policyValidation,
+              experimentalFeatures: lastPreflight.experimentalFeatures,
+            }
+          : (params.readGovernanceConsole?.() ?? readMenuGovernanceConsoleSnapshot(repoRoot));
       printConsumerRuntimeMenu({
         actions,
         repoRoot,
         useColor,
         write: params.write,
         preflight: lastPreflight,
+        governanceConsole,
       });
     },
     readCurrentSummary: () => summaryOverride,
