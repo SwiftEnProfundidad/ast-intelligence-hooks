@@ -6,6 +6,11 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.100)
+
+- **Hotfix de activación efectiva:** la línea publicada deja de resolver `PRE_WRITE` a `off/default` en ausencia de override explícito; el default vuelve a ser coercitivo para el flujo real del agente/editor.
+- **Rollout recomendado:** publicar `pumuki@6.3.100` y revalidar en `RuralGo` que `status`/`doctor` ya no presenten `pre_write.mode=off source=default`.
+
 ### 2026-04-22 (v6.3.99)
 
 - **Hotfix de coerción temprana:** `PRE_WRITE` deja de parecer advisory cuando realmente está activado en `strict`, y el arranque agentic devuelve fallo real al bloquear.

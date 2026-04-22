@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.100] - 2026-04-22
+
+### Fixed
+
+- **`PRE_WRITE` estricto por defecto en la línea publicada:** la resolución experimental de `pre_write` deja de nacer en `off/default` en `main` y vuelve a converger con el contrato coercitivo esperado por los consumers.
+- **Regresión explícita del default efectivo:** nuevas pruebas fijan que `resolvePreWriteExperimentalFeature`, `resolvePreWriteEnforcement` y `policyValidationSnapshot` tratan `PRE_WRITE` como estricto cuando no existe override explícito.
+
 ## [6.3.99] - 2026-04-22
 
 ### Fixed

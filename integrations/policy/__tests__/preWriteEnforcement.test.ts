@@ -51,14 +51,14 @@ const withLegacyPreWriteEnforcementEnv = async <T>(
   }
 };
 
-test('resolvePreWriteEnforcement defaults to off mode', async () => {
+test('resolvePreWriteEnforcement defaults to strict mode', async () => {
   await withPreWriteEnforcementEnv(undefined, () => {
     const resolved = resolvePreWriteEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'off',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
       layer: 'experimental',
       activationVariable: 'PUMUKI_EXPERIMENTAL_PRE_WRITE',
       legacyActivationVariable: 'PUMUKI_PREWRITE_ENFORCEMENT',
@@ -113,14 +113,14 @@ test('resolvePreWriteEnforcement accepts legacy environment as compatibility fal
   });
 });
 
-test('resolvePreWriteEnforcement falls back to off on invalid environment value', async () => {
+test('resolvePreWriteEnforcement falls back to strict on invalid environment value', async () => {
   await withPreWriteEnforcementEnv('surprise', () => {
     const resolved = resolvePreWriteEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'off',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
       layer: 'experimental',
       activationVariable: 'PUMUKI_EXPERIMENTAL_PRE_WRITE',
       legacyActivationVariable: 'PUMUKI_PREWRITE_ENFORCEMENT',
