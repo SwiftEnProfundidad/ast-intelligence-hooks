@@ -110,6 +110,9 @@ test('resolvePolicyAsCodeTraceMetadata validates signature when contract matches
         {
           version: '1.0',
           source: 'default',
+          strict: {
+            PRE_PUSH: true,
+          },
           signatures: {
             PRE_COMMIT: 'a'.repeat(64),
             PRE_PUSH: signature,
@@ -132,6 +135,7 @@ test('resolvePolicyAsCodeTraceMetadata validates signature when contract matches
 
     assert.equal(trace.validation.status, 'valid');
     assert.equal(trace.validation.code, 'POLICY_AS_CODE_VALID');
+    assert.equal(trace.validation.strict, true);
     assert.equal(trace.signature, signature);
   });
 });

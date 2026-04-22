@@ -234,6 +234,7 @@ type PolicyAsCodeContract = {
   source: 'default' | 'skills.policy' | 'hard-mode';
   signatures: Partial<Record<SkillsStage, string>> & Record<'PRE_COMMIT' | 'PRE_PUSH' | 'CI', string>;
   expires_at?: string;
+  strict?: Partial<Record<SkillsStage, boolean>>;
 };
 
 const resolveContractSignatureForStage = (
@@ -264,6 +265,23 @@ const isIsoDateString = (value: unknown): value is string => {
   return Number.isFinite(Date.parse(value));
 };
 
+const isPolicyStrictRecord = (
+  value: unknown
+): value is Partial<Record<SkillsStage, boolean>> => {
+  if (!isObject(value)) {
+    return false;
+  }
+  return Object.entries(value).every(([stage, strict]) => {
+    return (
+      (stage === 'PRE_WRITE' ||
+        stage === 'PRE_COMMIT' ||
+        stage === 'PRE_PUSH' ||
+        stage === 'CI') &&
+      typeof strict === 'boolean'
+    );
+  });
+};
+
 const policyStrictModeFromEnv = (): boolean => {
   const raw = process.env.PUMUKI_POLICY_STRICT?.trim().toLowerCase();
   if (!raw) {
@@ -292,12 +310,26 @@ const isPolicyAsCodeContract = (value: unknown): value is PolicyAsCodeContract =
   if (typeof value.expires_at !== 'undefined' && !isIsoDateString(value.expires_at)) {
     return false;
   }
+  if (typeof value.strict !== 'undefined' && !isPolicyStrictRecord(value.strict)) {
+    return false;
+  }
   return (
     (typeof value.signatures.PRE_WRITE === 'undefined' || isSha256Hex(value.signatures.PRE_WRITE)) &&
     isSha256Hex(value.signatures.PRE_COMMIT) &&
     isSha256Hex(value.signatures.PRE_PUSH) &&
     isSha256Hex(value.signatures.CI)
   );
+};
+
+const resolvePolicyAsCodeStrict = (params: {
+  contract?: PolicyAsCodeContract;
+  stage: SkillsStage;
+}): boolean => {
+  const declared = params.contract?.strict?.[params.stage];
+  if (typeof declared === 'boolean') {
+    return declared;
+  }
+  return policyStrictModeFromEnv();
 };
 
 const createPolicyAsCodeSignature = (params: {
@@ -332,7 +364,7 @@ const resolvePolicyAsCodeTraceMetadata = (params: {
   policySource: string;
   validation: NonNullable<ResolvedStagePolicy['trace']['validation']>;
 } => {
-  const strict = policyStrictModeFromEnv();
+  const envStrict = policyStrictModeFromEnv();
   const computedVersion = `policy-as-code/${params.source}@${POLICY_AS_CODE_VERSION}`;
   const computedSignature = createPolicyAsCodeSignature({
     stage: params.stage,
@@ -344,7 +376,7 @@ const resolvePolicyAsCodeTraceMetadata = (params: {
   const contractPath = join(params.repoRoot, POLICY_AS_CODE_CONTRACT_PATH);
 
   if (!existsSync(contractPath)) {
-    if (strict) {
+    if (envStrict) {
       return {
         version: computedVersion,
         signature: computedSignature,
@@ -354,7 +386,7 @@ const resolvePolicyAsCodeTraceMetadata = (params: {
           code: 'POLICY_AS_CODE_UNSIGNED',
           message:
             'Policy-as-code contract is missing; runtime policy metadata is unsigned.',
-          strict,
+          strict: envStrict,
         },
       };
     }
@@ -367,7 +399,7 @@ const resolvePolicyAsCodeTraceMetadata = (params: {
         status: 'valid',
         code: 'POLICY_AS_CODE_VALID',
         message: 'Policy-as-code metadata generated from active runtime policy.',
-        strict,
+        strict: envStrict,
       },
     };
   }
@@ -383,10 +415,15 @@ const resolvePolicyAsCodeTraceMetadata = (params: {
           status: 'invalid',
           code: 'POLICY_AS_CODE_CONTRACT_INVALID',
           message: 'Policy-as-code contract is malformed.',
-          strict,
+          strict: envStrict,
         },
       };
     }
+
+    const strict = resolvePolicyAsCodeStrict({
+      contract: raw,
+      stage: params.stage,
+    });
 
     if (raw.source !== params.source) {
       return {
@@ -465,7 +502,7 @@ const resolvePolicyAsCodeTraceMetadata = (params: {
         status: 'invalid',
         code: 'POLICY_AS_CODE_CONTRACT_INVALID',
         message: 'Policy-as-code contract cannot be parsed as JSON.',
-        strict,
+        strict: envStrict,
       },
     };
   }

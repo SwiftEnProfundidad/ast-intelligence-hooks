@@ -115,6 +115,41 @@ test('resolvePolicyForStage marks unknown-source when policy-as-code contract so
   });
 });
 
+test('resolvePolicyForStage lee strict desde el contrato firmado cuando está declarado', async () => {
+  await withTempDir('pumuki-stage-policy-contract-strict-', async (repoRoot) => {
+    const baseline = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    const prePushSignature = baseline.trace.signature;
+    assert.ok(prePushSignature);
+
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'policy-as-code.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          source: 'default',
+          strict: {
+            PRE_PUSH: true,
+          },
+          signatures: {
+            PRE_COMMIT: 'a'.repeat(64),
+            PRE_PUSH: prePushSignature,
+            CI: 'c'.repeat(64),
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    assert.equal(resolved.trace.validation?.status, 'valid');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_VALID');
+    assert.equal(resolved.trace.validation?.strict, true);
+  });
+});
+
 test('resolvePolicyForStage marks expired when policy-as-code contract is out of date', async () => {
   await withTempDir('pumuki-stage-policy-contract-expired-', async (repoRoot) => {
     const baseline = resolvePolicyForStage('PRE_PUSH', repoRoot);
