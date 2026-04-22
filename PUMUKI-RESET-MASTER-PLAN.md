@@ -1032,9 +1032,9 @@ Decisión hard de cierre:
 
 Último cierre: `[✅] - Adopción útil de pumuki@6.3.98 cerrada en consumers` la release publicada ya quedó integrada en `SAAS`, `Flux` y `RuralGo` y no quedan bugs externos abiertos en los tres MDs consumidores.
 
-Último cierre operativo: `[✅] - S1 governance console unificada cerrada` la convergencia entre `Consumer` y `Advanced` ya queda validada de extremo a extremo sobre la misma consola de governance unificada; el cierre queda cubierto con la suite dirigida en verde (`19/19`) dentro de `refactor/s1-governance-console-v2`.
+Último cierre operativo: `[✅] - Slice S2.a smoke contractual cruzado entre menú, CLI y MCP` la consola de governance unificada ya queda congelada con un smoke contractual que cruza menú real, CLI real y MCP sobre el mismo contrato visible de `Pre-write` y `Next action`; el cierre queda cubierto con la suite dirigida en verde (`6/6`) dentro de `refactor/s1-governance-console-v2`.
 
-Tarea activa única: `[🚧] - Slice S2.a — Elevar la consola de governance unificada a smoke contractual cruzado entre menú, CLI y MCP` tras cerrar S1, el siguiente corte mínimo con valor real es convertir esta convergencia en smoke contractual cruzado entre superficies para congelar el contrato compartido.
+Tarea activa única: `[🚧] - Slice S2.b — Extender el smoke contractual de governance a status, doctor y ai_gate_check` tras congelar el contrato entre menú, CLI y MCP, el siguiente corte mínimo con valor real es cubrir también `status`, `doctor` y `ai_gate_check` para cerrar el perímetro contractual principal de governance.
 
 Barrido de consumers cerrado:
 - SAAS (`pumuki@6.3.98`): rollout ejecutado en `chore/pumuki-6-3-98-rollout`, follow-up de pin exacto (`52bb5d3`) y PR [#11](https://github.com/SwiftEnProfundidad/app-supermercados/pull/11) ya mergeada en `main` con squash `6bdd18404358319b20b594c3a2193799eabe4dab` (`2026-04-21T19:04:27Z`). `install/status/doctor` convergieron en verde y el hilo de review sobre `^6.3.98` quedó resuelto antes del merge.
