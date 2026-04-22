@@ -1032,25 +1032,25 @@ Decisión hard de cierre:
 
 Último cierre: `[✅] - PUMUKI-INC-079 cerrado con release útil de pumuki@6.3.101` el hotfix de runtime quedó integrado en `main` vía PR [#779](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/779), publicado en npm como `pumuki@6.3.101` y revalidado en RuralGo con replay bloqueante real ya mergeado vía PR [#1875](https://github.com/SwiftEnProfundidad/R_GO/pull/1875); en consumer, `status`/`doctor` convergen en `6.3.101`, `PRE_WRITE` sale `mode=strict source=default blocking=true` y la ruta bloqueante termina con salida visual `[pumuki] title: 🔴 Pumuki bloqueado` sin el error residual `options is not defined`.
 
-Último cierre operativo: `[✅] - Workspace raíz saneado y worktrees auxiliares desmontadas` el checkout principal `release/6.3.65` quedó limpio tras extraer y aparcar los bundles locales fuera del root; el trabajo no publicado sigue preservado en `/tmp/pumuki-root-bundles/**` para rehidratación controlada cuando haga falta.
+Último cierre operativo: `[✅] - PUMUKI-INC-080 — Resolver incoherencia de policy efectiva y wiring de hooks` el fix quedó integrado en `develop` vía PR [#782](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/782) (`6f70bd6147518d96a29b9255eaf3ea4085813945`), publicado en `main` vía hotfix PR [#783](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/783) (`c247456cbb08ae5ed08780fa011f21f668fdeb29`) y release útil `pumuki@6.3.102`; el replay real en consumers valida convergencia de `status`/`doctor`, `PRE_WRITE.strict=true` sin contradicción con el contrato firmado y wiring ejecutable de `pre-push` incluso cuando el hook previo termina en `exec`.
 
-Tarea activa única: `[🚧] - PUMUKI-INC-080 — Resolver incoherencia de policy efectiva y wiring de hooks` tras cerrar `PUMUKI-INC-079` con release útil `6.3.101` y replay real en RuralGo, el único bug externo prioritario restante pasa a ser `PUMUKI-INC-080`: convergencia entre policy declarada y efectiva, eliminación de wiring muerto o ambiguo en hooks y cierre del drift semántico entre `status`, `doctor`, lifecycle y hooks gestionados.
+Tarea activa única: `[🚧] - Slice S2.b — Extender el smoke contractual de governance a status, doctor y ai_gate_check` con `SAAS`, `RuralGo` y `Flux` ya en `0` bugs externos activos de Pumuki, el backlog interno deja de estar congelado y vuelve el siguiente corte propio pendiente: endurecer el smoke contractual para cubrir `status`, `doctor` y `ai_gate_check` sobre el mismo contrato visible de governance.
 
 Regla operativa persistente: este repositorio no dispone de cuota útil de GitHub Actions en el ciclo actual; durante rollout y release se crean las PR necesarias y se mergean igualmente sin esperar CI remoto. La validación contractual pasa a ser local y dirigida y cualquier bloqueo de branch policy por checks remotos debe resolverse por merge administrativo, no reabriendo el debate sobre esperar Actions.
 
 Barrido de consumers cerrado:
-- SAAS (`pumuki@6.3.98`): rollout ejecutado en `chore/pumuki-6-3-98-rollout`, follow-up de pin exacto (`52bb5d3`) y PR [#11](https://github.com/SwiftEnProfundidad/app-supermercados/pull/11) ya mergeada en `main` con squash `6bdd18404358319b20b594c3a2193799eabe4dab` (`2026-04-21T19:04:27Z`). `install/status/doctor` convergieron en verde y el hilo de review sobre `^6.3.98` quedó resuelto antes del merge.
-- Flux (`pumuki@6.3.98`): rollout aislado en `Flux_training__chore-pumuki-6-3-98-rollout`, repin exacto (`f0ec81e`) y PR [#8](https://github.com/SwiftEnProfundidad/flux-training/pull/8) ya mergeada en `develop` con squash `945d46e3a1c06497f08a0875d62974a5429095cb` (`2026-04-21T19:04:07Z`). `install/status/doctor` convergieron en verde y `Vercel` quedó en success antes del merge.
-- RuralGo (`pumuki@6.3.101`): cierre útil de `PUMUKI-INC-079` ejecutado y mergeado vía PR [#1875](https://github.com/SwiftEnProfundidad/R_GO/pull/1875) sobre `feature/rgo-1900-01-ios-buyer-core`; `status` y `doctor` convergieron en `6.3.101` sin drift y el replay real de `pumuki-pre-write.js` ya bloquea de forma perceptible y limpia en consumer.
-- Adopción: `pumuki@6.3.98` ya quedó publicada y mergeada en los tres consumers activos, sin bugs externos abiertos derivados del rollout.
+- SAAS (`pumuki@6.3.102`): rollout ejecutado en `chore/pumuki-6-3-102-rollout` y PR [#12](https://github.com/SwiftEnProfundidad/app-supermercados/pull/12) ya mergeada en `main` con merge `ed8a5d3be224a8bc05a0b5209e0699835a83b925`; `status`/`doctor` convergieron en verde y el hook real `tools/git-hooks/pre-push` quedó validado tras refrescar `PRE_WRITE`/receipt MCP.
+- Flux (`pumuki@6.3.102`): rollout aislado en `Flux_training__pumuki-6-3-102-rollout` y PR [#9](https://github.com/SwiftEnProfundidad/flux-training/pull/9) ya mergeada en `develop` con merge `4b98c95a04a48766d39181fd7a3e0bd13d8537ad`; `status`/`doctor` convergieron en verde y el hook real `./.pumuki/git-hooks/pre-push` quedó ejecutable en la worktree limpia.
+- RuralGo (`pumuki@6.3.102`): rollout ejecutado y mergeado vía PR [#1878](https://github.com/SwiftEnProfundidad/R_GO/pull/1878) sobre `feature/rgo-1900-01-ios-buyer-core` con merge `0144c795b1b365bdd5557cc2c11b94b50aaebdad`; `status` y `doctor` convergieron en `6.3.102` sin drift, `pre-commit run --hook-stage pre-push pumuki-pre-push --all-files` pasó y el backlog externo de `PUMUKI-INC-080` quedó en `✅ fixed`.
+- Adopción: `pumuki@6.3.102` ya quedó publicada y mergeada en los tres consumers activos, sin bugs externos abiertos derivados del rollout.
 
 Snapshot de adopción vigente:
 
 | Consumer | Versión/estado actual | Estado backlog externo | Lectura operativa |
 |----------|------------------------|------------------------|-------------------|
-| `SAAS` | `6.3.98` mergeada vía [#11](https://github.com/SwiftEnProfundidad/app-supermercados/pull/11) | `0` incidencias activas | Adopción cerrada en `main`. |
-| `RuralGo` | `6.3.101` mergeada vía [#1875](https://github.com/SwiftEnProfundidad/R_GO/pull/1875) | `1` incidencia activa (`PUMUKI-INC-080`) | `PUMUKI-INC-079` cerrada; `INC-080` pasa a ser el único frente vivo. |
-| `Flux` | `6.3.98` mergeada vía [#8](https://github.com/SwiftEnProfundidad/flux-training/pull/8) | sin bug nuevo abierto en backlog Pumuki | Adopción cerrada en `develop`. |
+| `SAAS` | `6.3.102` mergeada vía [#12](https://github.com/SwiftEnProfundidad/app-supermercados/pull/12) | `0` incidencias activas | Adopción cerrada en `main`. |
+| `RuralGo` | `6.3.102` mergeada vía [#1878](https://github.com/SwiftEnProfundidad/R_GO/pull/1878) | `0` incidencias activas | `PUMUKI-INC-079` y `PUMUKI-INC-080` cerradas. |
+| `Flux` | `6.3.102` mergeada vía [#9](https://github.com/SwiftEnProfundidad/flux-training/pull/9) | sin bug nuevo abierto en backlog Pumuki | Adopción cerrada en `develop`. |
 
 *(Sustituir la fila anterior al cerrar/abrir la tarea en curso: una sola 🚧 en todo el plan.)*
 
