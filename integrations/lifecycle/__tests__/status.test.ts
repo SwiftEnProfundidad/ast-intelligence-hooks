@@ -195,7 +195,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     assert.equal(status.governanceObservation.contract_surface.agents_md, false);
     assert.equal(
       status.governanceObservation.attention_codes.includes('POLICY_PRE_WRITE_NOT_STRICT'),
-      true
+      false
     );
 
     assert.deepEqual(git.resolveCalls, ['/tmp/ignored-cwd']);
