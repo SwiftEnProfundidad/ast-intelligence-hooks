@@ -6,6 +6,11 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.99)
+
+- **Hotfix de coerción temprana:** `PRE_WRITE` deja de parecer advisory cuando realmente está activado en `strict`, y el arranque agentic devuelve fallo real al bloquear.
+- **Rollout recomendado:** publicar `pumuki@6.3.99` y repin inmediato en `RuralGo`, validando `pumuki:status`, `pumuki:doctor`, `pre-commit` y `pre-push` con el fix de `PUMUKI-INC-079`.
+
 ### 2026-04-11 (v6.3.72)
 
 - **Tarball npm**: `package.json` → `files` incluye `AGENTS.md`, `CHANGELOG.md` y `docs/tracking/plan-curso-pumuki-stack-my-architecture.md` para lectura canónica vía npm / jsDelivr sin depender solo del repo Git.
