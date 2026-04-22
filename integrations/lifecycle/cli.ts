@@ -1670,10 +1670,19 @@ export type PreWriteOpenSpecBootstrapTrace = {
   details?: string;
 };
 
-export const PRE_WRITE_ENABLE_ADVISORY_COMMAND =
-  'PUMUKI_EXPERIMENTAL_PRE_WRITE=advisory npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json';
-export const buildSddExperimentalEnableAdvisoryCommand = (stage: SddStage): string =>
-  `PUMUKI_EXPERIMENTAL_SDD=advisory npx --yes --package pumuki@latest pumuki sdd validate --stage=${stage} --json`;
+export const buildPreWriteExperimentalEnableAdvisoryCommand = (
+  repoRoot: string = process.cwd()
+): string =>
+  `PUMUKI_EXPERIMENTAL_PRE_WRITE=advisory ${buildPinnedPumukiNpxCommand(
+    getCurrentPumukiVersion({ repoRoot })
+  )} sdd validate --stage=PRE_WRITE --json`;
+export const buildSddExperimentalEnableAdvisoryCommand = (
+  stage: SddStage,
+  repoRoot: string = process.cwd()
+): string =>
+  `PUMUKI_EXPERIMENTAL_SDD=advisory ${buildPinnedPumukiNpxCommand(
+    getCurrentPumukiVersion({ repoRoot })
+  )} sdd validate --stage=${stage} --json`;
 const buildAnalyticsExperimentalEnableCommand = (action: AnalyticsHotspotsCommand): string =>
   `PUMUKI_EXPERIMENTAL_ANALYTICS=advisory npx --yes --package pumuki@latest pumuki analytics hotspots ${action} --json`;
 const SAAS_INGESTION_ENABLE_ADVISORY_COMMAND =

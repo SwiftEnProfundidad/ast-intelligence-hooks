@@ -4,6 +4,7 @@ import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import { getCurrentPumukiVersion } from '../../lifecycle/packageInfo';
 import { evaluateSddPolicy } from '../policy';
 import { openSddSession } from '../sessionStore';
 
@@ -137,6 +138,10 @@ test('evaluateSddPolicy deja SDD/OpenSpec en default-off cuando el feature exper
     assert.equal(result.decision.allowed, true);
     assert.equal(result.decision.code, 'SDD_EXPERIMENTAL_DISABLED');
     assert.equal(result.decision.details?.activation_env, 'PUMUKI_EXPERIMENTAL_SDD');
+    assert.equal(
+      result.decision.details?.activation_command,
+      `PUMUKI_EXPERIMENTAL_SDD=advisory npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd validate --stage=PRE_COMMIT --json`
+    );
     assert.match(result.decision.message, /namespace experimental/i);
   });
 });
