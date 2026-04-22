@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.107] - 2026-04-22
+
+### Fixed
+
+- **Semántica inequívoca para sesión SDD expirada:** una sesión vencida deja de proyectarse como `active=true` y pasa a exponerse como inactiva (`active=false`) manteniendo `valid=false` y `remainingSeconds=0`.
+- **Refresh de sesión expiradas todavía permitido:** `refreshSddSession` ya no exige `active=true`; basta con conservar el `changeId` para poder renovar una sesión caducada sin reabrirla manualmente.
+- **Policy SDD alineada con esa semántica:** `evaluateSddPolicy` trata la sesión como `missing` solo cuando falta `changeId`, y conserva `SDD_SESSION_INVALID` para sesiones expiradas con contexto recuperable.
+
 ## [6.3.106] - 2026-04-22
 
 ### Fixed

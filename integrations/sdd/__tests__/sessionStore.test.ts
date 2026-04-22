@@ -208,9 +208,15 @@ test('readSddSession marca la sesión como inválida cuando expiresAt ya venció
     ]);
 
     const readBack = readSddSession();
-    assert.equal(readBack.active, true);
+    assert.equal(readBack.active, false);
     assert.equal(readBack.valid, false);
     assert.equal(readBack.remainingSeconds, 0);
+    assert.equal(readBack.changeId, 'add-auth-feature');
+
+    const refreshed = refreshSddSession();
+    assert.equal(refreshed.active, true);
+    assert.equal(refreshed.valid, true);
+    assert.equal(refreshed.changeId, 'add-auth-feature');
   } finally {
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });

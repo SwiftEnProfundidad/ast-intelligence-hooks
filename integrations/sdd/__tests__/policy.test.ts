@@ -193,11 +193,11 @@ test('evaluateSddPolicy bloquea con SDD_SESSION_MISSING cuando no existe sesión
     assert.match(result.decision.message, /session --open --change=/i);
     assert.equal(
       result.decision.details?.command,
-      'npx --yes --package pumuki@latest pumuki sdd session --open --change=add-auth-feature'
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd session --open --change=add-auth-feature`
     );
     assert.equal(
       result.decision.details?.fallbackCommand,
-      'npx --yes --package pumuki@latest pumuki sdd session --open --change=auto'
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd session --open --change=auto`
     );
   });
 });
@@ -216,11 +216,11 @@ test('evaluateSddPolicy con múltiples changes activos no recomienda --change=au
     assert.doesNotMatch(result.decision.message, /change=auto/i);
     assert.equal(
       result.decision.details?.command,
-      'npx --yes --package pumuki@latest pumuki sdd session --open --change=<id>'
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd session --open --change=<id>`
     );
     assert.equal(
       result.decision.details?.fallbackCommand,
-      'npx --yes --package pumuki@latest pumuki sdd session --open --change=<id>'
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd session --open --change=<id>`
     );
     assert.deepEqual(result.decision.details?.availableChangeIds, ['add-auth-feature', 'rgo-2000-01']);
     assert.equal(result.decision.details?.suggestedChangeId, undefined);
@@ -255,7 +255,7 @@ test('evaluateSddPolicy bloquea con SDD_SESSION_INVALID cuando la sesión está 
       assert.equal(result.decision.code, 'SDD_SESSION_INVALID');
       assert.equal(
         result.decision.details?.command,
-        'npx --yes --package pumuki@latest pumuki sdd session --refresh --ttl-minutes=90'
+        `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd session --refresh --ttl-minutes=90`
       );
     } finally {
       if (typeof previous === 'undefined') {
