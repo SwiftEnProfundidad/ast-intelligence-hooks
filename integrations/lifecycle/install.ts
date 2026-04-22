@@ -13,6 +13,7 @@ import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { readOpenSpecManagedArtifacts, writeLifecycleState } from './state';
 import { ensureRuntimeArtifactsIgnored } from './artifacts';
 import { runLifecycleAdapterInstall } from './adapter';
+import { runPolicyReconcile } from './policyReconcile';
 
 export type LifecycleInstallResult = {
   repoRoot: string;
@@ -77,6 +78,26 @@ const ensureRepoBaselineAdapter = (repoRoot: string): void => {
   }
 };
 
+const materializeStrictPolicyAsCode = (repoRoot: string): void => {
+  try {
+    const report = runPolicyReconcile({
+      repoRoot,
+      strict: true,
+      apply: true,
+    });
+    if (report.summary.status === 'PASS') {
+      return;
+    }
+    if (process.env.PUMUKI_VERBOSE_INSTALL === '1') {
+      console.debug('[pumuki] strict policy reconcile skipped', report.summary.status);
+    }
+  } catch (cause: unknown) {
+    if (process.env.PUMUKI_VERBOSE_INSTALL === '1') {
+      console.debug('[pumuki] strict policy reconcile skipped', cause);
+    }
+  }
+};
+
 export const runLifecycleInstall = (params?: {
   cwd?: string;
   git?: ILifecycleGitService;
@@ -103,6 +124,7 @@ export const runLifecycleInstall = (params?: {
         openSpecManagedArtifacts: priorArtifacts.length > 0 ? priorArtifacts : undefined,
       });
       ensureRepoBaselineAdapter(report.repoRoot);
+      materializeStrictPolicyAsCode(report.repoRoot);
       return {
         repoRoot: report.repoRoot,
         version,
@@ -142,6 +164,7 @@ export const runLifecycleInstall = (params?: {
     openSpecManagedArtifacts: Array.from(mergedOpenSpecArtifacts),
   });
   ensureRepoBaselineAdapter(report.repoRoot);
+  materializeStrictPolicyAsCode(report.repoRoot);
 
   return {
     repoRoot: report.repoRoot,
