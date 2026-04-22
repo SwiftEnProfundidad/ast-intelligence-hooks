@@ -6,6 +6,15 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.99] - 2026-04-22
+
+### Fixed
+
+- **PRE_WRITE visible y coercitivo:** `policyValidationSnapshot` deja de desmentir al enforcement efectivo de `PRE_WRITE` cuando este ya está en modo `strict`.
+- **Next action por stage real:** `governanceNextAction` ya no emite `POLICY_STAGE_NOT_STRICT` para `PRE_WRITE` cuando la deriva pertenece a otros stages.
+- **Arranque agentic sin éxito falso:** `auto_execute_ai_start` devuelve semántica de fallo real cuando el gate bloquea y fuerza remediación explícita antes de continuar.
+- **Regresión contractual de governance:** nuevas suites cubren `policyValidationSnapshot`, `governanceNextAction`, `auto_execute_ai_start` y el contrato HTTP del enterprise server.
+
 ## [6.3.98] - 2026-04-21
 
 ### Fixed
