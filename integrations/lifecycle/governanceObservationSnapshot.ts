@@ -89,9 +89,9 @@ const readCurrentBranch = (git: ILifecycleGitService, repoRoot: string): string 
   }
 };
 
-const readSddStatusSafe = (repoRoot: string): SddStatusPayload => {
+const readSddStatusSafe = (repoRoot: string, git: ILifecycleGitService): SddStatusPayload => {
   try {
-    return readSddStatus(repoRoot);
+    return readSddStatus(repoRoot, git);
   } catch {
     return {
       repoRoot,
@@ -222,7 +222,7 @@ export const readGovernanceObservationSnapshot = (params: {
   const git = params.git ?? new LifecycleGitService();
   const { repoRoot, experimentalFeatures, policyValidation } = params;
   const rawSdd = process.env.PUMUKI_EXPERIMENTAL_SDD?.trim();
-  const sddStatus = readSddStatusSafe(repoRoot);
+  const sddStatus = readSddStatusSafe(repoRoot, git);
   const evidence = summarizeEvidence(repoRoot);
   const branch = readCurrentBranch(git, repoRoot);
   const onProtected = typeof branch === 'string' && DEFAULT_PROTECTED_BRANCHES.has(branch.trim().toLowerCase());
@@ -243,7 +243,10 @@ export const readGovernanceObservationSnapshot = (params: {
   if (evidence.readable === 'valid' && evidence.snapshot_outcome === 'BLOCK') {
     attention.push('EVIDENCE_SNAPSHOT_BLOCK');
   }
-  if (sddStatus.session.active === true && sddStatus.session.valid !== true) {
+  if (
+    sddStatus.session.valid !== true &&
+    (sddStatus.session.active === true || !!sddStatus.session.changeId || sddStatus.session.remainingSeconds === 0)
+  ) {
     attention.push('SDD_SESSION_INVALID_OR_EXPIRED');
   }
   if (!policyValidation.stages.PRE_WRITE.strict) {

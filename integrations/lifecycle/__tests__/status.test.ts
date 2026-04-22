@@ -275,7 +275,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
       false
     );
 
-    assert.deepEqual(git.resolveCalls, ['/tmp/ignored-cwd']);
+    assert.deepEqual(git.resolveCalls, ['/tmp/ignored-cwd', repoRoot]);
     assert.deepEqual(git.listTrackedCalls, [repoRoot]);
     assert.deepEqual(
       git.getConfigCalls.map((call) => call.key),
@@ -285,6 +285,11 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
         PUMUKI_CONFIG_KEYS.hooks,
         PUMUKI_CONFIG_KEYS.installedAt,
         PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts,
+        'pumuki.sdd.session.active',
+        'pumuki.sdd.session.change',
+        'pumuki.sdd.session.updatedAt',
+        'pumuki.sdd.session.expiresAt',
+        'pumuki.sdd.session.ttlMinutes',
       ]
     );
     assert.ok(git.getConfigCalls.every((call) => call.cwd === repoRoot));
@@ -336,7 +341,7 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
 
     assert.equal(status.repoRoot, repoRoot);
     assert.equal(status.version.effective, getCurrentPumukiVersion());
-    assert.deepEqual(git.resolveCalls, [process.cwd()]);
+    assert.deepEqual(git.resolveCalls, [process.cwd(), repoRoot]);
     assert.deepEqual(git.listTrackedCalls, [repoRoot]);
     assert.equal(status.trackedNodeModulesCount, 0);
     assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
@@ -536,5 +541,29 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
     assert.equal(status.governanceNextAction.stage, 'PRE_WRITE');
     assert.equal(status.governanceObservation.evidence.readable, 'missing');
     assert.equal(status.governanceObservation.governance_effective, 'attention');
+  });
+});
+
+test('readLifecycleStatus proyecta sesión SDD expirada como inactiva pero mantiene atención canónica', async () => {
+  await withTempDir('pumuki-lifecycle-status-expired-sdd-', async (repoRoot) => {
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      'pumuki.sdd.session.active': 'true',
+      'pumuki.sdd.session.change': 'RGO-1750-01',
+      'pumuki.sdd.session.expiresAt': '2000-01-01T00:00:00.000Z',
+      'pumuki.sdd.session.ttlMinutes': '90',
+    });
+
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.governanceObservation.sdd_session.active, false);
+    assert.equal(status.governanceObservation.sdd_session.valid, false);
+    assert.equal(status.governanceObservation.sdd_session.remaining_seconds, 0);
+    assert.equal(
+      status.governanceObservation.attention_codes.includes('SDD_SESSION_INVALID_OR_EXPIRED'),
+      true
+    );
   });
 });
