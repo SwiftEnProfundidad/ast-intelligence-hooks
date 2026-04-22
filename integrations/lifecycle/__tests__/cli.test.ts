@@ -2212,7 +2212,10 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
     assert.equal(payload.bootstrap?.status, 'SKIPPED');
     assert.match(payload.bootstrap?.details ?? '', /PUMUKI_PREWRITE_AUTO_BOOTSTRAP=0/);
     assert.equal(payload.next_action?.reason, 'OPENSPEC_MISSING');
-    assert.equal(payload.next_action?.command, 'npx --yes --package pumuki@latest pumuki install');
+    assert.equal(
+      payload.next_action?.command,
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: repo })} pumuki install`
+    );
     } finally {
       if (typeof previousAutoBootstrap === 'undefined') {
         delete process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
@@ -2728,7 +2731,7 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile cua
     assert.equal(payload.next_action?.reason, 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES');
     assert.equal(
       payload.next_action?.command,
-      'npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json'
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: repo })} pumuki policy reconcile --strict --json && npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: repo })} pumuki sdd validate --stage=PRE_WRITE --json`
     );
   } finally {
     process.stdout.write = originalStdoutWrite;

@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.105)
+
+- **Remediación reproducible en la línea publicada:** las rutas bloqueantes de `PRE_WRITE` dejan de sugerir `pumuki@latest` y fijan la versión efectiva del runtime al construir `next_action.command`.
+- **Cobertura MCP alineada:** `auto_execute_ai_start` devuelve las mismas remediaciones versionadas que `sdd validate` para evidence invalid/stale, `active_rule_ids` vacío y policy reconcile estricto.
+- **Rollout recomendado:** publicar `pumuki@6.3.105`, repin inmediato en `RuralGo` y revalidar el command contract de `PRE_WRITE` en `sdd validate`, `auto_execute_ai_start` y hooks reales.
+
 ### 2026-04-22 (v6.3.104)
 
 - **RuralGo hub-aware diagnostics:** `TRACKING_CANONICAL_IN_PROGRESS_INVALID` pasa a enriquecer su mensaje usando `docs/RURALGO_SEGUIMIENTO.md` cuando ese hub es el board canónico del consumer.

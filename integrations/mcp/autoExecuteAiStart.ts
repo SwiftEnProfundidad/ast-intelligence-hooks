@@ -1,5 +1,6 @@
 import { evaluateAiGate, type AiGateStage, type AiGateViolation } from '../gate/evaluateAiGate';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
+import { getCurrentPumukiVersion } from '../lifecycle/packageInfo';
 import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
 
@@ -56,6 +57,12 @@ const confidenceFromViolation = (violationCode: string | null): number => {
   return 50;
 };
 
+const buildPinnedPumukiNpxCommand = (params: {
+  repoRoot: string;
+  executableAndArgs: string;
+}): string =>
+  `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: params.repoRoot })} ${params.executableAndArgs}`;
+
 const nextActionFromViolation = (
   violation: AiGateViolation | undefined,
   repoRoot: string
@@ -74,7 +81,10 @@ const nextActionFromViolation = (
       return {
         kind: 'run_command',
         message: 'Regenera o refresca evidencia y vuelve a evaluar PRE_WRITE.',
-        command: 'npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
+        command: buildPinnedPumukiNpxCommand({
+          repoRoot,
+          executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+        }),
       };
     case 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES':
       return {
@@ -82,7 +92,13 @@ const nextActionFromViolation = (
         message:
           'No hay active_rule_ids para plataforma de código detectada. Reconciliación strict de policy/skills y revalidación PRE_WRITE.',
         command:
-          'npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
+          `${buildPinnedPumukiNpxCommand({
+            repoRoot,
+            executableAndArgs: 'pumuki policy reconcile --strict --json',
+          })} && ${buildPinnedPumukiNpxCommand({
+            repoRoot,
+            executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+          })}`,
       };
     case 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE':
     case 'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING':
@@ -91,7 +107,10 @@ const nextActionFromViolation = (
         kind: 'run_command',
         message:
           'Completa cobertura de skills por plataforma (prefijos + bundles) y revalida PRE_WRITE.',
-        command: 'npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
+        command: buildPinnedPumukiNpxCommand({
+          repoRoot,
+          executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+        }),
       };
     case 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING':
     case 'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE':
@@ -100,7 +119,13 @@ const nextActionFromViolation = (
         message:
           'Reconcilia policy/skills en modo estricto (incluida skills.ios.critical-test-quality cuando aplique) y revalida PRE_WRITE.',
         command:
-          'npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
+          `${buildPinnedPumukiNpxCommand({
+            repoRoot,
+            executableAndArgs: 'pumuki policy reconcile --strict --json',
+          })} && ${buildPinnedPumukiNpxCommand({
+            repoRoot,
+            executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+          })}`,
       };
     case 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT':
     case 'EVIDENCE_PREWRITE_WORKTREE_WARN':
@@ -117,7 +142,10 @@ const nextActionFromViolation = (
             message:
               `Particiona el worktree en slices atómicos por scope. Primer lote sugerido: ${firstSlice?.scope ?? 'scope-desconocido'}.`,
             command:
-              `${firstSlice?.staged_command ?? 'git add -p'} && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json`,
+              `${firstSlice?.staged_command ?? 'git add -p'} && ${buildPinnedPumukiNpxCommand({
+                repoRoot,
+                executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+              })}`,
           };
         }
       }
@@ -126,7 +154,10 @@ const nextActionFromViolation = (
         message:
           'Particiona el worktree en slices atómicos y revalida PRE_WRITE para continuar sin fricción.',
         command:
-          'git status --short && git add -p && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
+          `git status --short && git add -p && ${buildPinnedPumukiNpxCommand({
+            repoRoot,
+            executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+          })}`,
       };
     case 'GITFLOW_PROTECTED_BRANCH':
       return {

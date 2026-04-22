@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.105] - 2026-04-22
+
+### Fixed
+
+- **Remediaciones PRE_WRITE fijadas a la versión diagnosticada:** `sdd validate`, `auto_execute_ai_start` y la remediación por defecto dejan de recomendar `pumuki@latest` y pasan a devolver comandos con la versión efectiva del runtime (`pumuki@6.3.105` en esta línea).
+- **Backport útil de `PUMUKI-INC-089` a la línea publicada:** `main` mantiene la ruta reproducible para `install`, `policy reconcile --strict --json` y la revalidación `PRE_WRITE` sin exigir al consumer adivinar la versión correcta.
+
 ## [6.3.104] - 2026-04-22
 
 ### Fixed
