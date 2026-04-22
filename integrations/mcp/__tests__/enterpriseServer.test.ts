@@ -52,6 +52,20 @@ const withMcpEnterpriseEnabled = async (callback: () => Promise<void>): Promise<
   }
 };
 
+const withMcpEnterpriseDisabled = async (callback: () => Promise<void>): Promise<void> => {
+  const previous = process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE;
+  process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE = 'off';
+  try {
+    await callback();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE = previous;
+    }
+  }
+};
+
 type AiEvidencePayload = Parameters<typeof computeEvidencePayloadHash>[0];
 
 const withEvidenceChain = (evidence: AiEvidencePayload): AiEvidencePayload => {
@@ -106,7 +120,7 @@ test('enterprise server exposes health endpoint', async () => {
       };
       assert.equal(payload.status, 'ok');
       assert.equal(payload.repoRoot, repoRoot);
-      assert.equal(payload.experimentalFeatures?.mcp_enterprise?.mode, 'off');
+      assert.equal(payload.experimentalFeatures?.mcp_enterprise?.mode, 'strict');
     });
   });
 });
@@ -159,7 +173,15 @@ test('enterprise server exposes baseline status payload with capabilities', asyn
       );
       assert.equal(
         payload.capabilities?.tools?.includes('ai_gate_check'),
-        false
+        true
+      );
+      assert.equal(
+        payload.capabilities?.tools?.includes('pre_flight_check'),
+        true
+      );
+      assert.equal(
+        payload.capabilities?.tools?.includes('auto_execute_ai_start'),
+        true
       );
       assert.equal(payload.evidence?.status, 'degraded');
       assert.equal((payload as { lifecycle?: unknown }).lifecycle, null);
@@ -198,6 +220,9 @@ test('enterprise server exposes enterprise tools catalog', async () => {
       };
       const names = (payload.tools ?? []).map((tool) => tool.name);
       assert.deepEqual(names, [
+        'ai_gate_check',
+        'pre_flight_check',
+        'auto_execute_ai_start',
         'check_sdd_status',
         'validate_and_fix',
         'sync_branches',
@@ -212,39 +237,41 @@ test('enterprise server exposes enterprise tools catalog', async () => {
   });
 });
 
-test('enterprise server devuelve payload explícito cuando MCP enterprise está apagado por defecto', async () => {
-  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
-    runGit(repoRoot, ['init']);
-    await withEnterpriseServer(repoRoot, async (baseUrl) => {
-      const aiGateResponse = await safeFetchRequest(`${baseUrl}/tool`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: 'ai_gate_check',
-        }),
-      });
-      assert.equal(aiGateResponse.status, 200);
-      const aiGatePayload = (await aiGateResponse.json()) as {
-        tool?: string;
-        success?: boolean;
-        dryRun?: boolean;
-        executed?: boolean;
-        result?: {
-          code?: string;
-          activation_variable?: string;
+test('enterprise server devuelve payload explícito cuando MCP enterprise está desactivado de forma explícita', async () => {
+  await withMcpEnterpriseDisabled(async () => {
+    await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+      runGit(repoRoot, ['init']);
+      await withEnterpriseServer(repoRoot, async (baseUrl) => {
+        const aiGateResponse = await safeFetchRequest(`${baseUrl}/tool`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: 'ai_gate_check',
+          }),
+        });
+        assert.equal(aiGateResponse.status, 200);
+        const aiGatePayload = (await aiGateResponse.json()) as {
+          tool?: string;
+          success?: boolean;
+          dryRun?: boolean;
+          executed?: boolean;
+          result?: {
+            code?: string;
+            activation_variable?: string;
+          };
         };
-      };
-      assert.equal(aiGatePayload.tool, 'ai_gate_check');
-      assert.equal(aiGatePayload.success, false);
-      assert.equal(aiGatePayload.dryRun, true);
-      assert.equal(aiGatePayload.executed, false);
-      assert.equal(aiGatePayload.result?.code, 'MCP_ENTERPRISE_EXPERIMENTAL_DISABLED');
-      assert.equal(
-        aiGatePayload.result?.activation_variable,
-        'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE'
-      );
+        assert.equal(aiGatePayload.tool, 'ai_gate_check');
+        assert.equal(aiGatePayload.success, false);
+        assert.equal(aiGatePayload.dryRun, true);
+        assert.equal(aiGatePayload.executed, false);
+        assert.equal(aiGatePayload.result?.code, 'MCP_ENTERPRISE_EXPERIMENTAL_DISABLED');
+        assert.equal(
+          aiGatePayload.result?.activation_variable,
+          'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE'
+        );
+      });
     });
   });
 });
