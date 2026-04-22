@@ -92,6 +92,12 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
                   {
                     sdd: disabledResult,
                     pre_write_enforcement: preWriteEnforcement,
+                    prewrite_effective: {
+                      mode: preWriteEnforcement.mode,
+                      source: preWriteEnforcement.source,
+                      blocking: false,
+                      strict_policy: policyValidation.stages.PRE_WRITE.strict,
+                    },
                     experimental_features: experimentalFeatures,
                     policy_validation: policyValidation,
                     automation: {
@@ -129,6 +135,9 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
               );
               writeInfo(
                 `[pumuki][sdd] pre-write enforcement: mode=${preWriteEnforcement.mode} source=${preWriteEnforcement.source} blocking=no`
+              );
+              writeInfo(
+                `[pumuki][sdd] prewrite_effective: mode=${preWriteEnforcement.mode} source=${preWriteEnforcement.source} blocking=no strict_policy=${policyValidation.stages.PRE_WRITE.strict ? 'yes' : 'no'}`
               );
               writeInfo('[pumuki][sdd] reason_code=PRE_WRITE_EXPERIMENTAL_DISABLED');
               writeInfo(
@@ -273,6 +282,9 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
               );
               writeInfo(
                 `[pumuki][sdd] pre-write enforcement: mode=${preWriteEnforcement.mode} source=${preWriteEnforcement.source} blocking=${preWriteEnforcement.blocking ? 'yes' : 'no'}`
+              );
+              writeInfo(
+                `[pumuki][sdd] prewrite_effective: mode=${preWriteEnforcement.mode} source=${preWriteEnforcement.source} blocking=${preWriteEnforcement.blocking ? 'yes' : 'no'} strict_policy=${policyValidation.stages.PRE_WRITE.strict ? 'yes' : 'no'}`
               );
               if (preWriteBootstrapTrace.details) {
                 writeInfo(

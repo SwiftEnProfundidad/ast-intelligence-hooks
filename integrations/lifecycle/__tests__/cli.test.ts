@@ -2170,6 +2170,12 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       sdd?: { decision?: { code?: string; allowed?: boolean } };
       pre_write_enforcement?: { mode?: string; blocking?: boolean };
+      prewrite_effective?: {
+        mode?: string;
+        source?: string;
+        blocking?: boolean;
+        strict_policy?: boolean;
+      };
       bootstrap?: { enabled?: boolean; attempted?: boolean; status?: string; details?: string };
       reason_code?: string;
       instruction?: string;
@@ -2179,6 +2185,10 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
     assert.equal(payload.sdd?.decision?.code, 'OPENSPEC_MISSING');
     assert.equal(payload.pre_write_enforcement?.mode, 'advisory');
     assert.equal(payload.pre_write_enforcement?.blocking, false);
+    assert.equal(payload.prewrite_effective?.mode, 'advisory');
+    assert.equal(payload.prewrite_effective?.source, 'env');
+    assert.equal(payload.prewrite_effective?.blocking, false);
+    assert.equal(payload.prewrite_effective?.strict_policy, false);
     assert.equal(payload.bootstrap?.enabled, false);
     assert.equal(payload.bootstrap?.attempted, false);
     assert.equal(payload.bootstrap?.status, 'SKIPPED');

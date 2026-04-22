@@ -4,7 +4,9 @@ import {
 } from '../gate/governanceActionCatalog';
 import { evaluateAiGate, type AiGateStage, type AiGateViolation } from '../gate/evaluateAiGate';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
+import { readLifecyclePolicyValidationSnapshot } from '../lifecycle/policyValidationSnapshot';
 import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
+import { resolvePreWriteEnforcement } from '../policy/preWriteEnforcement';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
 
 const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
@@ -141,6 +143,12 @@ export type EnterprisePreFlightCheckResult = {
     message: string;
     instruction: string;
     reason_code: string;
+    prewrite_effective: {
+      mode: ReturnType<typeof resolvePreWriteEnforcement>['mode'];
+      source: ReturnType<typeof resolvePreWriteEnforcement>['source'];
+      blocking: boolean;
+      strict_policy: boolean;
+    };
     next_action: GovernanceCatalogNextAction;
     stage: ReturnType<typeof evaluateAiGate>['stage'];
     policy: ReturnType<typeof evaluateAiGate>['policy'];
@@ -172,6 +180,8 @@ export const runEnterprisePreFlightCheck = (params: {
     : readSddLearningContext({
       repoRoot: params.repoRoot,
     });
+  const preWriteEnforcement = resolvePreWriteEnforcement();
+  const policyValidation = readLifecyclePolicyValidationSnapshot(params.repoRoot);
 
   const hints = buildPreFlightHints({
     repoRoot: params.repoRoot,
@@ -218,6 +228,12 @@ export const runEnterprisePreFlightCheck = (params: {
       message,
       instruction,
       reason_code: reasonCode,
+      prewrite_effective: {
+        mode: preWriteEnforcement.mode,
+        source: preWriteEnforcement.source,
+        blocking: preWriteEnforcement.blocking,
+        strict_policy: policyValidation.stages.PRE_WRITE.strict,
+      },
       next_action: nextAction,
       stage: evaluation.stage,
       policy: evaluation.policy,
