@@ -44,3 +44,19 @@ test('resolveBlockedRemediation cae a fallback genérico cuando no conoce el blo
 
   assert.match(result, /corrige/i);
 });
+
+test('resolveBlockedRemediation cae a fallback en español ante remediación inglesa no mapeada', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      remediation: 'Fix the blocking rule and rerun the gate.',
+    },
+    'UNKNOWN_AST_RULE'
+  );
+
+  assert.match(result, /corrige/i);
+  assert.match(result, /vuelve a ejecutar/i);
+  assert.doesNotMatch(result, /fix the blocking rule/i);
+});

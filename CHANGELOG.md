@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.98] - 2026-04-21
+
+### Fixed
+
+- **Fallback de `gate.blocked` más robusto:** las notificaciones de framework traducen causas y remediaciones legacy al español con mejor cobertura de hints en inglés, evitando copy mixto en banners y diálogos.
+- **Remediación bloqueante más estable:** `framework-menu-system-notifications-remediation.ts` consolida fallback genérico por `causeCode`, normaliza prefijos legacy (`remediation:`, `fix:`, `solution:`) y degrada mensajes ingleses a copy español cuando no son presentables al usuario final.
+- **Cobertura de regresión para notificaciones:** la suite de `framework-menu-system-notifications-*` cubre atomicidad legacy, fallbacks no mapeados, disable/mute y mensajes mixtos sin dejar texto en inglés visible al usuario.
+
 ## [6.3.82] - 2026-04-17
 
 ### Fixed
