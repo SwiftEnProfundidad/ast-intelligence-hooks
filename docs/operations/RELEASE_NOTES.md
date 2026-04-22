@@ -6,6 +6,13 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.102)
+
+- **Convergencia de policy efectiva:** `strict` deja de depender solo de `PUMUKI_POLICY_STRICT` cuando el contrato firmado ya lo declara por stage; `status`, `doctor` y runtime vuelven a hablar el mismo idioma.
+- **Autofix persistente de contrato:** `policy reconcile --strict --apply` escribe el mapa `strict` completo en `.pumuki/policy-as-code.json`, cerrando la deriva entre reconcile y lectura posterior.
+- **Wiring fiable en `pre-push`:** el hook gestionado se antepone también cuando el hook previo termina en `exec`, evitando bloques inalcanzables.
+- **Rollout recomendado:** publicar `pumuki@6.3.102`, repin inmediato en `RuralGo` y revalidar `status` / `doctor` / `pre-push` para cerrar `PUMUKI-INC-080`.
+
 ### 2026-04-22 (v6.3.101)
 
 - **Hotfix de ruta bloqueante:** `gate.blocked` deja de lanzar `ReferenceError: options is not defined` al construir la remediación visible en `PRE_WRITE`.

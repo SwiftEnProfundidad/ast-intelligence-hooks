@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.102] - 2026-04-22
+
+### Fixed
+
+- **`strict` efectivo alineado con el contrato firmado:** `policyAsCode` y `stagePolicies` dejan de publicar `validation.strict` desde el entorno cuando el contrato persistido ya declara el valor por stage.
+- **`policy reconcile --strict --apply` materializa el contrato completo:** el archivo `.pumuki/policy-as-code.json` pasa a persistir el mapa `strict` por stage para que `status`, `doctor` y runtime converjan sobre la misma fuente.
+- **Wiring robusto de `pre-push` con hooks previos terminados en `exec`:** el bloque gestionado de Pumuki se recoloca antes del `exec` también en `pre-push`, evitando que el enforcement quede detrás de código muerto.
+
 ## [6.3.101] - 2026-04-22
 
 ### Fixed

@@ -148,6 +148,12 @@ const tryApplyPolicyAutofix = (params: {
       PRE_PUSH: signatures.PRE_PUSH,
       CI: signatures.CI,
     },
+    strict: {
+      PRE_WRITE: params.report.stages.PRE_WRITE.strict,
+      PRE_COMMIT: params.report.stages.PRE_COMMIT.strict,
+      PRE_PUSH: params.report.stages.PRE_PUSH.strict,
+      CI: params.report.stages.CI.strict,
+    },
     expires_at: '2999-01-01T00:00:00.000Z',
   };
 
