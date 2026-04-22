@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.103)
+
+- **Tracking canónico accionable:** `status`, `doctor` y el gate repo-policy enriquecen `TRACKING_CANONICAL_IN_PROGRESS_INVALID` con referencias a las entradas activas detectadas en el board del consumer.
+- **PRE_WRITE menos ambiguo:** cuando un warning de higiene de worktree convive con un bloqueo duro, el runtime imprime `warning-summary` separado del `block-summary`.
+- **Rollout recomendado:** publicar `pumuki@6.3.103`, repin inmediato en `RuralGo` y revalidar `status` / `doctor` / `git commit` sobre un board con varias filas `🚧 reported activo`.
+
 ### 2026-04-22 (v6.3.102)
 
 - **Convergencia de policy efectiva:** `strict` deja de depender solo de `PUMUKI_POLICY_STRICT` cuando el contrato firmado ya lo declara por stage; `status`, `doctor` y runtime vuelven a hablar el mismo idioma.

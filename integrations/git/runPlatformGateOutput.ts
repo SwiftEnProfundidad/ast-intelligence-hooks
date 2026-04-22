@@ -52,6 +52,15 @@ const resolvePrimaryFinding = (findings: ReadonlyArray<Finding>): Finding => {
   return primary ?? findings[0]!;
 };
 
+const sortFindingsBySeverity = (findings: ReadonlyArray<Finding>): ReadonlyArray<Finding> =>
+  [...findings].sort((left, right) => {
+    const severityDelta = severityWeight(right.severity) - severityWeight(left.severity);
+    if (severityDelta !== 0) {
+      return severityDelta;
+    }
+    return left.ruleId.localeCompare(right.ruleId);
+  });
+
 const normalizeAnchorLine = (lines: Finding['lines']): number => {
   if (Array.isArray(lines)) {
     const candidates = lines
@@ -98,7 +107,8 @@ export const printGateFindings = (findings: ReadonlyArray<Finding>): void => {
   if (findings.length === 0) {
     return;
   }
-  const primary = resolvePrimaryFinding(findings);
+  const orderedFindings = sortFindingsBySeverity(findings);
+  const primary = resolvePrimaryFinding(orderedFindings);
   const nextAction =
     BLOCK_NEXT_ACTION_BY_CODE[primary.code]
     ?? 'Corrige el bloqueante primario y vuelve a ejecutar el mismo comando.';
@@ -106,7 +116,17 @@ export const printGateFindings = (findings: ReadonlyArray<Finding>): void => {
     `[pumuki][block-summary] primary=${primary.code} severity=${primary.severity.toUpperCase()} rule=${primary.ruleId}\n`
   );
   process.stdout.write(`[pumuki][block-summary] next_action=${nextAction}\n`);
-  for (const finding of findings) {
+  const secondaryWarnings = orderedFindings.filter(
+    (finding) =>
+      finding !== primary &&
+      severityWeight(finding.severity) < severityWeight(primary.severity)
+  );
+  for (const finding of secondaryWarnings) {
+    process.stdout.write(
+      `[pumuki][warning-summary] secondary=${finding.code} severity=${finding.severity.toUpperCase()} rule=${finding.ruleId}\n`
+    );
+  }
+  for (const finding of orderedFindings) {
     process.stdout.write(`${formatFinding(finding)}\n`);
   }
 };

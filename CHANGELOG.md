@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.103] - 2026-04-22
+
+### Fixed
+
+- **Diagnóstico accionable del tracking canónico en consumers:** `status`, `doctor` y el gate repo-policy ya incluyen `TRACKING_CANONICAL_IN_PROGRESS_INVALID` junto con referencias a entradas activas y al board canónico del repo consumidor cuando existe.
+- **Separación explícita entre blocker y warning secundario:** la salida de `PRE_WRITE` conserva un `block-summary` primario y añade `warning-summary` para warnings de higiene (`EVIDENCE_PREWRITE_WORKTREE_WARN`) cuando conviven con un bloqueo duro de tracking.
+- **Cobertura de regresión del hotfix:** nuevas pruebas fijan el parsing de boards tabulares `🚧 reported activo` y la impresión del resumen jerárquico con warning secundario.
+
 ## [6.3.102] - 2026-04-22
 
 ### Fixed
