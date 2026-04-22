@@ -6,6 +6,15 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.99] - 2026-04-22
+
+### Fixed
+
+- **PRE_WRITE visible y coherente en la línea de producción:** `policyValidationSnapshot` refleja `PRE_WRITE` como estricto cuando el enforcement efectivo está activado en `strict`, evitando contradicción entre policy y runtime.
+- **Arranque agentic sin éxito falso:** `auto_execute_ai_start` devuelve `success=false` cuando el gate bloquea y fuerza remediación explícita antes de continuar.
+- **Contrato MCP actualizado:** la superficie HTTP del enterprise server hereda ese mismo contrato de bloqueo para `auto_execute_ai_start`.
+- **Cobertura de regresión del hotfix:** nuevas regresiones fijan la proyección de `PRE_WRITE` y el comportamiento bloqueante del arranque agentic sobre la línea `main`.
+
 ## [6.3.98] - 2026-04-21
 
 ### Fixed
