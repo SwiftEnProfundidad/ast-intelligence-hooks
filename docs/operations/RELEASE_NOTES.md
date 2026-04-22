@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.106)
+
+- **Cierre útil del literal residual en RuralGo:** `sdd validate --stage=PRE_WRITE --json` ya no recomienda activar SDD con `pumuki@latest`; devuelve el mismo runtime versionado que está diagnosticando.
+- **Guía de sesión SDD alineada:** `session --refresh` y `session --open` quedan versionados para evitar drift en repos consumidores.
+- **Rollout recomendado:** publicar `pumuki@6.3.106`, repin inmediato en `RuralGo` y revalidar `sdd validate --stage=PRE_WRITE --json` comprobando `activation_command` fijo a `6.3.106`.
+
 ### 2026-04-22 (v6.3.105)
 
 - **Remediación reproducible en la línea publicada:** las rutas bloqueantes de `PRE_WRITE` dejan de sugerir `pumuki@latest` y fijan la versión efectiva del runtime al construir `next_action.command`.

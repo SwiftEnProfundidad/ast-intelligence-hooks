@@ -6,8 +6,12 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { PUMUKI_MANAGED_BLOCK_END, PUMUKI_MANAGED_BLOCK_START } from '../constants';
 import { getCurrentPumukiPackageName, getCurrentPumukiVersion } from '../packageInfo';
-import { parseLifecycleCliArgs } from '../cli';
-import { runLifecycleCli } from '../cli';
+import {
+  buildPreWriteExperimentalEnableAdvisoryCommand,
+  buildSddExperimentalEnableAdvisoryCommand,
+  parseLifecycleCliArgs,
+  runLifecycleCli,
+} from '../cli';
 import { runLifecycleInstall } from '../install';
 import { runLifecycleRemove } from '../remove';
 import { runLifecycleUninstall } from '../uninstall';
@@ -233,7 +237,10 @@ test('runLifecycleCli PRE_WRITE --json expone payload determinista cuando el flu
         'PUMUKI_EXPERIMENTAL_SDD'
       );
       assert.equal(payload.next_action?.reason, 'PRE_WRITE_EXPERIMENTAL_DISABLED');
-      assert.match(payload.next_action?.command ?? '', /PUMUKI_EXPERIMENTAL_PRE_WRITE=advisory/);
+      assert.equal(
+        payload.next_action?.command,
+        buildPreWriteExperimentalEnableAdvisoryCommand(repo)
+      );
       assert.equal(typeof payload.ai_gate, 'undefined');
     } finally {
       process.stdout.write = originalStdoutWrite;
@@ -282,7 +289,10 @@ test('runLifecycleCli SDD PRE_COMMIT --json expone payload determinista cuando S
         'PUMUKI_EXPERIMENTAL_SDD'
       );
       assert.equal(payload.next_action?.reason, 'SDD_EXPERIMENTAL_DISABLED');
-      assert.match(payload.next_action?.command ?? '', /PUMUKI_EXPERIMENTAL_SDD=advisory/);
+      assert.equal(
+        payload.next_action?.command,
+        buildSddExperimentalEnableAdvisoryCommand('PRE_COMMIT', repo)
+      );
     } finally {
       process.stdout.write = originalStdoutWrite;
       process.chdir(previousCwd);

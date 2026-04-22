@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.106] - 2026-04-22
+
+### Fixed
+
+- **Activación advisory de SDD/PRE_WRITE fijada al runtime diagnosticado:** `sdd validate` deja de devolver `activation_command` con `pumuki@latest` cuando el namespace experimental está desactivado por defecto.
+- **Session guidance reproducible en SDD:** las instrucciones de `session --refresh` y `session --open` también quedan fijadas a la versión efectiva del runtime en lugar de depender de `latest`.
+
 ## [6.3.105] - 2026-04-22
 
 ### Fixed
