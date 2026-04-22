@@ -1032,9 +1032,9 @@ Decisión hard de cierre:
 
 Último cierre: `[✅] - Adopción útil de pumuki@6.3.98 cerrada en consumers` la release publicada ya quedó integrada en `SAAS`, `Flux` y `RuralGo` y no quedan bugs externos abiertos en los tres MDs consumidores.
 
-Último cierre operativo: `[✅] - Slice S1.c unificada entre hooks, CLI y MCP` `next_action` y `prewrite_effective` ya salen con vocabulario canónico compartido entre hooks, CLI y MCP; el contrato queda cubierto con la suite dirigida en verde (`91/91`) dentro de `refactor/s1-governance-console-v2`.
+Último cierre operativo: `[✅] - Slice S1.d alineada en Advanced` `next_action` y `prewrite_effective` ya salen con el mismo bloque canónico en `Advanced`, tanto en modo UI v2 como en fallback clásico y también en frío; la superficie visible queda cubierta con tests dirigidos en verde (`14/14`) dentro de `refactor/s1-governance-console-v2`.
 
-Tarea activa única: `[🚧] - Slice S1.d — Llevar next_action y prewrite_effective canónicos a Advanced sin divergencias de orden, labels ni estados efectivos` tras cerrar la convergencia de hooks, CLI y MCP, el siguiente corte mínimo con más valor visible es llevar ese mismo vocabulario canónico a `Advanced` para eliminar la última divergencia relevante del frente S1.
+Tarea activa única: `[🚧] - Slice S1.e — Cerrar S1 con validación end-to-end de Consumer y Advanced sobre la consola de governance unificada` tras eliminar la última divergencia visible de `Advanced`, el siguiente corte mínimo con valor real es dejar validada de extremo a extremo la convergencia entre `Consumer` y `Advanced` sobre la misma consola unificada antes de dar S1 por cerrada.
 
 Barrido de consumers cerrado:
 - SAAS (`pumuki@6.3.98`): rollout ejecutado en `chore/pumuki-6-3-98-rollout`, follow-up de pin exacto (`52bb5d3`) y PR [#11](https://github.com/SwiftEnProfundidad/app-supermercados/pull/11) ya mergeada en `main` con squash `6bdd18404358319b20b594c3a2193799eabe4dab` (`2026-04-21T19:04:27Z`). `install/status/doctor` convergieron en verde y el hilo de review sobre `^6.3.98` quedó resuelto antes del merge.
