@@ -60,9 +60,10 @@ export const readLifecycleStatus = (params?: {
     policyValidation,
     git,
   });
+  const governanceStage = governanceObservation.evidence.snapshot_stage ?? 'PRE_WRITE';
   const governanceNextAction = (params?.governanceNextActionReader ?? readGovernanceNextAction)({
     repoRoot,
-    stage: 'PRE_WRITE',
+    stage: governanceStage,
     governanceObservation,
   });
   const tracking = resolveRepoTrackingState(repoRoot);
