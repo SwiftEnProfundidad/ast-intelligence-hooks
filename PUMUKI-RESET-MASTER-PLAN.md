@@ -1032,9 +1032,9 @@ Decisión hard de cierre:
 
 Último cierre: `[✅] - Adopción útil de pumuki@6.3.98 cerrada en consumers` la release publicada ya quedó integrada en `SAAS`, `Flux` y `RuralGo` y no quedan bugs externos abiertos en los tres MDs consumidores.
 
-Último cierre operativo: `[✅] - Slice S1.d alineada en Advanced` `next_action` y `prewrite_effective` ya salen con el mismo bloque canónico en `Advanced`, tanto en modo UI v2 como en fallback clásico y también en frío; la superficie visible queda cubierta con tests dirigidos en verde (`14/14`) dentro de `refactor/s1-governance-console-v2`.
+Último cierre operativo: `[✅] - S1 governance console unificada cerrada` la convergencia entre `Consumer` y `Advanced` ya queda validada de extremo a extremo sobre la misma consola de governance unificada; el cierre queda cubierto con la suite dirigida en verde (`19/19`) dentro de `refactor/s1-governance-console-v2`.
 
-Tarea activa única: `[🚧] - Slice S1.e — Cerrar S1 con validación end-to-end de Consumer y Advanced sobre la consola de governance unificada` tras eliminar la última divergencia visible de `Advanced`, el siguiente corte mínimo con valor real es dejar validada de extremo a extremo la convergencia entre `Consumer` y `Advanced` sobre la misma consola unificada antes de dar S1 por cerrada.
+Tarea activa única: `[🚧] - Slice S2.a — Elevar la consola de governance unificada a smoke contractual cruzado entre menú, CLI y MCP` tras cerrar S1, el siguiente corte mínimo con valor real es convertir esta convergencia en smoke contractual cruzado entre superficies para congelar el contrato compartido.
 
 Barrido de consumers cerrado:
 - SAAS (`pumuki@6.3.98`): rollout ejecutado en `chore/pumuki-6-3-98-rollout`, follow-up de pin exacto (`52bb5d3`) y PR [#11](https://github.com/SwiftEnProfundidad/app-supermercados/pull/11) ya mergeada en `main` con squash `6bdd18404358319b20b594c3a2193799eabe4dab` (`2026-04-21T19:04:27Z`). `install/status/doctor` convergieron en verde y el hilo de review sobre `^6.3.98` quedó resuelto antes del merge.
