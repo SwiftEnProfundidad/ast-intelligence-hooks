@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.99)
+
+- **PRE_WRITE coercitivo en el arranque agentic**: la línea de governance deja de reportar éxito falso cuando el gate bloquea y `auto_execute_ai_start` obliga a remediación explícita antes de continuar.
+- **Strict efectivo alineado**: `PRE_WRITE` ya no se desmiente a sí mismo entre enforcement experimental, `policyValidation` y `governanceNextAction`.
+- **Rollout recomendado**: publicar `pumuki@6.3.99` y repin rápido en `RuralGo`, revalidando `status`, `doctor`, `pre-commit` y `pre-push` con el fix de `INC-079`.
+
 ### 2026-04-17 (v6.3.81)
 
 - **Causa 100% en español**: la notificación `gate.blocked` traduce explícitamente `EVIDENCE_GATE_BLOCKED` y también los mensajes legacy equivalentes, evitando el spanglish `Cause: Evidence AI gate status is BLOCKED.` en macOS.
