@@ -214,13 +214,13 @@ export const runEnterpriseAutoExecuteAiStart = (params: {
     message = `${message} Learning: ${learningContext.recommended_actions[0]}`;
     instruction = `${instruction} Learning: ${learningContext.recommended_actions[0]}`;
   }
-  const force = action === 'ask' && confidencePct < 50;
+  const force = action === 'ask';
 
   return {
     tool: 'auto_execute_ai_start',
     dryRun: true,
     executed: true,
-    success: true,
+    success: evaluation.allowed,
     result: {
       action,
       phase,

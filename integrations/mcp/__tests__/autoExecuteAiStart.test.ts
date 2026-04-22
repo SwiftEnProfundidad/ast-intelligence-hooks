@@ -107,11 +107,12 @@ test('auto_execute_ai_start devuelve contrato accionable en bloqueo (confidence_
     });
 
     assert.equal(result.tool, 'auto_execute_ai_start');
+    assert.equal(result.success, false);
     assert.equal(result.result.action, 'ask');
     assert.equal(result.result.phase, 'RED');
     assert.equal(result.result.message.length > 0, true);
     assert.equal(result.result.instruction.length > 0, true);
-    assert.equal(typeof result.result.platforms.force, 'boolean');
+    assert.equal(result.result.platforms.force, true);
     assert.equal(typeof result.result.confidence_pct, 'number');
     assert.equal(result.result.confidence_pct >= 0, true);
     assert.equal(result.result.reason_code.length > 0, true);
@@ -227,6 +228,7 @@ test('auto_execute_ai_start devuelve proceed cuando gate está en verde', () => 
     });
 
     assert.equal(result.tool, 'auto_execute_ai_start');
+    assert.equal(result.success, true);
     assert.equal(result.result.action, 'proceed');
     assert.equal(result.result.phase, 'GREEN');
     assert.equal(result.result.message.includes('Confianza alta'), true);

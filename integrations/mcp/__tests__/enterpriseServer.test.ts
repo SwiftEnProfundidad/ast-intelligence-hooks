@@ -367,7 +367,7 @@ test('enterprise server ejecuta tools enterprise en safe mode cuando MCP enterpr
           };
         };
         assert.equal(autoExecutePayload.tool, 'auto_execute_ai_start');
-        assert.equal(autoExecutePayload.success, true);
+        assert.equal(autoExecutePayload.success, false);
         assert.equal(typeof autoExecutePayload.result?.confidence_pct, 'number');
         assert.equal(typeof autoExecutePayload.result?.reason_code, 'string');
         assert.equal((autoExecutePayload.result?.next_action?.message ?? '').length > 0, true);
