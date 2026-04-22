@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.108] - 2026-04-22
+
+### Fixed
+
+- **MCP enterprise visible por defecto en la línea publicada:** `mcp_enterprise` deja de nacer en `off`, así que el editor/agente puede ver `ai_gate_check`, `pre_flight_check` y `auto_execute_ai_start` sin opt-in adicional.
+- **Enforcement temprano más perceptible para `PRE_WRITE`:** el catálogo enterprise visible por defecto reduce el gap entre `status`/`doctor` bloqueados y la ruta real de trabajo del agente/editor.
+- **Cobertura de regresión de la baseline MCP:** nuevas pruebas fijan el catálogo del enterprise server y la proyección de baseline consumer asociada a `mcp_enterprise`.
+
 ## [6.3.107] - 2026-04-22
 
 ### Fixed
