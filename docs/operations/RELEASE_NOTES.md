@@ -6,6 +6,11 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.101)
+
+- **Hotfix de ruta bloqueante:** `gate.blocked` deja de lanzar `ReferenceError: options is not defined` al construir la remediación visible en `PRE_WRITE`.
+- **Rollout recomendado:** publicar `pumuki@6.3.101`, repin inmediato en `RuralGo` y revalidar que el bloqueo de `PRE_WRITE` termina limpio, sin error residual tras el panel.
+
 ### 2026-04-22 (v6.3.100)
 
 - **Hotfix de activación efectiva:** la línea publicada deja de resolver `PRE_WRITE` a `off/default` en ausencia de override explícito; el default vuelve a ser coercitivo para el flujo real del agente/editor.

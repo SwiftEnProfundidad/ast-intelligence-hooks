@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.101] - 2026-04-22
+
+### Fixed
+
+- **`gate.blocked` sin `ReferenceError` en consumers:** `resolveBlockedRemediation` recupera su contrato con variantes (`banner`/`dialog`) y deja de romper la ruta bloqueante de `PRE_WRITE` por un `options is not defined`.
+- **Cobertura de regresión del módulo de remediación:** la suite de `framework-menu-system-notifications-remediation` fija el caso de copy legacy en inglés y la compactación de banners sin truncados rotos.
+
 ## [6.3.100] - 2026-04-22
 
 ### Fixed
