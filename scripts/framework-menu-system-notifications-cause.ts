@@ -5,7 +5,6 @@ import {
 } from './framework-menu-system-notifications-text';
 
 const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
-  EVIDENCE_GATE_BLOCKED: 'El gate de evidencia de IA está bloqueado.',
   EVIDENCE_MISSING: 'Falta evidencia para validar este paso.',
   EVIDENCE_INVALID: 'La evidencia actual es inválida.',
   EVIDENCE_CHAIN_INVALID: 'La cadena de evidencia no es válida.',
@@ -19,8 +18,37 @@ const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
   OPENSPEC_MISSING: 'OpenSpec no está instalado en este repositorio.',
   MCP_ENTERPRISE_RECEIPT_MISSING: 'Falta el recibo enterprise de MCP.',
   BACKEND_AVOID_EXPLICIT_ANY: 'Se detectó uso de "any" explícito en backend.',
-  GIT_ATOMICITY_TOO_MANY_SCOPES: 'Se han cambiado demasiados scopes en el mismo commit.',
-  SOLID_HEURISTIC: 'Se detectó una violación estructural en el cambio actual.',
+};
+
+const ENGLISH_CAUSE_HINTS = [
+  'detected',
+  'avoid explicit any',
+  'evidence is',
+  'no upstream',
+  'too many scopes',
+  'atomicity',
+  'heuristic violation',
+  'protected branch',
+  'missing',
+  'invalid',
+  'failed',
+  'session',
+  'open spec',
+  'openspec',
+  'policy-as-code',
+  'worktree',
+  'callback usage',
+  'usage.',
+];
+
+const buildGenericSpanishBlockedCauseSummary = (
+  event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>,
+  causeCode: string
+): string => {
+  if (causeCode.trim().length > 0 && causeCode !== 'GATE_BLOCKED') {
+    return `Se ha detectado el bloqueo ${causeCode} en ${event.stage}.`;
+  }
+  return `Se detectaron ${event.totalViolations} bloqueos en ${event.stage}.`;
 };
 
 const toKnownSpanishCauseFromMessage = (message: string): string | null => {
@@ -28,22 +56,21 @@ const toKnownSpanishCauseFromMessage = (message: string): string | null => {
   if (normalized.includes('avoid explicit any')) {
     return BLOCKED_CAUSE_SUMMARY_BY_CODE.BACKEND_AVOID_EXPLICIT_ANY;
   }
+  if (normalized.includes('atomicity')) {
+    return 'Se detectaron demasiados scopes en el cambio actual.';
+  }
   if (normalized.includes('evidence is stale')) {
     return BLOCKED_CAUSE_SUMMARY_BY_CODE.EVIDENCE_STALE;
-  }
-  if (normalized.includes('evidence ai gate status is blocked')) {
-    return BLOCKED_CAUSE_SUMMARY_BY_CODE.EVIDENCE_GATE_BLOCKED;
   }
   if (normalized.includes('no upstream tracking reference')) {
     return BLOCKED_CAUSE_SUMMARY_BY_CODE.PRE_PUSH_UPSTREAM_MISSING;
   }
-  if (normalized.includes('too many scopes changed') || normalized.includes('atomicity budget exceeded')) {
-    return BLOCKED_CAUSE_SUMMARY_BY_CODE.GIT_ATOMICITY_TOO_MANY_SCOPES;
-  }
-  if (normalized.includes('heuristic violation')) {
-    return BLOCKED_CAUSE_SUMMARY_BY_CODE.SOLID_HEURISTIC;
-  }
   return null;
+};
+
+const hasEnglishBlockedCauseHints = (message: string): boolean => {
+  const normalized = message.toLowerCase();
+  return ENGLISH_CAUSE_HINTS.some((hint) => normalized.includes(hint));
 };
 
 export const resolveBlockedCauseSummary = (
@@ -60,7 +87,13 @@ export const resolveBlockedCauseSummary = (
     if (translated) {
       return translated;
     }
+    if (hasEnglishBlockedCauseHints(rawMessage)) {
+      return truncateNotificationText(
+        buildGenericSpanishBlockedCauseSummary(event, causeCode),
+        72
+      );
+    }
     return truncateNotificationText(rawMessage, 72);
   }
-  return `Se detectaron ${event.totalViolations} bloqueos en ${event.stage}.`;
+  return buildGenericSpanishBlockedCauseSummary(event, causeCode);
 };

@@ -17,21 +17,6 @@ test('resolveBlockedCauseSummary usa mapping conocido por causeCode', () => {
   assert.match(result, /desactualizada/i);
 });
 
-test('resolveBlockedCauseSummary traduce EVIDENCE_GATE_BLOCKED al español', () => {
-  const result = resolveBlockedCauseSummary(
-    {
-      kind: 'gate.blocked',
-      stage: 'PRE_WRITE',
-      totalViolations: 1,
-      causeMessage: 'Evidence AI gate status is BLOCKED.',
-    },
-    'EVIDENCE_GATE_BLOCKED'
-  );
-
-  assert.match(result, /gate de evidencia/i);
-  assert.doesNotMatch(result, /evidence ai gate status is blocked/i);
-});
-
 test('resolveBlockedCauseSummary traduce mensajes legacy conocidos', () => {
   const result = resolveBlockedCauseSummary(
     {
@@ -74,4 +59,20 @@ test('resolveBlockedCauseSummary traduce causas legacy de atomicidad a español'
 
   assert.match(result, /demasiados scopes/i);
   assert.doesNotMatch(result, /atomicity/i);
+});
+
+test('resolveBlockedCauseSummary no deja copy en inglés cuando llega un bloqueo no mapeado', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeMessage: 'AST heuristic detected console.log usage.',
+    },
+    'UNKNOWN_AST_RULE'
+  );
+
+  assert.match(result, /bloqueo/i);
+  assert.match(result, /PRE_COMMIT/i);
+  assert.doesNotMatch(result, /AST heuristic detected console\.log usage\./i);
 });

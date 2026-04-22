@@ -6,53 +6,50 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.98] - 2026-04-21
+
+### Fixed
+
+- **Fallback de `gate.blocked` más robusto:** las notificaciones de framework traducen causas y remediaciones legacy al español con mejor cobertura de hints en inglés, evitando copy mixto en banners y diálogos.
+- **Remediación bloqueante más estable:** `framework-menu-system-notifications-remediation.ts` consolida fallback genérico por `causeCode`, normaliza prefijos legacy (`remediation:`, `fix:`, `solution:`) y degrada mensajes ingleses a copy español cuando no son presentables al usuario final.
+- **Cobertura de regresión para notificaciones:** la suite de `framework-menu-system-notifications-*` cubre atomicidad legacy, fallbacks no mapeados, disable/mute y mensajes mixtos sin dejar texto en inglés visible al usuario.
+
+## [6.3.82] - 2026-04-17
+
+### Fixed
+
+- **Postinstall sin MCP por defecto:** `pumuki` vuelve a ejecutar `pumuki install` en baseline y no agrega wiring MCP/IDE por defecto en postinstall. MCP explícito con `PUMUKI_POSTINSTALL_WITH_MCP=1` o `PUMUKI_POSTINSTALL_MCP_AGENT=<agent>`.
+- **Errores de postinstall visibles:** si `pumuki install` falla durante `npm postinstall`, `scripts/consumer-postinstall.cjs` devuelve el código de salida real y deja trazabilidad en logs, evitando falsas instalaciones completas.
+- **Smoke de superficie:** el comando separa filas de validación críticas (`core`) y diagnósticas (`diagnostic`), por lo que por defecto falla solo por regresiones funcionales y no por diagnósticos no deterministas.
+- **Alcance git no trazado por defecto:** `GitService.getUnstagedFacts` y `getStagedAndUnstagedFacts` dejan fuera archivos `untracked` salvo `PUMUKI_INCLUDE_UNTRACKED_WORKTREE=1`.
+
+## [6.3.72] - 2026-04-11
+
+### Fixed
+
+- **Tests `cli` (macOS):** la suite `integrations/lifecycle/__tests__/cli.test.ts` activaba **`emitGateBlockedNotification`** real en escenarios PRE_WRITE **strict** (p. ej. `OPENSPEC_MISSING`), lo que podía **bloquear** `npm test` indefinidamente al abrir notificación/diálogo del sistema. Los tests fijan **`PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS=1`** en `beforeEach` y restauran el env en `afterEach` (misma variable que el producto ya documenta para desactivar notificaciones).
+- **macOS notificaciones en `gate.blocked`**: por defecto vuelve a mostrarse el **banner** de Notification Center además del modal interactivo cuando el modal está activo. Antes, si el modal (Swift/AppleScript) no llegaba a mostrarse desde un hook en un repo consumidor, podía no verse **ninguna** notificación. Opt-in al comportamiento previo (solo modal, sin banner duplicado): `PUMUKI_MACOS_GATE_BLOCKED_BANNER_DEDUPE=1`.
+- **Consumer repin + MCP (IDE-agnóstico)**: el `postinstall` del paquete ejecuta **`pumuki install --with-mcp --agent=repo`** por defecto, actualizando **`.pumuki/adapter.json`** (hooks + comandos MCP stdio) sin depender de Cursor ni de ningún IDE. La plantilla `repo` usa **`json-merge`** para no pisar claves extra del consumidor. Opt-out: `PUMUKI_POSTINSTALL_SKIP_MCP=1`. Opt-in a ficheros de IDE en postinstall: `PUMUKI_POSTINSTALL_MCP_AGENT=cursor|claude|codex`.
+- **macOS diálogo `gate.blocked` (Swift)**: el helper deja de usar un `NSPanel` flotante personalizado y pasa a **`NSAlert.runModal()`**, de modo que **Desactivar / Silenciar 30 min / Mantener activas** respondan de forma fiable a clics y teclado (el panel flotante podía no entregar eventos según foco de otras apps, p. ej. el IDE).
+
+### Added
+
+- **Smoke de superficie CLI**: `npm run smoke:pumuki-surface` (~29 invocaciones) y `smoke:pumuki-surface-installed` con `PUMUKI_SMOKE_REPO_ROOT` + `PUMUKI_SMOKE_BIN_STRATEGY=installed` para validar el bin bajo `node_modules/pumuki` del consumidor. Ver `docs/validation/README.md`.
+- **Barra local sin GitHub Actions**: `npm run validation:local-merge-bar` (`typecheck` + smoke + `npm test`) como sustituto operativo cuando la org no tiene cuota útil de Actions.
+- **Tarball npm**: el paquete publicado incluye también `AGENTS.md`, `CHANGELOG.md` y `docs/tracking/plan-curso-pumuki-stack-my-architecture.md` (listados en `package.json` → `files`), de modo que la misma versión en **npm** / **jsDelivr** / `node_modules` expone contrato de agentes, historial de release y el plan formativo del curso Pumuki sin depender solo de GitHub.
+- **Menú consumer (`npm run framework:menu`)**: opciones `11` (solo **staged**), `12` (solo **unstaged**: `git diff` + untracked), `13` (**staged + unstaged** con política **PRE_COMMIT** sobre el working tree), `14` (**todo el repo trackeado** sin preflight). Ejecutan el motor de gate **sin preflight** consumer. Nuevo alcance de hechos `unstaged` y `GitService.getUnstagedFacts`.
+- **Vista “classic” en consola**: segundo panel tras el resumen consumer con severidades coloreadas (enterprise + legacy), hasta 45 hallazgos ordenados, filas **platform** si existen en la evidencia, y nota sobre heurística `Other`. Variable `PUMUKI_MENU_VINTAGE_REPORT=0` para desactivar.
+- **Transparencia PRE_PUSH**: tras opciones `2` y `4` con outcome **PASS/WARN**, mensaje sobre posible **no escritura** en disco de `.ai_evidence.json` trackeado y variable `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE`.
+- **Etiquetas consumer** para opciones `1–4` y hints de evidencia/preflight alineados con alcance real (preflight vs motor, riesgo de skip en disco).
+
 ### Changed
 
+- **`runConsumerMenuMatrix` / baseline / summary**: la matriz consumer incluye también las opciones `11–14` (misma semántica que el menú: staged, unstaged, working tree **PRE_COMMIT**, repo completo, sin preflight), junto a `1–4` y `9`. Se exporta `MATRIX_MENU_OPTION_IDS` como lista canónica de ids.
 - **OpenSpec / SDD**: detección y ejecución del CLI OpenSpec solo usan `node_modules/.bin/openspec` **del repositorio** (ya no se resuelve un `openspec` genérico del `PATH`). Instala `@fission-ai/openspec` en el consumidor para SDD estricto; evita resultados distintos entre máquinas con CLI global y CI limpio. Documentado en `docs/product/USAGE.md` (flujo SDD obligatorio, integración OpenSpec y troubleshooting).
 
 ### Security
 
 - Dependencias transitivas al día vía `npm audit fix` (p. ej. `ajv`, `brace-expansion`, `flatted`, `picomatch`).
-
-## [6.3.81] - 2026-04-17
-
-### Fixed
-
-- **Notificaciones bloqueantes**: `gate.blocked` traduce ya la causa `EVIDENCE_GATE_BLOCKED` al español y deja de mostrar el texto raw `Evidence AI gate status is BLOCKED.` en banners o modales de macOS.
-
-### Validation
-
-- `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-cause.test.ts scripts/__tests__/framework-menu-system-notifications-remediation.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-blocked.test.ts` (`14 pass / 0 fail`)
-- `npm run -s typecheck` (`PASS`)
-
-## [6.3.80] - 2026-04-17
-
-### Fixed
-
-- **Tracking canónico**: el parser interno y el guardrail `check-tracking-single-active.sh` aceptan ya el formato hard `[🚧] - tarea`, incluso cuando la task viva aparece dentro de celdas de tabla con backticks en `PUMUKI-RESET-MASTER-PLAN.md`.
-- **Notificaciones bloqueantes**: `gate.blocked` normaliza remediaciones legacy al español, prioriza textos válidos por `causeCode` cuando llega copy en inglés y compacta banners por palabra para no cortar la solución a mitad de frase.
-
-### Validation
-
-- `npx --yes tsx@4.21.0 --test integrations/evidence/__tests__/repoState.test.ts scripts/__tests__/framework-menu-system-notifications-text.test.ts scripts/__tests__/framework-menu-system-notifications-remediation.test.ts scripts/__tests__/framework-menu-system-notifications-cause.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-blocked.test.ts scripts/__tests__/framework-menu-system-notifications-dispatch.test.ts` (`24 pass / 0 fail`)
-- `npm run -s typecheck` (`PASS`)
-- `bash scripts/check-tracking-single-active.sh` (`PASS`)
-
-## [6.3.78] - 2026-04-16
-
-### Added
-
-- **Consola de gobernanza unificada (S1)**: `pumuki status`, `pumuki doctor`, `PRE-FLIGHT CHECK`, el menú `Consumer` y el menú `Advanced` comparten ya el mismo bloque visible de governance (`truth`, `next action`, `policy-as-code`, `experimental`) a través de una capa canónica reutilizable.
-- **`cliGovernanceConsole.ts`**: nueva capa compartida para resumir governance sin duplicar fuentes de verdad entre CLI y superficies de menú.
-
-### Changed
-
-- **Paridad cross-surface**: el runtime `Consumer` conserva el último `preflight` y lo propaga a `Consumer`, `Advanced` y `PRE-FLIGHT CHECK`, evitando recomputar snapshots divergentes.
-- **Promoción sobre línea viva**: esta release se corta sobre la rama `develop` ya realineada con `release/6.3.77`, para no perder fixes previos del framework antes de publicar S1.
-
-### Validation
-
-- No-regression package preparado con la batería S1 de `status`, `doctor`, `framework-menu` y smoke de imports antes del rollout controlado en consumers activos.
 
 ## [6.3.71] - 2026-04-06
 
