@@ -6,14 +6,36 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.102] - 2026-04-22
+
+### Fixed
+
+- **`strict` efectivo alineado con el contrato firmado:** `policyAsCode` y `stagePolicies` dejan de publicar `validation.strict` desde el entorno cuando el contrato persistido ya declara el valor por stage.
+- **`policy reconcile --strict --apply` materializa el contrato completo:** el archivo `.pumuki/policy-as-code.json` pasa a persistir el mapa `strict` por stage para que `status`, `doctor` y runtime converjan sobre la misma fuente.
+- **Wiring robusto de `pre-push` con hooks previos terminados en `exec`:** el bloque gestionado de Pumuki se recoloca antes del `exec` también en `pre-push`, evitando que el enforcement quede detrás de código muerto.
+
+## [6.3.101] - 2026-04-22
+
+### Fixed
+
+- **`gate.blocked` sin `ReferenceError` en consumers:** `resolveBlockedRemediation` recupera su contrato con variantes (`banner`/`dialog`) y deja de romper la ruta bloqueante de `PRE_WRITE` por un `options is not defined`.
+- **Cobertura de regresión del módulo de remediación:** la suite de `framework-menu-system-notifications-remediation` fija el caso de copy legacy en inglés y la compactación de banners sin truncados rotos.
+
+## [6.3.100] - 2026-04-22
+
+### Fixed
+
+- **`PRE_WRITE` estricto por defecto en la línea publicada:** la resolución experimental de `pre_write` deja de nacer en `off/default` en `main` y vuelve a converger con el contrato coercitivo esperado por los consumers.
+- **Regresión explícita del default efectivo:** nuevas pruebas fijan que `resolvePreWriteExperimentalFeature`, `resolvePreWriteEnforcement` y `policyValidationSnapshot` tratan `PRE_WRITE` como estricto cuando no existe override explícito.
+
 ## [6.3.99] - 2026-04-22
 
 ### Fixed
 
-- **PRE_WRITE visible y coercitivo:** `policyValidationSnapshot` deja de desmentir al enforcement efectivo de `PRE_WRITE` cuando este ya está en modo `strict`.
-- **Next action por stage real:** `governanceNextAction` ya no emite `POLICY_STAGE_NOT_STRICT` para `PRE_WRITE` cuando la deriva pertenece a otros stages.
+- **PRE_WRITE visible y coherente en la línea de producción:** `policyValidationSnapshot` refleja `PRE_WRITE` como estricto cuando el enforcement efectivo está activado en `strict`, evitando contradicción entre policy y runtime.
 - **Arranque agentic sin éxito falso:** `auto_execute_ai_start` devuelve semántica de fallo real cuando el gate bloquea y fuerza remediación explícita antes de continuar.
-- **Regresión contractual de governance:** nuevas suites cubren `policyValidationSnapshot`, `governanceNextAction`, `auto_execute_ai_start` y el contrato HTTP del enterprise server.
+- **Contrato MCP actualizado:** la superficie HTTP del enterprise server hereda ese mismo contrato de bloqueo para `auto_execute_ai_start`.
+- **Cobertura de regresión del hotfix:** nuevas regresiones fijan la proyección de `PRE_WRITE` y el comportamiento bloqueante del arranque agentic sobre la línea `main`.
 
 ## [6.3.98] - 2026-04-21
 
