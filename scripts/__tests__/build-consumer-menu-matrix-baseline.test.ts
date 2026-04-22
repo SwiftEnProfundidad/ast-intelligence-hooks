@@ -193,9 +193,9 @@ const buildStatus = (): LifecycleStatus => {
         },
         mcp_enterprise: {
           layer: 'experimental',
-          mode: 'off',
+          mode: 'strict',
           source: 'default',
-          blocking: false,
+          blocking: true,
           activationVariable: 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE',
           legacyActivationVariable: null,
         },
@@ -356,7 +356,7 @@ test('runConsumerMenuMatrixBaselineBuild escribe report y summary y devuelve 0 s
   assert.match(stdout, /"experimental": \{/);
   assert.match(writes.get('/tmp/out/report.json') ?? '', /"stable": true/);
   assert.match(writes.get('/tmp/out/report.json') ?? '', /"layerSummary"/);
-  assert.match(writes.get('/tmp/out/summary.md') ?? '', /layer experimental: verdict=PASS/);
+  assert.match(writes.get('/tmp/out/summary.md') ?? '', /layer experimental: verdict=FAIL/);
   assert.match(writes.get('/tmp/out/summary.md') ?? '', /# Consumer Menu Matrix Baseline/);
 });
 
