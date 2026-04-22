@@ -113,3 +113,101 @@ test('emitSystemNotification mantiene la fachada pública y entrega por macOS cu
     assert.equal(calls[0]?.command, 'osascript');
   });
 });
+
+test('emitSystemNotification desactiva notificaciones desde el diálogo y bloquea emisiones posteriores', async () => {
+  await withTempDir('pumuki-system-notifications-disable-e2e-', async (repoRoot) => {
+    const baseNowMs = Date.parse('2026-03-04T12:00:00.000Z');
+    const event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }> = {
+      kind: 'gate.blocked',
+      stage: 'PRE_PUSH',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_STALE',
+    };
+
+    const first = emitSystemNotification({
+      platform: 'darwin',
+      repoRoot,
+      env: envForDefaultNotificationBehavior(),
+      event,
+      now: () => baseNowMs,
+      runCommand: () => 0,
+      runCommandWithOutput: () => ({
+        exitCode: 0,
+        stdout: 'button returned:Desactivar\n',
+      }),
+    });
+
+    const second = emitSystemNotification({
+      platform: 'darwin',
+      repoRoot,
+      env: envForDefaultNotificationBehavior(),
+      event,
+      now: () => baseNowMs + 5_000,
+      runCommand: () => {
+        throw new Error('runCommand should not be called when notifications are disabled');
+      },
+      runCommandWithOutput: () => {
+        throw new Error('runCommandWithOutput should not be called when notifications are disabled');
+      },
+    });
+
+    assert.deepEqual(first, { delivered: true, reason: 'delivered' });
+    assert.deepEqual(second, { delivered: false, reason: 'disabled' });
+  });
+});
+
+test('emitSystemNotification silencia 30 min desde el diálogo y vuelve a permitir notificaciones al expirar', async () => {
+  await withTempDir('pumuki-system-notifications-mute-e2e-', async (repoRoot) => {
+    const baseNowMs = Date.parse('2026-03-04T12:00:00.000Z');
+    const event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }> = {
+      kind: 'gate.blocked',
+      stage: 'PRE_PUSH',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_STALE',
+    };
+
+    const first = emitSystemNotification({
+      platform: 'darwin',
+      repoRoot,
+      env: envForDefaultNotificationBehavior(),
+      event,
+      now: () => baseNowMs,
+      runCommand: () => 0,
+      runCommandWithOutput: () => ({
+        exitCode: 0,
+        stdout: 'button returned:Silenciar 30 min\n',
+      }),
+    });
+
+    const muted = emitSystemNotification({
+      platform: 'darwin',
+      repoRoot,
+      env: envForDefaultNotificationBehavior(),
+      event,
+      now: () => baseNowMs + 5 * 60_000,
+      runCommand: () => {
+        throw new Error('runCommand should not be called while notifications are muted');
+      },
+      runCommandWithOutput: () => {
+        throw new Error('runCommandWithOutput should not be called while notifications are muted');
+      },
+    });
+
+    const afterMute = emitSystemNotification({
+      platform: 'darwin',
+      repoRoot,
+      env: envForDefaultNotificationBehavior(),
+      event,
+      now: () => baseNowMs + 31 * 60_000,
+      runCommand: () => 0,
+      runCommandWithOutput: () => ({
+        exitCode: 0,
+        stdout: 'button returned:Mantener activas\n',
+      }),
+    });
+
+    assert.deepEqual(first, { delivered: true, reason: 'delivered' });
+    assert.deepEqual(muted, { delivered: false, reason: 'muted' });
+    assert.deepEqual(afterMute, { delivered: true, reason: 'delivered' });
+  });
+});
