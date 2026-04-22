@@ -5,22 +5,26 @@ import {
 } from './framework-menu-system-notifications-text';
 
 const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
-  EVIDENCE_MISSING: 'Genera evidencia del slice actual y vuelve a validar el gate de esta fase.',
-  EVIDENCE_INVALID: 'Regenera la evidencia de la iteración y repite la validación en el mismo stage.',
+  EVIDENCE_MISSING: 'Genera la evidencia del slice actual y vuelve a validar esta fase.',
+  EVIDENCE_INVALID: 'Regenera la evidencia de esta iteración y repite la validación.',
   EVIDENCE_CHAIN_INVALID: 'Regenera la evidencia para restaurar la cadena de integridad y vuelve a validar.',
-  EVIDENCE_STALE: 'Ejecuta una auditoría completa de evidencia y vuelve a validar PRE_WRITE/PRE_PUSH. Si persiste, refresca la sesión SDD y reintenta.',
-  EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en esta rama y vuelve a ejecutar la validación para sincronizar branch y snapshot.',
-  EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera evidencia desde este repositorio y relanza la validación del gate.',
-  PRE_PUSH_UPSTREAM_MISSING:
-    'Configura upstream con `git push --set-upstream origin <branch>` y vuelve a ejecutar PRE_PUSH.',
-  SDD_SESSION_MISSING: 'Abre sesión SDD del change activo y repite la validación de la fase actual.',
-  SDD_SESSION_INVALID: 'Refresca la sesión SDD (open/refresh) y vuelve a validar en el mismo stage.',
-  OPENSPEC_MISSING: 'Instala OpenSpec en el repositorio y relanza la validación del gate.',
-  MCP_ENTERPRISE_RECEIPT_MISSING: 'Genera el receipt enterprise de MCP y vuelve a ejecutar la validación.',
-  BACKEND_AVOID_EXPLICIT_ANY: 'Reemplaza `any` por tipos concretos en backend y vuelve a lanzar el gate para confirmar el fix.',
+  EVIDENCE_STALE: 'Refresca la evidencia y vuelve a validar PRE_WRITE/PRE_PUSH.',
+  EVIDENCE_BRANCH_MISMATCH: 'La evidencia no corresponde a esta rama. Regenera el receipt/evidencia y vuelve a validar.',
+  EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera la evidencia desde este repositorio y vuelve a validar.',
+  PRE_PUSH_UPSTREAM_MISSING: 'Configura upstream con `git push --set-upstream origin <branch>` y repite PRE_PUSH.',
+  SDD_SESSION_MISSING: 'Abre la sesión SDD del change activo y repite la validación.',
+  SDD_SESSION_INVALID: 'Refresca la sesión SDD activa y vuelve a validar esta fase.',
+  OPENSPEC_MISSING: 'Instala OpenSpec en este repositorio y vuelve a validar el gate.',
+  MCP_ENTERPRISE_RECEIPT_MISSING: 'Genera el receipt enterprise de MCP y vuelve a validar.',
+  BACKEND_AVOID_EXPLICIT_ANY: 'Sustituye `any` por tipos concretos en backend y relanza el gate.',
+  GIT_ATOMICITY_TOO_MANY_SCOPES: 'Divide el cambio por scope o en commits más pequeños y vuelve a ejecutar el gate.',
+  SOLID_HEURISTIC: 'Corrige la violación detectada y vuelve a ejecutar el gate.',
 };
 
-const BLOCKED_REMEDIATION_MAX_LENGTH = 220;
+const BLOCKED_REMEDIATION_MAX_LENGTH_BY_VARIANT: Readonly<Record<BlockedRemediationVariant, number>> = {
+  banner: 120,
+  dialog: 220,
+};
 
 const GENERIC_BLOCKED_REMEDIATION =
   'Corrige el bloqueo indicado y vuelve a ejecutar el comando.';
@@ -38,7 +42,6 @@ const resolveFallbackRemediation = (causeCode: string): string =>
 const hasEnglishHints = (message: string): boolean => {
   const normalized = message.toLowerCase();
   return [
-    'detected',
     'avoid explicit any',
     'set-upstream',
     'refresh evidence',
@@ -49,16 +52,6 @@ const hasEnglishHints = (message: string): boolean => {
     'rerun',
     'retry',
     'to continue',
-    'protected branch',
-    'open spec',
-    'openspec',
-    'session',
-    'missing',
-    'invalid',
-    'failed',
-    'worktree',
-    'callback usage',
-    'usage.',
     'run ',
   ].some((hint) => normalized.includes(hint));
 };
@@ -74,9 +67,6 @@ const toKnownSpanishRemediationFromMessage = (message: string, causeCode: string
   if (normalized.includes('refresh evidence') || normalized.includes('evidence is stale')) {
     return BLOCKED_REMEDIATION_BY_CODE.EVIDENCE_STALE;
   }
-  if (normalized.includes('evidence ai gate status is blocked')) {
-    return BLOCKED_REMEDIATION_BY_CODE.EVIDENCE_GATE_BLOCKED;
-  }
   if (normalized.includes('split the change')) {
     return BLOCKED_REMEDIATION_BY_CODE.GIT_ATOMICITY_TOO_MANY_SCOPES;
   }
@@ -88,9 +78,13 @@ const toKnownSpanishRemediationFromMessage = (message: string, causeCode: string
 
 export const resolveBlockedRemediation = (
   event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>,
-  causeCode: string
+  causeCode: string,
+  options?: {
+    variant?: BlockedRemediationVariant;
+  }
 ): string => {
-  const maxLength = BLOCKED_REMEDIATION_MAX_LENGTH;
+  const variant = options?.variant ?? 'dialog';
+  const maxLength = BLOCKED_REMEDIATION_MAX_LENGTH_BY_VARIANT[variant];
   const fromEvent = event.remediation
     ? normalizeBlockedRemediation(event.remediation)
     : '';
