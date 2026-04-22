@@ -142,16 +142,16 @@ test('resolveHeuristicsExperimentalFeature respects canonical env modes', async 
   });
 });
 
-test('resolveMcpEnterpriseExperimentalFeature defaults to default-off with canonical activation variable', async () => {
+test('resolveMcpEnterpriseExperimentalFeature defaults to strict baseline with canonical activation variable', async () => {
   await withEnv('PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE', undefined, () => {
     const resolved = resolveMcpEnterpriseExperimentalFeature();
 
     assert.deepEqual(resolved, {
       feature: 'mcp_enterprise',
       layer: 'experimental',
-      mode: 'off',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
       activationVariable: 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE',
       legacyActivationVariable: null,
     });

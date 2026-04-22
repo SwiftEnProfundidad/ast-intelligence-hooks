@@ -163,9 +163,9 @@ const buildExperimentalFeatures = (): LifecycleExperimentalFeaturesSnapshot => (
     },
     mcp_enterprise: {
       layer: 'experimental',
-      mode: 'off',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
       activationVariable: 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE',
       legacyActivationVariable: null,
     },
@@ -250,7 +250,7 @@ test('printGovernanceConsoleHuman imprime cabecera compartida S1 y el bloque can
     assert.match(output, /Pre-write: mode=off blocking=no strict_policy=yes source=default/);
     assert.match(output, /Governance next action:/);
     assert.match(output, /Policy-as-code: PRE_WRITE=POLICY_AS_CODE_VALID strict=yes/);
-    assert.match(output, /Experimental: MCP_ENTERPRISE=off/);
+    assert.match(output, /Experimental: MCP_ENTERPRISE=strict/);
   } finally {
     process.stdout.write = originalStdoutWrite;
   }
