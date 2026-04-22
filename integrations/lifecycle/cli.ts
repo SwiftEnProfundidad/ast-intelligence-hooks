@@ -16,6 +16,7 @@ import { printGovernanceConsoleHuman } from './cliGovernanceConsole';
 import { runLifecycleInstall } from './install';
 import { runLifecycleRemove } from './remove';
 import { readLifecycleStatus } from './status';
+import { getCurrentPumukiVersion } from './packageInfo';
 import {
   readLifecycleExperimentalFeaturesSnapshot,
   type LifecycleExperimentalFeaturesSnapshot,
@@ -1579,10 +1580,26 @@ const printDoctorReport = (
 };
 
 const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->mcp->ai_gate->ai_evidence';
-const PRE_WRITE_INSTALL_REMEDIATION_COMMAND =
-  'npx --yes --package pumuki@latest pumuki install';
-const PRE_WRITE_POLICY_RECONCILE_COMMAND =
-  'npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json';
+const buildPinnedPumukiNpxCommand = (params: {
+  repoRoot?: string;
+  executableAndArgs: string;
+}): string =>
+  `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: params.repoRoot })} ${params.executableAndArgs}`;
+const buildPreWriteInstallRemediationCommand = (repoRoot?: string): string =>
+  buildPinnedPumukiNpxCommand({ repoRoot, executableAndArgs: 'pumuki install' });
+const buildPreWriteValidateCommand = (params: {
+  repoRoot?: string;
+  stage: SddStage;
+}): string =>
+  buildPinnedPumukiNpxCommand({
+    repoRoot: params.repoRoot,
+    executableAndArgs: `pumuki sdd validate --stage=${params.stage} --json`,
+  });
+const buildPreWritePolicyReconcileCommand = (repoRoot?: string): string =>
+  `${buildPinnedPumukiNpxCommand({
+    repoRoot,
+    executableAndArgs: 'pumuki policy reconcile --strict --json',
+  })} && ${buildPreWriteValidateCommand({ repoRoot, stage: 'PRE_WRITE' })}`;
 
 type PreWriteValidationEnvelope = {
   sdd: SddEvaluateResult;
@@ -1626,9 +1643,9 @@ export type PreWriteOpenSpecBootstrapTrace = {
 };
 
 export const PRE_WRITE_ENABLE_STRICT_COMMAND =
-  'PUMUKI_EXPERIMENTAL_PRE_WRITE=strict npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json';
+  `PUMUKI_EXPERIMENTAL_PRE_WRITE=strict ${buildPreWriteValidateCommand({ stage: 'PRE_WRITE' })}`;
 export const buildSddExperimentalEnableAdvisoryCommand = (stage: SddStage): string =>
-  `PUMUKI_EXPERIMENTAL_SDD=advisory npx --yes --package pumuki@latest pumuki sdd validate --stage=${stage} --json`;
+  `PUMUKI_EXPERIMENTAL_SDD=advisory ${buildPreWriteValidateCommand({ stage })}`;
 const buildAnalyticsExperimentalEnableCommand = (action: AnalyticsHotspotsCommand): string =>
   `PUMUKI_EXPERIMENTAL_ANALYTICS=advisory npx --yes --package pumuki@latest pumuki analytics hotspots ${action} --json`;
 const SAAS_INGESTION_ENABLE_ADVISORY_COMMAND =
@@ -1788,8 +1805,11 @@ const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   MCP_ENTERPRISE_RECEIPT_REPO_ROOT_MISMATCH: 'Genera el recibo MCP en este mismo repositorio.',
 };
 
-const PRE_WRITE_DEFAULT_REMEDIATION =
-  'Corrige la causa bloqueante y vuelve a ejecutar: npx --yes --package pumuki@latest pumuki-pre-write';
+const buildPreWriteDefaultRemediation = (repoRoot?: string): string =>
+  `Corrige la causa bloqueante y vuelve a ejecutar: ${buildPinnedPumukiNpxCommand({
+    repoRoot,
+    executableAndArgs: 'pumuki-pre-write',
+  })}`;
 
 export const PRE_WRITE_OPENSPEC_AUTOREMEDIABLE_CODES = new Set<string>([
   'OPENSPEC_MISSING',
@@ -1813,7 +1833,7 @@ export const resolvePreWriteNextAction = (params: {
   if (!params.sdd.decision.allowed && PRE_WRITE_OPENSPEC_AUTOREMEDIABLE_CODES.has(params.sdd.decision.code)) {
     return {
       reason: params.sdd.decision.code,
-      command: PRE_WRITE_INSTALL_REMEDIATION_COMMAND,
+      command: buildPreWriteInstallRemediationCommand(params.aiGate?.repo_state.repo_root),
     };
   }
   if (!params.aiGate || params.aiGate.allowed) {
@@ -1825,7 +1845,7 @@ export const resolvePreWriteNextAction = (params: {
   if (policyReconcileViolation) {
     return {
       reason: policyReconcileViolation.code,
-      command: PRE_WRITE_POLICY_RECONCILE_COMMAND,
+      command: buildPreWritePolicyReconcileCommand(params.aiGate.repo_state.repo_root),
     };
   }
   const atomicSliceViolation = params.aiGate.violations.find((violation) =>
@@ -1841,7 +1861,10 @@ export const resolvePreWriteNextAction = (params: {
     return {
       reason: atomicSliceViolation.code,
       command:
-        `${firstSliceCommand} && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json`,
+        `${firstSliceCommand} && ${buildPreWriteValidateCommand({
+          repoRoot: params.aiGate.repo_state.repo_root,
+          stage: 'PRE_WRITE',
+        })}`,
     };
   }
   const hasMcpViolation = params.aiGate.violations.some((violation) =>
@@ -1852,7 +1875,10 @@ export const resolvePreWriteNextAction = (params: {
   }
   return {
     reason: 'MCP_ENTERPRISE_RECEIPT',
-    command: 'npx --yes --package pumuki@latest pumuki-pre-write',
+    command: buildPinnedPumukiNpxCommand({
+      repoRoot: params.aiGate.repo_state.repo_root,
+      executableAndArgs: 'pumuki-pre-write',
+    }),
   };
 };
 
@@ -1863,7 +1889,7 @@ export const resolvePreWriteBlockedRemediation = (params: {
   if (params.nextAction?.command) {
     return params.nextAction.command;
   }
-  return PRE_WRITE_HINTS_BY_CODE[params.causeCode] ?? PRE_WRITE_DEFAULT_REMEDIATION;
+  return PRE_WRITE_HINTS_BY_CODE[params.causeCode] ?? buildPreWriteDefaultRemediation();
 };
 
 export const buildPreWriteReasonCode = (params: {

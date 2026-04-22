@@ -191,6 +191,28 @@ const buildDoctorIssues = (params: {
   return issues;
 };
 
+const appendGovernanceBlockingIssue = (params: {
+  issues: ReadonlyArray<DoctorIssue>;
+  governanceObservation: GovernanceObservationSnapshot;
+  governanceNextAction: GovernanceNextActionSummary;
+}): ReadonlyArray<DoctorIssue> => {
+  if (!doctorGovernanceIsBlocking(params.governanceObservation)) {
+    return params.issues;
+  }
+  if (params.issues.some((issue) => issue.severity === 'error')) {
+    return params.issues;
+  }
+  return [
+    ...params.issues,
+    {
+      severity: 'error',
+      message:
+        `Governance is blocked (${params.governanceNextAction.reason_code}). ` +
+        params.governanceNextAction.instruction,
+    },
+  ];
+};
+
 const DEEP_EVIDENCE_MAX_AGE_SECONDS = 1800;
 
 const toCanonicalPath = (value: string): string => {
@@ -878,10 +900,16 @@ export const runLifecycleDoctor = (params?: {
     policyValidation,
     git,
   });
+  const governanceStage = governanceObservation.evidence.snapshot_stage ?? 'PRE_WRITE';
   const governanceNextAction = (params?.governanceNextActionReader ?? readGovernanceNextAction)({
     repoRoot,
-    stage: 'PRE_WRITE',
+    stage: governanceStage,
     governanceObservation,
+  });
+  const canonicalIssues = appendGovernanceBlockingIssue({
+    issues,
+    governanceObservation,
+    governanceNextAction,
   });
 
   const parity_profile =
@@ -910,7 +938,7 @@ export const runLifecycleDoctor = (params?: {
     governanceNextAction,
     governanceObservation,
     tracking,
-    issues,
+    issues: canonicalIssues,
     deep,
     parity_profile,
     parity_comparison,

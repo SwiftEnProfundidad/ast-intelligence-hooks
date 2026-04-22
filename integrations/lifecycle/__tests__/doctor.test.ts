@@ -465,6 +465,78 @@ test('runLifecycleDoctor --deep marca evidence stale como fallo bloqueante', asy
   });
 });
 
+test('runLifecycleDoctor añade issue canónico y alinea stage cuando governance está bloqueado por evidencia', async () => {
+  await withTempDir('pumuki-doctor-governance-blocked-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    const branch = 'feature/doctor-governance-blocked';
+    const blockedEvidence = {
+      ...sampleEvidence({
+        repoRoot,
+        branch,
+        upstream: null,
+      }),
+      snapshot: {
+        stage: 'PRE_PUSH' as const,
+        outcome: 'BLOCK' as const,
+        findings: [],
+      },
+      ai_gate: {
+        status: 'BLOCKED' as const,
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'BLOCKED' as const,
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+    };
+    const payloadHash = computeEvidencePayloadHash(blockedEvidence);
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        {
+          ...blockedEvidence,
+          evidence_chain: {
+            algorithm: 'sha256' as const,
+            previous_payload_hash: null,
+            payload_hash: payloadHash,
+            sequence: 1,
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.governanceObservation.evidence.snapshot_stage, 'PRE_PUSH');
+    assert.equal(report.governanceNextAction.stage, 'PRE_PUSH');
+    assert.equal(report.issues.some((issue) => issue.severity === 'error'), true);
+    assert.equal(
+      report.issues.some((issue) => issue.message.includes('Governance is blocked')),
+      true
+    );
+  });
+});
+
 test('runLifecycleDoctor --deep marca policy-drift por fallback default como fail no bloqueante', async () => {
   await withTempDir('pumuki-doctor-deep-policy-drift-advisory-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
