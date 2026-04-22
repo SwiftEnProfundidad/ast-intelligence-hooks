@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.107)
+
+- **Sesión SDD expirada sin semántica ambigua:** la línea publicada deja de diagnosticar sesiones vencidas como `active=true` con `valid=false`; ahora las proyecta como inactivas y mantiene la señal de expiración con `remainingSeconds=0`.
+- **Refresh reproducible de sesiones caducadas:** si el `changeId` sigue siendo válido, `session --refresh` vuelve a servir para recuperar la sesión sin exigir un `session --open` innecesario.
+- **Rollout recomendado:** publicar `pumuki@6.3.107`, repin inmediato en `RuralGo` y revalidar `sdd validate --stage=PRE_WRITE --json` comprobando que `status.session.active=false`, `valid=false` y que la remediación siga permitiendo refresh sobre el mismo `changeId`.
+
 ### 2026-04-22 (v6.3.106)
 
 - **Cierre útil del literal residual en RuralGo:** `sdd validate --stage=PRE_WRITE --json` ya no recomienda activar SDD con `pumuki@latest`; devuelve el mismo runtime versionado que está diagnosticando.

@@ -86,7 +86,7 @@ const readConfig = (
   repoRoot: string,
   git: ILifecycleGitService
 ): SddSessionState => {
-  const active = git.localConfig(repoRoot, SDD_KEYS.active) === 'true';
+  const rawActive = git.localConfig(repoRoot, SDD_KEYS.active) === 'true';
   const rawChangeId = git.localConfig(repoRoot, SDD_KEYS.change);
   const changeId =
     typeof rawChangeId === 'string' && rawChangeId.trim().length > 0
@@ -101,6 +101,7 @@ const readConfig = (
       : undefined;
 
   const validity = computeValidity(expiresAt);
+  const active = rawActive && !!changeId && validity.valid;
   return {
     repoRoot,
     active,
@@ -174,7 +175,7 @@ export const refreshSddSession = (params?: {
   const git = params?.git ?? new LifecycleGitService();
   const repoRoot = resolveRepoRoot(params?.cwd ?? process.cwd(), git);
   const current = readConfig(repoRoot, git);
-  if (!current.active || !current.changeId) {
+  if (!current.changeId) {
     throw new Error('No active SDD session to refresh. Run `pumuki sdd session --open --change=<id>` first.');
   }
   const ttlMinutes = parsePositiveMinutes(params?.ttlMinutes ?? current.ttlMinutes);
