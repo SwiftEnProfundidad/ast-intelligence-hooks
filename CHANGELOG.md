@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.109] - 2026-04-22
+
+### Fixed
+
+- **`install` materializa policy estricta cuando el repo ya puede reconciliarla:** tras una instalación limpia, Pumuki intenta persistir `.pumuki/policy-as-code.json` con `strict=true` por stage en lugar de dejar `status` y `doctor` en `computed-local`.
+- **Convergencia de `status`/`doctor` tras install en consumers reales:** el runtime deja de depender de `PUMUKI_POLICY_STRICT` para que `PRE_COMMIT`, `PRE_PUSH` y `CI` reflejen el mismo contrato estricto que `PRE_WRITE`.
+- **Cobertura de regresión del ciclo de install:** nuevas pruebas fijan que `runLifecycleInstall` materializa el contrato firmado cuando `AGENTS.md` y `skills.lock.json` exponen los insumos mínimos.
+
 ## [6.3.108] - 2026-04-22
 
 ### Fixed
