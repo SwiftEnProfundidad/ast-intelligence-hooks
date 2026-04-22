@@ -24,6 +24,13 @@ export type GovernanceNextActionReader = (params: {
   governanceObservation: GovernanceObservationSnapshot;
 }) => GovernanceNextActionSummary;
 
+const POLICY_ATTENTION_CODE_BY_STAGE: Record<AiGateStage, string> = {
+  PRE_WRITE: 'POLICY_PRE_WRITE_NOT_STRICT',
+  PRE_COMMIT: 'POLICY_PRE_COMMIT_NOT_STRICT',
+  PRE_PUSH: 'POLICY_PRE_PUSH_NOT_STRICT',
+  CI: 'POLICY_CI_NOT_STRICT',
+};
+
 const resolveBlockedAction = (
   snapshot: GovernanceObservationSnapshot,
   stage: AiGateStage
@@ -72,7 +79,7 @@ const resolveBlockedAction = (
     };
   }
   if (
-    snapshot.attention_codes.some((code) => code.startsWith('POLICY_'))
+    snapshot.attention_codes.includes(POLICY_ATTENTION_CODE_BY_STAGE[stage])
     || snapshot.enterprise_warn_as_block_env
   ) {
     return {
