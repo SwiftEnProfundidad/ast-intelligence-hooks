@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.104)
+
+- **RuralGo hub-aware diagnostics:** `TRACKING_CANONICAL_IN_PROGRESS_INVALID` pasa a enriquecer su mensaje usando `docs/RURALGO_SEGUIMIENTO.md` cuando ese hub es el board canónico del consumer.
+- **Compatibilidad con tablas del hub:** el parser reconoce filas `| 🚧 | TASK_ID |` y las devuelve como entradas activas accionables.
+- **Rollout recomendado:** publicar `pumuki@6.3.104`, repin inmediato en `RuralGo` y revalidar `status` / `doctor` / `pumuki-pre-write` con doble fila `🚧` temporal en el hub canónico.
+
 ### 2026-04-22 (v6.3.103)
 
 - **Tracking canónico accionable:** `status`, `doctor` y el gate repo-policy enriquecen `TRACKING_CANONICAL_IN_PROGRESS_INVALID` con referencias a las entradas activas detectadas en el board del consumer.

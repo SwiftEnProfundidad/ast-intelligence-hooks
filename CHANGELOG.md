@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.104] - 2026-04-22
+
+### Fixed
+
+- **Tracking canónico de RuralGo reconocido por el parser de repo-policy:** `appendTrackingActionableContext` ya inspecciona `docs/RURALGO_SEGUIMIENTO.md`, que es la ruta canónica real del consumer.
+- **Filas `| 🚧 | TASK |` tratadas como entradas activas válidas:** el diagnóstico accionable cubre el formato de tabla usado por el hub de seguimiento de RuralGo además del backlog tabular de incidencias.
+- **Cobertura de regresión para el hub canónico:** nuevas pruebas fijan parsing y priorización de `docs/RURALGO_SEGUIMIENTO.md` antes de otros archivos de tracking del consumer.
+
 ## [6.3.103] - 2026-04-22
 
 ### Fixed

@@ -15,6 +15,7 @@ const REPO_POLICY_CODES = new Set<string>([
 
 const TRACKING_CANDIDATE_FILES = [
   'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
+  'docs/RURALGO_SEGUIMIENTO.md',
   'docs/pumuki/PUMUKI_BUGS_MEJORAS.md',
   'docs/BUGS_Y_MEJORAS_PUMUKI.md',
   'PUMUKI-RESET-MASTER-PLAN.md',
@@ -32,6 +33,14 @@ export const collectTrackingActiveEntriesFromMarkdown = (
   const entries: TrackingActiveEntry[] = [];
   const lines = markdown.split(/\r?\n/u);
   for (const [index, line] of lines.entries()) {
+    const boardRowMatch = line.match(/^\|\s*🚧\s*\|\s*([A-Z0-9-]+)\s*\|/u);
+    if (boardRowMatch) {
+      entries.push({
+        taskId: boardRowMatch[1]!.trim(),
+        lineNumber: index + 1,
+      });
+      continue;
+    }
     const tableMatch = line.match(
       /^\|\s*\d+\s*\|\s*`([^`]+)`\s*\|.*\|\s*🚧(?:\s+reported\s+activo|\s+En construcción|\s+En construccion)?\s*\|/u
     );
