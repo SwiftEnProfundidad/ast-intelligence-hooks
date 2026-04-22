@@ -1030,16 +1030,18 @@ Decisión hard de cierre:
 - El worktree mezclado de `release/6.3.65` queda fuera del cierre de esta release; se archivó en `ast-intelligence-hooks-wip-6.3.81-2026-04-20.tgz` y no puede usarse como fuente de publicación.
 - Todo cambio local fuera del paquete anterior (`tracking/evidence/lifecycle`, `consumer-postinstall`, `GitService`, `smoke surface`, textos/payloads adicionales no incluidos en `release/6.3.81`) queda diferido a slices posteriores para evitar regresiones en consumers.
 
-Último cierre: `[✅] - Adopción útil de pumuki@6.3.98 cerrada en consumers` la release publicada ya quedó integrada en `SAAS`, `Flux` y `RuralGo` y no quedan bugs externos abiertos en los tres MDs consumidores.
+Último cierre: `[✅] - PUMUKI-INC-079 cerrado con release útil de pumuki@6.3.101` el hotfix de runtime quedó integrado en `main` vía PR [#779](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/779), publicado en npm como `pumuki@6.3.101` y revalidado en RuralGo con replay bloqueante real ya mergeado vía PR [#1875](https://github.com/SwiftEnProfundidad/R_GO/pull/1875); en consumer, `status`/`doctor` convergen en `6.3.101`, `PRE_WRITE` sale `mode=strict source=default blocking=true` y la ruta bloqueante termina con salida visual `[pumuki] title: 🔴 Pumuki bloqueado` sin el error residual `options is not defined`.
 
-Último cierre operativo: `[✅] - Slice S2.a smoke contractual cruzado entre menú, CLI y MCP` la consola de governance unificada ya queda congelada con un smoke contractual que cruza menú real, CLI real y MCP sobre el mismo contrato visible de `Pre-write` y `Next action`; el cierre queda cubierto con la suite dirigida en verde (`6/6`) dentro de `refactor/s1-governance-console-v2`.
+Último cierre operativo: `[✅] - Workspace raíz saneado y worktrees auxiliares desmontadas` el checkout principal `release/6.3.65` quedó limpio tras extraer y aparcar los bundles locales fuera del root; el trabajo no publicado sigue preservado en `/tmp/pumuki-root-bundles/**` para rehidratación controlada cuando haga falta.
 
-Tarea activa única: `[🚧] - Slice S2.b — Extender el smoke contractual de governance a status, doctor y ai_gate_check` tras congelar el contrato entre menú, CLI y MCP, el siguiente corte mínimo con valor real es cubrir también `status`, `doctor` y `ai_gate_check` para cerrar el perímetro contractual principal de governance.
+Tarea activa única: `[🚧] - PUMUKI-INC-080 — Resolver incoherencia de policy efectiva y wiring de hooks` tras cerrar `PUMUKI-INC-079` con release útil `6.3.101` y replay real en RuralGo, el único bug externo prioritario restante pasa a ser `PUMUKI-INC-080`: convergencia entre policy declarada y efectiva, eliminación de wiring muerto o ambiguo en hooks y cierre del drift semántico entre `status`, `doctor`, lifecycle y hooks gestionados.
+
+Regla operativa persistente: este repositorio no dispone de cuota útil de GitHub Actions en el ciclo actual; durante rollout y release se crean las PR necesarias y se mergean igualmente sin esperar CI remoto. La validación contractual pasa a ser local y dirigida y cualquier bloqueo de branch policy por checks remotos debe resolverse por merge administrativo, no reabriendo el debate sobre esperar Actions.
 
 Barrido de consumers cerrado:
 - SAAS (`pumuki@6.3.98`): rollout ejecutado en `chore/pumuki-6-3-98-rollout`, follow-up de pin exacto (`52bb5d3`) y PR [#11](https://github.com/SwiftEnProfundidad/app-supermercados/pull/11) ya mergeada en `main` con squash `6bdd18404358319b20b594c3a2193799eabe4dab` (`2026-04-21T19:04:27Z`). `install/status/doctor` convergieron en verde y el hilo de review sobre `^6.3.98` quedó resuelto antes del merge.
 - Flux (`pumuki@6.3.98`): rollout aislado en `Flux_training__chore-pumuki-6-3-98-rollout`, repin exacto (`f0ec81e`) y PR [#8](https://github.com/SwiftEnProfundidad/flux-training/pull/8) ya mergeada en `develop` con squash `945d46e3a1c06497f08a0875d62974a5429095cb` (`2026-04-21T19:04:07Z`). `install/status/doctor` convergieron en verde y `Vercel` quedó en success antes del merge.
-- RuralGo (`pumuki@6.3.98`): rollout aislado en `R_GO__chore-pumuki-6-3-98-rollout`, follow-up de pin exacto (`3a630d7a6`), merge de reconciliación con `origin/develop` (`c27131cab`) y PR [#1872](https://github.com/SwiftEnProfundidad/R_GO/pull/1872) ya mergeada en `develop` con squash `9f79178cfade18ab76be48656077f71f0f063e1f` (`2026-04-21T19:04:10Z`). `install/status/doctor` convergieron en verde; el repin se ejecutó con `engine-strict=false` solo para sortear el shell Node 25 de Codex, sin dejar divergencia funcional en el consumer.
+- RuralGo (`pumuki@6.3.101`): cierre útil de `PUMUKI-INC-079` ejecutado y mergeado vía PR [#1875](https://github.com/SwiftEnProfundidad/R_GO/pull/1875) sobre `feature/rgo-1900-01-ios-buyer-core`; `status` y `doctor` convergieron en `6.3.101` sin drift y el replay real de `pumuki-pre-write.js` ya bloquea de forma perceptible y limpia en consumer.
 - Adopción: `pumuki@6.3.98` ya quedó publicada y mergeada en los tres consumers activos, sin bugs externos abiertos derivados del rollout.
 
 Snapshot de adopción vigente:
@@ -1047,7 +1049,7 @@ Snapshot de adopción vigente:
 | Consumer | Versión/estado actual | Estado backlog externo | Lectura operativa |
 |----------|------------------------|------------------------|-------------------|
 | `SAAS` | `6.3.98` mergeada vía [#11](https://github.com/SwiftEnProfundidad/app-supermercados/pull/11) | `0` incidencias activas | Adopción cerrada en `main`. |
-| `RuralGo` | `6.3.98` mergeada vía [#1872](https://github.com/SwiftEnProfundidad/R_GO/pull/1872) | `0` incidencias activas en backlog Pumuki | Adopción cerrada en `develop`. |
+| `RuralGo` | `6.3.101` mergeada vía [#1875](https://github.com/SwiftEnProfundidad/R_GO/pull/1875) | `1` incidencia activa (`PUMUKI-INC-080`) | `PUMUKI-INC-079` cerrada; `INC-080` pasa a ser el único frente vivo. |
 | `Flux` | `6.3.98` mergeada vía [#8](https://github.com/SwiftEnProfundidad/flux-training/pull/8) | sin bug nuevo abierto en backlog Pumuki | Adopción cerrada en `develop`. |
 
 *(Sustituir la fila anterior al cerrar/abrir la tarea en curso: una sola 🚧 en todo el plan.)*
