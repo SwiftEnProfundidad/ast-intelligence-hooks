@@ -7,6 +7,7 @@ import test from 'node:test';
 import { runEnterpriseAutoExecuteAiStart } from '../autoExecuteAiStart';
 import { buildEvidenceChain } from '../../evidence/evidenceChain';
 import type { AiEvidenceV2_1 } from '../../evidence/schema';
+import { getCurrentPumukiVersion } from '../../lifecycle/packageInfo';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
   execFileSync('git', args, { cwd, encoding: 'utf8' });
@@ -388,7 +389,7 @@ test('auto_execute_ai_start devuelve next_action de reconcile cuando PRE_WRITE d
     );
     assert.equal(
       result.result.next_action.command,
-      'npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json'
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki policy reconcile --strict --json && npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd validate --stage=PRE_WRITE --json`
     );
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
@@ -566,7 +567,7 @@ test('auto_execute_ai_start remedia evidence_chain_invalid como fallo accionable
     );
     assert.equal(
       result.result.next_action.command,
-      'npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json'
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd validate --stage=PRE_WRITE --json`
     );
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
