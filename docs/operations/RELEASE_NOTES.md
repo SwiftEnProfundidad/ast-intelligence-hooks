@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.109)
+
+- **`install` deja lista la policy estricta real para consumers compatibles:** si el repo ya expone `AGENTS.md` y `skills.lock.json` suficientes, la instalación materializa `.pumuki/policy-as-code.json` con firmas y `strict=true` por stage.
+- **Menos deriva entre `PRE_WRITE` y el resto del lifecycle:** `status` y `doctor` dejan de caer en `computed-local` para `PRE_COMMIT`, `PRE_PUSH` y `CI` después de una instalación limpia.
+- **Rollout recomendado:** publicar `pumuki@6.3.109`, repin inmediato en `RuralGo` y revalidar `status --json` / `doctor --json` comprobando `strict=true` en `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI`.
+
 ### 2026-04-22 (v6.3.108)
 
 - **MCP enterprise visible desde la baseline publicada:** la línea `main` deja de exigir opt-in adicional para exponer `ai_gate_check`, `pre_flight_check` y `auto_execute_ai_start` en el catálogo enterprise.
