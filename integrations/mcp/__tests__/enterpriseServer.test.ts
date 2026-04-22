@@ -272,6 +272,12 @@ test('enterprise server ejecuta tools enterprise en safe mode cuando MCP enterpr
           result?: {
             reason_code?: string;
             instruction?: string;
+            prewrite_effective?: {
+              mode?: string;
+              source?: string;
+              blocking?: boolean;
+              strict_policy?: boolean;
+            };
             next_action?: {
               reason?: string;
               kind?: string;
@@ -285,6 +291,10 @@ test('enterprise server ejecuta tools enterprise en safe mode cuando MCP enterpr
         assert.equal(aiGatePayload.executed, true);
         assert.equal(typeof aiGatePayload.result?.reason_code, 'string');
         assert.equal((aiGatePayload.result?.instruction ?? '').length > 0, true);
+        assert.equal(typeof aiGatePayload.result?.prewrite_effective?.mode, 'string');
+        assert.equal(typeof aiGatePayload.result?.prewrite_effective?.source, 'string');
+        assert.equal(typeof aiGatePayload.result?.prewrite_effective?.blocking, 'boolean');
+        assert.equal(typeof aiGatePayload.result?.prewrite_effective?.strict_policy, 'boolean');
         assert.equal(typeof aiGatePayload.result?.next_action?.reason, 'string');
         assert.equal(aiGatePayload.result?.next_action?.kind, 'info');
         assert.equal((aiGatePayload.result?.next_action?.message ?? '').length > 0, true);
@@ -307,11 +317,29 @@ test('enterprise server ejecuta tools enterprise en safe mode cuando MCP enterpr
           success?: boolean;
           dryRun?: boolean;
           executed?: boolean;
+          result?: {
+            prewrite_effective?: {
+              mode?: string;
+              source?: string;
+              blocking?: boolean;
+              strict_policy?: boolean;
+            };
+            next_action?: {
+              kind?: string;
+              message?: string;
+            };
+          };
         };
         assert.equal(preFlightPayload.tool, 'pre_flight_check');
         assert.equal(preFlightPayload.success, false);
         assert.equal(preFlightPayload.dryRun, true);
         assert.equal(preFlightPayload.executed, true);
+        assert.equal(typeof preFlightPayload.result?.prewrite_effective?.mode, 'string');
+        assert.equal(typeof preFlightPayload.result?.prewrite_effective?.source, 'string');
+        assert.equal(typeof preFlightPayload.result?.prewrite_effective?.blocking, 'boolean');
+        assert.equal(typeof preFlightPayload.result?.prewrite_effective?.strict_policy, 'boolean');
+        assert.equal(typeof preFlightPayload.result?.next_action?.kind, 'string');
+        assert.equal((preFlightPayload.result?.next_action?.message ?? '').length > 0, true);
 
         const autoExecuteResponse = await safeFetchRequest(`${baseUrl}/tool`, {
           method: 'POST',

@@ -1588,6 +1588,12 @@ type PreWriteValidationEnvelope = {
   sdd: SddEvaluateResult;
   ai_gate: ReturnType<typeof evaluateAiGate>;
   pre_write_enforcement: PreWriteEnforcementResolution;
+  prewrite_effective: {
+    mode: PreWriteEnforcementResolution['mode'];
+    source: PreWriteEnforcementResolution['source'];
+    blocking: boolean;
+    strict_policy: boolean;
+  };
   experimental_features: LifecycleExperimentalFeaturesSnapshot;
   policy_validation: LifecyclePolicyValidationSnapshot;
   automation: PreWriteAutomationTrace;
@@ -2014,6 +2020,12 @@ export const buildPreWriteValidationEnvelope = (
   sdd: result,
   ai_gate: aiGate,
   pre_write_enforcement: preWriteEnforcement,
+  prewrite_effective: {
+    mode: preWriteEnforcement.mode,
+    source: preWriteEnforcement.source,
+    blocking: preWriteEnforcement.blocking,
+    strict_policy: policyValidation.stages.PRE_WRITE.strict,
+  },
   experimental_features: experimentalFeatures,
   policy_validation: policyValidation,
   automation: {

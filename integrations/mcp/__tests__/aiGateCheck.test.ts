@@ -116,6 +116,10 @@ test('runEnterpriseAiGateCheck aplica contrato de tool ai_gate_check en PRE_WRIT
     assert.equal(result.result.message.length > 0, true);
     assert.equal(result.result.reason_code, 'AI_GATE_ALLOWED');
     assert.equal(result.result.instruction.length > 0, true);
+    assert.equal(typeof result.result.prewrite_effective.mode, 'string');
+    assert.equal(typeof result.result.prewrite_effective.source, 'string');
+    assert.equal(typeof result.result.prewrite_effective.blocking, 'boolean');
+    assert.equal(typeof result.result.prewrite_effective.strict_policy, 'boolean');
     assert.equal(result.result.next_action.reason, 'AI_GATE_ALLOWED');
     assert.equal(result.result.next_action.kind, 'info');
     assert.equal(result.result.next_action.message.length > 0, true);
