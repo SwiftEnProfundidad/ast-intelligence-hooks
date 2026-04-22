@@ -54,6 +54,13 @@ const buildConsumerPreflightResult = (): ConsumerPreflightResult => ({
   },
   governanceObservation: {
     schema_version: '1',
+    platform_bundles_effective: ['android', 'backend', 'frontend', 'ios'],
+    pre_write_effective: {
+      mode: 'off',
+      source: 'default',
+      blocking: false,
+      strict_policy: true,
+    },
     sdd: {
       experimental_raw: null,
       effective_mode: 'off',
@@ -325,7 +332,10 @@ test('renderConsumerRuntimeModernMenu muestra bloque visible de governance cuand
   });
 
   assert.match(rendered, /Governance Console/);
+  assert.match(rendered, /Contract: AGENTS=yes/);
   assert.match(rendered, /Governance truth:/);
+  assert.match(rendered, /Platforms: android, backend, frontend, ios/);
+  assert.match(rendered, /Pre-write: mode=off blocking=no strict_policy=yes source=default/);
   assert.match(rendered, /Governance next action:/);
   assert.match(rendered, /Policy-as-code: PRE_WRITE=POLICY_AS_CODE_VALID strict=yes/);
   assert.match(rendered, /Experimental: ANALYTICS=off/);
@@ -349,6 +359,8 @@ test('renderConsumerRuntimeModernMenu muestra bloque visible de governance aunqu
 
   assert.match(rendered, /Governance Console/);
   assert.match(rendered, /Governance truth:/);
+  assert.match(rendered, /Platforms: android, backend, frontend, ios/);
+  assert.match(rendered, /Pre-write: mode=off blocking=no strict_policy=yes source=default/);
   assert.match(rendered, /Governance next action:/);
 });
 

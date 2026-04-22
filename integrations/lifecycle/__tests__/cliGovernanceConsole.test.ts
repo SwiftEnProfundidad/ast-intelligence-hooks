@@ -11,6 +11,13 @@ import type { LifecyclePolicyValidationSnapshot } from '../policyValidationSnaps
 
 const buildGovernanceObservation = (): GovernanceObservationSnapshot => ({
   schema_version: '1',
+  platform_bundles_effective: ['android', 'backend', 'frontend', 'ios'],
+  pre_write_effective: {
+    mode: 'off',
+    source: 'default',
+    blocking: false,
+    strict_policy: true,
+  },
   sdd: {
     experimental_raw: null,
     effective_mode: 'off',
@@ -206,8 +213,11 @@ test('buildGovernanceConsoleSummaryLines compone truth, next action, policy y ex
   });
 
   assert.match(lines[0] ?? '', /Governance truth:/);
+  assert.equal(lines.some((line) => /Contract: AGENTS=yes/.test(line)), true);
   assert.equal(lines.some((line) => /Governance: GREEN/.test(line)), true);
+  assert.equal(lines.some((line) => /Platforms: android, backend, frontend, ios/.test(line)), true);
   assert.equal(lines.some((line) => /Evidence hint: repo-clean/.test(line)), true);
+  assert.equal(lines.some((line) => /Pre-write: mode=off blocking=no strict_policy=yes source=default/.test(line)), true);
   assert.equal(lines.some((line) => /Governance next action:/.test(line)), true);
   assert.equal(lines.some((line) => /Instruction: Continúa con la implementación mínima\./.test(line)), true);
   assert.equal(lines.some((line) => /Policy-as-code: PRE_WRITE=POLICY_AS_CODE_VALID strict=yes/.test(line)), true);
@@ -234,7 +244,10 @@ test('printGovernanceConsoleHuman imprime cabecera compartida S1 y el bloque can
 
     const output = printed.join('\n');
     assert.match(output, /governance console \(S1 \/ shared status-doctor baseline\)/i);
+    assert.match(output, /Contract: AGENTS=yes/);
     assert.match(output, /Governance truth:/);
+    assert.match(output, /Platforms: android, backend, frontend, ios/);
+    assert.match(output, /Pre-write: mode=off blocking=no strict_policy=yes source=default/);
     assert.match(output, /Governance next action:/);
     assert.match(output, /Policy-as-code: PRE_WRITE=POLICY_AS_CODE_VALID strict=yes/);
     assert.match(output, /Experimental: MCP_ENTERPRISE=off/);
