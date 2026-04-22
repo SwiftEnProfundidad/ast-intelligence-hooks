@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-22 (v6.3.108)
+
+- **MCP enterprise visible desde la baseline publicada:** la línea `main` deja de exigir opt-in adicional para exponer `ai_gate_check`, `pre_flight_check` y `auto_execute_ai_start` en el catálogo enterprise.
+- **Menos gap entre governance y flujo real del editor/agente:** cuando `status`/`doctor` ya están bloqueando, el consumer pasa a ver antes la misma capa MCP que materializa el enforcement perceptible de `PRE_WRITE`.
+- **Rollout recomendado:** publicar `pumuki@6.3.108`, repin inmediato en `RuralGo` y revalidar `status`, `doctor` y el arranque MCP/agentic sobre un repo con `PUMUKI-INC-079` reportada.
+
 ### 2026-04-22 (v6.3.107)
 
 - **Sesión SDD expirada sin semántica ambigua:** la línea publicada deja de diagnosticar sesiones vencidas como `active=true` con `valid=false`; ahora las proyecta como inactivas y mantiene la señal de expiración con `remainingSeconds=0`.
