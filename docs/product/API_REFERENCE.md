@@ -174,7 +174,7 @@ Interpretation contract:
 - `consumerInstalled`: version installed in the consumer repository.
 - `lifecycleInstalled`: version recorded in managed lifecycle metadata.
 - `driftWarning`: compact human-readable explanation when those values diverge.
-- `alignmentCommand`: exact remediation command to align dependency and lifecycle state with the current runtime version.
+- `alignmentCommand`: exact remediation command to align dependency and lifecycle state with the current runtime version. When the consumer repo declares a Node runtime via `volta`, `.nvmrc`, or `package.json.engines.node`, this command prepends the matching runtime switch before the Pumuki install step.
 - `pathExecutionHazard`: boolean flag raised when the repo root contains the platform `PATH` delimiter and `npx/npm exec` can fail to resolve `pumuki`.
 - `pathExecutionWarning`: compact warning explaining why `PATH` resolution is unsafe in that repo.
 - `pathExecutionWorkaroundCommand`: safe local-node entrypoint to use when `pathExecutionHazard=true`.

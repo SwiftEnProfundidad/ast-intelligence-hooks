@@ -49,15 +49,126 @@ const hasPathExecutionHazard = (repoRoot?: string): boolean =>
   repoRoot.trim().length > 0 &&
   repoRoot.includes(delimiter);
 
+type ConsumerNodeRuntimeSpec = {
+  version: string;
+  source: 'volta' | '.nvmrc' | 'package.engines';
+  commandPrefix: 'volta' | 'nvm';
+};
+
+const normalizeNodeVersionToken = (value: string): string =>
+  value.trim().replace(/^node@/i, '').replace(/^v/i, '');
+
+const extractNodeVersionToken = (value: string): string | null => {
+  const normalized = normalizeNodeVersionToken(value);
+  const exactVersion = normalized.match(/\d+\.\d+\.\d+/)?.[0];
+  if (exactVersion) {
+    return exactVersion;
+  }
+  const majorOnly = normalized.match(/^\d+$/)?.[0];
+  return majorOnly ?? null;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const readNestedString = (
+  source: Record<string, unknown>,
+  path: ReadonlyArray<string>
+): string | undefined => {
+  let cursor: unknown = source;
+  for (const segment of path) {
+    if (!isRecord(cursor)) {
+      return undefined;
+    }
+    cursor = cursor[segment];
+  }
+  return typeof cursor === 'string' && cursor.trim().length > 0 ? cursor.trim() : undefined;
+};
+
+const readConsumerNodeRuntimeSpec = (repoRoot?: string): ConsumerNodeRuntimeSpec | null => {
+  if (typeof repoRoot !== 'string' || repoRoot.trim().length === 0) {
+    return null;
+  }
+
+  const packageJsonPath = join(repoRoot, 'package.json');
+  if (existsSync(packageJsonPath)) {
+    try {
+      const parsed = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as unknown;
+      if (isRecord(parsed)) {
+        const voltaNode = readNestedString(parsed, ['volta', 'node']);
+        const voltaVersion = voltaNode ? extractNodeVersionToken(voltaNode) : null;
+        if (voltaVersion) {
+          return {
+            version: voltaVersion,
+            source: 'volta',
+            commandPrefix: 'volta',
+          };
+        }
+
+        const enginesNode = readNestedString(parsed, ['engines', 'node']);
+        const enginesVersion = enginesNode ? extractNodeVersionToken(enginesNode) : null;
+        if (enginesVersion) {
+          return {
+            version: enginesVersion,
+            source: 'package.engines',
+            commandPrefix: 'nvm',
+          };
+        }
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  const nvmrcPath = join(repoRoot, '.nvmrc');
+  if (existsSync(nvmrcPath)) {
+    try {
+      const nvmrcVersion = extractNodeVersionToken(readFileSync(nvmrcPath, 'utf8'));
+      if (nvmrcVersion) {
+        return {
+          version: nvmrcVersion,
+          source: '.nvmrc',
+          commandPrefix: 'nvm',
+        };
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+};
+
+const buildConsumerNodeAlignmentCommand = (repoRoot?: string): string | null => {
+  const runtimeSpec = readConsumerNodeRuntimeSpec(repoRoot);
+  if (!runtimeSpec) {
+    return null;
+  }
+
+  const currentNodeVersion = normalizeNodeVersionToken(process.version);
+  if (currentNodeVersion === runtimeSpec.version) {
+    return null;
+  }
+
+  if (runtimeSpec.commandPrefix === 'volta') {
+    return `volta install node@${runtimeSpec.version} && volta pin node@${runtimeSpec.version}`;
+  }
+
+  return `nvm install ${runtimeSpec.version} && nvm use ${runtimeSpec.version}`;
+};
+
 export const buildLifecycleAlignmentCommand = (
   runtimeVersion: string,
   repoRoot?: string
 ): string => {
+  const consumerNodeAlignmentCommand = buildConsumerNodeAlignmentCommand(repoRoot);
   const installStep = `npm install --save-exact pumuki@${runtimeVersion}`;
   const runStep = hasPathExecutionHazard(repoRoot)
     ? `${buildLocalPumukiCommand()} install`
     : `npx --yes --package pumuki@${runtimeVersion} pumuki install`;
-  return `${installStep} && ${runStep}`;
+  return [consumerNodeAlignmentCommand, installStep, runStep]
+    .filter((value): value is string => typeof value === 'string' && value.length > 0)
+    .join(' && ');
 };
 
 export const resolvePumukiVersionMetadata = (params?: { repoRoot?: string }): PumukiVersionMetadata => {
@@ -114,11 +225,17 @@ export const buildLifecycleVersionReport = (params?: {
   const driftFromConsumerInstalled =
     metadata.consumerInstalledVersion !== null &&
     metadata.consumerInstalledVersion !== metadata.runtimeVersion;
+  const consumerNodeSpec = readConsumerNodeRuntimeSpec(params?.repoRoot);
+  const consumerNodeVersion = consumerNodeSpec?.version ?? null;
+  const currentNodeVersion = normalizeNodeVersionToken(process.version);
+  const driftFromConsumerNode =
+    consumerNodeVersion !== null && currentNodeVersion !== consumerNodeVersion;
   const driftFromLifecycleInstalled =
     lifecycleInstalled !== null && metadata.resolvedVersion !== lifecycleInstalled;
   const driftTargets = [
     driftFromRuntime ? `runtime=${metadata.runtimeVersion}` : null,
     driftFromConsumerInstalled ? `consumer=${metadata.consumerInstalledVersion}` : null,
+    driftFromConsumerNode ? `node=${consumerNodeVersion}` : null,
     driftFromLifecycleInstalled ? `lifecycle=${lifecycleInstalled}` : null,
   ].filter((value): value is string => value !== null);
   const pathExecutionHazard = hasPathExecutionHazard(params?.repoRoot);
