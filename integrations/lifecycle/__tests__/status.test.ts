@@ -345,6 +345,23 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
 
 test('readLifecycleStatus expone issues canónicos cuando governance está bloqueado por evidencia', async () => {
   await withTempDir('pumuki-lifecycle-status-blocked-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      '# plan\n- la única fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'),
+      [
+        '# plan',
+        '',
+        '[🚧] - PUMUKI-INC-078 (RuralGo) corregir tracking canónico',
+        '[🚧] - PUMUKI-INC-079 (RuralGo) task inválida simultánea',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
     writeBlockedEvidence({
       repoRoot,
       branch: 'feature/lifecycle-status-blocked',
@@ -366,6 +383,10 @@ test('readLifecycleStatus expone issues canónicos cuando governance está bloqu
     assert.equal(
       status.issues.some((issue) => issue.message.includes('Governance is blocked')),
       true
+    );
+    assert.match(
+      status.issues.find((issue) => issue.message.includes('Governance is blocked'))?.message ?? '',
+      /active_entries=PUMUKI-INC-078@L3, PUMUKI-INC-079@L4/i
     );
   });
 });

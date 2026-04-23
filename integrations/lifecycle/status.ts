@@ -2,6 +2,7 @@ import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { buildLifecycleVersionReport } from './packageInfo';
 import { readEvidenceResult } from '../evidence/readEvidence';
+import { appendTrackingActionableContext } from '../git/aiGateRepoPolicyFindings';
 import {
   readLifecycleExperimentalFeaturesSnapshot,
   type LifecycleExperimentalFeaturesSnapshot,
@@ -44,10 +45,14 @@ const buildLifecycleIssues = (repoRoot: string): ReadonlyArray<DoctorIssue> => {
   }
 
   const blockedStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
+  const message = appendTrackingActionableContext({
+    repoRoot,
+    message: `Governance is blocked (${blockedStage}).`,
+  });
   return [
     {
       severity: 'error',
-      message: `Governance is blocked (${blockedStage}).`,
+      message,
     },
   ];
 };

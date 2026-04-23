@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { readEvidenceResult } from '../evidence/readEvidence';
+import { appendTrackingActionableContext } from '../git/aiGateRepoPolicyFindings';
 import { resolvePolicyForStage } from '../gate/stagePolicies';
 import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
@@ -103,12 +104,14 @@ export type LifecycleDoctorReport = {
 };
 
 const buildDoctorIssues = (params: {
+  repoRoot: string;
   trackedNodeModulesPaths: ReadonlyArray<string>;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
   hooksDirectory: string;
   lifecycleState: LifecycleState;
 }): ReadonlyArray<DoctorIssue> => {
   const issues: DoctorIssue[] = [];
+  const evidenceResult = readEvidenceResult(params.repoRoot);
 
   if (params.trackedNodeModulesPaths.length > 0) {
     issues.push({
@@ -144,6 +147,24 @@ const buildDoctorIssues = (params: {
       message:
         'Managed hook blocks exist but lifecycle state is not marked as installed.',
     });
+  }
+
+  if (evidenceResult.kind === 'valid') {
+    const evidence = evidenceResult.evidence;
+    const blocked =
+      evidence.snapshot.outcome === 'BLOCK' ||
+      evidence.ai_gate.status === 'BLOCKED' ||
+      evidence.severity_metrics.gate_status === 'BLOCKED';
+    if (blocked) {
+      const blockedStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
+      issues.push({
+        severity: 'error',
+        message: appendTrackingActionableContext({
+          repoRoot: params.repoRoot,
+          message: `Governance is blocked (${blockedStage}).`,
+        }),
+      });
+    }
   }
 
   return issues;
@@ -817,6 +838,7 @@ export const runLifecycleDoctor = (params?: {
   const lifecycleState = readLifecycleState(git, repoRoot);
 
   const issues = buildDoctorIssues({
+    repoRoot,
     trackedNodeModulesPaths,
     hookStatus,
     hooksDirectory: hooksDirectory.path,
