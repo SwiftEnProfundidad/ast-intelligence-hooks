@@ -25,6 +25,17 @@ export type RepoTrackingState = {
   last_run_status?: string | null;
 };
 
+export const formatTrackingActionableContext = (tracking: RepoTrackingState): string | null => {
+  const activeEntries = (tracking.in_progress_entries ?? [])
+    .map((entry) => `${entry.task_id ?? 'UNKNOWN'}@L${entry.line_number}`)
+    .join(', ');
+  if (!activeEntries) {
+    return null;
+  }
+  const lastRunStatus = tracking.last_run_status ?? 'absent';
+  return `active_entries=${activeEntries} last_run_status=${lastRunStatus}`;
+};
+
 type TrackingDeclarationSource = {
   sourceFile: string;
   priority: number;

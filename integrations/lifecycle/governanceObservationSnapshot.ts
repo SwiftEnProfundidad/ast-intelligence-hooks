@@ -10,6 +10,7 @@ import type { ILifecycleGitService } from './gitService';
 import { LifecycleGitService } from './gitService';
 import type { LifecyclePolicyValidationSnapshot } from './policyValidationSnapshot';
 import { writeInfo } from './cliOutputs';
+import { formatTrackingActionableContext } from './trackingState';
 
 const DEFAULT_PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
 
@@ -118,17 +119,6 @@ const buildContractSurface = (repoRoot: string): GovernanceContractSurface => ({
   vendor_skills_dir: existsSync(join(repoRoot, 'vendor', 'skills')),
   pumuki_adapter_json: existsSync(join(repoRoot, '.pumuki', 'adapter.json')),
 });
-
-const formatTrackingActionableContext = (tracking: RepoTrackingState): string | null => {
-  const activeEntries = (tracking.in_progress_entries ?? [])
-    .map((entry) => `${entry.task_id ?? 'UNKNOWN'}@L${entry.line_number}`)
-    .join(', ');
-  if (!activeEntries) {
-    return null;
-  }
-  const lastRunStatus = tracking.last_run_status ?? 'absent';
-  return `active_entries=${activeEntries} last_run_status=${lastRunStatus}`;
-};
 
 const PLATFORM_BUNDLE_ORDER = [
   'android-enterprise-rules',
