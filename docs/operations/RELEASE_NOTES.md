@@ -6,7 +6,7 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
-### 2026-04-23 (v6.3.111)
+### 2026-04-23 (v6.3.112)
 
 - **Runtime-aware remediation:** `alignmentCommand` now respects the consumer's declared Node runtime when the shell Node does not match, using `volta`, `.nvmrc`, or `package.json.engines.node` as the source of truth.
 - **Rollout recommended:** publish `pumuki@6.3.111`, repin the active consumer, and revalidate `status` / `doctor` to confirm the consumer runtime is aligned before following the remediation command.
