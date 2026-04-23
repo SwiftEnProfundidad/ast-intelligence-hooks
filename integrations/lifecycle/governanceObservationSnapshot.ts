@@ -119,6 +119,17 @@ const buildContractSurface = (repoRoot: string): GovernanceContractSurface => ({
   pumuki_adapter_json: existsSync(join(repoRoot, '.pumuki', 'adapter.json')),
 });
 
+const formatTrackingActionableContext = (tracking: RepoTrackingState): string | null => {
+  const activeEntries = (tracking.in_progress_entries ?? [])
+    .map((entry) => `${entry.task_id ?? 'UNKNOWN'}@L${entry.line_number}`)
+    .join(', ');
+  if (!activeEntries) {
+    return null;
+  }
+  const lastRunStatus = tracking.last_run_status ?? 'absent';
+  return `active_entries=${activeEntries} last_run_status=${lastRunStatus}`;
+};
+
 const PLATFORM_BUNDLE_ORDER = [
   'android-enterprise-rules',
   'backend-enterprise-rules',
@@ -204,8 +215,9 @@ const buildHints = (
     hints.push(`Falta el tracking canónico declarado (${tracking.canonical_path ?? 'sin resolver'}).`);
   }
   if (tracking.enforced && tracking.single_in_progress_valid === false) {
+    const actionableContext = formatTrackingActionableContext(tracking);
     hints.push(
-      `El tracking canónico debe dejar exactamente una 🚧 (actual=${tracking.in_progress_count ?? 'n/a'}).`
+      `El tracking canónico debe dejar exactamente una 🚧 (actual=${tracking.in_progress_count ?? 'n/a'}${actionableContext ? `, ${actionableContext}` : ''}).`
     );
   }
   hints.push('SDD/OpenSpec: usa PUMUKI_EXPERIMENTAL_SDD=advisory|strict cuando el loop SDD esté activo.');
@@ -340,6 +352,12 @@ export const buildGovernanceObservationSummaryLines = (
   ];
   if (snapshot.attention_codes.length > 0) {
     lines.push(`Attention: ${snapshot.attention_codes.join(', ')}`);
+  }
+  if (snapshot.tracking.enforced && snapshot.tracking.single_in_progress_valid === false) {
+    const actionableContext = formatTrackingActionableContext(snapshot.tracking);
+    lines.push(
+      `Tracking: canonical=${snapshot.tracking.canonical_path ?? 'unknown'} in_progress_count=${snapshot.tracking.in_progress_count ?? 'n/a'}${actionableContext ? ` ${actionableContext}` : ''}`
+    );
   }
   return lines;
 };

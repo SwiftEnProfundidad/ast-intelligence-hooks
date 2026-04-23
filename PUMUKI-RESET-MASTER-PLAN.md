@@ -1034,7 +1034,7 @@ Decisión hard de cierre:
 
 Último cierre operativo: `[✅] - PUMUKI-INC-080 — Convergencia de policy efectiva y wiring de hooks en instalación limpia` el fix quedó integrado en `develop` vía PR [#808](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/808) (merge `5460677930494c0c966120ea9e72b10ee43d26b0`), backporteado a `main` vía PR [#809](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/809) (merge `0ed2b81ed10bac6fca4386cfcfcc5997f76d8486`) y publicado como `pumuki@6.3.109` tras la PR de release [#810](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/810) (merge `24d3a546678c006e4e6b7e5495b11267a49aabdf`). El replay útil en RuralGo confirma `version.effective=6.3.109`, `.pumuki/policy-as-code.json` materializado por `install`, `policyValidation.stages.{PRE_WRITE,PRE_COMMIT,PRE_PUSH,CI}.strict=true`, `policySource=file:.pumuki/policy-as-code.json` y `doctor.issues=[]`.
 
-Tarea activa única: `[🚧] - PUMUKI-INC-081 — Separar blocker real de warning PRE_WRITE y hacer accionable el tracking canónico` tras cerrar `INC-080`, el backlog externo de RuralGo sigue abierto y la prioridad hard pasa al siguiente bug externo vivo de mayor severidad. Mientras `PUMUKI-INC-081` siga reportado en el MD externo, no se permite activar una task interna distinta ni saltar a incidencias de menor severidad.
+Tarea activa única: `[🚧] - PUMUKI-INC-083 — Hacer accionable el tracking canónico en la salida visible del runtime` tras cerrar `INC-082`, el backlog externo de RuralGo sigue abierto y la prioridad hard pasa al siguiente bug externo vivo de mayor severidad. Mientras `PUMUKI-INC-083` siga reportado en el MD externo, no se permite activar una task interna distinta ni saltar a incidencias de menor severidad.
 
 Regla operativa persistente: este repositorio no dispone de cuota útil de GitHub Actions en el ciclo actual; durante rollout y release se crean las PR necesarias y se mergean igualmente sin esperar CI remoto. La validación contractual pasa a ser local y dirigida y cualquier bloqueo de branch policy por checks remotos debe resolverse por merge administrativo, no reabriendo el debate sobre esperar Actions.
 
@@ -1049,7 +1049,7 @@ Snapshot de adopción vigente:
 | Consumer | Versión/estado actual | Estado backlog externo | Lectura operativa |
 |----------|------------------------|------------------------|-------------------|
 | `SAAS` | `6.3.102` mergeada vía [#12](https://github.com/SwiftEnProfundidad/app-supermercados/pull/12) | `0` incidencias activas | Adopción cerrada en `main`. |
-| `RuralGo` | `6.3.109` en rollout útil para cierre de `INC-080` | `27` incidencias activas | `PUMUKI-INC-080` ya cerrado; siguiente bug vivo prioritario `PUMUKI-INC-081`. |
+| `RuralGo` | `6.3.109` en rollout útil para cierre de `INC-080` | `27` incidencias activas | `PUMUKI-INC-080` ya cerrado; siguiente bug vivo prioritario `PUMUKI-INC-083`. |
 | `Flux` | `6.3.102` mergeada vía [#9](https://github.com/SwiftEnProfundidad/flux-training/pull/9) | sin bug nuevo abierto en backlog Pumuki | Adopción cerrada en `develop`. |
 
 *(Sustituir la fila anterior al cerrar/abrir la tarea en curso: una sola 🚧 en todo el plan.)*

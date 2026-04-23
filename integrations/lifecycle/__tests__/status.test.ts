@@ -217,7 +217,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     );
     assert.equal(status.experimentalFeatures.features.heuristics.legacyActivationVariable, null);
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.source, 'default');
     assert.equal(
       status.experimentalFeatures.features.mcp_enterprise.activationVariable,
@@ -352,7 +352,7 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
     assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
     assert.equal(status.governanceNextAction.stage, 'PRE_WRITE');
     assert.equal(status.governanceObservation.governance_effective, 'attention');
@@ -536,7 +536,7 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
     assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
     assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
     assert.equal(status.governanceNextAction.stage, 'PRE_WRITE');
     assert.equal(status.governanceObservation.evidence.readable, 'missing');
