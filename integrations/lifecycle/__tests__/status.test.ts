@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { PUMUKI_CONFIG_KEYS } from '../constants';
 import type { ILifecycleGitService } from '../gitService';
@@ -51,6 +52,82 @@ class FakeLifecycleGitService implements ILifecycleGitService {
     return this.config[key];
   }
 }
+
+const writeBlockedEvidence = (params: {
+  repoRoot: string;
+  branch: string;
+  stage: 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+}): void => {
+  const evidence = {
+    version: '2.1' as const,
+    timestamp: new Date().toISOString(),
+    snapshot: {
+      stage: params.stage,
+      outcome: 'BLOCK' as const,
+      findings: [],
+    },
+    ledger: [],
+    platforms: {},
+    rulesets: [],
+    human_intent: null,
+    ai_gate: {
+      status: 'BLOCKED' as const,
+      violations: [],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'BLOCKED' as const,
+      total_violations: 0,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 0,
+        INFO: 0,
+      },
+    },
+    repo_state: {
+      repo_root: params.repoRoot,
+      git: {
+        available: true,
+        branch: params.branch,
+        upstream: null,
+        ahead: 0,
+        behind: 0,
+        dirty: false,
+        staged: 0,
+        unstaged: 0,
+      },
+      lifecycle: {
+        installed: true,
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
+        hooks: {
+          pre_commit: 'managed' as const,
+          pre_push: 'managed' as const,
+        },
+      },
+    },
+  };
+
+  const payloadHash = computeEvidencePayloadHash(evidence);
+  writeFileSync(
+    join(params.repoRoot, '.ai_evidence.json'),
+    JSON.stringify(
+      {
+        ...evidence,
+        evidence_chain: {
+          algorithm: 'sha256' as const,
+          previous_payload_hash: null,
+          payload_hash: payloadHash,
+          sequence: 1,
+        },
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+};
 
 test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', async () => {
   await withTempDir('pumuki-lifecycle-status-', async (repoRoot) => {
@@ -121,7 +198,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     assert.equal(status.policyValidation.stages.PRE_PUSH.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(status.policyValidation.stages.CI.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(status.experimentalFeatures.features.pre_write.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.pre_write.source, 'default');
     assert.equal(status.experimentalFeatures.features.analytics.layer, 'experimental');
     assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
@@ -140,7 +217,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     );
     assert.equal(status.experimentalFeatures.features.heuristics.legacyActivationVariable, null);
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.source, 'default');
     assert.equal(
       status.experimentalFeatures.features.mcp_enterprise.activationVariable,
@@ -256,12 +333,40 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     assert.equal(status.hooksDirectoryResolution, 'default');
     assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
     assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
+    assert.deepEqual(status.issues, []);
+  });
+});
+
+test('readLifecycleStatus expone issues canónicos cuando governance está bloqueado por evidencia', async () => {
+  await withTempDir('pumuki-lifecycle-status-blocked-', async (repoRoot) => {
+    writeBlockedEvidence({
+      repoRoot,
+      branch: 'feature/lifecycle-status-blocked',
+      stage: 'PRE_PUSH',
+    });
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.issues.some((issue) => issue.severity === 'error'), true);
+    assert.equal(
+      status.issues.some((issue) => issue.message.includes('Governance is blocked')),
+      true
+    );
   });
 });
 
@@ -294,11 +399,11 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
     assert.equal(status.hooksDirectoryResolution, 'default');
     assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
     assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
   });
 });
