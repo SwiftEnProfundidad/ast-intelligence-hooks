@@ -1041,7 +1041,7 @@ Regla operativa persistente: este repositorio no dispone de cuota útil de GitHu
 Barrido de consumers cerrado:
 - SAAS (`pumuki@6.3.102`): rollout ejecutado en `chore/pumuki-6-3-102-rollout` y PR [#12](https://github.com/SwiftEnProfundidad/app-supermercados/pull/12) ya mergeada en `main` con merge `ed8a5d3be224a8bc05a0b5209e0699835a83b925`; `status`/`doctor` convergieron en verde y el hook real `tools/git-hooks/pre-push` quedó validado tras refrescar `PRE_WRITE`/receipt MCP.
 - Flux (`pumuki@6.3.102`): rollout aislado en `Flux_training__pumuki-6-3-102-rollout` y PR [#9](https://github.com/SwiftEnProfundidad/flux-training/pull/9) ya mergeada en `develop` con merge `4b98c95a04a48766d39181fd7a3e0bd13d8537ad`; `status`/`doctor` convergieron en verde y el hook real `./.pumuki/git-hooks/pre-push` quedó ejecutable en la worktree limpia.
-- RuralGo (`pumuki@6.3.109`): rollout incremental ejecutado sobre una instalación limpia; `status` y `doctor` convergieron en `6.3.109` sin drift, `install` materializó `.pumuki/policy-as-code.json` y las cuatro stages (`PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`) quedaron en `strict=true` con `policySource=file:.pumuki/policy-as-code.json`, cerrando `PUMUKI-INC-080`.
+- RuralGo (`pumuki@6.3.111`): rollout incremental ejecutado sobre una instalación limpia; `status` y `doctor` convergieron en `6.3.111` sin drift, `install` materializó `.pumuki/policy-as-code.json` y las cuatro stages (`PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`) quedaron en `strict=true` con `policySource=file:.pumuki/policy-as-code.json`, cerrando `PUMUKI-INC-080`.
 - Adopción: `pumuki@6.3.102` ya quedó publicada y mergeada en los tres consumers activos, sin bugs externos abiertos derivados del rollout.
 
 Snapshot de adopción vigente:
