@@ -1,6 +1,7 @@
 import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { buildLifecycleVersionReport } from './packageInfo';
+import { readEvidenceResult } from '../evidence/readEvidence';
 import {
   readLifecycleExperimentalFeaturesSnapshot,
   type LifecycleExperimentalFeaturesSnapshot,
@@ -10,6 +11,7 @@ import {
   type LifecyclePolicyValidationSnapshot,
 } from './policyValidationSnapshot';
 import { readLifecycleState, type LifecycleState } from './state';
+import type { DoctorIssue } from './doctor';
 
 export type LifecycleStatus = {
   repoRoot: string;
@@ -22,6 +24,32 @@ export type LifecycleStatus = {
   trackedNodeModulesCount: number;
   policyValidation: LifecyclePolicyValidationSnapshot;
   experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
+  issues: ReadonlyArray<DoctorIssue>;
+};
+
+const buildLifecycleIssues = (repoRoot: string): ReadonlyArray<DoctorIssue> => {
+  const evidenceResult = readEvidenceResult(repoRoot);
+  if (evidenceResult.kind !== 'valid') {
+    return [];
+  }
+
+  const evidence = evidenceResult.evidence;
+  const blocked =
+    evidence.snapshot.outcome === 'BLOCK' ||
+    evidence.ai_gate.status === 'BLOCKED' ||
+    evidence.severity_metrics.gate_status === 'BLOCKED';
+
+  if (!blocked) {
+    return [];
+  }
+
+  const blockedStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
+  return [
+    {
+      severity: 'error',
+      message: `Governance is blocked (${blockedStage}).`,
+    },
+  ];
 };
 
 export const readLifecycleStatus = (params?: {
@@ -38,6 +66,9 @@ export const readLifecycleStatus = (params?: {
     repoRoot,
     lifecycleVersion: lifecycleState.version,
   });
+  const policyValidation = readLifecyclePolicyValidationSnapshot(repoRoot);
+  const experimentalFeatures = readLifecycleExperimentalFeaturesSnapshot();
+  const issues = buildLifecycleIssues(repoRoot);
 
   return {
     repoRoot,
@@ -48,7 +79,8 @@ export const readLifecycleStatus = (params?: {
     hooksDirectory: hooksDirectory.path,
     hooksDirectoryResolution: hooksDirectory.source,
     trackedNodeModulesCount,
-    policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
-    experimentalFeatures: readLifecycleExperimentalFeaturesSnapshot(),
+    policyValidation,
+    experimentalFeatures,
+    issues,
   };
 };
