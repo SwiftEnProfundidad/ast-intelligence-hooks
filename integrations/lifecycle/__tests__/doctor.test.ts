@@ -138,6 +138,82 @@ const sampleEvidence = (params: {
   return evidence;
 };
 
+const writeBlockedEvidence = (params: {
+  repoRoot: string;
+  branch: string;
+  stage: 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+}): void => {
+  const evidence = {
+    version: '2.1' as const,
+    timestamp: new Date().toISOString(),
+    snapshot: {
+      stage: params.stage,
+      outcome: 'BLOCK' as const,
+      findings: [],
+    },
+    ledger: [],
+    platforms: {},
+    rulesets: [],
+    human_intent: null,
+    ai_gate: {
+      status: 'BLOCKED' as const,
+      violations: [],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'BLOCKED' as const,
+      total_violations: 0,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 0,
+        INFO: 0,
+      },
+    },
+    repo_state: {
+      repo_root: params.repoRoot,
+      git: {
+        available: true,
+        branch: params.branch,
+        upstream: null,
+        ahead: 0,
+        behind: 0,
+        dirty: false,
+        staged: 0,
+        unstaged: 0,
+      },
+      lifecycle: {
+        installed: true,
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
+        hooks: {
+          pre_commit: 'managed' as const,
+          pre_push: 'managed' as const,
+        },
+      },
+    },
+  };
+
+  const payloadHash = computeEvidencePayloadHash(evidence);
+  writeFileSync(
+    join(params.repoRoot, '.ai_evidence.json'),
+    JSON.stringify(
+      {
+        ...evidence,
+        evidence_chain: {
+          algorithm: 'sha256' as const,
+          previous_payload_hash: null,
+          payload_hash: payloadHash,
+          sequence: 1,
+        },
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+};
+
 test('runLifecycleDoctor marca issue bloqueante cuando hay rutas trackeadas en node_modules', async () => {
   await withTempDir('pumuki-doctor-tracked-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
@@ -184,6 +260,54 @@ test('runLifecycleDoctor marca warning si lifecycle dice instalado y falta bloqu
     assert.match(report.issues[0]?.message ?? '', /installed=true/i);
     assert.match(report.issues[0]?.message ?? '', /core\.hooksPath/i);
     assert.equal(doctorHasBlockingIssues(report), false);
+  });
+});
+
+test('runLifecycleDoctor itemiza el tracking canónico cuando governance está bloqueado por evidencia', async () => {
+  await withTempDir('pumuki-doctor-blocked-tracking-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, 'docs', 'validation', 'refactor'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      '# plan\n- la única fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'),
+      [
+        '# plan',
+        '',
+        '[🚧] - PUMUKI-INC-078 (RuralGo) corregir tracking canónico',
+        '[🚧] - PUMUKI-INC-079 (RuralGo) task inválida simultánea',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+    writeBlockedEvidence({
+      repoRoot,
+      branch: 'feature/doctor-blocked-tracking',
+      stage: 'PRE_PUSH',
+    });
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.issues.some((issue) => issue.severity === 'error'), true);
+    assert.equal(
+      report.issues.some((issue) => issue.message.includes('Governance is blocked')),
+      true
+    );
+    assert.match(
+      report.issues.find((issue) => issue.message.includes('Governance is blocked'))?.message ?? '',
+      /active_entries=PUMUKI-INC-078@L3, PUMUKI-INC-079@L4/i
+    );
   });
 });
 
