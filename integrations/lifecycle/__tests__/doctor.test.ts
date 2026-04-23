@@ -187,6 +187,54 @@ test('runLifecycleDoctor marca warning si lifecycle dice instalado y falta bloqu
   });
 });
 
+test('runLifecycleDoctor itemiza el tracking canónico cuando governance está bloqueado por evidencia', async () => {
+  await withTempDir('pumuki-doctor-blocked-tracking-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, 'docs', 'validation', 'refactor'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      '# plan\n- la única fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'),
+      [
+        '# plan',
+        '',
+        '[🚧] - PUMUKI-INC-078 (RuralGo) corregir tracking canónico',
+        '[🚧] - PUMUKI-INC-079 (RuralGo) task inválida simultánea',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+    writeBlockedEvidence({
+      repoRoot,
+      branch: 'feature/doctor-blocked-tracking',
+      stage: 'PRE_PUSH',
+    });
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.issues.some((issue) => issue.severity === 'error'), true);
+    assert.equal(
+      report.issues.some((issue) => issue.message.includes('Governance is blocked')),
+      true
+    );
+    assert.match(
+      report.issues.find((issue) => issue.message.includes('Governance is blocked'))?.message ?? '',
+      /active_entries=PUMUKI-INC-078@L3, PUMUKI-INC-079@L4/i
+    );
+  });
+});
+
 test('runLifecycleDoctor marca warning si hay hooks gestionados pero lifecycle no está instalado', async () => {
   await withTempDir('pumuki-doctor-hooks-without-state-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
