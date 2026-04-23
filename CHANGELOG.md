@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.111] - 2026-04-23
+
+### Fixed
+
+- **Alignment commands now respect the consumer runtime declaration:** `status`, `doctor` and the lifecycle helpers prepend the matching Node runtime switch when the consumer declares `volta`, `.nvmrc`, or `package.json.engines.node` and the current shell Node does not match.
+- **Reproducible remediation stays repo-aware:** the suggested command keeps the consumer's runtime manager in the loop before the Pumuki install/alignment step, so fixes stay tied to the repo that is being audited.
+
 ## [6.3.102] - 2026-04-22
 
 ### Fixed
