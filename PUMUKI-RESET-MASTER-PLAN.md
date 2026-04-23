@@ -1032,7 +1032,7 @@ Decisión hard de cierre:
 
 Último cierre: `[✅] - PUMUKI-INC-081 / PUMUKI-INC-083 cerradas con releases útiles pumuki@6.3.103 y pumuki@6.3.104` el primer hotfix separó `block-summary` y `warning-summary` en `PRE_WRITE` y enriqueció el tracking canónico con `active_entries`; el segundo amplió ese diagnóstico al hub real de RuralGo (`docs/RURALGO_SEGUIMIENTO.md` y filas `| 🚧 | TASK_ID |`). Ambos quedaron integrados en `main` vía PR [#793](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/793) y PR [#794](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/794), publicados en npm como `pumuki@6.3.103` y `pumuki@6.3.104`, y repinados en RuralGo vía PR [#1879](https://github.com/SwiftEnProfundidad/R_GO/pull/1879) con merge `a6999288f5d240a20468d0b510dd7adf2a43ce14`.
 
-Último cierre operativo: `[✅] - PUMUKI-INC-080 — Convergencia de policy efectiva y wiring de hooks en instalación limpia` el fix quedó integrado en `develop` vía PR [#808](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/808) (merge `5460677930494c0c966120ea9e72b10ee43d26b0`), backporteado a `main` vía PR [#809](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/809) (merge `0ed2b81ed10bac6fca4386cfcfcc5997f76d8486`) y publicado como `pumuki@6.3.109` tras la PR de release [#810](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/810) (merge `24d3a546678c006e4e6b7e5495b11267a49aabdf`). El replay útil en RuralGo confirma `version.effective=6.3.109`, `.pumuki/policy-as-code.json` materializado por `install`, `policyValidation.stages.{PRE_WRITE,PRE_COMMIT,PRE_PUSH,CI}.strict=true`, `policySource=file:.pumuki/policy-as-code.json` y `doctor.issues=[]`.
+Último cierre operativo: `[✅] - PUMUKI-INC-082 — Snapshot superior del backlog ya sincronizado con la tabla activa` no ha hecho falta patch nuevo de runtime: la deriva quedaba en el propio MD externo de RuralGo. Tras cerrar `PUMUKI-INC-080` y `PUMUKI-INC-081`, el documento seguía anunciando `29` incidencias abiertas aunque la tabla viva ya estaba en `26`. El cierre actual corrige el snapshot superior, retira `PUMUKI-INC-082` del frente crítico y deja el backlog activo en `25`, manteniendo una sola fuente de verdad visible en el propio consumer.
 
 Tarea activa única: `[🚧] - PUMUKI-INC-083 — Hacer accionable el tracking canónico en la salida visible del runtime` tras cerrar `INC-082`, el backlog externo de RuralGo sigue abierto y la prioridad hard pasa al siguiente bug externo vivo de mayor severidad. Mientras `PUMUKI-INC-083` siga reportado en el MD externo, no se permite activar una task interna distinta ni saltar a incidencias de menor severidad.
 
@@ -1049,7 +1049,11 @@ Snapshot de adopción vigente:
 | Consumer | Versión/estado actual | Estado backlog externo | Lectura operativa |
 |----------|------------------------|------------------------|-------------------|
 | `SAAS` | `6.3.102` mergeada vía [#12](https://github.com/SwiftEnProfundidad/app-supermercados/pull/12) | `0` incidencias activas | Adopción cerrada en `main`. |
-| `RuralGo` | `6.3.109` en rollout útil para cierre de `INC-080` | `27` incidencias activas | `PUMUKI-INC-080` ya cerrado; siguiente bug vivo prioritario `PUMUKI-INC-083`. |
+<<<<<<< HEAD
+| `RuralGo` | `6.3.109` revalidada en runtime real | `25` incidencias activas | `PUMUKI-INC-080`, `PUMUKI-INC-081` y `PUMUKI-INC-082` ya cerrados; siguiente bug vivo prioritario `PUMUKI-INC-083`. |
+=======
+| `RuralGo` | `6.3.109` revalidada en runtime real | `25` incidencias activas | `PUMUKI-INC-080`, `PUMUKI-INC-081` y `PUMUKI-INC-082` ya cerrados; siguiente bug vivo prioritario `PUMUKI-INC-083`. |
+>>>>>>> origin/develop
 | `Flux` | `6.3.102` mergeada vía [#9](https://github.com/SwiftEnProfundidad/flux-training/pull/9) | sin bug nuevo abierto en backlog Pumuki | Adopción cerrada en `develop`. |
 
 *(Sustituir la fila anterior al cerrar/abrir la tarea en curso: una sola 🚧 en todo el plan.)*
