@@ -6,7 +6,7 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
-### 2026-04-23 (v6.3.105)
+### 2026-04-23 (v6.3.106)
 
 - **Tracking canónico accionable en `status` / `doctor`:** cuando el runtime está bloqueado, la salida visible ya incluye `issues` y contexto suficiente para no depender de grep manual.
 - **Stage visible coherente con la evidencia:** `governanceNextAction.stage` deja de ser un valor forzado y sigue el `snapshot_stage` real cuando existe.
