@@ -11,6 +11,7 @@ import {
 } from './policyValidationSnapshot';
 import {
   readGovernanceObservationSnapshot,
+  doctorGovernanceIsBlocking,
   type GovernanceObservationSnapshot,
 } from './governanceObservationSnapshot';
 import {
@@ -18,6 +19,7 @@ import {
   type GovernanceNextActionReader,
   type GovernanceNextActionSummary,
 } from './governanceNextAction';
+import type { DoctorIssue } from './doctor';
 import { readLifecycleState, type LifecycleState } from './state';
 import { resolveRepoTrackingState, type RepoTrackingState } from './trackingState';
 
@@ -35,6 +37,25 @@ export type LifecycleStatus = {
   governanceObservation: GovernanceObservationSnapshot;
   governanceNextAction: GovernanceNextActionSummary;
   tracking: RepoTrackingState;
+  issues: ReadonlyArray<DoctorIssue>;
+};
+
+const buildLifecycleIssues = (params: {
+  governanceObservation: GovernanceObservationSnapshot;
+  governanceNextAction: GovernanceNextActionSummary;
+}): ReadonlyArray<DoctorIssue> => {
+  const issues: DoctorIssue[] = [];
+
+  if (doctorGovernanceIsBlocking(params.governanceObservation)) {
+    issues.push({
+      severity: 'error',
+      message:
+        `Governance is blocked (${params.governanceNextAction.reason_code}). ` +
+        params.governanceNextAction.instruction,
+    });
+  }
+
+  return issues;
 };
 
 export const readLifecycleStatus = (params?: {
@@ -67,6 +88,7 @@ export const readLifecycleStatus = (params?: {
     governanceObservation,
   });
   const tracking = resolveRepoTrackingState(repoRoot);
+  const issues = buildLifecycleIssues({ governanceObservation, governanceNextAction });
 
   return {
     repoRoot,
@@ -82,5 +104,6 @@ export const readLifecycleStatus = (params?: {
     governanceNextAction,
     governanceObservation,
     tracking,
+    issues,
   };
 };

@@ -1034,7 +1034,7 @@ Decisión hard de cierre:
 
 Último cierre operativo: `[✅] - PUMUKI-INC-082 — Snapshot superior del backlog ya sincronizado con la tabla activa` no ha hecho falta patch nuevo de runtime: la deriva quedaba en el propio MD externo de RuralGo. Tras cerrar `PUMUKI-INC-080` y `PUMUKI-INC-081`, el documento seguía anunciando `29` incidencias abiertas aunque la tabla viva ya estaba en `26`. El cierre actual corrige el snapshot superior, retira `PUMUKI-INC-082` del frente crítico y deja el backlog activo en `25`, manteniendo una sola fuente de verdad visible en el propio consumer.
 
-Tarea activa única: `[🚧] - PUMUKI-INC-083 — Hacer accionable el tracking canónico en la salida visible del runtime` tras cerrar `INC-082`, el backlog externo de RuralGo sigue abierto y la prioridad hard pasa al siguiente bug externo vivo de mayor severidad. Mientras `PUMUKI-INC-083` siga reportado en el MD externo, no se permite activar una task interna distinta ni saltar a incidencias de menor severidad.
+Tarea activa única: `[🚧] - PUMUKI-INC-086 / PUMUKI-INC-089 — Alinear stage y fijar remediación reproducible` con `081/083/084` ya cerradas en la línea publicada y en RuralGo, el siguiente write set útil del backlog externo pasa a ser `086 + 089`: la salida seguía mezclando `governanceNextAction.stage=PRE_WRITE` con snapshots `PRE_PUSH`, y la remediación recomendada seguía apuntando a `pumuki@latest` en vez de al runtime diagnosticado. El objetivo inmediato es cerrar esa incoherencia de contrato antes de abrir otro frente.
 
 Regla operativa persistente: este repositorio no dispone de cuota útil de GitHub Actions en el ciclo actual; durante rollout y release se crean las PR necesarias y se mergean igualmente sin esperar CI remoto. La validación contractual pasa a ser local y dirigida y cualquier bloqueo de branch policy por checks remotos debe resolverse por merge administrativo, no reabriendo el debate sobre esperar Actions.
 
@@ -1049,11 +1049,7 @@ Snapshot de adopción vigente:
 | Consumer | Versión/estado actual | Estado backlog externo | Lectura operativa |
 |----------|------------------------|------------------------|-------------------|
 | `SAAS` | `6.3.102` mergeada vía [#12](https://github.com/SwiftEnProfundidad/app-supermercados/pull/12) | `0` incidencias activas | Adopción cerrada en `main`. |
-<<<<<<< HEAD
 | `RuralGo` | `6.3.109` revalidada en runtime real | `25` incidencias activas | `PUMUKI-INC-080`, `PUMUKI-INC-081` y `PUMUKI-INC-082` ya cerrados; siguiente bug vivo prioritario `PUMUKI-INC-083`. |
-=======
-| `RuralGo` | `6.3.109` revalidada en runtime real | `25` incidencias activas | `PUMUKI-INC-080`, `PUMUKI-INC-081` y `PUMUKI-INC-082` ya cerrados; siguiente bug vivo prioritario `PUMUKI-INC-083`. |
->>>>>>> origin/develop
 | `Flux` | `6.3.102` mergeada vía [#9](https://github.com/SwiftEnProfundidad/flux-training/pull/9) | sin bug nuevo abierto en backlog Pumuki | Adopción cerrada en `develop`. |
 
 *(Sustituir la fila anterior al cerrar/abrir la tarea en curso: una sola 🚧 en todo el plan.)*
