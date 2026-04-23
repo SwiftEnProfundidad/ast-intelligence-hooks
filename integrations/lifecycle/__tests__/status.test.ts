@@ -656,6 +656,59 @@ test('readLifecycleStatus expone issues canónicos cuando governance está bloqu
   });
 });
 
+test('readLifecycleStatus itemiza el tracking canónico cuando hay más de una task activa', async () => {
+  await withTempDir('pumuki-lifecycle-status-tracking-invalid-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      '# plan\n- la única fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'),
+      [
+        '# plan',
+        '',
+        '[🚧] - PUMUKI-INC-078 (RuralGo) corregir tracking canónico',
+        '[🚧] - PUMUKI-INC-079 (RuralGo) task inválida simultánea',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'validation', 'refactor', 'last-run.json'),
+      JSON.stringify({
+        status: 'IN_PROGRESS',
+        plan_file: 'PUMUKI-RESET-MASTER-PLAN.md',
+        next: 'PUMUKI-INC-078',
+      }),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.tracking.single_in_progress_valid, false);
+    assert.equal(status.issues.some((issue) => issue.severity === 'warning'), true);
+    assert.equal(
+      status.issues.some((issue) => issue.message.includes('Canonical tracking is inconsistent')),
+      true
+    );
+    assert.match(
+      status.issues.find((issue) => issue.message.includes('Canonical tracking is inconsistent'))?.message ?? '',
+      /active_entries=PUMUKI-INC-078@L3, PUMUKI-INC-079@L4/i
+    );
+  });
+});
+
 test('readLifecycleStatus proyecta sesión SDD expirada como inactiva pero mantiene atención canónica', async () => {
   await withTempDir('pumuki-lifecycle-status-expired-sdd-', async (repoRoot) => {
     const git = new FakeLifecycleGitService(repoRoot, [], {

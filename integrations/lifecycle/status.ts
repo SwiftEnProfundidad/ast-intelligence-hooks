@@ -21,7 +21,11 @@ import {
 } from './governanceNextAction';
 import type { DoctorIssue } from './doctor';
 import { readLifecycleState, type LifecycleState } from './state';
-import { resolveRepoTrackingState, type RepoTrackingState } from './trackingState';
+import {
+  formatTrackingActionableContext,
+  resolveRepoTrackingState,
+  type RepoTrackingState,
+} from './trackingState';
 
 export type LifecycleStatus = {
   repoRoot: string;
@@ -43,6 +47,7 @@ export type LifecycleStatus = {
 const buildLifecycleIssues = (params: {
   governanceObservation: GovernanceObservationSnapshot;
   governanceNextAction: GovernanceNextActionSummary;
+  tracking: RepoTrackingState;
 }): ReadonlyArray<DoctorIssue> => {
   const issues: DoctorIssue[] = [];
 
@@ -52,6 +57,15 @@ const buildLifecycleIssues = (params: {
       message:
         `Governance is blocked (${params.governanceNextAction.reason_code}). ` +
         params.governanceNextAction.instruction,
+    });
+  }
+
+  if (params.tracking.enforced && params.tracking.single_in_progress_valid === false) {
+    const actionableContext = formatTrackingActionableContext(params.tracking);
+    issues.push({
+      severity: 'warning',
+      message:
+        `Canonical tracking is inconsistent for ${params.tracking.canonical_path ?? 'unknown'} (in_progress_count=${params.tracking.in_progress_count}, active_task=${params.tracking.active_task_id ?? 'unknown'}, last_run_status=${params.tracking.last_run_status ?? 'absent'}).${actionableContext ? ` ${actionableContext}` : ''}`,
     });
   }
 
@@ -88,7 +102,7 @@ export const readLifecycleStatus = (params?: {
     governanceObservation,
   });
   const tracking = resolveRepoTrackingState(repoRoot);
-  const issues = buildLifecycleIssues({ governanceObservation, governanceNextAction });
+  const issues = buildLifecycleIssues({ governanceObservation, governanceNextAction, tracking });
 
   return {
     repoRoot,
