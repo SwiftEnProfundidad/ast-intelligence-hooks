@@ -21,6 +21,13 @@ const concreteDependencyNames = new Set<string>([
 ]);
 const GOD_CLASS_MAX_LINES = 300;
 const networkCallCalleePattern = /^(fetch|axios|get|post|put|patch|delete|request)$/i;
+const ignoredMagicNumberValues = new Set<number>([0, 1]);
+const runtimeTestDoubleLibraryPattern = /^(sinon|testdouble|ts-mockito|jest-mock|vitest)$/i;
+const runtimeTestDoublePathPattern = /(^|\/)(__mocks__|mocks|fakes|spies|stubs)(\/|$)|\.(mock|fake|spy|stub)$/i;
+const anemicDomainClassNamePattern = /(Entity|Aggregate|Model)$/i;
+const controllerClassNamePattern = /Controller$/i;
+const controllerRoutingDecoratorPattern =
+  /^(Get|Post|Put|Patch|Delete|All|Head|Options|MessagePattern|EventPattern)$/;
 type AstNode = Record<string, string | number | boolean | bigint | symbol | null | Date | object>;
 type TypeScriptSemanticNode = {
   kind: 'class' | 'property' | 'call' | 'member';
@@ -405,6 +412,101 @@ const collectClassMethodDescriptors = (classNode: AstNode): readonly ClassMethod
   }
 
   return descriptors;
+};
+
+const isAccessorLikeMethodName = (name: string): boolean => {
+  return name === 'constructor' || /^(get|set)[A-Z_]/.test(name);
+};
+
+const isAnemicDomainClassNode = (value: AstNode): boolean => {
+  if (value.type !== 'ClassDeclaration' && value.type !== 'ClassExpression') {
+    return false;
+  }
+
+  const className = classNameFromNode(value);
+  if (!anemicDomainClassNamePattern.test(className)) {
+    return false;
+  }
+
+  const descriptors = collectClassMethodDescriptors(value);
+  if (descriptors.length < 2) {
+    return false;
+  }
+
+  return descriptors.every((descriptor) => isAccessorLikeMethodName(descriptor.name));
+};
+
+const hasDecoratorNamed = (node: unknown, decoratorName: RegExp): boolean => {
+  if (!isObject(node) || !Array.isArray(node.decorators)) {
+    return false;
+  }
+
+  return node.decorators.some((decorator) => {
+    if (!isObject(decorator)) {
+      return false;
+    }
+    const expression = decorator.expression;
+    if (!isObject(expression)) {
+      return false;
+    }
+    const callee = expression.type === 'CallExpression' ? expression.callee : expression;
+    const name = methodNameFromNode(callee) ?? memberExpressionPropertyName(callee);
+    return typeof name === 'string' && decoratorName.test(name);
+  });
+};
+
+const isControllerHandlerMethodNode = (node: AstNode): boolean => {
+  return node.type === 'ClassMethod' && node.kind !== 'constructor';
+};
+
+const statementCountFromMethodNode = (node: AstNode): number => {
+  if (!isObject(node.body) || !Array.isArray(node.body.body)) {
+    return 0;
+  }
+  return node.body.body.filter((statement) => isObject(statement)).length;
+};
+
+const hasControllerBusinessFlow = (node: AstNode): boolean => {
+  return hasNode(node, (value) => {
+    return (
+      value.type === 'IfStatement' ||
+      value.type === 'SwitchStatement' ||
+      value.type === 'ForStatement' ||
+      value.type === 'ForInStatement' ||
+      value.type === 'ForOfStatement' ||
+      value.type === 'WhileStatement' ||
+      value.type === 'DoWhileStatement' ||
+      value.type === 'TryStatement' ||
+      value.type === 'ConditionalExpression'
+    );
+  });
+};
+
+const isControllerBusinessLogicMethodNode = (node: AstNode): boolean => {
+  if (!isControllerHandlerMethodNode(node)) {
+    return false;
+  }
+  if (statementCountFromMethodNode(node) < 2) {
+    return false;
+  }
+  return hasControllerBusinessFlow(node);
+};
+
+const isControllerClassNode = (value: AstNode): boolean => {
+  if (value.type !== 'ClassDeclaration' && value.type !== 'ClassExpression') {
+    return false;
+  }
+  return controllerClassNamePattern.test(classNameFromNode(value));
+};
+
+const findControllerBusinessLogicMethod = (node: AstNode): AstNode | undefined => {
+  const classBody = node.body;
+  if (!isObject(classBody) || !Array.isArray(classBody.body)) {
+    return undefined;
+  }
+  return classBody.body.find((member): member is AstNode => {
+    return isObject(member) && isControllerBusinessLogicMethodNode(member);
+  });
 };
 
 const interfaceNameFromNode = (node: AstNode): string => {
@@ -1546,6 +1648,96 @@ export const hasAsyncPromiseExecutor = (node: unknown): boolean => {
   });
 };
 
+export const hasMagicNumberLiteral = (node: unknown): boolean => {
+  return [...collectMagicNumberOccurrences(node).values()].some(
+    (occurrence) => occurrence.count >= 2
+  );
+};
+
+export const findMagicNumberLiteralLines = (node: unknown): readonly number[] => {
+  return collectRepeatedMagicNumberLines(node);
+};
+
+const runtimeTestDoubleSpecifier = (node: unknown): string | undefined => {
+  if (!isObject(node) || node.type !== 'StringLiteral' || typeof node.value !== 'string') {
+    return undefined;
+  }
+  return node.value;
+};
+
+const matchesRuntimeTestDoubleImport = (specifier: string): boolean => {
+  return (
+    runtimeTestDoubleLibraryPattern.test(specifier) ||
+    runtimeTestDoublePathPattern.test(specifier)
+  );
+};
+
+const isRuntimeTestDoubleImportNode = (value: AstNode): boolean => {
+  if (value.type === 'ImportDeclaration') {
+    const specifier = runtimeTestDoubleSpecifier(value.source);
+    return typeof specifier === 'string' && matchesRuntimeTestDoubleImport(specifier);
+  }
+
+  if (
+    value.type === 'CallExpression' &&
+    isObject(value.callee) &&
+    value.callee.type === 'Identifier' &&
+    value.callee.name === 'require' &&
+    Array.isArray(value.arguments)
+  ) {
+    return value.arguments.some((argument) => {
+      const specifier = runtimeTestDoubleSpecifier(argument);
+      return typeof specifier === 'string' && matchesRuntimeTestDoubleImport(specifier);
+    });
+  }
+
+  return false;
+};
+
+export const hasProductionMockArtifactUsage = (node: unknown): boolean => {
+  return hasNode(node, (value) => isRuntimeTestDoubleImportNode(value));
+};
+
+export const findProductionMockArtifactUsageLines = (node: unknown): readonly number[] => {
+  return collectLineMatchesWithAncestors(node, (value) => isRuntimeTestDoubleImportNode(value), {
+    max: 8,
+  });
+};
+
+export const hasAnemicDomainModel = (node: unknown): boolean => {
+  return hasNode(node, (value) => isAnemicDomainClassNode(value));
+};
+
+export const findAnemicDomainModelLines = (node: unknown): readonly number[] => {
+  return collectLineMatchesWithAncestors(node, (value) => isAnemicDomainClassNode(value), {
+    max: 8,
+  });
+};
+
+export const hasControllerBusinessLogic = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (!isControllerClassNode(value)) {
+      return false;
+    }
+    return Boolean(findControllerBusinessLogicMethod(value));
+  });
+};
+
+export const findControllerBusinessLogicLines = (node: unknown): readonly number[] => {
+  return collectLineMatchesWithAncestors(
+    node,
+    (value) => {
+      if (!isControllerClassNode(value)) {
+        return false;
+      }
+      return Boolean(findControllerBusinessLogicMethod(value));
+    },
+    {
+      max: 8,
+    }
+  );
+};
+
 export const hasWithStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'WithStatement');
 };
@@ -1757,6 +1949,92 @@ const nodeLineSpan = (node: unknown): number => {
     return 0;
   }
   return Math.max(0, end - start + 1);
+};
+
+type MagicNumberOccurrence = {
+  count: number;
+  lines: number[];
+};
+
+const magicNumberValueFromNode = (node: unknown): number | undefined => {
+  if (!isObject(node) || node.type !== 'NumericLiteral' || typeof node.value !== 'number') {
+    return undefined;
+  }
+  if (!Number.isFinite(node.value) || ignoredMagicNumberValues.has(node.value)) {
+    return undefined;
+  }
+  return node.value;
+};
+
+const isExecutableMagicNumberContext = (
+  value: AstNode,
+  ancestors: ReadonlyArray<AstNode>
+): boolean => {
+  const parent = ancestors[ancestors.length - 1];
+  if (!isObject(parent)) {
+    return false;
+  }
+  if (parent.type === 'BinaryExpression') {
+    return parent.left === value || parent.right === value;
+  }
+  if (parent.type === 'CallExpression' || parent.type === 'NewExpression') {
+    return Array.isArray(parent.arguments) && parent.arguments.includes(value);
+  }
+  if (parent.type === 'AssignmentExpression') {
+    return parent.right === value;
+  }
+  if (parent.type === 'ReturnStatement') {
+    return parent.argument === value;
+  }
+  if (parent.type === 'SwitchCase') {
+    return parent.test === value;
+  }
+  return false;
+};
+
+const collectMagicNumberOccurrences = (
+  node: unknown
+): ReadonlyMap<number, MagicNumberOccurrence> => {
+  const occurrences = new Map<number, MagicNumberOccurrence>();
+
+  const walk = (value: unknown, ancestors: ReadonlyArray<AstNode>): void => {
+    if (!isObject(value)) {
+      return;
+    }
+
+    const numericValue = magicNumberValueFromNode(value);
+    if (typeof numericValue === 'number' && isExecutableMagicNumberContext(value, ancestors)) {
+      const current = occurrences.get(numericValue) ?? { count: 0, lines: [] };
+      current.count += 1;
+      const line = toPositiveLine(value);
+      if (typeof line === 'number') {
+        current.lines.push(line);
+      }
+      occurrences.set(numericValue, current);
+    }
+
+    const nextAncestors = [...ancestors, value];
+    for (const child of Object.values(value)) {
+      if (Array.isArray(child)) {
+        for (const entry of child) {
+          walk(entry, nextAncestors);
+        }
+        continue;
+      }
+      walk(child, nextAncestors);
+    }
+  };
+
+  walk(node, []);
+  return occurrences;
+};
+
+const collectRepeatedMagicNumberLines = (node: unknown): readonly number[] => {
+  return sortedUniqueLines(
+    [...collectMagicNumberOccurrences(node).values()]
+      .filter((occurrence) => occurrence.count >= 2)
+      .flatMap((occurrence) => occurrence.lines)
+  );
 };
 
 export const hasLargeClassDeclaration = (node: unknown): boolean => {

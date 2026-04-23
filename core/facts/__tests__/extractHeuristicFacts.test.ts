@@ -172,6 +172,7 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
     'heuristics.ts.jwt-decode-without-verify.ast',
     'heuristics.ts.jwt-sign-no-expiration.ast',
     'heuristics.ts.jwt-verify-ignore-expiration.ast',
+    'heuristics.ts.magic-number.ast',
     'heuristics.ts.new-promise-async.ast',
     'heuristics.ts.process-env-mutation.ast',
     'heuristics.ts.process-exit.ast',
@@ -346,6 +347,7 @@ test('detects backend TypeScript heuristic findings in production path', () => {
     'heuristics.ts.jwt-decode-without-verify.ast',
     'heuristics.ts.jwt-sign-no-expiration.ast',
     'heuristics.ts.jwt-verify-ignore-expiration.ast',
+    'heuristics.ts.magic-number.ast',
     'heuristics.ts.new-promise-async.ast',
     'heuristics.ts.process-env-mutation.ast',
     'heuristics.ts.process-exit.ast',
@@ -1788,7 +1790,115 @@ test('extracts typed heuristic facts with expected metadata', () => {
     },
   });
 
-  assert.equal(extracted.length, 150);
+  assert.equal(extracted.length, 151);
   assert.equal(extracted.every((fact) => fact.kind === 'Heuristic'), true);
   assert.equal(extracted.every((fact) => fact.source === 'heuristics:ast'), true);
+});
+
+test('detects magic number heuristic facts in backend production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/service.ts',
+        [
+          'export const retry = (attempts: number) => {',
+          '  if (attempts > 3) return 3;',
+          '  return notify(3);',
+          '};',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const magicNumberFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.magic-number.ast'
+  );
+
+  assert.ok(magicNumberFact);
+  assert.deepEqual(magicNumberFact?.lines, [2, 3]);
+});
+
+test('detects production mock artifact heuristic facts in backend production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/service.ts',
+        [
+          'import { buildRepository } from "../mocks/user-repository";',
+          'const sinon = require("sinon");',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const productionMockFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.production-mock-artifact.ast'
+  );
+
+  assert.ok(productionMockFact);
+  assert.deepEqual(productionMockFact?.lines, [1, 2]);
+});
+
+test('detects anemic domain model heuristic facts in backend production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/domain/order.entity.ts',
+        [
+          'export class OrderEntity {',
+          '  constructor(private status: string) {}',
+          '  getStatus() { return this.status; }',
+          '  setStatus(status: string) { this.status = status; }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const anemicDomainFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.anemic-domain-model.ast'
+  );
+
+  assert.ok(anemicDomainFact);
+  assert.deepEqual(anemicDomainFact?.lines, [1]);
+});
+
+test('detects controller business logic heuristic facts in backend production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/OrdersController.ts',
+        [
+          'export class OrdersController {',
+          '  createOrder(dto: CreateOrderDto) {',
+          '    const normalized = dto.priority ?? "normal";',
+          '    if (normalized === "high") {',
+          '      return this.ordersService.createPriority(dto);',
+          '    }',
+          '    return this.ordersService.create(dto);',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const controllerLogicFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.controller-business-logic.ast'
+  );
+
+  assert.ok(controllerLogicFact);
+  assert.deepEqual(controllerLogicFact?.lines, [1]);
 });

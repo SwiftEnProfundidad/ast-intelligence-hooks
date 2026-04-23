@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { PUMUKI_CONFIG_KEYS } from '../constants';
 import type { ILifecycleGitService } from '../gitService';
@@ -51,6 +52,164 @@ class FakeLifecycleGitService implements ILifecycleGitService {
     return this.config[key];
   }
 }
+
+const writeAllowedEvidence = (params: {
+  repoRoot: string;
+  branch: string;
+  stage: 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+}): void => {
+  const evidence = {
+    version: '2.1' as const,
+    timestamp: new Date().toISOString(),
+    snapshot: {
+      stage: params.stage,
+      outcome: 'PASS' as const,
+      findings: [],
+    },
+    ledger: [],
+    platforms: {},
+    rulesets: [],
+    human_intent: null,
+    ai_gate: {
+      status: 'ALLOWED' as const,
+      violations: [],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'ALLOWED' as const,
+      total_violations: 0,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 0,
+        INFO: 0,
+      },
+    },
+    repo_state: {
+      repo_root: params.repoRoot,
+      git: {
+        available: true,
+        branch: params.branch,
+        upstream: null,
+        ahead: 0,
+        behind: 0,
+        dirty: false,
+        staged: 0,
+        unstaged: 0,
+      },
+      lifecycle: {
+        installed: true,
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
+        hooks: {
+          pre_commit: 'managed' as const,
+          pre_push: 'managed' as const,
+        },
+      },
+    },
+  };
+
+  const payloadHash = computeEvidencePayloadHash(evidence);
+  writeFileSync(
+    join(params.repoRoot, '.ai_evidence.json'),
+    JSON.stringify(
+      {
+        ...evidence,
+        evidence_chain: {
+          algorithm: 'sha256' as const,
+          previous_payload_hash: null,
+          payload_hash: payloadHash,
+          sequence: 1,
+        },
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+};
+
+const writeBlockedEvidence = (params: {
+  repoRoot: string;
+  branch: string;
+  stage: 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+}): void => {
+  const evidence = {
+    version: '2.1' as const,
+    timestamp: new Date().toISOString(),
+    snapshot: {
+      stage: params.stage,
+      outcome: 'BLOCK' as const,
+      findings: [
+        {
+          code: 'TRACKING_CANONICAL_IN_PROGRESS_INVALID',
+          message: 'Canonical tracking is inconsistent.',
+          severity: 'ERROR' as const,
+        },
+      ],
+    },
+    ledger: [],
+    platforms: {},
+    rulesets: [],
+    human_intent: null,
+    ai_gate: {
+      status: 'BLOCKED' as const,
+      violations: [],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'BLOCKED' as const,
+      total_violations: 0,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 0,
+        INFO: 0,
+      },
+    },
+    repo_state: {
+      repo_root: params.repoRoot,
+      git: {
+        available: true,
+        branch: params.branch,
+        upstream: null,
+        ahead: 0,
+        behind: 0,
+        dirty: false,
+        staged: 0,
+        unstaged: 0,
+      },
+      lifecycle: {
+        installed: true,
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
+        hooks: {
+          pre_commit: 'managed' as const,
+          pre_push: 'managed' as const,
+        },
+      },
+    },
+  };
+
+  const payloadHash = computeEvidencePayloadHash(evidence);
+  writeFileSync(
+    join(params.repoRoot, '.ai_evidence.json'),
+    JSON.stringify(
+      {
+        ...evidence,
+        evidence_chain: {
+          algorithm: 'sha256' as const,
+          previous_payload_hash: null,
+          payload_hash: payloadHash,
+          sequence: 1,
+        },
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+};
 
 test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', async () => {
   await withTempDir('pumuki-lifecycle-status-', async (repoRoot) => {
@@ -140,13 +299,14 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     );
     assert.equal(status.experimentalFeatures.features.heuristics.legacyActivationVariable, null);
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.source, 'default');
     assert.equal(
       status.experimentalFeatures.features.mcp_enterprise.activationVariable,
       'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE'
     );
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.legacyActivationVariable, null);
+    assert.deepEqual(status.issues, []);
     assert.equal(status.experimentalFeatures.features.operational_memory.layer, 'experimental');
     assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
     assert.equal(status.experimentalFeatures.features.operational_memory.source, 'default');
@@ -195,10 +355,10 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     assert.equal(status.governanceObservation.contract_surface.agents_md, false);
     assert.equal(
       status.governanceObservation.attention_codes.includes('POLICY_PRE_WRITE_NOT_STRICT'),
-      true
+      false
     );
 
-    assert.deepEqual(git.resolveCalls, ['/tmp/ignored-cwd']);
+    assert.deepEqual(git.resolveCalls, ['/tmp/ignored-cwd', repoRoot]);
     assert.deepEqual(git.listTrackedCalls, [repoRoot]);
     assert.deepEqual(
       git.getConfigCalls.map((call) => call.key),
@@ -208,6 +368,11 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
         PUMUKI_CONFIG_KEYS.hooks,
         PUMUKI_CONFIG_KEYS.installedAt,
         PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts,
+        'pumuki.sdd.session.active',
+        'pumuki.sdd.session.change',
+        'pumuki.sdd.session.updatedAt',
+        'pumuki.sdd.session.expiresAt',
+        'pumuki.sdd.session.ttlMinutes',
       ]
     );
     assert.ok(git.getConfigCalls.every((call) => call.cwd === repoRoot));
@@ -259,7 +424,7 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
 
     assert.equal(status.repoRoot, repoRoot);
     assert.equal(status.version.effective, getCurrentPumukiVersion());
-    assert.deepEqual(git.resolveCalls, [process.cwd()]);
+    assert.deepEqual(git.resolveCalls, [process.cwd(), repoRoot]);
     assert.deepEqual(git.listTrackedCalls, [repoRoot]);
     assert.equal(status.trackedNodeModulesCount, 0);
     assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
@@ -270,7 +435,7 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
     assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
     assert.equal(status.governanceNextAction.stage, 'PRE_WRITE');
     assert.equal(status.governanceObservation.governance_effective, 'attention');
@@ -360,6 +525,67 @@ test('readLifecycleStatus no marca tracking inválido cuando la board canónica 
   });
 });
 
+test('readLifecycleStatus alinea governanceNextAction.stage con evidence.snapshot_stage cuando existe evidencia', async () => {
+  await withTempDir('pumuki-lifecycle-status-evidence-stage-', async (repoRoot) => {
+    writeAllowedEvidence({
+      repoRoot,
+      branch: 'feature/status-evidence-stage',
+      stage: 'PRE_PUSH',
+    });
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {});
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.governanceObservation.evidence.snapshot_stage, 'PRE_PUSH');
+    assert.equal(status.governanceNextAction.stage, 'PRE_PUSH');
+  });
+});
+
+test('readLifecycleStatus expone el tracking canónico del repo en la raíz del payload', async () => {
+  await withTempDir('pumuki-lifecycle-status-top-level-tracking-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'docs'), { recursive: true });
+    mkdirSync(join(repoRoot, 'docs', 'validation', 'refactor'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      '# fixture\n- la única fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'),
+      '# plan\n\n[🚧] - PUMUKI-INC-078 (RuralGo) corregir tracking canónico\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'validation', 'refactor', 'last-run.json'),
+      JSON.stringify({
+        status: 'IN_PROGRESS',
+        plan_file: 'PUMUKI-RESET-MASTER-PLAN.md',
+        next: 'PUMUKI-INC-078',
+      }),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {});
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.tracking.enforced, true);
+    assert.equal(status.tracking.canonical_path, 'PUMUKI-RESET-MASTER-PLAN.md');
+    assert.equal(status.tracking.canonical_present, true);
+    assert.equal(status.tracking.source_file, 'AGENTS.md');
+    assert.equal(status.tracking.in_progress_count, 1);
+    assert.equal(status.tracking.single_in_progress_valid, true);
+    assert.equal(status.tracking.conflict, false);
+    assert.equal(status.tracking.active_task_id, 'PUMUKI-INC-078');
+    assert.equal(status.tracking.last_run_status, 'IN_PROGRESS');
+  });
+});
+
 test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no hay instalación', async () => {
   await withTempDir('pumuki-lifecycle-status-empty-', async (repoRoot) => {
     const git = new FakeLifecycleGitService(repoRoot, [], {});
@@ -393,10 +619,63 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
     assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
     assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
     assert.equal(status.governanceNextAction.stage, 'PRE_WRITE');
     assert.equal(status.governanceObservation.evidence.readable, 'missing');
     assert.equal(status.governanceObservation.governance_effective, 'attention');
+  });
+});
+
+test('readLifecycleStatus expone issues canónicos cuando governance está bloqueado por evidencia', async () => {
+  await withTempDir('pumuki-lifecycle-status-blocked-', async (repoRoot) => {
+    writeBlockedEvidence({
+      repoRoot,
+      branch: 'feature/lifecycle-status-blocked',
+      stage: 'PRE_PUSH',
+    });
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.governanceObservation.governance_effective, 'blocked');
+    assert.equal(status.governanceNextAction.stage, 'PRE_PUSH');
+    assert.equal(status.issues.some((issue) => issue.severity === 'error'), true);
+    assert.equal(
+      status.issues.some((issue) => issue.message.includes('Governance is blocked')),
+      true
+    );
+  });
+});
+
+test('readLifecycleStatus proyecta sesión SDD expirada como inactiva pero mantiene atención canónica', async () => {
+  await withTempDir('pumuki-lifecycle-status-expired-sdd-', async (repoRoot) => {
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      'pumuki.sdd.session.active': 'true',
+      'pumuki.sdd.session.change': 'RGO-1750-01',
+      'pumuki.sdd.session.expiresAt': '2000-01-01T00:00:00.000Z',
+      'pumuki.sdd.session.ttlMinutes': '90',
+    });
+
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.governanceObservation.sdd_session.active, false);
+    assert.equal(status.governanceObservation.sdd_session.valid, false);
+    assert.equal(status.governanceObservation.sdd_session.remaining_seconds, 0);
+    assert.equal(
+      status.governanceObservation.attention_codes.includes('SDD_SESSION_INVALID_OR_EXPIRED'),
+      true
+    );
   });
 });

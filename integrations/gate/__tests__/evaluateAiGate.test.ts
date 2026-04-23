@@ -71,6 +71,16 @@ const sampleEvidence = (overrides: Partial<AiEvidenceV2_1> = {}): AiEvidenceV2_1
         pre_commit: 'managed',
         pre_push: 'managed',
       },
+      tracking: {
+        enforced: false,
+        canonical_path: null,
+        canonical_present: false,
+        source_file: null,
+        in_progress_count: null,
+        single_in_progress_valid: null,
+        conflict: false,
+        declarations: [],
+      },
     },
   },
   ...overrides,
@@ -2187,6 +2197,174 @@ test('evaluateAiGate detecta plataformas activas desde paths cambiados en PRE_WR
       assert.equal(
         result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
         true
+      );
+    });
+  } finally {
+    rmSync(tmpRoot, { recursive: true, force: true });
+  }
+});
+
+test('evaluateAiGate prioriza el slice staged real en PRE_COMMIT frente a la inferencia global por coverage', async () => {
+  const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-precommit-scope-'));
+  mkdirSync(join(tmpRoot, 'apps/ios'), { recursive: true });
+  mkdirSync(join(tmpRoot, 'apps/backend'), { recursive: true });
+
+  try {
+    execFileSync('git', ['init'], { cwd: tmpRoot, stdio: 'ignore' });
+    writeFileSync(join(tmpRoot, 'apps/ios', 'BuyerView.swift'), 'struct BuyerView {}\n');
+    execFileSync('git', ['add', 'apps/ios/BuyerView.swift'], { cwd: tmpRoot, stdio: 'ignore' });
+
+    await withSkillsEnforcementEnv('strict', async () => {
+      const base = sampleEvidence();
+      const result = evaluateAiGate(
+        {
+          repoRoot: tmpRoot,
+          stage: 'PRE_COMMIT',
+        },
+        {
+          now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+          readEvidenceResult: () =>
+            validEvidenceResult({
+              ...base,
+              platforms: {},
+              rulesets: [],
+              repo_state: {
+                ...base.repo_state!,
+                repo_root: tmpRoot,
+              },
+              snapshot: {
+                ...base.snapshot,
+                stage: 'PRE_COMMIT',
+                rules_coverage: {
+                  ...base.snapshot.rules_coverage!,
+                  stage: 'PRE_COMMIT',
+                  active_rule_ids: ['skills.backend.no-empty-catch'],
+                  evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+                  matched_rule_ids: [],
+                  unevaluated_rule_ids: [],
+                  counts: {
+                    active: 1,
+                    evaluated: 1,
+                    matched: 0,
+                    unevaluated: 0,
+                  },
+                  coverage_ratio: 1,
+                },
+              },
+            }),
+          captureRepoState: () => ({
+            ...sampleEvidence().repo_state!,
+            repo_root: tmpRoot,
+            git: {
+              ...sampleEvidence().repo_state!.git,
+              pending_changes: 1,
+              staged: 1,
+              unstaged: 0,
+            },
+          }),
+          loadRequiredSkillsLock: () => sampleMultiPlatformSkillsLock(),
+        }
+      );
+
+      assert.equal(result.skills_contract?.enforced, true);
+      assert.equal(result.skills_contract?.status, 'FAIL');
+      assert.deepEqual(result.skills_contract?.detected_platforms, ['ios']);
+      assert.deepEqual(
+        result.skills_contract?.requirements.map((item) => item.platform),
+        ['ios']
+      );
+      assert.equal(
+        result.skills_contract?.requirements.some((item) => item.platform === 'backend'),
+        false
+      );
+    });
+  } finally {
+    rmSync(tmpRoot, { recursive: true, force: true });
+  }
+});
+
+test('evaluateAiGate prioriza el slice contra upstream en PRE_PUSH frente a la inferencia global por coverage', async () => {
+  const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-prepush-scope-'));
+  mkdirSync(join(tmpRoot, 'apps/ios'), { recursive: true });
+  mkdirSync(join(tmpRoot, 'apps/backend'), { recursive: true });
+
+  try {
+    execFileSync('git', ['init', '--initial-branch=develop'], { cwd: tmpRoot, stdio: 'ignore' });
+    execFileSync('git', ['config', 'user.email', 'pumuki@example.com'], { cwd: tmpRoot, stdio: 'ignore' });
+    execFileSync('git', ['config', 'user.name', 'Pumuki Test'], { cwd: tmpRoot, stdio: 'ignore' });
+    writeFileSync(join(tmpRoot, 'README.md'), '# repo\n');
+    execFileSync('git', ['add', 'README.md'], { cwd: tmpRoot, stdio: 'ignore' });
+    execFileSync('git', ['commit', '-m', 'init'], { cwd: tmpRoot, stdio: 'ignore' });
+    execFileSync('git', ['checkout', '-b', 'feature/prepush-scope'], { cwd: tmpRoot, stdio: 'ignore' });
+    execFileSync('git', ['branch', '--set-upstream-to=develop'], { cwd: tmpRoot, stdio: 'ignore' });
+    writeFileSync(join(tmpRoot, 'apps/ios', 'BuyerView.swift'), 'struct BuyerView {}\n');
+    execFileSync('git', ['add', 'apps/ios/BuyerView.swift'], { cwd: tmpRoot, stdio: 'ignore' });
+    execFileSync('git', ['commit', '-m', 'ios slice'], { cwd: tmpRoot, stdio: 'ignore' });
+
+    await withSkillsEnforcementEnv('strict', async () => {
+      const base = sampleEvidence();
+      const result = evaluateAiGate(
+        {
+          repoRoot: tmpRoot,
+          stage: 'PRE_PUSH',
+        },
+        {
+          now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+          readEvidenceResult: () =>
+            validEvidenceResult({
+              ...base,
+              platforms: {},
+              rulesets: [],
+              repo_state: {
+                ...base.repo_state!,
+                repo_root: tmpRoot,
+              },
+              snapshot: {
+                ...base.snapshot,
+                stage: 'PRE_PUSH',
+                rules_coverage: {
+                  ...base.snapshot.rules_coverage!,
+                  stage: 'PRE_PUSH',
+                  active_rule_ids: ['skills.backend.no-empty-catch'],
+                  evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+                  matched_rule_ids: [],
+                  unevaluated_rule_ids: [],
+                  counts: {
+                    active: 1,
+                    evaluated: 1,
+                    matched: 0,
+                    unevaluated: 0,
+                  },
+                  coverage_ratio: 1,
+                },
+              },
+            }),
+          captureRepoState: () => ({
+            ...sampleEvidence().repo_state!,
+            repo_root: tmpRoot,
+            git: {
+              ...sampleEvidence().repo_state!.git,
+              branch: 'feature/prepush-scope',
+              upstream: 'develop',
+              pending_changes: 0,
+              staged: 0,
+              unstaged: 0,
+            },
+          }),
+          loadRequiredSkillsLock: () => sampleMultiPlatformSkillsLock(),
+        }
+      );
+
+      assert.equal(result.skills_contract?.enforced, true);
+      assert.equal(result.skills_contract?.status, 'FAIL');
+      assert.deepEqual(result.skills_contract?.detected_platforms, ['ios']);
+      assert.deepEqual(
+        result.skills_contract?.requirements.map((item) => item.platform),
+        ['ios']
+      );
+      assert.equal(
+        result.skills_contract?.requirements.some((item) => item.platform === 'backend'),
+        false
       );
     });
   } finally {

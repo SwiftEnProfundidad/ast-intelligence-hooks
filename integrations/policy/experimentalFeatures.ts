@@ -55,7 +55,7 @@ const EXPERIMENTAL_FEATURES: Record<ExperimentalFeatureId, ExperimentalFeatureCo
     legacyActivationVariable: null,
   },
   mcp_enterprise: {
-    defaultMode: 'off',
+    defaultMode: 'strict',
     activationVariable: 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE',
     legacyActivationVariable: null,
   },

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -105,6 +105,12 @@ const writeValidPolicyAsCodeContract = (repoRoot: string): void => {
       {
         version: '1.0',
         source: 'default',
+        strict: {
+          PRE_WRITE: snapshot.stages.PRE_WRITE.strict,
+          PRE_COMMIT: snapshot.stages.PRE_COMMIT.strict,
+          PRE_PUSH: snapshot.stages.PRE_PUSH.strict,
+          CI: snapshot.stages.CI.strict,
+        },
         signatures: {
           PRE_WRITE: preWriteSignature,
           PRE_COMMIT: preCommitSignature,
@@ -212,5 +218,14 @@ test('runPolicyReconcile --strict --apply genera contrato y converge a PASS sin 
     assert.equal(report.autofix.actions.includes('WRITE_POLICY_AS_CODE_CONTRACT'), true);
     assert.equal(report.summary.status, 'PASS');
     assert.equal(report.summary.blocking, 0);
+    const writtenContract = JSON.parse(
+      readFileSync(join(repoRoot, '.pumuki', 'policy-as-code.json'), 'utf8')
+    ) as {
+      strict?: Partial<Record<'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI', boolean>>;
+    };
+    assert.equal(writtenContract.strict?.PRE_WRITE, true);
+    assert.equal(writtenContract.strict?.PRE_COMMIT, true);
+    assert.equal(writtenContract.strict?.PRE_PUSH, true);
+    assert.equal(writtenContract.strict?.CI, true);
   });
 });

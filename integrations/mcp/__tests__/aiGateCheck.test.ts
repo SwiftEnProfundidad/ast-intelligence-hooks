@@ -114,6 +114,15 @@ test('runEnterpriseAiGateCheck aplica contrato de tool ai_gate_check en PRE_WRIT
       true
     );
     assert.equal(result.result.message.length > 0, true);
+    assert.equal(result.result.reason_code, 'AI_GATE_ALLOWED');
+    assert.equal(result.result.instruction.length > 0, true);
+    assert.equal(typeof result.result.prewrite_effective.mode, 'string');
+    assert.equal(typeof result.result.prewrite_effective.source, 'string');
+    assert.equal(typeof result.result.prewrite_effective.blocking, 'boolean');
+    assert.equal(typeof result.result.prewrite_effective.strict_policy, 'boolean');
+    assert.equal(result.result.next_action.reason, 'AI_GATE_ALLOWED');
+    assert.equal(result.result.next_action.kind, 'info');
+    assert.equal(result.result.next_action.message.length > 0, true);
     assert.ok(Array.isArray(result.result.warnings));
     assert.ok(Array.isArray(result.result.auto_fixes));
     assert.equal(result.result.stage, 'PRE_WRITE');
@@ -646,6 +655,11 @@ test('runEnterpriseAiGateCheck bloquea rama con naming GitFlow inválido y expon
     assert.equal(result.success, false);
     assert.equal(result.result.status, 'BLOCKED');
     assert.equal(result.result.violations[0]?.code, 'GITFLOW_BRANCH_NAMING_INVALID');
+    assert.equal(result.result.reason_code, 'GITFLOW_BRANCH_NAMING_INVALID');
+    assert.equal(result.result.instruction.length > 0, true);
+    assert.equal(result.result.next_action.reason, 'GITFLOW_BRANCH_NAMING_INVALID');
+    assert.equal(result.result.next_action.kind, 'info');
+    assert.equal(result.result.next_action.message.length > 0, true);
     assert.equal(
       result.result.auto_fixes.some((item) => item.includes('prefijo GitFlow válido')),
       true

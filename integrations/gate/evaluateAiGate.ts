@@ -403,6 +403,45 @@ const collectWorktreeChangedPaths = (repoRoot: string): ReadonlyArray<string> =>
   }
 };
 
+const collectGitChangedPaths = (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+): ReadonlyArray<string> => {
+  try {
+    const output = execFileSync(
+      'git',
+      [...args],
+      {
+        cwd: repoRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }
+    );
+    const files = output
+      .split('\n')
+      .map((line) => parseChangedPath(line))
+      .filter((line): line is string => typeof line === 'string' && line.length > 0);
+    return [...new Set(files)];
+  } catch {
+    return [];
+  }
+};
+
+const collectStagedChangedPaths = (repoRoot: string): ReadonlyArray<string> =>
+  collectGitChangedPaths(repoRoot, ['diff', '--cached', '--name-status', '--find-renames']);
+
+const collectRangeChangedPaths = (params: {
+  repoRoot: string;
+  fromRef: string;
+  toRef: string;
+}): ReadonlyArray<string> =>
+  collectGitChangedPaths(params.repoRoot, [
+    'diff',
+    '--name-status',
+    '--find-renames',
+    `${params.fromRef}...${params.toRef}`,
+  ]);
+
 const isPlatformPath = (platform: PreWriteSkillsPlatform, filePath: string): boolean => {
   const normalized = normalizeChangedPath(filePath).toLowerCase();
   if (platform === 'ios') {
@@ -449,6 +488,47 @@ const isPlatformPath = (platform: PreWriteSkillsPlatform, filePath: string): boo
     || /(^|\/)(frontend|web|client)(\/|$)/.test(normalized);
 };
 
+const toDetectedPlatformsFromPaths = (params: {
+  changedPaths: ReadonlyArray<string>;
+  requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
+}): ReadonlyArray<PreWriteSkillsPlatform> => {
+  if (params.changedPaths.length === 0) {
+    return [];
+  }
+
+  const detected = new Set<PreWriteSkillsPlatform>();
+  for (const filePath of params.changedPaths) {
+    for (const platform of params.requiredPlatforms) {
+      if (isPlatformPath(platform, filePath)) {
+        detected.add(platform);
+      }
+    }
+  }
+
+  return PREWRITE_SKILLS_PLATFORMS.filter((platform) => detected.has(platform));
+};
+
+const collectStageScopedChangedPaths = (params: {
+  stage: AiGateStage;
+  repoRoot: string;
+  upstream: string | null;
+}): ReadonlyArray<string> => {
+  if (params.stage === 'PRE_WRITE') {
+    return collectWorktreeChangedPaths(params.repoRoot);
+  }
+  if (params.stage === 'PRE_COMMIT') {
+    return collectStagedChangedPaths(params.repoRoot);
+  }
+  if (params.stage === 'PRE_PUSH' && typeof params.upstream === 'string' && params.upstream.length > 0) {
+    return collectRangeChangedPaths({
+      repoRoot: params.repoRoot,
+      fromRef: params.upstream,
+      toRef: 'HEAD',
+    });
+  }
+  return [];
+};
+
 const hasWorktreeCodePlatforms = (params: {
   repoRoot: string;
   requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
@@ -462,25 +542,20 @@ const hasWorktreeCodePlatforms = (params: {
   );
 };
 
-const toWorktreeDetectedPlatforms = (params: {
+const toStageScopedDetectedPlatforms = (params: {
+  stage: AiGateStage;
   repoRoot: string;
+  upstream: string | null;
   requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
 }): ReadonlyArray<PreWriteSkillsPlatform> => {
-  const changedPaths = collectWorktreeChangedPaths(params.repoRoot);
-  if (changedPaths.length === 0) {
-    return [];
-  }
-
-  const detected = new Set<PreWriteSkillsPlatform>();
-  for (const filePath of changedPaths) {
-    for (const platform of params.requiredPlatforms) {
-      if (isPlatformPath(platform, filePath)) {
-        detected.add(platform);
-      }
-    }
-  }
-
-  return PREWRITE_SKILLS_PLATFORMS.filter((platform) => detected.has(platform));
+  return toDetectedPlatformsFromPaths({
+    changedPaths: collectStageScopedChangedPaths({
+      stage: params.stage,
+      repoRoot: params.repoRoot,
+      upstream: params.upstream,
+    }),
+    requiredPlatforms: params.requiredPlatforms,
+  });
 };
 
 const toLockRequiredPlatforms = (
@@ -774,15 +849,18 @@ const toSkillsContractAssessment = (params: {
   const coverage = params.evidenceResult.evidence.snapshot.rules_coverage;
   const explicitlyDetectedPlatforms = toDetectedSkillsPlatforms(params.evidenceResult.evidence.platforms);
   const inferredPlatforms = toCoverageInferredPlatforms(coverage);
-  const worktreeDetectedPlatforms =
-    params.stage === 'PRE_WRITE' && requiredPlatforms.length > 0
-      ? toWorktreeDetectedPlatforms({
+  const stageScopedDetectedPlatforms =
+    params.stage !== 'CI' && requiredPlatforms.length > 0
+      ? toStageScopedDetectedPlatforms({
+          stage: params.stage,
           repoRoot: params.repoRoot,
+          upstream: params.repoState.git.upstream,
           requiredPlatforms,
         })
       : [];
+  const worktreeDetectedPlatforms = stageScopedDetectedPlatforms;
   const repoTreeDetectedPlatforms =
-    params.stage !== 'PRE_WRITE' && requiredPlatforms.length > 0
+    params.stage === 'CI' && requiredPlatforms.length > 0
       ? toRepoTreeDetectedPlatforms({
           repoRoot: params.repoRoot,
           platforms: requiredPlatforms,
@@ -792,11 +870,13 @@ const toSkillsContractAssessment = (params: {
     explicitlyDetectedPlatforms.length > 0
       ? toEffectiveSkillsPlatforms({
           platforms: params.evidenceResult.evidence.platforms,
-          coverage,
-        })
+        coverage,
+      })
       : [];
   const detectedPlatforms =
-    explicitlyDetectedEffectivePlatforms.length > 0
+    stageScopedDetectedPlatforms.length > 0
+      ? stageScopedDetectedPlatforms
+      : explicitlyDetectedEffectivePlatforms.length > 0
       ? explicitlyDetectedEffectivePlatforms
       : inferredPlatforms.length > 0
         ? inferredPlatforms
@@ -807,7 +887,7 @@ const toSkillsContractAssessment = (params: {
   const detectedPlatformSet = new Set(detectedPlatforms);
   const assessmentPlatforms =
     requiredPlatforms.length > 0
-      ? params.stage === 'PRE_WRITE' && detectedPlatforms.length > 0
+      ? params.stage !== 'CI' && detectedPlatforms.length > 0
         ? requiredPlatforms.filter((platform) => detectedPlatformSet.has(platform))
         : requiredPlatforms
       : detectedPlatforms;

@@ -174,6 +174,30 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.backend.no-god-classes': heuristicDetector('typescript.god-class', [
     'heuristics.ts.god-class-large-class.ast',
   ]),
+  'skills.backend.guideline.backend.callback-hell-usar-async-await': heuristicDetector(
+    'typescript.new-promise-async',
+    ['heuristics.ts.new-promise-async.ast']
+  ),
+  'skills.backend.guideline.backend.try-catch-silenciosos-siempre-loggear-o-propagar':
+    heuristicDetector('typescript.empty-catch', ['heuristics.ts.empty-catch.ast']),
+  'skills.backend.guideline.backend.hardcoded-values-config-en-variables-de-entorno':
+    heuristicDetector('typescript.hardcoded-secret-token', [
+      'heuristics.ts.hardcoded-secret-token.ast',
+    ]),
+  'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos':
+    heuristicDetector('typescript.magic-number', ['heuristics.ts.magic-number.ast']),
+  'skills.backend.guideline.backend.mocks-en-produccion-usar-fakes-spies-de-test':
+    heuristicDetector('typescript.production-mock-artifact', [
+      'heuristics.ts.production-mock-artifact.ast',
+    ]),
+  'skills.backend.guideline.backend.anemic-domain-models-entidades-con-comportamiento':
+    heuristicDetector('typescript.anemic-domain-model', [
+      'heuristics.ts.anemic-domain-model.ast',
+    ]),
+  'skills.backend.guideline.backend.logica-en-controllers-mover-logica-de-negocio-a-casos-de-uso-servicios':
+    heuristicDetector('typescript.controller-business-logic', [
+      'heuristics.ts.controller-business-logic.ast',
+    ]),
   'skills.frontend.no-empty-catch': heuristicDetector('typescript.empty-catch', [
     'heuristics.ts.empty-catch.ast',
   ]),

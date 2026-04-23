@@ -1,6 +1,8 @@
 import { evaluateAiGate, type AiGateStage } from '../gate/evaluateAiGate';
 import { resolveRemediationHintForViolationCode } from '../gate/remediationCatalog';
+import { readLifecyclePolicyValidationSnapshot } from '../lifecycle/policyValidationSnapshot';
 import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
+import { resolvePreWriteEnforcement } from '../policy/preWriteEnforcement';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
 import { runMcpAlignedPlatformGate } from './alignedPlatformGate';
 
@@ -24,6 +26,19 @@ export type EnterpriseAiGateCheckResult = {
     timestamp: string | null;
     branch: string | null;
     message: string;
+    reason_code: string;
+    instruction: string;
+    prewrite_effective: {
+      mode: ReturnType<typeof resolvePreWriteEnforcement>['mode'];
+      source: ReturnType<typeof resolvePreWriteEnforcement>['source'];
+      blocking: boolean;
+      strict_policy: boolean;
+    };
+    next_action: {
+      kind: 'info';
+      reason: string;
+      message: string;
+    };
     stage: ReturnType<typeof evaluateAiGate>['stage'];
     policy: ReturnType<typeof evaluateAiGate>['policy'];
     violations: ReturnType<typeof evaluateAiGate>['violations'];
@@ -140,6 +155,23 @@ const buildAutoFixes = (
   return fixes;
 };
 
+const buildReasonCode = (evaluation: ReturnType<typeof evaluateAiGate>): string =>
+  evaluation.violations[0]?.code ?? 'AI_GATE_ALLOWED';
+
+const buildInstruction = (evaluation: ReturnType<typeof evaluateAiGate>): string =>
+  evaluation.allowed
+    ? 'Continúa con el stage actual manteniendo el vocabulario canónico de governance.'
+    : 'Corrige el bloqueante primario y vuelve a ejecutar ai_gate_check en el mismo stage.';
+
+const buildNextAction = (
+  evaluation: ReturnType<typeof evaluateAiGate>,
+  autoFixes: ReadonlyArray<string>
+): EnterpriseAiGateCheckResult['result']['next_action'] => ({
+  kind: 'info',
+  reason: buildReasonCode(evaluation),
+  message: autoFixes[0] ?? buildInstruction(evaluation),
+});
+
 const buildMessage = (
   evaluation: ReturnType<typeof evaluateAiGate>,
   platform?: { exitCode: number; skipReason: string | null }
@@ -200,6 +232,8 @@ export const runEnterpriseAiGateCheck = (params: {
     : readSddLearningContext({
       repoRoot: params.repoRoot,
     });
+  const preWriteEnforcement = resolvePreWriteEnforcement();
+  const policyValidation = readLifecyclePolicyValidationSnapshot(params.repoRoot);
   const warnings = buildWarnings(evaluation);
   const autoFixes = buildAutoFixes(evaluation, learningContext);
   const message = buildMessage(evaluation);
@@ -215,6 +249,15 @@ export const runEnterpriseAiGateCheck = (params: {
       timestamp,
       branch,
       message,
+      reason_code: buildReasonCode(evaluation),
+      instruction: buildInstruction(evaluation),
+      prewrite_effective: {
+        mode: preWriteEnforcement.mode,
+        source: preWriteEnforcement.source,
+        blocking: preWriteEnforcement.blocking,
+        strict_policy: policyValidation.stages.PRE_WRITE.strict,
+      },
+      next_action: buildNextAction(evaluation, autoFixes),
       stage: evaluation.stage,
       policy: evaluation.policy,
       violations: evaluation.violations,
@@ -283,6 +326,8 @@ export const runEnterpriseAiGateCheckAsync = async (params: {
   const warnings = buildWarnings(evaluationForHints);
   const autoFixes = buildAutoFixes(evaluationForHints, learningContext);
   const message = buildMessage(evaluationForHints, platform);
+  const preWriteEnforcement = resolvePreWriteEnforcement();
+  const policyValidation = readLifecyclePolicyValidationSnapshot(params.repoRoot);
 
   return {
     tool: 'ai_gate_check',
@@ -295,6 +340,15 @@ export const runEnterpriseAiGateCheckAsync = async (params: {
       timestamp,
       branch,
       message,
+      reason_code: buildReasonCode(evaluationForHints),
+      instruction: buildInstruction(evaluationForHints),
+      prewrite_effective: {
+        mode: preWriteEnforcement.mode,
+        source: preWriteEnforcement.source,
+        blocking: preWriteEnforcement.blocking,
+        strict_policy: policyValidation.stages.PRE_WRITE.strict,
+      },
+      next_action: buildNextAction(evaluationForHints, autoFixes),
       stage: evaluation.stage,
       policy: evaluation.policy,
       violations,

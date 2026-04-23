@@ -9,6 +9,7 @@ import { formatAdvancedMenuView } from '../framework-menu-advanced-view-lib';
 import { createFrameworkMenuActions } from '../framework-menu-actions';
 import { createFrameworkMenuPrompts } from '../framework-menu-prompts';
 import type { ConsumerPreflightResult } from '../framework-menu-consumer-preflight-types';
+import type { GovernanceConsoleSnapshot } from '../../integrations/lifecycle/cliGovernanceConsole';
 
 const buildConsumerPreflightResult = (): ConsumerPreflightResult => ({
   stage: 'PRE_COMMIT',
@@ -53,6 +54,13 @@ const buildConsumerPreflightResult = (): ConsumerPreflightResult => ({
   },
   governanceObservation: {
     schema_version: '1',
+    platform_bundles_effective: ['android', 'backend', 'frontend', 'ios'],
+    pre_write_effective: {
+      mode: 'off',
+      source: 'default',
+      blocking: false,
+      strict_policy: true,
+    },
     sdd: {
       experimental_raw: null,
       effective_mode: 'off',
@@ -172,7 +180,7 @@ const buildConsumerPreflightResult = (): ConsumerPreflightResult => ({
       analytics: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_ANALYTICS', legacyActivationVariable: null },
       heuristics: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_HEURISTICS', legacyActivationVariable: null },
       learning_context: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT', legacyActivationVariable: null },
-      mcp_enterprise: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE', legacyActivationVariable: null },
+      mcp_enterprise: { layer: 'experimental', mode: 'strict', source: 'default', blocking: true, activationVariable: 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE', legacyActivationVariable: null },
       operational_memory: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY', legacyActivationVariable: null },
       pre_write: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_PRE_WRITE', legacyActivationVariable: null },
       saas_ingestion: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_SAAS_INGESTION', legacyActivationVariable: null },
@@ -182,6 +190,16 @@ const buildConsumerPreflightResult = (): ConsumerPreflightResult => ({
   hints: [],
   notificationResults: [],
 });
+
+const buildGovernanceConsoleSnapshot = (): GovernanceConsoleSnapshot => {
+  const preflight = buildConsumerPreflightResult();
+  return {
+    governanceObservation: preflight.governanceObservation,
+    governanceNextAction: preflight.governanceNextAction,
+    policyValidation: preflight.policyValidation,
+    experimentalFeatures: preflight.experimentalFeatures,
+  };
+};
 
 const buildAdvancedActions = () => {
   const fakeRl = {
@@ -314,10 +332,36 @@ test('renderConsumerRuntimeModernMenu muestra bloque visible de governance cuand
   });
 
   assert.match(rendered, /Governance Console/);
+  assert.match(rendered, /Contract: AGENTS=yes/);
   assert.match(rendered, /Governance truth:/);
+  assert.match(rendered, /Platforms: android, backend, frontend, ios/);
+  assert.match(rendered, /Pre-write: mode=off blocking=no strict_policy=yes source=default/);
   assert.match(rendered, /Governance next action:/);
   assert.match(rendered, /Policy-as-code: PRE_WRITE=POLICY_AS_CODE_VALID strict=yes/);
   assert.match(rendered, /Experimental: ANALYTICS=off/);
+});
+
+test('renderConsumerRuntimeModernMenu muestra bloque visible de governance aunque todavía no exista preflight', () => {
+  const rendered = renderConsumerRuntimeModernMenu({
+    actions: createConsumerMenuRuntime({
+      runRepoGate: async () => {},
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runPreflight: async () => {},
+      write: () => {},
+      readGovernanceConsole: () => buildGovernanceConsoleSnapshot(),
+    }).actions,
+    repoRoot: '/tmp/repo',
+    useColor: () => false,
+    governanceConsole: buildGovernanceConsoleSnapshot(),
+  });
+
+  assert.match(rendered, /Governance Console/);
+  assert.match(rendered, /Governance truth:/);
+  assert.match(rendered, /Platforms: android, backend, frontend, ios/);
+  assert.match(rendered, /Pre-write: mode=off blocking=no strict_policy=yes source=default/);
+  assert.match(rendered, /Governance next action:/);
 });
 
 test('consumer runtime printMenu usa vista clásica agrupada por shell mínima cuando PUMUKI_MENU_UI_V2 no está activo', async () => {

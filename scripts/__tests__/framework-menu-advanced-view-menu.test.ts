@@ -7,6 +7,7 @@ import {
 } from '../framework-menu-advanced-view-lib';
 import { createFrameworkMenuPrompts } from '../framework-menu-prompts';
 import type { ConsumerPreflightResult } from '../framework-menu-consumer-preflight-types';
+import type { GovernanceConsoleSnapshot } from '../../integrations/lifecycle/cliGovernanceConsole';
 
 const noop = async (): Promise<void> => {};
 
@@ -72,6 +73,12 @@ const buildConsumerPreflightResult = (): ConsumerPreflightResult => ({
   },
   governanceObservation: {
     schema_version: '1',
+    pre_write_effective: {
+      mode: 'off',
+      source: 'default',
+      blocking: false,
+      strict_policy: true,
+    },
     sdd: {
       experimental_raw: null,
       effective_mode: 'off',
@@ -191,7 +198,7 @@ const buildConsumerPreflightResult = (): ConsumerPreflightResult => ({
       analytics: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_ANALYTICS', legacyActivationVariable: null },
       heuristics: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_HEURISTICS', legacyActivationVariable: null },
       learning_context: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT', legacyActivationVariable: null },
-      mcp_enterprise: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE', legacyActivationVariable: null },
+      mcp_enterprise: { layer: 'experimental', mode: 'strict', source: 'default', blocking: true, activationVariable: 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE', legacyActivationVariable: null },
       operational_memory: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY', legacyActivationVariable: null },
       pre_write: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_PRE_WRITE', legacyActivationVariable: null },
       saas_ingestion: { layer: 'experimental', mode: 'off', source: 'default', blocking: false, activationVariable: 'PUMUKI_EXPERIMENTAL_SAAS_INGESTION', legacyActivationVariable: null },
@@ -201,6 +208,16 @@ const buildConsumerPreflightResult = (): ConsumerPreflightResult => ({
   hints: [],
   notificationResults: [],
 });
+
+const buildGovernanceConsoleSnapshot = (): GovernanceConsoleSnapshot => {
+  const preflight = buildConsumerPreflightResult();
+  return {
+    governanceObservation: preflight.governanceObservation,
+    governanceNextAction: preflight.governanceNextAction,
+    policyValidation: preflight.policyValidation,
+    experimentalFeatures: preflight.experimentalFeatures,
+  };
+};
 
 test('formatAdvancedMenuView renderiza secciones por dominio y ayuda contextual corta', () => {
   const rendered = formatAdvancedMenuView(buildAdvancedActions(), {
@@ -278,6 +295,9 @@ test('formatAdvancedMenuView muestra bloque visible de governance cuando existe 
   assert.match(rendered, /Governance Console/);
   assert.match(rendered, /Governance truth:/);
   assert.match(rendered, /Governance next action:/);
+  assert.match(rendered, /Next action: stage=PRE_COMMIT phase=GREEN action=proceed confidence=90%/);
+  assert.match(rendered, /reason=READY/);
+  assert.match(rendered, /Pre-write: mode=off blocking=no strict_policy=yes source=default/);
   assert.match(rendered, /Policy-as-code: PRE_WRITE=POLICY_AS_CODE_VALID strict=yes/);
   assert.match(rendered, /Experimental: ANALYTICS=off/);
 });
@@ -298,4 +318,64 @@ test('formatAdvancedMenuClassicView conserva formato legacy sin panel agrupado',
   assert.match(rendered, /C\. Switch to consumer menu/);
   assert.match(rendered, /1\.\s+Evaluate staged changes/);
   assert.match(rendered, /27\.\s+Exit/);
+});
+
+test('formatAdvancedMenuView muestra bloque canónico de governance también en frío', () => {
+  const rendered = formatAdvancedMenuView(buildAdvancedActions(), {
+    evidenceSummary: {
+      status: 'ok',
+      stage: 'PRE_COMMIT',
+      outcome: 'PASS',
+      totalFindings: 0,
+      bySeverity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 },
+      topFiles: [],
+    },
+    governanceConsole: buildGovernanceConsoleSnapshot(),
+  });
+
+  assert.match(rendered, /Governance Console/);
+  assert.match(rendered, /Governance truth:/);
+  assert.match(rendered, /Pre-write: mode=off blocking=no strict_policy=yes source=default/);
+  assert.match(rendered, /Next action: stage=PRE_COMMIT phase=GREEN action=proceed confidence=90%/);
+  assert.match(rendered, /reason=READY/);
+});
+
+test('formatAdvancedMenuClassicView muestra bloque canónico de governance cuando existe preflight', () => {
+  const rendered = formatAdvancedMenuClassicView(buildAdvancedActions(), {
+    evidenceSummary: {
+      status: 'ok',
+      stage: 'PRE_COMMIT',
+      outcome: 'PASS',
+      totalFindings: 0,
+      bySeverity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 },
+      topFiles: [],
+    },
+    preflight: buildConsumerPreflightResult(),
+  });
+
+  assert.match(rendered, /Governance Console/);
+  assert.match(rendered, /Governance truth:/);
+  assert.match(rendered, /Governance next action:/);
+  assert.match(rendered, /Next action: stage=PRE_COMMIT phase=GREEN action=proceed confidence=90% reason=READY/);
+  assert.match(rendered, /Pre-write: mode=off blocking=no strict_policy=yes source=default/);
+  assert.match(rendered, /C\. Switch to consumer menu/);
+});
+
+test('formatAdvancedMenuClassicView muestra bloque canónico de governance también en frío', () => {
+  const rendered = formatAdvancedMenuClassicView(buildAdvancedActions(), {
+    evidenceSummary: {
+      status: 'ok',
+      stage: 'PRE_COMMIT',
+      outcome: 'PASS',
+      totalFindings: 0,
+      bySeverity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 },
+      topFiles: [],
+    },
+    governanceConsole: buildGovernanceConsoleSnapshot(),
+  });
+
+  assert.match(rendered, /Governance Console/);
+  assert.match(rendered, /Governance truth:/);
+  assert.match(rendered, /Pre-write: mode=off blocking=no strict_policy=yes source=default/);
+  assert.match(rendered, /Next action: stage=PRE_COMMIT phase=GREEN action=proceed confidence=90% reason=READY/);
 });

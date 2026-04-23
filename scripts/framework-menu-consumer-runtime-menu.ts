@@ -14,6 +14,7 @@ import {
 } from './framework-menu-ui-components-lib';
 import { isMenuUiV2Enabled } from './framework-menu-ui-version-lib';
 import { buildGovernanceConsoleSummaryLines } from '../integrations/lifecycle/cliGovernanceConsole';
+import type { GovernanceConsoleSnapshot } from '../integrations/lifecycle/cliGovernanceConsole';
 import type { ConsumerPreflightResult } from './framework-menu-consumer-preflight-types';
 import type { ConsumerAction, ConsumerRuntimeWrite } from './framework-menu-consumer-runtime-types';
 
@@ -58,6 +59,7 @@ export const renderConsumerRuntimeModernMenu = (
     repoRoot: string;
     useColor: () => boolean;
     preflight?: ConsumerPreflightResult | null;
+    governanceConsole?: GovernanceConsoleSnapshot | null;
   }
 ): string => {
   const menuSummary = readEvidenceSummaryForMenu(params.repoRoot);
@@ -67,19 +69,28 @@ export const renderConsumerRuntimeModernMenu = (
     color: params.useColor(),
   });
   const groupedActions = resolveConsumerMenuLayout(params.actions);
-  const lines = [
-    'PUMUKI — Hook-System (run: npx ast-hooks)',
-    'AST Intelligence System Overview',
-    `Status: ${renderBadge(menuStatus.label, menuStatus.level, tokens)}`,
-    ...(params.preflight
-      ? [
-        '',
-        'Governance Console',
-        ...buildGovernanceConsoleSummaryLines({
+  const governanceConsole =
+    params.preflight
+      ? {
           governanceObservation: params.preflight.governanceObservation,
           governanceNextAction: params.preflight.governanceNextAction,
           policyValidation: params.preflight.policyValidation,
           experimentalFeatures: params.preflight.experimentalFeatures,
+        }
+      : params.governanceConsole;
+  const lines = [
+    'PUMUKI — Hook-System (run: npx ast-hooks)',
+    'AST Intelligence System Overview',
+    `Status: ${renderBadge(menuStatus.label, menuStatus.level, tokens)}`,
+    ...(governanceConsole
+      ? [
+        '',
+        'Governance Console',
+        ...buildGovernanceConsoleSummaryLines({
+          governanceObservation: governanceConsole.governanceObservation,
+          governanceNextAction: governanceConsole.governanceNextAction,
+          policyValidation: governanceConsole.policyValidation,
+          experimentalFeatures: governanceConsole.experimentalFeatures,
         }).map((line) => `  ${line}`),
       ]
       : []),
@@ -106,6 +117,7 @@ export const printConsumerRuntimeMenu = (params: {
   useColor: () => boolean;
   write: ConsumerRuntimeWrite;
   preflight?: ConsumerPreflightResult | null;
+  governanceConsole?: GovernanceConsoleSnapshot | null;
 }): void => {
   const classicMenu = renderConsumerRuntimeClassicMenu(params.actions, params.useColor);
   if (!isMenuUiV2Enabled()) {
@@ -119,6 +131,7 @@ export const printConsumerRuntimeMenu = (params: {
       repoRoot: params.repoRoot,
       useColor: params.useColor,
       preflight: params.preflight,
+      governanceConsole: params.governanceConsole,
     })}\n`);
   } catch {
     params.write('\n[pumuki][menu-ui-v2] Render failed. Falling back to classic menu.\n');

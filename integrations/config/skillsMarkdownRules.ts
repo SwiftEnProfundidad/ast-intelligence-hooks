@@ -440,6 +440,63 @@ const normalizeKnownRuleTarget = (
 
   if (platform === 'backend' || platform === 'frontend') {
     const prefix = platform === 'backend' ? 'skills.backend' : 'skills.frontend';
+    if (
+      platform === 'backend' &&
+      (includes('try-catch silenciosos') ||
+        includes('try catch silenciosos') ||
+        includes('silenciosos siempre loggear o propagar') ||
+        includes('siempre loggear o propagar'))
+    ) {
+      return 'skills.backend.guideline.backend.try-catch-silenciosos-siempre-loggear-o-propagar';
+    }
+    if (
+      platform === 'backend' &&
+      (includes('hardcoded values') ||
+        includes('config en variables de entorno') ||
+        includes('hardcoded values - config en variables de entorno'))
+    ) {
+      return 'skills.backend.guideline.backend.hardcoded-values-config-en-variables-de-entorno';
+    }
+    if (
+      platform === 'backend' &&
+      (includes('magic numbers') ||
+        includes('usar constantes con nombres descriptivos') ||
+        includes('magic numbers - usar constantes con nombres descriptivos'))
+    ) {
+      return 'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos';
+    }
+    if (
+      platform === 'backend' &&
+      (includes('mocks en producción') ||
+        includes('mocks en produccion') ||
+        includes('usar fakes/spies de test') ||
+        includes('runtime productivo') ||
+        includes('solo adaptadores y datos reales'))
+    ) {
+      return 'skills.backend.guideline.backend.mocks-en-produccion-usar-fakes-spies-de-test';
+    }
+    if (
+      platform === 'backend' &&
+      (includes('anemic domain models') ||
+        includes('entidades con comportamiento') ||
+        includes('no solo getters/setters'))
+    ) {
+      return 'skills.backend.guideline.backend.anemic-domain-models-entidades-con-comportamiento';
+    }
+    if (
+      platform === 'backend' &&
+      (includes('lógica en controllers') ||
+        includes('logica en controllers') ||
+        includes('lo gica en controllers') ||
+        includes('mover lógica de negocio a casos de uso/servicios') ||
+        includes('mover logica de negocio a casos de uso/servicios') ||
+        includes('mover lo gica de negocio a casos de uso/servicios') ||
+        (includes('controllers') &&
+          includes('casos de uso') &&
+          includes('servicios')))
+    ) {
+      return 'skills.backend.guideline.backend.logica-en-controllers-mover-logica-de-negocio-a-casos-de-uso-servicios';
+    }
     if (includes('solid') || includes('single responsibility') || includes('srp')) {
       return `${prefix}.no-solid-violations`;
     }

@@ -22,6 +22,105 @@ test('normaliza reglas backend de SOLID/Clean Architecture/God Class a ids canon
   assert.equal(rules.every((rule) => rule.evaluationMode === 'AUTO'), true);
 });
 
+test('normaliza try-catch silenciosos backend al guideline foundation canonico', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+    sourceContent: '❌ Try-catch silenciosos - Siempre loggear o propagar',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.backend.guideline.backend.try-catch-silenciosos-siempre-loggear-o-propagar'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.equal(rules[0]?.platform, 'backend');
+});
+
+test('normaliza hardcoded values backend al guideline foundation canonico', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+    sourceContent: '❌ Hardcoded values - Config en variables de entorno',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.backend.guideline.backend.hardcoded-values-config-en-variables-de-entorno'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.equal(rules[0]?.platform, 'backend');
+});
+
+test('normaliza magic numbers backend al guideline foundation canonico', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+    sourceContent: '❌ Magic numbers - Usar constantes con nombres descriptivos',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.equal(rules[0]?.platform, 'backend');
+});
+
+test('normaliza mocks en producción backend al guideline foundation canonico', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+    sourceContent:
+      '❌ Mocks en producción - Usar fakes/spies de test; en runtime productivo, solo adaptadores y datos reales',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.backend.guideline.backend.mocks-en-produccion-usar-fakes-spies-de-test'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.equal(rules[0]?.platform, 'backend');
+});
+
+test('normaliza anemic domain models backend al guideline foundation canonico', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+    sourceContent:
+      '❌ Anemic domain models - Entidades con comportamiento, no solo getters/setters',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.backend.guideline.backend.anemic-domain-models-entidades-con-comportamiento'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.equal(rules[0]?.platform, 'backend');
+});
+
+test('normaliza lógica en controllers backend al guideline foundation canonico', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+    sourceContent:
+      '❌ Lógica en controllers - Mover lógica de negocio a casos de uso/servicios',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.backend.guideline.backend.logica-en-controllers-mover-logica-de-negocio-a-casos-de-uso-servicios'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.equal(rules[0]?.platform, 'backend');
+});
+
 test('normaliza regla frontend SOLID a id canonico', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'frontend-guidelines',

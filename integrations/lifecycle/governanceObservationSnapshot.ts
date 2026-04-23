@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { readEvidenceResult } from '../evidence/readEvidence';
 import { readRepoTrackingState } from '../evidence/trackingContract';
@@ -35,6 +35,13 @@ export type GovernanceContractSurface = {
 
 export type GovernanceObservationSnapshot = {
   schema_version: '1';
+  platform_bundles_effective?: ReadonlyArray<string>;
+  pre_write_effective?: {
+    mode: 'off' | 'advisory' | 'strict';
+    source: string;
+    blocking: boolean;
+    strict_policy: boolean;
+  };
   sdd: {
     experimental_raw: string | null;
     effective_mode: 'off' | 'advisory' | 'strict';
@@ -82,9 +89,9 @@ const readCurrentBranch = (git: ILifecycleGitService, repoRoot: string): string 
   }
 };
 
-const readSddStatusSafe = (repoRoot: string): SddStatusPayload => {
+const readSddStatusSafe = (repoRoot: string, git: ILifecycleGitService): SddStatusPayload => {
   try {
-    return readSddStatus(repoRoot);
+    return readSddStatus(repoRoot, git);
   } catch {
     return {
       repoRoot,
@@ -111,6 +118,46 @@ const buildContractSurface = (repoRoot: string): GovernanceContractSurface => ({
   vendor_skills_dir: existsSync(join(repoRoot, 'vendor', 'skills')),
   pumuki_adapter_json: existsSync(join(repoRoot, '.pumuki', 'adapter.json')),
 });
+
+const formatTrackingActionableContext = (tracking: RepoTrackingState): string | null => {
+  const activeEntries = (tracking.in_progress_entries ?? [])
+    .map((entry) => `${entry.task_id ?? 'UNKNOWN'}@L${entry.line_number}`)
+    .join(', ');
+  if (!activeEntries) {
+    return null;
+  }
+  const lastRunStatus = tracking.last_run_status ?? 'absent';
+  return `active_entries=${activeEntries} last_run_status=${lastRunStatus}`;
+};
+
+const PLATFORM_BUNDLE_ORDER = [
+  'android-enterprise-rules',
+  'backend-enterprise-rules',
+  'frontend-enterprise-rules',
+  'ios-enterprise-rules',
+] as const;
+
+const PLATFORM_BUNDLE_LABELS: Record<(typeof PLATFORM_BUNDLE_ORDER)[number], string> = {
+  'android-enterprise-rules': 'android',
+  'backend-enterprise-rules': 'backend',
+  'frontend-enterprise-rules': 'frontend',
+  'ios-enterprise-rules': 'ios',
+};
+
+const resolvePlatformBundlesEffective = (repoRoot: string): ReadonlyArray<string> => {
+  const vendorSkillsPath = join(repoRoot, 'vendor', 'skills');
+  if (!existsSync(vendorSkillsPath)) {
+    return [];
+  }
+  const present = new Set(
+    readdirSync(vendorSkillsPath, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+  );
+  return PLATFORM_BUNDLE_ORDER.filter((bundle) => present.has(bundle)).map(
+    (bundle) => PLATFORM_BUNDLE_LABELS[bundle]
+  );
+};
 
 const summarizeEvidence = (repoRoot: string): GovernanceEvidenceSummary => {
   const evidenceResult = readEvidenceResult(repoRoot);
@@ -168,8 +215,9 @@ const buildHints = (
     hints.push(`Falta el tracking canónico declarado (${tracking.canonical_path ?? 'sin resolver'}).`);
   }
   if (tracking.enforced && tracking.single_in_progress_valid === false) {
+    const actionableContext = formatTrackingActionableContext(tracking);
     hints.push(
-      `El tracking canónico debe dejar exactamente una 🚧 (actual=${tracking.in_progress_count ?? 'n/a'}).`
+      `El tracking canónico debe dejar exactamente una 🚧 (actual=${tracking.in_progress_count ?? 'n/a'}${actionableContext ? `, ${actionableContext}` : ''}).`
     );
   }
   hints.push('SDD/OpenSpec: usa PUMUKI_EXPERIMENTAL_SDD=advisory|strict cuando el loop SDD esté activo.');
@@ -186,7 +234,7 @@ export const readGovernanceObservationSnapshot = (params: {
   const git = params.git ?? new LifecycleGitService();
   const { repoRoot, experimentalFeatures, policyValidation } = params;
   const rawSdd = process.env.PUMUKI_EXPERIMENTAL_SDD?.trim();
-  const sddStatus = readSddStatusSafe(repoRoot);
+  const sddStatus = readSddStatusSafe(repoRoot, git);
   const evidence = summarizeEvidence(repoRoot);
   const branch = readCurrentBranch(git, repoRoot);
   const onProtected = typeof branch === 'string' && DEFAULT_PROTECTED_BRANCHES.has(branch.trim().toLowerCase());
@@ -207,7 +255,10 @@ export const readGovernanceObservationSnapshot = (params: {
   if (evidence.readable === 'valid' && evidence.snapshot_outcome === 'BLOCK') {
     attention.push('EVIDENCE_SNAPSHOT_BLOCK');
   }
-  if (sddStatus.session.active === true && sddStatus.session.valid !== true) {
+  if (
+    sddStatus.session.valid !== true &&
+    (sddStatus.session.active === true || !!sddStatus.session.changeId || sddStatus.session.remainingSeconds === 0)
+  ) {
     attention.push('SDD_SESSION_INVALID_OR_EXPIRED');
   }
   if (!policyValidation.stages.PRE_WRITE.strict) {
@@ -248,6 +299,13 @@ export const readGovernanceObservationSnapshot = (params: {
 
   return {
     schema_version: '1',
+    platform_bundles_effective: resolvePlatformBundlesEffective(repoRoot),
+    pre_write_effective: {
+      mode: experimentalFeatures.features.pre_write.mode,
+      source: experimentalFeatures.features.pre_write.source,
+      blocking: experimentalFeatures.features.pre_write.blocking,
+      strict_policy: policyValidation.stages.PRE_WRITE.strict,
+    },
     sdd: {
       experimental_raw: rawSdd && rawSdd.length > 0 ? rawSdd : null,
       effective_mode: experimentalFeatures.features.sdd.mode,
@@ -284,16 +342,22 @@ export const buildGovernanceObservationSummaryLines = (
   snapshot: GovernanceObservationSnapshot
 ): string[] => {
   const lines = [
-    `Governance: ${snapshot.governance_effective.toUpperCase()}`,
     `Contract: AGENTS=${snapshot.contract_surface.agents_md ? 'yes' : 'no'} skills.lock=${snapshot.contract_surface.skills_lock_json ? 'yes' : 'no'} skills.sources=${snapshot.contract_surface.skills_sources_json ? 'yes' : 'no'} vendor/skills=${snapshot.contract_surface.vendor_skills_dir ? 'yes' : 'no'} adapter=${snapshot.contract_surface.pumuki_adapter_json ? 'yes' : 'no'}`,
+    `Governance: ${snapshot.governance_effective.toUpperCase()}`,
+    `Platforms: ${snapshot.platform_bundles_effective?.join(', ') || 'none-detected'}`,
+    `GitFlow: branch=${snapshot.git.current_branch ?? 'unknown'} protected_hint=${snapshot.git.on_protected_branch_hint ? 'yes' : 'no'}`,
     `SDD: env=${snapshot.sdd.experimental_raw ?? '(unset)'} effective=${snapshot.sdd.effective_mode} session_active=${snapshot.sdd_session.active} session_valid=${snapshot.sdd_session.valid} change=${snapshot.sdd_session.change_id ?? 'none'}`,
     `Evidence: readable=${snapshot.evidence.readable} stage=${snapshot.evidence.snapshot_stage ?? 'n/a'} outcome=${snapshot.evidence.snapshot_outcome ?? 'n/a'} ai_gate=${snapshot.evidence.ai_gate_status ?? 'n/a'} findings=${snapshot.evidence.findings_count ?? 'n/a'}`,
-    `GitFlow: branch=${snapshot.git.current_branch ?? 'unknown'} protected_hint=${snapshot.git.on_protected_branch_hint ? 'yes' : 'no'}`,
-    `Tracking: enforced=${snapshot.tracking.enforced} canonical=${snapshot.tracking.canonical_path ?? 'none'} present=${snapshot.tracking.canonical_present} single_active=${snapshot.tracking.single_in_progress_valid ?? 'n/a'} count=${snapshot.tracking.in_progress_count ?? 'n/a'} conflict=${snapshot.tracking.conflict}`,
-    `Policy strict: PRE_WRITE=${snapshot.policy_strict.pre_write} PRE_COMMIT=${snapshot.policy_strict.pre_commit} PRE_PUSH=${snapshot.policy_strict.pre_push} CI=${snapshot.policy_strict.ci}`,
+    `Pre-write: mode=${snapshot.pre_write_effective?.mode ?? 'unknown'} blocking=${snapshot.pre_write_effective?.blocking ? 'yes' : 'no'} strict_policy=${snapshot.pre_write_effective?.strict_policy ? 'yes' : 'no'} source=${snapshot.pre_write_effective?.source ?? 'unknown'}`,
   ];
   if (snapshot.attention_codes.length > 0) {
     lines.push(`Attention: ${snapshot.attention_codes.join(', ')}`);
+  }
+  if (snapshot.tracking.enforced && snapshot.tracking.single_in_progress_valid === false) {
+    const actionableContext = formatTrackingActionableContext(snapshot.tracking);
+    lines.push(
+      `Tracking: canonical=${snapshot.tracking.canonical_path ?? 'unknown'} in_progress_count=${snapshot.tracking.in_progress_count ?? 'n/a'}${actionableContext ? ` ${actionableContext}` : ''}`
+    );
   }
   return lines;
 };

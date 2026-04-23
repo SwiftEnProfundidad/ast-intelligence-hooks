@@ -3,6 +3,7 @@ import {
   resolvePolicyForStage,
   type ResolvedStagePolicy,
 } from '../gate/stagePolicies';
+import { resolvePreWriteEnforcement } from '../policy/preWriteEnforcement';
 
 export type LifecyclePolicyValidationStageSnapshot = {
   source: ResolvedStagePolicy['trace']['source'];
@@ -23,8 +24,13 @@ export type LifecyclePolicyValidationSnapshot = {
 const POLICY_STAGES: ReadonlyArray<SkillsStage> = ['PRE_WRITE', 'PRE_COMMIT', 'PRE_PUSH', 'CI'];
 
 const toStageSnapshot = (
+  stage: SkillsStage,
   resolved: ResolvedStagePolicy
 ): LifecyclePolicyValidationStageSnapshot => {
+  const strictFromPolicy = resolved.trace.validation?.strict ?? false;
+  const strict = stage === 'PRE_WRITE'
+    ? strictFromPolicy || resolvePreWriteEnforcement().blocking
+    : strictFromPolicy;
   return {
     source: resolved.trace.source,
     bundle: resolved.trace.bundle,
@@ -34,7 +40,7 @@ const toStageSnapshot = (
     policySource: resolved.trace.policySource ?? null,
     validationStatus: resolved.trace.validation?.status ?? null,
     validationCode: resolved.trace.validation?.code ?? null,
-    strict: resolved.trace.validation?.strict ?? false,
+    strict,
   };
 };
 
@@ -42,7 +48,7 @@ export const readLifecyclePolicyValidationSnapshot = (
   repoRoot: string
 ): LifecyclePolicyValidationSnapshot => {
   const resolvedByStage = Object.fromEntries(
-    POLICY_STAGES.map((stage) => [stage, toStageSnapshot(resolvePolicyForStage(stage, repoRoot))])
+    POLICY_STAGES.map((stage) => [stage, toStageSnapshot(stage, resolvePolicyForStage(stage, repoRoot))])
   ) as Record<SkillsStage, LifecyclePolicyValidationStageSnapshot>;
 
   return {

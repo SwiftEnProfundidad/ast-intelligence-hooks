@@ -6,12 +6,38 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
-### 2026-04-16 (v6.3.78)
+### 2026-04-22 (v6.3.102)
 
-- **Slice S1 consolidada**: `status`, `doctor`, `PRE-FLIGHT CHECK`, menú `Consumer` y menú `Advanced` muestran el mismo bloque canónico de governance sin duplicar lógica de cálculo.
-- **Runtime del menú**: `Consumer` conserva `lastPreflight` y lo reutiliza en superficies derivadas para mantener paridad visible de `truth / next action / policy-as-code / experimentales`.
-- **Base de release correcta**: la publicación se prepara desde `release/6.3.78` recortada sobre `develop` ya alineado con la línea viva `release/6.3.77`.
-- **Rollout recomendado**: publicar `pumuki@6.3.78` y repin ordenado `RuralGo -> SAAS -> Flux`, validando después `pumuki status`, `pumuki doctor` y hooks Git en cada consumer.
+- **Convergencia de policy efectiva:** `strict` deja de depender solo de `PUMUKI_POLICY_STRICT` cuando el contrato firmado ya lo declara por stage; `status`, `doctor` y runtime vuelven a hablar el mismo idioma.
+- **Autofix persistente de contrato:** `policy reconcile --strict --apply` escribe el mapa `strict` completo en `.pumuki/policy-as-code.json`, cerrando la deriva entre reconcile y lectura posterior.
+- **Wiring fiable en `pre-push`:** el hook gestionado se antepone también cuando el hook previo termina en `exec`, evitando bloques inalcanzables.
+- **Rollout recomendado:** publicar `pumuki@6.3.102`, repin inmediato en `RuralGo` y revalidar `status` / `doctor` / `pre-push` para cerrar `PUMUKI-INC-080`.
+
+### 2026-04-22 (v6.3.101)
+
+- **Hotfix de ruta bloqueante:** `gate.blocked` deja de lanzar `ReferenceError: options is not defined` al construir la remediación visible en `PRE_WRITE`.
+- **Rollout recomendado:** publicar `pumuki@6.3.101`, repin inmediato en `RuralGo` y revalidar que el bloqueo de `PRE_WRITE` termina limpio, sin error residual tras el panel.
+
+### 2026-04-22 (v6.3.100)
+
+- **Hotfix de activación efectiva:** la línea publicada deja de resolver `PRE_WRITE` a `off/default` en ausencia de override explícito; el default vuelve a ser coercitivo para el flujo real del agente/editor.
+- **Rollout recomendado:** publicar `pumuki@6.3.100` y revalidar en `RuralGo` que `status`/`doctor` ya no presenten `pre_write.mode=off source=default`.
+
+### 2026-04-22 (v6.3.99)
+
+- **Hotfix de coerción temprana:** `PRE_WRITE` deja de parecer advisory cuando realmente está activado en `strict`, y el arranque agentic devuelve fallo real al bloquear.
+- **Rollout recomendado:** publicar `pumuki@6.3.99` y repin inmediato en `RuralGo`, validando `pumuki:status`, `pumuki:doctor`, `pre-commit` y `pre-push` con el fix de `PUMUKI-INC-079`.
+
+### 2026-04-11 (v6.3.72)
+
+- **Tarball npm**: `package.json` → `files` incluye `AGENTS.md`, `CHANGELOG.md` y `docs/tracking/plan-curso-pumuki-stack-my-architecture.md` para lectura canónica vía npm / jsDelivr sin depender solo del repo Git.
+- **`gate.blocked` (macOS)**: banner de Notification Center **y** modal por defecto (evita cero notificaciones si el modal no llega a mostrarse desde un hook); dedupe opcional: `PUMUKI_MACOS_GATE_BLOCKED_BANNER_DEDUPE=1`.
+- **Modal Swift**: `NSAlert.runModal()` en lugar de panel flotante para que los botones del diálogo respondan de forma fiable.
+- **Postinstall consumer**: por defecto `pumuki install --with-mcp --agent=repo` y fusión conservadora en `.pumuki/adapter.json` (`json-merge`); opt-out `PUMUKI_POSTINSTALL_SKIP_MCP=1`.
+- **Validación local**: `smoke:pumuki-surface` / `smoke:pumuki-surface-installed` y `validation:local-merge-bar` (sin depender de minutos de Actions). Detalle en `docs/validation/README.md`.
+- **Tests en macOS:** `integrations/lifecycle/__tests__/cli.test.ts` evita notificaciones reales del sistema (`PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS` en hooks) para que `npm test` / la barra local no queden colgados en PRE_WRITE strict.
+- **Menú / matriz consumer**: opciones motor `11–14`, matriz baseline alineada, vista classic opcional, etc. (ver `CHANGELOG.md`).
+- **Rollout**: `pumuki@6.3.72`; `npm publish` cuando el tarball incluya lo anterior; luego `pumuki doctor --json` + repin en consumidores (p. ej. RuralGO).
 
 ### 2026-04-06 (v6.3.71)
 

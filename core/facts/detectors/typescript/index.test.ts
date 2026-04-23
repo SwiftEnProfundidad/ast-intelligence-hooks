@@ -13,6 +13,12 @@ import {
   findUndefinedInBaseTypeUnionLines,
   findUnknownWithoutGuardLines,
   findUnknownTypeAssertionLines,
+  findAnemicDomainModelLines,
+  findControllerBusinessLogicLines,
+  findMagicNumberLiteralLines,
+  findProductionMockArtifactUsageLines,
+  hasAnemicDomainModel,
+  hasControllerBusinessLogic,
   hasAsyncPromiseExecutor,
   hasConcreteDependencyInstantiation,
   hasConsoleErrorCall,
@@ -24,6 +30,8 @@ import {
   hasExplicitAnyType,
   hasFrameworkDependencyImport,
   hasFunctionConstructorUsage,
+  hasMagicNumberLiteral,
+  hasProductionMockArtifactUsage,
   hasNetworkCallWithoutErrorHandling,
   hasMixedCommandQueryClass,
   hasMixedCommandQueryInterface,
@@ -882,6 +890,227 @@ test('hasLargeClassDeclaration detecta clases con 300 lineas o mas', () => {
   assert.equal(hasLargeClassDeclaration(oversizedClassAst), true);
   assert.equal(hasLargeClassDeclaration(thresholdClassAst), true);
   assert.equal(hasLargeClassDeclaration(compactClassAst), false);
+});
+
+test('hasMagicNumberLiteral detecta literales numericos repetidos en contexto ejecutable y descarta declarativos', () => {
+  const magicAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'CallExpression',
+          callee: { type: 'Identifier', name: 'retry' },
+          arguments: [{ type: 'NumericLiteral', value: 42, loc: { start: { line: 3 }, end: { line: 3 } } }],
+        },
+      },
+      {
+        type: 'VariableDeclaration',
+        kind: 'const',
+        declarations: [
+          {
+            type: 'VariableDeclarator',
+            id: { type: 'Identifier', name: 'timeoutMs' },
+            init: { type: 'NumericLiteral', value: 42, loc: { start: { line: 5 }, end: { line: 5 } } },
+          },
+        ],
+      },
+      {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'BinaryExpression',
+          operator: '>',
+          left: { type: 'Identifier', name: 'elapsedMs' },
+          right: { type: 'NumericLiteral', value: 42, loc: { start: { line: 7 }, end: { line: 7 } } },
+        },
+      },
+      {
+        type: 'ReturnStatement',
+        argument: { type: 'NumericLiteral', value: 1, loc: { start: { line: 9 }, end: { line: 9 } } },
+      },
+    ],
+  };
+
+  const ignoredAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'VariableDeclaration',
+        kind: 'const',
+        declarations: [
+          {
+            type: 'VariableDeclarator',
+            id: { type: 'Identifier', name: 'port' },
+            init: { type: 'NumericLiteral', value: 3000, loc: { start: { line: 2 }, end: { line: 2 } } },
+          },
+        ],
+      },
+      {
+        type: 'ReturnStatement',
+        argument: { type: 'NumericLiteral', value: 1, loc: { start: { line: 4 }, end: { line: 4 } } },
+      },
+    ],
+  };
+
+  assert.equal(hasMagicNumberLiteral(magicAst), true);
+  assert.deepEqual(findMagicNumberLiteralLines(magicAst), [3, 7]);
+  assert.equal(hasMagicNumberLiteral(ignoredAst), false);
+  assert.deepEqual(findMagicNumberLiteralLines(ignoredAst), []);
+});
+
+test('hasProductionMockArtifactUsage detecta imports/requires de doubles en runtime productivo', () => {
+  const importAst = {
+    type: 'ImportDeclaration',
+    source: { type: 'StringLiteral', value: '../mocks/user-repository', loc: { start: { line: 3 }, end: { line: 3 } } },
+    specifiers: [],
+    loc: { start: { line: 3 }, end: { line: 3 } },
+  };
+  const requireAst = {
+    type: 'CallExpression',
+    callee: { type: 'Identifier', name: 'require' },
+    arguments: [{ type: 'StringLiteral', value: 'sinon', loc: { start: { line: 7 }, end: { line: 7 } } }],
+    loc: { start: { line: 7 }, end: { line: 7 } },
+  };
+  const cleanAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ImportDeclaration',
+        source: { type: 'StringLiteral', value: '../adapters/user-repository', loc: { start: { line: 1 }, end: { line: 1 } } },
+        specifiers: [],
+      },
+    ],
+  };
+  const mixedAst = {
+    type: 'Program',
+    body: [importAst, { type: 'ExpressionStatement', expression: requireAst }],
+  };
+
+  assert.equal(hasProductionMockArtifactUsage(importAst), true);
+  assert.equal(hasProductionMockArtifactUsage(requireAst), true);
+  assert.equal(hasProductionMockArtifactUsage(cleanAst), false);
+  assert.deepEqual(findProductionMockArtifactUsageLines(mixedAst), [3, 7]);
+});
+
+test('hasAnemicDomainModel detecta clases de dominio con solo accessors y sin comportamiento', () => {
+  const anemicAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrderEntity' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        { type: 'ClassMethod', kind: 'constructor', key: { type: 'Identifier', name: 'constructor' }, loc: { start: { line: 3 }, end: { line: 3 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'getStatus' }, loc: { start: { line: 5 }, end: { line: 5 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'setStatus' }, loc: { start: { line: 7 }, end: { line: 7 } } },
+      ],
+    },
+    loc: { start: { line: 1 }, end: { line: 9 } },
+  };
+  const richAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrderEntity' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        { type: 'ClassMethod', kind: 'constructor', key: { type: 'Identifier', name: 'constructor' }, loc: { start: { line: 3 }, end: { line: 3 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'getStatus' }, loc: { start: { line: 5 }, end: { line: 5 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'confirm' }, loc: { start: { line: 7 }, end: { line: 7 } } },
+      ],
+    },
+    loc: { start: { line: 1 }, end: { line: 9 } },
+  };
+  const serviceAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrderService' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        { type: 'ClassMethod', kind: 'constructor', key: { type: 'Identifier', name: 'constructor' }, loc: { start: { line: 3 }, end: { line: 3 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'getStatus' }, loc: { start: { line: 5 }, end: { line: 5 } } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'setStatus' }, loc: { start: { line: 7 }, end: { line: 7 } } },
+      ],
+    },
+    loc: { start: { line: 1 }, end: { line: 9 } },
+  };
+
+  assert.equal(hasAnemicDomainModel(anemicAst), true);
+  assert.deepEqual(findAnemicDomainModelLines(anemicAst), [1]);
+  assert.equal(hasAnemicDomainModel(richAst), false);
+  assert.equal(hasAnemicDomainModel(serviceAst), false);
+});
+
+test('hasControllerBusinessLogic detecta flow control dentro de handlers en clases Controller', () => {
+  const controllerAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrdersController' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'createOrder' },
+          decorators: [{ expression: { type: 'Identifier', name: 'Post' } }],
+          body: {
+            type: 'BlockStatement',
+            body: [
+              {
+                type: 'VariableDeclaration',
+                declarations: [{ type: 'VariableDeclarator', id: { type: 'Identifier', name: 'status' } }],
+              },
+              {
+                type: 'IfStatement',
+                test: { type: 'Identifier', name: 'isPriority' },
+                consequent: { type: 'BlockStatement', body: [] },
+              },
+            ],
+          },
+          loc: { start: { line: 4 }, end: { line: 10 } },
+        },
+      ],
+    },
+    loc: { start: { line: 1 }, end: { line: 12 } },
+  };
+  const delegatedControllerAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrdersController' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'createOrder' },
+          decorators: [{ expression: { type: 'Identifier', name: 'Post' } }],
+          body: {
+            type: 'BlockStatement',
+            body: [
+              {
+                type: 'ReturnStatement',
+                argument: {
+                  type: 'CallExpression',
+                  callee: {
+                    type: 'MemberExpression',
+                    object: {
+                      type: 'MemberExpression',
+                      object: { type: 'ThisExpression' },
+                      property: { type: 'Identifier', name: 'ordersService' },
+                    },
+                    property: { type: 'Identifier', name: 'create' },
+                  },
+                  arguments: [],
+                },
+              },
+            ],
+          },
+          loc: { start: { line: 4 }, end: { line: 8 } },
+        },
+      ],
+    },
+    loc: { start: { line: 1 }, end: { line: 10 } },
+  };
+
+  assert.equal(hasControllerBusinessLogic(controllerAst), true);
+  assert.deepEqual(findControllerBusinessLogicLines(controllerAst), [1]);
+  assert.equal(hasControllerBusinessLogic(delegatedControllerAst), false);
 });
 
 test('hasRecordStringUnknownType detecta Record<string, unknown>', () => {

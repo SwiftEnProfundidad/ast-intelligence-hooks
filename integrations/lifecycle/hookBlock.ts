@@ -104,7 +104,7 @@ const ensureExecutableHeader = (contents: string): string => {
   return contents;
 };
 
-const isPreCommitFrameworkWithExecTerminator = (contents: string): boolean => {
+const isFrameworkHookWithExecTerminator = (contents: string): boolean => {
   if (!contents.includes('pre-commit.com') && !contents.includes('pre_commit')) {
     return false;
   }
@@ -141,11 +141,7 @@ export const upsertPumukiManagedBlock = (params: {
     )
   );
 
-  if (
-    params.hook === 'pre-commit' &&
-    core.length > 0 &&
-    isPreCommitFrameworkWithExecTerminator(core)
-  ) {
+  if (core.length > 0 && isFrameworkHookWithExecTerminator(core)) {
     const merged = prependManagedBlockAfterShebang({ contents: core, block });
     return `${trimTrailingWhitespace(merged)}\n`;
   }

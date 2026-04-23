@@ -471,6 +471,451 @@ test('mapea reglas SOLID y God Class a detectores AST heuristics en backend', as
   );
 });
 
+test('mapea el primer backend guideline foundation a heuristic AST reusable', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-callback-hell-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'a'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.callback-hell-usar-async-await',
+                description: 'Avoid callback hell in backend runtime code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ts.new-promise-async.ast'),
+        true
+      );
+
+      const callbackHellRule = result.rules[0];
+      assert.ok(callbackHellRule);
+      assert.equal(
+        callbackHellRule.id,
+        'skills.backend.guideline.backend.callback-hell-usar-async-await'
+      );
+      assert.equal(callbackHellRule.when.kind, 'Heuristic');
+      if (callbackHellRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend callback hell guideline.');
+      }
+      assert.equal(callbackHellRule.when.where?.ruleId, 'heuristics.ts.new-promise-async.ast');
+      assert.deepEqual(collectHeuristicPrefixes(callbackHellRule.when), ['apps/backend/']);
+      assert.equal(
+        callbackHellRule.then.source?.includes('ast_nodes=[heuristics.ts.new-promise-async.ast]'),
+        true
+      );
+    })
+  );
+});
+
+test('mapea try-catch silenciosos al heuristic AST reusable de empty catch', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-empty-catch-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'b'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.try-catch-silenciosos-siempre-loggear-o-propagar',
+                description: 'Avoid silent catch blocks in backend runtime code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(result.mappedHeuristicRuleIds.has('heuristics.ts.empty-catch.ast'), true);
+
+      const silentCatchRule = result.rules[0];
+      assert.ok(silentCatchRule);
+      assert.equal(
+        silentCatchRule.id,
+        'skills.backend.guideline.backend.try-catch-silenciosos-siempre-loggear-o-propagar'
+      );
+      assert.equal(silentCatchRule.when.kind, 'Heuristic');
+      if (silentCatchRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend silent catch guideline.');
+      }
+      assert.equal(silentCatchRule.when.where?.ruleId, 'heuristics.ts.empty-catch.ast');
+      assert.deepEqual(collectHeuristicPrefixes(silentCatchRule.when), ['apps/backend/']);
+      assert.equal(
+        silentCatchRule.then.source?.includes('ast_nodes=[heuristics.ts.empty-catch.ast]'),
+        true
+      );
+    })
+  );
+});
+
+test('mapea hardcoded values al heuristic AST reusable más cercano', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-hardcoded-values-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'c'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.hardcoded-values-config-en-variables-de-entorno',
+                description: 'Avoid hardcoded backend configuration values.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'MEDIUM',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ts.hardcoded-secret-token.ast'),
+        true
+      );
+
+      const hardcodedValuesRule = result.rules[0];
+      assert.ok(hardcodedValuesRule);
+      assert.equal(
+        hardcodedValuesRule.id,
+        'skills.backend.guideline.backend.hardcoded-values-config-en-variables-de-entorno'
+      );
+      assert.equal(hardcodedValuesRule.when.kind, 'Heuristic');
+      if (hardcodedValuesRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend hardcoded values guideline.');
+      }
+      assert.equal(
+        hardcodedValuesRule.when.where?.ruleId,
+        'heuristics.ts.hardcoded-secret-token.ast'
+      );
+      assert.deepEqual(collectHeuristicPrefixes(hardcodedValuesRule.when), ['apps/backend/']);
+      assert.equal(
+        hardcodedValuesRule.then.source?.includes(
+          'ast_nodes=[heuristics.ts.hardcoded-secret-token.ast]'
+        ),
+        true
+      );
+    })
+  );
+});
+
+test('mapea magic numbers al heuristic AST nuevo del slice backend', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-magic-numbers-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'c'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos',
+                description: 'Avoid magic numbers in backend runtime code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(result.mappedHeuristicRuleIds.has('heuristics.ts.magic-number.ast'), true);
+
+      const magicNumbersRule = result.rules[0];
+      assert.ok(magicNumbersRule);
+      assert.equal(
+        magicNumbersRule.id,
+        'skills.backend.guideline.backend.magic-numbers-usar-constantes-con-nombres-descriptivos'
+      );
+      assert.equal(magicNumbersRule.when.kind, 'Heuristic');
+      if (magicNumbersRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend magic numbers guideline.');
+      }
+      assert.equal(magicNumbersRule.when.where?.ruleId, 'heuristics.ts.magic-number.ast');
+      assert.deepEqual(collectHeuristicPrefixes(magicNumbersRule.when), ['apps/backend/']);
+      assert.equal(
+        magicNumbersRule.then.source?.includes('ast_nodes=[heuristics.ts.magic-number.ast]'),
+        true
+      );
+    })
+  );
+});
+
+test('mapea mocks en producción al heuristic AST nuevo del slice backend', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-production-mocks-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'd'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.mocks-en-produccion-usar-fakes-spies-de-test',
+                description: 'Avoid runtime mocks, fakes, spies or stubs in backend code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ts.production-mock-artifact.ast'),
+        true
+      );
+
+      const runtimeMocksRule = result.rules[0];
+      assert.ok(runtimeMocksRule);
+      assert.equal(
+        runtimeMocksRule.id,
+        'skills.backend.guideline.backend.mocks-en-produccion-usar-fakes-spies-de-test'
+      );
+      assert.equal(runtimeMocksRule.when.kind, 'Heuristic');
+      if (runtimeMocksRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend runtime test doubles guideline.');
+      }
+      assert.equal(
+        runtimeMocksRule.when.where?.ruleId,
+        'heuristics.ts.production-mock-artifact.ast'
+      );
+      assert.deepEqual(collectHeuristicPrefixes(runtimeMocksRule.when), ['apps/backend/']);
+      assert.equal(
+        runtimeMocksRule.then.source?.includes(
+          'ast_nodes=[heuristics.ts.production-mock-artifact.ast]'
+        ),
+        true
+      );
+    })
+  );
+});
+
+test('mapea anemic domain models al heuristic AST nuevo del slice backend', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-anemic-domain-model-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'e'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.anemic-domain-models-entidades-con-comportamiento',
+                description: 'Avoid anemic domain models in backend runtime code.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(result.mappedHeuristicRuleIds.has('heuristics.ts.anemic-domain-model.ast'), true);
+
+      const anemicDomainRule = result.rules[0];
+      assert.ok(anemicDomainRule);
+      assert.equal(
+        anemicDomainRule.id,
+        'skills.backend.guideline.backend.anemic-domain-models-entidades-con-comportamiento'
+      );
+      assert.equal(anemicDomainRule.when.kind, 'Heuristic');
+      if (anemicDomainRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend anemic domain model guideline.');
+      }
+      assert.equal(
+        anemicDomainRule.when.where?.ruleId,
+        'heuristics.ts.anemic-domain-model.ast'
+      );
+      assert.deepEqual(collectHeuristicPrefixes(anemicDomainRule.when), ['apps/backend/']);
+      assert.equal(
+        anemicDomainRule.then.source?.includes(
+          'ast_nodes=[heuristics.ts.anemic-domain-model.ast]'
+        ),
+        true
+      );
+    })
+  );
+});
+
+test('mapea lógica en controllers al heuristic AST nuevo del slice backend', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-backend-guideline-controller-business-logic-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+            hash: 'f'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.guideline.backend.logica-en-controllers-mover-logica-de-negocio-a-casos-de-uso-servicios',
+                description: 'Avoid business logic inside backend controllers.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      assert.equal(result.rules.length, 1);
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ts.controller-business-logic.ast'),
+        true
+      );
+
+      const controllerLogicRule = result.rules[0];
+      assert.ok(controllerLogicRule);
+      assert.equal(
+        controllerLogicRule.id,
+        'skills.backend.guideline.backend.logica-en-controllers-mover-logica-de-negocio-a-casos-de-uso-servicios'
+      );
+      assert.equal(controllerLogicRule.when.kind, 'Heuristic');
+      if (controllerLogicRule.when.kind !== 'Heuristic') {
+        assert.fail('Expected heuristic condition for backend controller logic guideline.');
+      }
+      assert.equal(
+        controllerLogicRule.when.where?.ruleId,
+        'heuristics.ts.controller-business-logic.ast'
+      );
+      assert.deepEqual(collectHeuristicPrefixes(controllerLogicRule.when), ['apps/backend/']);
+      assert.equal(
+        controllerLogicRule.then.source?.includes(
+          'ast_nodes=[heuristics.ts.controller-business-logic.ast]'
+        ),
+        true
+      );
+    })
+  );
+});
+
 test('enriquce mensaje de no-solid-violations con criterios accionables y métricas observadas', async () => {
   await withCoreSkillsDisabled(async () =>
     withTempDir('pumuki-skills-ruleset-solid-actionable-message-', async (tempRoot) => {

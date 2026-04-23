@@ -164,6 +164,78 @@ export const typescriptRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.magic-number.ast',
+    description: 'Detects repeated magic number usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.magic-number.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected magic number usage.',
+      code: 'HEURISTICS_MAGIC_NUMBER_AST',
+    },
+  },
+  {
+    id: 'heuristics.ts.production-mock-artifact.ast',
+    description: 'Detects imports or requires of mocks/fakes/spies/stubs in TypeScript/TSX runtime code.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.production-mock-artifact.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected test doubles imported or required in production backend code.',
+      code: 'HEURISTICS_PRODUCTION_MOCK_ARTIFACT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ts.anemic-domain-model.ast',
+    description: 'Detects domain classes with only constructor/getters/setters and no behavior.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.anemic-domain-model.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected an anemic domain model.',
+      code: 'HEURISTICS_ANEMIC_DOMAIN_MODEL_AST',
+    },
+  },
+  {
+    id: 'heuristics.ts.controller-business-logic.ast',
+    description: 'Detects controller handlers with branching or business flow in TypeScript backend code.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.controller-business-logic.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected business logic inside a controller.',
+      code: 'HEURISTICS_CONTROLLER_BUSINESS_LOGIC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.with-statement.ast',
     description: 'Detects with-statement usage in TypeScript/TSX production files.',
     severity: 'WARN',

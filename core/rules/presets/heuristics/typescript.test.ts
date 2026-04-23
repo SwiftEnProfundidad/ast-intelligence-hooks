@@ -3,7 +3,7 @@ import test from 'node:test';
 import { typescriptRules } from './typescript';
 
 test('typescriptRules define reglas heurísticas locked para plataforma generic', () => {
-  assert.equal(typescriptRules.length, 19);
+  assert.equal(typescriptRules.length, 23);
 
   const ids = typescriptRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -16,6 +16,10 @@ test('typescriptRules define reglas heurísticas locked para plataforma generic'
     'heuristics.ts.set-timeout-string.ast',
     'heuristics.ts.set-interval-string.ast',
     'heuristics.ts.new-promise-async.ast',
+    'heuristics.ts.magic-number.ast',
+    'heuristics.ts.production-mock-artifact.ast',
+    'heuristics.ts.anemic-domain-model.ast',
+    'heuristics.ts.controller-business-logic.ast',
     'heuristics.ts.with-statement.ast',
     'heuristics.ts.delete-operator.ast',
     'heuristics.ts.debugger.ast',
@@ -32,6 +36,22 @@ test('typescriptRules define reglas heurísticas locked para plataforma generic'
   assert.equal(
     byId.get('heuristics.ts.empty-catch.ast')?.then.code,
     'HEURISTICS_EMPTY_CATCH_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ts.magic-number.ast')?.then.code,
+    'HEURISTICS_MAGIC_NUMBER_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ts.production-mock-artifact.ast')?.then.code,
+    'HEURISTICS_PRODUCTION_MOCK_ARTIFACT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ts.anemic-domain-model.ast')?.then.code,
+    'HEURISTICS_ANEMIC_DOMAIN_MODEL_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ts.controller-business-logic.ast')?.then.code,
+    'HEURISTICS_CONTROLLER_BUSINESS_LOGIC_AST'
   );
   assert.equal(
     byId.get('heuristics.ts.debugger.ast')?.then.code,

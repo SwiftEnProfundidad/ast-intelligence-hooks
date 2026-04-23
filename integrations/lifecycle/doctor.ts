@@ -30,6 +30,7 @@ import {
   evaluateOpenSpecCompatibility,
   isOpenSpecProjectInitialized,
 } from '../sdd/openSpecCli';
+import { resolveRepoTrackingState, type RepoTrackingState } from './trackingState';
 
 export type DoctorIssueSeverity = 'warning' | 'error';
 
@@ -113,6 +114,7 @@ export type LifecycleDoctorReport = {
   experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
   governanceObservation: GovernanceObservationSnapshot;
   governanceNextAction: GovernanceNextActionSummary;
+  tracking: RepoTrackingState;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
   parity_profile?: DoctorParityProfile;
@@ -124,6 +126,7 @@ const buildDoctorIssues = (params: {
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
   hooksDirectory: string;
   lifecycleState: LifecycleState;
+  tracking: RepoTrackingState;
 }): ReadonlyArray<DoctorIssue> => {
   const issues: DoctorIssue[] = [];
 
@@ -163,7 +166,57 @@ const buildDoctorIssues = (params: {
     });
   }
 
+  if (params.tracking.enforced) {
+    if (!params.tracking.canonical_path || !params.tracking.canonical_present) {
+      issues.push({
+        severity: 'warning',
+        message:
+          'Tracking contract is declared but the canonical tracking file is missing or unresolved.',
+      });
+    } else if (params.tracking.conflict) {
+      issues.push({
+        severity: 'warning',
+        message:
+          `Tracking contract has conflicting canonical declarations (${params.tracking.declarations.map((declaration) => declaration.resolved_path).join(', ')}).`,
+      });
+    } else if (!params.tracking.single_in_progress_valid) {
+      const activeEntries = (params.tracking.in_progress_entries ?? [])
+        .map((entry) => `${entry.task_id ?? 'UNKNOWN'}@L${entry.line_number}`)
+        .join(', ');
+      const actionableContext = activeEntries.length > 0
+        ? ` active_entries=${activeEntries} last_run_status=${params.tracking.last_run_status ?? 'absent'}`
+        : '';
+      issues.push({
+        severity: 'warning',
+        message:
+          `Canonical tracking is inconsistent for ${params.tracking.canonical_path} (in_progress_count=${params.tracking.in_progress_count}, active_task=${params.tracking.active_task_id ?? 'unknown'}, last_run_status=${params.tracking.last_run_status ?? 'absent'}).${actionableContext}`,
+      });
+    }
+  }
+
   return issues;
+};
+
+const appendGovernanceBlockingIssue = (params: {
+  issues: ReadonlyArray<DoctorIssue>;
+  governanceObservation: GovernanceObservationSnapshot;
+  governanceNextAction: GovernanceNextActionSummary;
+}): ReadonlyArray<DoctorIssue> => {
+  if (!doctorGovernanceIsBlocking(params.governanceObservation)) {
+    return params.issues;
+  }
+  if (params.issues.some((issue) => issue.severity === 'error')) {
+    return params.issues;
+  }
+  return [
+    ...params.issues,
+    {
+      severity: 'error',
+      message:
+        `Governance is blocked (${params.governanceNextAction.reason_code}). ` +
+        params.governanceNextAction.instruction,
+    },
+  ];
 };
 
 const DEEP_EVIDENCE_MAX_AGE_SECONDS = 1800;
@@ -824,12 +877,14 @@ export const runLifecycleDoctor = (params?: {
   const hooksDirectory = resolvePumukiHooksDirectory(repoRoot);
   const hookStatus = getPumukiHooksStatus(repoRoot);
   const lifecycleState = readLifecycleState(git, repoRoot);
+  const tracking = resolveRepoTrackingState(repoRoot);
 
   const issues = buildDoctorIssues({
     trackedNodeModulesPaths,
     hookStatus,
     hooksDirectory: hooksDirectory.path,
     lifecycleState,
+    tracking,
   });
   const deep = params?.deep
     ? buildDoctorDeepReport({
@@ -851,10 +906,16 @@ export const runLifecycleDoctor = (params?: {
     policyValidation,
     git,
   });
+  const governanceStage = governanceObservation.evidence.snapshot_stage ?? 'PRE_WRITE';
   const governanceNextAction = (params?.governanceNextActionReader ?? readGovernanceNextAction)({
     repoRoot,
-    stage: 'PRE_WRITE',
+    stage: governanceStage,
     governanceObservation,
+  });
+  const canonicalIssues = appendGovernanceBlockingIssue({
+    issues,
+    governanceObservation,
+    governanceNextAction,
   });
 
   const parity_profile =
@@ -882,7 +943,8 @@ export const runLifecycleDoctor = (params?: {
     experimentalFeatures,
     governanceNextAction,
     governanceObservation,
-    issues,
+    tracking,
+    issues: canonicalIssues,
     deep,
     parity_profile,
     parity_comparison,

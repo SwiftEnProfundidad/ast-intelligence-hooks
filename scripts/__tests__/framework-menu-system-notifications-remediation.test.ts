@@ -14,6 +14,7 @@ test('resolveBlockedRemediation usa remediation explícita cuando viene traducib
     'PRE_PUSH_UPSTREAM_MISSING'
   );
 
+  assert.match(result, /configura upstream/i);
   assert.match(result, /set-upstream/);
   assert.match(result, /PRE_PUSH/i);
 });
@@ -43,4 +44,35 @@ test('resolveBlockedRemediation cae a fallback genérico cuando no conoce el blo
   );
 
   assert.match(result, /corrige/i);
+});
+
+test('resolveBlockedRemediation traduce remediaciones legacy en inglés a una salida accionable en español', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_PUSH',
+      totalViolations: 1,
+      remediation: 'Split the change into smaller commits.',
+    },
+    'GIT_ATOMICITY_TOO_MANY_SCOPES'
+  );
+
+  assert.match(result, /divide el cambio/i);
+  assert.doesNotMatch(result, /split the change/i);
+});
+
+test('resolveBlockedRemediation compacta el banner sin cortar palabras por la mitad', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      remediation: 'Cómo solucionarlo: Refresca la evidencia del repositorio y vuelve a validar PRE_WRITE y PRE_PUSH con la sesión SDD correcta para esta rama.',
+    },
+    'EVIDENCE_STALE',
+    { variant: 'banner' }
+  );
+
+  assert.ok(result.length <= 120);
+  assert.doesNotMatch(result, /sesió…|correc…|ram…/i);
 });
