@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.103] - 2026-04-23
+
+### Fixed
+
+- **Contrato bloqueado canónico en `status` / `doctor`:** cuando el runtime está bloqueado, la salida expone `issues` accionables en vez de dejar el diagnóstico implícito.
+- **`governanceNextAction.stage` alineado con la evidencia:** el stage visible deja de forzarse y respeta `evidence.snapshot_stage` cuando existe.
+- **Remediación reproducible respecto al runtime diagnosticado:** la guía de alineación deja de apuntar a `pumuki@latest` y pasa a resolver contra el runtime efectivo del consumer.
+
 ## [6.3.102] - 2026-04-22
 
 ### Fixed

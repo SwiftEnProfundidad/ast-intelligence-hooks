@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-23 (v6.3.103)
+
+- **Tracking canónico accionable en `status` / `doctor`:** cuando el runtime está bloqueado, la salida visible ya incluye `issues` y contexto suficiente para no depender de grep manual.
+- **Stage visible coherente con la evidencia:** `governanceNextAction.stage` deja de ser un valor forzado y sigue el `snapshot_stage` real cuando existe.
+- **Remediación reproducible:** la recomendación de alineación ahora apunta al runtime diagnosticado del consumer, no a una versión comodín.
+
 ### 2026-04-22 (v6.3.102)
 
 - **Convergencia de policy efectiva:** `strict` deja de depender solo de `PUMUKI_POLICY_STRICT` cuando el contrato firmado ya lo declara por stage; `status`, `doctor` y runtime vuelven a hablar el mismo idioma.
