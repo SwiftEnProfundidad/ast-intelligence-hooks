@@ -163,9 +163,9 @@ const buildExperimentalFeatures = (): LifecycleExperimentalFeaturesSnapshot => (
     },
     mcp_enterprise: {
       layer: 'experimental',
-      mode: 'off',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
       activationVariable: 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE',
       legacyActivationVariable: null,
     },
@@ -250,8 +250,44 @@ test('printGovernanceConsoleHuman imprime cabecera compartida S1 y el bloque can
     assert.match(output, /Pre-write: mode=off blocking=no strict_policy=yes source=default/);
     assert.match(output, /Governance next action:/);
     assert.match(output, /Policy-as-code: PRE_WRITE=POLICY_AS_CODE_VALID strict=yes/);
-    assert.match(output, /Experimental: MCP_ENTERPRISE=off/);
+    assert.match(output, /Experimental: MCP_ENTERPRISE=strict/);
   } finally {
     process.stdout.write = originalStdoutWrite;
   }
+});
+
+test('buildGovernanceConsoleSummaryLines itemiza el tracking canónico cuando está inconsistente', () => {
+  const observation = buildGovernanceObservation();
+  observation.tracking = {
+    ...observation.tracking,
+    single_in_progress_valid: false,
+    in_progress_count: 2,
+    in_progress_entries: [
+      { line_number: 10, task_id: 'PUMUKI-INC-078' },
+      { line_number: 11, task_id: 'PUMUKI-INC-079' },
+    ],
+    last_run_status: 'IN_PROGRESS',
+  };
+  observation.attention_codes = ['TRACKING_CANONICAL_IN_PROGRESS_INVALID'];
+
+  const lines = buildGovernanceConsoleSummaryLines({
+    governanceObservation: observation,
+    governanceNextAction: buildGovernanceNextAction(),
+    policyValidation: buildPolicyValidation(),
+    experimentalFeatures: buildExperimentalFeatures(),
+  });
+
+  const output = lines.join('\n');
+  assert.equal(
+    output.includes(
+      'Tracking: canonical=PUMUKI-RESET-MASTER-PLAN.md in_progress_count=2 active_entries=PUMUKI-INC-078@L10, PUMUKI-INC-079@L11 last_run_status=IN_PROGRESS'
+    ),
+    true
+  );
+  assert.equal(
+    output.includes(
+      'Attention: TRACKING_CANONICAL_IN_PROGRESS_INVALID'
+    ),
+    true
+  );
 });

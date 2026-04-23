@@ -206,9 +206,9 @@ const buildStatus = (): LifecycleStatus => {
         },
         mcp_enterprise: {
           layer: 'experimental',
-          mode: 'off',
+          mode: 'strict',
           source: 'default',
-          blocking: false,
+          blocking: true,
           activationVariable: 'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE',
           legacyActivationVariable: null,
         },
@@ -344,7 +344,7 @@ test('buildConsumerMenuMatrixBaselineSnapshot conserva contrato útil para accep
   assert.equal(snapshot.latestRound.byOption['1'].totalViolations, 3);
   assert.equal(snapshot.doctor.layerSummary.core.verdict, 'PASS');
   assert.equal(snapshot.doctor.layerSummary.operational.verdict, 'WARN');
-  assert.equal(snapshot.doctor.layerSummary.experimental.verdict, 'PASS');
+  assert.equal(snapshot.doctor.layerSummary.experimental.verdict, 'FAIL');
 });
 
 test('renderConsumerMenuMatrixBaselineSummary publica drift, capas y latest round', () => {
@@ -364,7 +364,7 @@ test('renderConsumerMenuMatrixBaselineSummary publica drift, capas y latest roun
   assert.match(summary, /- stable: YES/);
   assert.match(summary, /- layer core: verdict=PASS/);
   assert.match(summary, /- layer policy-pack: verdict=WARN/);
-  assert.match(summary, /- layer experimental: verdict=PASS/);
+  assert.match(summary, /- layer experimental: verdict=FAIL/);
   assert.match(summary, /- option 1: stable=YES drift=none/);
   assert.match(
     summary,

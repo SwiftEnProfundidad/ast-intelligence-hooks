@@ -47,6 +47,60 @@ const createGitRepo = (): string => {
   return repo;
 };
 
+const writeValidPolicyReconcileInputs = (repoRoot: string): void => {
+  writeFileSync(
+    join(repoRoot, 'AGENTS.md'),
+    [
+      '# AGENTS',
+      'ios-enterprise-rules',
+      'swift-concurrency',
+      'swiftui-expert-skill',
+      'frontend-enterprise-rules',
+      'backend-enterprise-rules',
+      'android-enterprise-rules',
+      '',
+    ].join('\n'),
+    'utf8'
+  );
+  writeFileSync(
+    join(repoRoot, 'skills.lock.json'),
+    JSON.stringify(
+      {
+        version: '1.0',
+        bundles: [
+          {
+            name: 'ios-enterprise-rules',
+            source: 'docs/codex-skills/ios-enterprise-rules.md',
+          },
+          {
+            name: 'swift-concurrency',
+            source: 'docs/codex-skills/swift-concurrency.md',
+          },
+          {
+            name: 'swiftui-expert-skill',
+            source: 'docs/codex-skills/swiftui-expert-skill.md',
+          },
+          {
+            name: 'frontend-enterprise-rules',
+            source: 'docs/codex-skills/frontend-enterprise-rules.md',
+          },
+          {
+            name: 'backend-enterprise-rules',
+            source: 'docs/codex-skills/backend-enterprise-rules.md',
+          },
+          {
+            name: 'android-enterprise-rules',
+            source: 'docs/codex-skills/android-enterprise-rules.md',
+          },
+        ],
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+};
+
 test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
   const repo = createGitRepo();
   try {
@@ -255,6 +309,33 @@ test('runLifecycleInstall es idempotente en segunda ejecución sobre repo ya ins
     assert.equal(typeof firstInstalledAt, 'string');
     assert.equal(typeof secondInstalledAt, 'string');
     assert.equal(existsSync(join(repo, '.ai_evidence.json')), true);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleInstall materializa policy-as-code estricta cuando el repo declara insumos mínimos', () => {
+  const repo = createGitRepo();
+  try {
+    writeValidPolicyReconcileInputs(repo);
+
+    runLifecycleInstall({ cwd: repo });
+
+    const contract = JSON.parse(
+      readFileSync(join(repo, '.pumuki', 'policy-as-code.json'), 'utf8')
+    ) as {
+      strict?: Partial<Record<'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI', boolean>>;
+      signatures?: Partial<Record<'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI', string>>;
+    };
+
+    assert.equal(contract.strict?.PRE_WRITE, true);
+    assert.equal(contract.strict?.PRE_COMMIT, true);
+    assert.equal(contract.strict?.PRE_PUSH, true);
+    assert.equal(contract.strict?.CI, true);
+    assert.equal(typeof contract.signatures?.PRE_WRITE, 'string');
+    assert.equal(typeof contract.signatures?.PRE_COMMIT, 'string');
+    assert.equal(typeof contract.signatures?.PRE_PUSH, 'string');
+    assert.equal(typeof contract.signatures?.CI, 'string');
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

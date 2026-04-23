@@ -12,6 +12,7 @@ import {
   readSddSession,
   refreshSddSession,
 } from './sessionStore';
+import type { ILifecycleGitService } from '../lifecycle/gitService';
 import { resolveDegradedMode } from '../gate/degradedMode';
 import { resolveSddCompletenessEnforcement } from '../policy/sddCompletenessEnforcement';
 import { resolveSddExperimentalFeature } from '../policy/experimentalFeatures';
@@ -71,10 +72,10 @@ const resolveMissingSessionGuidance = (repoRoot: string): {
   };
 };
 
-const buildStatus = (repoRoot: string): SddStatusPayload => {
+const buildStatus = (repoRoot: string, git?: ILifecycleGitService): SddStatusPayload => {
   const openspec = detectOpenSpecInstallation(repoRoot);
   const compatibility = evaluateOpenSpecCompatibility(openspec);
-  const session = readSddSession(repoRoot);
+  const session = readSddSession(repoRoot, git);
   return {
     repoRoot,
     openspec: {
@@ -164,7 +165,7 @@ const evaluateSessionRequirements = (params: {
   autoRefreshError?: string;
 }): SddDecision | undefined => {
   const { status } = params;
-  if (!status.session.active) {
+  if (!status.session.changeId) {
     const guidance = resolveMissingSessionGuidance(status.repoRoot);
     const details: Record<string, string | number | boolean | bigint | symbol | null | Date | object> = {
       command: guidance.command,
@@ -221,7 +222,6 @@ const shouldAttemptSessionAutoRefresh = (params: {
 }): boolean =>
   params.stage !== 'PRE_WRITE'
   && params.autoRefreshEnabled
-  && params.status.session.active
   && !!params.status.session.changeId
   && !params.status.session.valid;
 
@@ -545,5 +545,5 @@ export const evaluateSddPolicy = (params: {
   });
 };
 
-export const readSddStatus = (repoRoot?: string): SddStatusPayload =>
-  buildStatus(repoRoot ?? process.cwd());
+export const readSddStatus = (repoRoot?: string, git?: ILifecycleGitService): SddStatusPayload =>
+  buildStatus(repoRoot ?? process.cwd(), git);
