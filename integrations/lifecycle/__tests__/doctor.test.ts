@@ -281,6 +281,10 @@ test('runLifecycleDoctor marca warning cuando el tracking canónico tiene más d
     assert.equal(report.issues.length, 1);
     assert.equal(report.issues[0]?.severity, 'warning');
     assert.match(report.issues[0]?.message ?? '', /Canonical tracking is inconsistent/i);
+    assert.match(
+      report.issues[0]?.message ?? '',
+      /active_entries=PUMUKI-INC-078@L3, PUMUKI-INC-079@L4/i
+    );
     assert.equal(doctorHasBlockingIssues(report), false);
   });
 });

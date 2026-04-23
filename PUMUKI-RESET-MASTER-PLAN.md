@@ -1049,7 +1049,11 @@ Snapshot de adopción vigente:
 | Consumer | Versión/estado actual | Estado backlog externo | Lectura operativa |
 |----------|------------------------|------------------------|-------------------|
 | `SAAS` | `6.3.102` mergeada vía [#12](https://github.com/SwiftEnProfundidad/app-supermercados/pull/12) | `0` incidencias activas | Adopción cerrada en `main`. |
+<<<<<<< HEAD
 | `RuralGo` | `6.3.109` revalidada en runtime real | `25` incidencias activas | `PUMUKI-INC-080`, `PUMUKI-INC-081` y `PUMUKI-INC-082` ya cerrados; siguiente bug vivo prioritario `PUMUKI-INC-083`. |
+=======
+| `RuralGo` | `6.3.109` revalidada en runtime real | `25` incidencias activas | `PUMUKI-INC-080`, `PUMUKI-INC-081` y `PUMUKI-INC-082` ya cerrados; siguiente bug vivo prioritario `PUMUKI-INC-083`. |
+>>>>>>> origin/develop
 | `Flux` | `6.3.102` mergeada vía [#9](https://github.com/SwiftEnProfundidad/flux-training/pull/9) | sin bug nuevo abierto en backlog Pumuki | Adopción cerrada en `develop`. |
 
 *(Sustituir la fila anterior al cerrar/abrir la tarea en curso: una sola 🚧 en todo el plan.)*

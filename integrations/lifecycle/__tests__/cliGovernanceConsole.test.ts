@@ -255,3 +255,39 @@ test('printGovernanceConsoleHuman imprime cabecera compartida S1 y el bloque can
     process.stdout.write = originalStdoutWrite;
   }
 });
+
+test('buildGovernanceConsoleSummaryLines itemiza el tracking canónico cuando está inconsistente', () => {
+  const observation = buildGovernanceObservation();
+  observation.tracking = {
+    ...observation.tracking,
+    single_in_progress_valid: false,
+    in_progress_count: 2,
+    in_progress_entries: [
+      { line_number: 10, task_id: 'PUMUKI-INC-078' },
+      { line_number: 11, task_id: 'PUMUKI-INC-079' },
+    ],
+    last_run_status: 'IN_PROGRESS',
+  };
+  observation.attention_codes = ['TRACKING_CANONICAL_IN_PROGRESS_INVALID'];
+
+  const lines = buildGovernanceConsoleSummaryLines({
+    governanceObservation: observation,
+    governanceNextAction: buildGovernanceNextAction(),
+    policyValidation: buildPolicyValidation(),
+    experimentalFeatures: buildExperimentalFeatures(),
+  });
+
+  const output = lines.join('\n');
+  assert.equal(
+    output.includes(
+      'Tracking: canonical=PUMUKI-RESET-MASTER-PLAN.md in_progress_count=2 active_entries=PUMUKI-INC-078@L10, PUMUKI-INC-079@L11 last_run_status=IN_PROGRESS'
+    ),
+    true
+  );
+  assert.equal(
+    output.includes(
+      'Attention: TRACKING_CANONICAL_IN_PROGRESS_INVALID'
+    ),
+    true
+  );
+});

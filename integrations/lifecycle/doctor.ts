@@ -180,10 +180,16 @@ const buildDoctorIssues = (params: {
           `Tracking contract has conflicting canonical declarations (${params.tracking.declarations.map((declaration) => declaration.resolved_path).join(', ')}).`,
       });
     } else if (!params.tracking.single_in_progress_valid) {
+      const activeEntries = (params.tracking.in_progress_entries ?? [])
+        .map((entry) => `${entry.task_id ?? 'UNKNOWN'}@L${entry.line_number}`)
+        .join(', ');
+      const actionableContext = activeEntries.length > 0
+        ? ` active_entries=${activeEntries} last_run_status=${params.tracking.last_run_status ?? 'absent'}`
+        : '';
       issues.push({
         severity: 'warning',
         message:
-          `Canonical tracking is inconsistent for ${params.tracking.canonical_path} (in_progress_count=${params.tracking.in_progress_count}, active_task=${params.tracking.active_task_id ?? 'unknown'}, last_run_status=${params.tracking.last_run_status ?? 'absent'}).`,
+          `Canonical tracking is inconsistent for ${params.tracking.canonical_path} (in_progress_count=${params.tracking.in_progress_count}, active_task=${params.tracking.active_task_id ?? 'unknown'}, last_run_status=${params.tracking.last_run_status ?? 'absent'}).${actionableContext}`,
       });
     }
   }
