@@ -174,7 +174,7 @@ export const buildLifecycleBootstrapManifest = (params: {
   })
   const governanceNextAction = readGovernanceNextAction({
     repoRoot,
-    stage: 'PRE_WRITE',
+    stage: governanceObservation.evidence.snapshot_stage ?? 'PRE_WRITE',
     governanceObservation,
   })
   const hooksDirectory = resolvePumukiHooksDirectory(repoRoot)

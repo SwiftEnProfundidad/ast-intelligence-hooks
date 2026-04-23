@@ -129,7 +129,7 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
     assert.match(adapter.mcp?.enterprise?.command ?? '', /pumuki-mcp-enterprise/);
     const bootstrapManifest = JSON.parse(readFileSync(bootstrapManifestPath, 'utf8')) as {
       contract_surface?: { agents_md?: boolean; pumuki_adapter_json?: boolean };
-      governance?: { bootstrap_hints?: string[]; next_action?: { reason_code?: string } };
+      governance?: { bootstrap_hints?: string[]; next_action?: { reason_code?: string; stage?: string } };
       adapter?: { hooks?: { pre_write?: string }; mcp?: { enterprise?: string } };
       lifecycle?: { installed?: boolean };
     };
@@ -140,6 +140,7 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
     assert.match(bootstrapManifest.adapter?.mcp?.enterprise ?? '', /pumuki-mcp-enterprise/);
     assert.equal(Array.isArray(bootstrapManifest.governance?.bootstrap_hints), true);
     assert.equal(typeof bootstrapManifest.governance?.next_action?.reason_code, 'string');
+    assert.equal(bootstrapManifest.governance?.next_action?.stage, 'PRE_COMMIT');
     assert.equal(realpathSync(result.bootstrapManifest.path), realpathSync(bootstrapManifestPath));
     assert.equal(typeof result.bootstrapManifest.changed, 'boolean');
 
