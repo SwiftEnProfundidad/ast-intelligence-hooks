@@ -736,7 +736,7 @@ export const runLifecycleWatch = async (
           driftFromRuntime,
           driftWarning,
           alignmentCommand: driftFromRuntime
-            ? buildLifecycleAlignmentCommand(versionMetadata.runtimeVersion)
+            ? buildLifecycleAlignmentCommand(versionMetadata.runtimeVersion, repoRoot)
             : null,
         },
         stage,
