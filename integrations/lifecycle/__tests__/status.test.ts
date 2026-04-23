@@ -129,6 +129,88 @@ const writeAllowedEvidence = (params: {
   );
 };
 
+const writeBlockedEvidence = (params: {
+  repoRoot: string;
+  branch: string;
+  stage: 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+}): void => {
+  const evidence = {
+    version: '2.1' as const,
+    timestamp: new Date().toISOString(),
+    snapshot: {
+      stage: params.stage,
+      outcome: 'BLOCK' as const,
+      findings: [
+        {
+          code: 'TRACKING_CANONICAL_IN_PROGRESS_INVALID',
+          message: 'Canonical tracking is inconsistent.',
+          severity: 'ERROR' as const,
+        },
+      ],
+    },
+    ledger: [],
+    platforms: {},
+    rulesets: [],
+    human_intent: null,
+    ai_gate: {
+      status: 'BLOCKED' as const,
+      violations: [],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'BLOCKED' as const,
+      total_violations: 0,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 0,
+        INFO: 0,
+      },
+    },
+    repo_state: {
+      repo_root: params.repoRoot,
+      git: {
+        available: true,
+        branch: params.branch,
+        upstream: null,
+        ahead: 0,
+        behind: 0,
+        dirty: false,
+        staged: 0,
+        unstaged: 0,
+      },
+      lifecycle: {
+        installed: true,
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
+        hooks: {
+          pre_commit: 'managed' as const,
+          pre_push: 'managed' as const,
+        },
+      },
+    },
+  };
+
+  const payloadHash = computeEvidencePayloadHash(evidence);
+  writeFileSync(
+    join(params.repoRoot, '.ai_evidence.json'),
+    JSON.stringify(
+      {
+        ...evidence,
+        evidence_chain: {
+          algorithm: 'sha256' as const,
+          previous_payload_hash: null,
+          payload_hash: payloadHash,
+          sequence: 1,
+        },
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+};
+
 test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', async () => {
   await withTempDir('pumuki-lifecycle-status-', async (repoRoot) => {
     const hooksDir = join(repoRoot, '.git', 'hooks');
@@ -224,6 +306,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
       'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE'
     );
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.legacyActivationVariable, null);
+    assert.deepEqual(status.issues, []);
     assert.equal(status.experimentalFeatures.features.operational_memory.layer, 'experimental');
     assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
     assert.equal(status.experimentalFeatures.features.operational_memory.source, 'default');
@@ -536,5 +619,34 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
     assert.equal(status.governanceNextAction.stage, 'PRE_WRITE');
     assert.equal(status.governanceObservation.evidence.readable, 'missing');
     assert.equal(status.governanceObservation.governance_effective, 'attention');
+  });
+});
+
+test('readLifecycleStatus expone issues canónicos cuando governance está bloqueado por evidencia', async () => {
+  await withTempDir('pumuki-lifecycle-status-blocked-', async (repoRoot) => {
+    writeBlockedEvidence({
+      repoRoot,
+      branch: 'feature/lifecycle-status-blocked',
+      stage: 'PRE_PUSH',
+    });
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.governanceObservation.governance_effective, 'blocked');
+    assert.equal(status.governanceNextAction.stage, 'PRE_PUSH');
+    assert.equal(status.issues.some((issue) => issue.severity === 'error'), true);
+    assert.equal(
+      status.issues.some((issue) => issue.message.includes('Governance is blocked')),
+      true
+    );
   });
 });
