@@ -40,4 +40,20 @@ test('readGovernanceNextAction mantiene POLICY_STAGE_NOT_STRICT cuando PRE_WRITE
   });
 
   assert.equal(result.reason_code, 'POLICY_STAGE_NOT_STRICT');
+  assert.equal(result.action, 'run_command');
+  assert.equal(result.next_action.kind, 'run_command');
+});
+
+test('readGovernanceNextAction alinea action con next_action.kind cuando la remediación es informativa', () => {
+  const snapshot = buildSnapshot([]);
+
+  const result = readGovernanceNextAction({
+    repoRoot: process.cwd(),
+    stage: 'PRE_WRITE',
+    governanceObservation: snapshot,
+  });
+
+  assert.equal(result.reason_code, 'GOVERNANCE_ATTENTION');
+  assert.equal(result.action, 'info');
+  assert.equal(result.next_action.kind, 'info');
 });

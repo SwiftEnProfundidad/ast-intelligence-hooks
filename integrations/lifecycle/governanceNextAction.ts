@@ -6,7 +6,7 @@ import { writeInfo } from './cliOutputs';
 export type GovernanceNextActionSummary = {
   stage: AiGateStage;
   phase: 'GREEN' | 'RED';
-  action: 'proceed' | 'ask';
+  action: 'proceed' | 'info' | 'run_command';
   confidence_pct: number;
   reason_code: string;
   instruction: string;
@@ -35,100 +35,88 @@ const resolveBlockedAction = (
   snapshot: GovernanceObservationSnapshot,
   stage: AiGateStage
 ): GovernanceNextActionSummary => {
-  if (snapshot.attention_codes.includes('EVIDENCE_INVALID_OR_CHAIN')) {
+  const buildAttentionAction = (params: {
+    confidencePct: number;
+    catalogCode: string;
+    message: string;
+  }): GovernanceNextActionSummary => {
+    const catalogAction = resolveGovernanceCatalogAction({ code: params.catalogCode, stage });
     return {
       stage,
       phase: 'RED',
-      action: 'ask',
-      confidence_pct: 80,
-      ...resolveGovernanceCatalogAction({ code: 'EVIDENCE_INVALID_OR_CHAIN', stage }),
-      message: 'La evidencia actual no es fiable; detén la ejecución automática hasta regenerarla.',
+      action: catalogAction.next_action.kind,
+      confidence_pct: params.confidencePct,
+      ...catalogAction,
+      message: params.message,
     };
+  };
+  if (snapshot.attention_codes.includes('EVIDENCE_INVALID_OR_CHAIN')) {
+    return buildAttentionAction({
+      confidencePct: 80,
+      catalogCode: 'EVIDENCE_INVALID_OR_CHAIN',
+      message: 'La evidencia actual no es fiable; detén la ejecución automática hasta regenerarla.',
+    });
   }
   if (
     snapshot.attention_codes.includes('AI_GATE_BLOCKED')
     || snapshot.attention_codes.includes('EVIDENCE_SNAPSHOT_BLOCK')
   ) {
-    return {
-      stage,
-      phase: 'RED',
-      action: 'ask',
-      confidence_pct: 75,
-      ...resolveGovernanceCatalogAction({ code: 'AI_GATE_BLOCKED', stage }),
+    return buildAttentionAction({
+      confidencePct: 75,
+      catalogCode: 'AI_GATE_BLOCKED',
       message: 'El gate efectivo sigue bloqueado; Pumuki no debe marcar verde ni dejar continuar.',
-    };
+    });
   }
   if (snapshot.attention_codes.includes('SDD_SESSION_INVALID_OR_EXPIRED')) {
-    return {
-      stage,
-      phase: 'RED',
-      action: 'ask',
-      confidence_pct: 70,
-      ...resolveGovernanceCatalogAction({ code: 'SDD_SESSION_INVALID_OR_EXPIRED', stage }),
+    return buildAttentionAction({
+      confidencePct: 70,
+      catalogCode: 'SDD_SESSION_INVALID_OR_EXPIRED',
       message: 'Hay una sesión SDD activa pero inválida; eso rompe el loop documental esperado.',
-    };
+    });
   }
   if (snapshot.attention_codes.includes('GITFLOW_PROTECTED_BRANCH_CONTEXT')) {
-    return {
-      stage,
-      phase: 'RED',
-      action: 'ask',
-      confidence_pct: 65,
-      ...resolveGovernanceCatalogAction({ code: 'GITFLOW_PROTECTED_BRANCH_CONTEXT', stage }),
+    return buildAttentionAction({
+      confidencePct: 65,
+      catalogCode: 'GITFLOW_PROTECTED_BRANCH_CONTEXT',
       message: 'El contexto actual cae sobre una rama protegida; el flujo enterprise no debe continuar ahí.',
-    };
+    });
   }
   if (
     snapshot.attention_codes.includes(POLICY_ATTENTION_CODE_BY_STAGE[stage])
     || snapshot.enterprise_warn_as_block_env
   ) {
-    return {
-      stage,
-      phase: 'RED',
-      action: 'ask',
-      confidence_pct: 60,
-      ...resolveGovernanceCatalogAction({ code: 'POLICY_STAGE_NOT_STRICT', stage }),
+    return buildAttentionAction({
+      confidencePct: 60,
+      catalogCode: 'POLICY_STAGE_NOT_STRICT',
       message: 'La política efectiva todavía no es estricta en todos los stages requeridos.',
-    };
+    });
   }
   if (!snapshot.contract_surface.skills_lock_json || !snapshot.contract_surface.skills_sources_json) {
-    return {
-      stage,
-      phase: 'RED',
-      action: 'ask',
-      confidence_pct: 55,
-      ...resolveGovernanceCatalogAction({ code: 'SKILLS_CONTRACT_SURFACE_INCOMPLETE', stage }),
+    return buildAttentionAction({
+      confidencePct: 55,
+      catalogCode: 'SKILLS_CONTRACT_SURFACE_INCOMPLETE',
       message: 'El contrato de skills todavía no está completamente materializado en el repo.',
-    };
+    });
   }
   if (!snapshot.contract_surface.pumuki_adapter_json) {
-    return {
-      stage,
-      phase: 'RED',
-      action: 'ask',
-      confidence_pct: 50,
-      ...resolveGovernanceCatalogAction({ code: 'ADAPTER_WIRING_MISSING', stage }),
+    return buildAttentionAction({
+      confidencePct: 50,
+      catalogCode: 'ADAPTER_WIRING_MISSING',
       message: 'La línea base Git puede operar, pero el wiring adaptador aún no está materializado.',
-    };
+    });
   }
   if (snapshot.attention_codes.includes('EVIDENCE_SNAPSHOT_WARN')) {
-    return {
-      stage,
-      phase: 'RED',
-      action: 'ask',
-      confidence_pct: 50,
-      ...resolveGovernanceCatalogAction({ code: 'EVIDENCE_SNAPSHOT_WARN', stage }),
+    return buildAttentionAction({
+      confidencePct: 50,
+      catalogCode: 'EVIDENCE_SNAPSHOT_WARN',
       message: 'La evidencia está en WARN; no conviene tratar el repo como completamente verde.',
-    };
+    });
   }
-  return {
-    stage,
-    phase: 'RED',
-    action: 'ask',
-    confidence_pct: 40,
-    ...resolveGovernanceCatalogAction({ code: 'GOVERNANCE_ATTENTION', stage }),
+  return buildAttentionAction({
+    confidencePct: 40,
+    catalogCode: 'GOVERNANCE_ATTENTION',
     message: 'Todavía hay señales de governance no resueltas.',
-  };
+  });
 };
 
 export const readGovernanceNextAction: GovernanceNextActionReader = (params) => {
