@@ -1,4 +1,5 @@
 import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager';
+import type { AiGateStage } from '../gate/evaluateAiGate';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { buildLifecycleVersionReport } from './packageInfo';
 import {
@@ -27,6 +28,22 @@ import {
   resolveRepoTrackingState,
   type RepoTrackingState,
 } from './trackingState';
+import {
+  readLifecycleDependencyInventory,
+  type LifecycleDependencyInventory,
+} from './dependencyInventory';
+
+const resolveGovernanceStage = (stage: string | null | undefined): AiGateStage => {
+  if (
+    stage === 'PRE_WRITE' ||
+    stage === 'PRE_COMMIT' ||
+    stage === 'PRE_PUSH' ||
+    stage === 'CI'
+  ) {
+    return stage;
+  }
+  return 'PRE_WRITE';
+};
 
 export type LifecycleStatus = {
   repoRoot: string;
@@ -37,6 +54,7 @@ export type LifecycleStatus = {
   hooksDirectory: string;
   hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   trackedNodeModulesCount: number;
+  dependencyInventory: LifecycleDependencyInventory;
   policyValidation: LifecyclePolicyValidationSnapshot;
   experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
   governanceObservation: GovernanceObservationSnapshot;
@@ -96,6 +114,7 @@ export const readLifecycleStatus = (params?: {
   const repoRoot = git.resolveRepoRoot(cwd);
   const hooksDirectory = resolvePumukiHooksDirectory(repoRoot);
   const trackedNodeModulesCount = git.trackedNodeModulesPaths(repoRoot).length;
+  const dependencyInventory = readLifecycleDependencyInventory(repoRoot);
   const lifecycleState = readLifecycleState(git, repoRoot);
   const version = buildLifecycleVersionReport({
     repoRoot,
@@ -109,7 +128,7 @@ export const readLifecycleStatus = (params?: {
     policyValidation,
     git,
   });
-  const governanceStage = governanceObservation.evidence.snapshot_stage ?? 'PRE_WRITE';
+  const governanceStage = resolveGovernanceStage(governanceObservation.evidence.snapshot_stage);
   const governanceNextAction = (params?.governanceNextActionReader ?? readGovernanceNextAction)({
     repoRoot,
     stage: governanceStage,
@@ -127,6 +146,7 @@ export const readLifecycleStatus = (params?: {
     hooksDirectory: hooksDirectory.path,
     hooksDirectoryResolution: hooksDirectory.source,
     trackedNodeModulesCount,
+    dependencyInventory,
     policyValidation,
     experimentalFeatures,
     governanceNextAction,
