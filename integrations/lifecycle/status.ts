@@ -41,7 +41,20 @@ const buildLifecycleIssues = (repoRoot: string): ReadonlyArray<DoctorIssue> => {
     evidence.severity_metrics.gate_status === 'BLOCKED';
 
   if (!blocked) {
-    return [];
+    if (evidence.snapshot.outcome !== 'WARN') {
+      return [];
+    }
+
+    const warnStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
+    return [
+      {
+        severity: 'warning',
+        message: appendTrackingActionableContext({
+          repoRoot,
+          message: `Governance requires attention (${warnStage}).`,
+        }),
+      },
+    ];
   }
 
   const blockedStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';

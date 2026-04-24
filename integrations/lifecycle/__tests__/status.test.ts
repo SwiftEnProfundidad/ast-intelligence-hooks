@@ -129,6 +129,88 @@ const writeBlockedEvidence = (params: {
   );
 };
 
+const writeWarnEvidence = (params: {
+  repoRoot: string;
+  branch: string;
+  stage: 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+}): void => {
+  const evidence = {
+    version: '2.1' as const,
+    timestamp: new Date().toISOString(),
+    snapshot: {
+      stage: params.stage,
+      outcome: 'WARN' as const,
+      findings: [
+        {
+          code: 'TDD_BDD_EVIDENCE_MISSING',
+          message: 'TDD/BDD evidence contract is required for new/complex changes and was not found.',
+          severity: 'WARN' as const,
+        },
+      ],
+    },
+    ledger: [],
+    platforms: {},
+    rulesets: [],
+    human_intent: null,
+    ai_gate: {
+      status: 'ALLOWED' as const,
+      violations: [],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'ALLOWED' as const,
+      total_violations: 0,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 1,
+        INFO: 0,
+      },
+    },
+    repo_state: {
+      repo_root: params.repoRoot,
+      git: {
+        available: true,
+        branch: params.branch,
+        upstream: null,
+        ahead: 0,
+        behind: 0,
+        dirty: false,
+        staged: 0,
+        unstaged: 0,
+      },
+      lifecycle: {
+        installed: true,
+        package_version: getCurrentPumukiVersion(),
+        lifecycle_version: getCurrentPumukiVersion(),
+        hooks: {
+          pre_commit: 'managed' as const,
+          pre_push: 'managed' as const,
+        },
+      },
+    },
+  };
+
+  const payloadHash = computeEvidencePayloadHash(evidence);
+  writeFileSync(
+    join(params.repoRoot, '.ai_evidence.json'),
+    JSON.stringify(
+      {
+        ...evidence,
+        evidence_chain: {
+          algorithm: 'sha256' as const,
+          previous_payload_hash: null,
+          payload_hash: payloadHash,
+          sequence: 1,
+        },
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+};
+
 test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', async () => {
   await withTempDir('pumuki-lifecycle-status-', async (repoRoot) => {
     const hooksDir = join(repoRoot, '.git', 'hooks');
@@ -346,9 +428,15 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
 test('readLifecycleStatus expone issues canónicos cuando governance está bloqueado por evidencia', async () => {
   await withTempDir('pumuki-lifecycle-status-blocked-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, 'docs', 'validation', 'refactor'), { recursive: true });
     writeFileSync(
       join(repoRoot, 'AGENTS.md'),
       '# plan\n- la única fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'README.md'),
+      '# docs\nTracking canónico: `./RURALGO_SEGUIMIENTO.md`\n',
       'utf8'
     );
     writeFileSync(
@@ -358,6 +446,17 @@ test('readLifecycleStatus expone issues canónicos cuando governance está bloqu
         '',
         '[🚧] - PUMUKI-INC-078 (RuralGo) corregir tracking canónico',
         '[🚧] - PUMUKI-INC-079 (RuralGo) task inválida simultánea',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'RURALGO_SEGUIMIENTO.md'),
+      [
+        '# tracking',
+        '',
+        '| 🚧 | PUMUKI-INC-078 |',
+        '| 🚧 | PUMUKI-INC-079 |',
         '',
       ].join('\n'),
       'utf8'
@@ -387,6 +486,34 @@ test('readLifecycleStatus expone issues canónicos cuando governance está bloqu
     assert.match(
       status.issues.find((issue) => issue.message.includes('Governance is blocked'))?.message ?? '',
       /active_entries=PUMUKI-INC-078@L3, PUMUKI-INC-079@L4/i
+    );
+  });
+});
+
+test('readLifecycleStatus expone issues canónicos cuando governance requiere atención por evidencia WARN', async () => {
+  await withTempDir('pumuki-lifecycle-status-warn-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    writeWarnEvidence({
+      repoRoot,
+      branch: 'feature/lifecycle-status-warn',
+      stage: 'PRE_COMMIT',
+    });
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.issues.some((issue) => issue.severity === 'warning'), true);
+    assert.equal(
+      status.issues.some((issue) => issue.message.includes('Governance requires attention')),
+      true
     );
   });
 });

@@ -164,6 +164,15 @@ const buildDoctorIssues = (params: {
           message: `Governance is blocked (${blockedStage}).`,
         }),
       });
+    } else if (evidence.snapshot.outcome === 'WARN') {
+      const warnStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
+      issues.push({
+        severity: 'warning',
+        message: appendTrackingActionableContext({
+          repoRoot: params.repoRoot,
+          message: `Governance requires attention (${warnStage}).`,
+        }),
+      });
     }
   }
 
