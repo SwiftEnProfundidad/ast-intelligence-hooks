@@ -6,11 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
-### 2026-04-24 (v6.3.114)
+### 2026-04-24 (v6.3.115)
 
 - **`issues` canónicos también para `WARN`:** `status` y `doctor` ya no dejan `issues=[]` cuando la evidencia operativa real está en atención (`WARN`) pero aún no bloquea el gate.
 - **Cierre útil de `PUMUKI-INC-084` en la línea publicada:** el consumer puede automatizar tanto estados `BLOCK` como `WARN` sin recombinar `attention_codes` y `human_summary_preview` por su cuenta.
-- **Rollout recomendado:** publicar `pumuki@6.3.114`, repin inmediato en `RuralGo` y revalidar `status --json` / `doctor --json` comprobando que la evidencia `WARN` ya aparece dentro de `issues`.
+- **`postinstall` vuelve a ser instalable en consumers reales:** la release evita el ciclo en `repoState` que rompía `npm install pumuki@6.3.114`.
+- **Rollout recomendado:** publicar `pumuki@6.3.115`, repin inmediato en `RuralGo` y revalidar `status --json` / `doctor --json` comprobando que la evidencia `WARN` ya aparece dentro de `issues`.
 
 ### 2026-04-22 (v6.3.108)
 

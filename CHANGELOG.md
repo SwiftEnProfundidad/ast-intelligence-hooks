@@ -6,13 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [6.3.114] - 2026-04-24
+## [6.3.115] - 2026-04-24
 
 ### Fixed
 
 - **`status` y `doctor` exponen `issues` canónicos también en evidencia `WARN`:** la línea publicada deja de reservar la lista de findings a estados bloqueados y pasa a emitir una advertencia consumible por automatización cuando governance está en atención operativa real.
 - **Hotfix mínimo sobre la superficie estable de `main`:** el contrato bloqueado existente se conserva, pero ahora la evidencia `WARN` produce `Governance requires attention (...)` como issue canónico sin arrastrar snapshots adicionales de `develop`.
 - **Cobertura de regresión de `INC-084` en la línea publicada:** nuevas pruebas fijan el caso `WARN` tanto en `status` como en `doctor`, manteniendo la semántica previa para estados `BLOCK`.
+- **Regresión de `postinstall` resuelta en la línea publicada:** `captureRepoState` deja de importar `status.ts` y rompe el ciclo que hacía fallar `scripts/consumer-postinstall.cjs` con `ReferenceError: Cannot access 'captureRepoState' before initialization`.
 
 ## [6.3.108] - 2026-04-22
 
