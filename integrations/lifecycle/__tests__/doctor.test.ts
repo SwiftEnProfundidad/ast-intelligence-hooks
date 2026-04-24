@@ -195,6 +195,61 @@ test('runLifecycleDoctor marca warning si lifecycle dice instalado y falta bloqu
   });
 });
 
+test('runLifecycleDoctor añade issue canónico cuando governance requiere atención', async () => {
+  await withTempDir('pumuki-doctor-governance-attention-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+
+    const evidence = sampleEvidence({
+      repoRoot,
+      branch: 'bugfix/inc-084-canonical-issues',
+      upstream: null,
+    });
+    evidence.snapshot.outcome = 'WARN';
+    evidence.snapshot.findings = [
+      {
+        code: 'TDD_BDD_EVIDENCE_MISSING',
+        message: 'TDD/BDD evidence contract is required for new/complex changes and was not found.',
+        severity: 'WARN',
+      },
+    ];
+    evidence.severity_metrics = {
+      gate_status: 'ALLOWED',
+      total_violations: 0,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 1,
+        INFO: 0,
+      },
+    };
+    evidence.evidence_chain = {
+      algorithm: 'sha256',
+      previous_payload_hash: null,
+      payload_hash: computeEvidencePayloadHash(evidence),
+      sequence: 1,
+    };
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.governanceObservation.governance_effective, 'attention');
+    assert.equal(report.issues.some((issue) => issue.severity === 'warning'), true);
+    assert.match(report.issues[0]?.message ?? '', /Governance requires attention/i);
+    assert.equal(doctorHasBlockingIssues(report), false);
+    assert.equal(doctorHasGovernanceAttention(report), true);
+  });
+});
+
 test('runLifecycleDoctor marca warning si hay hooks gestionados pero lifecycle no está instalado', async () => {
   await withTempDir('pumuki-doctor-hooks-without-state-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
