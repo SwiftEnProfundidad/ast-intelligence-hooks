@@ -6,11 +6,11 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
-### 2026-04-22 (v6.3.109)
+### 2026-04-24 (v6.3.114)
 
-- **`install` deja lista la policy estricta real para consumers compatibles:** si el repo ya expone `AGENTS.md` y `skills.lock.json` suficientes, la instalación materializa `.pumuki/policy-as-code.json` con firmas y `strict=true` por stage.
-- **Menos deriva entre `PRE_WRITE` y el resto del lifecycle:** `status` y `doctor` dejan de caer en `computed-local` para `PRE_COMMIT`, `PRE_PUSH` y `CI` después de una instalación limpia.
-- **Rollout recomendado:** publicar `pumuki@6.3.109`, repin inmediato en `RuralGo` y revalidar `status --json` / `doctor --json` comprobando `strict=true` en `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI`.
+- **`issues` canónicos también para `WARN`:** `status` y `doctor` ya no dejan `issues=[]` cuando la evidencia operativa real está en atención (`WARN`) pero aún no bloquea el gate.
+- **Cierre útil de `PUMUKI-INC-084` en la línea publicada:** el consumer puede automatizar tanto estados `BLOCK` como `WARN` sin recombinar `attention_codes` y `human_summary_preview` por su cuenta.
+- **Rollout recomendado:** publicar `pumuki@6.3.114`, repin inmediato en `RuralGo` y revalidar `status --json` / `doctor --json` comprobando que la evidencia `WARN` ya aparece dentro de `issues`.
 
 ### 2026-04-22 (v6.3.108)
 
