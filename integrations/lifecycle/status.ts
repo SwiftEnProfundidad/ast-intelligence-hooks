@@ -12,6 +12,7 @@ import {
 import {
   readGovernanceObservationSnapshot,
   doctorGovernanceIsBlocking,
+  doctorGovernanceNeedsAttention,
   type GovernanceObservationSnapshot,
 } from './governanceObservationSnapshot';
 import {
@@ -50,12 +51,25 @@ const buildLifecycleIssues = (params: {
   tracking: RepoTrackingState;
 }): ReadonlyArray<DoctorIssue> => {
   const issues: DoctorIssue[] = [];
+  const hasOperationalAttention =
+    params.governanceObservation.attention_codes.includes('EVIDENCE_SNAPSHOT_WARN')
+    || params.governanceObservation.attention_codes.includes('SDD_SESSION_INVALID_OR_EXPIRED');
 
   if (doctorGovernanceIsBlocking(params.governanceObservation)) {
     issues.push({
       severity: 'error',
       message:
         `Governance is blocked (${params.governanceNextAction.reason_code}). ` +
+        params.governanceNextAction.instruction,
+    });
+  } else if (
+    doctorGovernanceNeedsAttention(params.governanceObservation)
+    && hasOperationalAttention
+  ) {
+    issues.push({
+      severity: 'warning',
+      message:
+        `Governance requires attention (${params.governanceNextAction.reason_code}). ` +
         params.governanceNextAction.instruction,
     });
   }

@@ -218,6 +218,33 @@ const appendGovernanceBlockingIssue = (params: {
   ];
 };
 
+const appendGovernanceAttentionIssue = (params: {
+  issues: ReadonlyArray<DoctorIssue>;
+  governanceObservation: GovernanceObservationSnapshot;
+  governanceNextAction: GovernanceNextActionSummary;
+}): ReadonlyArray<DoctorIssue> => {
+  const hasOperationalAttention =
+    params.governanceObservation.attention_codes.includes('EVIDENCE_SNAPSHOT_WARN')
+    || params.governanceObservation.attention_codes.includes('SDD_SESSION_INVALID_OR_EXPIRED');
+  if (
+    doctorGovernanceIsBlocking(params.governanceObservation) ||
+    !doctorGovernanceNeedsAttention(params.governanceObservation) ||
+    !hasOperationalAttention
+  ) {
+    return params.issues;
+  }
+
+  return [
+    ...params.issues,
+    {
+      severity: 'warning',
+      message:
+        `Governance requires attention (${params.governanceNextAction.reason_code}). ` +
+        params.governanceNextAction.instruction,
+    },
+  ];
+};
+
 const DEEP_EVIDENCE_MAX_AGE_SECONDS = 1800;
 
 const toCanonicalPath = (value: string): string => {
@@ -911,8 +938,12 @@ export const runLifecycleDoctor = (params?: {
     stage: governanceStage,
     governanceObservation,
   });
-  const canonicalIssues = appendGovernanceBlockingIssue({
-    issues,
+  const canonicalIssues = appendGovernanceAttentionIssue({
+    issues: appendGovernanceBlockingIssue({
+      issues,
+      governanceObservation,
+      governanceNextAction,
+    }),
     governanceObservation,
     governanceNextAction,
   });

@@ -379,6 +379,118 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
   });
 });
 
+test('readLifecycleStatus añade issue canónico cuando governance requiere atención', async () => {
+  await withTempDir('pumuki-lifecycle-status-attention-', async (repoRoot) => {
+    const hooksDir = join(repoRoot, '.git', 'hooks');
+    mkdirSync(hooksDir, { recursive: true });
+
+    writeFileSync(
+      join(hooksDir, 'pre-commit'),
+      `#!/usr/bin/env sh\n\n${buildPumukiManagedHookBlock('pre-commit')}\n`,
+      'utf8'
+    );
+    writeFileSync(
+      join(hooksDir, 'pre-push'),
+      `#!/usr/bin/env sh\n\n${buildPumukiManagedHookBlock('pre-push')}\n`,
+      'utf8'
+    );
+
+    const evidence = {
+      version: '2.1' as const,
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_COMMIT' as const,
+        outcome: 'WARN' as const,
+        findings: [
+          {
+            code: 'TDD_BDD_EVIDENCE_MISSING',
+            message: 'TDD/BDD evidence contract is required for new/complex changes and was not found.',
+            severity: 'WARN' as const,
+          },
+        ],
+      },
+      ledger: [],
+      platforms: {},
+      rulesets: [],
+      human_intent: null,
+      ai_gate: {
+        status: 'ALLOWED' as const,
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED' as const,
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 1,
+          INFO: 0,
+        },
+      },
+      repo_state: {
+        repo_root: repoRoot,
+        git: {
+          available: true,
+          branch: 'bugfix/inc-084-canonical-issues',
+          upstream: null,
+          ahead: 0,
+          behind: 0,
+          dirty: false,
+          staged: 0,
+          unstaged: 0,
+        },
+        lifecycle: {
+          installed: true,
+          package_version: getCurrentPumukiVersion(),
+          lifecycle_version: getCurrentPumukiVersion(),
+          hooks: {
+            pre_commit: 'managed' as const,
+            pre_push: 'managed' as const,
+          },
+        },
+      },
+    };
+
+    const payloadHash = computeEvidencePayloadHash(evidence);
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        {
+          ...evidence,
+          evidence_chain: {
+            algorithm: 'sha256' as const,
+            previous_payload_hash: null,
+            payload_hash: payloadHash,
+            sequence: 1,
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.governanceObservation.governance_effective, 'attention');
+    assert.equal(status.issues.some((issue) => issue.severity === 'warning'), true);
+    assert.match(
+      status.issues[0]?.message ?? '',
+      /Governance requires attention/i
+    );
+  });
+});
+
 test('readLifecycleStatus expone warning y workaround cuando repoRoot contiene el separador de PATH', async () => {
   await withTempDir('pumuki:status-path-hazard-', async (repoRoot) => {
     const hooksDir = join(repoRoot, '.git', 'hooks');
@@ -659,6 +771,7 @@ test('readLifecycleStatus expone issues canónicos cuando governance está bloqu
 test('readLifecycleStatus itemiza el tracking canónico cuando hay más de una task activa', async () => {
   await withTempDir('pumuki-lifecycle-status-tracking-invalid-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, 'docs', 'validation', 'refactor'), { recursive: true });
     writeFileSync(
       join(repoRoot, 'AGENTS.md'),
       '# plan\n- la única fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`\n',
