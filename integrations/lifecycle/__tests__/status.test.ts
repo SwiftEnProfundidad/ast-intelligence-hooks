@@ -379,6 +379,47 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
   });
 });
 
+test('readLifecycleStatus expone inventario local de dependencia pumuki instalada', async () => {
+  await withTempDir('pumuki-lifecycle-status-dependency-inventory-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'node_modules', 'pumuki'), { recursive: true });
+    mkdirSync(join(repoRoot, 'node_modules', '.bin'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'package.json'),
+      JSON.stringify({ dependencies: { pumuki: '6.3.115' } }),
+      'utf8'
+    );
+    writeFileSync(join(repoRoot, 'package-lock.json'), '{}', 'utf8');
+    writeFileSync(
+      join(repoRoot, 'node_modules', 'pumuki', 'package.json'),
+      JSON.stringify({ name: 'pumuki', version: '6.3.115' }),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'pumuki.cmd' : 'pumuki'),
+      '#!/usr/bin/env sh\n',
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {});
+    const status = readLifecycleStatus({ cwd: repoRoot, git });
+
+    assert.equal(status.trackedNodeModulesCount, 0);
+    assert.equal(status.dependencyInventory.nodeModulesPresent, true);
+    assert.equal(status.dependencyInventory.packageJsonPresent, true);
+    assert.equal(status.dependencyInventory.lockfilePresent, true);
+    assert.equal(status.dependencyInventory.pumuki.declared, true);
+    assert.equal(status.dependencyInventory.pumuki.declaredRange, '6.3.115');
+    assert.equal(status.dependencyInventory.pumuki.installed, true);
+    assert.equal(status.dependencyInventory.pumuki.installedVersion, '6.3.115');
+    assert.equal(status.dependencyInventory.pumuki.packageJsonPath, 'node_modules/pumuki/package.json');
+    assert.equal(status.dependencyInventory.pumuki.binPresent, true);
+    assert.equal(
+      status.dependencyInventory.pumuki.binPath,
+      process.platform === 'win32' ? 'node_modules/.bin/pumuki.cmd' : 'node_modules/.bin/pumuki'
+    );
+  });
+});
+
 test('readLifecycleStatus añade issue canónico cuando governance requiere atención', async () => {
   await withTempDir('pumuki-lifecycle-status-attention-', async (repoRoot) => {
     const hooksDir = join(repoRoot, '.git', 'hooks');

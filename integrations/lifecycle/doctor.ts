@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { readEvidenceResult } from '../evidence/readEvidence';
+import type { AiGateStage } from '../gate/evaluateAiGate';
 import { resolvePolicyForStage } from '../gate/stagePolicies';
 import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
@@ -35,6 +36,22 @@ import {
   resolveRepoTrackingState,
   type RepoTrackingState,
 } from './trackingState';
+import {
+  readLifecycleDependencyInventory,
+  type LifecycleDependencyInventory,
+} from './dependencyInventory';
+
+const resolveGovernanceStage = (stage: string | null | undefined): AiGateStage => {
+  if (
+    stage === 'PRE_WRITE' ||
+    stage === 'PRE_COMMIT' ||
+    stage === 'PRE_PUSH' ||
+    stage === 'CI'
+  ) {
+    return stage;
+  }
+  return 'PRE_WRITE';
+};
 
 export type DoctorIssueSeverity = 'warning' | 'error';
 
@@ -110,6 +127,7 @@ export type LifecycleDoctorReport = {
   packageVersion: string;
   version: ReturnType<typeof buildLifecycleVersionReport>;
   lifecycleState: LifecycleState;
+  dependencyInventory: LifecycleDependencyInventory;
   trackedNodeModulesPaths: ReadonlyArray<string>;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
   hooksDirectory: string;
@@ -900,6 +918,7 @@ export const runLifecycleDoctor = (params?: {
   const cwd = params?.cwd ?? process.cwd();
   const repoRoot = git.resolveRepoRoot(cwd);
   const trackedNodeModulesPaths = git.trackedNodeModulesPaths(repoRoot);
+  const dependencyInventory = readLifecycleDependencyInventory(repoRoot);
   const hooksDirectory = resolvePumukiHooksDirectory(repoRoot);
   const hookStatus = getPumukiHooksStatus(repoRoot);
   const lifecycleState = readLifecycleState(git, repoRoot);
@@ -932,7 +951,7 @@ export const runLifecycleDoctor = (params?: {
     policyValidation,
     git,
   });
-  const governanceStage = governanceObservation.evidence.snapshot_stage ?? 'PRE_WRITE';
+  const governanceStage = resolveGovernanceStage(governanceObservation.evidence.snapshot_stage);
   const governanceNextAction = (params?.governanceNextActionReader ?? readGovernanceNextAction)({
     repoRoot,
     stage: governanceStage,
@@ -965,6 +984,7 @@ export const runLifecycleDoctor = (params?: {
     packageVersion: version.effective,
     version,
     lifecycleState,
+    dependencyInventory,
     trackedNodeModulesPaths,
     hookStatus,
     hooksDirectory: hooksDirectory.path,

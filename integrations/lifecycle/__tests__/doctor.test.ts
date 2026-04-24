@@ -170,6 +170,48 @@ test('runLifecycleDoctor marca issue bloqueante cuando hay rutas trackeadas en n
   });
 });
 
+test('runLifecycleDoctor expone inventario local de dependencia pumuki instalada', async () => {
+  await withTempDir('pumuki-doctor-dependency-inventory-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, 'node_modules', 'pumuki'), { recursive: true });
+    mkdirSync(join(repoRoot, 'node_modules', '.bin'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'package.json'),
+      JSON.stringify({ devDependencies: { pumuki: '6.3.115' } }),
+      'utf8'
+    );
+    writeFileSync(join(repoRoot, 'package-lock.json'), '{}', 'utf8');
+    writeFileSync(
+      join(repoRoot, 'node_modules', 'pumuki', 'package.json'),
+      JSON.stringify({ name: 'pumuki', version: '6.3.115' }),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'pumuki.cmd' : 'pumuki'),
+      '#!/usr/bin/env sh\n',
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot);
+    const report = runLifecycleDoctor({ cwd: repoRoot, git });
+
+    assert.deepEqual(report.trackedNodeModulesPaths, []);
+    assert.equal(report.dependencyInventory.nodeModulesPresent, true);
+    assert.equal(report.dependencyInventory.packageJsonPresent, true);
+    assert.equal(report.dependencyInventory.lockfilePresent, true);
+    assert.equal(report.dependencyInventory.pumuki.declared, true);
+    assert.equal(report.dependencyInventory.pumuki.declaredRange, '6.3.115');
+    assert.equal(report.dependencyInventory.pumuki.installed, true);
+    assert.equal(report.dependencyInventory.pumuki.installedVersion, '6.3.115');
+    assert.equal(report.dependencyInventory.pumuki.packageJsonPath, 'node_modules/pumuki/package.json');
+    assert.equal(report.dependencyInventory.pumuki.binPresent, true);
+    assert.equal(
+      report.dependencyInventory.pumuki.binPath,
+      process.platform === 'win32' ? 'node_modules/.bin/pumuki.cmd' : 'node_modules/.bin/pumuki'
+    );
+  });
+});
+
 test('runLifecycleDoctor marca warning si lifecycle dice instalado y falta bloque de hook', async () => {
   await withTempDir('pumuki-doctor-missing-hook-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
