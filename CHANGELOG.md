@@ -6,6 +6,15 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.116] - 2026-04-25
+
+### Fixed
+
+- **Inventario real de dependencia local en `status` y `doctor`:** la línea publicada diferencia por fin la señal de seguridad Git (`trackedNodeModulesCount` / `trackedNodeModulesPaths`) del estado real de instalación local (`dependencyInventory`).
+- **Diagnóstico consumer-facing de `pumuki`:** `status --json` y `doctor --json` exponen si existe `package.json`, lockfile, `node_modules`, declaración de `pumuki`, versión instalada y binario local.
+- **Salida humana alineada:** `status` y `doctor` imprimen una línea compacta `dependency pumuki` para que el operador no confunda ausencia de `node_modules` trackeados con ausencia de instalación local.
+- **Cobertura de regresión de `PUMUKI-INC-088`:** nuevas pruebas fijan el inventario de dependencia en ambas superficies lifecycle sin arrastrar el delta amplio de `develop`.
+
 ## [6.3.115] - 2026-04-24
 
 ### Fixed

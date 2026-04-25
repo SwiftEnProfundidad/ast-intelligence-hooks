@@ -16,6 +16,10 @@ import {
   evaluateOpenSpecCompatibility,
   isOpenSpecProjectInitialized,
 } from '../sdd/openSpecCli';
+import {
+  readLifecycleDependencyInventory,
+  type LifecycleDependencyInventory,
+} from './dependencyInventory';
 
 export type DoctorIssueSeverity = 'warning' | 'error';
 
@@ -91,6 +95,7 @@ export type LifecycleDoctorReport = {
   packageVersion: string;
   version: ReturnType<typeof buildLifecycleVersionReport>;
   lifecycleState: LifecycleState;
+  dependencyInventory: LifecycleDependencyInventory;
   trackedNodeModulesPaths: ReadonlyArray<string>;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
   hooksDirectory: string;
@@ -842,6 +847,7 @@ export const runLifecycleDoctor = (params?: {
   const cwd = params?.cwd ?? process.cwd();
   const repoRoot = git.resolveRepoRoot(cwd);
   const trackedNodeModulesPaths = git.trackedNodeModulesPaths(repoRoot);
+  const dependencyInventory = readLifecycleDependencyInventory(repoRoot);
   const hooksDirectory = resolvePumukiHooksDirectory(repoRoot);
   const hookStatus = getPumukiHooksStatus(repoRoot);
   const lifecycleState = readLifecycleState(git, repoRoot);
@@ -886,6 +892,7 @@ export const runLifecycleDoctor = (params?: {
     packageVersion: version.effective,
     version,
     lifecycleState,
+    dependencyInventory,
     trackedNodeModulesPaths,
     hookStatus,
     hooksDirectory: hooksDirectory.path,

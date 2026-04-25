@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-04-25 (v6.3.116)
+
+- **Inventario local real de dependencias:** `status` y `doctor` conservan `trackedNodeModules*` como señal estricta de seguridad Git y añaden `dependencyInventory` como fuente de verdad de instalación local.
+- **Cierre útil de `PUMUKI-INC-088`:** los consumers pueden ver si `pumuki` está declarado, instalado, con qué versión y si el binario local existe, sin inferirlo desde `git ls-files node_modules`.
+- **Rollout recomendado:** publicar `pumuki@6.3.116`, repin inmediato en `RuralGo` y revalidar `status --json` / `doctor --json` comprobando `dependencyInventory.pumuki.installedVersion`.
+
 ### 2026-04-24 (v6.3.115)
 
 - **`issues` canónicos también para `WARN`:** `status` y `doctor` ya no dejan `issues=[]` cuando la evidencia operativa real está en atención (`WARN`) pero aún no bloquea el gate.
