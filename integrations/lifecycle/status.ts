@@ -13,6 +13,10 @@ import {
 } from './policyValidationSnapshot';
 import { readLifecycleState, type LifecycleState } from './state';
 import type { DoctorIssue } from './doctor';
+import {
+  readLifecycleDependencyInventory,
+  type LifecycleDependencyInventory,
+} from './dependencyInventory';
 
 export type LifecycleStatus = {
   repoRoot: string;
@@ -23,6 +27,7 @@ export type LifecycleStatus = {
   hooksDirectory: string;
   hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   trackedNodeModulesCount: number;
+  dependencyInventory: LifecycleDependencyInventory;
   policyValidation: LifecyclePolicyValidationSnapshot;
   experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
   issues: ReadonlyArray<DoctorIssue>;
@@ -79,6 +84,7 @@ export const readLifecycleStatus = (params?: {
   const repoRoot = git.resolveRepoRoot(cwd);
   const hooksDirectory = resolvePumukiHooksDirectory(repoRoot);
   const trackedNodeModulesCount = git.trackedNodeModulesPaths(repoRoot).length;
+  const dependencyInventory = readLifecycleDependencyInventory(repoRoot);
   const lifecycleState = readLifecycleState(git, repoRoot);
   const version = buildLifecycleVersionReport({
     repoRoot,
@@ -97,6 +103,7 @@ export const readLifecycleStatus = (params?: {
     hooksDirectory: hooksDirectory.path,
     hooksDirectoryResolution: hooksDirectory.source,
     trackedNodeModulesCount,
+    dependencyInventory,
     policyValidation,
     experimentalFeatures,
     issues,

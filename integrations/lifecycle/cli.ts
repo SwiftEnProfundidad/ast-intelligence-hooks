@@ -1556,6 +1556,9 @@ const printDoctorReport = (
     `[pumuki] tracked node_modules paths: ${report.trackedNodeModulesPaths.length}`
   );
   writeInfo(
+    `[pumuki] dependency pumuki: declared=${report.dependencyInventory.pumuki.declared ? 'yes' : 'no'}, installed=${report.dependencyInventory.pumuki.installed ? 'yes' : 'no'}, version=${report.dependencyInventory.pumuki.installedVersion ?? 'unknown'}, bin=${report.dependencyInventory.pumuki.binPresent ? 'present' : 'missing'}`
+  );
+  writeInfo(
     `[pumuki] hook pre-commit: ${report.hookStatus['pre-commit'].managedBlockPresent ? 'managed' : 'missing'}`
   );
   writeInfo(
@@ -2427,6 +2430,9 @@ export const runLifecycleCli = async (
           );
           writeInfo(
             `[pumuki] tracked node_modules paths: ${status.trackedNodeModulesCount}`
+          );
+          writeInfo(
+            `[pumuki] dependency pumuki: declared=${status.dependencyInventory.pumuki.declared ? 'yes' : 'no'}, installed=${status.dependencyInventory.pumuki.installed ? 'yes' : 'no'}, version=${status.dependencyInventory.pumuki.installedVersion ?? 'unknown'}, bin=${status.dependencyInventory.pumuki.binPresent ? 'present' : 'missing'}`
           );
           writeInfo(
             `[pumuki] policy-as-code: PRE_COMMIT=${status.policyValidation.stages.PRE_COMMIT.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.PRE_COMMIT.strict ? 'yes' : 'no'} ` +

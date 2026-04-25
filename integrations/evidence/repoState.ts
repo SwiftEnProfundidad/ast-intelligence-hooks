@@ -1,8 +1,10 @@
 import { execFileSync as runBinarySync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readLifecycleStatus } from '../lifecycle/status';
+import { LifecycleGitService } from '../lifecycle/gitService';
+import { getPumukiHooksStatus } from '../lifecycle/hookManager';
 import { resolvePumukiVersionMetadata } from '../lifecycle/packageInfo';
+import { readLifecycleState } from '../lifecycle/state';
 import { readPersistedHardModeConfig } from '../policy/policyProfiles';
 import type { RepoHardModeState, RepoHookState, RepoState } from './schema';
 
@@ -73,10 +75,13 @@ const toAheadBehind = (
 };
 
 const readLifecycleStatusSafe = (repoRoot: string): LifecycleStatusShape => {
+  const git = new LifecycleGitService();
   try {
-    return readLifecycleStatus({
-      cwd: repoRoot,
-    });
+    return {
+      lifecycleState: readLifecycleState(git, repoRoot),
+      packageVersion: resolvePumukiVersionMetadata({ repoRoot }).resolvedVersion,
+      hookStatus: getPumukiHooksStatus(repoRoot),
+    };
   } catch {
     return {
       lifecycleState: {},

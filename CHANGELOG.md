@@ -6,13 +6,23 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [6.3.109] - 2026-04-22
+## [6.3.116] - 2026-04-25
 
 ### Fixed
 
-- **`install` materializa policy estricta cuando el repo ya puede reconciliarla:** tras una instalación limpia, Pumuki intenta persistir `.pumuki/policy-as-code.json` con `strict=true` por stage en lugar de dejar `status` y `doctor` en `computed-local`.
-- **Convergencia de `status`/`doctor` tras install en consumers reales:** el runtime deja de depender de `PUMUKI_POLICY_STRICT` para que `PRE_COMMIT`, `PRE_PUSH` y `CI` reflejen el mismo contrato estricto que `PRE_WRITE`.
-- **Cobertura de regresión del ciclo de install:** nuevas pruebas fijan que `runLifecycleInstall` materializa el contrato firmado cuando `AGENTS.md` y `skills.lock.json` exponen los insumos mínimos.
+- **Inventario real de dependencia local en `status` y `doctor`:** la línea publicada diferencia por fin la señal de seguridad Git (`trackedNodeModulesCount` / `trackedNodeModulesPaths`) del estado real de instalación local (`dependencyInventory`).
+- **Diagnóstico consumer-facing de `pumuki`:** `status --json` y `doctor --json` exponen si existe `package.json`, lockfile, `node_modules`, declaración de `pumuki`, versión instalada y binario local.
+- **Salida humana alineada:** `status` y `doctor` imprimen una línea compacta `dependency pumuki` para que el operador no confunda ausencia de `node_modules` trackeados con ausencia de instalación local.
+- **Cobertura de regresión de `PUMUKI-INC-088`:** nuevas pruebas fijan el inventario de dependencia en ambas superficies lifecycle sin arrastrar el delta amplio de `develop`.
+
+## [6.3.115] - 2026-04-24
+
+### Fixed
+
+- **`status` y `doctor` exponen `issues` canónicos también en evidencia `WARN`:** la línea publicada deja de reservar la lista de findings a estados bloqueados y pasa a emitir una advertencia consumible por automatización cuando governance está en atención operativa real.
+- **Hotfix mínimo sobre la superficie estable de `main`:** el contrato bloqueado existente se conserva, pero ahora la evidencia `WARN` produce `Governance requires attention (...)` como issue canónico sin arrastrar snapshots adicionales de `develop`.
+- **Cobertura de regresión de `INC-084` en la línea publicada:** nuevas pruebas fijan el caso `WARN` tanto en `status` como en `doctor`, manteniendo la semántica previa para estados `BLOCK`.
+- **Regresión de `postinstall` resuelta en la línea publicada:** `captureRepoState` deja de importar `status.ts` y rompe el ciclo que hacía fallar `scripts/consumer-postinstall.cjs` con `ReferenceError: Cannot access 'captureRepoState' before initialization`.
 
 ## [6.3.108] - 2026-04-22
 
