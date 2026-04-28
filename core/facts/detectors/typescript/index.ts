@@ -19,7 +19,6 @@ const concreteDependencyNames = new Set<string>([
   'ApolloClient',
   'Axios',
 ]);
-const GOD_CLASS_MAX_LINES = 300;
 const networkCallCalleePattern = /^(fetch|axios|get|post|put|patch|delete|request)$/i;
 type AstNode = Record<string, string | number | boolean | bigint | symbol | null | Date | object>;
 type TypeScriptSemanticNode = {
@@ -1747,16 +1746,19 @@ export const findConcreteDependencyInstantiationMatch = (
   return buildSolidDipMatch(node, 'concrete-instantiation');
 };
 
-const nodeLineSpan = (node: unknown): number => {
-  if (!isObject(node) || !isObject(node.loc)) {
-    return 0;
-  }
-  const start = isObject(node.loc.start) ? node.loc.start.line : undefined;
-  const end = isObject(node.loc.end) ? node.loc.end.line : undefined;
-  if (typeof start !== 'number' || typeof end !== 'number') {
-    return 0;
-  }
-  return Math.max(0, end - start + 1);
+const hasSemanticGodClassResponsibilities = (classNode: AstNode): boolean => {
+  const mixesCommandsAndQueries = typeof buildMixedCommandQueryClassMatch(classNode) !== 'undefined';
+  const ownsConcreteInfrastructure = hasConcreteDependencyInstantiation(classNode);
+  const ownsTypeBranching = hasTypeDiscriminatorSwitch(classNode);
+  const weakensBaseContract = hasOverrideMethodThrowingNotImplemented(classNode);
+
+  return (
+    (mixesCommandsAndQueries && ownsConcreteInfrastructure) ||
+    (mixesCommandsAndQueries && ownsTypeBranching) ||
+    (mixesCommandsAndQueries && weakensBaseContract) ||
+    (ownsConcreteInfrastructure && ownsTypeBranching) ||
+    (ownsConcreteInfrastructure && weakensBaseContract)
+  );
 };
 
 export const hasLargeClassDeclaration = (node: unknown): boolean => {
@@ -1764,7 +1766,7 @@ export const hasLargeClassDeclaration = (node: unknown): boolean => {
     if (value.type !== 'ClassDeclaration' && value.type !== 'ClassExpression') {
       return false;
     }
-    return nodeLineSpan(value) >= GOD_CLASS_MAX_LINES;
+    return hasSemanticGodClassResponsibilities(value);
   });
 };
 

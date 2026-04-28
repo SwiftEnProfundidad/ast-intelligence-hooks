@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.122] - 2026-04-28
+
+### Fixed
+
+- **Skills estructurales sin umbrales hardcodeados:** `skills.backend.no-god-classes` / `skills.frontend.no-god-classes` dejan de depender de `GOD_CLASS_MAX_LINES` y pasan a detectar mezcla semántica de responsabilidades por nodos AST.
+- **Auditoría transversal iOS/Android/backend/frontend:** las skills estructurales `God/Massive/SRP/Clean Architecture` ya no expresan límites implícitos de líneas; una regresión dedicada falla si vuelven a aparecer umbrales `> N líneas` en las skills de las cuatro plataformas.
+- **Cierre de `PUMUKI-INC-115`:** Pumuki mantiene hotspots por `max_lines` solo cuando el consumer los declara explícitamente, pero las skills hard vuelven a depender de nodos AST inteligentes o reglas declarativas.
+
 ## [6.3.121] - 2026-04-28
 
 ### Fixed

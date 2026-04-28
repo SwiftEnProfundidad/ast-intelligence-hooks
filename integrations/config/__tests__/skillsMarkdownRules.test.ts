@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import test from 'node:test';
 import { extractCompiledRulesFromSkillMarkdown } from '../skillsMarkdownRules';
 
@@ -9,7 +11,7 @@ test('normaliza reglas backend de SOLID/Clean Architecture/God Class a ids canon
     sourceContent: [
       '✅ Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)',
       '✅ Seguir Clean Architecture - Domain -> Application -> Infrastructure -> Presentation',
-      '❌ God classes - Servicios con >500 líneas',
+      '❌ God classes - Servicios que mezclan responsabilidades de dominio, aplicación, infraestructura, branching de tipos o contratos en una misma clase',
     ].join('\n'),
   });
 
@@ -216,4 +218,31 @@ test('reglas no canonicas con nodos AST explicitos se compilan como AUTO con ast
     'heuristics.ts.empty-catch.ast',
     'heuristics.ts.explicit-any.ast',
   ]);
+});
+
+test('skills estructurales de las cuatro plataformas no expresan God/Massive como umbral de lineas', () => {
+  const skillPaths = [
+    'docs/codex-skills/ios-enterprise-rules.md',
+    'docs/codex-skills/android-enterprise-rules.md',
+    'docs/codex-skills/backend-enterprise-rules.md',
+    'docs/codex-skills/frontend-enterprise-rules.md',
+    'vendor/skills/ios-enterprise-rules/SKILL.md',
+    'vendor/skills/android-enterprise-rules/SKILL.md',
+    'vendor/skills/backend-enterprise-rules/SKILL.md',
+    'vendor/skills/frontend-enterprise-rules/SKILL.md',
+  ];
+
+  const forbiddenStructuralThreshold =
+    /\b(?:god classes?|god activities|massive view controllers?)\b[^\n]*(?:[<>]=?\s*\d+|\d+\s*(?:lines|lineas|lineas|líneas))/iu;
+
+  const offenders = skillPaths.flatMap((relativePath) => {
+    const content = readFileSync(join(process.cwd(), relativePath), 'utf8');
+    return content
+      .split('\n')
+      .map((line, index) => ({ line, lineNumber: index + 1, relativePath }))
+      .filter(({ line }) => forbiddenStructuralThreshold.test(line))
+      .map(({ line, lineNumber, relativePath }) => `${relativePath}:${lineNumber}: ${line.trim()}`);
+  });
+
+  assert.deepEqual(offenders, []);
 });

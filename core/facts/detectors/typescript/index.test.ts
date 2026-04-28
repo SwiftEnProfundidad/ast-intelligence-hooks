@@ -856,32 +856,86 @@ test('findConcreteDependencyInstantiationMatch devuelve payload semantico para D
   assert.match(match.expected_fix, /adapter|puerto|abstracci/i);
 });
 
-test('hasLargeClassDeclaration detecta clases con 300 lineas o mas', () => {
-  const oversizedClassAst = {
+test('hasLargeClassDeclaration detecta god class por mezcla semantica de responsabilidades', () => {
+  const godClassAst = {
     type: 'ClassDeclaration',
     loc: {
-      start: { line: 10 },
-      end: { line: 320 },
-    },
-  };
-  const thresholdClassAst = {
-    type: 'ClassDeclaration',
-    loc: {
-      start: { line: 10 },
-      end: { line: 309 },
-    },
-  };
-  const compactClassAst = {
-    type: 'ClassDeclaration',
-    loc: {
-      start: { line: 10 },
+      start: { line: 1 },
       end: { line: 80 },
+    },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassProperty',
+          key: { type: 'Identifier', name: 'client' },
+          value: {
+            type: 'NewExpression',
+            callee: { type: 'Identifier', name: 'PrismaClient' },
+            arguments: [],
+          },
+        },
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'getOrder' },
+          loc: { start: { line: 20 }, end: { line: 24 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'saveOrder' },
+          loc: { start: { line: 30 }, end: { line: 40 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+      ],
+    },
+  };
+  const oversizedButSingleResponsibilityAst = {
+    type: 'ClassDeclaration',
+    loc: {
+      start: { line: 1 },
+      end: { line: 1_000 },
+    },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'getOrder' },
+          loc: { start: { line: 20 }, end: { line: 24 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+      ],
+    },
+  };
+  const srpOnlyAst = {
+    type: 'ClassDeclaration',
+    loc: {
+      start: { line: 1 },
+      end: { line: 80 },
+    },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'getOrder' },
+          loc: { start: { line: 20 }, end: { line: 24 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'saveOrder' },
+          loc: { start: { line: 30 }, end: { line: 40 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+      ],
     },
   };
 
-  assert.equal(hasLargeClassDeclaration(oversizedClassAst), true);
-  assert.equal(hasLargeClassDeclaration(thresholdClassAst), true);
-  assert.equal(hasLargeClassDeclaration(compactClassAst), false);
+  assert.equal(hasLargeClassDeclaration(godClassAst), true);
+  assert.equal(hasLargeClassDeclaration(oversizedButSingleResponsibilityAst), false);
+  assert.equal(hasLargeClassDeclaration(srpOnlyAst), false);
 });
 
 test('hasRecordStringUnknownType detecta Record<string, unknown>', () => {
