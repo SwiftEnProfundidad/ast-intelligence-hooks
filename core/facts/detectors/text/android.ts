@@ -70,6 +70,40 @@ type KotlinTypeDeclaration = {
   bodyEndLine: number;
 };
 
+type KotlinResponsibilityMatch = {
+  key: string;
+  node: KotlinSemanticNodeMatch;
+};
+
+const kotlinQueryMemberNamePattern = /^(get|find|list|fetch|read|load|restore|refresh|is|has|can)/i;
+const kotlinCommandMemberNamePattern =
+  /^(create|update|delete|remove|save|insert|upsert|set|write|persist|clear|reset|sync|store)/i;
+
+const registerKotlinResponsibility = (
+  nodes: KotlinResponsibilityMatch[],
+  key: string,
+  kind: KotlinSemanticNodeMatch['kind'],
+  name: string,
+  lines: readonly number[]
+): void => {
+  if (lines.length === 0) {
+    return;
+  }
+  nodes.push({ key, node: { kind, name, lines } });
+};
+
+const hasKotlinResponsibilityKeys = (
+  nodes: readonly KotlinResponsibilityMatch[],
+  keys: readonly string[]
+): boolean => {
+  const observedKeys = new Set(nodes.map((node) => node.key));
+  return keys.every((key) => observedKeys.has(key));
+};
+
+const isKotlinQueryMemberName = (name: string): boolean => kotlinQueryMemberNamePattern.test(name);
+const isKotlinCommandMemberName = (name: string): boolean =>
+  kotlinCommandMemberNamePattern.test(name);
+
 const stripKotlinLineForSemanticScan = (line: string): string => {
   return line
     .replace(/\/\/.*$/, '')
@@ -274,44 +308,46 @@ export const findKotlinPresentationSrpMatch = (
     return undefined;
   }
 
-  const relatedNodes: KotlinSemanticNodeMatch[] = [];
+  const responsibilities: KotlinResponsibilityMatch[] = [];
   const registerNode = (
+    key: string,
     kind: KotlinSemanticNodeMatch['kind'],
     name: string,
     regex: RegExp
   ): void => {
-    const lines = collectKotlinRegexLines(source, regex);
-    if (lines.length === 0) {
-      return;
-    }
-    relatedNodes.push({ kind, name, lines });
+    registerKotlinResponsibility(responsibilities, key, kind, name, collectKotlinRegexLines(source, regex));
   };
 
   registerNode(
+    'session',
     'member',
     'session/auth flow',
     /\b(?:restore|bootstrap|refresh|resume|signIn|signOut|authenticate|session)\w*\s*\(/
   );
   registerNode(
+    'networking',
     'call',
     'remote networking',
     /\b(?:OkHttpClient\s*\(|Retrofit\.Builder\s*\(|HttpURLConnection\b)/
   );
   registerNode(
+    'persistence',
     'call',
     'local persistence',
     /\b(?:SharedPreferences\b.*\)|PreferenceDataStoreFactory\.create|preferencesDataStore|DataStore<|RoomDatabase\b)/
   );
   registerNode(
+    'navigation',
     'member',
     'navigation flow',
     /\b(?:findNavController\s*\(|\.\s*navigate\s*\()/
   );
 
-  if (relatedNodes.length < 4) {
+  if (!hasKotlinResponsibilityKeys(responsibilities, ['session', 'networking', 'persistence', 'navigation'])) {
     return undefined;
   }
 
+  const relatedNodes = responsibilities.map((entry) => entry.node);
   const allLines = sortedUniqueLines([
     ...classLines,
     ...relatedNodes.flatMap((node) => [...node.lines]),
@@ -396,7 +432,7 @@ export const findKotlinConcreteDependencyDipMatch = (
   );
   registerNode('call', 'Room.databaseBuilder', /\bRoom\.databaseBuilder\s*\(/);
 
-  if (relatedNodes.length < 2) {
+  if (relatedNodes.length === 0) {
     return undefined;
   }
 
@@ -473,7 +509,8 @@ export const findKotlinOpenClosedWhenMatch = (
       }
     }
 
-    if (branchNodes.length < 2) {
+    const [firstBranchNode, secondBranchNode] = branchNodes;
+    if (!firstBranchNode || !secondBranchNode) {
       continue;
     }
 
@@ -483,7 +520,7 @@ export const findKotlinOpenClosedWhenMatch = (
         name: `discriminator switch: ${discriminatorName}`,
         lines: [index + 1],
       },
-      ...branchNodes.slice(0, 3),
+      ...branchNodes,
     ];
 
     const allLines = sortedUniqueLines([
@@ -492,7 +529,6 @@ export const findKotlinOpenClosedWhenMatch = (
       ...branchNodes.flatMap((node) => [...node.lines]),
     ]);
     const branchSummary = branchNodes
-      .slice(0, 3)
       .map((node) => node.name.replace(/^branch /, ''))
       .join(', ');
 
@@ -541,7 +577,13 @@ export const findKotlinInterfaceSegregationMatch = (
   const sourceLines = source.split(/\r?\n/);
 
   for (const interfaceDeclaration of interfaceDeclarations) {
-    if (interfaceDeclaration.members.length < 4) {
+    const queryMembers = interfaceDeclaration.members.filter((member) =>
+      isKotlinQueryMemberName(member.name)
+    );
+    const commandMembers = interfaceDeclaration.members.filter((member) =>
+      isKotlinCommandMemberName(member.name)
+    );
+    if (queryMembers.length === 0 || commandMembers.length === 0) {
       continue;
     }
 
@@ -579,14 +621,21 @@ export const findKotlinInterfaceSegregationMatch = (
       }
     });
 
-    if (usedMembers.size === 0 || usedMembers.size > 2) {
+    const usedMemberNames = [...usedMembers.keys()];
+    if (usedMemberNames.length === 0) {
       continue;
     }
 
-    const unusedMembers = interfaceDeclaration.members.filter(
-      (member) => !usedMembers.has(member.name)
-    );
-    if (unusedMembers.length < 2) {
+    const usesQueryContract = usedMemberNames.some(isKotlinQueryMemberName);
+    const usesCommandContract = usedMemberNames.some(isKotlinCommandMemberName);
+    if (usesQueryContract === usesCommandContract) {
+      continue;
+    }
+
+    const oppositeFamilyMembers = usesQueryContract ? commandMembers : queryMembers;
+    const unusedMembers = oppositeFamilyMembers.filter((member) => !usedMembers.has(member.name));
+    const firstUnusedMember = unusedMembers[0];
+    if (!firstUnusedMember) {
       continue;
     }
 
@@ -603,7 +652,7 @@ export const findKotlinInterfaceSegregationMatch = (
         lines: [interfaceDeclaration.line],
       },
       ...usedDescriptors,
-      ...unusedMembers.slice(0, 2).map((member) => ({
+      ...unusedMembers.map((member) => ({
         kind: 'member' as const,
         name: `unused contract member: ${member.name}`,
         lines: [member.line],
@@ -611,7 +660,7 @@ export const findKotlinInterfaceSegregationMatch = (
     ];
 
     const usedMemberSummary = usedDescriptors.map((member) => member.name.replace('used member: ', ''));
-    const unusedSummary = unusedMembers.slice(0, 2).map((member) => member.name);
+    const unusedSummary = unusedMembers.map((member) => member.name);
     const allLines = sortedUniqueLines([
       ...typeLines,
       interfaceDeclaration.line,

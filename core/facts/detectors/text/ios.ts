@@ -144,6 +144,39 @@ type SwiftTypeDeclaration = {
   bodyEndLine: number;
 };
 
+type SwiftResponsibilityMatch = {
+  key: string;
+  node: SwiftSemanticNodeMatch;
+};
+
+const swiftQueryMemberNamePattern = /^(get|find|list|fetch|read|load|restore|refresh|is|has|can)/i;
+const swiftCommandMemberNamePattern =
+  /^(create|update|delete|remove|save|insert|upsert|set|write|persist|clear|reset|sync|store)/i;
+
+const registerSwiftResponsibility = (
+  nodes: SwiftResponsibilityMatch[],
+  key: string,
+  kind: SwiftSemanticNodeMatch['kind'],
+  name: string,
+  lines: readonly number[]
+): void => {
+  if (lines.length === 0) {
+    return;
+  }
+  nodes.push({ key, node: { kind, name, lines } });
+};
+
+const hasSwiftResponsibilityKeys = (
+  nodes: readonly SwiftResponsibilityMatch[],
+  keys: readonly string[]
+): boolean => {
+  const observedKeys = new Set(nodes.map((node) => node.key));
+  return keys.every((key) => observedKeys.has(key));
+};
+
+const isSwiftQueryMemberName = (name: string): boolean => swiftQueryMemberNamePattern.test(name);
+const isSwiftCommandMemberName = (name: string): boolean => swiftCommandMemberNamePattern.test(name);
+
 const parseSwiftProtocolDeclarations = (source: string): readonly SwiftProtocolDeclaration[] => {
   const lines = source.split(/\r?\n/);
   const declarations: SwiftProtocolDeclaration[] = [];
@@ -874,31 +907,41 @@ export const findSwiftIOSCanary001Match = (source: string): SwiftIOSCanary001Mat
     return undefined;
   }
 
-  const registerNode = (
-    nodes: SwiftSemanticNodeMatch[],
-    kind: SwiftSemanticNodeMatch['kind'],
-    name: string,
-    regex: RegExp
-  ): void => {
-    const lines = collectSwiftRegexLines(source, regex);
-    if (lines.length === 0) {
-      return;
-    }
-    nodes.push({ kind, name, lines });
-  };
-
-  const explicitInfraNodes: SwiftSemanticNodeMatch[] = [];
-  registerNode(explicitInfraNodes, 'property', 'shared singleton', /\bstatic\s+let\s+shared\b/);
-  registerNode(explicitInfraNodes, 'call', 'URLSession.shared', /\bURLSession\.shared\b/);
-  registerNode(explicitInfraNodes, 'call', 'FileManager.default', /\bFileManager\.default\b/);
-  registerNode(
-    explicitInfraNodes,
+  const explicitInfraResponsibilities: SwiftResponsibilityMatch[] = [];
+  registerSwiftResponsibility(
+    explicitInfraResponsibilities,
+    'shared-state',
+    'property',
+    'shared singleton',
+    collectSwiftRegexLines(source, /\bstatic\s+let\s+shared\b/)
+  );
+  registerSwiftResponsibility(
+    explicitInfraResponsibilities,
+    'networking',
+    'call',
+    'URLSession.shared',
+    collectSwiftRegexLines(source, /\bURLSession\.shared\b/)
+  );
+  registerSwiftResponsibility(
+    explicitInfraResponsibilities,
+    'persistence',
+    'call',
+    'FileManager.default',
+    collectSwiftRegexLines(source, /\bFileManager\.default\b/)
+  );
+  registerSwiftResponsibility(
+    explicitInfraResponsibilities,
+    'navigation',
     'member',
     'navigation flow',
-    /\b(?:router|route|coordinator|navigationPath|navigationDestination)\b|\b(?:navigate|dismiss|present)\s*\(/i
+    collectSwiftRegexLines(
+      source,
+      /\b(?:router|route|coordinator|navigationPath|navigationDestination)\b|\b(?:navigate|dismiss|present)\s*\(/i
+    )
   );
 
-  if (explicitInfraNodes.length >= 3) {
+  if (hasSwiftResponsibilityKeys(explicitInfraResponsibilities, ['networking', 'persistence', 'navigation'])) {
+    const explicitInfraNodes = explicitInfraResponsibilities.map((entry) => entry.node);
     const relatedNodeNames = explicitInfraNodes.map((node) => node.name).join(', ');
     const allLines = sortedUniqueLines([
       ...classLines,
@@ -921,33 +964,55 @@ export const findSwiftIOSCanary001Match = (source: string): SwiftIOSCanary001Mat
     };
   }
 
-  const appShellNodes: SwiftSemanticNodeMatch[] = [];
-  registerNode(
-    appShellNodes,
+  const appShellResponsibilities: SwiftResponsibilityMatch[] = [];
+  registerSwiftResponsibility(
+    appShellResponsibilities,
+    'session',
     'member',
     'session bootstrap/restoration',
-    /\b(?:restorePersistedSessionIfNeeded|continueAsGuest|bootstrapAuthenticatedSession)\s*\(/
+    collectSwiftRegexLines(source, /\b(?:restorePersistedSessionIfNeeded|continueAsGuest|bootstrapAuthenticatedSession)\s*\(/)
   );
-  registerNode(appShellNodes, 'member', 'store selection orchestration', /\bselectStore\s*\(/);
-  registerNode(appShellNodes, 'member', 'shopping list synchronization', /\bsyncShoppingList\s*\(/);
-  registerNode(
-    appShellNodes,
+  registerSwiftResponsibility(
+    appShellResponsibilities,
+    'store',
+    'member',
+    'store selection orchestration',
+    collectSwiftRegexLines(source, /\bselectStore\s*\(/)
+  );
+  registerSwiftResponsibility(
+    appShellResponsibilities,
+    'shopping-list',
+    'member',
+    'shopping list synchronization',
+    collectSwiftRegexLines(source, /\bsyncShoppingList\s*\(/)
+  );
+  registerSwiftResponsibility(
+    appShellResponsibilities,
+    'route',
     'member',
     'route progression',
-    /\b(?:markNextStopCompleted|scanCheckpoint|rebuildRouteStatus)\s*\(/
+    collectSwiftRegexLines(source, /\b(?:markNextStopCompleted|scanCheckpoint|rebuildRouteStatus)\s*\(/)
   );
-  registerNode(
-    appShellNodes,
+  registerSwiftResponsibility(
+    appShellResponsibilities,
+    'offline-queue',
     'member',
     'offline queue coordination',
-    /\b(?:flushOfflineQueue|enqueueOfflineCheckpoint)\s*\(/
+    collectSwiftRegexLines(source, /\b(?:flushOfflineQueue|enqueueOfflineCheckpoint)\s*\(/)
   );
-  registerNode(appShellNodes, 'member', 'deep link/navigation flow', /\bopenDeepLink\s*\(/);
+  registerSwiftResponsibility(
+    appShellResponsibilities,
+    'navigation',
+    'member',
+    'deep link/navigation flow',
+    collectSwiftRegexLines(source, /\bopenDeepLink\s*\(/)
+  );
 
-  if (appShellNodes.length < 4) {
+  if (!hasSwiftResponsibilityKeys(appShellResponsibilities, ['session', 'store', 'route', 'navigation'])) {
     return undefined;
   }
 
+  const appShellNodes = appShellResponsibilities.map((entry) => entry.node);
   const relatedNodeNames = appShellNodes.map((node) => node.name).join(', ');
   const allLines = sortedUniqueLines([
     ...classLines,
@@ -985,44 +1050,46 @@ export const findSwiftPresentationSrpMatch = (
     return undefined;
   }
 
-  const relatedNodes: SwiftSemanticNodeMatch[] = [];
+  const responsibilities: SwiftResponsibilityMatch[] = [];
   const registerNode = (
+    key: string,
     kind: SwiftSemanticNodeMatch['kind'],
     name: string,
     regex: RegExp
   ): void => {
-    const lines = collectSwiftRegexLines(source, regex);
-    if (lines.length === 0) {
-      return;
-    }
-    relatedNodes.push({ kind, name, lines });
+    registerSwiftResponsibility(responsibilities, key, kind, name, collectSwiftRegexLines(source, regex));
   };
 
   registerNode(
+    'session',
     'member',
     'session/auth flow',
     /\b(?:restore|bootstrap|refresh|resume|signIn|signOut|authenticate|session)\w*\s*\(/
   );
   registerNode(
+    'networking',
     'call',
     'remote networking',
     /\b(?:URLSession\.shared|URLRequest\b|dataTask\s*\(|uploadTask\s*\(|downloadTask\s*\()/
   );
   registerNode(
+    'persistence',
     'call',
     'local persistence',
     /\b(?:UserDefaults\.standard|FileManager\.default|Keychain|NSPersistentContainer|CoreData)\b/
   );
   registerNode(
+    'navigation',
     'member',
     'navigation flow',
     /\b(?:navigationPath|navigationDestination)\b|(?:\.\s*(?:navigate|present|dismiss|push|open)\s*\()/
   );
 
-  if (relatedNodes.length < 4) {
+  if (!hasSwiftResponsibilityKeys(responsibilities, ['session', 'networking', 'persistence', 'navigation'])) {
     return undefined;
   }
 
+  const relatedNodes = responsibilities.map((entry) => entry.node);
   const allLines = sortedUniqueLines([
     ...classLines,
     ...relatedNodes.flatMap((node) => [...node.lines]),
@@ -1092,7 +1159,7 @@ export const findSwiftConcreteDependencyDipMatch = (
   );
   registerNode('call', 'FileManager.default', /\bFileManager\.default\b/);
 
-  if (relatedNodes.length < 2) {
+  if (relatedNodes.length === 0) {
     return undefined;
   }
 
@@ -1178,7 +1245,8 @@ export const findSwiftOpenClosedSwitchMatch = (
       }
     }
 
-    if (caseNodes.length < 2) {
+    const [firstCaseNode, secondCaseNode] = caseNodes;
+    if (!firstCaseNode || !secondCaseNode) {
       continue;
     }
 
@@ -1188,7 +1256,7 @@ export const findSwiftOpenClosedSwitchMatch = (
         name: `discriminator switch: ${discriminatorName}`,
         lines: [index + 1],
       },
-      ...caseNodes.slice(0, 3),
+      ...caseNodes,
     ];
 
     const allLines = sortedUniqueLines([
@@ -1197,7 +1265,6 @@ export const findSwiftOpenClosedSwitchMatch = (
       ...caseNodes.flatMap((node) => [...node.lines]),
     ]);
     const caseSummary = caseNodes
-      .slice(0, 3)
       .map((node) => node.name.replace(/^case\s+/, ''))
       .join(', ');
 
@@ -1246,7 +1313,13 @@ export const findSwiftInterfaceSegregationMatch = (
   const sourceLines = source.split(/\r?\n/);
 
   for (const protocolDeclaration of protocolDeclarations) {
-    if (protocolDeclaration.members.length < 4) {
+    const queryMembers = protocolDeclaration.members.filter((member) =>
+      isSwiftQueryMemberName(member.name)
+    );
+    const commandMembers = protocolDeclaration.members.filter((member) =>
+      isSwiftCommandMemberName(member.name)
+    );
+    if (queryMembers.length === 0 || commandMembers.length === 0) {
       continue;
     }
 
@@ -1283,14 +1356,21 @@ export const findSwiftInterfaceSegregationMatch = (
       }
     });
 
-    if (usedMembers.size === 0 || usedMembers.size > 2) {
+    const usedMemberNames = [...usedMembers.keys()];
+    if (usedMemberNames.length === 0) {
       continue;
     }
 
-    const unusedMembers = protocolDeclaration.members.filter(
-      (member) => !usedMembers.has(member.name)
-    );
-    if (unusedMembers.length < 2) {
+    const usesQueryContract = usedMemberNames.some(isSwiftQueryMemberName);
+    const usesCommandContract = usedMemberNames.some(isSwiftCommandMemberName);
+    if (usesQueryContract === usesCommandContract) {
+      continue;
+    }
+
+    const oppositeFamilyMembers = usesQueryContract ? commandMembers : queryMembers;
+    const unusedMembers = oppositeFamilyMembers.filter((member) => !usedMembers.has(member.name));
+    const firstUnusedMember = unusedMembers[0];
+    if (!firstUnusedMember) {
       continue;
     }
 
@@ -1311,7 +1391,7 @@ export const findSwiftInterfaceSegregationMatch = (
         name: `used member: ${usedMemberName}`,
         lines: sortedUniqueLines(usedMemberLines),
       },
-      ...unusedMembers.slice(0, 2).map((member) => ({
+      ...unusedMembers.map((member) => ({
         kind: 'member' as const,
         name: `unused contract member: ${member.name}`,
         lines: [member.line],
@@ -1322,7 +1402,7 @@ export const findSwiftInterfaceSegregationMatch = (
       ...typeLines,
       protocolDeclaration.line,
       ...usedMemberLines,
-      ...unusedMembers.slice(0, 2).map((member) => member.line),
+      ...unusedMembers.map((member) => member.line),
     ]);
 
     return {
