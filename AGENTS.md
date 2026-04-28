@@ -81,6 +81,17 @@ Antes de realizar cualquier accion:
   - explicar la regla exacta bloqueante, y
   - pedir decision explicita del usuario antes de continuar.
 
+## Protocolo condicionado de review paralela
+- MUST: Cuando el usuario pida revisar una rama, PR, diff amplio o cambio transversal, usar subagentes paralelos si el alcance lo justifica.
+- MUST: Separar la revision en tres focos independientes:
+  1. riesgos de seguridad
+  2. carencias de tests
+  3. mantenibilidad, deuda y complejidad
+- MUST: Integrar los hallazgos en una unica respuesta final priorizada por severidad, con referencias a archivo/linea y sin duplicar conclusiones.
+- MUST: Mantener el formato de review: hallazgos primero, preguntas/assumptions despues, resumen al final.
+- MUST: No activar este protocolo para implementaciones normales, fixes pequenos, tareas de tracking o cambios documentales simples salvo peticion explicita del usuario.
+- MUST: No sustituir los gates del repo por opiniones de subagentes; los subagentes aportan focos de revision, pero la respuesta final debe contrastar sus hallazgos con codigo, tests y evidencia local.
+
 ## Contrato hard de GitFlow y ramas (no negociable)
 - El ciclo GitFlow del proyecto es obligatorio.
 - Es obligatorio respetar ramas nombradas segun la convencion acordada del repositorio.

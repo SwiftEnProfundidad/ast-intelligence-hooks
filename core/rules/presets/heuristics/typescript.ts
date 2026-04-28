@@ -332,7 +332,7 @@ export const typescriptRules: RuleSet = [
   },
   {
     id: 'heuristics.ts.god-class-large-class.ast',
-    description: 'Detects God Class candidates when a class declaration exceeds 500 lines.',
+    description: 'Detects God Class candidates when one class mixes multiple responsibility nodes.',
     severity: 'ERROR',
     platform: 'generic',
     locked: true,
@@ -344,7 +344,7 @@ export const typescriptRules: RuleSet = [
     },
     then: {
       kind: 'Finding',
-      message: 'AST heuristic detected God Class candidate (>500 lines in one class declaration).',
+      message: 'AST heuristic detected God Class candidate by mixed responsibility nodes in one class declaration.',
       code: 'HEURISTICS_GOD_CLASS_LARGE_CLASS_AST',
     },
   },

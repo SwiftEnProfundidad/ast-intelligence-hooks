@@ -441,7 +441,8 @@ test('mapea reglas SOLID y God Class a detectores AST heuristics en backend', as
               },
               {
                 id: 'skills.backend.no-god-classes',
-                description: 'God classes - Servicios con >500 lineas.',
+                description:
+                  'God classes - Servicios que mezclan responsabilidades de dominio, aplicacion, infraestructura, branching de tipos o contratos en una misma clase.',
                 severity: 'ERROR',
                 platform: 'backend',
                 sourceSkill: 'backend-guidelines',

@@ -446,13 +446,7 @@ const normalizeKnownRuleTarget = (
     if (includes('clean architecture')) {
       return `${prefix}.enforce-clean-architecture`;
     }
-    if (
-      includes('god classes') ||
-      includes('god class') ||
-      includes('500 lineas') ||
-      includes('500 li neas') ||
-      includes('500 lines')
-    ) {
+    if (includes('god classes') || includes('god class')) {
       return `${prefix}.no-god-classes`;
     }
     if (includes('empty catch')) {
