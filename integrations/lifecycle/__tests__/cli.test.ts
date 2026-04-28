@@ -1321,6 +1321,11 @@ test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto e
             source?: string;
             activationVariable?: string;
           };
+          mcp_enterprise?: {
+            mode?: string;
+            source?: string;
+            activationVariable?: string;
+          };
           saas_ingestion?: {
             mode?: string;
             source?: string;
@@ -1369,7 +1374,9 @@ test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto e
     assert.equal(payload.experimentalFeatures?.features?.analytics?.source, 'default');
     assert.equal(payload.experimentalFeatures?.features?.operational_memory?.mode, 'off');
     assert.equal(payload.experimentalFeatures?.features?.operational_memory?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.pre_write?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.mcp_enterprise?.mode, 'strict');
+    assert.equal(payload.experimentalFeatures?.features?.mcp_enterprise?.source, 'default');
+    assert.equal(payload.experimentalFeatures?.features?.pre_write?.mode, 'strict');
     assert.equal(payload.experimentalFeatures?.features?.pre_write?.source, 'default');
     assert.equal(payload.experimentalFeatures?.features?.saas_ingestion?.mode, 'off');
     assert.equal(payload.experimentalFeatures?.features?.saas_ingestion?.source, 'default');
@@ -1386,6 +1393,10 @@ test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto e
     assert.equal(
       payload.experimentalFeatures?.features?.operational_memory?.activationVariable,
       'PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY'
+    );
+    assert.equal(
+      payload.experimentalFeatures?.features?.mcp_enterprise?.activationVariable,
+      'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE'
     );
     assert.equal(
       payload.experimentalFeatures?.features?.pre_write?.activationVariable,
