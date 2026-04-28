@@ -24,9 +24,6 @@ type ObservedFile = {
 };
 
 const DEFAULT_HOTSPOTS_CONFIG_PATH = 'config/pumuki-hotspots.json';
-const PRESENTATION_OR_APPLICATION_SEGMENTS = ['/presentation/', '/application/'];
-const HIGH_LINE_THRESHOLD = 800;
-const CRITICAL_LINE_THRESHOLD = 1200;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -100,11 +97,6 @@ const readBrownfieldHotspotConfig = (repoRoot: string): BrownfieldHotspotConfig 
   } catch {
     return undefined;
   }
-};
-
-const isSensitiveLayerPath = (path: string): boolean => {
-  const normalized = `/${toNormalizedPath(path).toLowerCase()}`;
-  return PRESENTATION_OR_APPLICATION_SEGMENTS.some((segment) => normalized.includes(segment));
 };
 
 const hasRequiredArtifacts = (
@@ -245,28 +237,15 @@ export const evaluateBrownfieldHotspotFindings = (params: {
 
   for (const file of observedFiles) {
     const configEntry = configByPath.get(file.path);
-    const isSensitiveLayer = isSensitiveLayerPath(file.path);
-    if (typeof file.lineCount === 'number' && (isSensitiveLayer || configEntry?.max_lines)) {
-      const highThreshold = configEntry?.max_lines ?? HIGH_LINE_THRESHOLD;
-      const criticalThreshold = Math.max(highThreshold, CRITICAL_LINE_THRESHOLD);
-      if (file.lineCount > criticalThreshold) {
+    if (typeof file.lineCount === 'number' && configEntry?.max_lines) {
+      const threshold = configEntry.max_lines;
+      if (file.lineCount > threshold) {
         findings.push(
           toHotspotSizeFinding({
             stage: params.stage,
             path: file.path,
             lineCount: file.lineCount,
-            threshold: criticalThreshold,
-            severity: 'CRITICAL',
-            reason: configEntry?.reason,
-          })
-        );
-      } else if (file.lineCount > highThreshold) {
-        findings.push(
-          toHotspotSizeFinding({
-            stage: params.stage,
-            path: file.path,
-            lineCount: file.lineCount,
-            threshold: highThreshold,
+            threshold,
             severity: 'ERROR',
             reason: configEntry?.reason,
           })

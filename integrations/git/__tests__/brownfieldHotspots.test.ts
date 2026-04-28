@@ -19,7 +19,12 @@ test('evaluateBrownfieldHotspotFindings skips when hotspots config missing', () 
   const repo = mkdtempSync(join(tmpdir(), 'pumuki-brownfield-'));
   try {
     const facts: Fact[] = [
-      { source: 'test', kind: 'FileContent', path: 'src/Foo.ts', content: 'x\n' },
+      {
+        source: 'test',
+        kind: 'FileContent',
+        path: 'apps/ios/Presentation/Features/BuyerAppViewModel.swift',
+        content: 'line\n'.repeat(2_000),
+      },
     ];
     const findings = evaluateBrownfieldHotspotFindings({
       repoRoot: repo,
@@ -27,6 +32,45 @@ test('evaluateBrownfieldHotspotFindings skips when hotspots config missing', () 
       facts,
     });
     assert.deepEqual(findings, []);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('evaluateBrownfieldHotspotFindings flags size only from declarative hotspot config', () => {
+  const repo = mkdtempSync(join(tmpdir(), 'pumuki-brownfield-'));
+  try {
+    mkdirSync(join(repo, 'config'), { recursive: true });
+    writeFileSync(
+      join(repo, 'config', 'pumuki-hotspots.json'),
+      JSON.stringify({
+        hotspots: [
+          {
+            path: 'apps/ios/Presentation/Features/BuyerAppViewModel.swift',
+            max_lines: 1200,
+            reason: 'consumer-declared god file',
+          },
+        ],
+      }),
+      'utf8'
+    );
+    const facts: Fact[] = [
+      {
+        source: 'test',
+        kind: 'FileContent',
+        path: 'apps/ios/Presentation/Features/BuyerAppViewModel.swift',
+        content: 'line\n'.repeat(1_250),
+      },
+    ];
+    const findings = evaluateBrownfieldHotspotFindings({
+      repoRoot: repo,
+      stage: 'PRE_WRITE',
+      facts,
+    });
+    assert.equal(findings.length, 1);
+    assert.equal(findings[0]?.code, 'HOTSPOT_FILE_OVER_LIMIT_HIGH');
+    assert.match(findings[0]?.message ?? '', /threshold=1200/);
+    assert.match(findings[0]?.message ?? '', /consumer-declared god file/);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

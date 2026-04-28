@@ -3876,8 +3876,107 @@ test('runPlatformGate bloquea por policy TDD/BDD en modo strict para cambios nue
   });
 });
 
-test('runPlatformGate bloquea PRE_WRITE en hotspot de Presentation por tamaño estructural', async () => {
+test('runPlatformGate no bloquea PRE_WRITE por tamaño implícito sin hotspot declarativo', async () => {
   await withTempDir('pumuki-run-platform-gate-hotspot-prewrite-', async (repoRoot) => {
+    const policy: GatePolicy = {
+      stage: 'PRE_WRITE',
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
+    };
+    const git = buildGitStub(repoRoot);
+    const evidence = buildEvidenceStub();
+    const oversizedContent = Array.from({ length: 901 }, (_, index) => `export const line${index} = ${index};`).join('\n');
+    const facts: ReadonlyArray<Fact> = [
+      {
+        kind: 'FileChange',
+        path: 'apps/frontend/presentation/AppShell.tsx',
+        changeType: 'modified',
+        source: 'git:working-tree',
+      },
+      {
+        kind: 'FileContent',
+        path: 'apps/frontend/presentation/AppShell.tsx',
+        content: oversizedContent,
+        source: 'git:working-tree',
+      },
+    ];
+
+    let emittedFindings: ReadonlyArray<Finding> = [];
+    let emittedOutcome: 'ALLOW' | 'WARN' | 'BLOCK' | undefined;
+
+    const result = await runPlatformGate({
+      policy,
+      scope: { kind: 'workingTree' },
+      services: {
+        git,
+        evidence,
+      },
+      dependencies: {
+        resolveFactsForGateScope: async () => facts,
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: { frontend: { detected: true, confidence: 'HIGH' } },
+          skillsRuleSet: {
+            rules: [],
+            activeBundles: [],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: facts.length,
+            filesScanned: 1,
+            rulesTotal: 1,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 1,
+            projectRules: 0,
+            matchedRules: 1,
+            unmatchedRules: 0,
+            unevaluatedRules: 0,
+            activeRuleIds: ['skills.frontend.no-empty-catch'],
+            evaluatedRuleIds: ['skills.frontend.no-empty-catch'],
+            matchedRuleIds: ['skills.frontend.no-empty-catch'],
+            unmatchedRuleIds: [],
+            unevaluatedRuleIds: [],
+          },
+          findings: [],
+        }),
+        evaluateGate: () => ({ outcome: 'ALLOW' }),
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedFindings = paramsArg.findings;
+          emittedOutcome = paramsArg.gateOutcome;
+        },
+        printGateFindings: () => {},
+        enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      },
+    });
+
+    assert.equal(result, 0);
+    assert.equal(emittedOutcome, 'ALLOW');
+    assert.equal(
+      emittedFindings.some((finding) => finding.ruleId === 'governance.hotspot.file_over_limit'),
+      false
+    );
+  });
+});
+
+test('runPlatformGate bloquea PRE_WRITE por tamaño solo con hotspot declarativo', async () => {
+  await withTempDir('pumuki-run-platform-gate-hotspot-prewrite-config-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'config'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'config', 'pumuki-hotspots.json'),
+      `${JSON.stringify({
+        hotspots: [
+          {
+            path: 'apps/frontend/presentation/AppShell.tsx',
+            max_lines: 800,
+            reason: 'declared app shell hotspot',
+          },
+        ],
+      }, null, 2)}\n`,
+      'utf8'
+    );
     const policy: GatePolicy = {
       stage: 'PRE_WRITE',
       blockOnOrAbove: 'ERROR',
