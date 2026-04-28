@@ -821,11 +821,11 @@ export const startEnterpriseMcpServer = (
               dryRun: true,
               executed: false,
               success: false,
-              warnings: ['Enterprise MCP está desactivado por defecto en el baseline del reset.'],
+              warnings: ['Enterprise MCP está desactivado explícitamente por configuración.'],
               result: {
                 code: 'MCP_ENTERPRISE_EXPERIMENTAL_DISABLED',
                 message:
-                  'MCP enterprise pertenece al namespace experimental y está desactivado por defecto.',
+                  'MCP enterprise está desactivado explícitamente por configuración.',
                 experimental_feature: experimentalFeature.feature,
                 mode: experimentalFeature.mode,
                 source: experimentalFeature.source,

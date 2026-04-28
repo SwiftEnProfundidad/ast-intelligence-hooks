@@ -1370,21 +1370,21 @@ test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto e
     assert.equal(payload.policyValidation?.stages?.CI?.source, 'default');
     assert.equal(payload.policyValidation?.stages?.PRE_WRITE?.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(payload.policyValidation?.stages?.PRE_WRITE?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.analytics?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.analytics?.mode, 'strict');
     assert.equal(payload.experimentalFeatures?.features?.analytics?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.operational_memory?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.operational_memory?.mode, 'strict');
     assert.equal(payload.experimentalFeatures?.features?.operational_memory?.source, 'default');
     assert.equal(payload.experimentalFeatures?.features?.mcp_enterprise?.mode, 'strict');
     assert.equal(payload.experimentalFeatures?.features?.mcp_enterprise?.source, 'default');
     assert.equal(payload.experimentalFeatures?.features?.pre_write?.mode, 'strict');
     assert.equal(payload.experimentalFeatures?.features?.pre_write?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.saas_ingestion?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.saas_ingestion?.mode, 'strict');
     assert.equal(payload.experimentalFeatures?.features?.saas_ingestion?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.heuristics?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.heuristics?.mode, 'strict');
     assert.equal(payload.experimentalFeatures?.features?.heuristics?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.learning_context?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.learning_context?.mode, 'strict');
     assert.equal(payload.experimentalFeatures?.features?.learning_context?.source, 'default');
-    assert.equal(payload.experimentalFeatures?.features?.sdd?.mode, 'off');
+    assert.equal(payload.experimentalFeatures?.features?.sdd?.mode, 'strict');
     assert.equal(payload.experimentalFeatures?.features?.sdd?.source, 'default');
     assert.equal(
       payload.experimentalFeatures?.features?.analytics?.activationVariable,
@@ -3855,7 +3855,7 @@ test('runLifecycleCli analytics hotspots diagnose genera diagnóstico y métrica
   }
 });
 
-test('runLifecycleCli analytics hotspots diagnose queda desactivado por defecto con next_action canónica', async () => {
+test('runLifecycleCli analytics hotspots diagnose queda desactivado por env con next_action canónica', async () => {
   const repo = createGitRepo();
   const printed: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -3863,7 +3863,7 @@ test('runLifecycleCli analytics hotspots diagnose queda desactivado por defecto 
   const previousSaasIngestion = process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION;
 
   try {
-    delete process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION;
+    process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION = 'off';
     process.chdir(repo);
     process.stdout.write = ((chunk: unknown): boolean => {
       printed.push(String(chunk).trimEnd());
@@ -3892,7 +3892,7 @@ test('runLifecycleCli analytics hotspots diagnose queda desactivado por defecto 
     assert.equal(payload.result?.code, 'SAAS_INGESTION_EXPERIMENTAL_DISABLED');
     assert.equal(payload.result?.experimental_feature, 'saas_ingestion');
     assert.equal(payload.result?.mode, 'off');
-    assert.equal(payload.result?.source, 'default');
+    assert.equal(payload.result?.source, 'env');
     assert.equal(payload.result?.activation_variable, 'PUMUKI_EXPERIMENTAL_SAAS_INGESTION');
     assert.equal(payload.result?.next_action?.reason, 'SAAS_INGESTION_EXPERIMENTAL_DISABLED');
     assert.match(
@@ -3911,7 +3911,7 @@ test('runLifecycleCli analytics hotspots diagnose queda desactivado por defecto 
   }
 });
 
-test('runLifecycleCli analytics hotspots report queda desactivado por defecto con next_action canónica', async () => {
+test('runLifecycleCli analytics hotspots report queda desactivado por env con next_action canónica', async () => {
   const repo = createGitRepo();
   const printed: string[] = [];
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -3919,7 +3919,7 @@ test('runLifecycleCli analytics hotspots report queda desactivado por defecto co
   const previousAnalytics = process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
 
   try {
-    delete process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
+    process.env.PUMUKI_EXPERIMENTAL_ANALYTICS = 'off';
     process.chdir(repo);
     process.stdout.write = ((chunk: unknown): boolean => {
       printed.push(String(chunk).trimEnd());
@@ -3948,7 +3948,7 @@ test('runLifecycleCli analytics hotspots report queda desactivado por defecto co
     assert.equal(payload.result?.code, 'ANALYTICS_EXPERIMENTAL_DISABLED');
     assert.equal(payload.result?.experimental_feature, 'analytics');
     assert.equal(payload.result?.mode, 'off');
-    assert.equal(payload.result?.source, 'default');
+    assert.equal(payload.result?.source, 'env');
     assert.equal(payload.result?.activation_variable, 'PUMUKI_EXPERIMENTAL_ANALYTICS');
     assert.equal(payload.result?.next_action?.reason, 'ANALYTICS_EXPERIMENTAL_DISABLED');
     assert.match(payload.result?.next_action?.command ?? '', /PUMUKI_EXPERIMENTAL_ANALYTICS=advisory/);

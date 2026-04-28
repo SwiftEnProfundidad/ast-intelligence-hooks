@@ -1755,7 +1755,7 @@ const buildAnalyticsExperimentalDisabledEnvelope = (
   result: {
     code: 'ANALYTICS_EXPERIMENTAL_DISABLED',
     message:
-      'Analytics hotspots pertenece al namespace experimental y está desactivado por defecto. Actívalo explícitamente con PUMUKI_EXPERIMENTAL_ANALYTICS=advisory o strict si necesitas este flujo.',
+      'Analytics hotspots está desactivado explícitamente. Usa PUMUKI_EXPERIMENTAL_ANALYTICS=advisory o strict si necesitas este flujo.',
     experimental_feature: 'analytics',
     mode: feature.mode,
     source: feature.source,
@@ -1777,7 +1777,7 @@ const buildSaasIngestionExperimentalDisabledEnvelope = (
   result: {
     code: 'SAAS_INGESTION_EXPERIMENTAL_DISABLED',
     message:
-      'SaaS ingestion/federation pertenece al namespace experimental y está desactivado por defecto. Actívalo explícitamente con PUMUKI_EXPERIMENTAL_SAAS_INGESTION=advisory o strict si necesitas este flujo.',
+      'SaaS ingestion/federation está desactivado explícitamente. Usa PUMUKI_EXPERIMENTAL_SAAS_INGESTION=advisory o strict si necesitas este flujo.',
     experimental_feature: 'saas_ingestion',
     mode: feature.mode,
     source: feature.source,
@@ -1799,7 +1799,7 @@ export const buildPreWriteExperimentalDisabledResult = (params: {
     allowed: true,
     code: 'PRE_WRITE_EXPERIMENTAL_DISABLED',
     message:
-      'PRE_WRITE pertenece al namespace experimental y está desactivado por defecto. Actívalo explícitamente con PUMUKI_EXPERIMENTAL_PRE_WRITE=advisory o strict si necesitas este flujo.',
+      'PRE_WRITE está desactivado explícitamente. Usa PUMUKI_EXPERIMENTAL_PRE_WRITE=advisory o strict si necesitas este flujo.',
     details: {
       experimental: true,
       default_off: true,

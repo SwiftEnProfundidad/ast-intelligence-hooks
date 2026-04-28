@@ -132,7 +132,7 @@ test('evaluateSddPolicy allows emergency bypass via PUMUKI_SDD_BYPASS=1', () => 
   });
 });
 
-test('evaluateSddPolicy deja SDD/OpenSpec en default-off cuando el feature experimental no está activado', () => {
+test('evaluateSddPolicy deja SDD/OpenSpec apagado cuando el feature se desactiva por env', () => {
   return withFixtureRepoExperimentalSddMode('pumuki-sdd-experimental-off-', 'off', (repoRoot) => {
     const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
     assert.equal(result.decision.allowed, true);
@@ -142,7 +142,7 @@ test('evaluateSddPolicy deja SDD/OpenSpec en default-off cuando el feature exper
       result.decision.details?.activation_command,
       `PUMUKI_EXPERIMENTAL_SDD=advisory npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd validate --stage=PRE_COMMIT --json`
     );
-    assert.match(result.decision.message, /namespace experimental/i);
+    assert.match(result.decision.message, /desactivado explícitamente/i);
   });
 });
 

@@ -283,7 +283,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.pre_write.source, 'default');
     assert.equal(status.experimentalFeatures.features.analytics.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.analytics.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.analytics.source, 'default');
     assert.equal(
       status.experimentalFeatures.features.analytics.activationVariable,
@@ -291,7 +291,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     );
     assert.equal(status.experimentalFeatures.features.analytics.legacyActivationVariable, null);
     assert.equal(status.experimentalFeatures.features.heuristics.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.heuristics.source, 'default');
     assert.equal(
       status.experimentalFeatures.features.heuristics.activationVariable,
@@ -307,7 +307,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     );
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.legacyActivationVariable, null);
     assert.equal(status.experimentalFeatures.features.operational_memory.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.operational_memory.source, 'default');
     assert.equal(
       status.experimentalFeatures.features.operational_memory.activationVariable,
@@ -315,7 +315,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     );
     assert.equal(status.experimentalFeatures.features.operational_memory.legacyActivationVariable, null);
     assert.equal(status.experimentalFeatures.features.learning_context.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.learning_context.source, 'default');
     assert.equal(
       status.experimentalFeatures.features.learning_context.activationVariable,
@@ -331,7 +331,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
       'PUMUKI_PREWRITE_ENFORCEMENT'
     );
     assert.equal(status.experimentalFeatures.features.saas_ingestion.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.saas_ingestion.source, 'default');
     assert.equal(
       status.experimentalFeatures.features.saas_ingestion.activationVariable,
@@ -339,7 +339,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
     );
     assert.equal(status.experimentalFeatures.features.saas_ingestion.legacyActivationVariable, null);
     assert.equal(status.experimentalFeatures.features.sdd.layer, 'experimental');
-    assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.sdd.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.sdd.source, 'default');
     assert.equal(
       status.experimentalFeatures.features.sdd.activationVariable,
@@ -453,14 +453,14 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     assert.equal(status.trackedNodeModulesCount, 0);
     assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
     assert.equal(status.hooksDirectoryResolution, 'default');
-    assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.analytics.mode, 'strict');
+    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
-    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'strict');
+    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'strict');
+    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
-    assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.sdd.mode, 'strict');
     assert.deepEqual(status.issues, []);
   });
 });
@@ -585,13 +585,13 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
     });
     assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
     assert.equal(status.hooksDirectoryResolution, 'default');
-    assert.equal(status.experimentalFeatures.features.analytics.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.analytics.mode, 'strict');
+    assert.equal(status.experimentalFeatures.features.operational_memory.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.pre_write.mode, 'strict');
-    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'off');
-    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.saas_ingestion.mode, 'strict');
+    assert.equal(status.experimentalFeatures.features.heuristics.mode, 'strict');
+    assert.equal(status.experimentalFeatures.features.learning_context.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
-    assert.equal(status.experimentalFeatures.features.sdd.mode, 'off');
+    assert.equal(status.experimentalFeatures.features.sdd.mode, 'strict');
   });
 });

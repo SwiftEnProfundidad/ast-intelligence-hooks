@@ -169,9 +169,11 @@ test('auto_execute_ai_start incorpora learning_context y recomendación cuando e
   });
 });
 
-test('auto_execute_ai_start no mezcla learning_context cuando el feature sigue apagado por defecto', () => {
+test('auto_execute_ai_start no mezcla learning_context cuando el feature se apaga explícitamente', () => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-auto-execute-learning-off-'));
+  const previousLearningContext = process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
   try {
+    process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT = 'off';
     runGit(repoRoot, ['init', '-b', 'feature/auto-execute-learning-off']);
     runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
     runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
@@ -205,6 +207,11 @@ test('auto_execute_ai_start no mezcla learning_context cuando el feature sigue a
     assert.equal(result.result.learning_context, null);
     assert.equal(result.result.message.includes('Learning:'), false);
   } finally {
+    if (typeof previousLearningContext === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT = previousLearningContext;
+    }
     rmSync(repoRoot, { recursive: true, force: true });
   }
 });

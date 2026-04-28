@@ -102,7 +102,7 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
                       attempted: false,
                       status: 'SKIPPED',
                       actions: [],
-                      details: 'PRE_WRITE experimental/default-off.',
+                      details: 'PRE_WRITE experimental/off-by-env.',
                     },
                     next_action: {
                       reason: 'PRE_WRITE_EXPERIMENTAL_DISABLED',

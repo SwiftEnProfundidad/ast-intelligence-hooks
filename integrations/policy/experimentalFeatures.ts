@@ -45,12 +45,12 @@ const EXPERIMENTAL_FEATURES: Record<ExperimentalFeatureId, ExperimentalFeatureCo
     legacyActivationVariable: 'PUMUKI_PREWRITE_ENFORCEMENT',
   },
   sdd: {
-    defaultMode: 'off',
+    defaultMode: 'strict',
     activationVariable: 'PUMUKI_EXPERIMENTAL_SDD',
     legacyActivationVariable: null,
   },
   heuristics: {
-    defaultMode: 'off',
+    defaultMode: 'strict',
     activationVariable: 'PUMUKI_EXPERIMENTAL_HEURISTICS',
     legacyActivationVariable: null,
   },
@@ -60,22 +60,22 @@ const EXPERIMENTAL_FEATURES: Record<ExperimentalFeatureId, ExperimentalFeatureCo
     legacyActivationVariable: null,
   },
   learning_context: {
-    defaultMode: 'off',
+    defaultMode: 'strict',
     activationVariable: 'PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT',
     legacyActivationVariable: null,
   },
   analytics: {
-    defaultMode: 'off',
+    defaultMode: 'strict',
     activationVariable: 'PUMUKI_EXPERIMENTAL_ANALYTICS',
     legacyActivationVariable: null,
   },
   operational_memory: {
-    defaultMode: 'off',
+    defaultMode: 'strict',
     activationVariable: 'PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY',
     legacyActivationVariable: null,
   },
   saas_ingestion: {
-    defaultMode: 'off',
+    defaultMode: 'strict',
     activationVariable: 'PUMUKI_EXPERIMENTAL_SAAS_INGESTION',
     legacyActivationVariable: null,
   },
