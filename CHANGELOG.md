@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.123] - 2026-04-28
+
+### Fixed
+
+- **Detectores SOLID sin contadores arbitrarios:** `SRP`, `DIP`, `OCP` e `ISP` en iOS/Android/TypeScript dejan de depender de mínimos tipo `relatedNodes.length < N`, `typedCaseCount >= N` o cortes `slice(0, N)` y pasan a usar categorías semánticas explícitas.
+- **ISP iOS/Android por familias de contrato:** los protocolos/interfaces anchos se detectan por mezcla real de `query`/`command` y uso de una sola familia por consumidor, no por número de miembros.
+- **Cierre de `PUMUKI-INC-116`:** se añade regresión negativa para clases/protocolos grandes pero cohesionados y auditoría textual para impedir que los detectores estructurales vuelvan a degradarse a `N señales => bloqueo`.
+
 ## [6.3.122] - 2026-04-28
 
 ### Fixed

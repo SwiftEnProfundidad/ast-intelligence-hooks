@@ -807,6 +807,54 @@ final class PumukiIspIosCanaryUseCase {
   assert.match(match.expected_fix, /protocolos pequeños|puerto mínimo/i);
 });
 
+test('detectores SOLID iOS no convierten tamaño o cardinalidad en violacion', () => {
+  const presentationWithoutMixedResponsibilities = `
+final class CatalogViewModel {
+  func restoreSessionSnapshot() async {}
+  func refreshSessionToken() async {}
+  func resumeSessionIfNeeded() async {}
+  func signOut() async {}
+}
+`;
+  const dipWithPortOnly = `
+protocol CatalogFetching {
+  func fetchCatalog() async throws -> [String]
+}
+
+final class CatalogUseCase {
+  private let catalog: CatalogFetching
+
+  init(catalog: CatalogFetching) {
+    self.catalog = catalog
+  }
+}
+`;
+  const cohesiveProtocol = `
+protocol CatalogReading {
+  func fetchCatalog() async throws -> [String]
+  func loadCachedCatalog() async throws -> [String]
+  func readCatalogVersion() async throws -> String
+  func getFeaturedCatalog() async throws -> [String]
+}
+
+final class CatalogUseCase {
+  private let catalog: CatalogReading
+
+  init(catalog: CatalogReading) {
+    self.catalog = catalog
+  }
+
+  func execute() async throws {
+    _ = try await catalog.fetchCatalog()
+  }
+}
+`;
+
+  assert.equal(findSwiftPresentationSrpMatch(presentationWithoutMixedResponsibilities), undefined);
+  assert.equal(findSwiftConcreteDependencyDipMatch(dipWithPortOnly), undefined);
+  assert.equal(findSwiftInterfaceSegregationMatch(cohesiveProtocol), undefined);
+});
+
 test('findSwiftLiskovSubstitutionMatch devuelve payload semantico para LSP-iOS en application', () => {
   const source = `
 protocol PumukiLspIosCanaryDiscountApplying {

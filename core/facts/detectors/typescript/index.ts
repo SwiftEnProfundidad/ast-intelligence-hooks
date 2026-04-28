@@ -893,14 +893,15 @@ const findTypeDiscriminatorSwitchInfo = (
       return false;
     }
 
-    const typedCaseCount = value.cases.filter((entry) => {
+    const typedCases = value.cases.filter((entry) => {
       if (!isObject(entry) || entry.type !== 'SwitchCase' || !isObject(entry.test)) {
         return false;
       }
       return typeof switchCaseLabelFromNode(entry.test) === 'string';
-    }).length;
+    });
 
-    return typedCaseCount >= 2;
+    const [firstTypedCase, secondTypedCase] = typedCases;
+    return firstTypedCase !== undefined && secondTypedCase !== undefined;
   });
 
   if (!match) {
@@ -934,7 +935,8 @@ const findTypeDiscriminatorSwitchInfo = (
       })
     : [];
 
-  if (caseNodes.length < 2) {
+  const [firstCaseNode, secondCaseNode] = caseNodes;
+  if (!firstCaseNode || !secondCaseNode) {
     return undefined;
   }
 
@@ -1657,7 +1659,7 @@ export const hasTypeDiscriminatorSwitch = (node: unknown): boolean => {
       return false;
     }
 
-    const typedCaseCount = value.cases.filter((entry) => {
+    const typedCases = value.cases.filter((entry) => {
       if (!isObject(entry) || entry.type !== 'SwitchCase' || !isObject(entry.test)) {
         return false;
       }
@@ -1667,9 +1669,10 @@ export const hasTypeDiscriminatorSwitch = (node: unknown): boolean => {
         testNode.type === 'NumericLiteral' ||
         testNode.type === 'BooleanLiteral'
       );
-    }).length;
+    });
 
-    return typedCaseCount >= 2;
+    const [firstTypedCase, secondTypedCase] = typedCases;
+    return firstTypedCase !== undefined && secondTypedCase !== undefined;
   });
 };
 

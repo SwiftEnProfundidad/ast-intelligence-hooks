@@ -254,6 +254,46 @@ class PumukiIspAndroidCanaryUseCase(
   assert.match(match.expected_fix, /interfaces pequeñas|puerto mínimo/i);
 });
 
+test('detectores SOLID Android no convierten tamaño o cardinalidad en violacion', () => {
+  const presentationWithoutMixedResponsibilities = `
+class CatalogViewModel {
+  fun restoreSessionSnapshot() {}
+  fun refreshSessionToken() {}
+  fun resumeSessionIfNeeded() {}
+  fun signOut() {}
+}
+`;
+  const dipWithPortOnly = `
+interface CatalogFetching {
+  suspend fun fetchCatalog(): List<String>
+}
+
+class CatalogUseCase(
+  private val catalog: CatalogFetching,
+)
+`;
+  const cohesiveInterface = `
+interface CatalogReading {
+  suspend fun fetchCatalog(): List<String>
+  suspend fun loadCachedCatalog(): List<String>
+  suspend fun readCatalogVersion(): String
+  suspend fun getFeaturedCatalog(): List<String>
+}
+
+class CatalogUseCase(
+  private val catalog: CatalogReading,
+) {
+  suspend fun execute() {
+    catalog.fetchCatalog()
+  }
+}
+`;
+
+  assert.equal(findKotlinPresentationSrpMatch(presentationWithoutMixedResponsibilities), undefined);
+  assert.equal(findKotlinConcreteDependencyDipMatch(dipWithPortOnly), undefined);
+  assert.equal(findKotlinInterfaceSegregationMatch(cohesiveInterface), undefined);
+});
+
 test('findKotlinLiskovSubstitutionMatch devuelve payload semantico para LSP-Android en application', () => {
   const source = `
 interface PumukiLspAndroidCanaryDiscountPolicy {
