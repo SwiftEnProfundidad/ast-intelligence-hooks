@@ -1,13 +1,15 @@
 import { collectNodeLineMatches, hasNode, isObject } from '../utils/astHelpers';
 
 const sensitiveIdentifierPattern = /(secret|token|password|api[_-]?key)/i;
+const placeholderSecretLiteralPattern =
+  /^(?:changeme|change-me|change_me|replace-me|replace_me|todo|tbd|example|sample|dummy|test|testing|placeholder|your[_-]?(?:secret|token|password|api[_-]?key)|xxx+)$/i;
 
-const hasStrongLiteralValue = (value: unknown): boolean => {
+const hasCredentialLiteralValue = (value: unknown): boolean => {
   if (!isObject(value)) {
     return false;
   }
   if (value.type === 'StringLiteral') {
-    return typeof value.value === 'string' && value.value.trim().length >= 12;
+    return typeof value.value === 'string' && isCredentialLiteral(value.value);
   }
   if (
     value.type === 'TemplateLiteral' &&
@@ -17,9 +19,14 @@ const hasStrongLiteralValue = (value: unknown): boolean => {
     value.quasis.length === 1
   ) {
     const cooked = value.quasis[0]?.value?.cooked;
-    return typeof cooked === 'string' && cooked.trim().length >= 12;
+    return typeof cooked === 'string' && isCredentialLiteral(cooked);
   }
   return false;
+};
+
+const isCredentialLiteral = (value: string): boolean => {
+  const normalized = value.trim();
+  return normalized.length > 0 && !placeholderSecretLiteralPattern.test(normalized);
 };
 
 const containsMathRandomCall = (candidate: unknown): boolean => {
@@ -109,7 +116,7 @@ const isHardcodedSecretTokenLiteralNode = (value: Record<string, string | number
   if (!sensitiveIdentifierPattern.test(idNode.name as string)) {
     return false;
   }
-  return hasStrongLiteralValue(value.init);
+  return hasCredentialLiteralValue(value.init);
 };
 
 const isInsecureTokenGenerationWithMathRandomNode = (value: Record<string, string | number | boolean | bigint | symbol | null | Date | object>): boolean => {

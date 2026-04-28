@@ -1435,9 +1435,6 @@ export const findSwiftLiskovSubstitutionMatch = (
   }
 
   const typeDeclarations = parseSwiftTypeDeclarations(source);
-  if (typeDeclarations.length < 2) {
-    return undefined;
-  }
 
   const sourceLines = source.split(/\r?\n/);
 
@@ -1450,9 +1447,6 @@ export const findSwiftLiskovSubstitutionMatch = (
     const conformingTypes = typeDeclarations.filter((typeDeclaration) =>
       typeDeclaration.conformances.includes(protocolDeclaration.name)
     );
-    if (conformingTypes.length < 2) {
-      continue;
-    }
 
     for (const memberName of memberNames) {
       let safeType: SwiftTypeDeclaration | undefined;

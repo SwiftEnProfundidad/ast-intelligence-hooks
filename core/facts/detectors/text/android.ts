@@ -699,9 +699,6 @@ export const findKotlinLiskovSubstitutionMatch = (
   }
 
   const typeDeclarations = parseKotlinTypeDeclarations(source);
-  if (typeDeclarations.length < 2) {
-    return undefined;
-  }
 
   const sourceLines = source.split(/\r?\n/);
 
@@ -714,9 +711,6 @@ export const findKotlinLiskovSubstitutionMatch = (
     const conformingTypes = typeDeclarations.filter((typeDeclaration) =>
       typeDeclaration.conformances.includes(interfaceDeclaration.name)
     );
-    if (conformingTypes.length < 2) {
-      continue;
-    }
 
     for (const memberName of memberNames) {
       let safeType: KotlinTypeDeclaration | undefined;
