@@ -148,10 +148,13 @@ test('loads and transforms active bundles into heuristic-driven rules', async ()
     writeFileSync(join(tempRoot, 'skills.policy.json'), JSON.stringify(samplePolicy, null, 2));
 
     const preCommit = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
-    assert.equal(preCommit.rules.length, 2);
+    assert.equal(preCommit.rules.length, 0);
     assert.equal(preCommit.activeBundles.length, 1);
     assert.equal(preCommit.activeBundles[0]?.name, 'ios-guidelines');
-    assert.equal(preCommit.requiresHeuristicFacts, true);
+    assert.equal(preCommit.requiresHeuristicFacts, false);
+    assert.equal(preCommit.registryCoverage?.registryTotals.total, 2);
+    assert.equal(preCommit.registryCoverage?.registryTotals.auto, 2);
+    assert.deepEqual(preCommit.registryCoverage?.stageApplicableAutoRuleIds, []);
 
     const prePush = loadSkillsRuleSetForStage('PRE_PUSH', tempRoot);
     assert.equal(prePush.rules.length, 2);
@@ -783,7 +786,11 @@ test('keeps only generic/text rules when no platform is detected', async () => {
 
     const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot, detectedPlatforms);
     const ruleIds = result.rules.map((rule) => rule.id).sort();
-    assert.deepEqual(ruleIds, ['skills.generic.architecture-note']);
+    assert.deepEqual(ruleIds, []);
+    assert.deepEqual(result.registryCoverage?.declarativeRuleIds, [
+      'skills.generic.architecture-note',
+    ]);
+    assert.equal(result.registryCoverage?.registryTotals.declarative, 1);
   }));
 });
 
@@ -934,11 +941,16 @@ test('keeps stage semantics aligned across PRE_COMMIT, PRE_PUSH and CI for scope
       );
       const ci = loadSkillsRuleSetForStage('CI', tempRoot, detectedPlatforms, observedPaths);
 
-      assert.deepEqual(
-        serializeRuleSetForParity(preCommit),
-        serializeRuleSetForParity(prePush)
-      );
+      assert.deepEqual(serializeRuleSetForParity(preCommit), {
+        rules: [],
+        mappedHeuristicRuleIds: [],
+        unsupportedAutoRuleIds: [],
+      });
       assert.deepEqual(serializeRuleSetForParity(prePush), serializeRuleSetForParity(ci));
+      assert.deepEqual(prePush.registryCoverage?.stageApplicableAutoRuleIds, [
+        'skills.backend.no-empty-catch',
+        'skills.ios.no-force-try',
+      ]);
     })
   );
 });

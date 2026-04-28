@@ -50,7 +50,7 @@ test('consumer runtime printMenu agrupa opciones por shell mínima y diagnóstic
     assert.match(rendered, /Read-Only Gate Flows/i);
     assert.match(rendered, /Engine · working tree \(no preflight\)/i);
     assert.match(rendered, /11\)\s+Engine audit · STAGED only/i);
-    assert.match(rendered, /14\)\s+Engine audit · FULL tracked repo/i);
+    assert.match(rendered, /14\)\s+Engine audit · tracked repo files \(AUTO runtime rules · PRE_COMMIT\)/i);
     assert.match(rendered, /Legacy Read-Only Export/i);
     assert.match(rendered, /Legacy Read-Only Diagnostics/i);
     assert.match(rendered, /System/i);

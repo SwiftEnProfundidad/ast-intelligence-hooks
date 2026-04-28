@@ -21,13 +21,25 @@ export type SkillsRuleSetLoadResult = {
   mappedHeuristicRuleIds: ReadonlySet<string>;
   requiresHeuristicFacts: boolean;
   unsupportedAutoRuleIds?: ReadonlyArray<string>;
+  registryCoverage?: {
+    contract: 'AUTO_RUNTIME_RULES_FOR_STAGE';
+    stage: Exclude<GateStage, 'STAGED'>;
+    registryTotals: {
+      total: number;
+      auto: number;
+      declarative: number;
+    };
+    stageApplicableAutoRuleIds: ReadonlyArray<string>;
+    declarativeRuleIds: ReadonlyArray<string>;
+    excludedDeclarativeReason: string;
+  };
 };
 
 const STAGE_RANK: Record<Exclude<GateStage, 'STAGED'>, number> = {
-  PRE_WRITE: 30,
-  PRE_COMMIT: 30,
+  PRE_WRITE: 10,
+  PRE_COMMIT: 20,
   PRE_PUSH: 30,
-  CI: 30,
+  CI: 40,
 };
 
 const PLATFORM_KEYS: ReadonlyArray<keyof DetectedPlatforms> = [
@@ -445,31 +457,7 @@ const toRuleDefinition = (params: {
     };
   }
 
-  // Declarative rules remain explicit, but AUTO rules without mapping are
-  // excluded from runtime rule conversion and reported separately.
-  return {
-    id: params.rule.id,
-    description: params.rule.description,
-    severity,
-    platform: params.rule.platform,
-    locked: params.rule.locked ?? true,
-    confidence: params.rule.confidence,
-    when: {
-      kind: 'FileContent',
-      regex: ['a^'],
-    },
-    then: {
-      kind: 'Finding',
-      message: `[Declarative] ${params.rule.description}`,
-      code: `${toCode(params.rule.id)}_DECLARATIVE`,
-      source: runtimeIrSource,
-    },
-    scope: resolveScopeForPlatform(
-      params.rule.platform,
-      params.repoRoot,
-      params.observedFilePaths
-    ),
-  };
+  return undefined;
 };
 
 const hasDetectedPlatforms = (detectedPlatforms?: DetectedPlatforms): boolean => {
@@ -546,11 +534,23 @@ export const loadSkillsRuleSetForStage = (
   const rulesById = new Map<string, RuleDefinition>();
   const mappedHeuristicRuleIds = new Set<string>();
   const unsupportedAutoRuleIds = new Set<string>();
+  const registryRuleIds = new Set<string>();
+  const registryAutoRuleIds = new Set<string>();
+  const registryDeclarativeRuleIds = new Set<string>();
+  const stageApplicableAutoRuleIds = new Set<string>();
 
   for (const bundle of activeBundles) {
     const bundlePolicy = policy?.bundles[bundle.name];
 
     for (const compiledRule of bundle.rules) {
+      registryRuleIds.add(compiledRule.id);
+      const evaluationMode = resolveRuleEvaluationMode(compiledRule);
+      if (evaluationMode === 'AUTO') {
+        registryAutoRuleIds.add(compiledRule.id);
+      } else {
+        registryDeclarativeRuleIds.add(compiledRule.id);
+      }
+
       if (
         !isRulePlatformActive({
           rule: compiledRule,
@@ -561,7 +561,13 @@ export const loadSkillsRuleSetForStage = (
       }
 
       const mappedRuleIds = resolveMappedHeuristicRuleIdsForCompiledRule(compiledRule);
-      const evaluationMode = resolveRuleEvaluationMode(compiledRule);
+      if (!stageApplies(stage, compiledRule.stage)) {
+        continue;
+      }
+      if (evaluationMode !== 'AUTO') {
+        continue;
+      }
+      stageApplicableAutoRuleIds.add(compiledRule.id);
       if (evaluationMode === 'AUTO' && mappedRuleIds.length === 0) {
         unsupportedAutoRuleIds.add(compiledRule.id);
         continue;
@@ -596,5 +602,18 @@ export const loadSkillsRuleSetForStage = (
     mappedHeuristicRuleIds,
     requiresHeuristicFacts: mappedHeuristicRuleIds.size > 0,
     unsupportedAutoRuleIds: [...unsupportedAutoRuleIds].sort(),
+    registryCoverage: {
+      contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+      stage,
+      registryTotals: {
+        total: registryRuleIds.size,
+        auto: registryAutoRuleIds.size,
+        declarative: registryDeclarativeRuleIds.size,
+      },
+      stageApplicableAutoRuleIds: [...stageApplicableAutoRuleIds].sort(),
+      declarativeRuleIds: [...registryDeclarativeRuleIds].sort(),
+      excludedDeclarativeReason:
+        'DECLARATIVE skills are registry contract/policy rules. They are not executed as PRE_COMMIT runtime detectors; only AUTO rules applicable to the current stage are evaluated.',
+    },
   };
 };
