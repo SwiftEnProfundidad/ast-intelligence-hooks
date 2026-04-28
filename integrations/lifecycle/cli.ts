@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
 import { runPlatformGate } from '../git/runPlatformGate';
@@ -84,6 +85,7 @@ type LifecycleCommand =
   | 'update'
   | 'doctor'
   | 'status'
+  | 'menu'
   | 'watch'
   | 'loop'
   | 'sdd'
@@ -190,6 +192,7 @@ Pumuki lifecycle commands:
   pumuki doctor [--remote-checks] [--deep] [--parity] [--json]
   pumuki audit [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--engine] [--json]
   pumuki status [--json] [--remote-checks]
+  pumuki menu
   pumuki watch [--stage=PRE_COMMIT|PRE_PUSH|CI] [--scope=workingTree|staged|repoAndStaged|repo] [--severity=critical|high|medium|low] [--interval-ms=<n>] [--notify-cooldown-ms=<n>] [--no-notify] [--once|--iterations=<n>] [--json]
   pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]
   pumuki loop status --session=<session-id> [--json]
@@ -229,6 +232,7 @@ const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'update' ||
   value === 'doctor' ||
   value === 'status' ||
+  value === 'menu' ||
   value === 'watch' ||
   value === 'loop' ||
   value === 'sdd' ||
@@ -557,6 +561,19 @@ const printHotspotsPublishDiagnostics = (diagnostics: HotspotsPublishDiagnostics
       `[pumuki][analytics][saas] ${issue.severity.toUpperCase()} ${issue.code}: ${issue.message}`
     );
   }
+};
+
+const runFrameworkMenuShim = (argv: ReadonlyArray<string>): number => {
+  const frameworkMenuBin = resolve(__dirname, '../../bin/pumuki-framework.js');
+  const result = spawnSync(process.execPath, [frameworkMenuBin, ...argv], {
+    stdio: 'inherit',
+    env: process.env,
+  });
+  if (result.error) {
+    writeError(`[pumuki] menu failed to start: ${result.error.message}`);
+    return 1;
+  }
+  return typeof result.status === 'number' ? result.status : 1;
 };
 
 export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
@@ -2462,6 +2479,9 @@ export const runLifecycleCli = async (
           }
         }
         return 0;
+      }
+      case 'menu': {
+        return runFrameworkMenuShim(argv.slice(1));
       }
       case 'watch': {
         const watchResult = await activeDependencies.runLifecycleWatch(

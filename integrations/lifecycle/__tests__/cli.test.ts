@@ -1034,6 +1034,15 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
   );
 });
 
+test('parseLifecycleCliArgs acepta menu como comando estable', () => {
+  assert.deepEqual(parseLifecycleCliArgs(['menu']), {
+    command: 'menu',
+    purgeArtifacts: false,
+    updateSpec: undefined,
+    json: false,
+  });
+});
+
 test('runLifecycleCli retorna 1 ante argumentos inválidos', async () => {
   const code = await withSilentConsole(() => runLifecycleCli(['--bad']));
   assert.equal(code, 1);
@@ -1053,10 +1062,12 @@ test('runLifecycleCli retorna 0 para ayuda explícita en comandos lifecycle simp
   const bootstrapCode = await withSilentConsole(() => runLifecycleCli(['bootstrap', '--help']));
   const statusCode = await withSilentConsole(() => runLifecycleCli(['status', '--help']));
   const doctorCode = await withSilentConsole(() => runLifecycleCli(['doctor', '--help']));
+  const menuCode = await withSilentConsole(() => runLifecycleCli(['menu', '--help']));
 
   assert.equal(bootstrapCode, 0);
   assert.equal(statusCode, 0);
   assert.equal(doctorCode, 0);
+  assert.equal(menuCode, 0);
 });
 
 test('runLifecycleCli retorna 0 para ayuda explícita en subcomandos profundos', async () => {
