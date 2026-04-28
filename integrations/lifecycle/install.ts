@@ -14,6 +14,7 @@ import { readOpenSpecManagedArtifacts, writeLifecycleState } from './state';
 import { ensureRuntimeArtifactsIgnored } from './artifacts';
 import { runLifecycleAdapterInstall } from './adapter';
 import { runPolicyReconcile } from './policyReconcile';
+import { emitGateBlockedNotification } from '../notifications/emitAuditSummaryNotification';
 
 export type LifecycleInstallResult = {
   repoRoot: string;
@@ -104,6 +105,7 @@ export const runLifecycleInstall = (params?: {
   npm?: ILifecycleNpmService;
   bootstrapOpenSpec?: boolean;
   bestEffortAfterDoctorBlock?: boolean;
+  notifyGateBlocked?: typeof emitGateBlockedNotification;
 }): LifecycleInstallResult => {
   const git = params?.git ?? new LifecycleGitService();
   const bestEffortAfterDoctorBlock =
@@ -134,8 +136,20 @@ export const runLifecycleInstall = (params?: {
       };
     }
     const renderedIssues = report.issues.map((issue) => `- [${issue.severity}] ${issue.message}`).join('\n');
+    const firstIssue = report.issues[0];
+    const notificationResult = (params?.notifyGateBlocked ?? emitGateBlockedNotification)({
+      repoRoot: report.repoRoot,
+      stage: 'PRE_COMMIT',
+      totalViolations: report.issues.length,
+      causeCode: 'LIFECYCLE_INSTALL_SAFETY_BLOCKED',
+      causeMessage: firstIssue?.message ?? 'pumuki install blocked by repository safety checks.',
+      remediation: 'Corrige las incidencias activas del tracking externo y reintenta pumuki install.',
+    });
+    const notificationLine = notificationResult.delivered
+      ? '- [info] Blocking notification delivered.'
+      : `- [warning] Blocking notification not delivered: ${notificationResult.reason}`;
     throw new Error(
-      `pumuki install blocked by repository safety checks.\n${renderedIssues}\n` +
+      `pumuki install blocked by repository safety checks.\n${renderedIssues}\n${notificationLine}\n` +
       'Fix the baseline (for example tracked node_modules) and retry.'
     );
   }

@@ -550,6 +550,18 @@ test('parseLifecycleCliArgs interpreta comandos y flags soportados', () => {
       watchIterations: 2,
     }
   );
+  assert.deepEqual(parseLifecycleCliArgs(['watch', '--scope=repo', '--once', '--json']), {
+    command: 'watch',
+    purgeArtifacts: false,
+    json: true,
+    watchStage: 'PRE_COMMIT',
+    watchScope: 'repo',
+    watchIntervalMs: 3000,
+    watchNotifyCooldownMs: 30000,
+    watchSeverityThreshold: 'high',
+    watchNotifyEnabled: false,
+    watchIterations: 1,
+  });
 });
 
 test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
@@ -1110,7 +1122,7 @@ test('runLifecycleCli watch --json delega en runLifecycleWatch y devuelve payloa
           intervalMs: 3000,
           notifyCooldownMs: 30000,
           severityThreshold: 'high',
-          notifyEnabled: true,
+          notifyEnabled: false,
           ticks: 1,
           evaluations: 1,
           notificationsSent: 1,

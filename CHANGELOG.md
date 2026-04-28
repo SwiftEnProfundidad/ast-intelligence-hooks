@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.120] - 2026-04-28
+
+### Fixed
+
+- **Watch no interactivo para auditoría machine-readable:** `pumuki watch --scope=repo --once --json` desactiva notificaciones por defecto en esa invocación de una sola pasada para terminar y emitir JSON sin depender de UI del sistema, cerrando `PUMUKI-INC-112`.
+- **Bloqueos de install visibles:** cuando `pumuki install` queda bloqueado por governance, emite una notificación `gate.blocked` y añade el estado de entrega al error, cerrando la brecha de visibilidad de `PUMUKI-INC-113`.
+
 ## [6.3.119] - 2026-04-28
 
 ### Fixed
