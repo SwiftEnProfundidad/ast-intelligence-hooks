@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.119] - 2026-04-28
+
+### Fixed
+
+- **Contrato CLI estable para menú:** `pumuki menu --help` deja de fallar como comando desconocido y `pumuki menu` delega en el runtime de menú existente (`pumuki-framework`), cerrando `PUMUKI-INC-111` para consumers como RuralGo.
+
 ## [6.3.118] - 2026-04-28
 
 ### Fixed
