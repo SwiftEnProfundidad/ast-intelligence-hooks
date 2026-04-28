@@ -188,6 +188,7 @@ test('enterprise server exposes enterprise tools catalog', async () => {
       };
       const names = (payload.tools ?? []).map((tool) => tool.name);
       assert.deepEqual(names, [
+        'pre_write_guard',
         'ai_gate_check',
         'pre_flight_check',
         'auto_execute_ai_start',
@@ -201,6 +202,40 @@ test('enterprise server exposes enterprise tools catalog', async () => {
         mutatingTools.map((tool) => tool.name),
         ['validate_and_fix', 'sync_branches', 'cleanup_stale_branches']
       );
+    });
+  });
+});
+
+test('enterprise server pre_write_guard devuelve findings accionables antes de editar', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    runGit(repoRoot, ['init']);
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const response = await safeFetchRequest(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'pre_write_guard',
+        }),
+      });
+      assert.equal(response.status, 200);
+      const payload = (await response.json()) as {
+        tool?: string;
+        executed?: boolean;
+        result?: {
+          stage?: string;
+          findings_count?: number;
+          blocking_findings_count?: number;
+          findings?: unknown[];
+        };
+      };
+      assert.equal(payload.tool, 'pre_write_guard');
+      assert.equal(payload.executed, true);
+      assert.equal(payload.result?.stage, 'PRE_WRITE');
+      assert.equal(typeof payload.result?.findings_count, 'number');
+      assert.equal(typeof payload.result?.blocking_findings_count, 'number');
+      assert.equal(Array.isArray(payload.result?.findings), true);
     });
   });
 });
