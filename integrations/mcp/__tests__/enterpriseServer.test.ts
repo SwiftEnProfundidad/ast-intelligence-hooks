@@ -392,7 +392,7 @@ test('enterprise server ejecuta tools enterprise en safe mode cuando MCP enterpr
         assert.equal(sddStatusPayload.tool, 'check_sdd_status');
         assert.equal(
           sddStatusPayload.result?.decision?.code,
-          'SDD_EXPERIMENTAL_DISABLED'
+          'OPENSPEC_MISSING'
         );
 
         const cleanupResponse = await safeFetchRequest(`${baseUrl}/tool`, {
@@ -418,10 +418,10 @@ test('enterprise server ejecuta tools enterprise en safe mode cuando MCP enterpr
             };
           };
         };
-        assert.equal(cleanupPayload.success, true);
+        assert.equal(cleanupPayload.success, false);
         assert.equal(cleanupPayload.dryRun, true);
         assert.equal(cleanupPayload.executed, false);
-        assert.equal(cleanupPayload.result?.guard?.decision?.code, undefined);
+        assert.equal(cleanupPayload.result?.guard?.decision?.code, 'OPENSPEC_MISSING');
       });
     });
   });

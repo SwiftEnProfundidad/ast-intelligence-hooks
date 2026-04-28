@@ -326,7 +326,7 @@ export const evaluateSddPolicy = (params: {
         allowed: true,
         code: 'SDD_EXPERIMENTAL_DISABLED',
         message:
-          'SDD/OpenSpec pertenece al namespace experimental y está desactivado por defecto. Actívalo explícitamente con PUMUKI_EXPERIMENTAL_SDD=advisory o strict si necesitas este flujo.',
+          'SDD/OpenSpec está desactivado explícitamente. Usa PUMUKI_EXPERIMENTAL_SDD=advisory o strict si necesitas este flujo.',
         details: {
           experimental: true,
           default_off: true,

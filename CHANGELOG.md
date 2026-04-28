@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.127] - 2026-04-28
+
+### Fixed
+
+- **Baseline enterprise fully active by default:** `sdd`, `heuristics`, `learning_context`, `analytics`, `operational_memory` and `saas_ingestion` now resolve as `strict source=default blocking=true`, aligned with `pre_write` and `mcp_enterprise`.
+- **No more false default-off messaging:** disabled envelopes now say the feature was switched off explicitly by configuration, avoiding the old misleading “desactivado por defecto” copy.
+- **Regression coverage:** status, lifecycle, MCP and SDD tests now assert that default-off only exists when a test or consumer explicitly sets the corresponding env var to `off`.
+
 ## [6.3.126] - 2026-04-28
 
 ### Fixed

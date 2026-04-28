@@ -78,16 +78,16 @@ test('resolvePreWriteExperimentalFeature gives precedence to canonical experimen
   });
 });
 
-test('resolveSddExperimentalFeature defaults to default-off with canonical activation variable', async () => {
+test('resolveSddExperimentalFeature defaults to default-strict with canonical activation variable', async () => {
   await withEnv('PUMUKI_EXPERIMENTAL_SDD', undefined, () => {
     const resolved = resolveSddExperimentalFeature();
 
     assert.deepEqual(resolved, {
       feature: 'sdd',
       layer: 'experimental',
-      mode: 'off',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
       activationVariable: 'PUMUKI_EXPERIMENTAL_SDD',
       legacyActivationVariable: null,
     });
@@ -110,16 +110,16 @@ test('resolveSddExperimentalFeature respects canonical env modes', async () => {
   });
 });
 
-test('resolveHeuristicsExperimentalFeature defaults to default-off with canonical activation variable', async () => {
+test('resolveHeuristicsExperimentalFeature defaults to default-strict with canonical activation variable', async () => {
   await withEnv('PUMUKI_EXPERIMENTAL_HEURISTICS', undefined, () => {
     const resolved = resolveHeuristicsExperimentalFeature();
 
     assert.deepEqual(resolved, {
       feature: 'heuristics',
       layer: 'experimental',
-      mode: 'off',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
       activationVariable: 'PUMUKI_EXPERIMENTAL_HEURISTICS',
       legacyActivationVariable: null,
     });
@@ -174,16 +174,16 @@ test('resolveMcpEnterpriseExperimentalFeature respects canonical env modes', asy
   });
 });
 
-test('resolveLearningContextExperimentalFeature defaults to default-off with canonical activation variable', async () => {
+test('resolveLearningContextExperimentalFeature defaults to default-strict with canonical activation variable', async () => {
   await withEnv('PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT', undefined, () => {
     const resolved = resolveLearningContextExperimentalFeature();
 
     assert.deepEqual(resolved, {
       feature: 'learning_context',
       layer: 'experimental',
-      mode: 'off',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
       activationVariable: 'PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT',
       legacyActivationVariable: null,
     });
@@ -206,16 +206,16 @@ test('resolveLearningContextExperimentalFeature respects canonical env modes', a
   });
 });
 
-test('resolveAnalyticsExperimentalFeature defaults to default-off with canonical activation variable', async () => {
+test('resolveAnalyticsExperimentalFeature defaults to default-strict with canonical activation variable', async () => {
   await withEnv('PUMUKI_EXPERIMENTAL_ANALYTICS', undefined, () => {
     const resolved = resolveAnalyticsExperimentalFeature();
 
     assert.deepEqual(resolved, {
       feature: 'analytics',
       layer: 'experimental',
-      mode: 'off',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
       activationVariable: 'PUMUKI_EXPERIMENTAL_ANALYTICS',
       legacyActivationVariable: null,
     });
@@ -238,16 +238,16 @@ test('resolveAnalyticsExperimentalFeature respects canonical env modes', async (
   });
 });
 
-test('resolveOperationalMemoryExperimentalFeature defaults to default-off with canonical activation variable', async () => {
+test('resolveOperationalMemoryExperimentalFeature defaults to default-strict with canonical activation variable', async () => {
   await withEnv('PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY', undefined, () => {
     const resolved = resolveOperationalMemoryExperimentalFeature();
 
     assert.deepEqual(resolved, {
       feature: 'operational_memory',
       layer: 'experimental',
-      mode: 'off',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
       activationVariable: 'PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY',
       legacyActivationVariable: null,
     });
@@ -270,16 +270,16 @@ test('resolveOperationalMemoryExperimentalFeature respects canonical env modes',
   });
 });
 
-test('resolveSaasIngestionExperimentalFeature defaults to default-off with canonical activation variable', async () => {
+test('resolveSaasIngestionExperimentalFeature defaults to default-strict with canonical activation variable', async () => {
   await withEnv('PUMUKI_EXPERIMENTAL_SAAS_INGESTION', undefined, () => {
     const resolved = resolveSaasIngestionExperimentalFeature();
 
     assert.deepEqual(resolved, {
       feature: 'saas_ingestion',
       layer: 'experimental',
-      mode: 'off',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
       activationVariable: 'PUMUKI_EXPERIMENTAL_SAAS_INGESTION',
       legacyActivationVariable: null,
     });
