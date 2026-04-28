@@ -721,7 +721,9 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       watchIntervalMs: watchIntervalMs ?? 3000,
       watchNotifyCooldownMs: watchNotifyCooldownMs ?? 30_000,
       watchSeverityThreshold: watchSeverityThreshold ?? 'high',
-      watchNotifyEnabled: watchNotifyEnabled !== false,
+      watchNotifyEnabled:
+        watchNotifyEnabled !== false &&
+        !(json && watchIterations === 1),
       ...(typeof watchIterations === 'number' ? { watchIterations } : {}),
     };
   }
