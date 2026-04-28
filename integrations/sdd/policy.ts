@@ -167,6 +167,7 @@ const evaluateActiveChangeCompleteness = (params: {
 
 const evaluateSessionRequirements = (params: {
   status: SddStatusPayload;
+  repoRoot: string;
   autoRefreshEnabled: boolean;
   autoRefreshAttempted: boolean;
   autoRefreshError?: string;
@@ -335,7 +336,7 @@ export const evaluateSddPolicy = (params: {
           experimentalSource: sddExperimentalFeature.source,
           activation_env: sddExperimentalFeature.activationVariable,
           legacy_activation_env: sddExperimentalFeature.legacyActivationVariable,
-          activation_command: buildSddExperimentalEnableCommand(params.stage, params.repoRoot),
+          activation_command: buildSddExperimentalEnableCommand(params.stage, repoRoot),
         },
       },
     };
@@ -428,6 +429,7 @@ export const evaluateSddPolicy = (params: {
 
   const sessionDecision = evaluateSessionRequirements({
     status,
+    repoRoot,
     autoRefreshEnabled,
     autoRefreshAttempted,
     autoRefreshError,

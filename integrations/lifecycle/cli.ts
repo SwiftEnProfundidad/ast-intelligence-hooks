@@ -1689,16 +1689,18 @@ export type PreWriteOpenSpecBootstrapTrace = {
 export const buildPreWriteExperimentalEnableAdvisoryCommand = (
   repoRoot: string = process.cwd()
 ): string =>
-  `PUMUKI_EXPERIMENTAL_PRE_WRITE=advisory ${buildPinnedPumukiNpxCommand(
-    getCurrentPumukiVersion({ repoRoot })
-  )} sdd validate --stage=PRE_WRITE --json`;
+  `PUMUKI_EXPERIMENTAL_PRE_WRITE=advisory ${buildPinnedPumukiNpxCommand({
+    repoRoot,
+    executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+  })}`;
 export const buildSddExperimentalEnableAdvisoryCommand = (
   stage: SddStage,
   repoRoot: string = process.cwd()
 ): string =>
-  `PUMUKI_EXPERIMENTAL_SDD=advisory ${buildPinnedPumukiNpxCommand(
-    getCurrentPumukiVersion({ repoRoot })
-  )} sdd validate --stage=${stage} --json`;
+  `PUMUKI_EXPERIMENTAL_SDD=advisory ${buildPinnedPumukiNpxCommand({
+    repoRoot,
+    executableAndArgs: `pumuki sdd validate --stage=${stage} --json`,
+  })}`;
 const buildAnalyticsExperimentalEnableCommand = (action: AnalyticsHotspotsCommand): string =>
   `PUMUKI_EXPERIMENTAL_ANALYTICS=advisory npx --yes --package pumuki@latest pumuki analytics hotspots ${action} --json`;
 const SAAS_INGESTION_ENABLE_ADVISORY_COMMAND =
@@ -1804,7 +1806,7 @@ export const buildPreWriteExperimentalDisabledResult = (params: {
       layer: 'experimental',
       activation_env: 'PUMUKI_EXPERIMENTAL_PRE_WRITE',
       legacy_activation_env: 'PUMUKI_PREWRITE_ENFORCEMENT',
-      activation_command: PRE_WRITE_ENABLE_ADVISORY_COMMAND,
+      activation_command: buildPreWriteExperimentalEnableAdvisoryCommand(),
     },
   },
 });

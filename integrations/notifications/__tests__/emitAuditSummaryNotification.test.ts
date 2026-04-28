@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 import type { AiEvidenceV2_1 } from '../../evidence/schema';
 import {
+  emitGateBlockedNotification,
   emitAuditSummaryNotificationFromAiGate,
   emitAuditSummaryNotificationFromEvidence,
   shouldEmitAuditSummaryNotificationForStage,
@@ -227,4 +231,41 @@ test('emitAuditSummaryNotificationFromAiGate emite notificación para PRE_WRITE'
   );
   assert.deepEqual(result, { delivered: true, reason: 'delivered' });
   assert.equal(events.length, 1);
+});
+
+test('emitGateBlockedNotification añade contexto de tracking al evento emitido', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-notification-tracking-'));
+  try {
+    mkdirSync(join(repoRoot, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'docs', 'RURALGO_SEGUIMIENTO.md'),
+      '| Estado | Task | Descripción |\n| --- | --- | --- |\n| 🚧 | RGO-1900-01 | Slice activo |\n',
+      'utf8'
+    );
+
+    const events: unknown[] = [];
+    const result = emitGateBlockedNotification(
+      {
+        repoRoot,
+        stage: 'PRE_WRITE',
+        totalViolations: 1,
+        causeCode: 'EVIDENCE_GATE_BLOCKED',
+        causeMessage: 'Evidence AI gate status is BLOCKED.',
+        remediation: 'pumuki policy reconcile --strict --json',
+      },
+      {
+        emitSystemNotification: ({ event }) => {
+          events.push(event);
+          return { delivered: true, reason: 'delivered' };
+        },
+      }
+    );
+
+    assert.deepEqual(result, { delivered: true, reason: 'delivered' });
+    const [event] = events as Array<{ causeMessage?: string }>;
+    assert.match(event?.causeMessage ?? '', /active_entries=RGO-1900-01@L3/);
+    assert.match(event?.causeMessage ?? '', /tracking_source=docs\/RURALGO_SEGUIMIENTO\.md/);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
 });
