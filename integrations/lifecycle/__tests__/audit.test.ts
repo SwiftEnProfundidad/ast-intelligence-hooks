@@ -114,6 +114,34 @@ test('runLifecycleAudit expone findings canónicos en JSON', async () => {
           stage: 'PRE_COMMIT',
           outcome: 'BLOCK',
           files_scanned: 3,
+          rules_coverage: {
+            stage: 'PRE_COMMIT',
+            contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+            scope_note: 'AUTO runtime only',
+            active_rule_ids: ['skills.ios.no-navigation-view'],
+            evaluated_rule_ids: ['skills.ios.no-navigation-view'],
+            matched_rule_ids: ['skills.ios.no-navigation-view'],
+            unevaluated_rule_ids: [],
+            registry_totals: {
+              total: 10,
+              auto: 2,
+              declarative: 8,
+            },
+            stage_applicable_auto_rule_ids: ['skills.ios.no-navigation-view'],
+            declarative_rule_ids: ['skills.ios.design-contract'],
+            declarative_excluded_reason: 'DECLARATIVE rules are not runtime detectors.',
+            counts: {
+              active: 1,
+              evaluated: 1,
+              matched: 1,
+              unevaluated: 0,
+              registry_total: 10,
+              registry_auto: 2,
+              registry_declarative: 8,
+              stage_applicable_auto: 1,
+            },
+            coverage_ratio: 1,
+          },
           findings: [
             {
               ruleId: 'skills.ios.no-navigation-view',
@@ -136,6 +164,9 @@ test('runLifecycleAudit expone findings canónicos en JSON', async () => {
   assert.equal(result.blocking_findings_count, 1);
   assert.equal(result.findings[0]?.code, 'SKILLS_IOS_NO_NAVIGATION_VIEW');
   assert.equal(result.untracked_matching_extensions_count, 1);
+  assert.equal(result.rules_coverage?.contract, 'AUTO_RUNTIME_RULES_FOR_STAGE');
+  assert.equal(result.rules_coverage?.registry_totals?.declarative, 8);
+  assert.equal(result.rule_id_normalization.entries[0]?.status, 'registry_1_to_1');
 });
 
 test('runLifecycleAudit mantiene JSON accionable si el gate bloquea sin findings', async () => {

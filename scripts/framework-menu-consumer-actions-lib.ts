@@ -61,7 +61,7 @@ export const createConsumerLegacyMenuActions = (
     },
     {
       id: '14',
-      label: 'Engine audit · FULL tracked repo (no preflight · PRE_COMMIT)',
+      label: 'Engine audit · tracked repo files (AUTO runtime rules · PRE_COMMIT)',
       execute: params.runEngineFullRepoNoPreflight,
     },
     {

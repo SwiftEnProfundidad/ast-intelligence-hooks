@@ -70,7 +70,7 @@ test('createConsumerLegacyMenuActions expone shell read-only mínima y diagnóst
   assert.match(actions[4]?.label ?? '', /Engine audit · STAGED only/i);
   assert.match(actions[5]?.label ?? '', /Engine audit · UNSTAGED only/i);
   assert.match(actions[6]?.label ?? '', /Engine audit · STAGED \+ UNSTAGED/i);
-  assert.match(actions[7]?.label ?? '', /FULL tracked repo/i);
+  assert.match(actions[7]?.label ?? '', /tracked repo files \(AUTO runtime rules/i);
   assert.match(actions[8]?.label ?? '', /Legacy read-only pattern checks snapshot/i);
   assert.match(actions[9]?.label ?? '', /Legacy read-only ESLint evidence snapshot/i);
   assert.match(actions[10]?.label ?? '', /Legacy read-only AST snapshot/i);

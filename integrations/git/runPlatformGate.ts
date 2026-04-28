@@ -1115,10 +1115,24 @@ export async function runPlatformGate(params: {
   const rulesCoverage = coverage
     ? {
       stage: params.policy.stage,
+      contract: skillsRuleSet.registryCoverage?.contract ?? 'AUTO_RUNTIME_RULES_FOR_STAGE',
+      scope_note:
+        'rules_coverage reports AUTO runtime rules applicable to this stage; it does not claim full DECLARATIVE registry execution.',
       active_rule_ids: [...coverage.activeRuleIds],
       evaluated_rule_ids: [...coverage.evaluatedRuleIds],
       matched_rule_ids: [...coverage.matchedRuleIds],
       unevaluated_rule_ids: [...coverage.unevaluatedRuleIds],
+      ...(skillsRuleSet.registryCoverage
+        ? {
+          registry_totals: skillsRuleSet.registryCoverage.registryTotals,
+          stage_applicable_auto_rule_ids: [
+            ...skillsRuleSet.registryCoverage.stageApplicableAutoRuleIds,
+          ],
+          declarative_rule_ids: [...skillsRuleSet.registryCoverage.declarativeRuleIds],
+          declarative_excluded_reason:
+            skillsRuleSet.registryCoverage.excludedDeclarativeReason,
+        }
+        : {}),
       ...((skillsRuleSet.unsupportedAutoRuleIds?.length ?? 0) > 0
         ? {
           unsupported_auto_rule_ids: [...(skillsRuleSet.unsupportedAutoRuleIds ?? [])],
@@ -1129,6 +1143,16 @@ export async function runPlatformGate(params: {
         evaluated: coverage.evaluatedRuleIds.length,
         matched: coverage.matchedRuleIds.length,
         unevaluated: coverage.unevaluatedRuleIds.length,
+        ...(skillsRuleSet.registryCoverage
+          ? {
+            registry_total: skillsRuleSet.registryCoverage.registryTotals.total,
+            registry_auto: skillsRuleSet.registryCoverage.registryTotals.auto,
+            registry_declarative:
+              skillsRuleSet.registryCoverage.registryTotals.declarative,
+            stage_applicable_auto:
+              skillsRuleSet.registryCoverage.stageApplicableAutoRuleIds.length,
+          }
+          : {}),
         ...((skillsRuleSet.unsupportedAutoRuleIds?.length ?? 0) > 0
           ? {
             unsupported_auto: (skillsRuleSet.unsupportedAutoRuleIds ?? []).length,

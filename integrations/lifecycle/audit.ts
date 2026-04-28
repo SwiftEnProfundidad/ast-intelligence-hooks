@@ -1,5 +1,5 @@
 import { readEvidence } from '../evidence/readEvidence';
-import type { AiEvidenceV2_1, SnapshotFinding } from '../evidence/schema';
+import type { AiEvidenceV2_1, SnapshotFinding, SnapshotRulesCoverage } from '../evidence/schema';
 import { GitService, type IGitService } from '../git/GitService';
 import { hasAllowedExtension } from '../git/gitDiffUtils';
 import { runPlatformGate } from '../git/runPlatformGate';
@@ -31,6 +31,18 @@ export type LifecycleAuditResult = {
   snapshot_outcome: string | null;
   findings_count: number;
   blocking_findings_count: number;
+  rules_coverage: SnapshotRulesCoverage | null;
+  rule_id_normalization: {
+    contract: 'registry_or_declared_runtime_normalization';
+    registry_rule_ids_count: number;
+    finding_rule_ids_count: number;
+    entries: ReadonlyArray<{
+      runtime_rule_id: string;
+      registry_rule_id: string | null;
+      status: 'registry_1_to_1' | 'runtime_derived';
+      normalization: string;
+    }>;
+  };
   findings: ReadonlyArray<LifecycleAuditFinding>;
   policy_reconcile_hint: string;
 };
@@ -114,6 +126,39 @@ const extractAuditFindings = (params: {
   return [];
 };
 
+const buildRuleIdNormalization = (params: {
+  findings: ReadonlyArray<LifecycleAuditFinding>;
+  rulesCoverage: SnapshotRulesCoverage | undefined;
+}): LifecycleAuditResult['rule_id_normalization'] => {
+  const registryRuleIds = new Set([
+    ...(params.rulesCoverage?.stage_applicable_auto_rule_ids ?? []),
+    ...(params.rulesCoverage?.declarative_rule_ids ?? []),
+  ]);
+  const findingRuleIds = [...new Set(params.findings.map((finding) => finding.ruleId))].sort();
+  return {
+    contract: 'registry_or_declared_runtime_normalization',
+    registry_rule_ids_count: registryRuleIds.size,
+    finding_rule_ids_count: findingRuleIds.length,
+    entries: findingRuleIds.map((ruleId) => {
+      if (registryRuleIds.has(ruleId)) {
+        return {
+          runtime_rule_id: ruleId,
+          registry_rule_id: ruleId,
+          status: 'registry_1_to_1',
+          normalization: 'finding ruleId is an exact skills registry rule id',
+        };
+      }
+      return {
+        runtime_rule_id: ruleId,
+        registry_rule_id: null,
+        status: 'runtime_derived',
+        normalization:
+          'finding ruleId is emitted by baseline/runtime governance outside the skills registry; see rules_coverage for the AUTO skills scope evaluated at this stage',
+      };
+    }),
+  };
+};
+
 export const runLifecycleAudit = async (params: {
   stage: LifecycleAuditStage;
   auditMode: 'gate' | 'engine';
@@ -192,6 +237,11 @@ export const runLifecycleAudit = async (params: {
     snapshot_outcome: snapshotOutcome,
     findings_count: findings.length,
     blocking_findings_count: findings.filter((finding) => finding.blocking).length,
+    rules_coverage: evidence?.snapshot.rules_coverage ?? null,
+    rule_id_normalization: buildRuleIdNormalization({
+      findings,
+      rulesCoverage: evidence?.snapshot.rules_coverage,
+    }),
     findings,
     policy_reconcile_hint: POLICY_RECONCILE_HINT,
   };
