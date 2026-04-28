@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.126] - 2026-04-28
+
+### Fixed
+
+- **Suite lifecycle determinista:** `cli.test.ts` deja de esperar `PRE_WRITE=off` cuando el contrato actual lo define como `strict` por defecto, eliminando el falso fallo de fichero en `node:test`.
+- **Snapshot experimental completo:** el payload `status --json --remote-checks` valida también `mcp_enterprise=strict`, alineado con la configuración enterprise real.
+
 ## [6.3.125] - 2026-04-28
 
 ### Fixed
