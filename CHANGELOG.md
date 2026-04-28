@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.117] - 2026-04-28
+
+### Fixed
+
+- **`pumuki audit --json` queda accionable cuando bloquea:** la salida ahora expone `findings_count`, `blocking_findings_count` y `findings`; si el gate bloquea sin findings persistidos, emite un blocker sintético `AUDIT_BLOCKED_WITHOUT_FINDINGS` para evitar JSON no accionable.
+- **Auditoría previa a edición:** `pumuki audit --stage=PRE_WRITE --json` queda soportado para dar a consumers como RuralGo un contrato machine-friendly antes de continuar feature work.
+- **Tracking externo prioritario:** el reset interno queda alineado con el bloqueo vivo de RuralGo `PUMUKI-INC-109`/`PUMUKI-INC-110`.
+
 ## [6.3.116] - 2026-04-25
 
 ### Fixed

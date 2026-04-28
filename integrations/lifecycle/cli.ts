@@ -188,7 +188,7 @@ Pumuki lifecycle commands:
   pumuki remove
   pumuki update [--latest|--spec=<package-spec>]
   pumuki doctor [--remote-checks] [--deep] [--parity] [--json]
-  pumuki audit [--stage=PRE_COMMIT|PRE_PUSH|CI] [--engine] [--json]
+  pumuki audit [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--engine] [--json]
   pumuki status [--json] [--remote-checks]
   pumuki watch [--stage=PRE_COMMIT|PRE_PUSH|CI] [--scope=workingTree|staged|repoAndStaged|repo] [--severity=critical|high|medium|low] [--interval-ms=<n>] [--notify-cooldown-ms=<n>] [--no-notify] [--once|--iterations=<n>] [--json]
   pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]
@@ -266,13 +266,7 @@ const parseSddStage = (value?: string): SddStage => {
 };
 
 const parseAuditStage = (value?: string): LifecycleAuditStage => {
-  const stage = parseSddStage(value);
-  if (stage === 'PRE_WRITE') {
-    throw new Error(
-      'PRE_WRITE is not supported for "pumuki audit". Use PRE_COMMIT, PRE_PUSH or CI (aliases GREEN, REFACTOR, CLOSE).'
-    );
-  }
-  return stage;
+  return parseSddStage(value);
 };
 
 const parseSddEvidencePath = (value: string): string => {

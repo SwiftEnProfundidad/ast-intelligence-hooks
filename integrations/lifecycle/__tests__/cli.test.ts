@@ -818,8 +818,13 @@ test('parseLifecycleCliArgs soporta audit con stage CI engine y json', () => {
   });
 });
 
-test('parseLifecycleCliArgs audit rechaza PRE_WRITE', () => {
-  assert.throws(() => parseLifecycleCliArgs(['audit', '--stage=PRE_WRITE']), /PRE_WRITE is not supported/);
+test('parseLifecycleCliArgs audit soporta PRE_WRITE para auditoria previa a edicion', () => {
+  assert.deepEqual(parseLifecycleCliArgs(['audit', '--stage=PRE_WRITE', '--json']), {
+    command: 'audit',
+    purgeArtifacts: false,
+    json: true,
+    auditStage: 'PRE_WRITE',
+  });
 });
 
 test('parseLifecycleCliArgs soporta policy reconcile', () => {
