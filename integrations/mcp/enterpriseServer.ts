@@ -4,7 +4,7 @@ import type { Server } from 'node:http';
 import { execFileSync as runBinarySync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { readLifecycleStatus } from '../lifecycle';
+import { readLifecycleStatus, runLifecycleAudit } from '../lifecycle';
 import { resolveMcpEnterpriseExperimentalFeature } from '../policy/experimentalFeatures';
 import { evaluateSddPolicy, readSddStatus } from '../sdd';
 import type { SddStage } from '../sdd';
@@ -75,6 +75,7 @@ const ENTERPRISE_RESOURCE_DESCRIPTORS: ReadonlyArray<{
 ];
 
 const ENTERPRISE_TOOLS = [
+  'pre_write_guard',
   'ai_gate_check',
   'pre_flight_check',
   'auto_execute_ai_start',
@@ -91,6 +92,12 @@ const ENTERPRISE_TOOL_DESCRIPTORS: ReadonlyArray<{
   mutating: boolean;
   safeByDefault: boolean;
 }> = [
+  {
+    name: 'pre_write_guard',
+    description: 'Runs the PRE_WRITE audit gate and returns actionable findings before an editor/agent writes code.',
+    mutating: false,
+    safeByDefault: true,
+  },
   {
     name: 'ai_gate_check',
     description: 'Reads .ai_evidence.json and reports AI gate compatibility status.',
@@ -382,13 +389,41 @@ const evaluateCriticalToolGuard = (
   }
 };
 
-const executeEnterpriseTool = (
+const executeEnterpriseTool = async (
   repoRoot: string,
   toolName: EnterpriseToolName,
   args: Record<string, string | number | boolean | bigint | symbol | null | Date | object>,
   dryRun: boolean
-): EnterpriseToolExecution => {
+): Promise<EnterpriseToolExecution> => {
   switch (toolName) {
+    case 'pre_write_guard': {
+      const audit = await runLifecycleAudit({
+        repoRoot,
+        stage: 'PRE_WRITE',
+        auditMode: 'gate',
+      });
+      return {
+        name: toolName,
+        success: audit.gate_exit_code === 0 && audit.blocking_findings_count === 0,
+        dryRun: true,
+        executed: true,
+        warnings: audit.blocking_findings_count > 0
+          ? ['PRE_WRITE guard blocked before editor write; inspect result.findings.']
+          : [],
+        data: {
+          ...audit,
+          next_action: audit.blocking_findings_count > 0
+            ? {
+                kind: 'inspect_findings',
+                message: 'Corrige los findings bloqueantes antes de escribir o restaurar ficheros.',
+              }
+            : {
+                kind: 'continue',
+                message: 'PRE_WRITE guard passed.',
+              },
+        },
+      };
+    }
     case 'ai_gate_check': {
       const stage = toSddStage(args.stage, 'PRE_COMMIT');
       const execution = runEnterpriseAiGateCheck({
@@ -741,7 +776,7 @@ export const startEnterpriseMcpServer = (
         return;
       }
       void readJsonBody(req)
-        .then((body) => {
+        .then(async (body) => {
           if (typeof body !== 'object' || body === null) {
             sendJson(res, 400, {
               error: 'Invalid request body.',
@@ -814,7 +849,7 @@ export const startEnterpriseMcpServer = (
           }
           let result: EnterpriseToolExecution;
           try {
-            result = executeEnterpriseTool(
+            result = await executeEnterpriseTool(
               repoRoot,
               toolName,
               args,

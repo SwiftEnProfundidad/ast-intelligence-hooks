@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.118] - 2026-04-28
+
+### Fixed
+
+- **Guard PRE_WRITE para editores/agentes vía MCP:** el catálogo enterprise expone `pre_write_guard`, una tool no mutante que ejecuta `audit --stage=PRE_WRITE --json` y devuelve `findings` accionables antes de permitir continuar una edición/restauración de ficheros.
+- **Cierre operativo de `PUMUKI-INC-109`:** RuralGo ya tiene una ruta MCP explícita para bloquear antes de escribir, no sólo en commit/gate posterior.
+
 ## [6.3.117] - 2026-04-28
 
 ### Fixed
