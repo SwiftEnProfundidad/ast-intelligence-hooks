@@ -11,16 +11,21 @@ import {
   hasWeakTokenGenerationWithCryptoRandomUuid,
 } from './securityCredentials';
 
-test('hasHardcodedSecretTokenLiteral detecta literal largo en identificador sensible', () => {
+test('hasHardcodedSecretTokenLiteral detecta literal real en identificador sensible', () => {
   const hardcodedSecretAst = {
     type: 'VariableDeclarator',
     id: { type: 'Identifier', name: 'apiKey' },
     init: { type: 'StringLiteral', value: 'super-secret-key-123' },
   };
-  const safeLengthAst = {
+  const placeholderAst = {
     type: 'VariableDeclarator',
     id: { type: 'Identifier', name: 'apiKey' },
-    init: { type: 'StringLiteral', value: 'short' },
+    init: { type: 'StringLiteral', value: 'replace-me' },
+  };
+  const shortRealSecretAst = {
+    type: 'VariableDeclarator',
+    id: { type: 'Identifier', name: 'apiKey' },
+    init: { type: 'StringLiteral', value: 'prod' },
   };
   const nonSensitiveIdentifierAst = {
     type: 'VariableDeclarator',
@@ -29,7 +34,8 @@ test('hasHardcodedSecretTokenLiteral detecta literal largo en identificador sens
   };
 
   assert.equal(hasHardcodedSecretTokenLiteral(hardcodedSecretAst), true);
-  assert.equal(hasHardcodedSecretTokenLiteral(safeLengthAst), false);
+  assert.equal(hasHardcodedSecretTokenLiteral(placeholderAst), false);
+  assert.equal(hasHardcodedSecretTokenLiteral(shortRealSecretAst), true);
   assert.equal(hasHardcodedSecretTokenLiteral(nonSensitiveIdentifierAst), false);
 });
 
