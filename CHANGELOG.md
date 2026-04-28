@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.121] - 2026-04-28
+
+### Fixed
+
+- **Hotspots brownfield sin umbrales hardcodeados:** `BrownfieldHotspotGuard` deja de bloquear por tamaño implícito en carpetas `presentation`/`application`; el bloqueo por líneas solo se activa cuando el consumer declara explícitamente `max_lines` en `config/pumuki-hotspots.json`.
+- **Cierre de `PUMUKI-INC-114`:** el guard mantiene bloqueo declarativo para hotspots marcados, pero SRP/god class vuelve a depender de reglas/skills AST inteligentes en vez de números internos `800/1200`.
+
 ## [6.3.120] - 2026-04-28
 
 ### Fixed
