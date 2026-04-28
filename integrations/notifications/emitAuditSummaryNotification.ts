@@ -1,6 +1,7 @@
 import type { AiEvidenceV2_1 } from '../evidence/schema';
 import { readEvidence } from '../evidence/readEvidence';
 import type { AiGateCheckResult } from '../gate/evaluateAiGate';
+import { appendTrackingActionableContext } from '../git/aiGateRepoPolicyFindings';
 import {
   emitSystemNotification,
   type PumukiCriticalNotificationEvent,
@@ -32,6 +33,22 @@ const isTruthyEnvValue = (value?: string): boolean => {
   }
   const normalized = value.trim().toLowerCase();
   return normalized === '1' || normalized === 'true' || normalized === 'yes';
+};
+
+const withTrackingContext = (params: {
+  repoRoot: string;
+  causeMessage: string;
+}): string => {
+  if (
+    params.causeMessage.includes('active_entries=') ||
+    params.causeMessage.includes('tracking_source=')
+  ) {
+    return params.causeMessage;
+  }
+  return appendTrackingActionableContext({
+    repoRoot: params.repoRoot,
+    message: params.causeMessage,
+  });
 };
 
 export const shouldEmitAuditSummaryNotificationForStage = (
@@ -155,7 +172,10 @@ export const emitGateBlockedNotification = (
       stage: params.stage,
       totalViolations: params.totalViolations,
       causeCode: params.causeCode,
-      causeMessage: params.causeMessage,
+      causeMessage: withTrackingContext({
+        repoRoot: params.repoRoot,
+        causeMessage: params.causeMessage,
+      }),
       remediation: params.remediation,
     },
     repoRoot: params.repoRoot,

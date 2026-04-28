@@ -54,7 +54,7 @@ export const collectTrackingActiveEntriesFromMarkdown = (
     const bulletMatch = line.match(/^- 🚧 (`?P[0-9A-Za-z.-]+`?)/u);
     if (bulletMatch) {
       entries.push({
-        taskId: bulletMatch[1]!.replaceAll('`', '').trim(),
+        taskId: bulletMatch[1]!.replace(/`/gu, '').trim(),
         lineNumber: index + 1,
       });
       continue;

@@ -3,8 +3,13 @@ import {
   normalizeNotificationText,
   truncateNotificationText,
 } from './framework-menu-system-notifications-text';
+import {
+  buildNotificationTrackingCauseSummary,
+  extractNotificationTrackingContext,
+} from './framework-menu-system-notifications-tracking';
 
 const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
+  EVIDENCE_GATE_BLOCKED: 'El gate de evidencia/gobernanza está bloqueado.',
   EVIDENCE_MISSING: 'Falta evidencia para validar este paso.',
   EVIDENCE_INVALID: 'La evidencia actual es inválida.',
   EVIDENCE_CHAIN_INVALID: 'La cadena de evidencia no es válida.',
@@ -18,6 +23,13 @@ const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
   OPENSPEC_MISSING: 'OpenSpec no está instalado en este repositorio.',
   MCP_ENTERPRISE_RECEIPT_MISSING: 'Falta el recibo enterprise de MCP.',
   BACKEND_AVOID_EXPLICIT_ANY: 'Se detectó uso de "any" explícito en backend.',
+  GIT_ATOMICITY_TOO_MANY_SCOPES: 'El cambio toca demasiados scopes para un commit atómico.',
+  TRACKING_CANONICAL_IN_PROGRESS_INVALID:
+    'El tracking canónico tiene una tarea activa inválida.',
+  TRACKING_CANONICAL_SOURCE_CONFLICT:
+    'Hay conflicto entre fuentes de tracking canónico.',
+  ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
+    'No hay reglas activas para cambios de código.',
 };
 
 const ENGLISH_CAUSE_HINTS = [
@@ -53,8 +65,18 @@ const buildGenericSpanishBlockedCauseSummary = (
 
 const toKnownSpanishCauseFromMessage = (message: string): string | null => {
   const normalized = message.toLowerCase();
+  const trackingContext = extractNotificationTrackingContext(message);
+  if (trackingContext) {
+    return buildNotificationTrackingCauseSummary(trackingContext);
+  }
   if (normalized.includes('avoid explicit any')) {
     return BLOCKED_CAUSE_SUMMARY_BY_CODE.BACKEND_AVOID_EXPLICIT_ANY;
+  }
+  if (normalized.includes('atomicity')) {
+    return BLOCKED_CAUSE_SUMMARY_BY_CODE.GIT_ATOMICITY_TOO_MANY_SCOPES;
+  }
+  if (normalized.includes('evidence ai gate status is blocked')) {
+    return BLOCKED_CAUSE_SUMMARY_BY_CODE.EVIDENCE_GATE_BLOCKED;
   }
   if (normalized.includes('evidence is stale')) {
     return BLOCKED_CAUSE_SUMMARY_BY_CODE.EVIDENCE_STALE;
@@ -74,6 +96,10 @@ export const resolveBlockedCauseSummary = (
   event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>,
   causeCode: string
 ): string => {
+  const trackingContext = extractNotificationTrackingContext(event.causeMessage);
+  if (trackingContext) {
+    return buildNotificationTrackingCauseSummary(trackingContext);
+  }
   const mapped = BLOCKED_CAUSE_SUMMARY_BY_CODE[causeCode];
   if (mapped) {
     return mapped;

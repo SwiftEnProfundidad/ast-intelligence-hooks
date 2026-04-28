@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.125] - 2026-04-28
+
+### Fixed
+
+- **Mensajes coherentes para bloqueos `gate.blocked`:** las notificaciones y diálogos traducen `EVIDENCE_GATE_BLOCKED`, tracking canónico y atomicidad a causas humanas en vez de mostrar copy interno en inglés.
+- **Tracking como causa accionable:** cuando existe `active_entries` / `tracking_source`, la remediación prioriza corregir el MD de tracking y deja de sugerir `policy reconcile && sdd validate` como solución principal.
+- **Cierre de `PUMUKI-INC-118`:** el evento central de bloqueo enriquece la causa con contexto de tracking antes de construir banners, diálogos macOS y payloads de sistema.
+
 ## [6.3.123] - 2026-04-28
 
 ### Fixed

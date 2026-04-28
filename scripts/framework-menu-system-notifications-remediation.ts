@@ -3,8 +3,16 @@ import {
   normalizeNotificationText,
   truncateNotificationText,
 } from './framework-menu-system-notifications-text';
+import {
+  extractNotificationTrackingContext,
+  TRACKING_BLOCKED_REMEDIATION,
+} from './framework-menu-system-notifications-tracking';
+
+type BlockedRemediationVariant = 'banner' | 'dialog';
 
 const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
+  EVIDENCE_GATE_BLOCKED:
+    'Revisa status/doctor para ver la causa exacta del gate, corrígela y revalida.',
   EVIDENCE_MISSING: 'Genera la evidencia del slice actual y vuelve a validar esta fase.',
   EVIDENCE_INVALID: 'Regenera la evidencia de esta iteración y repite la validación.',
   EVIDENCE_CHAIN_INVALID: 'Regenera la evidencia para restaurar la cadena de integridad y vuelve a validar.',
@@ -19,6 +27,10 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   BACKEND_AVOID_EXPLICIT_ANY: 'Sustituye `any` por tipos concretos en backend y relanza el gate.',
   GIT_ATOMICITY_TOO_MANY_SCOPES: 'Divide el cambio por scope o en commits más pequeños y vuelve a ejecutar el gate.',
   SOLID_HEURISTIC: 'Corrige la violación detectada y vuelve a ejecutar el gate.',
+  TRACKING_CANONICAL_IN_PROGRESS_INVALID: TRACKING_BLOCKED_REMEDIATION,
+  TRACKING_CANONICAL_SOURCE_CONFLICT: TRACKING_BLOCKED_REMEDIATION,
+  ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
+    'Ejecuta `pumuki policy reconcile --strict --json` y revalida antes de continuar.',
 };
 
 const BLOCKED_REMEDIATION_MAX_LENGTH_BY_VARIANT: Readonly<Record<BlockedRemediationVariant, number>> = {
@@ -38,6 +50,11 @@ const normalizeBlockedRemediation = (value: string): string =>
 
 const resolveFallbackRemediation = (causeCode: string): string =>
   BLOCKED_REMEDIATION_BY_CODE[causeCode] ?? GENERIC_BLOCKED_REMEDIATION;
+
+const isGenericPolicyReconcileRemediation = (message: string): boolean => {
+  const normalized = message.toLowerCase();
+  return normalized.includes('policy reconcile') && normalized.includes('sdd validate');
+};
 
 const hasEnglishHints = (message: string): boolean => {
   const normalized = message.toLowerCase();
@@ -88,7 +105,16 @@ export const resolveBlockedRemediation = (
   const fromEvent = event.remediation
     ? normalizeBlockedRemediation(event.remediation)
     : '';
+  if (extractNotificationTrackingContext(event.causeMessage)) {
+    return truncateNotificationText(TRACKING_BLOCKED_REMEDIATION, maxLength);
+  }
   if (fromEvent.length > 0) {
+    if (
+      causeCode === 'EVIDENCE_GATE_BLOCKED' &&
+      isGenericPolicyReconcileRemediation(fromEvent)
+    ) {
+      return truncateNotificationText(resolveFallbackRemediation(causeCode), maxLength);
+    }
     const translated = toKnownSpanishRemediationFromMessage(fromEvent, causeCode);
     if (translated) {
       return truncateNotificationText(translated, maxLength);

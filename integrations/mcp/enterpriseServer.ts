@@ -5,6 +5,7 @@ import { execFileSync as runBinarySync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { readLifecycleStatus, runLifecycleAudit } from '../lifecycle';
+import { GitService } from '../git/GitService';
 import { resolveMcpEnterpriseExperimentalFeature } from '../policy/experimentalFeatures';
 import { evaluateSddPolicy, readSddStatus } from '../sdd';
 import type { SddStage } from '../sdd';
@@ -337,6 +338,20 @@ type EnterpriseToolExecution = {
   warnings?: ReadonlyArray<string>;
 };
 
+class EnterpriseRepoGitService extends GitService {
+  constructor(private readonly repoRoot: string) {
+    super();
+  }
+
+  override resolveRepoRoot(): string {
+    return this.repoRoot;
+  }
+
+  override runGit(args: ReadonlyArray<string>, cwd: string = this.repoRoot): string {
+    return super.runGit(args, cwd);
+  }
+}
+
 type CriticalToolGuardResult = {
   allowed: boolean;
   stage: SddStage;
@@ -398,9 +413,11 @@ const executeEnterpriseTool = async (
   switch (toolName) {
     case 'pre_write_guard': {
       const audit = await runLifecycleAudit({
-        repoRoot,
         stage: 'PRE_WRITE',
         auditMode: 'gate',
+        dependencies: {
+          git: new EnterpriseRepoGitService(repoRoot),
+        },
       });
       return {
         name: toolName,
