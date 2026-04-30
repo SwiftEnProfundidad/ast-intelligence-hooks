@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-04-29 (v6.3.129)
+
+- **Singletons Android con detector AST real:** `skills.android.no-singleton-usar-inyeccio-n-de-dependencias-hilt-dagger` queda vinculada a un detector que distingue singleton real de `@Module` / `@InstallIn` / `@EntryPoint`.
+- **Regresión cerrada en la suite Android:** el caso de objetos anónimos y companion objects inocuos queda cubierto y la compilación del lock vuelve a producir el binding canónico.
+- **Rollout recomendado:** publicar `pumuki@6.3.129`, repin inmediato en `RuralGo` y revalidar `status` / `doctor` / `audit --stage=PRE_WRITE --json` sobre el consumer.
+
 ## 2026-04 (CLI stability and macOS notifications)
 
 ### 2026-04-25 (v6.3.116)
@@ -490,7 +496,7 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 - Blocked notification UX hardening for macOS:
   - short, human-readable Spanish banner (`🔴 Pumuki bloqueado`) with stage + summarized cause.
-  - remediation-first body (`Solución: ...`) to maximize visibility in truncated notification banners.
+  - actionable body (`Causa / Impacto / Comando / Siguiente acción`) to maximize visibility in truncated notification banners.
 - Optional blocked-dialog workflow (`PUMUKI_MACOS_BLOCKED_DIALOG=1`):
   - full cause/remediation modal for critical blocks.
   - anti-spam controls in dialog:

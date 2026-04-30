@@ -17,5 +17,8 @@ test('buildSystemNotificationPayload mantiene la fachada pública con contexto d
 
   assert.match(payload.subtitle ?? '', /SAAS:APP_SUPERMERCADOS/);
   assert.match(payload.subtitle ?? '', /PRE_COMMIT/);
-  assert.match(payload.message, /^solución:/i);
+  assert.match(payload.message, /causa:/i);
+  assert.match(payload.message, /impacto:/i);
+  assert.match(payload.message, /comando:/i);
+  assert.match(payload.message, /siguiente acción:/i);
 });

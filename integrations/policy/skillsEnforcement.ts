@@ -48,8 +48,8 @@ export const resolveSkillsEnforcement = (): SkillsEnforcementResolution => {
     };
   }
   return {
-    mode: 'advisory',
+    mode: 'strict',
     source: 'default',
-    blocking: false,
+    blocking: true,
   };
 };

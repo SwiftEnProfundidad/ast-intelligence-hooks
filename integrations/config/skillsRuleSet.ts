@@ -21,6 +21,7 @@ export type SkillsRuleSetLoadResult = {
   mappedHeuristicRuleIds: ReadonlySet<string>;
   requiresHeuristicFacts: boolean;
   unsupportedAutoRuleIds?: ReadonlyArray<string>;
+  unsupportedDetectorRuleIds?: ReadonlyArray<string>;
   registryCoverage?: {
     contract: 'AUTO_RUNTIME_RULES_FOR_STAGE';
     stage: Exclude<GateStage, 'STAGED'>;
@@ -502,6 +503,7 @@ const emptyResult = (): SkillsRuleSetLoadResult => {
     mappedHeuristicRuleIds: new Set<string>(),
     requiresHeuristicFacts: false,
     unsupportedAutoRuleIds: [],
+    unsupportedDetectorRuleIds: [],
   };
 };
 
@@ -534,6 +536,7 @@ export const loadSkillsRuleSetForStage = (
   const rulesById = new Map<string, RuleDefinition>();
   const mappedHeuristicRuleIds = new Set<string>();
   const unsupportedAutoRuleIds = new Set<string>();
+  const unsupportedDetectorRuleIds = new Set<string>();
   const registryRuleIds = new Set<string>();
   const registryAutoRuleIds = new Set<string>();
   const registryDeclarativeRuleIds = new Set<string>();
@@ -565,11 +568,13 @@ export const loadSkillsRuleSetForStage = (
         continue;
       }
       if (evaluationMode !== 'AUTO') {
+        unsupportedDetectorRuleIds.add(compiledRule.id);
         continue;
       }
       stageApplicableAutoRuleIds.add(compiledRule.id);
       if (evaluationMode === 'AUTO' && mappedRuleIds.length === 0) {
         unsupportedAutoRuleIds.add(compiledRule.id);
+        unsupportedDetectorRuleIds.add(compiledRule.id);
         continue;
       }
 
@@ -602,6 +607,7 @@ export const loadSkillsRuleSetForStage = (
     mappedHeuristicRuleIds,
     requiresHeuristicFacts: mappedHeuristicRuleIds.size > 0,
     unsupportedAutoRuleIds: [...unsupportedAutoRuleIds].sort(),
+    unsupportedDetectorRuleIds: [...unsupportedDetectorRuleIds].sort(),
     registryCoverage: {
       contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
       stage,

@@ -36,7 +36,8 @@ test('framework-menu-system-notifications-types mantiene contratos tipados visib
   };
   const payload: SystemNotificationPayload = {
     title: 'Pumuki bloqueado',
-    message: 'Solución: regenera evidencia.',
+    message:
+      'Causa: La evidencia está desactualizada.\nImpacto: El gate no deja avanzar.\nComando: pumuki sdd validate --stage=PRE_PUSH --json\nSiguiente acción: Regenera la evidencia.',
     subtitle: 'Repo · PRE_PUSH',
   };
   const config: SystemNotificationsConfig = {

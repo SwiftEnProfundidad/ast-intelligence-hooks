@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.129] - 2026-04-29
+
+### Fixed
+
+- **Nueva slice Android de singletons cerrada:** `skills.android.no-singleton-usar-inyeccio-n-de-dependencias-hilt-dagger` pasa a detector AST real y deja de depender de normalización genérica.
+- **Exclusión correcta de módulos DI:** `@Module`, `@InstallIn` y `@EntryPoint` ya no disparan el detector de singleton cuando el `object` es un módulo de inyección legítimo.
+- **Cobertura de regresión y lock recompilado:** la suite Android dirigida vuelve a verde y `skills.lock.json` se regenera con el binding canónico de la nueva skill.
+
 ## [6.3.127] - 2026-04-28
 
 ### Fixed

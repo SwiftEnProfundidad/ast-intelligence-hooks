@@ -23,14 +23,14 @@ const withGitAtomicityEnforcementEnv = async <T>(
   }
 };
 
-test('resolveGitAtomicityEnforcement defaults to advisory mode', async () => {
+test('resolveGitAtomicityEnforcement defaults to strict mode', async () => {
   await withGitAtomicityEnforcementEnv(undefined, () => {
     const resolved = resolveGitAtomicityEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'advisory',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
     });
   });
 });
@@ -47,14 +47,14 @@ test('resolveGitAtomicityEnforcement reads strict mode from environment', async 
   });
 });
 
-test('resolveGitAtomicityEnforcement falls back to advisory on invalid environment value', async () => {
+test('resolveGitAtomicityEnforcement falls back to strict on invalid environment value', async () => {
   await withGitAtomicityEnforcementEnv('surprise', () => {
     const resolved = resolveGitAtomicityEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'advisory',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
     });
   });
 });

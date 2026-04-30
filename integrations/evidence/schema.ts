@@ -54,6 +54,7 @@ export type SnapshotRulesCoverage = {
   matched_rule_ids: string[];
   unevaluated_rule_ids: string[];
   unsupported_auto_rule_ids?: string[];
+  unsupported_detector_rule_ids?: string[];
   registry_totals?: {
     total: number;
     auto: number;
@@ -72,6 +73,7 @@ export type SnapshotRulesCoverage = {
     registry_declarative?: number;
     stage_applicable_auto?: number;
     unsupported_auto?: number;
+    unsupported_detector?: number;
   };
   coverage_ratio: number;
 };

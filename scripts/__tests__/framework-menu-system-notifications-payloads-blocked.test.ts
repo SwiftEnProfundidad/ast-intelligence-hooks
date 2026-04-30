@@ -16,7 +16,10 @@ test('buildGateBlockedPayload construye payload para gate BLOCK', () => {
   assert.match(payload.title, /bloqueado/i);
   assert.match(payload.subtitle ?? '', /pre_commit|pre-commit/i);
   assert.match(payload.subtitle ?? '', /7/);
-  assert.match(payload.message, /^solución:/i);
+  assert.match(payload.message, /causa:/i);
+  assert.match(payload.message, /impacto:/i);
+  assert.match(payload.message, /comando:/i);
+  assert.match(payload.message, /siguiente acción:/i);
   assert.equal(payload.soundName, 'Basso');
 });
 
@@ -53,5 +56,6 @@ test('buildGateBlockedPayload muestra causa y solución coherentes para tracking
   assert.match(payload.subtitle ?? '', /R_GO/);
   assert.match(payload.subtitle ?? '', /Tracking bloqueado/i);
   assert.match(payload.message, /tracking/i);
-  assert.doesNotMatch(payload.message, /policy reconcile/i);
+  assert.match(payload.message, /comando:/i);
+  assert.match(payload.message, /siguiente acción:/i);
 });

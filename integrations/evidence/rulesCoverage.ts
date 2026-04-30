@@ -63,6 +63,9 @@ export const normalizeSnapshotRulesCoverage = (
   const matchedRuleIds = normalizeStringArray(value.matched_rule_ids);
   const unevaluatedRuleIds = normalizeStringArray(value.unevaluated_rule_ids);
   const unsupportedAutoRuleIds = normalizeStringArray(value.unsupported_auto_rule_ids ?? []);
+  const unsupportedDetectorRuleIds = normalizeStringArray(
+    value.unsupported_detector_rule_ids ?? []
+  );
   const stageApplicableAutoRuleIds = normalizeStringArray(
     value.stage_applicable_auto_rule_ids ?? []
   );
@@ -79,6 +82,10 @@ export const normalizeSnapshotRulesCoverage = (
   const unsupportedAutoCount = Math.max(
     unsupportedAutoRuleIds.length,
     normalizeCount(value.counts?.unsupported_auto ?? 0)
+  );
+  const unsupportedDetectorCount = Math.max(
+    unsupportedDetectorRuleIds.length,
+    normalizeCount(value.counts?.unsupported_detector ?? 0)
   );
 
   const counts: SnapshotRulesCoverage['counts'] = {
@@ -102,6 +109,9 @@ export const normalizeSnapshotRulesCoverage = (
 
   if (unsupportedAutoCount > 0) {
     counts.unsupported_auto = unsupportedAutoCount;
+  }
+  if (unsupportedDetectorCount > 0) {
+    counts.unsupported_detector = unsupportedDetectorCount;
   }
 
   const ratioFromCounts = createCoverageRatio(counts.active, counts.evaluated);
@@ -145,6 +155,9 @@ export const normalizeSnapshotRulesCoverage = (
 
   if (unsupportedAutoRuleIds.length > 0 || unsupportedAutoCount > 0) {
     normalized.unsupported_auto_rule_ids = unsupportedAutoRuleIds;
+  }
+  if (unsupportedDetectorRuleIds.length > 0 || unsupportedDetectorCount > 0) {
+    normalized.unsupported_detector_rule_ids = unsupportedDetectorRuleIds;
   }
 
   return normalized;

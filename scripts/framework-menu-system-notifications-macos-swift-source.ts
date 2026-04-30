@@ -41,7 +41,7 @@ final class DialogAppDelegate: NSObject, NSApplicationDelegate {
 
     let alert = NSAlert()
     alert.messageText = config.title
-    alert.informativeText = "Causa: \(config.cause)\n\nSolución: \(config.remediation)"
+    alert.informativeText = "\(config.cause)\n\n\(config.remediation)"
     alert.alertStyle = .critical
     alert.addButton(withTitle: config.keepButton)
     alert.addButton(withTitle: config.muteButton)

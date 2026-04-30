@@ -47,6 +47,8 @@ test('consumer runtime printMenu agrupa opciones por shell mínima y diagnóstic
 
     runtime.printMenu();
     const rendered = output.join('\n');
+    assert.match(rendered, /Status:/i);
+    assert.match(rendered, /(NO_EVIDENCE|PASS|WARN|BLOCK)/i);
     assert.match(rendered, /Read-Only Gate Flows/i);
     assert.match(rendered, /Engine · working tree \(no preflight\)/i);
     assert.match(rendered, /11\)\s+Engine audit · STAGED only/i);
