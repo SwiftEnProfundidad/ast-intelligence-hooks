@@ -188,6 +188,16 @@ const normalizeRepoState = (
   if (!repoState) {
     return undefined;
   }
+  const tracking = repoState.lifecycle.tracking ?? {
+    enforced: false,
+    canonical_path: null,
+    canonical_present: false,
+    source_file: null,
+    in_progress_count: null,
+    single_in_progress_valid: null,
+    conflict: false,
+    declarations: [],
+  };
   return {
     repo_root: toRelativeRepoPath(repoRoot, repoState.repo_root),
     git: {
@@ -217,6 +227,20 @@ const normalizeRepoState = (
           config_path: toRelativeRepoPath(repoRoot, repoState.lifecycle.hard_mode.config_path),
         }
         : undefined,
+      tracking: {
+        enforced: tracking.enforced,
+        canonical_path: tracking.canonical_path,
+        canonical_present: tracking.canonical_present,
+        source_file: tracking.source_file,
+        in_progress_count: tracking.in_progress_count,
+        single_in_progress_valid: tracking.single_in_progress_valid,
+        conflict: tracking.conflict,
+        declarations: tracking.declarations.map((entry) => ({
+          source_file: entry.source_file,
+          declared_path: entry.declared_path,
+          resolved_path: entry.resolved_path,
+        })),
+      },
     },
   };
 };

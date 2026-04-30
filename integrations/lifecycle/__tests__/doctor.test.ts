@@ -10,6 +10,8 @@ import { PUMUKI_CONFIG_KEYS } from '../constants';
 import type { ILifecycleGitService } from '../gitService';
 import { installPumukiHooks } from '../hookManager';
 import {
+  doctorCommandShouldFailExit,
+  doctorHasGovernanceAttention,
   doctorHasBlockingIssues,
   doctorHasParityMismatch,
   runLifecycleDoctor,
@@ -190,8 +192,55 @@ test('runLifecycleDoctor marca issue bloqueante cuando hay rutas trackeadas en n
     assert.equal(typeof report.policyValidation.stages.PRE_PUSH.hash, 'string');
     assert.equal(typeof report.policyValidation.stages.CI.hash, 'string');
     assert.deepEqual(report.trackedNodeModulesPaths, ['node_modules/pkg/index.js']);
+    assert.equal(report.governanceNextAction.stage, 'PRE_WRITE');
+    assert.equal(typeof report.governanceNextAction.reason_code, 'string');
+    assert.equal(report.governanceObservation.evidence.readable, 'missing');
     assert.equal(report.issues.some((issue) => issue.severity === 'error'), true);
     assert.equal(doctorHasBlockingIssues(report), true);
+    assert.equal(doctorHasGovernanceAttention(report), true);
+    assert.equal(doctorCommandShouldFailExit(report), true);
+  });
+});
+
+test('runLifecycleDoctor expone inventario local de dependencia pumuki instalada', async () => {
+  await withTempDir('pumuki-doctor-dependency-inventory-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, 'node_modules', 'pumuki'), { recursive: true });
+    mkdirSync(join(repoRoot, 'node_modules', '.bin'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'package.json'),
+      JSON.stringify({ devDependencies: { pumuki: '6.3.115' } }),
+      'utf8'
+    );
+    writeFileSync(join(repoRoot, 'package-lock.json'), '{}', 'utf8');
+    writeFileSync(
+      join(repoRoot, 'node_modules', 'pumuki', 'package.json'),
+      JSON.stringify({ name: 'pumuki', version: '6.3.115' }),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'pumuki.cmd' : 'pumuki'),
+      '#!/usr/bin/env sh\n',
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot);
+    const report = runLifecycleDoctor({ cwd: repoRoot, git });
+
+    assert.deepEqual(report.trackedNodeModulesPaths, []);
+    assert.equal(report.dependencyInventory.nodeModulesPresent, true);
+    assert.equal(report.dependencyInventory.packageJsonPresent, true);
+    assert.equal(report.dependencyInventory.lockfilePresent, true);
+    assert.equal(report.dependencyInventory.pumuki.declared, true);
+    assert.equal(report.dependencyInventory.pumuki.declaredRange, '6.3.115');
+    assert.equal(report.dependencyInventory.pumuki.installed, true);
+    assert.equal(report.dependencyInventory.pumuki.installedVersion, '6.3.115');
+    assert.equal(report.dependencyInventory.pumuki.packageJsonPath, 'node_modules/pumuki/package.json');
+    assert.equal(report.dependencyInventory.pumuki.binPresent, true);
+    assert.equal(
+      report.dependencyInventory.pumuki.binPath,
+      process.platform === 'win32' ? 'node_modules/.bin/pumuki.cmd' : 'node_modules/.bin/pumuki'
+    );
   });
 });
 
@@ -258,6 +307,62 @@ test('runLifecycleDoctor marca warning si lifecycle dice instalado y falta bloqu
     assert.match(report.issues[0]?.message ?? '', /installed=true/i);
     assert.match(report.issues[0]?.message ?? '', /core\.hooksPath/i);
     assert.equal(doctorHasBlockingIssues(report), false);
+    assert.equal(doctorHasGovernanceAttention(report), true);
+  });
+});
+
+test('runLifecycleDoctor añade issue canónico cuando governance requiere atención', async () => {
+  await withTempDir('pumuki-doctor-governance-attention-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+
+    const evidence = sampleEvidence({
+      repoRoot,
+      branch: 'bugfix/inc-084-canonical-issues',
+      upstream: null,
+    });
+    evidence.snapshot.outcome = 'WARN';
+    evidence.snapshot.findings = [
+      {
+        code: 'TDD_BDD_EVIDENCE_MISSING',
+        message: 'TDD/BDD evidence contract is required for new/complex changes and was not found.',
+        severity: 'WARN',
+      },
+    ];
+    evidence.severity_metrics = {
+      gate_status: 'ALLOWED',
+      total_violations: 0,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 1,
+        INFO: 0,
+      },
+    };
+    evidence.evidence_chain = {
+      algorithm: 'sha256',
+      previous_payload_hash: null,
+      payload_hash: computeEvidencePayloadHash(evidence),
+      sequence: 1,
+    };
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.governanceObservation.governance_effective, 'attention');
+    assert.equal(report.issues.some((issue) => issue.severity === 'warning'), true);
+    assert.match(report.issues[0]?.message ?? '', /Governance requires attention/i);
+    assert.equal(doctorHasBlockingIssues(report), false);
+    assert.equal(doctorHasGovernanceAttention(report), true);
   });
 });
 
@@ -411,6 +516,60 @@ test('runLifecycleDoctor queda limpio cuando estado y hooks son consistentes', a
     });
 
     assert.deepEqual(report.issues, []);
+    assert.equal(doctorHasBlockingIssues(report), false);
+  });
+});
+
+test('runLifecycleDoctor marca warning cuando el tracking canónico tiene más de una task activa', async () => {
+  await withTempDir('pumuki-doctor-tracking-invalid-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    mkdirSync(join(repoRoot, 'docs', 'validation', 'refactor'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      '# fixture\n- la única fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'),
+      [
+        '# plan',
+        '',
+        '[🚧] - PUMUKI-INC-078 (RuralGo) corregir tracking canónico',
+        '[🚧] - PUMUKI-INC-079 (RuralGo) task inválida simultánea',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'validation', 'refactor', 'last-run.json'),
+      JSON.stringify({
+        status: 'IN_PROGRESS',
+        plan_file: 'PUMUKI-RESET-MASTER-PLAN.md',
+        next: 'PUMUKI-INC-078',
+      }),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: '6.3.11',
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.tracking.in_progress_count, 2);
+    assert.equal(report.tracking.single_in_progress_valid, false);
+    assert.equal(report.issues.length, 1);
+    assert.equal(report.issues[0]?.severity, 'warning');
+    assert.match(report.issues[0]?.message ?? '', /Canonical tracking is inconsistent/i);
+    assert.match(
+      report.issues[0]?.message ?? '',
+      /active_entries=PUMUKI-INC-078@L3, PUMUKI-INC-079@L4/i
+    );
     assert.equal(doctorHasBlockingIssues(report), false);
   });
 });
@@ -592,6 +751,78 @@ test('runLifecycleDoctor --deep marca evidence stale como fallo bloqueante', asy
     assert.match(evidenceCheck?.message ?? '', /Evidence is stale/i);
     assert.equal(report.deep?.blocking, true);
     assert.equal(doctorHasBlockingIssues(report), true);
+  });
+});
+
+test('runLifecycleDoctor añade issue canónico y alinea stage cuando governance está bloqueado por evidencia', async () => {
+  await withTempDir('pumuki-doctor-governance-blocked-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    const branch = 'feature/doctor-governance-blocked';
+    const blockedEvidence = {
+      ...sampleEvidence({
+        repoRoot,
+        branch,
+        upstream: null,
+      }),
+      snapshot: {
+        stage: 'PRE_PUSH' as const,
+        outcome: 'BLOCK' as const,
+        findings: [],
+      },
+      ai_gate: {
+        status: 'BLOCKED' as const,
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'BLOCKED' as const,
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+    };
+    const payloadHash = computeEvidencePayloadHash(blockedEvidence);
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        {
+          ...blockedEvidence,
+          evidence_chain: {
+            algorithm: 'sha256' as const,
+            previous_payload_hash: null,
+            payload_hash: payloadHash,
+            sequence: 1,
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.governanceObservation.evidence.snapshot_stage, 'PRE_PUSH');
+    assert.equal(report.governanceNextAction.stage, 'PRE_PUSH');
+    assert.equal(report.issues.some((issue) => issue.severity === 'error'), true);
+    assert.equal(
+      report.issues.some((issue) => issue.message.includes('Governance is blocked')),
+      true
+    );
   });
 });
 

@@ -439,7 +439,7 @@ How to read it:
 - `lifecycleInstalled`: version persisted in managed lifecycle state.
 - `source`: source chosen to compute `effective`.
 - `driftWarning`: compact explanation when those values diverge.
-- `alignmentCommand`: exact command to align consumer dependency and lifecycle state with the current runtime.
+- `alignmentCommand`: exact command to align consumer dependency and lifecycle state with the current runtime. If the consumer declares Node via `volta`, `.nvmrc`, or `package.json.engines.node`, the command prepends the matching runtime switch before the Pumuki install step.
 - `pathExecutionHazard`: tells you whether the repo root itself can break `PATH`-based execution.
 - `pathExecutionWarning`: compact explanation of that hazard.
 - `pathExecutionWorkaroundCommand`: safe local-node entrypoint to use when `PATH` execution is unsafe.

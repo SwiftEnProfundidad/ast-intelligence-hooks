@@ -1203,6 +1203,39 @@ test('runPreCommitStage emite notificación de bloqueo con causa y remediación'
   });
 });
 
+test('runPreCommitStage bloquea por naming GitFlow inválido y expone remediación accionable', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
+    runGit(repoRoot, ['checkout', '--quiet', '-b', 'topic/inc-076']);
+    writeFileSync(join(repoRoot, 'docs-note.md'), 'note\n', 'utf8');
+    runGit(repoRoot, ['add', 'docs-note.md']);
+
+    const blocked: Array<{
+      causeCode: string;
+      causeMessage: string;
+      remediation: string;
+    }> = [];
+
+    const exitCode = await runPreCommitStage({
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+          remediation: params.remediation,
+        });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(blocked[0]?.causeCode, 'GITFLOW_BRANCH_NAMING_INVALID');
+    assert.match(blocked[0]?.causeMessage ?? '', /does not comply with GitFlow naming/i);
+    assert.match(blocked[0]?.remediation ?? '', /feature\/\*|prefijo GitFlow válido/i);
+  });
+});
+
 test('runPreCommitStage usa finding del snapshot PRE_COMMIT como causa primaria y remediación específica', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     stageBackendFile(repoRoot);

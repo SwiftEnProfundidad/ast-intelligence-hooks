@@ -40,10 +40,12 @@ test('runLifecycleAdapterInstall genera scaffolding para repo (solo .pumuki/adap
 
     assert.equal(result.agent, 'repo');
     assert.equal(result.changedFiles.includes('.pumuki/adapter.json'), true);
+    assert.equal(result.changedFiles.includes('.pumuki/bootstrap-manifest.json'), true);
     const payload = JSON.parse(
       readFileSync(join(repo, '.pumuki', 'adapter.json'), 'utf8')
     ) as { mcp?: { enterprise?: { command?: string } } };
     assert.match(payload.mcp?.enterprise?.command ?? '', /pumuki-mcp-enterprise/);
+    assert.equal(existsSync(join(repo, '.pumuki', 'bootstrap-manifest.json')), true);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
@@ -100,6 +102,13 @@ test('runLifecycleAdapterInstall genera scaffolding para codex', () => {
     );
     assert.equal(
       payload.mcp?.evidence?.command,
+      'npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio'
+    );
+    const bootstrapManifest = JSON.parse(
+      readFileSync(join(repo, '.pumuki', 'bootstrap-manifest.json'), 'utf8')
+    ) as { adapter?: { mcp?: { evidence?: string } } };
+    assert.equal(
+      bootstrapManifest.adapter?.mcp?.evidence,
       'npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio'
     );
   } finally {
@@ -191,6 +200,7 @@ test('runLifecycleAdapterInstall soporta dry-run sin escribir archivos', () => {
     assert.equal(result.written, false);
     assert.equal(result.changedFiles.length > 0, true);
     assert.equal(existsSync(join(repo, '.claude', 'settings.json')), false);
+    assert.equal(existsSync(join(repo, '.pumuki', 'bootstrap-manifest.json')), false);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

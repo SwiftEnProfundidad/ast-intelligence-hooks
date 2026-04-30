@@ -102,6 +102,8 @@ test('pre_flight_check comparte evaluador con ai_gate_check y mantiene mismo ver
     assert.equal(preFlightResult.result.phase, 'RED');
     assert.equal(preFlightResult.result.message.length > 0, true);
     assert.equal(preFlightResult.result.instruction.length > 0, true);
+    assert.equal(preFlightResult.result.reason_code.length > 0, true);
+    assert.equal(preFlightResult.result.next_action.message.length > 0, true);
     assert.equal(preFlightResult.result.ast_analysis, null);
     assert.equal(preFlightResult.result.tdd_status, null);
     assert.equal(preFlightResult.result.hints.length > 0, true);
@@ -170,7 +172,102 @@ test('pre_flight_check expone phase/message GREEN cuando no hay bloqueos', () =>
     assert.equal(preFlightResult.result.allowed, true);
     assert.equal(preFlightResult.result.phase, 'GREEN');
     assert.match(preFlightResult.result.message, /pre-flight aprobado/i);
-    assert.match(preFlightResult.result.instruction, /implementa el cambio mínimo/i);
+    assert.equal(preFlightResult.result.instruction.length > 0, true);
+    assert.equal(preFlightResult.result.reason_code.length > 0, true);
+    assert.equal(preFlightResult.result.next_action.kind, 'info');
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('pre_flight_check bloquea cuando el tracking canónico entra en conflicto con la documentación del repo', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-preflight-tracking-conflict-'));
+  try {
+    runGit(repoRoot, ['init', '-b', 'feature/tracking-conflict']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    mkdirSync(join(repoRoot, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'AGENTS.md'),
+      [
+        '# AGENTS',
+        '',
+        '- La unica fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md`.',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, 'docs', 'README.md'),
+      [
+        '# Docs',
+        '',
+        '- Fuente viva del tracking interno: `docs/tracking/plan-activo-de-trabajo.md`',
+      ].join('\n'),
+      'utf8'
+    );
+    writeFileSync(join(repoRoot, 'PUMUKI-RESET-MASTER-PLAN.md'), '- Estado: 🚧\n', 'utf8');
+
+    const evidence: AiEvidenceV2_1 = {
+      version: '2.1',
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_COMMIT',
+        outcome: 'PASS',
+        rules_coverage: {
+          stage: 'PRE_COMMIT',
+          active_rule_ids: ['skills.backend.no-empty-catch'],
+          evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      ai_gate: {
+        status: 'ALLOWED',
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED',
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      platforms: {},
+      rulesets: [],
+      ledger: [],
+      human_intent: null,
+    };
+    evidence.evidence_chain = buildEvidenceChain({ evidence });
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    const result = runEnterprisePreFlightCheck({
+      repoRoot,
+      stage: 'PRE_COMMIT',
+    });
+
+    assert.equal(result.result.allowed, false);
+    assert.equal(result.result.repo_state.lifecycle.tracking.conflict, true);
+    assert.equal(
+      result.result.violations.some((violation) => violation.code === 'TRACKING_CANONICAL_SOURCE_CONFLICT'),
+      true
+    );
+    assert.equal(
+      result.result.hints.some((hint) => hint.includes('TRACKING_CANONICAL_SOURCE_CONFLICT')),
+      true
+    );
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }
@@ -416,6 +513,8 @@ test('pre_flight_check expone hint accionable cuando falta cobertura de skills p
 
     assert.equal(preFlightResult.result.allowed, true);
     assert.equal(preFlightResult.result.phase, 'GREEN');
+    assert.equal(preFlightResult.result.reason_code, 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE');
+    assert.equal(preFlightResult.result.next_action.kind, 'info');
     assert.equal(
       preFlightResult.result.violations.some(
         (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
@@ -513,6 +612,8 @@ test('pre_flight_check expone hint accionable de reconcile estricto cuando falta
 
     assert.equal(preFlightResult.result.allowed, true);
     assert.equal(preFlightResult.result.phase, 'GREEN');
+    assert.equal(preFlightResult.result.reason_code, 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING');
+    assert.equal(preFlightResult.result.next_action.kind, 'info');
     assert.equal(
       preFlightResult.result.violations.some(
         (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'

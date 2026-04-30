@@ -7,6 +7,7 @@ import { resolvePumukiVersionMetadata } from '../lifecycle/packageInfo';
 import { readLifecycleState } from '../lifecycle/state';
 import { readPersistedHardModeConfig } from '../policy/policyProfiles';
 import type { RepoHardModeState, RepoHookState, RepoState } from './schema';
+import { readRepoTrackingState } from './trackingContract';
 
 type HookStateShape = { exists: boolean; managedBlockPresent: boolean };
 
@@ -128,6 +129,7 @@ export const captureRepoState = (repoRoot: string): RepoState => {
   const consumerFacingVersion = versionMetadata.resolvedVersion;
   const installedVersion = versionMetadata.consumerInstalledVersion;
   const hardModeState = readHardModeState(repoRoot);
+  const trackingState = readRepoTrackingState(repoRoot);
 
   return {
     repo_root: repoRoot,
@@ -155,6 +157,7 @@ export const captureRepoState = (repoRoot: string): RepoState => {
         pre_push: toHookState(lifecycle.hookStatus['pre-push']),
       },
       hard_mode: hardModeState,
+      tracking: trackingState,
     },
   };
 };

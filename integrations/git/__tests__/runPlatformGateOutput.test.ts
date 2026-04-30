@@ -41,7 +41,10 @@ test('printGateFindings emite resumen jerárquico con next_action para códigos 
   }).join('');
 
   assert.match(output, /\[pumuki\]\[block-summary\] primary=SDD_SESSION_MISSING/i);
+  assert.match(output, /\[pumuki\]\[block-summary\] reason_code=SDD_SESSION_MISSING/i);
+  assert.match(output, /\[pumuki\]\[block-summary\] instruction=Abre una sesión SDD válida/i);
   assert.match(output, /next_action=.*session --open --change=<id>/i);
+  assert.match(output, /command=.*session --open --change=<id>/i);
   assert.match(output, /\[ERROR\] sdd\.policy\.blocked: SDD session is not active\./i);
 });
 
@@ -63,6 +66,8 @@ test('printGateFindings usa next_action genérico cuando el código no está map
   }).join('');
 
   assert.match(output, /\[pumuki\]\[block-summary\] primary=CUSTOM_UNKNOWN/i);
+  assert.match(output, /\[pumuki\]\[block-summary\] reason_code=CUSTOM_UNKNOWN/i);
+  assert.match(output, /\[pumuki\]\[block-summary\] instruction=Corrige el bloqueante primario/i);
   assert.match(output, /next_action=Corrige el bloqueante primario/i);
 });
 
@@ -85,6 +90,7 @@ test('printGateFindings emite next_action incremental para bloqueo SOLID de fron
   }).join('');
 
   assert.match(output, /\[pumuki\]\[block-summary\] primary=SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS/i);
+  assert.match(output, /\[pumuki\]\[block-summary\] reason_code=SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS/i);
   assert.match(output, /next_action=Aplica refactor incremental: extrae 1 componente\/hook por commit/i);
 });
 
@@ -107,7 +113,61 @@ test('printGateFindings emite next_action de reconcile cuando active_rule_ids es
   }).join('');
 
   assert.match(output, /\[pumuki\]\[block-summary\] primary=ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH/i);
-  assert.match(output, /next_action=Reconcilia policy\/skills y reintenta PRE_COMMIT/i);
+  assert.match(output, /\[pumuki\]\[block-summary\] reason_code=EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES/i);
+  assert.match(output, /\[pumuki\]\[block-summary\] instruction=Reconcilia policy\/skills en modo estricto/i);
+  assert.match(output, /next_action=.*policy reconcile --strict --json/i);
+  assert.match(output, /command=.*validate --stage=PRE_COMMIT --json/i);
+});
+
+test('printGateFindings usa el stage recibido para generar la remediación canónica', () => {
+  const findings: Finding[] = [
+    {
+      ruleId: 'governance.evidence.stale',
+      severity: 'ERROR',
+      code: 'EVIDENCE_STALE',
+      message: 'Evidence is stale.',
+      filePath: '.ai_evidence.json',
+      lines: 1,
+      matchedBy: 'EvidenceGuard',
+      source: 'evidence',
+    },
+  ];
+
+  const output = withCapturedStdout(() => {
+    printGateFindings(findings, { stage: 'PRE_PUSH' });
+  }).join('');
+
+  assert.match(output, /\[pumuki\]\[block-summary\] reason_code=EVIDENCE_STALE/i);
+  assert.match(output, /command=.*validate --stage=PRE_PUSH --json/i);
+});
+
+test('printGateFindings separa warning secundario cuando convive con un blocker primario', () => {
+  const findings: Finding[] = [
+    {
+      ruleId: 'ai_gate.repo_policy.TRACKING_CANONICAL_IN_PROGRESS_INVALID',
+      severity: 'ERROR',
+      code: 'TRACKING_CANONICAL_IN_PROGRESS_INVALID',
+      message: 'Tracking canonical file must contain exactly one in-progress task (count=2). active_entries=PUMUKI-INC-081@L10, PUMUKI-INC-083@L11 last_run_status=IN_PROGRESS.',
+      matchedBy: 'RepoPolicy',
+      source: 'ai_gate:repo_policy',
+    },
+    {
+      ruleId: 'ai_gate.repo_policy.EVIDENCE_PREWRITE_WORKTREE_WARN',
+      severity: 'WARN',
+      code: 'EVIDENCE_PREWRITE_WORKTREE_WARN',
+      message: 'PRE_WRITE worktree hygiene warning: pending_changes=15 (warn_threshold=12). Consider smaller staged/unstaged batches.',
+      matchedBy: 'RepoPolicy',
+      source: 'ai_gate:repo_policy',
+    },
+  ];
+
+  const output = withCapturedStdout(() => {
+    printGateFindings(findings);
+  }).join('');
+
+  assert.match(output, /\[pumuki\]\[block-summary\] primary=TRACKING_CANONICAL_IN_PROGRESS_INVALID/i);
+  assert.match(output, /\[pumuki\]\[warning-summary\] secondary=EVIDENCE_PREWRITE_WORKTREE_WARN/i);
+  assert.match(output, /active_entries=PUMUKI-INC-081@L10, PUMUKI-INC-083@L11/i);
 });
 
 test('printGateFindings separa warning secundario cuando convive con un blocker primario', () => {

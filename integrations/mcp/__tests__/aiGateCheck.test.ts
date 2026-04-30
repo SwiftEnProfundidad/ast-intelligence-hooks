@@ -4,13 +4,34 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { runEnterpriseAiGateCheck } from '../aiGateCheck';
+import { runEnterpriseAiGateCheck, runEnterpriseAiGateCheckAsync } from '../aiGateCheck';
 import { buildEvidenceChain } from '../../evidence/evidenceChain';
 import type { AiEvidenceV2_1 } from '../../evidence/schema';
 import { evaluateAiGate } from '../../gate/evaluateAiGate';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
   execFileSync('git', args, { cwd, encoding: 'utf8' });
+
+const withAiGateCheckMode = async <T>(
+  mode: 'policy' | 'full' | undefined,
+  callback: () => Promise<T> | T
+): Promise<T> => {
+  const previous = process.env.PUMUKI_MCP_AI_GATE_CHECK_MODE;
+  if (typeof mode === 'undefined') {
+    delete process.env.PUMUKI_MCP_AI_GATE_CHECK_MODE;
+  } else {
+    process.env.PUMUKI_MCP_AI_GATE_CHECK_MODE = mode;
+  }
+  try {
+    return await callback();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env.PUMUKI_MCP_AI_GATE_CHECK_MODE;
+    } else {
+      process.env.PUMUKI_MCP_AI_GATE_CHECK_MODE = previous;
+    }
+  }
+};
 
 const withLearningContextMode = async <T>(
   mode: 'off' | 'advisory' | 'strict' | undefined,
@@ -93,6 +114,15 @@ test('runEnterpriseAiGateCheck aplica contrato de tool ai_gate_check en PRE_WRIT
       true
     );
     assert.equal(result.result.message.length > 0, true);
+    assert.equal(result.result.reason_code, 'AI_GATE_ALLOWED');
+    assert.equal(result.result.instruction.length > 0, true);
+    assert.equal(typeof result.result.prewrite_effective.mode, 'string');
+    assert.equal(typeof result.result.prewrite_effective.source, 'string');
+    assert.equal(typeof result.result.prewrite_effective.blocking, 'boolean');
+    assert.equal(typeof result.result.prewrite_effective.strict_policy, 'boolean');
+    assert.equal(result.result.next_action.reason, 'AI_GATE_ALLOWED');
+    assert.equal(result.result.next_action.kind, 'info');
+    assert.equal(result.result.next_action.message.length > 0, true);
     assert.ok(Array.isArray(result.result.warnings));
     assert.ok(Array.isArray(result.result.auto_fixes));
     assert.equal(result.result.stage, 'PRE_WRITE');
@@ -350,6 +380,155 @@ test('runEnterpriseAiGateCheck marca precedencia para códigos EVIDENCE_* legacy
   }
 });
 
+test('runEnterpriseAiGateCheckAsync por defecto mantiene semántica read-only y coincide con sync', async () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-aigate-async-policy-default-'));
+  try {
+    runGit(repoRoot, ['init', '-b', 'feature/mcp-chain']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    const evidence: AiEvidenceV2_1 = {
+      version: '2.1',
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_COMMIT',
+        outcome: 'PASS',
+        rules_coverage: {
+          stage: 'PRE_COMMIT',
+          active_rule_ids: ['skills.backend.no-empty-catch'],
+          evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      ai_gate: {
+        status: 'ALLOWED',
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED',
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+    };
+    evidence.evidence_chain = buildEvidenceChain({ evidence });
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    const syncResult = runEnterpriseAiGateCheck({
+      repoRoot,
+      stage: 'PRE_WRITE',
+    });
+    const asyncResult = await runEnterpriseAiGateCheckAsync(
+      {
+        repoRoot,
+        stage: 'PRE_WRITE',
+      },
+      {
+        runMcpAlignedPlatformGate: async () => {
+          throw new Error('runMcpAlignedPlatformGate no debería ejecutarse en modo policy por defecto');
+        },
+      }
+    );
+
+    assert.equal(asyncResult.success, syncResult.success);
+    assert.equal(asyncResult.result.allowed, syncResult.result.allowed);
+    assert.equal(asyncResult.result.message, syncResult.result.message);
+    assert.equal(asyncResult.result.platform_gate_alignment, undefined);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('runEnterpriseAiGateCheckAsync en modo full lee evidencia actual antes del platform gate', async () => {
+  await withAiGateCheckMode('full', async () => {
+    const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-aigate-async-preserve-evidence-'));
+    try {
+      runGit(repoRoot, ['init', '-b', 'feature/mcp-async-order']);
+      runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+      runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+      mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+
+      const result = await runEnterpriseAiGateCheckAsync(
+        {
+          repoRoot,
+          stage: 'PRE_WRITE',
+        },
+        {
+          runMcpAlignedPlatformGate: async () => {
+            const freshEvidence: AiEvidenceV2_1 = {
+              version: '2.1',
+              timestamp: new Date().toISOString(),
+              snapshot: {
+                stage: 'PRE_WRITE',
+                outcome: 'PASS',
+                rules_coverage: {
+                  stage: 'PRE_WRITE',
+                  active_rule_ids: ['skills.backend.no-empty-catch'],
+                  evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+                  matched_rule_ids: [],
+                  unevaluated_rule_ids: [],
+                  counts: {
+                    active: 1,
+                    evaluated: 1,
+                    matched: 0,
+                    unevaluated: 0,
+                  },
+                  coverage_ratio: 1,
+                },
+                findings: [],
+              },
+              ai_gate: {
+                status: 'ALLOWED',
+                violations: [],
+                human_intent: null,
+              },
+              severity_metrics: {
+                gate_status: 'ALLOWED',
+                total_violations: 0,
+                by_severity: {
+                  CRITICAL: 0,
+                  ERROR: 0,
+                  WARN: 0,
+                  INFO: 0,
+                },
+              },
+            };
+            freshEvidence.evidence_chain = buildEvidenceChain({ evidence: freshEvidence });
+            writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(freshEvidence, null, 2), 'utf8');
+            return { exitCode: 0, aligned: true, skipReason: null };
+          },
+        }
+      );
+
+      assert.equal(result.success, false);
+      assert.equal(result.result.allowed, false);
+      assert.equal(result.result.status, 'BLOCKED');
+      assert.equal(
+        result.result.violations.some((violation) => violation.code === 'EVIDENCE_MISSING'),
+        true
+      );
+      assert.equal(result.result.platform_gate_alignment?.mode, 'full');
+      assert.equal(result.result.platform_gate_alignment?.exit_code, 0);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+});
+
 test('runEnterpriseAiGateCheck incluye warning explícito en ramas protegidas', () => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-aigate-protected-branch-warning-'));
   try {
@@ -413,6 +592,83 @@ test('runEnterpriseAiGateCheck incluye warning explícito en ramas protegidas', 
     assert.equal(typeof result.result.allowed, 'boolean');
     assert.equal(
       result.result.warnings.some((warning) => warning.startsWith('ON_PROTECTED_BRANCH:')),
+      true
+    );
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('runEnterpriseAiGateCheck bloquea rama con naming GitFlow inválido y expone auto-fix', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-aigate-invalid-branch-'));
+  try {
+    runGit(repoRoot, ['init', '-b', 'topic/inc-076']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    writeFileSync(join(repoRoot, 'README.md'), '# invalid-branch\n', 'utf8');
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: bootstrap invalid branch']);
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    const evidence: AiEvidenceV2_1 = {
+      version: '2.1',
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_WRITE',
+        outcome: 'PASS',
+        rules_coverage: {
+          stage: 'PRE_WRITE',
+          active_rule_ids: ['skills.backend.no-empty-catch'],
+          evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      ai_gate: {
+        status: 'ALLOWED',
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED',
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      platforms: {},
+      rulesets: [],
+      ledger: [],
+      human_intent: null,
+    };
+    evidence.evidence_chain = buildEvidenceChain({ evidence });
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    const result = runEnterpriseAiGateCheck({
+      repoRoot,
+      stage: 'PRE_WRITE',
+    });
+
+    assert.equal(result.success, false);
+    assert.equal(result.result.status, 'BLOCKED');
+    assert.equal(result.result.violations[0]?.code, 'GITFLOW_BRANCH_NAMING_INVALID');
+    assert.equal(result.result.reason_code, 'GITFLOW_BRANCH_NAMING_INVALID');
+    assert.equal(result.result.instruction.length > 0, true);
+    assert.equal(result.result.next_action.reason, 'GITFLOW_BRANCH_NAMING_INVALID');
+    assert.equal(result.result.next_action.kind, 'info');
+    assert.equal(result.result.next_action.message.length > 0, true);
+    assert.equal(
+      result.result.auto_fixes.some((item) => item.includes('prefijo GitFlow válido')),
       true
     );
   } finally {

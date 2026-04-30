@@ -121,10 +121,28 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
 
     const adapterPath = join(repo, '.pumuki', 'adapter.json');
     assert.equal(existsSync(adapterPath), true);
+    const bootstrapManifestPath = join(repo, '.pumuki', 'bootstrap-manifest.json');
+    assert.equal(existsSync(bootstrapManifestPath), true);
     const adapter = JSON.parse(readFileSync(adapterPath, 'utf8')) as {
       mcp?: { enterprise?: { command?: string } };
     };
     assert.match(adapter.mcp?.enterprise?.command ?? '', /pumuki-mcp-enterprise/);
+    const bootstrapManifest = JSON.parse(readFileSync(bootstrapManifestPath, 'utf8')) as {
+      contract_surface?: { agents_md?: boolean; pumuki_adapter_json?: boolean };
+      governance?: { bootstrap_hints?: string[]; next_action?: { reason_code?: string; stage?: string } };
+      adapter?: { hooks?: { pre_write?: string }; mcp?: { enterprise?: string } };
+      lifecycle?: { installed?: boolean };
+    };
+    assert.equal(bootstrapManifest.lifecycle?.installed, true);
+    assert.equal(bootstrapManifest.contract_surface?.agents_md, false);
+    assert.equal(bootstrapManifest.contract_surface?.pumuki_adapter_json, true);
+    assert.match(bootstrapManifest.adapter?.hooks?.pre_write ?? '', /pumuki-pre-write/);
+    assert.match(bootstrapManifest.adapter?.mcp?.enterprise ?? '', /pumuki-mcp-enterprise/);
+    assert.equal(Array.isArray(bootstrapManifest.governance?.bootstrap_hints), true);
+    assert.equal(typeof bootstrapManifest.governance?.next_action?.reason_code, 'string');
+    assert.equal(bootstrapManifest.governance?.next_action?.stage, 'PRE_COMMIT');
+    assert.equal(realpathSync(result.bootstrapManifest.path), realpathSync(bootstrapManifestPath));
+    assert.equal(typeof result.bootstrapManifest.changed, 'boolean');
 
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.installed), 'true');
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.version), getCurrentPumukiVersion());
@@ -281,6 +299,7 @@ test('runLifecycleInstall con bestEffortAfterDoctorBlock cablea hooks aunque doc
     assert.match(hookText, /pumuki-pre-write/);
     assert.match(hookText, /pumuki-pre-commit/);
     assert.equal(existsSync(join(repo, '.pumuki', 'adapter.json')), true);
+    assert.equal(existsSync(join(repo, '.pumuki', 'bootstrap-manifest.json')), true);
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.installed), 'true');
     assert.equal(existsSync(join(repo, '.ai_evidence.json')), true);
   } finally {
@@ -299,12 +318,41 @@ test('runLifecycleInstall es idempotente en segunda ejecución sobre repo ya ins
 
     assert.deepEqual(firstInstall.changedHooks, ['pre-commit', 'pre-push']);
     assert.deepEqual(secondInstall.changedHooks, []);
+    assert.equal(existsSync(firstInstall.bootstrapManifest.path), true);
+    assert.equal(secondInstall.bootstrapManifest.changed, false);
     assert.equal(secondInstall.version, getCurrentPumukiVersion());
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.installed), 'true');
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.hooks), 'pre-commit,pre-push');
     assert.equal(typeof firstInstalledAt, 'string');
     assert.equal(typeof secondInstalledAt, 'string');
     assert.equal(existsSync(join(repo, '.ai_evidence.json')), true);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleInstall materializa policy-as-code estricta cuando el repo declara insumos mínimos', () => {
+  const repo = createGitRepo();
+  try {
+    writeValidPolicyReconcileInputs(repo);
+
+    runLifecycleInstall({ cwd: repo });
+
+    const contract = JSON.parse(
+      readFileSync(join(repo, '.pumuki', 'policy-as-code.json'), 'utf8')
+    ) as {
+      strict?: Partial<Record<'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI', boolean>>;
+      signatures?: Partial<Record<'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI', string>>;
+    };
+
+    assert.equal(contract.strict?.PRE_WRITE, true);
+    assert.equal(contract.strict?.PRE_COMMIT, true);
+    assert.equal(contract.strict?.PRE_PUSH, true);
+    assert.equal(contract.strict?.CI, true);
+    assert.equal(typeof contract.signatures?.PRE_WRITE, 'string');
+    assert.equal(typeof contract.signatures?.PRE_COMMIT, 'string');
+    assert.equal(typeof contract.signatures?.PRE_PUSH, 'string');
+    assert.equal(typeof contract.signatures?.CI, 'string');
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
