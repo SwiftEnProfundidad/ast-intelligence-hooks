@@ -1,9 +1,6 @@
-import {
-  buildGovernanceValidateCommand,
-  resolveGovernanceCatalogAction,
-} from '../gate/governanceActionCatalog';
 import { evaluateAiGate, type AiGateStage, type AiGateViolation } from '../gate/evaluateAiGate';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
+import { getCurrentPumukiVersion } from '../lifecycle/packageInfo';
 import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
 
@@ -54,98 +51,126 @@ const confidenceFromViolation = (violationCode: string | null): number => {
   if (isEvidenceCode(violationCode)) {
     return 65;
   }
-  if (
-    violationCode === 'GITFLOW_PROTECTED_BRANCH'
-    || violationCode === 'GITFLOW_BRANCH_NAMING_INVALID'
-  ) {
+  if (violationCode === 'GITFLOW_PROTECTED_BRANCH') {
     return 40;
   }
   return 50;
 };
 
-const normalizeGovernanceCatalogCode = (code: string): string => {
-  switch (code) {
+const buildPinnedPumukiNpxCommand = (params: {
+  repoRoot: string;
+  executableAndArgs: string;
+}): string =>
+  `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: params.repoRoot })} ${params.executableAndArgs}`;
+
+const nextActionFromViolation = (
+  violation: AiGateViolation | undefined,
+  repoRoot: string
+): AutoExecuteNextAction => {
+  if (!violation) {
+    return {
+      kind: 'info',
+      message: 'Gate listo. Puedes continuar con implementación.',
+    };
+  }
+  switch (violation.code) {
+    case 'EVIDENCE_MISSING':
     case 'EVIDENCE_INVALID':
     case 'EVIDENCE_CHAIN_INVALID':
-      return 'EVIDENCE_INVALID_OR_CHAIN';
-    case 'GITFLOW_PROTECTED_BRANCH':
-      return 'GITFLOW_PROTECTED_BRANCH_CONTEXT';
-    case 'GITFLOW_BRANCH_NAMING_INVALID':
-      return 'GITFLOW_BRANCH_NAMING_INVALID_CONTEXT';
-    default:
-      return code;
-  }
-};
-
-const resolveAutoExecuteRemediation = (params: {
-  violation: AiGateViolation | undefined;
-  repoRoot: string;
-  stage: AiGateStage;
-  allowed: boolean;
-}): {
-  instruction: string;
-  nextAction: AutoExecuteNextAction;
-} => {
-  if (!params.violation) {
-    const readyAction = resolveGovernanceCatalogAction({
-      code: 'READY',
-      stage: params.stage,
-    });
-    return {
-      instruction: readyAction.instruction,
-      nextAction: readyAction.next_action,
-    };
-  }
-
-  if (
-    params.violation.code === 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT'
-    || params.violation.code === 'EVIDENCE_PREWRITE_WORKTREE_WARN'
-  ) {
-    const validateCommand = buildGovernanceValidateCommand(params.stage);
-    const plan = collectWorktreeAtomicSlices({
-      repoRoot: params.repoRoot,
-      maxSlices: 3,
-      maxFilesPerSlice: 4,
-    });
-    if (plan.slices.length > 0) {
-      const firstSlice = plan.slices[0];
+    case 'EVIDENCE_STALE':
       return {
-        instruction: 'Particiona el worktree en slices atómicos antes de continuar.',
-        nextAction: {
-          kind: params.allowed ? 'info' : 'run_command',
-          message:
-            `Particiona el worktree en slices atómicos por scope. Primer lote sugerido: ${firstSlice?.scope ?? 'scope-desconocido'}.`,
-          command: params.allowed
-            ? undefined
-            : `${firstSlice?.staged_command ?? 'git add -p'} && ${validateCommand}`,
-        },
+        kind: 'run_command',
+        message: 'Regenera o refresca evidencia y vuelve a evaluar PRE_WRITE.',
+        command: buildPinnedPumukiNpxCommand({
+          repoRoot,
+          executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+        }),
       };
-    }
-    return {
-      instruction: 'Particiona el worktree en slices atómicos antes de continuar.',
-      nextAction: {
-        kind: params.allowed ? 'info' : 'run_command',
-        message: 'Particiona el worktree en slices atómicos y revalida PRE_WRITE para continuar sin fricción.',
-        command: params.allowed
-          ? undefined
-          : `git status --short && git add -p && ${validateCommand}`,
-      },
-    };
-  }
-
-  const governanceAction = resolveGovernanceCatalogAction({
-    code: normalizeGovernanceCatalogCode(params.violation.code),
-    stage: params.stage,
-  });
-  return {
-    instruction: governanceAction.instruction,
-    nextAction: params.allowed
-      ? {
-        kind: 'info',
-        message: governanceAction.next_action.message,
+    case 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES':
+      return {
+        kind: 'run_command',
+        message:
+          'No hay active_rule_ids para plataforma de código detectada. Reconciliación strict de policy/skills y revalidación PRE_WRITE.',
+        command:
+          `${buildPinnedPumukiNpxCommand({
+            repoRoot,
+            executableAndArgs: 'pumuki policy reconcile --strict --json',
+          })} && ${buildPinnedPumukiNpxCommand({
+            repoRoot,
+            executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+          })}`,
+      };
+    case 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE':
+    case 'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING':
+    case 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE':
+      return {
+        kind: 'run_command',
+        message:
+          'Completa cobertura de skills por plataforma (prefijos + bundles) y revalida PRE_WRITE.',
+        command: buildPinnedPumukiNpxCommand({
+          repoRoot,
+          executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+        }),
+      };
+    case 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING':
+    case 'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE':
+      return {
+        kind: 'run_command',
+        message:
+          'Reconcilia policy/skills en modo estricto (incluida skills.ios.critical-test-quality cuando aplique) y revalida PRE_WRITE.',
+        command:
+          `${buildPinnedPumukiNpxCommand({
+            repoRoot,
+            executableAndArgs: 'pumuki policy reconcile --strict --json',
+          })} && ${buildPinnedPumukiNpxCommand({
+            repoRoot,
+            executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+          })}`,
+      };
+    case 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT':
+    case 'EVIDENCE_PREWRITE_WORKTREE_WARN':
+      {
+        const plan = collectWorktreeAtomicSlices({
+          repoRoot,
+          maxSlices: 3,
+          maxFilesPerSlice: 4,
+        });
+        if (plan.slices.length > 0) {
+          const firstSlice = plan.slices[0];
+          return {
+            kind: 'run_command',
+            message:
+              `Particiona el worktree en slices atómicos por scope. Primer lote sugerido: ${firstSlice?.scope ?? 'scope-desconocido'}.`,
+            command:
+              `${firstSlice?.staged_command ?? 'git add -p'} && ${buildPinnedPumukiNpxCommand({
+                repoRoot,
+                executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+              })}`,
+          };
+        }
       }
-      : governanceAction.next_action,
-  };
+      return {
+        kind: 'run_command',
+        message:
+          'Particiona el worktree en slices atómicos y revalida PRE_WRITE para continuar sin fricción.',
+        command:
+          `git status --short && git add -p && ${buildPinnedPumukiNpxCommand({
+            repoRoot,
+            executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
+          })}`,
+      };
+    case 'GITFLOW_PROTECTED_BRANCH':
+      return {
+        kind: 'run_command',
+        message: 'Cambia a una rama feature/* antes de continuar.',
+        command: 'git checkout -b feature/<descripcion-kebab-case>',
+      };
+    default:
+      return {
+        kind: 'info',
+        message: 'Corrige la violación bloqueante y vuelve a ejecutar auto_execute_ai_start.',
+      };
+  }
 };
 
 export type EnterpriseAutoExecuteAiStartResult = {
@@ -196,20 +221,19 @@ export const runEnterpriseAutoExecuteAiStart = (params: {
   const action: AutoExecuteAction = evaluation.allowed ? 'proceed' : 'ask';
   const phase = toAutoExecutePhase(action);
   const confidencePct = confidenceFromViolation(firstViolation?.code ?? null);
-  const remediation = resolveAutoExecuteRemediation({
-    violation: firstViolation,
-    repoRoot: params.repoRoot,
-    stage,
-    allowed: evaluation.allowed,
-  });
-  const nextAction = remediation.nextAction;
+  const nextAction = evaluation.allowed
+    ? {
+      kind: 'info' as const,
+      message: 'Gate en verde. Continúa con la implementación.',
+    }
+    : nextActionFromViolation(firstViolation, params.repoRoot);
 
   let message = toHumanMessage({
     action,
     confidencePct,
     reasonCode,
   });
-  let instruction = remediation.instruction;
+  let instruction = nextAction.message;
   if (learningContext?.recommended_actions[0]) {
     message = `${message} Learning: ${learningContext.recommended_actions[0]}`;
     instruction = `${instruction} Learning: ${learningContext.recommended_actions[0]}`;

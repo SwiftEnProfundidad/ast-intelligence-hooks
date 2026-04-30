@@ -50,7 +50,9 @@ export const countFindingsBySeverity = (
 export const toTopFiles = (params: {
   findings: ReadonlyArray<EvidenceFinding>;
   repoRoot: string;
+  maxItems?: number;
 }): ReadonlyArray<{ file: string; count: number }> => {
+  const maxItems = params.maxItems ?? 5;
   const filesMap = new Map<string, number>();
   for (const finding of params.findings) {
     const rawFile = toStringOrNull(finding.file);
@@ -66,7 +68,7 @@ export const toTopFiles = (params: {
 
   return [...filesMap.entries()]
     .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
-    .slice(0, 5)
+    .slice(0, maxItems)
     .map(([file, count]) => ({ file, count }));
 };
 

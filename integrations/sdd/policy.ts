@@ -14,6 +14,7 @@ import {
 } from './sessionStore';
 import type { ILifecycleGitService } from '../lifecycle/gitService';
 import { resolveDegradedMode } from '../gate/degradedMode';
+import { getCurrentPumukiVersion } from '../lifecycle/packageInfo';
 import { resolveSddCompletenessEnforcement } from '../policy/sddCompletenessEnforcement';
 import { resolveSddExperimentalFeature } from '../policy/experimentalFeatures';
 import type {
@@ -23,16 +24,20 @@ import type {
   SddStatusPayload,
 } from './types';
 
-const SDD_SESSION_REFRESH_COMMAND =
-  'npx --yes --package pumuki@latest pumuki sdd session --refresh --ttl-minutes=90';
-const SDD_SESSION_OPEN_AUTO_COMMAND =
-  'npx --yes --package pumuki@latest pumuki sdd session --open --change=auto';
-const SDD_SESSION_OPEN_EXPLICIT_COMMAND =
-  'npx --yes --package pumuki@latest pumuki sdd session --open --change=<id>';
 const SDD_COMPLETENESS_CONTRACT_VERSION = '1.0';
 
-const buildSddExperimentalEnableCommand = (stage: SddStage): string =>
-  `PUMUKI_EXPERIMENTAL_SDD=advisory npx --yes --package pumuki@latest pumuki sdd validate --stage=${stage} --json`;
+const buildPinnedPumukiNpxCommand = (version: string): string =>
+  `npx --yes --package pumuki@${version} pumuki`;
+const buildSddSessionRefreshCommand = (repoRoot: string): string =>
+  `${buildPinnedPumukiNpxCommand(getCurrentPumukiVersion({ repoRoot }))} sdd session --refresh --ttl-minutes=90`;
+const buildSddSessionOpenAutoCommand = (repoRoot: string): string =>
+  `${buildPinnedPumukiNpxCommand(getCurrentPumukiVersion({ repoRoot }))} sdd session --open --change=auto`;
+const buildSddSessionOpenExplicitCommand = (repoRoot: string): string =>
+  `${buildPinnedPumukiNpxCommand(getCurrentPumukiVersion({ repoRoot }))} sdd session --open --change=<id>`;
+const buildSddExperimentalEnableCommand = (stage: SddStage, repoRoot: string): string =>
+  `PUMUKI_EXPERIMENTAL_SDD=advisory ${buildPinnedPumukiNpxCommand(
+    getCurrentPumukiVersion({ repoRoot })
+  )} sdd validate --stage=${stage} --json`;
 
 const resolveMissingSessionGuidance = (repoRoot: string): {
   message: string;
@@ -41,15 +46,17 @@ const resolveMissingSessionGuidance = (repoRoot: string): {
   suggestedChangeId?: string;
   availableChangeIds: ReadonlyArray<string>;
 } => {
+  const sessionOpenAutoCommand = buildSddSessionOpenAutoCommand(repoRoot);
+  const sessionOpenExplicitCommand = buildSddSessionOpenExplicitCommand(repoRoot);
   const availableChangeIds = listActiveOpenSpecChangeIds(repoRoot);
   if (availableChangeIds.length === 1) {
     const suggestedChangeId = availableChangeIds[0] ?? '';
     const command =
-      `npx --yes --package pumuki@latest pumuki sdd session --open --change=${suggestedChangeId}`;
+      `${buildPinnedPumukiNpxCommand(getCurrentPumukiVersion({ repoRoot }))} sdd session --open --change=${suggestedChangeId}`;
     return {
       message: `SDD session is not active. Run \`${command}\` and retry.`,
       command,
-      fallbackCommand: SDD_SESSION_OPEN_AUTO_COMMAND,
+      fallbackCommand: sessionOpenAutoCommand,
       suggestedChangeId,
       availableChangeIds,
     };
@@ -57,17 +64,17 @@ const resolveMissingSessionGuidance = (repoRoot: string): {
   if (availableChangeIds.length > 1) {
     return {
       message:
-        `SDD session is not active. Run \`${SDD_SESSION_OPEN_EXPLICIT_COMMAND}\` ` +
+        `SDD session is not active. Run \`${sessionOpenExplicitCommand}\` ` +
         `with one active change id. Active changes: ${availableChangeIds.join(', ')}.`,
-      command: SDD_SESSION_OPEN_EXPLICIT_COMMAND,
-      fallbackCommand: SDD_SESSION_OPEN_EXPLICIT_COMMAND,
+      command: sessionOpenExplicitCommand,
+      fallbackCommand: sessionOpenExplicitCommand,
       availableChangeIds,
     };
   }
   return {
-    message: `SDD session is not active. Run \`${SDD_SESSION_OPEN_AUTO_COMMAND}\` and retry.`,
-    command: SDD_SESSION_OPEN_AUTO_COMMAND,
-    fallbackCommand: SDD_SESSION_OPEN_AUTO_COMMAND,
+    message: `SDD session is not active. Run \`${sessionOpenAutoCommand}\` and retry.`,
+    command: sessionOpenAutoCommand,
+    fallbackCommand: sessionOpenAutoCommand,
     availableChangeIds,
   };
 };
@@ -160,6 +167,7 @@ const evaluateActiveChangeCompleteness = (params: {
 
 const evaluateSessionRequirements = (params: {
   status: SddStatusPayload;
+  repoRoot: string;
   autoRefreshEnabled: boolean;
   autoRefreshAttempted: boolean;
   autoRefreshError?: string;
@@ -182,8 +190,9 @@ const evaluateSessionRequirements = (params: {
     );
   }
   if (!status.session.valid || !status.session.changeId) {
+    const refreshCommand = buildSddSessionRefreshCommand(params.repoRoot);
     const details: Record<string, string | boolean> = {
-      command: SDD_SESSION_REFRESH_COMMAND,
+      command: refreshCommand,
       autoRefreshEnabled: params.autoRefreshEnabled,
       autoRefreshAttempted: params.autoRefreshAttempted,
     };
@@ -192,8 +201,8 @@ const evaluateSessionRequirements = (params: {
     }
     const message =
       params.autoRefreshAttempted && params.autoRefreshError
-        ? `SDD session is invalid or expired. Auto-refresh failed (${params.autoRefreshError}). Run \`${SDD_SESSION_REFRESH_COMMAND}\` or reopen it.`
-        : `SDD session is invalid or expired. Run \`${SDD_SESSION_REFRESH_COMMAND}\` or reopen it.`;
+        ? `SDD session is invalid or expired. Auto-refresh failed (${params.autoRefreshError}). Run \`${refreshCommand}\` or reopen it.`
+        : `SDD session is invalid or expired. Run \`${refreshCommand}\` or reopen it.`;
     return blocked(
       'SDD_SESSION_INVALID',
       message,
@@ -317,7 +326,7 @@ export const evaluateSddPolicy = (params: {
         allowed: true,
         code: 'SDD_EXPERIMENTAL_DISABLED',
         message:
-          'SDD/OpenSpec pertenece al namespace experimental y está desactivado por defecto. Actívalo explícitamente con PUMUKI_EXPERIMENTAL_SDD=advisory o strict si necesitas este flujo.',
+          'SDD/OpenSpec está desactivado explícitamente. Usa PUMUKI_EXPERIMENTAL_SDD=advisory o strict si necesitas este flujo.',
         details: {
           experimental: true,
           default_off: true,
@@ -327,7 +336,7 @@ export const evaluateSddPolicy = (params: {
           experimentalSource: sddExperimentalFeature.source,
           activation_env: sddExperimentalFeature.activationVariable,
           legacy_activation_env: sddExperimentalFeature.legacyActivationVariable,
-          activation_command: buildSddExperimentalEnableCommand(params.stage),
+          activation_command: buildSddExperimentalEnableCommand(params.stage, repoRoot),
         },
       },
     };
@@ -420,6 +429,7 @@ export const evaluateSddPolicy = (params: {
 
   const sessionDecision = evaluateSessionRequirements({
     status,
+    repoRoot,
     autoRefreshEnabled,
     autoRefreshAttempted,
     autoRefreshError,

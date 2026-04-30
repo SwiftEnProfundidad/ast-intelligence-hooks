@@ -249,14 +249,14 @@ const { data } = await supabase
 ✅ **i18n en error messages** - Mensajes traducibles
 
 ### Anti-patterns a EVITAR:
-❌ **God classes** - Servicios con >500 líneas
+❌ **God classes** - Servicios que mezclan responsabilidades de dominio, aplicación, infraestructura, branching de tipos o contratos en una misma clase
+❌ **Anemic domain models** - Entidades solo con getters/setters
 ❌ **Magic numbers** - Usar constantes con nombres descriptivos
-❌ **Mocks en producción** - Usar fakes/spies de test; en runtime productivo, solo adaptadores y datos reales
-❌ **Anemic domain models** - Entidades con comportamiento, no solo getters/setters
-❌ **Lógica en controllers** - Mover lógica de negocio a casos de uso/servicios
 ❌ **Callback hell** - Usar async/await
 ❌ **Hardcoded values** - Config en variables de entorno
+❌ **Mocks en producción** - Solo datos reales
 ❌ **try-catch silenciosos** - Siempre loggear o propagar (AST: common.error.empty_catch)
+❌ **Lógica en controllers** - Mover a servicios/use cases
 
 ### Principio fundamental:
 ✅ **"Measure twice, cut once"** - Planificar arquitectura, dependencias y flujo de datos antes de implementar. Analizar impacto en BD, caché y performance.

@@ -220,13 +220,25 @@ const toRulesCoverageBlockingFinding = (params: {
 
 const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
   stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  filesScanned: number;
   unsupportedAutoRuleIds: ReadonlyArray<string>;
+  unsupportedDetectorRuleIds?: ReadonlyArray<string>;
 }): Finding | undefined => {
-  if (params.unsupportedAutoRuleIds.length === 0) {
+  if (params.filesScanned === 0) {
     return undefined;
   }
 
-  const unsupportedAutoRuleIds = [...params.unsupportedAutoRuleIds].sort().join(', ');
+  const unsupportedRuleIds = [
+    ...new Set([
+      ...params.unsupportedAutoRuleIds,
+      ...(params.unsupportedDetectorRuleIds ?? []),
+    ]),
+  ].sort();
+  if (unsupportedRuleIds.length === 0) {
+    return undefined;
+  }
+
+  const unsupportedRuleIdsToken = unsupportedRuleIds.join(', ');
 
   return {
     ruleId: 'governance.skills.detector-mapping.incomplete',
@@ -234,8 +246,8 @@ const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
     code: 'SKILLS_DETECTOR_MAPPING_INCOMPLETE_HIGH',
     message:
       `Skills detector mapping incomplete at ${params.stage}: ` +
-      `unsupported_auto_rule_ids=[${unsupportedAutoRuleIds}]. ` +
-      'Map every AUTO skill rule to an AST detector before proceeding.',
+      `unsupported_detector_rule_ids=[${unsupportedRuleIdsToken}]. ` +
+      'Map every skill rule to an intelligent AST detector before proceeding; DECLARATIVE is not an acceptable final coverage state.',
     filePath: '.ai_evidence.json',
     matchedBy: 'SkillsDetectorMappingGuard',
     source: 'skills-detector-mapping',
@@ -993,7 +1005,9 @@ export async function runPlatformGate(params: {
     params.policy.stage === 'CI'
       ? toSkillsUnsupportedAutoRulesBlockingFinding({
         stage: params.policy.stage,
+        filesScanned,
         unsupportedAutoRuleIds: skillsRuleSet.unsupportedAutoRuleIds ?? [],
+        unsupportedDetectorRuleIds: skillsRuleSet.unsupportedDetectorRuleIds ?? [],
       })
       : undefined;
   const effectiveUnsupportedSkillsMappingFinding = applySkillsFindingEnforcement(
@@ -1115,13 +1129,34 @@ export async function runPlatformGate(params: {
   const rulesCoverage = coverage
     ? {
       stage: params.policy.stage,
+      contract: skillsRuleSet.registryCoverage?.contract ?? 'AUTO_RUNTIME_RULES_FOR_STAGE',
+      scope_note:
+        'rules_coverage reports AUTO runtime rules applicable to this stage; it does not claim full DECLARATIVE registry execution.',
       active_rule_ids: [...coverage.activeRuleIds],
       evaluated_rule_ids: [...coverage.evaluatedRuleIds],
       matched_rule_ids: [...coverage.matchedRuleIds],
       unevaluated_rule_ids: [...coverage.unevaluatedRuleIds],
+      ...(skillsRuleSet.registryCoverage
+        ? {
+          registry_totals: skillsRuleSet.registryCoverage.registryTotals,
+          stage_applicable_auto_rule_ids: [
+            ...skillsRuleSet.registryCoverage.stageApplicableAutoRuleIds,
+          ],
+          declarative_rule_ids: [...skillsRuleSet.registryCoverage.declarativeRuleIds],
+          declarative_excluded_reason:
+            skillsRuleSet.registryCoverage.excludedDeclarativeReason,
+        }
+        : {}),
       ...((skillsRuleSet.unsupportedAutoRuleIds?.length ?? 0) > 0
         ? {
           unsupported_auto_rule_ids: [...(skillsRuleSet.unsupportedAutoRuleIds ?? [])],
+        }
+        : {}),
+      ...((skillsRuleSet.unsupportedDetectorRuleIds?.length ?? 0) > 0
+        ? {
+          unsupported_detector_rule_ids: [
+            ...(skillsRuleSet.unsupportedDetectorRuleIds ?? []),
+          ],
         }
         : {}),
       counts: {
@@ -1129,9 +1164,25 @@ export async function runPlatformGate(params: {
         evaluated: coverage.evaluatedRuleIds.length,
         matched: coverage.matchedRuleIds.length,
         unevaluated: coverage.unevaluatedRuleIds.length,
+        ...(skillsRuleSet.registryCoverage
+          ? {
+            registry_total: skillsRuleSet.registryCoverage.registryTotals.total,
+            registry_auto: skillsRuleSet.registryCoverage.registryTotals.auto,
+            registry_declarative:
+              skillsRuleSet.registryCoverage.registryTotals.declarative,
+            stage_applicable_auto:
+              skillsRuleSet.registryCoverage.stageApplicableAutoRuleIds.length,
+          }
+          : {}),
         ...((skillsRuleSet.unsupportedAutoRuleIds?.length ?? 0) > 0
           ? {
             unsupported_auto: (skillsRuleSet.unsupportedAutoRuleIds ?? []).length,
+          }
+          : {}),
+        ...((skillsRuleSet.unsupportedDetectorRuleIds?.length ?? 0) > 0
+          ? {
+            unsupported_detector:
+              (skillsRuleSet.unsupportedDetectorRuleIds ?? []).length,
           }
           : {}),
       },

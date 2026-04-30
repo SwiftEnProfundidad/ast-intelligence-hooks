@@ -5,6 +5,7 @@ import {
   type SystemNotificationCommandRunnerWithOutput,
   type SystemNotificationsConfig,
 } from './framework-menu-system-notifications-types';
+import { isTruthyEnvValue } from './framework-menu-system-notifications-env';
 import { resolveBlockedDialogEnabled } from './framework-menu-system-notifications-macos-dialog-enabled';
 import { emitMacOsBannerStage } from './framework-menu-system-notifications-macos-banner-stage';
 import { emitMacOsBlockedDialogStage } from './framework-menu-system-notifications-macos-blocked-stage';
@@ -19,6 +20,9 @@ const shouldSkipMacOsBannerForInteractiveBlockedDialog = (params: {
   config: SystemNotificationsConfig;
   env: NodeJS.ProcessEnv;
 }): boolean => {
+  if (!isTruthyEnvValue(params.env.PUMUKI_MACOS_GATE_BLOCKED_BANNER_DEDUPE)) {
+    return false;
+  }
   if (params.event.kind !== 'gate.blocked') {
     return false;
   }

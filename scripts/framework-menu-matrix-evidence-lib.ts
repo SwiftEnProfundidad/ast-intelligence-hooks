@@ -8,6 +8,7 @@ export type {
   MatrixOptionDiagnosis,
   MatrixOptionId,
 } from './framework-menu-matrix-evidence-types';
+export { MATRIX_MENU_OPTION_IDS } from './framework-menu-matrix-evidence-types';
 export { toMatrixOptionReport } from './framework-menu-matrix-evidence-diagnosis';
 
 export const readMatrixOptionReport = (

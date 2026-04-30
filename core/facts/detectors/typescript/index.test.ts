@@ -2,27 +2,80 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   findEmptyCatchClauseLines,
+  findEmptyCatchClauseMatch,
   findConcreteDependencyInstantiationMatch,
+  findConsoleLogCallMatch,
+  findSensitiveLogCallMatch,
+  findErrorLoggingFullContextMatch,
+  findCorrelationIdsMatch,
+  findCorsConfiguredMatch,
+  findValidationPipeGlobalMatch,
+  findValidationConfigMatch,
+  findApiVersioningMatch,
+  findInputValidationMatch,
+  findNestedValidationMatch,
+  findClassValidatorDecoratorsMatch,
+  findClassTransformerDecoratorsMatch,
+  findDtoBoundaryMatch,
+  findSeparatedDtoMatch,
+  findBackendReturnDtosExposureLines,
+  findBackendCriticalTransactionsLines,
+  findBackendCriticalTransactionsMatch,
+  findBackendMultiTableTransactionsLines,
+  findBackendMultiTableTransactionsMatch,
+  findPrometheusMetricsMatch,
+  findPasswordHashingPatternMatch,
+  findRateLimitingThrottlerMatch,
+  findWinstonStructuredLoggerMatch,
+  findExplicitAnyTypeMatch,
+  findCleanArchitectureMatch,
+  findExceptionFilterClassMatch,
+  findGuardUseGuardsJwtAuthGuardMatch,
+  findUseInterceptorsLoggingTransformMatch,
   findFrameworkDependencyImportMatch,
   findMixedCommandQueryClassMatch,
   findMixedCommandQueryInterfaceMatch,
   findOverrideMethodThrowingNotImplementedMatch,
+  findProductionMockCallMatch,
+  findCallbackHellPatternMatch,
+  findHardcodedValuePatternMatch,
+  findEnvDefaultFallbackPatternMatch,
+  findMagicNumberPatternMatch,
+  findLargeClassDeclarationMatch,
+  findReactClassComponentLines,
+  findReactClassComponentMatch,
+  findSingletonPatternMatch,
   findTypeDiscriminatorSwitchMatch,
   findNetworkCallWithoutErrorHandlingLines,
   findRecordStringUnknownTypeLines,
   findUndefinedInBaseTypeUnionLines,
   findUnknownWithoutGuardLines,
   findUnknownTypeAssertionLines,
-  findAnemicDomainModelLines,
-  findControllerBusinessLogicLines,
-  findMagicNumberLiteralLines,
-  findProductionMockArtifactUsageLines,
-  hasAnemicDomainModel,
-  hasControllerBusinessLogic,
   hasAsyncPromiseExecutor,
   hasConcreteDependencyInstantiation,
   hasConsoleErrorCall,
   hasConsoleLogCall,
+  hasSensitiveLogCall,
+  hasErrorLoggingFullContextPattern,
+  hasCorrelationIdsPattern,
+  hasCorsConfiguredPattern,
+  hasValidationPipeGlobalPattern,
+  hasValidationConfigPattern,
+  hasApiVersioningPattern,
+  hasInputValidationPattern,
+  hasNestedValidationPattern,
+  hasClassValidatorDecoratorsPattern,
+  hasClassTransformerDecoratorsPattern,
+  hasDtoBoundaryPattern,
+  hasSeparatedDtoPattern,
+  hasBackendReturnDtosExposureUsage,
+  hasBackendCriticalTransactionsUsage,
+  hasBackendMultiTableTransactionsUsage,
+  hasPrometheusMetricsPattern,
+  hasPasswordHashingPattern,
+  hasRateLimitingThrottlerPattern,
+  hasWinstonStructuredLoggerPattern,
+  hasCallbackHellPattern,
   hasDebuggerStatement,
   hasDeleteOperator,
   hasEmptyCatchClause,
@@ -30,15 +83,22 @@ import {
   hasExplicitAnyType,
   hasFrameworkDependencyImport,
   hasFunctionConstructorUsage,
-  hasMagicNumberLiteral,
-  hasProductionMockArtifactUsage,
+  hasHardcodedValuePattern,
+  hasEnvDefaultFallbackPattern,
   hasNetworkCallWithoutErrorHandling,
   hasMixedCommandQueryClass,
   hasMixedCommandQueryInterface,
+  hasMagicNumberPattern,
   hasUnknownWithoutGuard,
   hasRecordStringUnknownType,
   hasOverrideMethodThrowingNotImplemented,
   hasLargeClassDeclaration,
+  hasReactClassComponentUsage,
+  hasExceptionFilterClass,
+  hasGuardUseGuardsJwtAuthGuard,
+  hasUseInterceptorsLoggingTransform,
+  hasProductionMockCall,
+  hasSingletonPattern,
   hasSetIntervalStringCallback,
   hasSetTimeoutStringCallback,
   hasTypeDiscriminatorSwitch,
@@ -84,6 +144,50 @@ test('findEmptyCatchClauseLines devuelve lineas ancla para catch vacio', () => {
   assert.deepEqual(findEmptyCatchClauseLines(ast), [7]);
 });
 
+test('findEmptyCatchClauseMatch devuelve payload semantico para catch vacio', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'processOrder' },
+        loc: { start: { line: 2 }, end: { line: 8 } },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'TryStatement',
+              loc: { start: { line: 4 }, end: { line: 7 } },
+              block: { type: 'BlockStatement', body: [] },
+              handler: {
+                type: 'CatchClause',
+                loc: { start: { line: 6 }, end: { line: 6 } },
+                body: { type: 'BlockStatement', body: [] },
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findEmptyCatchClauseMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'processOrder',
+    lines: [2],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'empty catch', lines: [6] },
+  ]);
+  assert.deepEqual(match?.lines, [2, 6]);
+  assert.match(match?.why ?? '', /catch vac[ií]o/i);
+  assert.match(match?.impact ?? '', /producci[oó]n|observabilidad/i);
+  assert.match(match?.expected_fix ?? '', /registra|propaga|documenta/i);
+});
+
 test('hasExplicitAnyType detecta TSAnyKeyword', () => {
   const anyAst = {
     type: 'TSTypeAnnotation',
@@ -96,6 +200,459 @@ test('hasExplicitAnyType detecta TSAnyKeyword', () => {
 
   assert.equal(hasExplicitAnyType(anyAst), true);
   assert.equal(hasExplicitAnyType(unknownAst), false);
+});
+
+test('findExplicitAnyTypeMatch devuelve payload semantico para any explicito', () => {
+  const anyAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'parsePayload' },
+        loc: { start: { line: 2 }, end: { line: 8 } },
+        params: [
+          {
+            type: 'Identifier',
+            name: 'payload',
+            typeAnnotation: {
+              type: 'TSTypeAnnotation',
+              loc: { start: { line: 3 }, end: { line: 3 } },
+              typeAnnotation: { type: 'TSAnyKeyword', loc: { start: { line: 3 }, end: { line: 3 } } },
+            },
+          },
+        ],
+        body: { type: 'BlockStatement', body: [] },
+      },
+    ],
+  };
+
+  const match = findExplicitAnyTypeMatch(anyAst);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'parsePayload',
+    lines: [2],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'explicit any', lines: [3] },
+  ]);
+  assert.deepEqual(match?.lines, [2, 3]);
+  assert.match(match?.why ?? '', /any/i);
+  assert.match(match?.impact ?? '', /regresiones|tipad/i);
+  assert.match(match?.expected_fix ?? '', /unknown|gen[eé]rico/i);
+});
+
+test('findCleanArchitectureMatch devuelve payload semantico para clean architecture', () => {
+  const cleanArchitectureAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ImportDeclaration',
+        loc: { start: { line: 1 }, end: { line: 1 } },
+        source: { type: 'StringLiteral', value: '@prisma/client' },
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'OrderApplicationService' },
+        loc: { start: { line: 3 }, end: { line: 12 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'client' },
+              loc: { start: { line: 4 }, end: { line: 4 } },
+              value: {
+                type: 'NewExpression',
+                loc: { start: { line: 4 }, end: { line: 4 } },
+                callee: { type: 'Identifier', name: 'PrismaClient' },
+                arguments: [],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findCleanArchitectureMatch(cleanArchitectureAst);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'OrderApplicationService',
+    lines: [3],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'import:@prisma/client', lines: [1] },
+    { kind: 'call', name: 'new PrismaClient', lines: [4] },
+  ]);
+  assert.deepEqual(match?.lines, [1, 3, 4]);
+  assert.match(match?.why ?? '', /Clean Architecture/i);
+  assert.match(match?.impact ?? '', /direcci[oó]n de dependencias|acopl/i);
+  assert.match(match?.expected_fix ?? '', /puerto|abstracci/i);
+});
+
+test('hasProductionMockCall detecta jest.mock y descarta llamadas no mock', () => {
+  const productionMockAst = {
+    type: 'CallExpression',
+    loc: { start: { line: 14 }, end: { line: 14 } },
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'jest' },
+      property: { type: 'Identifier', name: 'mock' },
+    },
+    arguments: [{ type: 'StringLiteral', value: '@prisma/client' }],
+  };
+  const nonMockAst = {
+    type: 'CallExpression',
+    loc: { start: { line: 18 }, end: { line: 18 } },
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'jest' },
+      property: { type: 'Identifier', name: 'fn' },
+    },
+    arguments: [],
+  };
+
+  assert.equal(hasProductionMockCall(productionMockAst), true);
+  assert.equal(hasProductionMockCall(nonMockAst), false);
+});
+
+test('findProductionMockCallMatch devuelve payload semantico para mocks en produccion', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'bootstrap' },
+        loc: { start: { line: 2 }, end: { line: 10 } },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              loc: { start: { line: 6 }, end: { line: 6 } },
+              expression: {
+                type: 'CallExpression',
+                loc: { start: { line: 6 }, end: { line: 6 } },
+                callee: {
+                  type: 'MemberExpression',
+                  computed: false,
+                  object: { type: 'Identifier', name: 'vi' },
+                  property: { type: 'Identifier', name: 'mock' },
+                },
+                arguments: [{ type: 'StringLiteral', value: '@/services/order' }],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findProductionMockCallMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'bootstrap',
+    lines: [2],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'vi.mock', lines: [6] },
+  ]);
+  assert.deepEqual(match?.lines, [2, 6]);
+  assert.match(match?.why ?? '', /mock/i);
+  assert.match(match?.impact ?? '', /producci[oó]n|observabilidad|integraci[oó]n/i);
+  assert.match(match?.expected_fix ?? '', /tests|fixtures|dobles|reales/i);
+});
+
+test('hasExceptionFilterClass detecta filtros globales de excepciones y descarta clases comunes', () => {
+  const exceptionFilterAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'HttpExceptionFilter' },
+    decorators: [
+      {
+        type: 'Decorator',
+        expression: {
+          type: 'CallExpression',
+          callee: { type: 'Identifier', name: 'Catch' },
+          arguments: [],
+        },
+      },
+    ],
+    implements: [
+      {
+        type: 'TSExpressionWithTypeArguments',
+        expression: { type: 'Identifier', name: 'ExceptionFilter' },
+      },
+    ],
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'catch' },
+          params: [
+            { type: 'Identifier', name: 'exception' },
+            { type: 'Identifier', name: 'host' },
+          ],
+          body: { type: 'BlockStatement', body: [] },
+        },
+      ],
+    },
+  };
+  const commonClassAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrderService' },
+    body: {
+      type: 'ClassBody',
+      body: [],
+    },
+  };
+
+  assert.equal(hasExceptionFilterClass(exceptionFilterAst), true);
+  assert.equal(hasExceptionFilterClass(commonClassAst), false);
+});
+
+test('findExceptionFilterClassMatch devuelve payload semantico para filtros globales de excepciones', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'AllExceptionsFilter' },
+        loc: { start: { line: 3 }, end: { line: 26 } },
+        decorators: [
+          {
+            type: 'Decorator',
+            loc: { start: { line: 3 }, end: { line: 3 } },
+            expression: {
+              type: 'CallExpression',
+              callee: { type: 'Identifier', name: 'Catch' },
+              arguments: [],
+            },
+          },
+        ],
+        implements: [
+          {
+            type: 'TSExpressionWithTypeArguments',
+            expression: { type: 'Identifier', name: 'ExceptionFilter' },
+          },
+        ],
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'catch' },
+              loc: { start: { line: 10 }, end: { line: 22 } },
+              params: [
+                { type: 'Identifier', name: 'exception' },
+                { type: 'Identifier', name: 'host' },
+              ],
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findExceptionFilterClassMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'AllExceptionsFilter',
+    lines: [3],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'catch', lines: [10] },
+    { kind: 'member', name: '@Catch', lines: [3] },
+  ]);
+  assert.deepEqual(match?.lines, [3, 10]);
+  assert.match(match?.why ?? '', /filtro global|excepciones/i);
+  assert.match(match?.impact ?? '', /trazabilidad|respuestas/i);
+  assert.match(match?.expected_fix ?? '', /@Catch|catch/i);
+});
+
+test('hasGuardUseGuardsJwtAuthGuard detecta UseGuards(JwtAuthGuard) y descarta guards distintos', () => {
+  const guardAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrdersController' },
+    decorators: [
+      {
+        type: 'Decorator',
+        expression: {
+          type: 'CallExpression',
+          callee: { type: 'Identifier', name: 'UseGuards' },
+          arguments: [{ type: 'Identifier', name: 'JwtAuthGuard' }],
+        },
+      },
+    ],
+    body: {
+      type: 'ClassBody',
+      body: [],
+    },
+  };
+  const otherGuardAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrdersController' },
+    decorators: [
+      {
+        type: 'Decorator',
+        expression: {
+          type: 'CallExpression',
+          callee: { type: 'Identifier', name: 'UseGuards' },
+          arguments: [{ type: 'Identifier', name: 'RolesGuard' }],
+        },
+      },
+    ],
+    body: {
+      type: 'ClassBody',
+      body: [],
+    },
+  };
+
+  assert.equal(hasGuardUseGuardsJwtAuthGuard(guardAst), true);
+  assert.equal(hasGuardUseGuardsJwtAuthGuard(otherGuardAst), false);
+});
+
+test('findGuardUseGuardsJwtAuthGuardMatch devuelve payload semantico para UseGuards(JwtAuthGuard)', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'OrdersController' },
+        loc: { start: { line: 3 }, end: { line: 18 } },
+        decorators: [
+          {
+            type: 'Decorator',
+            loc: { start: { line: 3 }, end: { line: 3 } },
+            expression: {
+              type: 'CallExpression',
+              callee: { type: 'Identifier', name: 'UseGuards' },
+              arguments: [{ type: 'Identifier', name: 'JwtAuthGuard' }],
+            },
+          },
+        ],
+        body: {
+          type: 'ClassBody',
+          body: [],
+        },
+      },
+    ],
+  };
+
+  const match = findGuardUseGuardsJwtAuthGuardMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'OrdersController',
+    lines: [3],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'UseGuards', lines: [3] },
+    { kind: 'member', name: 'JwtAuthGuard', lines: [3] },
+  ]);
+  assert.deepEqual(match?.lines, [3]);
+  assert.match(match?.why ?? '', /UseGuards/i);
+  assert.match(match?.impact ?? '', /per[ií]metro|guard/i);
+  assert.match(match?.expected_fix ?? '', /JwtAuthGuard|guard/i);
+});
+
+test('hasUseInterceptorsLoggingTransform detecta UseInterceptors y descarta decoradores no relevantes', () => {
+  const interceptorAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrdersController' },
+    decorators: [
+      {
+        type: 'Decorator',
+        expression: {
+          type: 'CallExpression',
+          callee: { type: 'Identifier', name: 'UseInterceptors' },
+          arguments: [{ type: 'Identifier', name: 'LoggingInterceptor' }],
+        },
+      },
+    ],
+    body: {
+      type: 'ClassBody',
+      body: [],
+    },
+  };
+  const otherDecoratorAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrdersController' },
+    decorators: [
+      {
+        type: 'Decorator',
+        expression: {
+          type: 'CallExpression',
+          callee: { type: 'Identifier', name: 'UseGuards' },
+          arguments: [{ type: 'Identifier', name: 'JwtAuthGuard' }],
+        },
+      },
+    ],
+    body: {
+      type: 'ClassBody',
+      body: [],
+    },
+  };
+
+  assert.equal(hasUseInterceptorsLoggingTransform(interceptorAst), true);
+  assert.equal(hasUseInterceptorsLoggingTransform(otherDecoratorAst), false);
+});
+
+test('findUseInterceptorsLoggingTransformMatch devuelve payload semantico para UseInterceptors', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'OrdersController' },
+        loc: { start: { line: 4 }, end: { line: 24 } },
+        decorators: [
+          {
+            type: 'Decorator',
+            loc: { start: { line: 4 }, end: { line: 4 } },
+            expression: {
+              type: 'CallExpression',
+              callee: { type: 'Identifier', name: 'UseInterceptors' },
+              arguments: [{ type: 'Identifier', name: 'ClassSerializerInterceptor' }],
+            },
+          },
+        ],
+        body: {
+          type: 'ClassBody',
+          body: [],
+        },
+      },
+    ],
+  };
+
+  const match = findUseInterceptorsLoggingTransformMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'OrdersController',
+    lines: [4],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'UseInterceptors', lines: [4] },
+    { kind: 'member', name: 'ClassSerializerInterceptor', lines: [4] },
+  ]);
+  assert.deepEqual(match?.lines, [4]);
+  assert.match(match?.why ?? '', /UseInterceptors/i);
+  assert.match(match?.impact ?? '', /logging|transform/i);
+  assert.match(match?.expected_fix ?? '', /interceptor|reutilizable/i);
 });
 
 test('hasConsoleLogCall detecta console.log y descarta variantes no soportadas', () => {
@@ -122,6 +679,2281 @@ test('hasConsoleLogCall detecta console.log y descarta variantes no soportadas',
 
   assert.equal(hasConsoleLogCall(logAst), true);
   assert.equal(hasConsoleLogCall(computedAst), false);
+});
+
+test('findConsoleLogCallMatch devuelve payload semantico para console.log', () => {
+  const logAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'renderAuditTrail' },
+        loc: { start: { line: 2 }, end: { line: 8 } },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              loc: { start: { line: 4 }, end: { line: 4 } },
+              expression: {
+                type: 'CallExpression',
+                loc: { start: { line: 4 }, end: { line: 4 } },
+                callee: {
+                  type: 'MemberExpression',
+                  computed: false,
+                  object: { type: 'Identifier', name: 'console' },
+                  property: { type: 'Identifier', name: 'log' },
+                },
+                arguments: [{ type: 'Identifier', name: 'value' }],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findConsoleLogCallMatch(logAst);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'renderAuditTrail',
+    lines: [2],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'console.log', lines: [4] },
+  ]);
+  assert.deepEqual(match?.lines, [2, 4]);
+  assert.match(match?.why ?? '', /console\.log/i);
+  assert.match(match?.impact ?? '', /logs de producci/i);
+  assert.match(match?.expected_fix ?? '', /logger|traza/i);
+});
+
+test('hasSensitiveLogCall detecta logger con datos sensibles y descarta logs inocuos', () => {
+  const sensitiveLogAst = {
+    type: 'CallExpression',
+    loc: { start: { line: 14 }, end: { line: 14 } },
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'logger' },
+      property: { type: 'Identifier', name: 'info' },
+    },
+    arguments: [
+      {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            type: 'ObjectProperty',
+            loc: { start: { line: 14 }, end: { line: 14 } },
+            key: { type: 'Identifier', name: 'password' },
+            value: { type: 'Identifier', name: 'rawPassword' },
+          },
+        ],
+      },
+    ],
+  };
+  const safeLogAst = {
+    type: 'CallExpression',
+    loc: { start: { line: 18 }, end: { line: 18 } },
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'logger' },
+      property: { type: 'Identifier', name: 'info' },
+    },
+    arguments: [
+      {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            type: 'ObjectProperty',
+            loc: { start: { line: 18 }, end: { line: 18 } },
+            key: { type: 'Identifier', name: 'status' },
+            value: { type: 'Identifier', name: 'state' },
+          },
+        ],
+      },
+    ],
+  };
+
+  assert.equal(hasSensitiveLogCall(sensitiveLogAst), true);
+  assert.equal(hasSensitiveLogCall(safeLogAst), false);
+});
+
+test('findSensitiveLogCallMatch devuelve payload semantico para log sensible', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'createSession' },
+        loc: { start: { line: 3 }, end: { line: 14 } },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              loc: { start: { line: 9 }, end: { line: 9 } },
+              expression: {
+                type: 'CallExpression',
+                loc: { start: { line: 9 }, end: { line: 9 } },
+                callee: {
+                  type: 'MemberExpression',
+                  computed: false,
+                  object: { type: 'Identifier', name: 'logger' },
+                  property: { type: 'Identifier', name: 'warn' },
+                },
+                arguments: [
+                  {
+                    type: 'StringLiteral',
+                    value: 'session created',
+                  },
+                  {
+                    type: 'Identifier',
+                    loc: { start: { line: 9 }, end: { line: 9 } },
+                    name: 'accessToken',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findSensitiveLogCallMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'createSession',
+    lines: [3],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'logging', lines: [9] },
+    { kind: 'member', name: 'accessToken', lines: [9] },
+  ]);
+  assert.deepEqual(match?.lines, [3, 9]);
+  assert.match(match?.why ?? '', /datos sensibles|accessToken/i);
+  assert.match(match?.impact ?? '', /PII|tokens|Passwords/i);
+  assert.match(match?.expected_fix ?? '', /red[aá]ctalo|mascarado|elimina/i);
+});
+
+test('hasErrorLoggingFullContextPattern detecta logger.error sin contexto y descarta logs completos', () => {
+  const incompleteErrorLogAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'logger' },
+      property: { type: 'Identifier', name: 'error' },
+    },
+    arguments: [{ type: 'Identifier', name: 'error' }],
+  };
+  const completeErrorLogAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'logger' },
+      property: { type: 'Identifier', name: 'error' },
+    },
+    arguments: [
+      { type: 'StringLiteral', value: 'Order failed' },
+      {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            type: 'ObjectProperty',
+            key: { type: 'Identifier', name: 'context' },
+            value: { type: 'StringLiteral', value: 'checkout' },
+          },
+        ],
+      },
+    ],
+  };
+
+  assert.equal(hasErrorLoggingFullContextPattern(incompleteErrorLogAst), true);
+  assert.equal(hasErrorLoggingFullContextPattern(completeErrorLogAst), false);
+});
+
+test('findErrorLoggingFullContextMatch devuelve payload semantico para logger.error sin contexto', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'processPayment' },
+        loc: { start: { line: 2 }, end: { line: 8 } },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              loc: { start: { line: 4 }, end: { line: 4 } },
+              expression: {
+                type: 'CallExpression',
+                loc: { start: { line: 4 }, end: { line: 4 } },
+                callee: {
+                  type: 'MemberExpression',
+                  computed: false,
+                  object: { type: 'Identifier', name: 'logger' },
+                  property: { type: 'Identifier', name: 'error' },
+                },
+                arguments: [{ type: 'Identifier', name: 'error' }],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findErrorLoggingFullContextMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'processPayment',
+    lines: [2],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'logger.error', lines: [4] },
+    { kind: 'member', name: 'missing context', lines: [4] },
+  ]);
+  assert.deepEqual(match?.lines, [2, 4]);
+  assert.match(match?.why ?? '', /contexto completo/i);
+  assert.match(match?.impact ?? '', /requestId|traceId|userId/i);
+  assert.match(match?.expected_fix ?? '', /contexto|logger\.error/i);
+});
+
+test('hasCorrelationIdsPattern detecta logger con correlation ids y descarta logs sin contexto', () => {
+  const correlationAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'logger' },
+      property: { type: 'Identifier', name: 'info' },
+    },
+    arguments: [
+      {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            type: 'ObjectProperty',
+            key: { type: 'Identifier', name: 'requestId' },
+            value: { type: 'Identifier', name: 'requestId' },
+          },
+        ],
+      },
+    ],
+  };
+  const plainAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'logger' },
+      property: { type: 'Identifier', name: 'info' },
+    },
+    arguments: [{ type: 'StringLiteral', value: 'ok' }],
+  };
+
+  assert.equal(hasCorrelationIdsPattern(correlationAst), true);
+  assert.equal(hasCorrelationIdsPattern(plainAst), false);
+});
+
+test('findCorrelationIdsMatch devuelve payload semantico para correlation ids', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'trackRequest' },
+        loc: { start: { line: 2 }, end: { line: 8 } },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              loc: { start: { line: 4 }, end: { line: 4 } },
+              expression: {
+                type: 'CallExpression',
+                loc: { start: { line: 4 }, end: { line: 4 } },
+                callee: {
+                  type: 'MemberExpression',
+                  computed: false,
+                  object: { type: 'Identifier', name: 'logger' },
+                  property: { type: 'Identifier', name: 'info' },
+                },
+                arguments: [
+                  {
+                    type: 'ObjectExpression',
+                    properties: [
+                      {
+                        type: 'ObjectProperty',
+                        key: { type: 'Identifier', name: 'requestId' },
+                        value: { type: 'Identifier', name: 'requestId' },
+                      },
+                      {
+                        type: 'ObjectProperty',
+                        key: { type: 'Identifier', name: 'traceId' },
+                        value: { type: 'Identifier', name: 'traceId' },
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findCorrelationIdsMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'trackRequest',
+    lines: [2],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'logger.info', lines: [4] },
+    { kind: 'member', name: 'correlation context', lines: [4] },
+  ]);
+  assert.deepEqual(match?.lines, [2, 4]);
+  assert.match(match?.why ?? '', /correlation IDs/i);
+  assert.match(match?.impact ?? '', /requestId|traceId|correlationId/i);
+  assert.match(match?.expected_fix ?? '', /requestId|traceId|correlationId/i);
+});
+
+test('hasCorsConfiguredPattern detecta enableCors con orígenes permitidos y descarta comodines', () => {
+  const configuredAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'app' },
+      property: { type: 'Identifier', name: 'enableCors' },
+    },
+    arguments: [
+      {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            type: 'ObjectProperty',
+            key: { type: 'Identifier', name: 'origin' },
+            value: {
+              type: 'ArrayExpression',
+              elements: [
+                { type: 'StringLiteral', value: 'https://app.example.com' },
+                { type: 'StringLiteral', value: 'https://admin.example.com' },
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  };
+  const wildcardAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'app' },
+      property: { type: 'Identifier', name: 'enableCors' },
+    },
+    arguments: [
+      {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            type: 'ObjectProperty',
+            key: { type: 'Identifier', name: 'origin' },
+            value: { type: 'StringLiteral', value: '*' },
+          },
+        ],
+      },
+    ],
+  };
+
+  assert.equal(hasCorsConfiguredPattern(configuredAst), true);
+  assert.equal(hasCorsConfiguredPattern(wildcardAst), false);
+});
+
+test('findCorsConfiguredMatch devuelve payload semantico para CORS configurado', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'bootstrap' },
+        loc: { start: { line: 2 }, end: { line: 9 } },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              loc: { start: { line: 4 }, end: { line: 4 } },
+              expression: {
+                type: 'CallExpression',
+                loc: { start: { line: 4 }, end: { line: 4 } },
+                callee: {
+                  type: 'MemberExpression',
+                  computed: false,
+                  object: { type: 'Identifier', name: 'app' },
+                  property: { type: 'Identifier', name: 'enableCors' },
+                },
+                arguments: [
+                  {
+                    type: 'ObjectExpression',
+                    properties: [
+                      {
+                        type: 'ObjectProperty',
+                        key: { type: 'Identifier', name: 'origin' },
+                        value: {
+                          type: 'ArrayExpression',
+                          elements: [
+                            { type: 'StringLiteral', value: 'https://app.example.com' },
+                            { type: 'StringLiteral', value: 'https://admin.example.com' },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findCorsConfiguredMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'bootstrap',
+    lines: [2],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'app.enableCors', lines: [4] },
+    { kind: 'member', name: 'allowed origins', lines: [4] },
+  ]);
+  assert.deepEqual(match?.lines, [2, 4]);
+  assert.match(match?.why ?? '', /CORS/i);
+  assert.match(match?.impact ?? '', /cross-origin|orígenes permitidos/i);
+  assert.match(match?.expected_fix ?? '', /enableCors|origin/i);
+});
+
+test('hasValidationPipeGlobalPattern detecta useGlobalPipes con whitelist y descarta configuraciones incompletas', () => {
+  const configuredAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'app' },
+      property: { type: 'Identifier', name: 'useGlobalPipes' },
+    },
+    arguments: [
+      {
+        type: 'NewExpression',
+        callee: { type: 'Identifier', name: 'ValidationPipe' },
+        arguments: [
+          {
+            type: 'ObjectExpression',
+            properties: [
+              {
+                type: 'ObjectProperty',
+                key: { type: 'Identifier', name: 'whitelist' },
+                value: { type: 'BooleanLiteral', value: true },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+  const incompleteAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'app' },
+      property: { type: 'Identifier', name: 'useGlobalPipes' },
+    },
+    arguments: [
+      {
+        type: 'NewExpression',
+        callee: { type: 'Identifier', name: 'ValidationPipe' },
+        arguments: [{ type: 'ObjectExpression', properties: [] }],
+      },
+    ],
+  };
+
+  assert.equal(hasValidationPipeGlobalPattern(configuredAst), true);
+  assert.equal(hasValidationPipeGlobalPattern(incompleteAst), false);
+});
+
+test('findValidationPipeGlobalMatch devuelve payload semantico para ValidationPipe global', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'bootstrap' },
+        loc: { start: { line: 2 }, end: { line: 9 } },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              loc: { start: { line: 4 }, end: { line: 4 } },
+              expression: {
+                type: 'CallExpression',
+                loc: { start: { line: 4 }, end: { line: 4 } },
+                callee: {
+                  type: 'MemberExpression',
+                  computed: false,
+                  object: { type: 'Identifier', name: 'app' },
+                  property: { type: 'Identifier', name: 'useGlobalPipes' },
+                },
+                arguments: [
+                  {
+                    type: 'NewExpression',
+                    callee: { type: 'Identifier', name: 'ValidationPipe' },
+                    arguments: [
+                      {
+                        type: 'ObjectExpression',
+                        properties: [
+                          {
+                            type: 'ObjectProperty',
+                            key: { type: 'Identifier', name: 'whitelist' },
+                            value: { type: 'BooleanLiteral', value: true },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findValidationPipeGlobalMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'bootstrap',
+    lines: [2],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'app.useGlobalPipes', lines: [4] },
+    { kind: 'member', name: 'whitelist: true', lines: [4] },
+  ]);
+  assert.deepEqual(match?.lines, [2, 4]);
+  assert.match(match?.why ?? '', /ValidationPipe/i);
+  assert.match(match?.impact ?? '', /whitelist/i);
+  assert.match(match?.expected_fix ?? '', /ValidationPipe|whitelist/i);
+});
+
+test('hasValidationConfigPattern detecta ConfigModule con validacion de env y descarta forRoot incompletos', () => {
+  const configuredAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'ConfigModule' },
+      property: { type: 'Identifier', name: 'forRoot' },
+    },
+    arguments: [
+      {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            type: 'ObjectProperty',
+            key: { type: 'Identifier', name: 'validationSchema' },
+            value: {
+              type: 'CallExpression',
+              callee: {
+                type: 'MemberExpression',
+                computed: false,
+                object: { type: 'Identifier', name: 'Joi' },
+                property: { type: 'Identifier', name: 'object' },
+              },
+              arguments: [],
+            },
+          },
+        ],
+      },
+    ],
+  };
+  const incompleteAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'ConfigModule' },
+      property: { type: 'Identifier', name: 'forRoot' },
+    },
+    arguments: [{ type: 'ObjectExpression', properties: [] }],
+  };
+
+  assert.equal(hasValidationConfigPattern(configuredAst), true);
+  assert.equal(hasValidationConfigPattern(incompleteAst), false);
+});
+
+test('findValidationConfigMatch devuelve payload semantico para ConfigModule validation', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'bootstrap' },
+        loc: { start: { line: 1 }, end: { line: 10 } },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              loc: { start: { line: 3 }, end: { line: 3 } },
+              expression: {
+                type: 'CallExpression',
+                loc: { start: { line: 3 }, end: { line: 3 } },
+                callee: {
+                  type: 'MemberExpression',
+                  computed: false,
+                  object: { type: 'Identifier', name: 'ConfigModule' },
+                  property: { type: 'Identifier', name: 'forRoot' },
+                },
+                arguments: [
+                  {
+                    type: 'ObjectExpression',
+                    properties: [
+                      {
+                        type: 'ObjectProperty',
+                        key: { type: 'Identifier', name: 'validationSchema' },
+                        value: {
+                          type: 'CallExpression',
+                          callee: {
+                            type: 'MemberExpression',
+                            computed: false,
+                            object: { type: 'Identifier', name: 'Joi' },
+                            property: { type: 'Identifier', name: 'object' },
+                          },
+                          arguments: [],
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findValidationConfigMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'bootstrap',
+    lines: [1],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'ConfigModule.forRoot', lines: [3] },
+    { kind: 'member', name: 'validationSchema / validate', lines: [3] },
+  ]);
+  assert.deepEqual(match?.lines, [1, 3]);
+  assert.match(match?.why ?? '', /ConfigModule/i);
+  assert.match(match?.impact ?? '', /variables inválidas|faltantes/i);
+  assert.match(match?.expected_fix ?? '', /validationSchema|validate/i);
+});
+
+test('hasClassValidatorDecoratorsPattern detecta decoradores class-validator y descarta decoradores no relacionados', () => {
+  const dtoAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'CreateOrderDto' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassProperty',
+          key: { type: 'Identifier', name: 'userEmail' },
+          decorators: [
+            {
+              type: 'Decorator',
+              expression: {
+                type: 'CallExpression',
+                callee: { type: 'Identifier', name: 'IsEmail' },
+                arguments: [],
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+  const unrelatedAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'OrderService' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'save' },
+          decorators: [
+            {
+              type: 'Decorator',
+              expression: {
+                type: 'CallExpression',
+                callee: { type: 'Identifier', name: 'Injectable' },
+                arguments: [],
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  assert.equal(hasClassValidatorDecoratorsPattern(dtoAst), true);
+  assert.equal(hasClassValidatorDecoratorsPattern(unrelatedAst), false);
+});
+
+test('findClassValidatorDecoratorsMatch devuelve payload semantico para DTOs con class-validator', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'CreateUserDto' },
+        loc: { start: { line: 3 }, end: { line: 16 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'email' },
+              loc: { start: { line: 6 }, end: { line: 6 } },
+              decorators: [
+                {
+                  type: 'Decorator',
+                  loc: { start: { line: 6 }, end: { line: 6 } },
+                  expression: {
+                    type: 'CallExpression',
+                    callee: { type: 'Identifier', name: 'IsEmail' },
+                    arguments: [],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findClassValidatorDecoratorsMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'CreateUserDto',
+    lines: [3],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'email', lines: [6] },
+    { kind: 'member', name: '@IsEmail', lines: [6] },
+  ]);
+  assert.deepEqual(match?.lines, [3, 6]);
+  assert.match(match?.why ?? '', /class-validator/i);
+  assert.match(match?.impact ?? '', /inv[aá]lidos|runtime/i);
+  assert.match(match?.expected_fix ?? '', /IsString|IsEmail|Min|Max/i);
+});
+
+test('hasClassTransformerDecoratorsPattern detecta decoradores class-transformer y descarta decoradores no relacionados', () => {
+  const dtoAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'UserResponseDto' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassProperty',
+          key: { type: 'Identifier', name: 'password' },
+          decorators: [
+            {
+              type: 'Decorator',
+              expression: {
+                type: 'CallExpression',
+                callee: { type: 'Identifier', name: 'Exclude' },
+                arguments: [],
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+  const unrelatedAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'UserResponseDto' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassProperty',
+          key: { type: 'Identifier', name: 'password' },
+          decorators: [
+            {
+              type: 'Decorator',
+              expression: {
+                type: 'CallExpression',
+                callee: { type: 'Identifier', name: 'IsString' },
+                arguments: [],
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  assert.equal(hasClassTransformerDecoratorsPattern(dtoAst), true);
+  assert.equal(hasClassTransformerDecoratorsPattern(unrelatedAst), false);
+});
+
+test('findClassTransformerDecoratorsMatch devuelve payload semantico para DTOs con class-transformer', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'UserResponseDto' },
+        loc: { start: { line: 4 }, end: { line: 14 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'internalNotes' },
+              loc: { start: { line: 8 }, end: { line: 8 } },
+              decorators: [
+                {
+                  type: 'Decorator',
+                  loc: { start: { line: 8 }, end: { line: 8 } },
+                  expression: {
+                    type: 'CallExpression',
+                    callee: { type: 'Identifier', name: 'Exclude' },
+                    arguments: [],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findClassTransformerDecoratorsMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'UserResponseDto',
+    lines: [4],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'internalNotes', lines: [8] },
+    { kind: 'member', name: '@Exclude', lines: [8] },
+  ]);
+  assert.deepEqual(match?.lines, [4, 8]);
+  assert.match(match?.why ?? '', /class-transformer/i);
+  assert.match(match?.impact ?? '', /transformaci[oó]n|exposici[oó]n|filtrar/i);
+  assert.match(match?.expected_fix ?? '', /Transform|Exclude|Expose/i);
+});
+
+test('hasDtoBoundaryPattern detecta DTOs en boundaries y descarta DTOs decorados', () => {
+  const dtoAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'CreateOrderDto' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassProperty',
+          key: { type: 'Identifier', name: 'userId' },
+        },
+      ],
+    },
+  };
+  const decoratedDtoAst = {
+    type: 'ClassDeclaration',
+    id: { type: 'Identifier', name: 'CreateOrderDto' },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassProperty',
+          key: { type: 'Identifier', name: 'userId' },
+          decorators: [
+            {
+              type: 'Decorator',
+              expression: {
+                type: 'CallExpression',
+                callee: { type: 'Identifier', name: 'IsString' },
+                arguments: [],
+              },
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  assert.equal(hasDtoBoundaryPattern(dtoAst), true);
+  assert.equal(hasDtoBoundaryPattern(decoratedDtoAst), false);
+});
+
+test('findDtoBoundaryMatch devuelve payload semantico para DTOs en boundaries', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'CreateUserDto' },
+        loc: { start: { line: 3 }, end: { line: 9 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'email' },
+              loc: { start: { line: 5 }, end: { line: 5 } },
+            },
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'name' },
+              loc: { start: { line: 6 }, end: { line: 6 } },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findDtoBoundaryMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'CreateUserDto',
+    lines: [3],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'email', lines: [5] },
+    { kind: 'member', name: 'name', lines: [6] },
+  ]);
+  assert.deepEqual(match?.lines, [3, 5, 6]);
+  assert.match(match?.why ?? '', /boundary|DTO/i);
+  assert.match(match?.impact ?? '', /contratos ambiguos|serializaci[oó]n/i);
+  assert.match(match?.expected_fix ?? '', /entrada|salida|DTO/i);
+});
+
+test('hasBackendCriticalTransactionsUsage detecta transacciones criticas y descarta llamadas sin transaccion', () => {
+  const criticalTransactionAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ExpressionStatement',
+        loc: { start: { line: 4 }, end: { line: 8 } },
+        expression: {
+          type: 'CallExpression',
+          loc: { start: { line: 4 }, end: { line: 8 } },
+          callee: {
+            type: 'MemberExpression',
+            object: { type: 'Identifier', name: 'dataSource' },
+            property: { type: 'Identifier', name: 'transaction' },
+          },
+          arguments: [
+            {
+              type: 'ArrowFunctionExpression',
+              loc: { start: { line: 4 }, end: { line: 8 } },
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+    ],
+  };
+  const noTransactionAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ExpressionStatement',
+        loc: { start: { line: 4 }, end: { line: 4 } },
+        expression: {
+          type: 'CallExpression',
+          loc: { start: { line: 4 }, end: { line: 4 } },
+          callee: {
+            type: 'MemberExpression',
+            object: { type: 'Identifier', name: 'dataSource' },
+            property: { type: 'Identifier', name: 'query' },
+          },
+          arguments: [],
+        },
+      },
+    ],
+  };
+
+  assert.equal(hasBackendCriticalTransactionsUsage(criticalTransactionAst), true);
+  assert.equal(hasBackendCriticalTransactionsUsage(noTransactionAst), false);
+});
+
+test('findBackendCriticalTransactionsLines devuelve la linea de la transaccion critica', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ExpressionStatement',
+        loc: { start: { line: 4 }, end: { line: 8 } },
+        expression: {
+          type: 'CallExpression',
+          loc: { start: { line: 4 }, end: { line: 8 } },
+          callee: {
+            type: 'MemberExpression',
+            object: { type: 'Identifier', name: 'dataSource' },
+            property: { type: 'Identifier', name: 'transaction' },
+          },
+          arguments: [
+            {
+              type: 'ArrowFunctionExpression',
+              loc: { start: { line: 4 }, end: { line: 8 } },
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  assert.deepEqual(findBackendCriticalTransactionsLines(ast), [4]);
+  assert.ok(findBackendCriticalTransactionsMatch(ast));
+});
+
+test('hasBackendMultiTableTransactionsUsage detecta transacciones multi-tabla y descarta una sola escritura', () => {
+  const multiTableTransactionAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ExpressionStatement',
+        loc: { start: { line: 4 }, end: { line: 9 } },
+        expression: {
+          type: 'CallExpression',
+          loc: { start: { line: 4 }, end: { line: 9 } },
+          callee: {
+            type: 'MemberExpression',
+            object: { type: 'Identifier', name: 'dataSource' },
+            property: { type: 'Identifier', name: 'transaction' },
+          },
+          arguments: [
+            {
+              type: 'ArrowFunctionExpression',
+              loc: { start: { line: 4 }, end: { line: 9 } },
+              body: {
+                type: 'BlockStatement',
+                body: [
+                  {
+                    type: 'ExpressionStatement',
+                    loc: { start: { line: 5 }, end: { line: 5 } },
+                    expression: {
+                      type: 'CallExpression',
+                      loc: { start: { line: 5 }, end: { line: 5 } },
+                      callee: {
+                        type: 'MemberExpression',
+                        object: { type: 'Identifier', name: 'manager' },
+                        property: { type: 'Identifier', name: 'save' },
+                      },
+                      arguments: [],
+                    },
+                  },
+                  {
+                    type: 'ExpressionStatement',
+                    loc: { start: { line: 6 }, end: { line: 6 } },
+                    expression: {
+                      type: 'CallExpression',
+                      loc: { start: { line: 6 }, end: { line: 6 } },
+                      callee: {
+                        type: 'MemberExpression',
+                        object: { type: 'Identifier', name: 'manager' },
+                        property: { type: 'Identifier', name: 'update' },
+                      },
+                      arguments: [],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+  const singleWriteTransactionAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ExpressionStatement',
+        loc: { start: { line: 4 }, end: { line: 8 } },
+        expression: {
+          type: 'CallExpression',
+          loc: { start: { line: 4 }, end: { line: 8 } },
+          callee: {
+            type: 'MemberExpression',
+            object: { type: 'Identifier', name: 'dataSource' },
+            property: { type: 'Identifier', name: 'transaction' },
+          },
+          arguments: [
+            {
+              type: 'ArrowFunctionExpression',
+              loc: { start: { line: 4 }, end: { line: 8 } },
+              body: {
+                type: 'BlockStatement',
+                body: [
+                  {
+                    type: 'ExpressionStatement',
+                    loc: { start: { line: 5 }, end: { line: 5 } },
+                    expression: {
+                      type: 'CallExpression',
+                      loc: { start: { line: 5 }, end: { line: 5 } },
+                      callee: {
+                        type: 'MemberExpression',
+                        object: { type: 'Identifier', name: 'manager' },
+                        property: { type: 'Identifier', name: 'save' },
+                      },
+                      arguments: [],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  assert.equal(hasBackendMultiTableTransactionsUsage(multiTableTransactionAst), true);
+  assert.equal(hasBackendMultiTableTransactionsUsage(singleWriteTransactionAst), false);
+});
+
+test('findBackendMultiTableTransactionsLines devuelve la transaccion y las escrituras relacionadas', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ExpressionStatement',
+        loc: { start: { line: 4 }, end: { line: 9 } },
+        expression: {
+          type: 'CallExpression',
+          loc: { start: { line: 4 }, end: { line: 9 } },
+          callee: {
+            type: 'MemberExpression',
+            object: { type: 'Identifier', name: 'dataSource' },
+            property: { type: 'Identifier', name: 'transaction' },
+          },
+          arguments: [
+            {
+              type: 'ArrowFunctionExpression',
+              loc: { start: { line: 4 }, end: { line: 9 } },
+              body: {
+                type: 'BlockStatement',
+                body: [
+                  {
+                    type: 'ExpressionStatement',
+                    loc: { start: { line: 5 }, end: { line: 5 } },
+                    expression: {
+                      type: 'CallExpression',
+                      loc: { start: { line: 5 }, end: { line: 5 } },
+                      callee: {
+                        type: 'MemberExpression',
+                        object: { type: 'Identifier', name: 'manager' },
+                        property: { type: 'Identifier', name: 'save' },
+                      },
+                      arguments: [],
+                    },
+                  },
+                  {
+                    type: 'ExpressionStatement',
+                    loc: { start: { line: 6 }, end: { line: 6 } },
+                    expression: {
+                      type: 'CallExpression',
+                      loc: { start: { line: 6 }, end: { line: 6 } },
+                      callee: {
+                        type: 'MemberExpression',
+                        object: { type: 'Identifier', name: 'manager' },
+                        property: { type: 'Identifier', name: 'update' },
+                      },
+                      arguments: [],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  assert.deepEqual(findBackendMultiTableTransactionsLines(ast), [4, 5, 6]);
+  assert.ok(findBackendMultiTableTransactionsMatch(ast));
+});
+
+test('hasApiVersioningPattern detecta controllers versionados y descarta controllers sin version', () => {
+  const versionedAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'OrdersController' },
+        decorators: [
+          {
+            type: 'Decorator',
+            expression: {
+              type: 'CallExpression',
+              callee: { type: 'Identifier', name: 'Controller' },
+              arguments: [
+                {
+                  type: 'ObjectExpression',
+                  properties: [
+                    {
+                      type: 'ObjectProperty',
+                      key: { type: 'Identifier', name: 'path' },
+                      value: { type: 'StringLiteral', value: 'orders' },
+                    },
+                    {
+                      type: 'ObjectProperty',
+                      key: { type: 'Identifier', name: 'version' },
+                      value: { type: 'StringLiteral', value: '1' },
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        ],
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'list' },
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+    ],
+  };
+  const unversionedAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'OrdersController' },
+        decorators: [
+          {
+            type: 'Decorator',
+            expression: {
+              type: 'CallExpression',
+              callee: { type: 'Identifier', name: 'Controller' },
+              arguments: [{ type: 'StringLiteral', value: 'orders' }],
+            },
+          },
+        ],
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'list' },
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  assert.equal(hasApiVersioningPattern(versionedAst), true);
+  assert.equal(hasApiVersioningPattern(unversionedAst), false);
+});
+
+test('findApiVersioningMatch devuelve payload semantico para controllers versionados', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'OrdersController' },
+        loc: { start: { line: 3 }, end: { line: 12 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'list' },
+              loc: { start: { line: 5 }, end: { line: 8 } },
+              decorators: [
+                {
+                  type: 'Decorator',
+                  loc: { start: { line: 5 }, end: { line: 5 } },
+                  expression: {
+                    type: 'CallExpression',
+                    callee: { type: 'Identifier', name: 'Version' },
+                    arguments: [{ type: 'StringLiteral', value: '2' }],
+                  },
+                },
+              ],
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findApiVersioningMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'OrdersController',
+    lines: [3],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'list', lines: [5] },
+    { kind: 'member', name: '@Version', lines: [5] },
+    { kind: 'member', name: 'v2', lines: [5] },
+  ]);
+  assert.deepEqual(match?.lines, [3, 5]);
+  assert.match(match?.why ?? '', /versionadas|v1|v2/i);
+  assert.match(match?.impact ?? '', /contratos de API|consumidores/i);
+  assert.match(match?.expected_fix ?? '', /@Version|version:|\/api\/v1|\/api\/v2/i);
+});
+
+test('hasInputValidationPattern detecta DTOs de entrada en controllers y descarta parametros primitivos', () => {
+  const dtoAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'OrdersController' },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'create' },
+              params: [
+                {
+                  type: 'Identifier',
+                  name: 'createOrderDto',
+                  decorators: [
+                    {
+                      type: 'Decorator',
+                      expression: {
+                        type: 'CallExpression',
+                        callee: { type: 'Identifier', name: 'Body' },
+                        arguments: [],
+                      },
+                    },
+                  ],
+                  typeAnnotation: {
+                    type: 'TSTypeAnnotation',
+                    typeAnnotation: {
+                      type: 'TSTypeReference',
+                      typeName: { type: 'Identifier', name: 'CreateOrderDto' },
+                    },
+                  },
+                },
+              ],
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+    ],
+  };
+  const primitiveAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'OrdersController' },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'findById' },
+              params: [
+                {
+                  type: 'Identifier',
+                  name: 'id',
+                  decorators: [
+                    {
+                      type: 'Decorator',
+                      expression: {
+                        type: 'CallExpression',
+                        callee: { type: 'Identifier', name: 'Param' },
+                        arguments: [],
+                      },
+                    },
+                  ],
+                  typeAnnotation: {
+                    type: 'TSTypeAnnotation',
+                    typeAnnotation: { type: 'TSStringKeyword' },
+                  },
+                },
+              ],
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  assert.equal(hasInputValidationPattern(dtoAst), true);
+  assert.equal(hasInputValidationPattern(primitiveAst), false);
+});
+
+test('findInputValidationMatch devuelve payload semantico para DTOs de entrada en controllers', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'OrdersController' },
+        loc: { start: { line: 3 }, end: { line: 16 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'create' },
+              loc: { start: { line: 5 }, end: { line: 11 } },
+              params: [
+                {
+                  type: 'Identifier',
+                  name: 'createOrderDto',
+                  loc: { start: { line: 6 }, end: { line: 6 } },
+                  decorators: [
+                    {
+                      type: 'Decorator',
+                      loc: { start: { line: 6 }, end: { line: 6 } },
+                      expression: {
+                        type: 'CallExpression',
+                        callee: { type: 'Identifier', name: 'Body' },
+                        arguments: [],
+                      },
+                    },
+                  ],
+                  typeAnnotation: {
+                    type: 'TSTypeAnnotation',
+                    typeAnnotation: {
+                      type: 'TSTypeReference',
+                      typeName: { type: 'Identifier', name: 'CreateOrderDto' },
+                    },
+                  },
+                },
+              ],
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findInputValidationMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'OrdersController',
+    lines: [3],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'create', lines: [5] },
+    { kind: 'member', name: 'createOrderDto', lines: [6] },
+    { kind: 'member', name: '@Body', lines: [6] },
+    { kind: 'member', name: 'CreateOrderDto', lines: [6] },
+  ]);
+  assert.deepEqual(match?.lines, [3, 5, 6]);
+  assert.match(match?.why ?? '', /controller/i);
+  assert.match(match?.impact ?? '', /payloads crudos|validaci[oó]n/i);
+  assert.match(match?.expected_fix ?? '', /ValidationPipe|class-validator|DTO/i);
+});
+
+test('hasNestedValidationPattern detecta @ValidateNested() y @Type() en DTOs anidados', () => {
+  const nestedDtoAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'AddressDto' },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'street' },
+              decorators: [
+                {
+                  type: 'Decorator',
+                  expression: {
+                    type: 'CallExpression',
+                    callee: { type: 'Identifier', name: 'IsString' },
+                    arguments: [],
+                  },
+                },
+              ],
+              typeAnnotation: {
+                type: 'TSTypeAnnotation',
+                typeAnnotation: { type: 'TSStringKeyword' },
+              },
+            },
+          ],
+        },
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'CreateOrderDto' },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'address' },
+              decorators: [
+                {
+                  type: 'Decorator',
+                  expression: {
+                    type: 'CallExpression',
+                    callee: { type: 'Identifier', name: 'ValidateNested' },
+                    arguments: [],
+                  },
+                },
+                {
+                  type: 'Decorator',
+                  expression: {
+                    type: 'CallExpression',
+                    callee: { type: 'Identifier', name: 'Type' },
+                    arguments: [
+                      {
+                        type: 'ArrowFunctionExpression',
+                        body: { type: 'Identifier', name: 'AddressDto' },
+                      },
+                    ],
+                  },
+                },
+              ],
+              typeAnnotation: {
+                type: 'TSTypeAnnotation',
+                typeAnnotation: {
+                  type: 'TSTypeReference',
+                  typeName: { type: 'Identifier', name: 'AddressDto' },
+                },
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+  const incompleteAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'CreateOrderDto' },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'address' },
+              decorators: [
+                {
+                  type: 'Decorator',
+                  expression: {
+                    type: 'CallExpression',
+                    callee: { type: 'Identifier', name: 'Type' },
+                    arguments: [],
+                  },
+                },
+              ],
+              typeAnnotation: {
+                type: 'TSTypeAnnotation',
+                typeAnnotation: {
+                  type: 'TSTypeReference',
+                  typeName: { type: 'Identifier', name: 'AddressDto' },
+                },
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  assert.equal(hasNestedValidationPattern(nestedDtoAst), true);
+  assert.equal(hasNestedValidationPattern(incompleteAst), false);
+});
+
+test('findNestedValidationMatch devuelve payload semantico para DTOs anidados', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'CreateOrderDto' },
+        loc: { start: { line: 3 }, end: { line: 11 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'address' },
+              loc: { start: { line: 5 }, end: { line: 10 } },
+              decorators: [
+                {
+                  type: 'Decorator',
+                  loc: { start: { line: 5 }, end: { line: 5 } },
+                  expression: {
+                    type: 'CallExpression',
+                    callee: { type: 'Identifier', name: 'ValidateNested' },
+                    arguments: [],
+                  },
+                },
+                {
+                  type: 'Decorator',
+                  loc: { start: { line: 6 }, end: { line: 6 } },
+                  expression: {
+                    type: 'CallExpression',
+                    callee: { type: 'Identifier', name: 'Type' },
+                    arguments: [
+                      {
+                        type: 'ArrowFunctionExpression',
+                        body: { type: 'Identifier', name: 'AddressDto' },
+                      },
+                    ],
+                  },
+                },
+              ],
+              typeAnnotation: {
+                type: 'TSTypeAnnotation',
+                typeAnnotation: {
+                  type: 'TSTypeReference',
+                  typeName: { type: 'Identifier', name: 'AddressDto' },
+                },
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findNestedValidationMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'CreateOrderDto',
+    lines: [3],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'address', lines: [5] },
+    { kind: 'member', name: '@ValidateNested', lines: [5] },
+    { kind: 'member', name: '@Type', lines: [6] },
+    { kind: 'member', name: 'AddressDto', lines: [5] },
+  ]);
+  assert.deepEqual(match?.lines, [3, 5, 6]);
+  assert.match(match?.why ?? '', /@ValidateNested|@Type|DTO/i);
+  assert.match(match?.impact ?? '', /anidada|payloads inv[aá]lidos/i);
+  assert.match(match?.expected_fix ?? '', /@ValidateNested|@Type|ChildDto/i);
+});
+
+test('hasSeparatedDtoPattern detecta DTOs separados y descarta variantes incompletas', () => {
+  const dtoAst = {
+    type: 'Program',
+    body: [
+      { type: 'ClassDeclaration', id: { type: 'Identifier', name: 'CreateOrderDto' }, body: { type: 'ClassBody', body: [] } },
+      { type: 'ClassDeclaration', id: { type: 'Identifier', name: 'UpdateOrderDto' }, body: { type: 'ClassBody', body: [] } },
+      { type: 'ClassDeclaration', id: { type: 'Identifier', name: 'OrderResponseDto' }, body: { type: 'ClassBody', body: [] } },
+    ],
+  };
+  const incompleteAst = {
+    type: 'Program',
+    body: [
+      { type: 'ClassDeclaration', id: { type: 'Identifier', name: 'CreateOrderDto' }, body: { type: 'ClassBody', body: [] } },
+      { type: 'ClassDeclaration', id: { type: 'Identifier', name: 'OrderResponseDto' }, body: { type: 'ClassBody', body: [] } },
+    ],
+  };
+
+  assert.equal(hasSeparatedDtoPattern(dtoAst), true);
+  assert.equal(hasSeparatedDtoPattern(incompleteAst), false);
+});
+
+test('findSeparatedDtoMatch devuelve payload semantico para DTOs separados', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'CreateOrderDto' },
+        loc: { start: { line: 3 }, end: { line: 6 } },
+        body: { type: 'ClassBody', body: [] },
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'UpdateOrderDto' },
+        loc: { start: { line: 8 }, end: { line: 11 } },
+        body: { type: 'ClassBody', body: [] },
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'OrderResponseDto' },
+        loc: { start: { line: 13 }, end: { line: 16 } },
+        body: { type: 'ClassBody', body: [] },
+      },
+    ],
+  };
+
+  const match = findSeparatedDtoMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'CreateOrderDto',
+    lines: [3],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'class', name: 'UpdateOrderDto', lines: [8] },
+    { kind: 'class', name: 'OrderResponseDto', lines: [13] },
+  ]);
+  assert.deepEqual(match?.lines, [3, 8, 13]);
+  assert.match(match?.why ?? '', /separan creación, actualización y respuesta/i);
+  assert.match(match?.impact ?? '', /mezcla contratos|validaci[oó]n y serializaci[oó]n/i);
+  assert.match(match?.expected_fix ?? '', /Create, Update y Response/i);
+});
+
+test('hasBackendReturnDtosExposureUsage detecta retornos directos de entidades y descarta DTOs', () => {
+  const entityReturnAst = {
+    type: 'ClassMethod',
+    key: { type: 'Identifier', name: 'getOrder' },
+    returnType: {
+      type: 'TSTypeAnnotation',
+      typeAnnotation: {
+        type: 'TSTypeReference',
+        typeName: { type: 'Identifier', name: 'Promise' },
+        typeParameters: {
+          params: [
+            {
+              type: 'TSTypeReference',
+              typeName: { type: 'Identifier', name: 'OrderEntity' },
+            },
+          ],
+        },
+      },
+    },
+    body: { type: 'BlockStatement', body: [] },
+  };
+  const dtoReturnAst = {
+    type: 'ClassMethod',
+    key: { type: 'Identifier', name: 'getOrder' },
+    returnType: {
+      type: 'TSTypeAnnotation',
+      typeAnnotation: {
+        type: 'TSTypeReference',
+        typeName: { type: 'Identifier', name: 'Promise' },
+        typeParameters: {
+          params: [
+            {
+              type: 'TSTypeReference',
+              typeName: { type: 'Identifier', name: 'OrderResponseDto' },
+            },
+          ],
+        },
+      },
+    },
+    body: { type: 'BlockStatement', body: [] },
+  };
+  const returnStatementAst = {
+    type: 'ReturnStatement',
+    argument: { type: 'Identifier', name: 'orderEntity' },
+  };
+  const safeReturnStatementAst = {
+    type: 'ReturnStatement',
+    argument: { type: 'Identifier', name: 'orderResponseDto' },
+  };
+
+  assert.equal(hasBackendReturnDtosExposureUsage(entityReturnAst), true);
+  assert.equal(hasBackendReturnDtosExposureUsage(returnStatementAst), true);
+  assert.equal(hasBackendReturnDtosExposureUsage(dtoReturnAst), false);
+  assert.equal(hasBackendReturnDtosExposureUsage(safeReturnStatementAst), false);
+});
+
+test('findBackendReturnDtosExposureLines devuelve lineas de retornos directos de entidades', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassMethod',
+        key: { type: 'Identifier', name: 'getOrder' },
+        loc: { start: { line: 4 }, end: { line: 10 } },
+        returnType: {
+          type: 'TSTypeAnnotation',
+          typeAnnotation: {
+            type: 'TSTypeReference',
+            typeName: { type: 'Identifier', name: 'Promise' },
+            typeParameters: {
+              params: [
+                {
+                  type: 'TSTypeReference',
+                  typeName: { type: 'Identifier', name: 'OrderEntity' },
+                },
+              ],
+            },
+          },
+        },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ReturnStatement',
+              loc: { start: { line: 7 }, end: { line: 7 } },
+              argument: { type: 'Identifier', name: 'orderEntity' },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  assert.deepEqual(findBackendReturnDtosExposureLines(ast), [4, 7]);
+});
+
+test('hasPrometheusMetricsPattern detecta prom-client y descarta dependencias no metrics', () => {
+  const importAst = {
+    type: 'ImportDeclaration',
+    source: { type: 'StringLiteral', value: 'prom-client' },
+  };
+  const requireAst = {
+    type: 'CallExpression',
+    callee: { type: 'Identifier', name: 'require' },
+    arguments: [{ type: 'StringLiteral', value: 'prom-client' }],
+  };
+  const localAst = {
+    type: 'ImportDeclaration',
+    source: { type: 'StringLiteral', value: './metrics' },
+  };
+
+  assert.equal(hasPrometheusMetricsPattern(importAst), true);
+  assert.equal(hasPrometheusMetricsPattern(requireAst), true);
+  assert.equal(hasPrometheusMetricsPattern(localAst), false);
+});
+
+test('findPrometheusMetricsMatch devuelve payload semantico para prom-client', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'MetricsController' },
+        loc: { start: { line: 2 }, end: { line: 8 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              loc: { start: { line: 3 }, end: { line: 3 } },
+              key: { type: 'Identifier', name: 'metrics' },
+              value: {
+                type: 'CallExpression',
+                loc: { start: { line: 3 }, end: { line: 3 } },
+                callee: { type: 'Identifier', name: 'require' },
+                arguments: [{ type: 'StringLiteral', value: 'prom-client' }],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findPrometheusMetricsMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'MetricsController',
+    lines: [2],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'import:prom-client', lines: [3] },
+  ]);
+  assert.deepEqual(match?.lines, [2, 3]);
+  assert.match(match?.why ?? '', /Prometheus/i);
+  assert.match(match?.impact ?? '', /m[eé]tricas/i);
+  assert.match(match?.expected_fix ?? '', /prom-client/i);
+});
+
+test('hasPasswordHashingPattern detecta bcrypt con salt rounds inseguros y descarta rounds seguros', () => {
+  const insecureHashAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'bcrypt' },
+      property: { type: 'Identifier', name: 'hashSync' },
+    },
+    arguments: [
+      { type: 'Identifier', name: 'password' },
+      { type: 'NumericLiteral', value: 8, loc: { start: { line: 4 }, end: { line: 4 } } },
+    ],
+  };
+  const insecureSaltAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'bcryptjs' },
+      property: { type: 'Identifier', name: 'genSaltSync' },
+    },
+    arguments: [
+      { type: 'NumericLiteral', value: 6, loc: { start: { line: 8 }, end: { line: 8 } } },
+    ],
+  };
+  const secureHashAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'bcrypt' },
+      property: { type: 'Identifier', name: 'hashSync' },
+    },
+    arguments: [
+      { type: 'Identifier', name: 'password' },
+      { type: 'NumericLiteral', value: 12, loc: { start: { line: 12 }, end: { line: 12 } } },
+    ],
+  };
+
+  assert.equal(hasPasswordHashingPattern(insecureHashAst), true);
+  assert.equal(hasPasswordHashingPattern(insecureSaltAst), true);
+  assert.equal(hasPasswordHashingPattern(secureHashAst), false);
+});
+
+test('findPasswordHashingPatternMatch devuelve payload semantico para bcrypt', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'createPasswordHash' },
+        loc: { start: { line: 2 }, end: { line: 8 } },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              loc: { start: { line: 4 }, end: { line: 4 } },
+              expression: {
+                type: 'CallExpression',
+                loc: { start: { line: 4 }, end: { line: 4 } },
+                callee: {
+                  type: 'MemberExpression',
+                  computed: false,
+                  object: { type: 'Identifier', name: 'bcrypt' },
+                  property: { type: 'Identifier', name: 'hashSync' },
+                },
+                arguments: [
+                  { type: 'Identifier', name: 'password' },
+                  { type: 'NumericLiteral', value: 8, loc: { start: { line: 4 }, end: { line: 4 } } },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findPasswordHashingPatternMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'createPasswordHash',
+    lines: [2],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'bcrypt.hashSync', lines: [4] },
+    { kind: 'member', name: 'salt rounds: 8', lines: [4] },
+  ]);
+  assert.deepEqual(match?.lines, [2, 4]);
+  assert.match(match?.why ?? '', /salt rounds/i);
+  assert.match(match?.impact ?? '', /fuerza bruta|offline/i);
+  assert.match(match?.expected_fix ?? '', /10 o m[aá]s|constante/i);
+});
+
+test('hasRateLimitingThrottlerPattern detecta ThrottlerModule y decoradores de throttling y descarta variantes ajenas', () => {
+  const throttlerSetupAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'ThrottlerModule' },
+      property: { type: 'Identifier', name: 'forRoot' },
+    },
+    arguments: [],
+  };
+  const throttleDecoratorAst = {
+    type: 'Decorator',
+    expression: {
+      type: 'CallExpression',
+      callee: { type: 'Identifier', name: 'Throttle' },
+      arguments: [
+        { type: 'NumericLiteral', value: 5 },
+        { type: 'NumericLiteral', value: 60 },
+      ],
+    },
+  };
+  const throttlerGuardDecoratorAst = {
+    type: 'Decorator',
+    expression: {
+      type: 'CallExpression',
+      callee: { type: 'Identifier', name: 'UseGuards' },
+      arguments: [{ type: 'Identifier', name: 'ThrottlerGuard' }],
+    },
+  };
+  const unrelatedAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'RateLimitModule' },
+      property: { type: 'Identifier', name: 'forRoot' },
+    },
+    arguments: [],
+  };
+
+  assert.equal(hasRateLimitingThrottlerPattern(throttlerSetupAst), true);
+  assert.equal(hasRateLimitingThrottlerPattern(throttleDecoratorAst), true);
+  assert.equal(hasRateLimitingThrottlerPattern(throttlerGuardDecoratorAst), true);
+  assert.equal(hasRateLimitingThrottlerPattern(unrelatedAst), false);
+});
+
+test('findRateLimitingThrottlerMatch devuelve payload semantico para @UseGuards(ThrottlerGuard)', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'AuthController' },
+        loc: { start: { line: 3 }, end: { line: 18 } },
+        decorators: [
+          {
+            type: 'Decorator',
+            loc: { start: { line: 3 }, end: { line: 3 } },
+            expression: {
+              type: 'CallExpression',
+              callee: { type: 'Identifier', name: 'UseGuards' },
+              arguments: [{ type: 'Identifier', name: 'ThrottlerGuard' }],
+            },
+          },
+        ],
+        body: {
+          type: 'ClassBody',
+          body: [],
+        },
+      },
+    ],
+  };
+
+  const match = findRateLimitingThrottlerMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'AuthController',
+    lines: [3],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'UseGuards', lines: [3] },
+    { kind: 'member', name: 'ThrottlerGuard', lines: [3] },
+  ]);
+  assert.deepEqual(match?.lines, [3]);
+  assert.match(match?.why ?? '', /rate limiting/i);
+  assert.match(match?.impact ?? '', /brute force|abuso/i);
+  assert.match(match?.expected_fix ?? '', /ThrottlerModule|Throttle|ThrottlerGuard/i);
+});
+
+test('hasWinstonStructuredLoggerPattern detecta createLogger con JSON logs y descarta configuraciones planas', () => {
+  const structuredLoggerAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'winston' },
+      property: { type: 'Identifier', name: 'createLogger' },
+    },
+    arguments: [
+      {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            type: 'ObjectProperty',
+            key: { type: 'Identifier', name: 'format' },
+            value: {
+              type: 'CallExpression',
+              callee: {
+                type: 'MemberExpression',
+                computed: false,
+                object: { type: 'Identifier', name: 'format' },
+                property: { type: 'Identifier', name: 'json' },
+              },
+              arguments: [],
+            },
+          },
+        ],
+      },
+    ],
+  };
+  const flatLoggerAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'winston' },
+      property: { type: 'Identifier', name: 'createLogger' },
+    },
+    arguments: [
+      {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            type: 'ObjectProperty',
+            key: { type: 'Identifier', name: 'level' },
+            value: { type: 'StringLiteral', value: 'info' },
+          },
+        ],
+      },
+    ],
+  };
+
+  assert.equal(hasWinstonStructuredLoggerPattern(structuredLoggerAst), true);
+  assert.equal(hasWinstonStructuredLoggerPattern(flatLoggerAst), false);
+});
+
+test('findWinstonStructuredLoggerMatch devuelve payload semantico para Winston con JSON logs', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'FunctionDeclaration',
+        id: { type: 'Identifier', name: 'buildLogger' },
+        loc: { start: { line: 2 }, end: { line: 10 } },
+        body: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'VariableDeclaration',
+              loc: { start: { line: 4 }, end: { line: 4 } },
+              declarations: [
+                {
+                  type: 'VariableDeclarator',
+                  id: { type: 'Identifier', name: 'logger' },
+                  init: {
+                    type: 'CallExpression',
+                    loc: { start: { line: 4 }, end: { line: 4 } },
+                    callee: {
+                      type: 'MemberExpression',
+                      computed: false,
+                      object: { type: 'Identifier', name: 'winston' },
+                      property: { type: 'Identifier', name: 'createLogger' },
+                    },
+                    arguments: [
+                      {
+                        type: 'ObjectExpression',
+                        properties: [
+                          {
+                            type: 'ObjectProperty',
+                            key: { type: 'Identifier', name: 'format' },
+                            value: {
+                              type: 'CallExpression',
+                              loc: { start: { line: 4 }, end: { line: 4 } },
+                              callee: {
+                                type: 'MemberExpression',
+                                computed: false,
+                                object: { type: 'Identifier', name: 'format' },
+                                property: { type: 'Identifier', name: 'json' },
+                              },
+                              arguments: [],
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  const match = findWinstonStructuredLoggerMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'member',
+    name: 'logger',
+    lines: undefined,
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'call', name: 'winston.createLogger', lines: [4] },
+    { kind: 'member', name: 'format.json', lines: [4] },
+  ]);
+  assert.deepEqual(match?.lines, [4]);
+  assert.match(match?.why ?? '', /Winston/i);
+  assert.match(match?.impact ?? '', /JSON|agregadores|correlation/i);
+  assert.match(match?.expected_fix ?? '', /createLogger|format\.json/i);
 });
 
 test('hasConsoleErrorCall detecta console.error y descarta metodos distintos', () => {
@@ -245,6 +3077,128 @@ test('hasAsyncPromiseExecutor detecta ejecutor async en new Promise', () => {
 
   assert.equal(hasAsyncPromiseExecutor(asyncExecutorAst), true);
   assert.equal(hasAsyncPromiseExecutor(syncExecutorAst), false);
+});
+
+test('hasCallbackHellPattern detecta callbacks anidados y descarta encadenado plano', () => {
+  const callbackHellAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'AsyncFlowService' },
+        loc: { start: { line: 1 }, end: { line: 14 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'load' },
+              loc: { start: { line: 2 }, end: { line: 13 } },
+              body: {
+                type: 'BlockStatement',
+                body: [
+                  {
+                    type: 'ExpressionStatement',
+                    loc: { start: { line: 3 }, end: { line: 12 } },
+                    expression: {
+                      type: 'CallExpression',
+                      loc: { start: { line: 3 }, end: { line: 12 } },
+                      callee: {
+                        type: 'MemberExpression',
+                        computed: false,
+                        object: {
+                          type: 'CallExpression',
+                          loc: { start: { line: 3 }, end: { line: 3 } },
+                          callee: { type: 'Identifier', name: 'fetchData' },
+                          arguments: [],
+                        },
+                        property: { type: 'Identifier', name: 'then' },
+                      },
+                      arguments: [
+                        {
+                          type: 'ArrowFunctionExpression',
+                          loc: { start: { line: 4 }, end: { line: 11 } },
+                          body: {
+                            type: 'BlockStatement',
+                            body: [
+                              {
+                                type: 'ExpressionStatement',
+                                loc: { start: { line: 5 }, end: { line: 10 } },
+                                expression: {
+                                  type: 'CallExpression',
+                                  loc: { start: { line: 5 }, end: { line: 10 } },
+                                  callee: {
+                                    type: 'MemberExpression',
+                                    computed: false,
+                                    object: {
+                                      type: 'CallExpression',
+                                      loc: { start: { line: 5 }, end: { line: 5 } },
+                                      callee: { type: 'Identifier', name: 'persist' },
+                                      arguments: [],
+                                    },
+                                    property: { type: 'Identifier', name: 'then' },
+                                  },
+                                  arguments: [
+                                    {
+                                      type: 'ArrowFunctionExpression',
+                                      loc: { start: { line: 6 }, end: { line: 9 } },
+                                      body: { type: 'BlockStatement', body: [] },
+                                    },
+                                  ],
+                                },
+                              },
+                            ],
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+  const flatChainAst = {
+    type: 'CallExpression',
+    callee: {
+      type: 'MemberExpression',
+      computed: false,
+      object: {
+        type: 'CallExpression',
+        callee: { type: 'Identifier', name: 'fetchData' },
+        arguments: [],
+      },
+      property: { type: 'Identifier', name: 'then' },
+    },
+    arguments: [
+      {
+        type: 'ArrowFunctionExpression',
+        body: { type: 'BlockStatement', body: [] },
+      },
+    ],
+  };
+
+  assert.equal(hasCallbackHellPattern(callbackHellAst), true);
+  assert.equal(hasCallbackHellPattern(flatChainAst), false);
+
+  const match = findCallbackHellPatternMatch(callbackHellAst);
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'member',
+    name: 'load',
+    lines: [2],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'call', name: 'then callback', lines: [3] },
+    { kind: 'call', name: 'then nested callback', lines: [5] },
+  ]);
+  assert.deepEqual(match.lines, [2, 3, 4, 5]);
+  assert.match(match.why, /async\/await/i);
+  assert.match(match.impact, /difícil de leer/i);
+  assert.match(match.expected_fix, /async\/await/i);
 });
 
 test('hasWithStatement detecta with y hasDeleteOperator detecta operador delete', () => {
@@ -864,253 +3818,484 @@ test('findConcreteDependencyInstantiationMatch devuelve payload semantico para D
   assert.match(match.expected_fix, /adapter|puerto|abstracci/i);
 });
 
-test('hasLargeClassDeclaration detecta clases con 300 lineas o mas', () => {
-  const oversizedClassAst = {
+test('hasLargeClassDeclaration detecta god class por mezcla semantica de responsabilidades', () => {
+  const godClassAst = {
     type: 'ClassDeclaration',
     loc: {
-      start: { line: 10 },
-      end: { line: 320 },
-    },
-  };
-  const thresholdClassAst = {
-    type: 'ClassDeclaration',
-    loc: {
-      start: { line: 10 },
-      end: { line: 309 },
-    },
-  };
-  const compactClassAst = {
-    type: 'ClassDeclaration',
-    loc: {
-      start: { line: 10 },
+      start: { line: 1 },
       end: { line: 80 },
     },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassProperty',
+          loc: { start: { line: 15 }, end: { line: 15 } },
+          key: { type: 'Identifier', name: 'client' },
+          value: {
+            type: 'NewExpression',
+            callee: { type: 'Identifier', name: 'PrismaClient' },
+            arguments: [],
+          },
+        },
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'getOrder' },
+          loc: { start: { line: 20 }, end: { line: 24 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'saveOrder' },
+          loc: { start: { line: 30 }, end: { line: 40 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+      ],
+    },
+  };
+  const oversizedButSingleResponsibilityAst = {
+    type: 'ClassDeclaration',
+    loc: {
+      start: { line: 1 },
+      end: { line: 1_000 },
+    },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'getOrder' },
+          loc: { start: { line: 20 }, end: { line: 24 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+      ],
+    },
+  };
+  const srpOnlyAst = {
+    type: 'ClassDeclaration',
+    loc: {
+      start: { line: 1 },
+      end: { line: 80 },
+    },
+    body: {
+      type: 'ClassBody',
+      body: [
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'getOrder' },
+          loc: { start: { line: 20 }, end: { line: 24 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+        {
+          type: 'ClassMethod',
+          key: { type: 'Identifier', name: 'saveOrder' },
+          loc: { start: { line: 30 }, end: { line: 40 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+      ],
+    },
   };
 
-  assert.equal(hasLargeClassDeclaration(oversizedClassAst), true);
-  assert.equal(hasLargeClassDeclaration(thresholdClassAst), true);
-  assert.equal(hasLargeClassDeclaration(compactClassAst), false);
+  assert.equal(hasLargeClassDeclaration(godClassAst), true);
+  assert.equal(hasLargeClassDeclaration(oversizedButSingleResponsibilityAst), false);
+  assert.equal(hasLargeClassDeclaration(srpOnlyAst), false);
+
+  const match = findLargeClassDeclarationMatch(godClassAst);
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'AnonymousClass',
+    lines: [1],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'query:getOrder', lines: [20] },
+    { kind: 'member', name: 'command:saveOrder', lines: [30] },
+    { kind: 'call', name: 'new PrismaClient', lines: [15] },
+  ]);
+  assert.match(match?.why ?? '', /God Class/i);
 });
 
-test('hasMagicNumberLiteral detecta literales numericos repetidos en contexto ejecutable y descarta declarativos', () => {
-  const magicAst = {
-    type: 'Program',
-    body: [
-      {
-        type: 'ExpressionStatement',
-        expression: {
-          type: 'CallExpression',
-          callee: { type: 'Identifier', name: 'retry' },
-          arguments: [{ type: 'NumericLiteral', value: 42, loc: { start: { line: 3 }, end: { line: 3 } } }],
-        },
-      },
-      {
-        type: 'VariableDeclaration',
-        kind: 'const',
-        declarations: [
-          {
-            type: 'VariableDeclarator',
-            id: { type: 'Identifier', name: 'timeoutMs' },
-            init: { type: 'NumericLiteral', value: 42, loc: { start: { line: 5 }, end: { line: 5 } } },
-          },
-        ],
-      },
-      {
-        type: 'ExpressionStatement',
-        expression: {
-          type: 'BinaryExpression',
-          operator: '>',
-          left: { type: 'Identifier', name: 'elapsedMs' },
-          right: { type: 'NumericLiteral', value: 42, loc: { start: { line: 7 }, end: { line: 7 } } },
-        },
-      },
-      {
-        type: 'ReturnStatement',
-        argument: { type: 'NumericLiteral', value: 1, loc: { start: { line: 9 }, end: { line: 9 } } },
-      },
-    ],
-  };
-
-  const ignoredAst = {
-    type: 'Program',
-    body: [
-      {
-        type: 'VariableDeclaration',
-        kind: 'const',
-        declarations: [
-          {
-            type: 'VariableDeclarator',
-            id: { type: 'Identifier', name: 'port' },
-            init: { type: 'NumericLiteral', value: 3000, loc: { start: { line: 2 }, end: { line: 2 } } },
-          },
-        ],
-      },
-      {
-        type: 'ReturnStatement',
-        argument: { type: 'NumericLiteral', value: 1, loc: { start: { line: 4 }, end: { line: 4 } } },
-      },
-    ],
-  };
-
-  assert.equal(hasMagicNumberLiteral(magicAst), true);
-  assert.deepEqual(findMagicNumberLiteralLines(magicAst), [3, 7]);
-  assert.equal(hasMagicNumberLiteral(ignoredAst), false);
-  assert.deepEqual(findMagicNumberLiteralLines(ignoredAst), []);
-});
-
-test('hasProductionMockArtifactUsage detecta imports/requires de doubles en runtime productivo', () => {
-  const importAst = {
-    type: 'ImportDeclaration',
-    source: { type: 'StringLiteral', value: '../mocks/user-repository', loc: { start: { line: 3 }, end: { line: 3 } } },
-    specifiers: [],
-    loc: { start: { line: 3 }, end: { line: 3 } },
-  };
-  const requireAst = {
-    type: 'CallExpression',
-    callee: { type: 'Identifier', name: 'require' },
-    arguments: [{ type: 'StringLiteral', value: 'sinon', loc: { start: { line: 7 }, end: { line: 7 } } }],
-    loc: { start: { line: 7 }, end: { line: 7 } },
-  };
-  const cleanAst = {
+test('hasReactClassComponentUsage detecta class components de React e ignora clases no React', () => {
+  const reactClassAst = {
     type: 'Program',
     body: [
       {
         type: 'ImportDeclaration',
-        source: { type: 'StringLiteral', value: '../adapters/user-repository', loc: { start: { line: 1 }, end: { line: 1 } } },
-        specifiers: [],
+        loc: { start: { line: 1 }, end: { line: 1 } },
+        source: { type: 'StringLiteral', value: 'react' },
+        specifiers: [
+          {
+            type: 'ImportDefaultSpecifier',
+            local: { type: 'Identifier', name: 'React' },
+          },
+        ],
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'LegacyCounter' },
+        superClass: {
+          type: 'MemberExpression',
+          computed: false,
+          object: { type: 'Identifier', name: 'React' },
+          property: { type: 'Identifier', name: 'Component' },
+          loc: { start: { line: 3 }, end: { line: 3 } },
+        },
+        loc: { start: { line: 4 }, end: { line: 18 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'render' },
+              loc: { start: { line: 8 }, end: { line: 14 } },
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
       },
     ],
   };
-  const mixedAst = {
+  const nonReactClassAst = {
     type: 'Program',
-    body: [importAst, { type: 'ExpressionStatement', expression: requireAst }],
+    body: [
+      {
+        type: 'ImportDeclaration',
+        loc: { start: { line: 1 }, end: { line: 1 } },
+        source: { type: 'StringLiteral', value: 'somewhere-else' },
+        specifiers: [
+          {
+            type: 'ImportDefaultSpecifier',
+            local: { type: 'Identifier', name: 'Component' },
+          },
+        ],
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'PlainClass' },
+        superClass: { type: 'Identifier', name: 'Component' },
+        loc: { start: { line: 4 }, end: { line: 9 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'render' },
+              loc: { start: { line: 6 }, end: { line: 8 } },
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+    ],
   };
 
-  assert.equal(hasProductionMockArtifactUsage(importAst), true);
-  assert.equal(hasProductionMockArtifactUsage(requireAst), true);
-  assert.equal(hasProductionMockArtifactUsage(cleanAst), false);
-  assert.deepEqual(findProductionMockArtifactUsageLines(mixedAst), [3, 7]);
+  assert.equal(hasReactClassComponentUsage(reactClassAst), true);
+  assert.equal(hasReactClassComponentUsage(nonReactClassAst), false);
 });
 
-test('hasAnemicDomainModel detecta clases de dominio con solo accessors y sin comportamiento', () => {
-  const anemicAst = {
-    type: 'ClassDeclaration',
-    id: { type: 'Identifier', name: 'OrderEntity' },
-    body: {
-      type: 'ClassBody',
-      body: [
-        { type: 'ClassMethod', kind: 'constructor', key: { type: 'Identifier', name: 'constructor' }, loc: { start: { line: 3 }, end: { line: 3 } } },
-        { type: 'ClassMethod', key: { type: 'Identifier', name: 'getStatus' }, loc: { start: { line: 5 }, end: { line: 5 } } },
-        { type: 'ClassMethod', key: { type: 'Identifier', name: 'setStatus' }, loc: { start: { line: 7 }, end: { line: 7 } } },
-      ],
-    },
-    loc: { start: { line: 1 }, end: { line: 9 } },
-  };
-  const richAst = {
-    type: 'ClassDeclaration',
-    id: { type: 'Identifier', name: 'OrderEntity' },
-    body: {
-      type: 'ClassBody',
-      body: [
-        { type: 'ClassMethod', kind: 'constructor', key: { type: 'Identifier', name: 'constructor' }, loc: { start: { line: 3 }, end: { line: 3 } } },
-        { type: 'ClassMethod', key: { type: 'Identifier', name: 'getStatus' }, loc: { start: { line: 5 }, end: { line: 5 } } },
-        { type: 'ClassMethod', key: { type: 'Identifier', name: 'confirm' }, loc: { start: { line: 7 }, end: { line: 7 } } },
-      ],
-    },
-    loc: { start: { line: 1 }, end: { line: 9 } },
-  };
-  const serviceAst = {
-    type: 'ClassDeclaration',
-    id: { type: 'Identifier', name: 'OrderService' },
-    body: {
-      type: 'ClassBody',
-      body: [
-        { type: 'ClassMethod', kind: 'constructor', key: { type: 'Identifier', name: 'constructor' }, loc: { start: { line: 3 }, end: { line: 3 } } },
-        { type: 'ClassMethod', key: { type: 'Identifier', name: 'getStatus' }, loc: { start: { line: 5 }, end: { line: 5 } } },
-        { type: 'ClassMethod', key: { type: 'Identifier', name: 'setStatus' }, loc: { start: { line: 7 }, end: { line: 7 } } },
-      ],
-    },
-    loc: { start: { line: 1 }, end: { line: 9 } },
+test('findReactClassComponentMatch devuelve payload semantico para class components de React', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ImportDeclaration',
+        loc: { start: { line: 1 }, end: { line: 1 } },
+        source: { type: 'StringLiteral', value: 'react' },
+        specifiers: [
+          {
+            type: 'ImportDefaultSpecifier',
+            local: { type: 'Identifier', name: 'React' },
+          },
+        ],
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'LegacyCounter' },
+        superClass: {
+          type: 'MemberExpression',
+          computed: false,
+          object: { type: 'Identifier', name: 'React' },
+          property: { type: 'Identifier', name: 'Component' },
+          loc: { start: { line: 3 }, end: { line: 3 } },
+        },
+        loc: { start: { line: 4 }, end: { line: 18 } },
+        body: {
+          type: 'ClassBody',
+          body: [
+            {
+              type: 'ClassProperty',
+              key: { type: 'Identifier', name: 'state' },
+              loc: { start: { line: 5 }, end: { line: 5 } },
+            },
+            {
+              type: 'ClassMethod',
+              key: { type: 'Identifier', name: 'render' },
+              loc: { start: { line: 8 }, end: { line: 14 } },
+              body: { type: 'BlockStatement', body: [] },
+            },
+          ],
+        },
+      },
+    ],
   };
 
-  assert.equal(hasAnemicDomainModel(anemicAst), true);
-  assert.deepEqual(findAnemicDomainModelLines(anemicAst), [1]);
-  assert.equal(hasAnemicDomainModel(richAst), false);
-  assert.equal(hasAnemicDomainModel(serviceAst), false);
+  const match = findReactClassComponentMatch(ast);
+
+  assert.ok(match);
+  assert.deepEqual(match?.primary_node, {
+    kind: 'class',
+    name: 'LegacyCounter',
+    lines: [4],
+  });
+  assert.deepEqual(match?.related_nodes, [
+    { kind: 'member', name: 'extends React.Component', lines: [3] },
+    { kind: 'member', name: 'import from react', lines: [1] },
+  ]);
+  assert.deepEqual(match?.lines, [1, 3, 4]);
+  assert.match(match?.why ?? '', /componente funcional/i);
+  assert.match(match?.impact ?? '', /hooks/i);
+  assert.match(match?.expected_fix ?? '', /custom hooks/i);
 });
 
-test('hasControllerBusinessLogic detecta flow control dentro de handlers en clases Controller', () => {
-  const controllerAst = {
+test('findReactClassComponentLines devuelve lineas de class components de React', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ImportDeclaration',
+        loc: { start: { line: 1 }, end: { line: 1 } },
+        source: { type: 'StringLiteral', value: 'react' },
+        specifiers: [
+          {
+            type: 'ImportDefaultSpecifier',
+            local: { type: 'Identifier', name: 'React' },
+          },
+        ],
+      },
+      {
+        type: 'ClassDeclaration',
+        id: { type: 'Identifier', name: 'LegacyCounter' },
+        superClass: {
+          type: 'MemberExpression',
+          computed: false,
+          object: { type: 'Identifier', name: 'React' },
+          property: { type: 'Identifier', name: 'Component' },
+        },
+        loc: { start: { line: 4 }, end: { line: 18 } },
+        body: { type: 'ClassBody', body: [] },
+      },
+    ],
+  };
+
+  assert.deepEqual(findReactClassComponentLines(ast), [4]);
+});
+
+test('hasSingletonPattern detecta constructor privado y singleton estatico', () => {
+  const singletonAst = {
     type: 'ClassDeclaration',
-    id: { type: 'Identifier', name: 'OrdersController' },
+    loc: {
+      start: { line: 1 },
+      end: { line: 20 },
+    },
+    id: { type: 'Identifier', name: 'SingletonService' },
     body: {
       type: 'ClassBody',
       body: [
         {
           type: 'ClassMethod',
-          key: { type: 'Identifier', name: 'createOrder' },
-          decorators: [{ expression: { type: 'Identifier', name: 'Post' } }],
-          body: {
-            type: 'BlockStatement',
-            body: [
-              {
-                type: 'VariableDeclaration',
-                declarations: [{ type: 'VariableDeclarator', id: { type: 'Identifier', name: 'status' } }],
-              },
-              {
-                type: 'IfStatement',
-                test: { type: 'Identifier', name: 'isPriority' },
-                consequent: { type: 'BlockStatement', body: [] },
-              },
-            ],
+          kind: 'constructor',
+          accessibility: 'private',
+          key: { type: 'Identifier', name: 'constructor' },
+          loc: { start: { line: 2 }, end: { line: 4 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+        {
+          type: 'ClassProperty',
+          static: true,
+          key: { type: 'Identifier', name: 'instance' },
+          loc: { start: { line: 5 }, end: { line: 5 } },
+          value: {
+            type: 'NewExpression',
+            callee: { type: 'Identifier', name: 'SingletonService' },
+            arguments: [],
           },
-          loc: { start: { line: 4 }, end: { line: 10 } },
         },
       ],
     },
-    loc: { start: { line: 1 }, end: { line: 12 } },
   };
-  const delegatedControllerAst = {
+  const utilityAst = {
     type: 'ClassDeclaration',
-    id: { type: 'Identifier', name: 'OrdersController' },
+    loc: {
+      start: { line: 1 },
+      end: { line: 18 },
+    },
+    id: { type: 'Identifier', name: 'UtilityService' },
     body: {
       type: 'ClassBody',
       body: [
         {
           type: 'ClassMethod',
-          key: { type: 'Identifier', name: 'createOrder' },
-          decorators: [{ expression: { type: 'Identifier', name: 'Post' } }],
-          body: {
-            type: 'BlockStatement',
-            body: [
-              {
-                type: 'ReturnStatement',
-                argument: {
-                  type: 'CallExpression',
-                  callee: {
-                    type: 'MemberExpression',
-                    object: {
-                      type: 'MemberExpression',
-                      object: { type: 'ThisExpression' },
-                      property: { type: 'Identifier', name: 'ordersService' },
-                    },
-                    property: { type: 'Identifier', name: 'create' },
-                  },
-                  arguments: [],
-                },
-              },
-            ],
-          },
-          loc: { start: { line: 4 }, end: { line: 8 } },
+          kind: 'constructor',
+          accessibility: 'private',
+          key: { type: 'Identifier', name: 'constructor' },
+          loc: { start: { line: 2 }, end: { line: 4 } },
+          body: { type: 'BlockStatement', body: [] },
+        },
+        {
+          type: 'ClassMethod',
+          static: true,
+          key: { type: 'Identifier', name: 'format' },
+          loc: { start: { line: 6 }, end: { line: 8 } },
+          body: { type: 'BlockStatement', body: [] },
         },
       ],
     },
-    loc: { start: { line: 1 }, end: { line: 10 } },
   };
 
-  assert.equal(hasControllerBusinessLogic(controllerAst), true);
-  assert.deepEqual(findControllerBusinessLogicLines(controllerAst), [1]);
-  assert.equal(hasControllerBusinessLogic(delegatedControllerAst), false);
+  assert.equal(hasSingletonPattern(singletonAst), true);
+  const match = findSingletonPatternMatch(singletonAst);
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'class',
+    name: 'SingletonService',
+    lines: [1],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'private constructor', lines: [2] },
+    { kind: 'member', name: 'static instance', lines: [5] },
+  ]);
+  assert.equal(hasSingletonPattern(utilityAst), false);
+});
+
+test('hasMagicNumberPattern detecta literales numericos en runtime y omite enums o tipos', () => {
+  const magicNumberAst = {
+    type: 'FunctionDeclaration',
+    id: { type: 'Identifier', name: 'buildRetryPolicy' },
+    loc: { start: { line: 1 }, end: { line: 8 } },
+    body: {
+      type: 'BlockStatement',
+      body: [
+        {
+          type: 'ReturnStatement',
+          loc: { start: { line: 4 }, end: { line: 4 } },
+          argument: {
+            type: 'NumericLiteral',
+            value: 3,
+            loc: { start: { line: 4 }, end: { line: 4 } },
+          },
+        },
+      ],
+    },
+  };
+  const enumAst = {
+    type: 'TSEnumMember',
+    id: { type: 'Identifier', name: 'RetryPolicy' },
+    initializer: {
+      type: 'NumericLiteral',
+      value: 3,
+      loc: { start: { line: 12 }, end: { line: 12 } },
+    },
+  };
+
+  assert.equal(hasMagicNumberPattern(magicNumberAst), true);
+  const match = findMagicNumberPatternMatch(magicNumberAst);
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'member',
+    name: 'buildRetryPolicy',
+    lines: [1],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'numeric literal: 3', lines: [4] },
+  ]);
+  assert.equal(hasMagicNumberPattern(enumAst), true);
+  assert.equal(findMagicNumberPatternMatch(enumAst), undefined);
+});
+
+test('hasHardcodedValuePattern detecta literals de configuracion y omite valores neutros', () => {
+  const hardcodedConfigAst = {
+    type: 'VariableDeclarator',
+    id: { type: 'Identifier', name: 'apiBaseUrl' },
+    init: {
+      type: 'StringLiteral',
+      value: 'https://api.example.com',
+      loc: { start: { line: 3 }, end: { line: 3 } },
+    },
+    loc: { start: { line: 3 }, end: { line: 3 } },
+  };
+  const neutralLiteralAst = {
+    type: 'VariableDeclarator',
+    id: { type: 'Identifier', name: 'count' },
+    init: {
+      type: 'NumericLiteral',
+      value: 3,
+      loc: { start: { line: 9 }, end: { line: 9 } },
+    },
+    loc: { start: { line: 9 }, end: { line: 9 } },
+  };
+
+  assert.equal(hasHardcodedValuePattern(hardcodedConfigAst), true);
+  const match = findHardcodedValuePatternMatch(hardcodedConfigAst);
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'member',
+    name: 'apiBaseUrl',
+    lines: [3],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'hardcoded value: https://api.example.com', lines: [3] },
+  ]);
+  assert.equal(hasHardcodedValuePattern(neutralLiteralAst), false);
+});
+
+test('hasEnvDefaultFallbackPattern detecta defaults implícitos sobre process.env y descarta accesos directos', () => {
+  const envDefaultAst = {
+    type: 'LogicalExpression',
+    operator: '||',
+    left: {
+      type: 'MemberExpression',
+      computed: false,
+      object: {
+        type: 'MemberExpression',
+        computed: false,
+        object: { type: 'Identifier', name: 'process' },
+        property: { type: 'Identifier', name: 'env' },
+      },
+      property: { type: 'Identifier', name: 'API_URL' },
+      loc: { start: { line: 6 }, end: { line: 6 } },
+    },
+    right: {
+      type: 'StringLiteral',
+      value: 'http://localhost:3000',
+      loc: { start: { line: 6 }, end: { line: 6 } },
+    },
+    loc: { start: { line: 6 }, end: { line: 6 } },
+  };
+  const directEnvAccessAst = {
+    type: 'MemberExpression',
+    computed: false,
+    object: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'process' },
+      property: { type: 'Identifier', name: 'env' },
+    },
+    property: { type: 'Identifier', name: 'API_URL' },
+    loc: { start: { line: 9 }, end: { line: 9 } },
+  };
+
+  assert.equal(hasEnvDefaultFallbackPattern(envDefaultAst), true);
+  const match = findEnvDefaultFallbackPatternMatch(envDefaultAst);
+  assert.ok(match);
+  assert.deepEqual(match.primary_node, {
+    kind: 'member',
+    name: 'API_URL',
+    lines: [6],
+  });
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'fallback value: http://localhost:3000', lines: [6] },
+  ]);
+  assert.equal(hasEnvDefaultFallbackPattern(directEnvAccessAst), false);
 });
 
 test('hasRecordStringUnknownType detecta Record<string, unknown>', () => {

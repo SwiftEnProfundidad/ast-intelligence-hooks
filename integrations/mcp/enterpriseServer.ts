@@ -4,7 +4,8 @@ import type { Server } from 'node:http';
 import { execFileSync as runBinarySync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { readLifecycleStatus } from '../lifecycle';
+import { readLifecycleStatus, runLifecycleAudit } from '../lifecycle';
+import { GitService } from '../git/GitService';
 import { resolveMcpEnterpriseExperimentalFeature } from '../policy/experimentalFeatures';
 import { evaluateSddPolicy, readSddStatus } from '../sdd';
 import type { SddStage } from '../sdd';
@@ -83,6 +84,7 @@ const ENTERPRISE_RESOURCE_DESCRIPTORS: ReadonlyArray<{
 ];
 
 const ENTERPRISE_TOOLS = [
+  'pre_write_guard',
   'ai_gate_check',
   'pre_flight_check',
   'auto_execute_ai_start',
@@ -99,6 +101,12 @@ const ENTERPRISE_TOOL_DESCRIPTORS: ReadonlyArray<{
   mutating: boolean;
   safeByDefault: boolean;
 }> = [
+  {
+    name: 'pre_write_guard',
+    description: 'Runs the PRE_WRITE audit gate and returns actionable findings before an editor/agent writes code.',
+    mutating: false,
+    safeByDefault: true,
+  },
   {
     name: 'ai_gate_check',
     description: 'Reads .ai_evidence.json and reports AI gate compatibility status.',
@@ -338,6 +346,20 @@ type EnterpriseToolExecution = {
   warnings?: ReadonlyArray<string>;
 };
 
+class EnterpriseRepoGitService extends GitService {
+  constructor(private readonly repoRoot: string) {
+    super();
+  }
+
+  override resolveRepoRoot(): string {
+    return this.repoRoot;
+  }
+
+  override runGit(args: ReadonlyArray<string>, cwd: string = this.repoRoot): string {
+    return super.runGit(args, cwd);
+  }
+}
+
 type CriticalToolGuardResult = {
   allowed: boolean;
   stage: SddStage;
@@ -397,6 +419,36 @@ const executeEnterpriseTool = async (
   dryRun: boolean
 ): Promise<EnterpriseToolExecution> => {
   switch (toolName) {
+    case 'pre_write_guard': {
+      const audit = await runLifecycleAudit({
+        stage: 'PRE_WRITE',
+        auditMode: 'gate',
+        dependencies: {
+          git: new EnterpriseRepoGitService(repoRoot),
+        },
+      });
+      return {
+        name: toolName,
+        success: audit.gate_exit_code === 0 && audit.blocking_findings_count === 0,
+        dryRun: true,
+        executed: true,
+        warnings: audit.blocking_findings_count > 0
+          ? ['PRE_WRITE guard blocked before editor write; inspect result.findings.']
+          : [],
+        data: {
+          ...audit,
+          next_action: audit.blocking_findings_count > 0
+            ? {
+                kind: 'inspect_findings',
+                message: 'Corrige los findings bloqueantes antes de escribir o restaurar ficheros.',
+              }
+            : {
+                kind: 'continue',
+                message: 'PRE_WRITE guard passed.',
+              },
+        },
+      };
+    }
     case 'ai_gate_check': {
       const stage = toSddStage(args.stage, 'PRE_COMMIT');
       const execution = await runEnterpriseAiGateCheckAsync({
@@ -785,11 +837,11 @@ export const startEnterpriseMcpServer = (
               dryRun: true,
               executed: false,
               success: false,
-              warnings: ['Enterprise MCP está desactivado por defecto en el baseline del reset.'],
+              warnings: ['Enterprise MCP está desactivado explícitamente por configuración.'],
               result: {
                 code: 'MCP_ENTERPRISE_EXPERIMENTAL_DISABLED',
                 message:
-                  'MCP enterprise pertenece al namespace experimental y está desactivado por defecto.',
+                  'MCP enterprise está desactivado explícitamente por configuración.',
                 experimental_feature: experimentalFeature.feature,
                 mode: experimentalFeature.mode,
                 source: experimentalFeature.source,

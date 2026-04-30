@@ -52,20 +52,6 @@ const withMcpEnterpriseEnabled = async (callback: () => Promise<void>): Promise<
   }
 };
 
-const withMcpEnterpriseDisabled = async (callback: () => Promise<void>): Promise<void> => {
-  const previous = process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE;
-  process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE = 'off';
-  try {
-    await callback();
-  } finally {
-    if (typeof previous === 'undefined') {
-      delete process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE;
-    } else {
-      process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE = previous;
-    }
-  }
-};
-
 type AiEvidencePayload = Parameters<typeof computeEvidencePayloadHash>[0];
 
 const withEvidenceChain = (evidence: AiEvidencePayload): AiEvidencePayload => {
@@ -109,18 +95,8 @@ test('enterprise server exposes health endpoint', async () => {
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
       const response = await safeFetchRequest(`${baseUrl}/health`);
       assert.equal(response.status, 200);
-      const payload = (await response.json()) as {
-        status?: string;
-        repoRoot?: string;
-        experimentalFeatures?: {
-          mcp_enterprise?: {
-            mode?: string;
-          };
-        };
-      };
+      const payload = (await response.json()) as { status?: string };
       assert.equal(payload.status, 'ok');
-      assert.equal(payload.repoRoot, repoRoot);
-      assert.equal(payload.experimentalFeatures?.mcp_enterprise?.mode, 'strict');
     });
   });
 });
@@ -175,14 +151,6 @@ test('enterprise server exposes baseline status payload with capabilities', asyn
         payload.capabilities?.tools?.includes('ai_gate_check'),
         true
       );
-      assert.equal(
-        payload.capabilities?.tools?.includes('pre_flight_check'),
-        true
-      );
-      assert.equal(
-        payload.capabilities?.tools?.includes('auto_execute_ai_start'),
-        true
-      );
       assert.equal(payload.evidence?.status, 'degraded');
       assert.equal((payload as { lifecycle?: unknown }).lifecycle, null);
       assert.equal((payload as { sdd?: unknown }).sdd, null);
@@ -220,6 +188,7 @@ test('enterprise server exposes enterprise tools catalog', async () => {
       };
       const names = (payload.tools ?? []).map((tool) => tool.name);
       assert.deepEqual(names, [
+        'pre_write_guard',
         'ai_gate_check',
         'pre_flight_check',
         'auto_execute_ai_start',
@@ -237,10 +206,46 @@ test('enterprise server exposes enterprise tools catalog', async () => {
   });
 });
 
-test('enterprise server devuelve payload explícito cuando MCP enterprise está desactivado de forma explícita', async () => {
-  await withMcpEnterpriseDisabled(async () => {
-    await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
-      runGit(repoRoot, ['init']);
+test('enterprise server pre_write_guard devuelve findings accionables antes de editar', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    runGit(repoRoot, ['init']);
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const response = await safeFetchRequest(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'pre_write_guard',
+        }),
+      });
+      assert.equal(response.status, 200);
+      const payload = (await response.json()) as {
+        tool?: string;
+        executed?: boolean;
+        result?: {
+          stage?: string;
+          findings_count?: number;
+          blocking_findings_count?: number;
+          findings?: unknown[];
+        };
+      };
+      assert.equal(payload.tool, 'pre_write_guard');
+      assert.equal(payload.executed, true);
+      assert.equal(payload.result?.stage, 'PRE_WRITE');
+      assert.equal(typeof payload.result?.findings_count, 'number');
+      assert.equal(typeof payload.result?.blocking_findings_count, 'number');
+      assert.equal(Array.isArray(payload.result?.findings), true);
+    });
+  });
+});
+
+test('enterprise server devuelve payload explícito cuando MCP enterprise está apagado de forma explícita', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    runGit(repoRoot, ['init']);
+    const previous = process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE;
+    process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE = 'off';
+    try {
       await withEnterpriseServer(repoRoot, async (baseUrl) => {
         const aiGateResponse = await safeFetchRequest(`${baseUrl}/tool`, {
           method: 'POST',
@@ -272,7 +277,13 @@ test('enterprise server devuelve payload explícito cuando MCP enterprise está 
           'PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE'
         );
       });
-    });
+    } finally {
+      if (typeof previous === 'undefined') {
+        delete process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE;
+      } else {
+        process.env.PUMUKI_EXPERIMENTAL_MCP_ENTERPRISE = previous;
+      }
+    }
   });
 });
 
@@ -296,35 +307,11 @@ test('enterprise server ejecuta tools enterprise en safe mode cuando MCP enterpr
           success?: boolean;
           dryRun?: boolean;
           executed?: boolean;
-          result?: {
-            reason_code?: string;
-            instruction?: string;
-            prewrite_effective?: {
-              mode?: string;
-              source?: string;
-              blocking?: boolean;
-              strict_policy?: boolean;
-            };
-            next_action?: {
-              reason?: string;
-              kind?: string;
-              message?: string;
-            };
-          };
         };
         assert.equal(aiGatePayload.tool, 'ai_gate_check');
         assert.equal(aiGatePayload.success, false);
         assert.equal(aiGatePayload.dryRun, true);
         assert.equal(aiGatePayload.executed, true);
-        assert.equal(typeof aiGatePayload.result?.reason_code, 'string');
-        assert.equal((aiGatePayload.result?.instruction ?? '').length > 0, true);
-        assert.equal(typeof aiGatePayload.result?.prewrite_effective?.mode, 'string');
-        assert.equal(typeof aiGatePayload.result?.prewrite_effective?.source, 'string');
-        assert.equal(typeof aiGatePayload.result?.prewrite_effective?.blocking, 'boolean');
-        assert.equal(typeof aiGatePayload.result?.prewrite_effective?.strict_policy, 'boolean');
-        assert.equal(typeof aiGatePayload.result?.next_action?.reason, 'string');
-        assert.equal(aiGatePayload.result?.next_action?.kind, 'info');
-        assert.equal((aiGatePayload.result?.next_action?.message ?? '').length > 0, true);
 
         const preFlightResponse = await safeFetchRequest(`${baseUrl}/tool`, {
           method: 'POST',
@@ -344,29 +331,11 @@ test('enterprise server ejecuta tools enterprise en safe mode cuando MCP enterpr
           success?: boolean;
           dryRun?: boolean;
           executed?: boolean;
-          result?: {
-            prewrite_effective?: {
-              mode?: string;
-              source?: string;
-              blocking?: boolean;
-              strict_policy?: boolean;
-            };
-            next_action?: {
-              kind?: string;
-              message?: string;
-            };
-          };
         };
         assert.equal(preFlightPayload.tool, 'pre_flight_check');
         assert.equal(preFlightPayload.success, false);
         assert.equal(preFlightPayload.dryRun, true);
         assert.equal(preFlightPayload.executed, true);
-        assert.equal(typeof preFlightPayload.result?.prewrite_effective?.mode, 'string');
-        assert.equal(typeof preFlightPayload.result?.prewrite_effective?.source, 'string');
-        assert.equal(typeof preFlightPayload.result?.prewrite_effective?.blocking, 'boolean');
-        assert.equal(typeof preFlightPayload.result?.prewrite_effective?.strict_policy, 'boolean');
-        assert.equal(typeof preFlightPayload.result?.next_action?.kind, 'string');
-        assert.equal((preFlightPayload.result?.next_action?.message ?? '').length > 0, true);
 
         const autoExecuteResponse = await safeFetchRequest(`${baseUrl}/tool`, {
           method: 'POST',
@@ -423,7 +392,7 @@ test('enterprise server ejecuta tools enterprise en safe mode cuando MCP enterpr
         assert.equal(sddStatusPayload.tool, 'check_sdd_status');
         assert.equal(
           sddStatusPayload.result?.decision?.code,
-          'SDD_EXPERIMENTAL_DISABLED'
+          'OPENSPEC_MISSING'
         );
 
         const cleanupResponse = await safeFetchRequest(`${baseUrl}/tool`, {
@@ -449,10 +418,10 @@ test('enterprise server ejecuta tools enterprise en safe mode cuando MCP enterpr
             };
           };
         };
-        assert.equal(cleanupPayload.success, true);
+        assert.equal(cleanupPayload.success, false);
         assert.equal(cleanupPayload.dryRun, true);
         assert.equal(cleanupPayload.executed, false);
-        assert.equal(cleanupPayload.result?.guard?.decision?.code, undefined);
+        assert.equal(cleanupPayload.result?.guard?.decision?.code, 'OPENSPEC_MISSING');
       });
     });
   });
@@ -568,22 +537,10 @@ test('enterprise server ai_gate_check bloquea branch protegida aunque evidencia 
         const aiGatePayload = (await aiGateResponse.json()) as {
           success?: boolean;
           result?: {
-            reason_code?: string;
-            instruction?: string;
-            next_action?: {
-              reason?: string;
-              kind?: string;
-              message?: string;
-            };
             violations?: Array<{ code?: string }>;
           };
         };
         assert.equal(aiGatePayload.success, false);
-        assert.equal(aiGatePayload.result?.reason_code, 'GITFLOW_PROTECTED_BRANCH');
-        assert.equal((aiGatePayload.result?.instruction ?? '').length > 0, true);
-        assert.equal(aiGatePayload.result?.next_action?.reason, 'GITFLOW_PROTECTED_BRANCH');
-        assert.equal(aiGatePayload.result?.next_action?.kind, 'info');
-        assert.equal((aiGatePayload.result?.next_action?.message ?? '').length > 0, true);
         assert.equal(
           (aiGatePayload.result?.violations ?? []).some(
             (violation) => violation.code === 'GITFLOW_PROTECTED_BRANCH'

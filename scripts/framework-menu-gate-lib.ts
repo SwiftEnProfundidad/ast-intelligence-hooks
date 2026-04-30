@@ -9,6 +9,7 @@ export type MenuStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 
 export type MenuScope =
   | { kind: 'staged' }
+  | { kind: 'unstaged' }
   | { kind: 'repo' }
   | { kind: 'repoAndStaged' }
   | { kind: 'workingTree' }
@@ -137,6 +138,14 @@ export const runWorkingTreePrePushGateSilent = async (): Promise<void> => {
   const gateParams = buildMenuGateParams({
     stage: 'PRE_PUSH',
     scope: { kind: 'workingTree' },
+  });
+  await runMenuAuditGate(gateParams);
+};
+
+export const runUnstagedGateSilent = async (): Promise<void> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'unstaged' },
   });
   await runMenuAuditGate(gateParams);
 };

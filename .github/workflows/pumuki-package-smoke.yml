@@ -1,4 +1,6 @@
 name: Pumuki Package Smoke
+# Opcional: solo corre si la org tiene cuota de GitHub Actions.
+# Sin cuota: mismo cheque en local → npm ci && node --import tsx scripts/package-install-smoke.ts --mode=block|minimal
 
 on:
   pull_request:

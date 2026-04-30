@@ -34,6 +34,9 @@ export const createEmptySnapshotRulesCoverage = (
   stage: GateStage
 ): SnapshotRulesCoverage => ({
   stage,
+  contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+  scope_note:
+    'No runtime rules were evaluated for this stage. DECLARATIVE registry rules are not runtime detectors.',
   active_rule_ids: [],
   evaluated_rule_ids: [],
   matched_rule_ids: [],
@@ -60,6 +63,14 @@ export const normalizeSnapshotRulesCoverage = (
   const matchedRuleIds = normalizeStringArray(value.matched_rule_ids);
   const unevaluatedRuleIds = normalizeStringArray(value.unevaluated_rule_ids);
   const unsupportedAutoRuleIds = normalizeStringArray(value.unsupported_auto_rule_ids ?? []);
+  const unsupportedDetectorRuleIds = normalizeStringArray(
+    value.unsupported_detector_rule_ids ?? []
+  );
+  const stageApplicableAutoRuleIds = normalizeStringArray(
+    value.stage_applicable_auto_rule_ids ?? []
+  );
+  const declarativeRuleIds = normalizeStringArray(value.declarative_rule_ids ?? []);
+  const registryTotals = value.registry_totals;
 
   const derivedCounts = {
     active: activeRuleIds.length,
@@ -72,6 +83,10 @@ export const normalizeSnapshotRulesCoverage = (
     unsupportedAutoRuleIds.length,
     normalizeCount(value.counts?.unsupported_auto ?? 0)
   );
+  const unsupportedDetectorCount = Math.max(
+    unsupportedDetectorRuleIds.length,
+    normalizeCount(value.counts?.unsupported_detector ?? 0)
+  );
 
   const counts: SnapshotRulesCoverage['counts'] = {
     active: Math.max(derivedCounts.active, normalizeCount(value.counts?.active ?? 0)),
@@ -83,8 +98,20 @@ export const normalizeSnapshotRulesCoverage = (
     ),
   };
 
+  if (registryTotals) {
+    counts.registry_total = normalizeCount(registryTotals.total);
+    counts.registry_auto = normalizeCount(registryTotals.auto);
+    counts.registry_declarative = normalizeCount(registryTotals.declarative);
+  }
+  if (stageApplicableAutoRuleIds.length > 0) {
+    counts.stage_applicable_auto = stageApplicableAutoRuleIds.length;
+  }
+
   if (unsupportedAutoCount > 0) {
     counts.unsupported_auto = unsupportedAutoCount;
+  }
+  if (unsupportedDetectorCount > 0) {
+    counts.unsupported_detector = unsupportedDetectorCount;
   }
 
   const ratioFromCounts = createCoverageRatio(counts.active, counts.evaluated);
@@ -94,6 +121,10 @@ export const normalizeSnapshotRulesCoverage = (
 
   const normalized: SnapshotRulesCoverage = {
     stage,
+    contract: value.contract ?? 'AUTO_RUNTIME_RULES_FOR_STAGE',
+    scope_note:
+      value.scope_note ??
+      'rules_coverage reports AUTO runtime rules applicable to this stage, not total DECLARATIVE registry surface.',
     active_rule_ids: activeRuleIds,
     evaluated_rule_ids: evaluatedRuleIds,
     matched_rule_ids: matchedRuleIds,
@@ -102,8 +133,31 @@ export const normalizeSnapshotRulesCoverage = (
     coverage_ratio: coverageRatio,
   };
 
+  if (registryTotals) {
+    normalized.registry_totals = {
+      total: normalizeCount(registryTotals.total),
+      auto: normalizeCount(registryTotals.auto),
+      declarative: normalizeCount(registryTotals.declarative),
+    };
+  }
+
+  if (stageApplicableAutoRuleIds.length > 0) {
+    normalized.stage_applicable_auto_rule_ids = stageApplicableAutoRuleIds;
+  }
+
+  if (declarativeRuleIds.length > 0) {
+    normalized.declarative_rule_ids = declarativeRuleIds;
+  }
+
+  if (typeof value.declarative_excluded_reason === 'string') {
+    normalized.declarative_excluded_reason = value.declarative_excluded_reason;
+  }
+
   if (unsupportedAutoRuleIds.length > 0 || unsupportedAutoCount > 0) {
     normalized.unsupported_auto_rule_ids = unsupportedAutoRuleIds;
+  }
+  if (unsupportedDetectorRuleIds.length > 0 || unsupportedDetectorCount > 0) {
+    normalized.unsupported_detector_rule_ids = unsupportedDetectorRuleIds;
   }
 
   return normalized;

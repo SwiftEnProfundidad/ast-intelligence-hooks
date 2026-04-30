@@ -360,9 +360,11 @@ test('pre_flight_check incorpora learning_context cuando existe learning.json de
   });
 });
 
-test('pre_flight_check no expone learning_context cuando el feature está apagado por defecto', () => {
+test('pre_flight_check no expone learning_context cuando el feature se apaga explícitamente', () => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-preflight-learning-off-'));
+  const previousLearningContext = process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
   try {
+    process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT = 'off';
     runGit(repoRoot, ['init', '-b', 'feature/preflight-learning-off']);
     runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
     runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
@@ -434,6 +436,11 @@ test('pre_flight_check no expone learning_context cuando el feature está apagad
       false
     );
   } finally {
+    if (typeof previousLearningContext === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT = previousLearningContext;
+    }
     rmSync(repoRoot, { recursive: true, force: true });
   }
 });

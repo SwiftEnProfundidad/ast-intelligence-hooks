@@ -32,6 +32,7 @@ test('getFactsForCommitRange filtra por extension y construye facts con source d
       throw new Error(`comando git no esperado: ${command}`);
     },
     getStagedFacts: () => [],
+    getUnstagedFacts: () => [],
     getRepoFacts: () => [],
     getRepoAndStagedFacts: () => [],
     getStagedAndUnstagedFacts: () => [],
@@ -104,6 +105,7 @@ test('getFactsForCommitRange retorna vacio si ningun cambio coincide con extensi
       throw new Error(`comando git no esperado: ${command}`);
     },
     getStagedFacts: () => [],
+    getUnstagedFacts: () => [],
     getRepoFacts: () => [],
     getRepoAndStagedFacts: () => [],
     getStagedAndUnstagedFacts: () => [],
@@ -140,6 +142,7 @@ test('getFactsForCommitRange retorna vacio cuando HEAD no es resoluble (repo sin
       throw new Error(`comando git no esperado: ${command}`);
     },
     getStagedFacts: () => [],
+    getUnstagedFacts: () => [],
     getRepoFacts: () => [],
     getRepoAndStagedFacts: () => [],
     getStagedAndUnstagedFacts: () => [],

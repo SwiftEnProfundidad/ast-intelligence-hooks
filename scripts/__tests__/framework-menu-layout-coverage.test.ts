@@ -21,6 +21,10 @@ const buildConsumerActions = () =>
     runStrictRepoAndStaged: noop,
     runStrictStagedOnly: noop,
     runStandardCriticalHigh: noop,
+    runEngineStagedNoPreflight: noop,
+    runEngineUnstagedNoPreflight: noop,
+    runEngineStagedAndUnstagedNoPreflight: noop,
+    runEngineFullRepoNoPreflight: noop,
     runPatternChecks: noop,
     runEslintAudit: noop,
     runAstIntelligence: noop,
@@ -48,7 +52,7 @@ const buildAdvancedActions = () => {
 };
 
 test('flattenMenuLayoutIds conserva el orden declarado', () => {
-  assert.deepEqual(flattenMenuLayoutIds(CONSUMER_MENU_LAYOUT), ['1', '2', '3', '4', '8', '5', '6', '7', '9', '10']);
+  assert.deepEqual(flattenMenuLayoutIds(CONSUMER_MENU_LAYOUT), ['1', '2', '3', '4', '11', '12', '13', '14', '8', '5', '6', '7', '9', '10']);
 });
 
 test('hasFullLayoutCoverage valida el layout consumer completo', () => {

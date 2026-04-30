@@ -10,6 +10,8 @@ import { buildAuditSummaryPayload } from './framework-menu-system-notifications-
 import {
   buildGateBlockedPayload,
   resolveBlockedCauseSummary,
+  resolveBlockedImpactSummary,
+  resolveBlockedCommand,
   resolveBlockedRemediation,
 } from './framework-menu-system-notifications-payloads-blocked';
 import {
@@ -20,6 +22,8 @@ import {
 export { resolveProjectLabel } from './framework-menu-system-notifications-payloads-context';
 export {
   resolveBlockedCauseSummary,
+  resolveBlockedImpactSummary,
+  resolveBlockedCommand,
   resolveBlockedRemediation,
 } from './framework-menu-system-notifications-payloads-blocked';
 export {
@@ -46,7 +50,10 @@ export const buildSystemNotificationPayload = (
     return buildAuditSummaryPayload(event);
   }
   if (event.kind === 'gate.blocked') {
-    return buildGateBlockedPayload(event, projectPrefix);
+    return buildGateBlockedPayload(event, {
+      projectPrefix,
+      repoRoot: context?.repoRoot ?? '',
+    });
   }
   if (event.kind === 'evidence.stale') {
     return buildEvidenceStalePayload(event);

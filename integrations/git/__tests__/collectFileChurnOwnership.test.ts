@@ -34,6 +34,7 @@ const createGitStub = (params: {
       throw new Error(`comando git no esperado: ${command}`);
     },
     getStagedFacts: () => [],
+    getUnstagedFacts: () => [],
     getRepoFacts: () => [],
     getRepoAndStagedFacts: () => [],
     getStagedAndUnstagedFacts: () => [],

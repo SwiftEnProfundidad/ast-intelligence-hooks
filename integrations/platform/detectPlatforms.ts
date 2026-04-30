@@ -51,6 +51,38 @@ const collectFilePaths = (facts: ReadonlyArray<Fact>): string[] => {
     .filter((path): path is string => typeof path === 'string');
 };
 
+const ALLOWED_PIN_KEYS = new Set(['ios', 'android', 'backend', 'frontend']);
+
+const readPinnedPlatformsFromEnv = (): ReadonlySet<keyof DetectedPlatforms> | null => {
+  const raw = process.env.PUMUKI_PIN_PLATFORMS?.trim().toLowerCase();
+  if (!raw) {
+    return null;
+  }
+  const tokens = raw
+    .split(',')
+    .map((token) => token.trim())
+    .filter((token) => token.length > 0)
+    .filter((token) => ALLOWED_PIN_KEYS.has(token)) as Array<keyof DetectedPlatforms>;
+  if (tokens.length === 0) {
+    return null;
+  }
+  return new Set(tokens);
+};
+
+const applyPinnedPlatformsFilter = (
+  detected: DetectedPlatforms,
+  pin: ReadonlySet<keyof DetectedPlatforms>
+): DetectedPlatforms => {
+  const next: DetectedPlatforms = {};
+  for (const key of pin) {
+    const state = detected[key];
+    if (state) {
+      next[key] = state;
+    }
+  }
+  return next;
+};
+
 export const detectPlatformsFromFacts = (
   facts: ReadonlyArray<Fact>
 ): DetectedPlatforms => {
@@ -100,6 +132,11 @@ export const detectPlatformsFromFacts = (
       detected: true,
       confidence: 'MEDIUM',
     };
+  }
+
+  const pin = readPinnedPlatformsFromEnv();
+  if (pin && pin.size > 0) {
+    return applyPinnedPlatformsFilter(result, pin);
   }
 
   return result;

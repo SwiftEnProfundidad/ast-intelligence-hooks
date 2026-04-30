@@ -89,3 +89,73 @@ test('readEvidenceSummaryForMenu orquesta lectura, normalización y severidades'
     ]);
   });
 });
+
+test('readEvidenceSummaryForMenu expone filas de plataforma cuando snapshot.platforms existe', async () => {
+  await withTempDir('pumuki-menu-evidence-platforms-', async (repoRoot) => {
+    const evidence = {
+      snapshot: {
+        stage: 'PRE_COMMIT',
+        outcome: 'PASS',
+        files_scanned: 3,
+        files_affected: 1,
+        findings: [],
+        platforms: [
+          {
+            platform: 'iOS',
+            files_affected: 1,
+            by_severity: { CRITICAL: 0, HIGH: 1, MEDIUM: 0, LOW: 0 },
+            top_violations: [],
+          },
+          {
+            platform: 'Other',
+            files_affected: 0,
+            by_severity: { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 },
+            top_violations: [],
+          },
+        ],
+      },
+    };
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    const summary = readEvidenceSummaryForMenu(repoRoot);
+    assert.equal(summary.status, 'ok');
+    assert.deepEqual(summary.platformAuditRows, [
+      { platform: 'iOS', violations: 1 },
+      { platform: 'Other', violations: 0 },
+    ]);
+  });
+});
+
+test('readEvidenceSummaryForMenu respeta topFindingsLimit', async () => {
+  await withTempDir('pumuki-menu-evidence-limit-', async (repoRoot) => {
+    const findings = Array.from({ length: 20 }, (_, index) => ({
+      ruleId: `rule.${index}`,
+      file: `src/f${index}.ts`,
+      lines: 1,
+      severity: 'WARN',
+    }));
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        {
+          snapshot: {
+            stage: 'PRE_COMMIT',
+            outcome: 'WARN',
+            files_scanned: 20,
+            files_affected: 20,
+            findings,
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const defaultSummary = readEvidenceSummaryForMenu(repoRoot);
+    assert.equal(defaultSummary.topFindings.length, 10);
+
+    const wide = readEvidenceSummaryForMenu(repoRoot, { topFindingsLimit: 3 });
+    assert.equal(wide.topFindings.length, 3);
+  });
+});

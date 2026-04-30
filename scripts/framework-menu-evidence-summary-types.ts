@@ -18,10 +18,16 @@ export type EvidenceSnapshot = {
   stage?: unknown;
   outcome?: unknown;
   findings?: unknown;
+  platforms?: unknown;
 };
 
 export type EvidenceSeverityMetrics = {
   by_enterprise_severity?: unknown;
+};
+
+export type FrameworkMenuEvidencePlatformRow = {
+  platform: string;
+  violations: number;
 };
 
 export type FrameworkMenuEvidenceSummary = {
@@ -41,4 +47,5 @@ export type FrameworkMenuEvidenceSummary = {
     file: string;
     line: number;
   }>;
+  platformAuditRows?: ReadonlyArray<FrameworkMenuEvidencePlatformRow>;
 };

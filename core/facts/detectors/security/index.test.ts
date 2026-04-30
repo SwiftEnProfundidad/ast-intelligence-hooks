@@ -15,7 +15,7 @@ import {
   hasWeakTokenGenerationWithCryptoRandomUuid,
 } from './index';
 
-test('hasHardcodedSecretTokenLiteral detecta literales fuertes en identificadores sensibles', () => {
+test('hasHardcodedSecretTokenLiteral detecta literales reales en identificadores sensibles', () => {
   const ast = {
     type: 'VariableDeclarator',
     id: { type: 'Identifier', name: 'apiToken' },
@@ -24,11 +24,17 @@ test('hasHardcodedSecretTokenLiteral detecta literales fuertes en identificadore
   const safeAst = {
     type: 'VariableDeclarator',
     id: { type: 'Identifier', name: 'apiToken' },
-    init: { type: 'StringLiteral', value: 'short' },
+    init: { type: 'StringLiteral', value: 'example' },
+  };
+  const shortRealSecretAst = {
+    type: 'VariableDeclarator',
+    id: { type: 'Identifier', name: 'apiToken' },
+    init: { type: 'StringLiteral', value: 'prod' },
   };
 
   assert.equal(hasHardcodedSecretTokenLiteral(ast), true);
   assert.equal(hasHardcodedSecretTokenLiteral(safeAst), false);
+  assert.equal(hasHardcodedSecretTokenLiteral(shortRealSecretAst), true);
 });
 
 test('hasInsecureTokenGenerationWithMathRandom detecta Math.random en asignacion sensible', () => {

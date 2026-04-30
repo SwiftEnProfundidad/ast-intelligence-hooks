@@ -6,8 +6,12 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { PUMUKI_MANAGED_BLOCK_END, PUMUKI_MANAGED_BLOCK_START } from '../constants';
 import { getCurrentPumukiPackageName, getCurrentPumukiVersion } from '../packageInfo';
-import { parseLifecycleCliArgs } from '../cli';
-import { runLifecycleCli } from '../cli';
+import {
+  buildPreWriteExperimentalEnableAdvisoryCommand,
+  buildSddExperimentalEnableAdvisoryCommand,
+  parseLifecycleCliArgs,
+  runLifecycleCli,
+} from '../cli';
 import { runLifecycleInstall } from '../install';
 import { runLifecycleRemove } from '../remove';
 import { runLifecycleUninstall } from '../uninstall';
@@ -42,12 +46,12 @@ const withExperimentalPreWriteDisabled = async <T>(
   const previousTddBdd = process.env.PUMUKI_TDD_BDD_ENFORCEMENT;
   const previousLegacy = process.env.PUMUKI_PREWRITE_ENFORCEMENT;
   process.env.PUMUKI_EXPERIMENTAL_PRE_WRITE = 'off';
-  delete process.env.PUMUKI_EXPERIMENTAL_SDD;
-  delete process.env.PUMUKI_EXPERIMENTAL_HEURISTICS;
-  delete process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
-  delete process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
-  delete process.env.PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY;
-  delete process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION;
+  process.env.PUMUKI_EXPERIMENTAL_SDD = 'off';
+  process.env.PUMUKI_EXPERIMENTAL_HEURISTICS = 'off';
+  process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT = 'off';
+  process.env.PUMUKI_EXPERIMENTAL_ANALYTICS = 'off';
+  process.env.PUMUKI_EXPERIMENTAL_OPERATIONAL_MEMORY = 'off';
+  process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION = 'off';
   delete process.env.PUMUKI_SKILLS_ENFORCEMENT;
   delete process.env.PUMUKI_TDD_BDD_ENFORCEMENT;
   delete process.env.PUMUKI_PREWRITE_ENFORCEMENT;
@@ -119,7 +123,7 @@ test('parseLifecycleCliArgs accepts remove command', () => {
   assert.equal(parsed.purgeArtifacts, false);
 });
 
-test('runLifecycleCli deja PRE_WRITE en no-op cuando está desactivado explícitamente', async () => {
+test('runLifecycleCli deja PRE_WRITE en no-op cuando está apagado explícitamente', async () => {
   await withExperimentalPreWriteDisabled(async () => {
     const repo = createGitRepo();
     const previousBypass = process.env.PUMUKI_SDD_BYPASS;
@@ -141,7 +145,7 @@ test('runLifecycleCli deja PRE_WRITE en no-op cuando está desactivado explícit
   });
 });
 
-test('runLifecycleCli PRE_WRITE en modo texto anuncia que el gate fue desactivado explícitamente', async () => {
+test('runLifecycleCli PRE_WRITE en modo texto anuncia que el flujo experimental está apagado explícitamente', async () => {
   await withExperimentalPreWriteDisabled(async () => {
     const repo = createGitRepo();
     const printed: string[] = [];
@@ -157,11 +161,8 @@ test('runLifecycleCli PRE_WRITE en modo texto anuncia que el gate fue desactivad
       assert.equal(exitCode, 0);
       const rendered = printed.join('\n');
       assert.match(rendered, /PRE_WRITE_EXPERIMENTAL_DISABLED/);
-      assert.match(rendered, /está desactivado explícitamente/i);
+      assert.match(rendered, /desactivado explícitamente/i);
       assert.match(rendered, /pre-write enforcement: mode=off source=env blocking=no/i);
-      assert.match(rendered, /\[pumuki\]\[sdd\] prewrite_effective: mode=off source=env blocking=no strict_policy=no/i);
-      assert.match(rendered, /\[pumuki\]\[sdd\] reason_code=PRE_WRITE_EXPERIMENTAL_DISABLED/);
-      assert.match(rendered, /\[pumuki\]\[sdd\] instruction=Activa PRE_WRITE en modo estricto/);
       assert.doesNotMatch(rendered, /\[pumuki\]\[ai-gate\]/);
     } finally {
       process.stdout.write = originalStdoutWrite;
@@ -171,7 +172,7 @@ test('runLifecycleCli PRE_WRITE en modo texto anuncia que el gate fue desactivad
   });
 });
 
-test('runLifecycleCli PRE_WRITE --json expone payload determinista cuando el gate está desactivado explícitamente', async () => {
+test('runLifecycleCli PRE_WRITE --json expone payload determinista cuando el flujo experimental está apagado explícitamente', async () => {
   await withExperimentalPreWriteDisabled(async () => {
     const repo = createGitRepo();
     const printed: string[] = [];
@@ -198,12 +199,6 @@ test('runLifecycleCli PRE_WRITE --json expone payload determinista cuando el gat
         blocking?: boolean;
         activationVariable?: string;
       };
-      prewrite_effective?: {
-        mode?: string;
-        source?: string;
-        blocking?: boolean;
-        strict_policy?: boolean;
-      };
       experimental_features?: {
         features?: {
           pre_write?: {
@@ -222,8 +217,6 @@ test('runLifecycleCli PRE_WRITE --json expone payload determinista cuando el gat
         reason?: string;
         command?: string;
       };
-      reason_code?: string;
-      instruction?: string;
       ai_gate?: object;
       };
       assert.equal(payload.sdd?.decision?.code, 'PRE_WRITE_EXPERIMENTAL_DISABLED');
@@ -231,14 +224,10 @@ test('runLifecycleCli PRE_WRITE --json expone payload determinista cuando el gat
       assert.equal(payload.pre_write_enforcement?.mode, 'off');
       assert.equal(payload.pre_write_enforcement?.blocking, false);
       assert.equal(payload.pre_write_enforcement?.activationVariable, 'PUMUKI_EXPERIMENTAL_PRE_WRITE');
-      assert.equal(payload.prewrite_effective?.mode, 'off');
-      assert.equal(payload.prewrite_effective?.source, 'env');
-      assert.equal(payload.prewrite_effective?.blocking, false);
-      assert.equal(payload.prewrite_effective?.strict_policy, false);
       assert.equal(payload.experimental_features?.features?.pre_write?.mode, 'off');
       assert.equal(payload.experimental_features?.features?.pre_write?.source, 'env');
       assert.equal(payload.experimental_features?.features?.sdd?.mode, 'off');
-      assert.equal(payload.experimental_features?.features?.sdd?.source, 'default');
+      assert.equal(payload.experimental_features?.features?.sdd?.source, 'env');
       assert.equal(
         payload.experimental_features?.features?.pre_write?.activationVariable,
         'PUMUKI_EXPERIMENTAL_PRE_WRITE'
@@ -247,10 +236,11 @@ test('runLifecycleCli PRE_WRITE --json expone payload determinista cuando el gat
         payload.experimental_features?.features?.sdd?.activationVariable,
         'PUMUKI_EXPERIMENTAL_SDD'
       );
-      assert.equal(payload.reason_code, 'PRE_WRITE_EXPERIMENTAL_DISABLED');
-      assert.match(payload.instruction ?? '', /PUMUKI_EXPERIMENTAL_PRE_WRITE=strict/);
       assert.equal(payload.next_action?.reason, 'PRE_WRITE_EXPERIMENTAL_DISABLED');
-      assert.match(payload.next_action?.command ?? '', /PUMUKI_EXPERIMENTAL_PRE_WRITE=strict/);
+      assert.equal(
+        payload.next_action?.command,
+        buildPreWriteExperimentalEnableAdvisoryCommand(repo)
+      );
       assert.equal(typeof payload.ai_gate, 'undefined');
     } finally {
       process.stdout.write = originalStdoutWrite;
@@ -260,7 +250,7 @@ test('runLifecycleCli PRE_WRITE --json expone payload determinista cuando el gat
   });
 });
 
-test('runLifecycleCli SDD PRE_COMMIT --json expone payload determinista cuando SDD/OpenSpec está apagado por defecto', async () => {
+test('runLifecycleCli SDD PRE_COMMIT --json expone payload determinista cuando SDD/OpenSpec se apaga por env', async () => {
   await withExperimentalPreWriteDisabled(async () => {
     const repo = createGitRepo();
     const printed: string[] = [];
@@ -293,13 +283,16 @@ test('runLifecycleCli SDD PRE_COMMIT --json expone payload determinista cuando S
       assert.equal(payload.decision?.code, 'SDD_EXPERIMENTAL_DISABLED');
       assert.equal(payload.decision?.allowed, true);
       assert.equal(payload.experimental_features?.features?.sdd?.mode, 'off');
-      assert.equal(payload.experimental_features?.features?.sdd?.source, 'default');
+      assert.equal(payload.experimental_features?.features?.sdd?.source, 'env');
       assert.equal(
         payload.experimental_features?.features?.sdd?.activationVariable,
         'PUMUKI_EXPERIMENTAL_SDD'
       );
       assert.equal(payload.next_action?.reason, 'SDD_EXPERIMENTAL_DISABLED');
-      assert.match(payload.next_action?.command ?? '', /PUMUKI_EXPERIMENTAL_SDD=advisory/);
+      assert.equal(
+        payload.next_action?.command,
+        buildSddExperimentalEnableAdvisoryCommand('PRE_COMMIT', repo)
+      );
     } finally {
       process.stdout.write = originalStdoutWrite;
       process.chdir(previousCwd);

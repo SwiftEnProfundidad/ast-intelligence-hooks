@@ -128,6 +128,21 @@ test('detectPlatformsFromFacts no marca plataformas cuando las extensiones no ap
   assert.deepEqual(detected, {});
 });
 
+test('detectPlatformsFromFacts PUMUKI_PIN_PLATFORMS conserva solo plataformas pinadas', () => {
+  process.env.PUMUKI_PIN_PLATFORMS = 'frontend';
+  try {
+    const detected = detectPlatformsFromFacts([fileChange('src/main.ts')]);
+    assert.deepEqual(detected, {
+      frontend: {
+        detected: true,
+        confidence: 'MEDIUM',
+      },
+    });
+  } finally {
+    delete process.env.PUMUKI_PIN_PLATFORMS;
+  }
+});
+
 test('detectPlatformsFromFacts permite combinación completa y prioriza presencia detectada', () => {
   const detected = detectPlatformsFromFacts([
     fileChange('apps/ios/App/Feature.swift'),

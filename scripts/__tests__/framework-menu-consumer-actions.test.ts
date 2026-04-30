@@ -7,6 +7,10 @@ test('createConsumerLegacyMenuActions expone shell read-only mínima y diagnóst
   let repoAndStaged = 0;
   let staged = 0;
   let standard = 0;
+  let engineStaged = 0;
+  let engineUnstaged = 0;
+  let engineBoth = 0;
+  let engineFullRepo = 0;
   let pattern = 0;
   let eslint = 0;
   let ast = 0;
@@ -25,6 +29,18 @@ test('createConsumerLegacyMenuActions expone shell read-only mínima y diagnóst
     },
     runStandardCriticalHigh: async () => {
       standard += 1;
+    },
+    runEngineStagedNoPreflight: async () => {
+      engineStaged += 1;
+    },
+    runEngineUnstagedNoPreflight: async () => {
+      engineUnstaged += 1;
+    },
+    runEngineStagedAndUnstagedNoPreflight: async () => {
+      engineBoth += 1;
+    },
+    runEngineFullRepoNoPreflight: async () => {
+      engineFullRepo += 1;
     },
     runPatternChecks: async () => {
       pattern += 1;
@@ -45,19 +61,23 @@ test('createConsumerLegacyMenuActions expone shell read-only mínima y diagnóst
 
   assert.deepEqual(
     actions.map((action) => action.id),
-    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+    ['1', '2', '3', '4', '11', '12', '13', '14', '5', '6', '7', '8', '9', '10']
   );
-  assert.match(actions[0]?.label ?? '', /Read-only full audit.*PRE_COMMIT/i);
-  assert.match(actions[1]?.label ?? '', /Read-only strict REPO\+STAGING.*PRE_PUSH/i);
-  assert.match(actions[2]?.label ?? '', /Read-only strict STAGING only.*PRE_COMMIT/i);
-  assert.match(actions[3]?.label ?? '', /Read-only audit of STAGED\+UNSTAGED working tree.*PRE_PUSH/i);
-  assert.match(actions[4]?.label ?? '', /Legacy read-only pattern checks snapshot/i);
-  assert.match(actions[5]?.label ?? '', /Legacy read-only ESLint evidence snapshot/i);
-  assert.match(actions[6]?.label ?? '', /Legacy read-only AST snapshot/i);
-  assert.match(actions[7]?.label ?? '', /Export legacy read-only evidence snapshot/i);
-  assert.match(actions[8]?.label ?? '', /Legacy read-only file diagnostics snapshot/i);
+  assert.match(actions[0]?.label ?? '', /ALL tracked files/i);
+  assert.match(actions[1]?.label ?? '', /REPO\+index contract/i);
+  assert.match(actions[2]?.label ?? '', /STAGED only \(PRE_COMMIT\)/i);
+  assert.match(actions[3]?.label ?? '', /working tree \(PRE_PUSH policy/i);
+  assert.match(actions[4]?.label ?? '', /Engine audit · STAGED only/i);
+  assert.match(actions[5]?.label ?? '', /Engine audit · UNSTAGED only/i);
+  assert.match(actions[6]?.label ?? '', /Engine audit · STAGED \+ UNSTAGED/i);
+  assert.match(actions[7]?.label ?? '', /tracked repo files \(AUTO runtime rules/i);
+  assert.match(actions[8]?.label ?? '', /Legacy read-only pattern checks snapshot/i);
+  assert.match(actions[9]?.label ?? '', /Legacy read-only ESLint evidence snapshot/i);
+  assert.match(actions[10]?.label ?? '', /Legacy read-only AST snapshot/i);
+  assert.match(actions[11]?.label ?? '', /Export legacy read-only evidence snapshot/i);
+  assert.match(actions[12]?.label ?? '', /Legacy read-only file diagnostics snapshot/i);
 
-  for (const action of actions.slice(0, 9)) {
+  for (const action of actions.filter((entry) => entry.id !== '10')) {
     await action.execute();
   }
 
@@ -65,6 +85,10 @@ test('createConsumerLegacyMenuActions expone shell read-only mínima y diagnóst
   assert.equal(repoAndStaged, 1);
   assert.equal(staged, 1);
   assert.equal(standard, 1);
+  assert.equal(engineStaged, 1);
+  assert.equal(engineUnstaged, 1);
+  assert.equal(engineBoth, 1);
+  assert.equal(engineFullRepo, 1);
   assert.equal(pattern, 1);
   assert.equal(eslint, 1);
   assert.equal(ast, 1);

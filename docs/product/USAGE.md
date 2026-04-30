@@ -19,6 +19,25 @@ Stack My Architecture (optional training hub; includes the dedicated Pumuki cour
 - Public static site: `https://stack-my-architecture-hub.vercel.app/pumuki/`
 - Initiative tracking in this repo: `docs/tracking/plan-curso-pumuki-stack-my-architecture.md`
 
+## Product intent (canonical)
+
+This section is the **single owner-authored contract** for what Pumuki must optimize for across consumers. Agents and contributors should treat it as **source of truth** for expectations so the product owner does not have to restate it in every session.
+
+1. **Repo-agnostic governance** — The same deterministic pipeline (`Facts → Rules → Gate → evidence`) must behave coherently in **any** Git consumer repository. Success is not measured by a specific downstream repo name.
+
+2. **Honest scope** — “What was audited” must always be explicit:
+   - Hook stages use **Git-defined scopes** (for example `PRE_COMMIT` is **staged** only; see the table [Gate stages and policies](#gate-stages-and-policies)).
+   - Full-tree style evaluation uses **tracked files** resolved via Git (`git ls-files`) with the configured extension set; **untracked** paths are out of scope unless a feature explicitly documents otherwise.
+   - Do not equate “pre-commit blocked me” with “the whole codebase was audited”.
+
+3. **Signal over noise** — Findings should reflect **real risk** for the active platforms in that repo. Heuristic multi-platform activation must not drown single-stack repos; set **`PUMUKI_PIN_PLATFORMS`** to a comma-separated subset (`ios`, `android`, `backend`, `frontend`) to restrict which detected platforms are kept for rule loading (unknown tokens are ignored).
+
+4. **Upgrade hygiene** — After bumping the `pumuki` package version, consumers that keep `.pumuki/policy-as-code.json` under version control must **refresh signatures** with `pumuki policy reconcile` (use `--apply` when appropriate). A `POLICY_AS_CODE_SIGNATURE_MISMATCH` from an **stale contract** is not the same class of problem as a code violation.
+
+5. **Product-shaped UX** — **`pumuki audit`** is the canonical CLI for “audit the tracked codebase in this repo” (see [Full-repository audit](#full-repository-audit-cli)). Hooks still use **staged** or **range** scopes per stage; do not confuse them.
+
+If this section conflicts with a one-off chat instruction, **this section wins** unless the product owner explicitly updates it here.
+
 ## Prerequisites
 
 - Node.js `>=18`
@@ -42,6 +61,20 @@ npm ci
 | `CI` | `baseRef..HEAD` | `ERROR` | `WARN` |
 
 Policy source: `integrations/gate/stagePolicies.ts`.
+
+## Full-repository audit (CLI)
+
+Use **`pumuki audit`** when you want the gate to evaluate **all Git-tracked** source files under the default extension set (see `DEFAULT_FACT_FILE_EXTENSIONS` in `integrations/git/runPlatformGateFacts.ts`), not only the staged diff.
+
+```bash
+pumuki audit [--stage=PRE_COMMIT|PRE_PUSH|CI] [--engine] [--json]
+```
+
+- **`--stage`**: policy thresholds for that stage (default **`PRE_COMMIT`**). `PRE_WRITE` is not supported here. Aliases from SDD (`GREEN`, `REFACTOR`, `CLOSE`) work the same as for `pumuki sdd validate`.
+- **`--engine`**: run with `audit_mode=engine` and AST heuristics widened (aligned with the consumer menu “engine” path). Default is **`gate`** (strict enforcement semantics).
+- **`--json`**: machine-readable payload including `files_scanned`, `untracked_matching_extensions_count` (untracked paths that match the extension filter are **not** scanned), and `policy_reconcile_hint` for signature drift.
+
+Platform noise control: set **`PUMUKI_PIN_PLATFORMS`** (comma-separated) before running, e.g. `export PUMUKI_PIN_PLATFORMS=frontend` in a TS-only UI repo.
 
 Coverage guardrail:
 
@@ -130,7 +163,10 @@ Use `A` to switch to `Advanced` mode (full options), and `C` to return to `Consu
 Advanced mode options include short inline contextual help.
 Consumer mode is now a minimal read-only shell:
 
-- `1/2/3/4` are the canonical read-only gate flows
+- `1/2/3/4` are the canonical gate flows with **consumer preflight** before evaluation (labels state scope and PRE_COMMIT vs PRE_PUSH).
+- `11/12/13/14` run the **engine** with **no preflight**: staged only, unstaged only (index→working tree + untracked), full working tree under **PRE_COMMIT**, or **all tracked files** (full repo). They write `.ai_evidence.json` on **PRE_COMMIT** engine runs like other menu audits.
+- After each successful evidence read, the menu prints a **second panel** (“Classic evidence view”) with **ANSI-colored** enterprise/legacy severity counts, optional **platform** rows from `snapshot.platforms`, and a longer ranked violation list. Disable with `PUMUKI_MENU_VINTAGE_REPORT=0`.
+- Options **2** and **4** (PRE_PUSH): if outcome is **PASS** or **WARN**, a short hint explains that a **tracked** `.ai_evidence.json` may **not** be rewritten on disk; use `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE=1` for local debugging.
 - `8` exports the same evidence snapshot in markdown form
 - `5/6/7/9` remain available only as `Legacy Read-Only Diagnostics`
 
@@ -249,9 +285,9 @@ Stage mapping:
 If a scope is empty, the menu prints an explicit operational hint (`Scope vacío`), so `PASS` with zero findings is distinguishable from a clean repository scan.
 
 System notifications (macOS) can be enabled from advanced menu option `31` (persisted in `.pumuki/system-notifications.json`).
-On non-macOS platforms, the same payloads are written to **stderr** by default (visible in the terminal) because there is no native banner API. Set `PUMUKI_DISABLE_STDERR_NOTIFICATIONS=1` to silence that path (delivery reports `unsupported-platform` on those OSes). On macOS, set `PUMUKI_NOTIFICATION_STDERR_MIRROR=1` to duplicate **any** notification payload to stderr in addition to the system notification. For **`gate.blocked`** specifically, stderr mirroring is **on by default** when the macOS path reports success (so a failed push/commit still prints a `[pumuki]` block in the terminal even if the banner does not appear); disable only that default with `PUMUKI_DISABLE_GATE_BLOCKED_STDERR_MIRROR=1`. The **blocked modal** (Swift floating / AppleScript) with **Desactivar / Silenciar 30 min / Mantener activas** is **on by default** whenever notifications are enabled and `blockedDialogEnabled` is omitted in `.pumuki/system-notifications.json`. Turn it off with `"blockedDialogEnabled": false` or `PUMUKI_MACOS_BLOCKED_DIALOG=0`. Ensure the terminal app is allowed to show notifications in **System Settings → Notifications**.
-Blocked notifications now use a native Swift floating modal (bottom-right) by default, with AppleScript fallback.
-Override mode with `PUMUKI_MACOS_BLOCKED_DIALOG_MODE=auto|swift-floating|applescript`.
+On non-macOS platforms, the same payloads are written to **stderr** by default (visible in the terminal) because there is no native banner API. Set `PUMUKI_DISABLE_STDERR_NOTIFICATIONS=1` to silence that path (delivery reports `unsupported-platform` on those OSes). On macOS, set `PUMUKI_NOTIFICATION_STDERR_MIRROR=1` to duplicate **any** notification payload to stderr in addition to the system notification. For **`gate.blocked`** specifically, stderr mirroring is **on by default** when the macOS path reports success (so a failed push/commit still prints a `[pumuki]` block in the terminal even if the banner does not appear); disable only that default with `PUMUKI_DISABLE_GATE_BLOCKED_STDERR_MIRROR=1`. The **blocked modal** (Swift **`NSAlert`** modal dialog / AppleScript) with **Desactivar / Silenciar 30 min / Mantener activas** is **on by default** whenever notifications are enabled and `blockedDialogEnabled` is omitted in `.pumuki/system-notifications.json`. Turn it off with `"blockedDialogEnabled": false` or `PUMUKI_MACOS_BLOCKED_DIALOG=0`. **`gate.blocked`** now emits **both** the Notification Center banner (`osascript`) **and** the interactive modal by default, so consumers (e.g. hooks in other repos) still get a visible banner if the modal cannot attach to a GUI session. To restore the previous “modal only” behaviour and suppress the duplicate banner, set `PUMUKI_MACOS_GATE_BLOCKED_BANNER_DEDUPE=1`. If you see **no** notifications at all: confirm `PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS` is unset, delete or fix `.pumuki/system-notifications.json` (absent file defaults to enabled), and ensure the terminal app is allowed to show notifications in **System Settings → Notifications**.
+Blocked notifications use a **Swift-compiled helper** that shows an **`NSAlert`** (reliable button hit-testing) by default, with AppleScript fallback if `swift` fails.
+Override mode with `PUMUKI_MACOS_BLOCKED_DIALOG_MODE=auto|swift-floating|applescript` (the `swift-floating` name is kept for compatibility; the Swift path is alert-based).
 Custom skills import is available in advanced menu option `33` (writes `/.pumuki/custom-rules.json`).
 Menu-driven audits apply SDD guardrails with the same strict semantics as stage runners (no bypass).
 
@@ -575,6 +611,7 @@ OpenSpec integration behavior:
 - SDD/OpenSpec enforcement invokes the CLI only from **`{repo}/node_modules/.bin/openspec`** (no fallback to a generic `openspec` on `PATH`).
 - `pumuki install` auto-bootstraps OpenSpec (`@fission-ai/openspec`) when missing/incompatible and scaffolds `openspec/` project baseline when absent.
 - `pumuki install --with-mcp` adds adapter/MCP wiring bootstrap and prints MCP health summary on completion.
+- The **`pumuki` package `postinstall`** runs baseline `pumuki install` from the consumer root (hooks + **`.pumuki/adapter.json`** con comandos MCP stdio, **sin** rutas de IDE). MCP wiring is opt-in via `PUMUKI_POSTINSTALL_WITH_MCP=1` or `PUMUKI_POSTINSTALL_MCP_AGENT=repo|cursor|claude|codex`. Repins refrescan ese contrato de forma **independiente de Cursor/CLI/extensión**. Disable MCP wiring en postinstall: `PUMUKI_POSTINSTALL_SKIP_MCP=1`. Escribir también ficheros de IDE en postinstall: `PUMUKI_POSTINSTALL_MCP_AGENT=cursor|claude|codex` (ver `docs/product/INSTALLATION.md`).
 - `pumuki update --latest` migrates legacy `openspec` package to `@fission-ai/openspec` before hook reinstall.
 
 Safety rule:

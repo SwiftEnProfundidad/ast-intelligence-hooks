@@ -55,7 +55,9 @@ export const createConsumerMenuRuntime = (
     runRepoGate: params.runRepoGate,
     runRepoAndStagedGate: params.runRepoAndStagedGate,
     runStagedGate: params.runStagedGate,
+    runUnstagedGate: params.runUnstagedGate,
     runWorkingTreeGate: params.runWorkingTreeGate,
+    runWorkingTreePreCommitGate: params.runWorkingTreePreCommitGate,
     runPreflight: params.runPreflight,
     emitNotification,
     clearSummaryOverride: () => {

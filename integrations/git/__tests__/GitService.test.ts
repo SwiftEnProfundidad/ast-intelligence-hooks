@@ -193,6 +193,172 @@ test('GitService.getRepoFacts ignora paths trackeados que ya no existen en worki
   });
 });
 
+test('GitService.getUnstagedFacts incluye diff indice→working tree pero no untracked por defecto', async () => {
+  await withTempDir('pumuki-git-unstaged-facts-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'src'), { recursive: true });
+    writeFileSync(join(repoRoot, 'src', 'wip.ts'), 'export const x = 1;\n', 'utf8');
+    writeFileSync(join(repoRoot, 'src', 'new.ts'), 'export const y = 2;\n', 'utf8');
+    const service = new GitService();
+    const calls: string[] = [];
+    const mutableService = service as GitService & {
+      runGit(args: ReadonlyArray<string>, cwd?: string): string;
+      resolveRepoRoot(): string;
+    };
+    mutableService.runGit = (args: ReadonlyArray<string>): string => {
+      const command = args.join(' ');
+      calls.push(command);
+      if (command === 'diff --name-status') {
+        return ['M\tsrc/wip.ts'].join('\n');
+      }
+      if (command === 'ls-files --others --exclude-standard') {
+        return ['src/new.ts', 'src/ignored.swift'].join('\n');
+      }
+      throw new Error(`comando git no esperado: ${command}`);
+    };
+    mutableService.resolveRepoRoot = () => repoRoot;
+
+    const result = service.getUnstagedFacts(['.ts']);
+
+    assert.deepEqual(result, [
+      {
+        kind: 'FileChange',
+        path: 'src/wip.ts',
+        changeType: 'modified',
+        source: 'git:unstaged',
+      },
+      {
+        kind: 'FileContent',
+        path: 'src/wip.ts',
+        content: 'export const x = 1;\n',
+        source: 'git:unstaged',
+      },
+    ]);
+    assert.deepEqual(calls, ['diff --name-status']);
+  });
+});
+
+test('GitService.getUnstagedFacts incluye untracked cuando se solicita explícitamente', async () => {
+  await withTempDir('pumuki-git-unstaged-facts-explicit-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'src'), { recursive: true });
+    writeFileSync(join(repoRoot, 'src', 'wip.ts'), 'export const x = 1;\n', 'utf8');
+    writeFileSync(join(repoRoot, 'src', 'new.ts'), 'export const y = 2;\n', 'utf8');
+    const service = new GitService();
+    const calls: string[] = [];
+    const mutableService = service as GitService & {
+      runGit(args: ReadonlyArray<string>, cwd?: string): string;
+      resolveRepoRoot(): string;
+    };
+    mutableService.runGit = (args: ReadonlyArray<string>): string => {
+      const command = args.join(' ');
+      calls.push(command);
+      if (command === 'diff --name-status') {
+        return ['M\tsrc/wip.ts'].join('\n');
+      }
+      if (command === 'ls-files --others --exclude-standard') {
+        return ['src/new.ts', 'src/ignored.swift'].join('\n');
+      }
+      throw new Error(`comando git no esperado: ${command}`);
+    };
+    mutableService.resolveRepoRoot = () => repoRoot;
+
+    const result = service.getUnstagedFacts(['.ts'], true);
+
+    assert.deepEqual(result, [
+      {
+        kind: 'FileChange',
+        path: 'src/wip.ts',
+        changeType: 'modified',
+        source: 'git:unstaged',
+      },
+      {
+        kind: 'FileContent',
+        path: 'src/wip.ts',
+        content: 'export const x = 1;\n',
+        source: 'git:unstaged',
+      },
+      {
+        kind: 'FileChange',
+        path: 'src/new.ts',
+        changeType: 'added',
+        source: 'git:unstaged',
+      },
+      {
+        kind: 'FileContent',
+        path: 'src/new.ts',
+        content: 'export const y = 2;\n',
+        source: 'git:unstaged',
+      },
+    ]);
+    assert.deepEqual(calls, ['diff --name-status', 'ls-files --others --exclude-standard']);
+  });
+});
+
+test('GitService.getUnstagedFacts incluye untracked cuando PUMUKI_INCLUDE_UNTRACKED_WORKTREE=1', async () => {
+  await withTempDir('pumuki-git-unstaged-facts-env-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'src'), { recursive: true });
+    writeFileSync(join(repoRoot, 'src', 'wip.ts'), 'export const x = 1;\n', 'utf8');
+    writeFileSync(join(repoRoot, 'src', 'new.ts'), 'export const y = 2;\n', 'utf8');
+    const previousEnv = process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE;
+    const service = new GitService();
+    const calls: string[] = [];
+    const mutableService = service as GitService & {
+      runGit(args: ReadonlyArray<string>, cwd?: string): string;
+      resolveRepoRoot(): string;
+    };
+    mutableService.runGit = (args: ReadonlyArray<string>): string => {
+      const command = args.join(' ');
+      calls.push(command);
+      if (command === 'diff --name-status') {
+        return ['M\tsrc/wip.ts'].join('\n');
+      }
+      if (command === 'ls-files --others --exclude-standard') {
+        return ['src/new.ts', 'src/ignored.swift'].join('\n');
+      }
+      throw new Error(`comando git no esperado: ${command}`);
+    };
+    mutableService.resolveRepoRoot = () => repoRoot;
+
+    process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE = '1';
+    try {
+      const result = service.getUnstagedFacts(['.ts']);
+
+      assert.deepEqual(result, [
+        {
+          kind: 'FileChange',
+          path: 'src/wip.ts',
+          changeType: 'modified',
+          source: 'git:unstaged',
+        },
+        {
+          kind: 'FileContent',
+          path: 'src/wip.ts',
+          content: 'export const x = 1;\n',
+          source: 'git:unstaged',
+        },
+        {
+          kind: 'FileChange',
+          path: 'src/new.ts',
+          changeType: 'added',
+          source: 'git:unstaged',
+        },
+        {
+          kind: 'FileContent',
+          path: 'src/new.ts',
+          content: 'export const y = 2;\n',
+          source: 'git:unstaged',
+        },
+      ]);
+      assert.deepEqual(calls, ['diff --name-status', 'ls-files --others --exclude-standard']);
+    } finally {
+      if (previousEnv === undefined) {
+        delete process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE;
+      } else {
+        process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE = previousEnv;
+      }
+    }
+  });
+});
+
 test('GitService.getRepoAndStagedFacts carga snapshot del index', () => {
   const service = new GitService();
   const calls: string[] = [];
@@ -233,7 +399,7 @@ test('GitService.getRepoAndStagedFacts carga snapshot del index', () => {
   ]);
 });
 
-test('GitService.getStagedAndUnstagedFacts agrega tracked y untracked del working tree', async () => {
+test('GitService.getStagedAndUnstagedFacts agrega tracked pero no untracked por defecto', async () => {
   await withTempDir('pumuki-git-working-tree-', async (repoRoot) => {
     mkdirSync(join(repoRoot, 'src'), { recursive: true });
     writeFileSync(join(repoRoot, 'src', 'tracked.ts'), 'export const tracked = true;\n', 'utf8');
@@ -275,24 +441,84 @@ test('GitService.getStagedAndUnstagedFacts agrega tracked y untracked del workin
         content: 'export const tracked = true;\n',
         source: 'git:working-tree',
       },
-      {
-        kind: 'FileChange',
-        path: 'src/new.ts',
-        changeType: 'added',
-        source: 'git:working-tree',
-      },
-      {
-        kind: 'FileContent',
-        path: 'src/new.ts',
-        content: 'export const created = true;\n',
-        source: 'git:working-tree',
-      },
     ]);
     assert.deepEqual(calls, [
       'rev-parse --verify HEAD',
       'diff --name-status HEAD',
-      'ls-files --others --exclude-standard',
     ]);
+  });
+});
+
+test('GitService.getStagedAndUnstagedFacts incluye untracked cuando se habilita por entorno', async () => {
+  await withTempDir('pumuki-git-working-tree-with-env-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'src'), { recursive: true });
+    writeFileSync(join(repoRoot, 'src', 'tracked.ts'), 'export const tracked = true;\n', 'utf8');
+    writeFileSync(join(repoRoot, 'src', 'new.ts'), 'export const created = true;\n', 'utf8');
+    const previousEnv = process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE;
+    const service = new GitService();
+    const calls: string[] = [];
+    const mutableService = service as GitService & {
+      runGit(args: ReadonlyArray<string>, cwd?: string): string;
+      resolveRepoRoot(): string;
+    };
+    mutableService.runGit = (args: ReadonlyArray<string>): string => {
+      const command = args.join(' ');
+      calls.push(command);
+      if (command === 'rev-parse --verify HEAD') {
+        return 'abc123';
+      }
+      if (command === 'diff --name-status HEAD') {
+        return ['M\tsrc/tracked.ts'].join('\n');
+      }
+      if (command === 'ls-files --others --exclude-standard') {
+        return ['src/new.ts', 'src/ignored.swift'].join('\n');
+      }
+      throw new Error(`comando git no esperado: ${command}`);
+    };
+    mutableService.resolveRepoRoot = () => repoRoot;
+
+    process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE = '1';
+    try {
+      const result = service.getStagedAndUnstagedFacts(['.ts']);
+
+      assert.deepEqual(result, [
+        {
+          kind: 'FileChange',
+          path: 'src/tracked.ts',
+          changeType: 'modified',
+          source: 'git:working-tree',
+        },
+        {
+          kind: 'FileContent',
+          path: 'src/tracked.ts',
+          content: 'export const tracked = true;\n',
+          source: 'git:working-tree',
+        },
+        {
+          kind: 'FileChange',
+          path: 'src/new.ts',
+          changeType: 'added',
+          source: 'git:working-tree',
+        },
+        {
+          kind: 'FileContent',
+          path: 'src/new.ts',
+          content: 'export const created = true;\n',
+          source: 'git:working-tree',
+        },
+      ]);
+      assert.deepEqual(calls, [
+        'rev-parse --verify HEAD',
+        'diff --name-status HEAD',
+        'ls-files --others --exclude-standard',
+      ]);
+    } finally {
+      if (previousEnv === undefined) {
+        delete process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE;
+      } else {
+        process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE = previousEnv;
+      }
+    }
   });
 });
 
@@ -341,24 +567,88 @@ test('GitService.getStagedAndUnstagedFacts soporta repos sin HEAD en commit inic
         content: 'export const bootstrap = true;\n',
         source: 'git:working-tree',
       },
-      {
-        kind: 'FileChange',
-        path: 'src/new.ts',
-        changeType: 'added',
-        source: 'git:working-tree',
-      },
-      {
-        kind: 'FileContent',
-        path: 'src/new.ts',
-        content: 'export const created = true;\n',
-        source: 'git:working-tree',
-      },
     ]);
     assert.deepEqual(calls, [
       'rev-parse --verify HEAD',
       'diff --cached --name-status',
       'diff --name-status',
-      'ls-files --others --exclude-standard',
     ]);
+  });
+});
+
+test('GitService.getStagedAndUnstagedFacts incluye untracked inicial cuando se habilita por entorno', async () => {
+  await withTempDir('pumuki-git-working-tree-initial-env-', async (repoRoot) => {
+    const previousEnv = process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE;
+    mkdirSync(join(repoRoot, 'src'), { recursive: true });
+    writeFileSync(join(repoRoot, 'src', 'bootstrap.ts'), 'export const bootstrap = true;\n', 'utf8');
+    writeFileSync(join(repoRoot, 'src', 'new.ts'), 'export const created = true;\n', 'utf8');
+    const service = new GitService();
+    const calls: string[] = [];
+    const mutableService = service as GitService & {
+      runGit(args: ReadonlyArray<string>, cwd?: string): string;
+      resolveRepoRoot(): string;
+    };
+    mutableService.runGit = (args: ReadonlyArray<string>): string => {
+      const command = args.join(' ');
+      calls.push(command);
+      if (command === 'rev-parse --verify HEAD') {
+        throw new Error("fatal: argumento ambiguo 'HEAD'");
+      }
+      if (command === 'diff --cached --name-status') {
+        return ['A\tsrc/bootstrap.ts'].join('\n');
+      }
+      if (command === 'diff --name-status') {
+        return ['M\tsrc/bootstrap.ts'].join('\n');
+      }
+      if (command === 'ls-files --others --exclude-standard') {
+        return ['src/new.ts', 'src/ignored.swift'].join('\n');
+      }
+      throw new Error(`comando git no esperado: ${command}`);
+    };
+    mutableService.resolveRepoRoot = () => repoRoot;
+
+    process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE = '1';
+    try {
+      const result = service.getStagedAndUnstagedFacts(['.ts']);
+
+      assert.deepEqual(result, [
+        {
+          kind: 'FileChange',
+          path: 'src/bootstrap.ts',
+          changeType: 'modified',
+          source: 'git:working-tree',
+        },
+        {
+          kind: 'FileContent',
+          path: 'src/bootstrap.ts',
+          content: 'export const bootstrap = true;\n',
+          source: 'git:working-tree',
+        },
+        {
+          kind: 'FileChange',
+          path: 'src/new.ts',
+          changeType: 'added',
+          source: 'git:working-tree',
+        },
+        {
+          kind: 'FileContent',
+          path: 'src/new.ts',
+          content: 'export const created = true;\n',
+          source: 'git:working-tree',
+        },
+      ]);
+      assert.deepEqual(calls, [
+        'rev-parse --verify HEAD',
+        'diff --cached --name-status',
+        'diff --name-status',
+        'ls-files --others --exclude-standard',
+      ]);
+    } finally {
+      if (previousEnv === undefined) {
+        delete process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE;
+      } else {
+        process.env.PUMUKI_INCLUDE_UNTRACKED_WORKTREE = previousEnv;
+      }
+    }
   });
 });

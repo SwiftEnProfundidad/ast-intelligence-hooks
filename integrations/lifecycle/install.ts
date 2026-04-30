@@ -13,8 +13,8 @@ import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { readOpenSpecManagedArtifacts, writeLifecycleState } from './state';
 import { ensureRuntimeArtifactsIgnored } from './artifacts';
 import { runLifecycleAdapterInstall } from './adapter';
-import { writeLifecycleBootstrapManifest } from './bootstrapManifest';
 import { runPolicyReconcile } from './policyReconcile';
+import { emitGateBlockedNotification } from '../notifications/emitAuditSummaryNotification';
 
 export type LifecycleInstallResult = {
   repoRoot: string;
@@ -22,10 +22,6 @@ export type LifecycleInstallResult = {
   changedHooks: ReadonlyArray<string>;
   openSpecBootstrap?: OpenSpecBootstrapResult;
   degradedDoctorBypass?: boolean;
-  bootstrapManifest: {
-    path: string;
-    changed: boolean;
-  };
 };
 
 const shouldBootstrapEvidence = (repoRoot: string): boolean =>
@@ -109,6 +105,7 @@ export const runLifecycleInstall = (params?: {
   npm?: ILifecycleNpmService;
   bootstrapOpenSpec?: boolean;
   bestEffortAfterDoctorBlock?: boolean;
+  notifyGateBlocked?: typeof emitGateBlockedNotification;
 }): LifecycleInstallResult => {
   const git = params?.git ?? new LifecycleGitService();
   const bestEffortAfterDoctorBlock =
@@ -130,25 +127,29 @@ export const runLifecycleInstall = (params?: {
       });
       ensureRepoBaselineAdapter(report.repoRoot);
       materializeStrictPolicyAsCode(report.repoRoot);
-      const bootstrapManifest = writeLifecycleBootstrapManifest({
-        git,
-        repoRoot: report.repoRoot,
-      });
       return {
         repoRoot: report.repoRoot,
         version,
         changedHooks,
         openSpecBootstrap: undefined,
         degradedDoctorBypass: true,
-        bootstrapManifest: {
-          path: bootstrapManifest.path,
-          changed: bootstrapManifest.changed,
-        },
       };
     }
     const renderedIssues = report.issues.map((issue) => `- [${issue.severity}] ${issue.message}`).join('\n');
+    const firstIssue = report.issues[0];
+    const notificationResult = (params?.notifyGateBlocked ?? emitGateBlockedNotification)({
+      repoRoot: report.repoRoot,
+      stage: 'PRE_COMMIT',
+      totalViolations: report.issues.length,
+      causeCode: 'LIFECYCLE_INSTALL_SAFETY_BLOCKED',
+      causeMessage: firstIssue?.message ?? 'pumuki install blocked by repository safety checks.',
+      remediation: 'Corrige las incidencias activas del tracking externo y reintenta pumuki install.',
+    });
+    const notificationLine = notificationResult.delivered
+      ? '- [info] Blocking notification delivered.'
+      : `- [warning] Blocking notification not delivered: ${notificationResult.reason}`;
     throw new Error(
-      `pumuki install blocked by repository safety checks.\n${renderedIssues}\n` +
+      `pumuki install blocked by repository safety checks.\n${renderedIssues}\n${notificationLine}\n` +
       'Fix the baseline (for example tracked node_modules) and retry.'
     );
   }
@@ -178,19 +179,11 @@ export const runLifecycleInstall = (params?: {
   });
   ensureRepoBaselineAdapter(report.repoRoot);
   materializeStrictPolicyAsCode(report.repoRoot);
-  const bootstrapManifest = writeLifecycleBootstrapManifest({
-    git,
-    repoRoot: report.repoRoot,
-  });
 
   return {
     repoRoot: report.repoRoot,
     version,
     changedHooks,
     openSpecBootstrap,
-    bootstrapManifest: {
-      path: bootstrapManifest.path,
-      changed: bootstrapManifest.changed,
-    },
   };
 };

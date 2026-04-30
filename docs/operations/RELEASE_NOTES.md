@@ -4,7 +4,62 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-04-29 (v6.3.129)
+
+- **Singletons Android con detector AST real:** `skills.android.no-singleton-usar-inyeccio-n-de-dependencias-hilt-dagger` queda vinculada a un detector que distingue singleton real de `@Module` / `@InstallIn` / `@EntryPoint`.
+- **Regresión cerrada en la suite Android:** el caso de objetos anónimos y companion objects inocuos queda cubierto y la compilación del lock vuelve a producir el binding canónico.
+- **Rollout recomendado:** publicar `pumuki@6.3.129`, repin inmediato en `RuralGo` y revalidar `status` / `doctor` / `audit --stage=PRE_WRITE --json` sobre el consumer.
+
 ## 2026-04 (CLI stability and macOS notifications)
+
+### 2026-04-25 (v6.3.116)
+
+- **Inventario local real de dependencias:** `status` y `doctor` conservan `trackedNodeModules*` como señal estricta de seguridad Git y añaden `dependencyInventory` como fuente de verdad de instalación local.
+- **Cierre útil de `PUMUKI-INC-088`:** los consumers pueden ver si `pumuki` está declarado, instalado, con qué versión y si el binario local existe, sin inferirlo desde `git ls-files node_modules`.
+- **Rollout recomendado:** publicar `pumuki@6.3.116`, repin inmediato en `RuralGo` y revalidar `status --json` / `doctor --json` comprobando `dependencyInventory.pumuki.installedVersion`.
+
+### 2026-04-24 (v6.3.115)
+
+- **`issues` canónicos también para `WARN`:** `status` y `doctor` ya no dejan `issues=[]` cuando la evidencia operativa real está en atención (`WARN`) pero aún no bloquea el gate.
+- **Cierre útil de `PUMUKI-INC-084` en la línea publicada:** el consumer puede automatizar tanto estados `BLOCK` como `WARN` sin recombinar `attention_codes` y `human_summary_preview` por su cuenta.
+- **`postinstall` vuelve a ser instalable en consumers reales:** la release evita el ciclo en `repoState` que rompía `npm install pumuki@6.3.114`.
+- **Rollout recomendado:** publicar `pumuki@6.3.115`, repin inmediato en `RuralGo` y revalidar `status --json` / `doctor --json` comprobando que la evidencia `WARN` ya aparece dentro de `issues`.
+
+### 2026-04-22 (v6.3.108)
+
+- **MCP enterprise visible desde la baseline publicada:** la línea `main` deja de exigir opt-in adicional para exponer `ai_gate_check`, `pre_flight_check` y `auto_execute_ai_start` en el catálogo enterprise.
+- **Menos gap entre governance y flujo real del editor/agente:** cuando `status`/`doctor` ya están bloqueando, el consumer pasa a ver antes la misma capa MCP que materializa el enforcement perceptible de `PRE_WRITE`.
+- **Rollout recomendado:** publicar `pumuki@6.3.108`, repin inmediato en `RuralGo` y revalidar `status`, `doctor` y el arranque MCP/agentic sobre un repo con `PUMUKI-INC-079` reportada.
+
+### 2026-04-22 (v6.3.107)
+
+- **Sesión SDD expirada sin semántica ambigua:** la línea publicada deja de diagnosticar sesiones vencidas como `active=true` con `valid=false`; ahora las proyecta como inactivas y mantiene la señal de expiración con `remainingSeconds=0`.
+- **Refresh reproducible de sesiones caducadas:** si el `changeId` sigue siendo válido, `session --refresh` vuelve a servir para recuperar la sesión sin exigir un `session --open` innecesario.
+- **Rollout recomendado:** publicar `pumuki@6.3.107`, repin inmediato en `RuralGo` y revalidar `sdd validate --stage=PRE_WRITE --json` comprobando que `status.session.active=false`, `valid=false` y que la remediación siga permitiendo refresh sobre el mismo `changeId`.
+
+### 2026-04-22 (v6.3.106)
+
+- **Cierre útil del literal residual en RuralGo:** `sdd validate --stage=PRE_WRITE --json` ya no recomienda activar SDD con `pumuki@latest`; devuelve el mismo runtime versionado que está diagnosticando.
+- **Guía de sesión SDD alineada:** `session --refresh` y `session --open` quedan versionados para evitar drift en repos consumidores.
+- **Rollout recomendado:** publicar `pumuki@6.3.106`, repin inmediato en `RuralGo` y revalidar `sdd validate --stage=PRE_WRITE --json` comprobando `activation_command` fijo a `6.3.106`.
+
+### 2026-04-22 (v6.3.105)
+
+- **Remediación reproducible en la línea publicada:** las rutas bloqueantes de `PRE_WRITE` dejan de sugerir `pumuki@latest` y fijan la versión efectiva del runtime al construir `next_action.command`.
+- **Cobertura MCP alineada:** `auto_execute_ai_start` devuelve las mismas remediaciones versionadas que `sdd validate` para evidence invalid/stale, `active_rule_ids` vacío y policy reconcile estricto.
+- **Rollout recomendado:** publicar `pumuki@6.3.105`, repin inmediato en `RuralGo` y revalidar el command contract de `PRE_WRITE` en `sdd validate`, `auto_execute_ai_start` y hooks reales.
+
+### 2026-04-22 (v6.3.104)
+
+- **RuralGo hub-aware diagnostics:** `TRACKING_CANONICAL_IN_PROGRESS_INVALID` pasa a enriquecer su mensaje usando `docs/RURALGO_SEGUIMIENTO.md` cuando ese hub es el board canónico del consumer.
+- **Compatibilidad con tablas del hub:** el parser reconoce filas `| 🚧 | TASK_ID |` y las devuelve como entradas activas accionables.
+- **Rollout recomendado:** publicar `pumuki@6.3.104`, repin inmediato en `RuralGo` y revalidar `status` / `doctor` / `pumuki-pre-write` con doble fila `🚧` temporal en el hub canónico.
+
+### 2026-04-22 (v6.3.103)
+
+- **Tracking canónico accionable:** `status`, `doctor` y el gate repo-policy enriquecen `TRACKING_CANONICAL_IN_PROGRESS_INVALID` con referencias a las entradas activas detectadas en el board del consumer.
+- **PRE_WRITE menos ambiguo:** cuando un warning de higiene de worktree convive con un bloqueo duro, el runtime imprime `warning-summary` separado del `block-summary`.
+- **Rollout recomendado:** publicar `pumuki@6.3.103`, repin inmediato en `RuralGo` y revalidar `status` / `doctor` / `git commit` sobre un board con varias filas `🚧 reported activo`.
 
 ### 2026-04-22 (v6.3.102)
 
@@ -441,7 +496,7 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 - Blocked notification UX hardening for macOS:
   - short, human-readable Spanish banner (`🔴 Pumuki bloqueado`) with stage + summarized cause.
-  - remediation-first body (`Solución: ...`) to maximize visibility in truncated notification banners.
+  - actionable body (`Causa / Impacto / Comando / Siguiente acción`) to maximize visibility in truncated notification banners.
 - Optional blocked-dialog workflow (`PUMUKI_MACOS_BLOCKED_DIALOG=1`):
   - full cause/remediation modal for critical blocks.
   - anti-spam controls in dialog:

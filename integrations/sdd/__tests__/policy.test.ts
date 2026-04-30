@@ -4,6 +4,7 @@ import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import { getCurrentPumukiVersion } from '../../lifecycle/packageInfo';
 import { evaluateSddPolicy } from '../policy';
 import { openSddSession } from '../sessionStore';
 
@@ -131,13 +132,17 @@ test('evaluateSddPolicy allows emergency bypass via PUMUKI_SDD_BYPASS=1', () => 
   });
 });
 
-test('evaluateSddPolicy deja SDD/OpenSpec en default-off cuando el feature experimental no está activado', () => {
+test('evaluateSddPolicy deja SDD/OpenSpec apagado cuando el feature se desactiva por env', () => {
   return withFixtureRepoExperimentalSddMode('pumuki-sdd-experimental-off-', 'off', (repoRoot) => {
     const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
     assert.equal(result.decision.allowed, true);
     assert.equal(result.decision.code, 'SDD_EXPERIMENTAL_DISABLED');
     assert.equal(result.decision.details?.activation_env, 'PUMUKI_EXPERIMENTAL_SDD');
-    assert.match(result.decision.message, /namespace experimental/i);
+    assert.equal(
+      result.decision.details?.activation_command,
+      `PUMUKI_EXPERIMENTAL_SDD=advisory npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd validate --stage=PRE_COMMIT --json`
+    );
+    assert.match(result.decision.message, /desactivado explícitamente/i);
   });
 });
 
@@ -188,11 +193,11 @@ test('evaluateSddPolicy bloquea con SDD_SESSION_MISSING cuando no existe sesión
     assert.match(result.decision.message, /session --open --change=/i);
     assert.equal(
       result.decision.details?.command,
-      'npx --yes --package pumuki@latest pumuki sdd session --open --change=add-auth-feature'
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd session --open --change=add-auth-feature`
     );
     assert.equal(
       result.decision.details?.fallbackCommand,
-      'npx --yes --package pumuki@latest pumuki sdd session --open --change=auto'
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd session --open --change=auto`
     );
   });
 });
@@ -211,11 +216,11 @@ test('evaluateSddPolicy con múltiples changes activos no recomienda --change=au
     assert.doesNotMatch(result.decision.message, /change=auto/i);
     assert.equal(
       result.decision.details?.command,
-      'npx --yes --package pumuki@latest pumuki sdd session --open --change=<id>'
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd session --open --change=<id>`
     );
     assert.equal(
       result.decision.details?.fallbackCommand,
-      'npx --yes --package pumuki@latest pumuki sdd session --open --change=<id>'
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd session --open --change=<id>`
     );
     assert.deepEqual(result.decision.details?.availableChangeIds, ['add-auth-feature', 'rgo-2000-01']);
     assert.equal(result.decision.details?.suggestedChangeId, undefined);
@@ -250,7 +255,7 @@ test('evaluateSddPolicy bloquea con SDD_SESSION_INVALID cuando la sesión está 
       assert.equal(result.decision.code, 'SDD_SESSION_INVALID');
       assert.equal(
         result.decision.details?.command,
-        'npx --yes --package pumuki@latest pumuki sdd session --refresh --ttl-minutes=90'
+        `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd session --refresh --ttl-minutes=90`
       );
     } finally {
       if (typeof previous === 'undefined') {
@@ -380,7 +385,7 @@ test('evaluateSddPolicy permite PRE_COMMIT cuando degraded mode fail-open está 
   });
 });
 
-test('evaluateSddPolicy permite PRE_PUSH cuando falta contrato mínimo del change y la completitud sigue en advisory por defecto', () => {
+test('evaluateSddPolicy bloquea PRE_PUSH cuando falta contrato mínimo del change por defecto', () => {
   return withFixtureRepo('pumuki-sdd-change-incomplete-', (repoRoot) => {
     writeOpenSpecBinary(repoRoot, {
       validateExitCode: 0,
@@ -393,12 +398,11 @@ test('evaluateSddPolicy permite PRE_PUSH cuando falta contrato mínimo del chang
     openSddSession({ cwd: repoRoot, changeId, ttlMinutes: 30 });
 
     const result = evaluateSddPolicy({ stage: 'PRE_PUSH', repoRoot });
-    assert.equal(result.decision.allowed, true);
-    assert.equal(result.decision.code, 'ALLOWED');
-    assert.equal(result.decision.details?.completenessEnforcementMode, 'advisory');
-    assert.equal(result.decision.details?.completenessBlocking, false);
-    assert.equal(result.decision.details?.completenessStatus, 'incomplete-advisory');
-    assert.deepEqual(result.decision.details?.missingCompletenessRequirements, [
+    assert.equal(result.decision.allowed, false);
+    assert.equal(result.decision.code, 'SDD_CHANGE_INCOMPLETE');
+    assert.equal(result.decision.details?.completenessEnforcementMode, 'strict');
+    assert.equal(result.decision.details?.completenessBlocking, true);
+    assert.deepEqual(result.decision.details?.missingRequirements, [
       'tasks.md',
       'scenario.feature',
     ]);

@@ -1,10 +1,11 @@
 import {
   runConsumerMenuMatrix,
 } from './framework-menu-matrix-runner-lib';
-import type {
-  ConsumerMenuMatrixReport,
-  ConsumerMenuMatrixOptionReport,
-  MatrixOptionId,
+import {
+  MATRIX_MENU_OPTION_IDS,
+  type ConsumerMenuMatrixReport,
+  type ConsumerMenuMatrixOptionReport,
+  type MatrixOptionId,
 } from './framework-menu-matrix-evidence-lib';
 
 export type MatrixOptionDrift = {
@@ -22,7 +23,13 @@ export type ConsumerMenuMatrixBaselineReport = {
   analysis: ConsumerMenuMatrixBaselineAnalysis;
 };
 
-const OPTION_IDS: ReadonlyArray<MatrixOptionId> = ['1', '2', '3', '4', '9'];
+const EMPTY_DRIFT: MatrixOptionDrift = { stable: true, driftFields: [] };
+
+const seedMatrixOptionDrift = (): Record<MatrixOptionId, MatrixOptionDrift> => {
+  return Object.fromEntries(
+    MATRIX_MENU_OPTION_IDS.map((optionId) => [optionId, { ...EMPTY_DRIFT }])
+  ) as Record<MatrixOptionId, MatrixOptionDrift>;
+};
 
 const OPTION_FIELDS: ReadonlyArray<keyof ConsumerMenuMatrixOptionReport> = [
   'stage',
@@ -57,18 +64,12 @@ const computeOptionDrift = (
 export const analyzeConsumerMenuMatrixBaseline = (
   rounds: ReadonlyArray<ConsumerMenuMatrixReport>
 ): ConsumerMenuMatrixBaselineAnalysis => {
-  const byOption = OPTION_IDS.reduce<Record<MatrixOptionId, MatrixOptionDrift>>((acc, optionId) => {
+  const byOption = MATRIX_MENU_OPTION_IDS.reduce<Record<MatrixOptionId, MatrixOptionDrift>>((acc, optionId) => {
     acc[optionId] = computeOptionDrift(rounds, optionId);
     return acc;
-  }, {
-    '1': { stable: true, driftFields: [] },
-    '2': { stable: true, driftFields: [] },
-    '3': { stable: true, driftFields: [] },
-    '4': { stable: true, driftFields: [] },
-    '9': { stable: true, driftFields: [] },
-  });
+  }, seedMatrixOptionDrift());
 
-  const stable = OPTION_IDS.every((optionId) => byOption[optionId].stable);
+  const stable = MATRIX_MENU_OPTION_IDS.every((optionId) => byOption[optionId].stable);
 
   return {
     stable,

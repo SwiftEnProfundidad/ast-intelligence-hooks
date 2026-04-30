@@ -32,6 +32,42 @@ test('resolveBlockedCauseSummary traduce mensajes legacy conocidos', () => {
   assert.match(result, /backend/i);
 });
 
+test('resolveBlockedCauseSummary explica bloqueos de tracking enriquecidos', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Evidence AI gate status is BLOCKED. active_entries=RGO-1900-01@L53, line_389 tracking_source=docs/RURALGO_SEGUIMIENTO.md',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /tracking bloqueado/i);
+  assert.match(result, /RGO-1900-01/);
+  assert.match(result, /docs\/RURALGO_SEGUIMIENTO\.md/);
+  assert.doesNotMatch(result, /Evidence AI gate status/i);
+});
+
+test('resolveBlockedCauseSummary traduce el bloqueo umbrella de evidencia', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage: 'Evidence AI gate status is BLOCKED.',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /evidencia/i);
+  assert.match(result, /gobernanza/i);
+  assert.doesNotMatch(result, /Evidence AI gate status/i);
+});
+
 test('resolveBlockedCauseSummary usa fallback por stage cuando no hay detalles', () => {
   const result = resolveBlockedCauseSummary(
     {

@@ -1,6 +1,5 @@
 import { Socket, createServer } from 'node:net';
 import { startEnterpriseMcpServer } from './enterpriseServer';
-import { resolveMcpEnterpriseExperimentalFeature } from '../policy/experimentalFeatures';
 
 type JsonRpcId = string | number | null;
 
@@ -99,32 +98,11 @@ const fetchJson = async (url: string, options?: RequestInit): Promise<unknown> =
   }
 };
 
-type EnterpriseHealthPayload = {
-  status?: string;
-  repoRoot?: string;
-  experimentalFeatures?: {
-    mcp_enterprise?: {
-      mode?: string;
-    };
-  };
-};
-
-const canReuseEnterpriseHttp = (
-  health: EnterpriseHealthPayload,
-  repoRoot: string,
-  expectedMcpMode: string
-): boolean =>
-  health.status === 'ok'
-  && health.repoRoot === repoRoot
-  && health.experimentalFeatures?.mcp_enterprise?.mode === expectedMcpMode;
-
 const startOrReuseEnterpriseHttp = async (): Promise<{
   host: string;
   port: number;
   startedByThisProcess: boolean;
 }> => {
-  const repoRoot = process.cwd();
-  const expectedMcpMode = resolveMcpEnterpriseExperimentalFeature().mode;
   const host = process.env.PUMUKI_ENTERPRISE_MCP_HOST ?? '127.0.0.1';
   const parsedPort = Number.parseInt(process.env.PUMUKI_ENTERPRISE_MCP_PORT ?? '', 10);
   const preferredPort = Number.isFinite(parsedPort) ? parsedPort : 7391;
@@ -132,8 +110,8 @@ const startOrReuseEnterpriseHttp = async (): Promise<{
 
   const healthUrl = `http://${host}:${requestedPort}/health`;
   try {
-    const health = (await fetchJson(healthUrl)) as EnterpriseHealthPayload;
-    if (canReuseEnterpriseHttp(health, repoRoot, expectedMcpMode)) {
+    const health = (await fetchJson(healthUrl)) as { status?: string };
+    if (health.status === 'ok') {
       return {
         host,
         port: requestedPort,
@@ -141,12 +119,7 @@ const startOrReuseEnterpriseHttp = async (): Promise<{
       };
     }
   } catch (error) {
-    if (process.env.PUMUKI_DEBUG_MCP === '1') {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(
-        `[pumuki-mcp-enterprise-stdio] health probe reuse skipped: ${message}\n`
-      );
-    }
+    void error;
   }
 
   const portInUse = await isPortInUse(host, requestedPort);
@@ -154,7 +127,7 @@ const startOrReuseEnterpriseHttp = async (): Promise<{
   startEnterpriseMcpServer({
     host,
     port: resolvedPort,
-    repoRoot,
+    repoRoot: process.cwd(),
   });
 
   return {

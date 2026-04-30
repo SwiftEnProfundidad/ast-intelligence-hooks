@@ -51,14 +51,14 @@ const withExperimentalHeuristicsEnv = async <T>(
   }
 };
 
-test('resolveHeuristicsEnforcement defaults to advisory mode', async () => {
+test('resolveHeuristicsEnforcement defaults to strict mode from enabled heuristics feature', async () => {
   await withHeuristicsEnforcementEnv(undefined, () => {
     const resolved = resolveHeuristicsEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'advisory',
-      source: 'default',
-      blocking: false,
+      mode: 'strict',
+      source: 'experimental:heuristics',
+      blocking: true,
     });
   });
 });
@@ -80,9 +80,9 @@ test('resolveHeuristicsEnforcement falls back to advisory on invalid environment
     const resolved = resolveHeuristicsEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'advisory',
-      source: 'default',
-      blocking: false,
+      mode: 'strict',
+      source: 'experimental:heuristics',
+      blocking: true,
     });
   });
 });

@@ -5,6 +5,7 @@ import {
   exportConsumerRuntimeMarkdown,
   notifyConsumerRuntimeAuditSummary,
   printConsumerRuntimeEmptyScopeHint,
+  printPrePushTrackedEvidenceDiskHint,
   renderConsumerRuntimeAstBreakdown,
   renderConsumerRuntimeEslintAudit,
   renderConsumerRuntimeFileDiagnostics,
@@ -21,7 +22,9 @@ type ConsumerRuntimeActionDependencies = {
   runRepoGate: () => Promise<ConsumerRuntimeGateResult | void>;
   runRepoAndStagedGate: () => Promise<ConsumerRuntimeGateResult | void>;
   runStagedGate: () => Promise<ConsumerRuntimeGateResult | void>;
+  runUnstagedGate: () => Promise<ConsumerRuntimeGateResult | void>;
   runWorkingTreeGate: () => Promise<ConsumerRuntimeGateResult | void>;
+  runWorkingTreePreCommitGate: () => Promise<ConsumerRuntimeGateResult | void>;
   runPreflight?: (
     stage: 'PRE_COMMIT' | 'PRE_PUSH'
   ) => Promise<string | void> | string | void;
@@ -93,18 +96,25 @@ export const createConsumerRuntimeActions = (
       } else {
         dependencies.clearSummaryOverride();
       }
+      const summary = renderConsumerRuntimeSummary({
+        repoRoot: dependencies.repoRoot,
+        write: dependencies.write,
+        useColor: dependencies.useColor,
+        summaryOverride: dependencies.getSummaryOverride(),
+      });
       notifyConsumerRuntimeAuditSummary(
         {
           emitNotification: dependencies.emitNotification,
           repoRoot: dependencies.repoRoot,
         },
-        renderConsumerRuntimeSummary({
-          repoRoot: dependencies.repoRoot,
-          write: dependencies.write,
-          useColor: dependencies.useColor,
-          summaryOverride: dependencies.getSummaryOverride(),
-        })
+        summary
       );
+      if (
+        !gateResult?.blocked
+        && (summary.outcome === 'PASS' || summary.outcome === 'WARN')
+      ) {
+        printPrePushTrackedEvidenceDiskHint({ write: dependencies.write });
+      }
     },
     runStrictStagedOnly: async () => {
       await runConsumerRuntimePreflight(dependencies, 'PRE_COMMIT');
@@ -140,7 +150,77 @@ export const createConsumerRuntimeActions = (
         },
         summary
       );
+      if (summary.outcome === 'PASS' || summary.outcome === 'WARN') {
+        printPrePushTrackedEvidenceDiskHint({ write: dependencies.write });
+      }
       printConsumerRuntimeEmptyScopeHint({ write: dependencies.write }, summary, 'workingTree');
+    },
+    runEngineStagedNoPreflight: async () => {
+      await dependencies.runStagedGate();
+      dependencies.clearSummaryOverride();
+      const summary = renderConsumerRuntimeSummary({
+        repoRoot: dependencies.repoRoot,
+        write: dependencies.write,
+        useColor: dependencies.useColor,
+      });
+      notifyConsumerRuntimeAuditSummary(
+        {
+          emitNotification: dependencies.emitNotification,
+          repoRoot: dependencies.repoRoot,
+        },
+        summary
+      );
+      printConsumerRuntimeEmptyScopeHint({ write: dependencies.write }, summary, 'staged');
+    },
+    runEngineUnstagedNoPreflight: async () => {
+      await dependencies.runUnstagedGate();
+      dependencies.clearSummaryOverride();
+      const summary = renderConsumerRuntimeSummary({
+        repoRoot: dependencies.repoRoot,
+        write: dependencies.write,
+        useColor: dependencies.useColor,
+      });
+      notifyConsumerRuntimeAuditSummary(
+        {
+          emitNotification: dependencies.emitNotification,
+          repoRoot: dependencies.repoRoot,
+        },
+        summary
+      );
+      printConsumerRuntimeEmptyScopeHint({ write: dependencies.write }, summary, 'unstaged');
+    },
+    runEngineStagedAndUnstagedNoPreflight: async () => {
+      await dependencies.runWorkingTreePreCommitGate();
+      dependencies.clearSummaryOverride();
+      const summary = renderConsumerRuntimeSummary({
+        repoRoot: dependencies.repoRoot,
+        write: dependencies.write,
+        useColor: dependencies.useColor,
+      });
+      notifyConsumerRuntimeAuditSummary(
+        {
+          emitNotification: dependencies.emitNotification,
+          repoRoot: dependencies.repoRoot,
+        },
+        summary
+      );
+      printConsumerRuntimeEmptyScopeHint({ write: dependencies.write }, summary, 'workingTree');
+    },
+    runEngineFullRepoNoPreflight: async () => {
+      await dependencies.runRepoGate();
+      dependencies.clearSummaryOverride();
+      const summary = renderConsumerRuntimeSummary({
+        repoRoot: dependencies.repoRoot,
+        write: dependencies.write,
+        useColor: dependencies.useColor,
+      });
+      notifyConsumerRuntimeAuditSummary(
+        {
+          emitNotification: dependencies.emitNotification,
+          repoRoot: dependencies.repoRoot,
+        },
+        summary
+      );
     },
     runPatternChecks: async () => {
       dependencies.clearLastPreflight();

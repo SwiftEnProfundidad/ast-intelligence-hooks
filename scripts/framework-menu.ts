@@ -16,6 +16,7 @@ import {
   runWorkingTreeGateSilent,
   runRepoAndStagedPrePushGateSilent,
   runWorkingTreePrePushGateSilent,
+  runUnstagedGateSilent,
 } from './framework-menu-gate-lib';
 import { createFrameworkMenuPrompts } from './framework-menu-prompts';
 import { resolveDefaultRangeFrom } from './framework-menu-runners';
@@ -78,7 +79,9 @@ const menu = async (): Promise<void> => {
       runRepoGate: runRepoGateSilent,
       runRepoAndStagedGate: runRepoAndStagedPrePushGateSilent,
       runStagedGate: runStagedGateSilent,
+      runUnstagedGate: runUnstagedGateSilent,
       runWorkingTreeGate: runWorkingTreePrePushGateSilent,
+      runWorkingTreePreCommitGate: runWorkingTreeGateSilent,
       write: (text) => {
         output.write(text);
       },

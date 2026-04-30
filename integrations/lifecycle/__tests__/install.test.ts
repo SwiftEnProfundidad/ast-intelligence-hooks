@@ -236,6 +236,7 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
 
 test('runLifecycleInstall bloquea cuando hay node_modules trackeado y no persiste estado', () => {
   const repo = createGitRepo();
+  const notifications: Array<{ causeCode: string; totalViolations: number }> = [];
   try {
     const trackedFile = join(repo, 'node_modules', 'tracked.txt');
     mkdirSync(join(repo, 'node_modules'), { recursive: true });
@@ -244,9 +245,24 @@ test('runLifecycleInstall bloquea cuando hay node_modules trackeado y no persist
     runGit(repo, ['commit', '-m', 'test: tracked node_modules']);
 
     assert.throws(
-      () => runLifecycleInstall({ cwd: repo }),
-      /blocked by repository safety checks/i
+      () => runLifecycleInstall({
+        cwd: repo,
+        notifyGateBlocked: (params) => {
+          notifications.push({
+            causeCode: params.causeCode,
+            totalViolations: params.totalViolations,
+          });
+          return { delivered: true, reason: 'delivered' };
+        },
+      }),
+      /Blocking notification delivered/i
     );
+    assert.deepEqual(notifications, [
+      {
+        causeCode: 'LIFECYCLE_INSTALL_SAFETY_BLOCKED',
+        totalViolations: 1,
+      },
+    ]);
 
     assert.equal(existsSync(join(repo, '.git/hooks/pre-commit')), false);
     assert.equal(existsSync(join(repo, '.git/hooks/pre-push')), false);
@@ -348,6 +364,33 @@ test('runLifecycleInstall usa process.cwd cuando no recibe cwd explícito', () =
     const result = withCwd(repo, () => runLifecycleInstall());
     assert.equal(realpathSync(result.repoRoot), realpathSync(repo));
     assert.deepEqual(result.changedHooks, ['pre-commit', 'pre-push']);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleInstall materializa policy-as-code estricta cuando el repo declara insumos mínimos', () => {
+  const repo = createGitRepo();
+  try {
+    writeValidPolicyReconcileInputs(repo);
+
+    runLifecycleInstall({ cwd: repo });
+
+    const contract = JSON.parse(
+      readFileSync(join(repo, '.pumuki', 'policy-as-code.json'), 'utf8')
+    ) as {
+      strict?: Partial<Record<'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI', boolean>>;
+      signatures?: Partial<Record<'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI', string>>;
+    };
+
+    assert.equal(contract.strict?.PRE_WRITE, true);
+    assert.equal(contract.strict?.PRE_COMMIT, true);
+    assert.equal(contract.strict?.PRE_PUSH, true);
+    assert.equal(contract.strict?.CI, true);
+    assert.equal(typeof contract.signatures?.PRE_WRITE, 'string');
+    assert.equal(typeof contract.signatures?.PRE_COMMIT, 'string');
+    assert.equal(typeof contract.signatures?.PRE_PUSH, 'string');
+    assert.equal(typeof contract.signatures?.CI, 'string');
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

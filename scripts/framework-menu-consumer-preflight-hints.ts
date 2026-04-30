@@ -7,7 +7,8 @@ import type {
 } from './framework-menu-consumer-preflight-types';
 
 export const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
-  EVIDENCE_MISSING: 'ejecuta una auditoría (1/2/3/4) para regenerar .ai_evidence.json.',
+  EVIDENCE_MISSING:
+    'ejecuta una auditoría (1/2/3/4 o motor 11–14) para regenerar .ai_evidence.json.',
   EVIDENCE_INVALID: 'regenera .ai_evidence.json desde una opción de auditoría.',
   EVIDENCE_STALE: 'refresca evidencia antes de continuar con commit/push.',
   EVIDENCE_TIMESTAMP_INVALID: 'regenera evidencia para obtener un timestamp válido.',
@@ -54,7 +55,9 @@ export const buildConsumerPreflightHints = (
   const actionableHintsByCode = resolveActionableHintsByCode(dependencies);
 
   if (hasViolationCode(violations, 'EVIDENCE_MISSING')) {
-    hints.push('Evidence missing: ejecuta una auditoría (1/2/3/4) para regenerar .ai_evidence.json.');
+    hints.push(
+      'Evidence missing: ejecuta una auditoría (1/2/3/4 o motor 11–14) para regenerar .ai_evidence.json.'
+    );
     handledCodes.add('EVIDENCE_MISSING');
   }
   if (hasViolationCode(violations, 'EVIDENCE_INVALID')) {

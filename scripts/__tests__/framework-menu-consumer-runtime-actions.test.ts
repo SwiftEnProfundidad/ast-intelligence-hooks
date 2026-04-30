@@ -22,7 +22,9 @@ test('consumer runtime avisa cuando STAGING only no tiene archivos en scope', { 
       runStagedGate: async () => {
         writeEmptyEvidence(temp, 'PRE_COMMIT');
       },
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);
@@ -50,9 +52,11 @@ test('consumer runtime avisa cuando working tree no tiene archivos en scope', { 
       runRepoGate: async () => {},
       runRepoAndStagedGate: async () => {},
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {
         writeEmptyEvidence(temp, 'PRE_PUSH');
       },
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);
@@ -80,9 +84,11 @@ test('consumer runtime no vende scope vacío cuando working tree queda bloqueado
       runRepoGate: async () => {},
       runRepoAndStagedGate: async () => {},
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {
         writeEvidenceWithLines(temp);
       },
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);
@@ -122,6 +128,29 @@ test('consumer runtime ejecuta preflight con stage correcto por opción', async 
   assert.deepEqual(stages, ['PRE_COMMIT', 'PRE_PUSH', 'PRE_COMMIT', 'PRE_PUSH']);
 });
 
+test('consumer runtime opciones 11–13 no ejecutan preflight', async () => {
+  const stages: string[] = [];
+  const runtime = createConsumerMenuRuntime({
+    runRepoGate: async () => {},
+    runRepoAndStagedGate: async () => {},
+    runStagedGate: async () => {},
+    runUnstagedGate: async () => {},
+    runWorkingTreeGate: async () => {},
+    runWorkingTreePreCommitGate: async () => {},
+    runPreflight: async (stage) => {
+      stages.push(stage);
+    },
+    write: () => {},
+  });
+
+  await runtime.actions.find((item) => item.id === '11')?.execute();
+  await runtime.actions.find((item) => item.id === '12')?.execute();
+  await runtime.actions.find((item) => item.id === '13')?.execute();
+  await runtime.actions.find((item) => item.id === '14')?.execute();
+
+  assert.deepEqual(stages, []);
+});
+
 test('consumer runtime opción 9 muestra trazabilidad clicable file:line', { concurrency: false }, async () => {
   const previous = process.cwd();
   const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-file-diagnostics-'));
@@ -133,7 +162,9 @@ test('consumer runtime opción 9 muestra trazabilidad clicable file:line', { con
       runRepoGate: async () => {},
       runRepoAndStagedGate: async () => {},
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);
@@ -164,7 +195,9 @@ test('consumer runtime opción 8 exporta markdown con enlaces clicables', { conc
       runRepoGate: async () => {},
       runRepoAndStagedGate: async () => {},
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);
@@ -203,7 +236,9 @@ test('consumer runtime opción 8 mantiene paridad con la evidence canónica tras
       },
       runRepoAndStagedGate: async () => {},
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);
@@ -243,7 +278,9 @@ test('consumer runtime opción 2 resume la evidencia canónica tras PRE_PUSH', {
         writeEvidenceWithLines(temp);
       },
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);
@@ -281,7 +318,9 @@ test('consumer runtime opción 2 resume un bloqueo PRE_PUSH aunque no exista evi
         },
       }),
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);
@@ -319,7 +358,9 @@ test('consumer runtime opción 8 exporta el bloqueo en memoria cuando la opción
         },
       }),
       runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
       runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
       runPreflight: async () => {},
       write: (text) => {
         output.push(text);

@@ -3,6 +3,8 @@ import {
   runRepoAndStagedPrePushGateSilent,
   runRepoGateSilent,
   runStagedGateSilent,
+  runUnstagedGateSilent,
+  runWorkingTreeGateSilent,
   runWorkingTreePrePushGateSilent,
 } from './framework-menu-gate-lib';
 import {
@@ -24,6 +26,8 @@ export type ConsumerMenuMatrixRunnerDependencies = {
   runRepoGateSilent: () => Promise<void>;
   runRepoAndStagedPrePushGateSilent: () => Promise<void>;
   runStagedGateSilent: () => Promise<void>;
+  runUnstagedGateSilent: () => Promise<void>;
+  runWorkingTreeGateSilent: () => Promise<void>;
   runWorkingTreePrePushGateSilent: () => Promise<void>;
   readMatrixOptionReport: (repoRoot: string, optionId: MatrixOptionId) => ConsumerMenuMatrixOptionReport;
 };
@@ -32,6 +36,8 @@ const createDefaultDependencies = (): ConsumerMenuMatrixRunnerDependencies => ({
   runRepoGateSilent,
   runRepoAndStagedPrePushGateSilent,
   runStagedGateSilent,
+  runUnstagedGateSilent,
+  runWorkingTreeGateSilent,
   runWorkingTreePrePushGateSilent,
   readMatrixOptionReport,
 });
@@ -84,6 +90,31 @@ export const runConsumerMenuMatrix = async (params?: {
       }
     })();
 
+    const option11 = await runOption(
+      '11',
+      repoRoot,
+      dependencies.runStagedGateSilent,
+      dependencies.readMatrixOptionReport
+    );
+    const option12 = await runOption(
+      '12',
+      repoRoot,
+      dependencies.runUnstagedGateSilent,
+      dependencies.readMatrixOptionReport
+    );
+    const option13 = await runOption(
+      '13',
+      repoRoot,
+      dependencies.runWorkingTreeGateSilent,
+      dependencies.readMatrixOptionReport
+    );
+    const option14 = await runOption(
+      '14',
+      repoRoot,
+      dependencies.runRepoGateSilent,
+      dependencies.readMatrixOptionReport
+    );
+
     return {
       byOption: {
         '1': option1,
@@ -91,6 +122,10 @@ export const runConsumerMenuMatrix = async (params?: {
         '3': option3,
         '4': option4,
         '9': option9,
+        '11': option11,
+        '12': option12,
+        '13': option13,
+        '14': option14,
       },
     };
   } finally {

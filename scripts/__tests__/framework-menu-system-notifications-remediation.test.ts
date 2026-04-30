@@ -33,6 +33,45 @@ test('resolveBlockedRemediation usa fallback conocido por causeCode', () => {
   assert.match(result, /evidencia/i);
 });
 
+test('resolveBlockedRemediation prioriza tracking sobre comandos genéricos de reconcile', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Evidence AI gate status is BLOCKED. active_entries=RGO-1900-01@L53 tracking_source=docs/RURALGO_SEGUIMIENTO.md',
+      remediation:
+        'npx --yes --package pumuki@6.3.124 pumuki policy reconcile --strict --json && npx --yes --package pumuki@6.3.124 pumuki sdd validate --stage=PRE_WRITE --json',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /tracking/i);
+  assert.match(result, /tarea activa/i);
+  assert.doesNotMatch(result, /policy reconcile/i);
+  assert.doesNotMatch(result, /sdd validate/i);
+});
+
+test('resolveBlockedRemediation no muestra comandos genéricos para el bloqueo umbrella de evidencia', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage: 'Evidence AI gate status is BLOCKED.',
+      remediation:
+        'npx --yes --package pumuki@6.3.124 pumuki policy reconcile --strict --json && npx --yes --package pumuki@6.3.124 pumuki sdd validate --stage=PRE_WRITE --json',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /status\/doctor/i);
+  assert.doesNotMatch(result, /policy reconcile/i);
+});
+
 test('resolveBlockedRemediation cae a fallback genérico cuando no conoce el bloqueo', () => {
   const result = resolveBlockedRemediation(
     {

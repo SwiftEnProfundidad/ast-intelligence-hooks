@@ -169,3 +169,33 @@ test('printGateFindings separa warning secundario cuando convive con un blocker 
   assert.match(output, /\[pumuki\]\[warning-summary\] secondary=EVIDENCE_PREWRITE_WORKTREE_WARN/i);
   assert.match(output, /active_entries=PUMUKI-INC-081@L10, PUMUKI-INC-083@L11/i);
 });
+
+test('printGateFindings separa warning secundario cuando convive con un blocker primario', () => {
+  const findings: Finding[] = [
+    {
+      ruleId: 'ai_gate.repo_policy.EVIDENCE_PREWRITE_WORKTREE_WARN',
+      severity: 'WARN',
+      code: 'EVIDENCE_PREWRITE_WORKTREE_WARN',
+      message: 'PRE_WRITE worktree hygiene warning: pending_changes=15 (warn_threshold=15).',
+      matchedBy: 'RepoPolicy',
+      source: 'ai_gate:repo_policy',
+    },
+    {
+      ruleId: 'ai_gate.repo_policy.TRACKING_CANONICAL_IN_PROGRESS_INVALID',
+      severity: 'ERROR',
+      code: 'TRACKING_CANONICAL_IN_PROGRESS_INVALID',
+      message:
+        'Canonical tracking file has 2 in-progress tasks; expected exactly 1. active_entries=PUMUKI-INC-081@L10, PUMUKI-INC-083@L11',
+      matchedBy: 'RepoPolicy',
+      source: 'ai_gate:repo_policy',
+    },
+  ];
+
+  const output = withCapturedStdout(() => {
+    printGateFindings(findings);
+  }).join('');
+
+  assert.match(output, /\[pumuki\]\[block-summary\] primary=TRACKING_CANONICAL_IN_PROGRESS_INVALID/i);
+  assert.match(output, /\[pumuki\]\[warning-summary\] secondary=EVIDENCE_PREWRITE_WORKTREE_WARN/i);
+  assert.match(output, /active_entries=PUMUKI-INC-081@L10, PUMUKI-INC-083@L11/i);
+});

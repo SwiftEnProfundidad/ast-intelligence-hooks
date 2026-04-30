@@ -38,8 +38,9 @@ test('dispatchSystemNotification entrega al canal macOS manteniendo el contrato 
     });
 
     assert.deepEqual(result, { delivered: true, reason: 'delivered' });
-    assert.equal(calls.length, 1);
-    assert.equal(calls[0]?.command, 'swift');
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0]?.command, 'osascript');
+    assert.equal(calls[1]?.command, 'swift');
   });
 });
 

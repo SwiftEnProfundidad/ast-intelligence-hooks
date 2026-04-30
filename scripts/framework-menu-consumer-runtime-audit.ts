@@ -14,6 +14,7 @@ import {
   readEvidenceSummaryForMenu,
   type FrameworkMenuEvidenceSummary,
 } from './framework-menu-evidence-summary-lib';
+import { renderVintageEvidenceReport } from './framework-menu-consumer-runtime-evidence-classic';
 import type {
   ConsumerRuntimeBlockedGate,
   ConsumerRuntimeNotificationDependencies,
@@ -56,7 +57,34 @@ export const renderConsumerRuntimeSummary = (
     width: resolveLegacyPanelOuterWidth(),
     color: dependencies.useColor(),
   })}\n`);
+
+  const vintageSource =
+    summary.status === 'ok' && !dependencies.summaryOverride
+      ? readEvidenceSummaryForMenu(dependencies.repoRoot, {
+        topFindingsLimit: 45,
+        topFileLocationsLimit: 15,
+        topFilesLimit: 10,
+      })
+      : summary;
+  renderVintageEvidenceReport({
+    write: dependencies.write,
+    summary: vintageSource,
+    useColor: dependencies.useColor,
+  });
   return summary;
+};
+
+export const printPrePushTrackedEvidenceDiskHint = (params: {
+  write: ConsumerRuntimeSummaryDependencies['write'];
+}): void => {
+  params.write(
+    '\n' +
+      [
+        'ℹ PRE_PUSH + `.ai_evidence.json` tracked: on PASS/WARN the gate may skip rewriting the file on disk',
+        '  (avoids dirty tracked evidence). Local dev: PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE=1 forces disk write.',
+      ].join('\n') +
+      '\n'
+  );
 };
 
 export const buildConsumerRuntimeBlockedSummary = (
@@ -116,12 +144,18 @@ export const printConsumerRuntimeEmptyScopeHint = (
   }
   if (scope === 'staged') {
     dependencies.write(
-      '\nℹ Scope vacío (staged): no hay archivos soportados en staged para auditar. Resultado PASS por alcance vacío; usa 1 o 2 para validar repo completo.\n'
+      '\nℹ Scope vacío (staged): no hay archivos soportados en staged para auditar. Resultado PASS por alcance vacío; usa 1, 2 o 14 (repo completo) según necesidad.\n'
+    );
+    return;
+  }
+  if (scope === 'unstaged') {
+    dependencies.write(
+      '\nℹ Scope vacío (unstaged): no hay cambios sin stage ni untracked auditable. Resultado PASS por alcance vacío; usa 1, 14 u opciones 11–13 según el alcance que necesites.\n'
     );
     return;
   }
   dependencies.write(
-    '\nℹ Scope vacío (working tree): no hay archivos soportados en staged/unstaged para auditar. Resultado PASS por alcance vacío; usa 1 o 2 para validar repo completo.\n'
+    '\nℹ Scope vacío (working tree): no hay archivos soportados en staged/unstaged para auditar. Resultado PASS por alcance vacío; usa 1, 2, 13 o 14 según el alcance que necesites.\n'
   );
 };
 

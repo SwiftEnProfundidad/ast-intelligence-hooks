@@ -27,6 +27,10 @@ test('buildBlockedDialogPayload compone título, causa y remediación visibles',
   });
 
   assert.equal(payload.title, '🔴 Pumuki bloqueado · demo-repo');
+  assert.match(payload.cause, /causa:/i);
   assert.match(payload.cause, /uso de ["']any["'] explícito en backend/i);
-  assert.equal(payload.remediation, 'Tipa el valor y elimina any explícito en backend.');
+  assert.match(payload.cause, /impacto:/i);
+  assert.match(payload.remediation, /comando:/i);
+  assert.match(payload.remediation, /siguiente acción:/i);
+  assert.match(payload.remediation, /any explícito en backend/i);
 });

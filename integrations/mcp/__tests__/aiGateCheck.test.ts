@@ -220,9 +220,11 @@ test('runEnterpriseAiGateCheck incorpora learning_context y auto_fix recomendado
   });
 });
 
-test('runEnterpriseAiGateCheck oculta learning_context cuando el feature sigue default-off', () => {
+test('runEnterpriseAiGateCheck oculta learning_context cuando el feature se apaga explícitamente', () => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-aigate-learning-off-'));
+  const previousLearningContext = process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
   try {
+    process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT = 'off';
     runGit(repoRoot, ['init', '-b', 'feature/mcp-learning-off']);
     runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
     runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
@@ -294,6 +296,11 @@ test('runEnterpriseAiGateCheck oculta learning_context cuando el feature sigue d
       false
     );
   } finally {
+    if (typeof previousLearningContext === 'undefined') {
+      delete process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT;
+    } else {
+      process.env.PUMUKI_EXPERIMENTAL_LEARNING_CONTEXT = previousLearningContext;
+    }
     rmSync(repoRoot, { recursive: true, force: true });
   }
 });

@@ -47,17 +47,33 @@ export type SnapshotEvaluationMetrics = {
 
 export type SnapshotRulesCoverage = {
   stage: GateStage;
+  contract?: 'AUTO_RUNTIME_RULES_FOR_STAGE';
+  scope_note?: string;
   active_rule_ids: string[];
   evaluated_rule_ids: string[];
   matched_rule_ids: string[];
   unevaluated_rule_ids: string[];
   unsupported_auto_rule_ids?: string[];
+  unsupported_detector_rule_ids?: string[];
+  registry_totals?: {
+    total: number;
+    auto: number;
+    declarative: number;
+  };
+  stage_applicable_auto_rule_ids?: string[];
+  declarative_rule_ids?: string[];
+  declarative_excluded_reason?: string;
   counts: {
     active: number;
     evaluated: number;
     matched: number;
     unevaluated: number;
+    registry_total?: number;
+    registry_auto?: number;
+    registry_declarative?: number;
+    stage_applicable_auto?: number;
     unsupported_auto?: number;
+    unsupported_detector?: number;
   };
   coverage_ratio: number;
 };

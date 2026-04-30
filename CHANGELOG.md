@@ -6,6 +6,152 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.129] - 2026-04-29
+
+### Fixed
+
+- **Nueva slice Android de singletons cerrada:** `skills.android.no-singleton-usar-inyeccio-n-de-dependencias-hilt-dagger` pasa a detector AST real y deja de depender de normalización genérica.
+- **Exclusión correcta de módulos DI:** `@Module`, `@InstallIn` y `@EntryPoint` ya no disparan el detector de singleton cuando el `object` es un módulo de inyección legítimo.
+- **Cobertura de regresión y lock recompilado:** la suite Android dirigida vuelve a verde y `skills.lock.json` se regenera con el binding canónico de la nueva skill.
+
+## [6.3.127] - 2026-04-28
+
+### Fixed
+
+- **Baseline enterprise fully active by default:** `sdd`, `heuristics`, `learning_context`, `analytics`, `operational_memory` and `saas_ingestion` now resolve as `strict source=default blocking=true`, aligned with `pre_write` and `mcp_enterprise`.
+- **No more false default-off messaging:** disabled envelopes now say the feature was switched off explicitly by configuration, avoiding the old misleading “desactivado por defecto” copy.
+- **Regression coverage:** status, lifecycle, MCP and SDD tests now assert that default-off only exists when a test or consumer explicitly sets the corresponding env var to `off`.
+
+## [6.3.126] - 2026-04-28
+
+### Fixed
+
+- **Suite lifecycle determinista:** `cli.test.ts` deja de esperar `PRE_WRITE=off` cuando el contrato actual lo define como `strict` por defecto, eliminando el falso fallo de fichero en `node:test`.
+- **Snapshot experimental completo:** el payload `status --json --remote-checks` valida también `mcp_enterprise=strict`, alineado con la configuración enterprise real.
+
+## [6.3.125] - 2026-04-28
+
+### Fixed
+
+- **Mensajes coherentes para bloqueos `gate.blocked`:** las notificaciones y diálogos traducen `EVIDENCE_GATE_BLOCKED`, tracking canónico y atomicidad a causas humanas en vez de mostrar copy interno en inglés.
+- **Tracking como causa accionable:** cuando existe `active_entries` / `tracking_source`, la remediación prioriza corregir el MD de tracking y deja de sugerir `policy reconcile && sdd validate` como solución principal.
+- **Cierre de `PUMUKI-INC-118`:** el evento central de bloqueo enriquece la causa con contexto de tracking antes de construir banners, diálogos macOS y payloads de sistema.
+
+## [6.3.123] - 2026-04-28
+
+### Fixed
+
+- **Detectores SOLID sin contadores arbitrarios:** `SRP`, `DIP`, `OCP` e `ISP` en iOS/Android/TypeScript dejan de depender de mínimos tipo `relatedNodes.length < N`, `typedCaseCount >= N` o cortes `slice(0, N)` y pasan a usar categorías semánticas explícitas.
+- **ISP iOS/Android por familias de contrato:** los protocolos/interfaces anchos se detectan por mezcla real de `query`/`command` y uso de una sola familia por consumidor, no por número de miembros.
+- **Cierre de `PUMUKI-INC-116`:** se añade regresión negativa para clases/protocolos grandes pero cohesionados y auditoría textual para impedir que los detectores estructurales vuelvan a degradarse a `N señales => bloqueo`.
+
+## [6.3.122] - 2026-04-28
+
+### Fixed
+
+- **Skills estructurales sin umbrales hardcodeados:** `skills.backend.no-god-classes` / `skills.frontend.no-god-classes` dejan de depender de `GOD_CLASS_MAX_LINES` y pasan a detectar mezcla semántica de responsabilidades por nodos AST.
+- **Auditoría transversal iOS/Android/backend/frontend:** las skills estructurales `God/Massive/SRP/Clean Architecture` ya no expresan límites implícitos de líneas; una regresión dedicada falla si vuelven a aparecer umbrales `> N líneas` en las skills de las cuatro plataformas.
+- **Cierre de `PUMUKI-INC-115`:** Pumuki mantiene hotspots por `max_lines` solo cuando el consumer los declara explícitamente, pero las skills hard vuelven a depender de nodos AST inteligentes o reglas declarativas.
+
+## [6.3.121] - 2026-04-28
+
+### Fixed
+
+- **Hotspots brownfield sin umbrales hardcodeados:** `BrownfieldHotspotGuard` deja de bloquear por tamaño implícito en carpetas `presentation`/`application`; el bloqueo por líneas solo se activa cuando el consumer declara explícitamente `max_lines` en `config/pumuki-hotspots.json`.
+- **Cierre de `PUMUKI-INC-114`:** el guard mantiene bloqueo declarativo para hotspots marcados, pero SRP/god class vuelve a depender de reglas/skills AST inteligentes en vez de números internos `800/1200`.
+
+## [6.3.120] - 2026-04-28
+
+### Fixed
+
+- **Watch no interactivo para auditoría machine-readable:** `pumuki watch --scope=repo --once --json` desactiva notificaciones por defecto en esa invocación de una sola pasada para terminar y emitir JSON sin depender de UI del sistema, cerrando `PUMUKI-INC-112`.
+- **Bloqueos de install visibles:** cuando `pumuki install` queda bloqueado por governance, emite una notificación `gate.blocked` y añade el estado de entrega al error, cerrando la brecha de visibilidad de `PUMUKI-INC-113`.
+
+## [6.3.119] - 2026-04-28
+
+### Fixed
+
+- **Contrato CLI estable para menú:** `pumuki menu --help` deja de fallar como comando desconocido y `pumuki menu` delega en el runtime de menú existente (`pumuki-framework`), cerrando `PUMUKI-INC-111` para consumers como RuralGo.
+
+## [6.3.118] - 2026-04-28
+
+### Fixed
+
+- **Guard PRE_WRITE para editores/agentes vía MCP:** el catálogo enterprise expone `pre_write_guard`, una tool no mutante que ejecuta `audit --stage=PRE_WRITE --json` y devuelve `findings` accionables antes de permitir continuar una edición/restauración de ficheros.
+- **Cierre operativo de `PUMUKI-INC-109`:** RuralGo ya tiene una ruta MCP explícita para bloquear antes de escribir, no sólo en commit/gate posterior.
+
+## [6.3.117] - 2026-04-28
+
+### Fixed
+
+- **`pumuki audit --json` queda accionable cuando bloquea:** la salida ahora expone `findings_count`, `blocking_findings_count` y `findings`; si el gate bloquea sin findings persistidos, emite un blocker sintético `AUDIT_BLOCKED_WITHOUT_FINDINGS` para evitar JSON no accionable.
+- **Auditoría previa a edición:** `pumuki audit --stage=PRE_WRITE --json` queda soportado para dar a consumers como RuralGo un contrato machine-friendly antes de continuar feature work.
+- **Tracking externo prioritario:** el reset interno queda alineado con el bloqueo vivo de RuralGo `PUMUKI-INC-109`/`PUMUKI-INC-110`.
+
+## [6.3.116] - 2026-04-25
+
+### Fixed
+
+- **Inventario real de dependencia local en `status` y `doctor`:** la línea publicada diferencia por fin la señal de seguridad Git (`trackedNodeModulesCount` / `trackedNodeModulesPaths`) del estado real de instalación local (`dependencyInventory`).
+- **Diagnóstico consumer-facing de `pumuki`:** `status --json` y `doctor --json` exponen si existe `package.json`, lockfile, `node_modules`, declaración de `pumuki`, versión instalada y binario local.
+- **Salida humana alineada:** `status` y `doctor` imprimen una línea compacta `dependency pumuki` para que el operador no confunda ausencia de `node_modules` trackeados con ausencia de instalación local.
+- **Cobertura de regresión de `PUMUKI-INC-088`:** nuevas pruebas fijan el inventario de dependencia en ambas superficies lifecycle sin arrastrar el delta amplio de `develop`.
+
+## [6.3.115] - 2026-04-24
+
+### Fixed
+
+- **`status` y `doctor` exponen `issues` canónicos también en evidencia `WARN`:** la línea publicada deja de reservar la lista de findings a estados bloqueados y pasa a emitir una advertencia consumible por automatización cuando governance está en atención operativa real.
+- **Hotfix mínimo sobre la superficie estable de `main`:** el contrato bloqueado existente se conserva, pero ahora la evidencia `WARN` produce `Governance requires attention (...)` como issue canónico sin arrastrar snapshots adicionales de `develop`.
+- **Cobertura de regresión de `INC-084` en la línea publicada:** nuevas pruebas fijan el caso `WARN` tanto en `status` como en `doctor`, manteniendo la semántica previa para estados `BLOCK`.
+- **Regresión de `postinstall` resuelta en la línea publicada:** `captureRepoState` deja de importar `status.ts` y rompe el ciclo que hacía fallar `scripts/consumer-postinstall.cjs` con `ReferenceError: Cannot access 'captureRepoState' before initialization`.
+
+## [6.3.108] - 2026-04-22
+
+### Fixed
+
+- **MCP enterprise visible por defecto en la línea publicada:** `mcp_enterprise` deja de nacer en `off`, así que el editor/agente puede ver `ai_gate_check`, `pre_flight_check` y `auto_execute_ai_start` sin opt-in adicional.
+- **Enforcement temprano más perceptible para `PRE_WRITE`:** el catálogo enterprise visible por defecto reduce el gap entre `status`/`doctor` bloqueados y la ruta real de trabajo del agente/editor.
+- **Cobertura de regresión de la baseline MCP:** nuevas pruebas fijan el catálogo del enterprise server y la proyección de baseline consumer asociada a `mcp_enterprise`.
+
+## [6.3.107] - 2026-04-22
+
+### Fixed
+
+- **Semántica inequívoca para sesión SDD expirada:** una sesión vencida deja de proyectarse como `active=true` y pasa a exponerse como inactiva (`active=false`) manteniendo `valid=false` y `remainingSeconds=0`.
+- **Refresh de sesión expiradas todavía permitido:** `refreshSddSession` ya no exige `active=true`; basta con conservar el `changeId` para poder renovar una sesión caducada sin reabrirla manualmente.
+- **Policy SDD alineada con esa semántica:** `evaluateSddPolicy` trata la sesión como `missing` solo cuando falta `changeId`, y conserva `SDD_SESSION_INVALID` para sesiones expiradas con contexto recuperable.
+
+## [6.3.106] - 2026-04-22
+
+### Fixed
+
+- **Activación advisory de SDD/PRE_WRITE fijada al runtime diagnosticado:** `sdd validate` deja de devolver `activation_command` con `pumuki@latest` cuando el namespace experimental está desactivado por defecto.
+- **Session guidance reproducible en SDD:** las instrucciones de `session --refresh` y `session --open` también quedan fijadas a la versión efectiva del runtime en lugar de depender de `latest`.
+
+## [6.3.105] - 2026-04-22
+
+### Fixed
+
+- **Remediaciones PRE_WRITE fijadas a la versión diagnosticada:** `sdd validate`, `auto_execute_ai_start` y la remediación por defecto dejan de recomendar `pumuki@latest` y pasan a devolver comandos con la versión efectiva del runtime (`pumuki@6.3.105` en esta línea).
+- **Backport útil de `PUMUKI-INC-089` a la línea publicada:** `main` mantiene la ruta reproducible para `install`, `policy reconcile --strict --json` y la revalidación `PRE_WRITE` sin exigir al consumer adivinar la versión correcta.
+
+## [6.3.104] - 2026-04-22
+
+### Fixed
+
+- **Tracking canónico de RuralGo reconocido por el parser de repo-policy:** `appendTrackingActionableContext` ya inspecciona `docs/RURALGO_SEGUIMIENTO.md`, que es la ruta canónica real del consumer.
+- **Filas `| 🚧 | TASK |` tratadas como entradas activas válidas:** el diagnóstico accionable cubre el formato de tabla usado por el hub de seguimiento de RuralGo además del backlog tabular de incidencias.
+- **Cobertura de regresión para el hub canónico:** nuevas pruebas fijan parsing y priorización de `docs/RURALGO_SEGUIMIENTO.md` antes de otros archivos de tracking del consumer.
+
+## [6.3.103] - 2026-04-22
+
+### Fixed
+
+- **Diagnóstico accionable del tracking canónico en consumers:** `status`, `doctor` y el gate repo-policy ya incluyen `TRACKING_CANONICAL_IN_PROGRESS_INVALID` junto con referencias a entradas activas y al board canónico del repo consumidor cuando existe.
+- **Separación explícita entre blocker y warning secundario:** la salida de `PRE_WRITE` conserva un `block-summary` primario y añade `warning-summary` para warnings de higiene (`EVIDENCE_PREWRITE_WORKTREE_WARN`) cuando conviven con un bloqueo duro de tracking.
+- **Cobertura de regresión del hotfix:** nuevas pruebas fijan el parsing de boards tabulares `🚧 reported activo` y la impresión del resumen jerárquico con warning secundario.
+
 ## [6.3.102] - 2026-04-22
 
 ### Fixed
@@ -33,7 +179,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - **PRE_WRITE visible y coherente en la línea de producción:** `policyValidationSnapshot` refleja `PRE_WRITE` como estricto cuando el enforcement efectivo está activado en `strict`, evitando contradicción entre policy y runtime.
-- **Arranque agentic sin éxito falso:** `auto_execute_ai_start` devuelve semántica de fallo real cuando el gate bloquea y fuerza remediación explícita antes de continuar.
+- **Arranque agentic sin éxito falso:** `auto_execute_ai_start` devuelve `success=false` cuando el gate bloquea y fuerza remediación explícita antes de continuar.
 - **Contrato MCP actualizado:** la superficie HTTP del enterprise server hereda ese mismo contrato de bloqueo para `auto_execute_ai_start`.
 - **Cobertura de regresión del hotfix:** nuevas regresiones fijan la proyección de `PRE_WRITE` y el comportamiento bloqueante del arranque agentic sobre la línea `main`.
 

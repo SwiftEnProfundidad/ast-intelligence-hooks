@@ -1,5 +1,27 @@
 import type { Finding } from '../../core/gate/Finding';
-import { resolveGovernanceCatalogAction } from '../gate/governanceActionCatalog';
+
+const BLOCK_NEXT_ACTION_BY_CODE: Readonly<Record<string, string>> = {
+  SDD_SESSION_MISSING:
+    'npx --yes --package pumuki@latest pumuki sdd session --open --change=<id>',
+  SDD_SESSION_INVALID:
+    'npx --yes --package pumuki@latest pumuki sdd session --refresh --ttl-minutes=90',
+  PRE_PUSH_UPSTREAM_MISSING:
+    'git push --set-upstream origin <branch>',
+  PRE_PUSH_UPSTREAM_MISALIGNED:
+    'git branch --unset-upstream && git push --set-upstream origin <branch>',
+  EVIDENCE_STALE:
+    'npx --yes --package pumuki@latest pumuki-pre-commit',
+  EVIDENCE_BRANCH_MISMATCH:
+    'npx --yes --package pumuki@latest pumuki-pre-commit',
+  GIT_ATOMICITY_TOO_MANY_FILES:
+    'git restore --staged . && separa cambios en commits más pequeños',
+  GIT_ATOMICITY_TOO_MANY_SCOPES:
+    'Revisa scope_files del bloqueo y aplica: git restore --staged . && git add <scope>/ && git commit -m "<tipo>: <scope>"',
+  ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
+    'Reconcilia policy/skills y reintenta PRE_COMMIT: npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki-pre-commit',
+  SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS:
+    'Aplica refactor incremental: extrae 1 componente/hook por commit y vuelve a ejecutar PRE_COMMIT.',
+};
 
 const severityWeight = (severity: string): number => {
   switch (severity.toUpperCase()) {
@@ -31,7 +53,13 @@ const resolvePrimaryFinding = (findings: ReadonlyArray<Finding>): Finding => {
 };
 
 const sortFindingsBySeverity = (findings: ReadonlyArray<Finding>): ReadonlyArray<Finding> =>
-  [...findings].sort((left, right) => severityWeight(right.severity) - severityWeight(left.severity));
+  [...findings].sort((left, right) => {
+    const severityDelta = severityWeight(right.severity) - severityWeight(left.severity);
+    if (severityDelta !== 0) {
+      return severityDelta;
+    }
+    return left.ruleId.localeCompare(right.ruleId);
+  });
 
 const normalizeAnchorLine = (lines: Finding['lines']): number => {
   if (Array.isArray(lines)) {
@@ -75,56 +103,27 @@ const formatFinding = (finding: Finding): string => {
   return `[${severity}] ${finding.ruleId}: ${finding.message} -> ${location}`;
 };
 
-const resolveAtomicityFallback = (code: string): string | null => {
-  switch (code) {
-    case 'GIT_ATOMICITY_TOO_MANY_FILES':
-      return 'git restore --staged . && separa cambios en commits más pequeños';
-    case 'GIT_ATOMICITY_TOO_MANY_SCOPES':
-      return 'Revisa scope_files del bloqueo y aplica: git restore --staged . && git add <scope>/ && git commit -m "<tipo>: <scope>"';
-    default:
-      return null;
-  }
-};
-
-export const printGateFindings = (
-  findings: ReadonlyArray<Finding>,
-  params?: { stage?: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI' }
-): void => {
+export const printGateFindings = (findings: ReadonlyArray<Finding>): void => {
   if (findings.length === 0) {
     return;
   }
-  const primary = resolvePrimaryFinding(findings);
-  const action = resolveGovernanceCatalogAction({
-    code: primary.code,
-    stage: params?.stage ?? 'PRE_COMMIT',
-    fallback: {
-      reason_code: primary.code,
-      instruction: 'Corrige el bloqueante primario y vuelve a ejecutar la validación del stage actual.',
-      next_action: {
-        kind: 'info',
-        message:
-          resolveAtomicityFallback(primary.code)
-          ?? 'Corrige el bloqueante primario y vuelve a ejecutar el mismo comando.',
-      },
-    },
-  });
-  const nextAction = action.next_action.command ?? action.next_action.message;
+  const orderedFindings = sortFindingsBySeverity(findings);
+  const primary = resolvePrimaryFinding(orderedFindings);
+  const nextAction =
+    BLOCK_NEXT_ACTION_BY_CODE[primary.code]
+    ?? 'Corrige el bloqueante primario y vuelve a ejecutar el mismo comando.';
   process.stdout.write(
     `[pumuki][block-summary] primary=${primary.code} severity=${primary.severity.toUpperCase()} rule=${primary.ruleId}\n`
   );
-  process.stdout.write(`[pumuki][block-summary] reason_code=${action.reason_code}\n`);
-  process.stdout.write(`[pumuki][block-summary] instruction=${action.instruction}\n`);
   process.stdout.write(`[pumuki][block-summary] next_action=${nextAction}\n`);
-  if (action.next_action.command) {
-    process.stdout.write(`[pumuki][block-summary] command=${action.next_action.command}\n`);
-  }
-  const orderedFindings = sortFindingsBySeverity(findings);
   const secondaryWarnings = orderedFindings.filter(
-    (finding) => finding !== primary && finding.severity.toUpperCase() === 'WARN'
+    (finding) =>
+      finding !== primary &&
+      severityWeight(finding.severity) < severityWeight(primary.severity)
   );
-  for (const warning of secondaryWarnings) {
+  for (const finding of secondaryWarnings) {
     process.stdout.write(
-      `[pumuki][warning-summary] secondary=${warning.code} severity=${warning.severity.toUpperCase()} rule=${warning.ruleId}\n`
+      `[pumuki][warning-summary] secondary=${finding.code} severity=${finding.severity.toUpperCase()} rule=${finding.ruleId}\n`
     );
   }
   for (const finding of orderedFindings) {

@@ -806,7 +806,7 @@ final class APIClientSpy: @unchecked Sendable, APIClientProtocol {
 - Usar `@preconcurrency` solo como medida temporal de migración
 
 ### Anti-patterns a EVITAR:
-❌ **Massive View Controllers** - ViewControllers >300 líneas
+❌ **Massive View Controllers** - ViewControllers que mezclan presentación, navegación, estado, acceso a datos o coordinación de infraestructura
 ❌ **Force unwrapping (!)** - Salvo IBOutlets y casos justificados
 ❌ **Singletons** - Dificultan testing
 ❌ **Storyboards grandes** - Merge conflicts, lentitud

@@ -50,8 +50,8 @@ export const resolveGitAtomicityEnforcement = (): GitAtomicityEnforcementResolut
     };
   }
   return {
-    mode: 'advisory',
+    mode: 'strict',
     source: 'default',
-    blocking: false,
+    blocking: true,
   };
 };

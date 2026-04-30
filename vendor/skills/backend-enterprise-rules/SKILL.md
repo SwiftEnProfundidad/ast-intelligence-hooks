@@ -249,7 +249,7 @@ const { data } = await supabase
 ✅ **i18n en error messages** - Mensajes traducibles
 
 ### Anti-patterns a EVITAR:
-❌ **God classes** - Servicios con >500 líneas
+❌ **God classes** - Servicios que mezclan responsabilidades de dominio, aplicación, infraestructura, branching de tipos o contratos en una misma clase
 ❌ **Anemic domain models** - Entidades solo con getters/setters
 ❌ **Magic numbers** - Usar constantes con nombres descriptivos
 ❌ **Callback hell** - Usar async/await

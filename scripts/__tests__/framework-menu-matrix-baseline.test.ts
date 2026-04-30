@@ -13,6 +13,10 @@ const buildRound = (overrides: Partial<ConsumerMenuMatrixReport['byOption']> = {
     '3': { stage: 'PRE_COMMIT', outcome: 'PASS', filesScanned: 0, totalViolations: 0, diagnosis: 'scope-empty' },
     '4': { stage: 'PRE_PUSH', outcome: 'PASS', filesScanned: 0, totalViolations: 0, diagnosis: 'scope-empty' },
     '9': { stage: 'PRE_PUSH', outcome: 'PASS', filesScanned: 100, totalViolations: 0, diagnosis: 'repo-clean' },
+    '11': { stage: 'PRE_COMMIT', outcome: 'PASS', filesScanned: 0, totalViolations: 0, diagnosis: 'scope-empty' },
+    '12': { stage: 'PRE_COMMIT', outcome: 'PASS', filesScanned: 20, totalViolations: 0, diagnosis: 'repo-clean' },
+    '13': { stage: 'PRE_COMMIT', outcome: 'PASS', filesScanned: 20, totalViolations: 0, diagnosis: 'repo-clean' },
+    '14': { stage: 'PRE_COMMIT', outcome: 'PASS', filesScanned: 100, totalViolations: 0, diagnosis: 'repo-clean' },
     ...overrides,
   },
 });

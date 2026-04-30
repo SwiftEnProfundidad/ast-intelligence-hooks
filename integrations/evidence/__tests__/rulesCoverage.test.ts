@@ -26,6 +26,31 @@ test('normalizeSnapshotRulesCoverage preserva unsupported_auto_rule_ids cuando e
   assert.equal(result.counts.unsupported_auto, 1);
 });
 
+test('normalizeSnapshotRulesCoverage preserva unsupported_detector_rule_ids cuando existen reglas sin detector', () => {
+  const result = normalizeSnapshotRulesCoverage('PRE_COMMIT', {
+    stage: 'PRE_COMMIT',
+    active_rule_ids: [],
+    evaluated_rule_ids: [],
+    matched_rule_ids: [],
+    unevaluated_rule_ids: [],
+    unsupported_detector_rule_ids: ['skills.backend.guideline.backend.clean-architecture'],
+    counts: {
+      active: 0,
+      evaluated: 0,
+      matched: 0,
+      unevaluated: 0,
+      unsupported_detector: 1,
+    },
+    coverage_ratio: 1,
+  });
+
+  assert.deepEqual(result.unsupported_detector_rule_ids, [
+    'skills.backend.guideline.backend.clean-architecture',
+  ]);
+  assert.equal(result.counts.unsupported_detector, 1);
+});
+
+
 test('normalizeSnapshotRulesCoverage omite unsupported_auto cuando no hay reglas sin detector', () => {
   const result = normalizeSnapshotRulesCoverage('PRE_COMMIT', {
     stage: 'PRE_COMMIT',

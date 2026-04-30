@@ -78,10 +78,12 @@ const withStageRunnerRepo = async (
 ): Promise<void> => {
   const previousBypass = process.env.PUMUKI_SDD_BYPASS;
   const previousDisableCore = process.env.PUMUKI_DISABLE_CORE_SKILLS;
+  const previousSkillsEnforcement = process.env.PUMUKI_SKILLS_ENFORCEMENT;
   const previousAtomicity = process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
   const previousDisableNotifications = process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS;
   process.env.PUMUKI_SDD_BYPASS = '1';
   process.env.PUMUKI_DISABLE_CORE_SKILLS = '0';
+  process.env.PUMUKI_SKILLS_ENFORCEMENT = 'advisory';
   process.env.PUMUKI_GIT_ATOMICITY_ENABLED = '0';
   process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS = '1';
   try {
@@ -99,6 +101,11 @@ const withStageRunnerRepo = async (
       delete process.env.PUMUKI_DISABLE_CORE_SKILLS;
     } else {
       process.env.PUMUKI_DISABLE_CORE_SKILLS = previousDisableCore;
+    }
+    if (typeof previousSkillsEnforcement === 'undefined') {
+      delete process.env.PUMUKI_SKILLS_ENFORCEMENT;
+    } else {
+      process.env.PUMUKI_SKILLS_ENFORCEMENT = previousSkillsEnforcement;
     }
     if (typeof previousAtomicity === 'undefined') {
       delete process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
@@ -1641,7 +1648,7 @@ test('runPrePushStage bloquea upstream desalineado también con ahead moderado (
   });
 });
 
-test('runPreCommitStage deja git atomicity en advisory por defecto y ejecuta el gate principal', async () => {
+test('runPreCommitStage bloquea por git atomicity en strict por defecto', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     stageBackendFile(repoRoot);
     let gateCalls = 0;
@@ -1669,9 +1676,10 @@ test('runPreCommitStage deja git atomicity en advisory por defecto y ejecuta el 
       resolveRepoRoot: () => repoRoot,
     });
 
-    assert.equal(exitCode, 0);
-    assert.equal(gateCalls, 1);
-    assert.equal(blocked.length, 0);
+    assert.equal(exitCode, 1);
+    assert.equal(gateCalls, 0);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.code, 'GIT_ATOMICITY_TOO_MANY_FILES');
   });
 });
 
@@ -1716,7 +1724,7 @@ test('runPreCommitStage bloquea temprano por git atomicity cuando el enforcement
   });
 });
 
-test('runPrePushStage deja git atomicity en advisory por defecto y ejecuta el gate principal', async () => {
+test('runPrePushStage bloquea por git atomicity en strict por defecto', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     setupBackendCommitRange(repoRoot);
     let gateCalls = 0;
@@ -1744,9 +1752,10 @@ test('runPrePushStage deja git atomicity en advisory por defecto y ejecuta el ga
       resolveRepoRoot: () => repoRoot,
     });
 
-    assert.equal(exitCode, 0);
-    assert.equal(gateCalls, 1);
-    assert.equal(blocked.length, 0);
+    assert.equal(exitCode, 1);
+    assert.equal(gateCalls, 0);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.code, 'GIT_ATOMICITY_COMMIT_MESSAGE_TRACEABILITY');
   });
 });
 

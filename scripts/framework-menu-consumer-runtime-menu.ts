@@ -11,6 +11,7 @@ import {
   buildCliDesignTokens,
   renderActionRow,
   renderBadge,
+  renderSectionHeader,
 } from './framework-menu-ui-components-lib';
 import { isMenuUiV2Enabled } from './framework-menu-ui-version-lib';
 import { buildGovernanceConsoleSummaryLines } from '../integrations/lifecycle/cliGovernanceConsole';
@@ -32,24 +33,37 @@ const buildConsumerRuntimeMenuStatus = (
           : { level: 'info', label: (menuSummary.outcome ?? 'UNKNOWN').trim().toUpperCase() };
 
 export const renderConsumerRuntimeClassicMenu = (
-  actions: ReadonlyArray<ConsumerAction>,
-  useColor: () => boolean
+  params: {
+    actions: ReadonlyArray<ConsumerAction>;
+    repoRoot: string;
+    useColor: () => boolean;
+  }
 ): string => {
-  const groupedActions = resolveConsumerMenuLayout(actions);
+  const menuSummary = readEvidenceSummaryForMenu(params.repoRoot);
+  const menuStatus = buildConsumerRuntimeMenuStatus(menuSummary);
+  const tokens = buildCliDesignTokens({
+    width: resolveLegacyPanelOuterWidth(),
+    color: params.useColor(),
+  });
+  const groupedActions = resolveConsumerMenuLayout(params.actions);
   const lines = [
     'PUMUKI — Hook-System (run: npx ast-hooks)',
     'AST Intelligence System Overview',
+    `Status: ${renderBadge(menuStatus.label, menuStatus.level, tokens)}`,
     'A. Switch to advanced menu',
     '',
-    ...groupedActions.flatMap((group) => [
-      group.title,
-      ...group.items.map((item) => `${item.id}) ${item.action.label}`),
+    ...groupedActions.flatMap((group, groupIndex) => [
+      renderSectionHeader(groupIndex + 1, group.title, tokens),
+      ...group.items.map((item) => renderActionRow({
+        id: item.id,
+        label: item.action.label,
+      })),
       '',
     ]),
   ];
   return renderLegacyPanel(lines, {
     width: resolveLegacyPanelOuterWidth(),
-    color: useColor(),
+    color: params.useColor(),
   });
 };
 
@@ -119,7 +133,11 @@ export const printConsumerRuntimeMenu = (params: {
   preflight?: ConsumerPreflightResult | null;
   governanceConsole?: GovernanceConsoleSnapshot | null;
 }): void => {
-  const classicMenu = renderConsumerRuntimeClassicMenu(params.actions, params.useColor);
+  const classicMenu = renderConsumerRuntimeClassicMenu({
+    actions: params.actions,
+    repoRoot: params.repoRoot,
+    useColor: params.useColor,
+  });
   if (!isMenuUiV2Enabled()) {
     params.write(`\n${classicMenu}\n`);
     return;

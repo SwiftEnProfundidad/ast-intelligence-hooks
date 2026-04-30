@@ -67,6 +67,45 @@ test('deliverMacOsNotification mantiene la fachada pública para gate bloqueado'
     });
 
     assert.equal(result.delivered, true);
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0]?.command, 'osascript');
+    assert.equal(calls[1]?.command, 'swift');
+  });
+});
+
+test('deliverMacOsNotification omite banner de gate.blocked solo con dedupe explícito', async () => {
+  await withTempDir('pumuki-notifications-dialog-dedupe-', async (repoRoot) => {
+    const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];
+    const event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }> = {
+      kind: 'gate.blocked',
+      stage: 'PRE_PUSH',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_STALE',
+    };
+    const payload = buildSystemNotificationPayload(event, { repoRoot });
+
+    const result = deliverMacOsNotification({
+      event,
+      payload,
+      repoRoot,
+      config: { enabled: true, channel: 'macos', blockedDialogEnabled: true },
+      env: { PUMUKI_MACOS_GATE_BLOCKED_BANNER_DEDUPE: '1' } as NodeJS.ProcessEnv,
+      nowMs: Date.parse('2026-03-04T12:00:00.000Z'),
+      runCommand: (command, args) => {
+        calls.push({ command, args });
+        return 0;
+      },
+      runCommandWithOutput: (command, args) => {
+        calls.push({ command, args });
+        return {
+          exitCode: 0,
+          stdout: 'button returned:Mantener activas\n',
+        };
+      },
+      applyDialogChoice: () => undefined,
+    });
+
+    assert.equal(result.delivered, true);
     assert.equal(calls.length, 1);
     assert.equal(calls[0]?.command, 'swift');
   });

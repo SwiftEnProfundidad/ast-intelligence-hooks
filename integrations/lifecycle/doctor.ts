@@ -1,30 +1,15 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { readEvidenceResult } from '../evidence/readEvidence';
-import type { AiGateStage } from '../gate/evaluateAiGate';
+import { appendTrackingActionableContext } from '../git/aiGateRepoPolicyFindings';
 import { resolvePolicyForStage } from '../gate/stagePolicies';
 import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { buildLifecycleVersionReport, getCurrentPumukiVersion } from './packageInfo';
 import {
-  readLifecycleExperimentalFeaturesSnapshot,
-  type LifecycleExperimentalFeaturesSnapshot,
-} from './experimentalFeaturesSnapshot';
-import {
   readLifecyclePolicyValidationSnapshot,
   type LifecyclePolicyValidationSnapshot,
 } from './policyValidationSnapshot';
-import {
-  doctorGovernanceIsBlocking,
-  doctorGovernanceNeedsAttention,
-  readGovernanceObservationSnapshot,
-  type GovernanceObservationSnapshot,
-} from './governanceObservationSnapshot';
-import {
-  readGovernanceNextAction,
-  type GovernanceNextActionReader,
-  type GovernanceNextActionSummary,
-} from './governanceNextAction';
 import { readLifecycleState, type LifecycleState } from './state';
 import {
   detectOpenSpecInstallation,
@@ -32,26 +17,9 @@ import {
   isOpenSpecProjectInitialized,
 } from '../sdd/openSpecCli';
 import {
-  formatTrackingActionableContext,
-  resolveRepoTrackingState,
-  type RepoTrackingState,
-} from './trackingState';
-import {
   readLifecycleDependencyInventory,
   type LifecycleDependencyInventory,
 } from './dependencyInventory';
-
-const resolveGovernanceStage = (stage: string | null | undefined): AiGateStage => {
-  if (
-    stage === 'PRE_WRITE' ||
-    stage === 'PRE_COMMIT' ||
-    stage === 'PRE_PUSH' ||
-    stage === 'CI'
-  ) {
-    return stage;
-  }
-  return 'PRE_WRITE';
-};
 
 export type DoctorIssueSeverity = 'warning' | 'error';
 
@@ -133,10 +101,7 @@ export type LifecycleDoctorReport = {
   hooksDirectory: string;
   hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   policyValidation: LifecyclePolicyValidationSnapshot;
-  experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
-  governanceObservation: GovernanceObservationSnapshot;
-  governanceNextAction: GovernanceNextActionSummary;
-  tracking: RepoTrackingState;
+  policy_signature_remediation?: string;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
   parity_profile?: DoctorParityProfile;
@@ -144,13 +109,14 @@ export type LifecycleDoctorReport = {
 };
 
 const buildDoctorIssues = (params: {
+  repoRoot: string;
   trackedNodeModulesPaths: ReadonlyArray<string>;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
   hooksDirectory: string;
   lifecycleState: LifecycleState;
-  tracking: RepoTrackingState;
 }): ReadonlyArray<DoctorIssue> => {
   const issues: DoctorIssue[] = [];
+  const evidenceResult = readEvidenceResult(params.repoRoot);
 
   if (params.trackedNodeModulesPaths.length > 0) {
     issues.push({
@@ -188,79 +154,34 @@ const buildDoctorIssues = (params: {
     });
   }
 
-  if (params.tracking.enforced) {
-    if (!params.tracking.canonical_path || !params.tracking.canonical_present) {
+  if (evidenceResult.kind === 'valid') {
+    const evidence = evidenceResult.evidence;
+    const blocked =
+      evidence.snapshot.outcome === 'BLOCK' ||
+      evidence.ai_gate.status === 'BLOCKED' ||
+      evidence.severity_metrics.gate_status === 'BLOCKED';
+    if (blocked) {
+      const blockedStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
       issues.push({
-        severity: 'warning',
-        message:
-          'Tracking contract is declared but the canonical tracking file is missing or unresolved.',
+        severity: 'error',
+        message: appendTrackingActionableContext({
+          repoRoot: params.repoRoot,
+          message: `Governance is blocked (${blockedStage}).`,
+        }),
       });
-    } else if (params.tracking.conflict) {
+    } else if (evidence.snapshot.outcome === 'WARN') {
+      const warnStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
       issues.push({
         severity: 'warning',
-        message:
-          `Tracking contract has conflicting canonical declarations (${params.tracking.declarations.map((declaration) => declaration.resolved_path).join(', ')}).`,
-      });
-    } else if (!params.tracking.single_in_progress_valid) {
-      const actionableContext = formatTrackingActionableContext(params.tracking);
-      issues.push({
-        severity: 'warning',
-        message:
-          `Canonical tracking is inconsistent for ${params.tracking.canonical_path} (in_progress_count=${params.tracking.in_progress_count}, active_task=${params.tracking.active_task_id ?? 'unknown'}, last_run_status=${params.tracking.last_run_status ?? 'absent'}).${actionableContext ? ` ${actionableContext}` : ''}`,
+        message: appendTrackingActionableContext({
+          repoRoot: params.repoRoot,
+          message: `Governance requires attention (${warnStage}).`,
+        }),
       });
     }
   }
 
   return issues;
-};
-
-const appendGovernanceBlockingIssue = (params: {
-  issues: ReadonlyArray<DoctorIssue>;
-  governanceObservation: GovernanceObservationSnapshot;
-  governanceNextAction: GovernanceNextActionSummary;
-}): ReadonlyArray<DoctorIssue> => {
-  if (!doctorGovernanceIsBlocking(params.governanceObservation)) {
-    return params.issues;
-  }
-  if (params.issues.some((issue) => issue.severity === 'error')) {
-    return params.issues;
-  }
-  return [
-    ...params.issues,
-    {
-      severity: 'error',
-      message:
-        `Governance is blocked (${params.governanceNextAction.reason_code}). ` +
-        params.governanceNextAction.instruction,
-    },
-  ];
-};
-
-const appendGovernanceAttentionIssue = (params: {
-  issues: ReadonlyArray<DoctorIssue>;
-  governanceObservation: GovernanceObservationSnapshot;
-  governanceNextAction: GovernanceNextActionSummary;
-}): ReadonlyArray<DoctorIssue> => {
-  const hasOperationalAttention =
-    params.governanceObservation.attention_codes.includes('EVIDENCE_SNAPSHOT_WARN')
-    || params.governanceObservation.attention_codes.includes('SDD_SESSION_INVALID_OR_EXPIRED');
-  if (
-    doctorGovernanceIsBlocking(params.governanceObservation) ||
-    !doctorGovernanceNeedsAttention(params.governanceObservation) ||
-    !hasOperationalAttention
-  ) {
-    return params.issues;
-  }
-
-  return [
-    ...params.issues,
-    {
-      severity: 'warning',
-      message:
-        `Governance requires attention (${params.governanceNextAction.reason_code}). ` +
-        params.governanceNextAction.instruction,
-    },
-  ];
 };
 
 const DEEP_EVIDENCE_MAX_AGE_SECONDS = 1800;
@@ -907,12 +828,20 @@ const compareDoctorParityProfile = (params: {
   };
 };
 
+const buildPolicySignatureRemediation = (
+  policyValidation: LifecyclePolicyValidationSnapshot
+): string | undefined => {
+  const mismatch = Object.values(policyValidation.stages).some(
+    (stage) => stage.validationCode === 'POLICY_AS_CODE_SIGNATURE_MISMATCH'
+  );
+  return mismatch ? 'pumuki policy reconcile --apply' : undefined;
+};
+
 export const runLifecycleDoctor = (params?: {
   cwd?: string;
   git?: ILifecycleGitService;
   deep?: boolean;
   parity?: boolean;
-  governanceNextActionReader?: GovernanceNextActionReader;
 }): LifecycleDoctorReport => {
   const git = params?.git ?? new LifecycleGitService();
   const cwd = params?.cwd ?? process.cwd();
@@ -922,14 +851,13 @@ export const runLifecycleDoctor = (params?: {
   const hooksDirectory = resolvePumukiHooksDirectory(repoRoot);
   const hookStatus = getPumukiHooksStatus(repoRoot);
   const lifecycleState = readLifecycleState(git, repoRoot);
-  const tracking = resolveRepoTrackingState(repoRoot);
 
   const issues = buildDoctorIssues({
+    repoRoot,
     trackedNodeModulesPaths,
     hookStatus,
     hooksDirectory: hooksDirectory.path,
     lifecycleState,
-    tracking,
   });
   const deep = params?.deep
     ? buildDoctorDeepReport({
@@ -942,29 +870,6 @@ export const runLifecycleDoctor = (params?: {
   const version = buildLifecycleVersionReport({
     repoRoot,
     lifecycleVersion: lifecycleState.version,
-  });
-  const policyValidation = readLifecyclePolicyValidationSnapshot(repoRoot);
-  const experimentalFeatures = readLifecycleExperimentalFeaturesSnapshot();
-  const governanceObservation = readGovernanceObservationSnapshot({
-    repoRoot,
-    experimentalFeatures,
-    policyValidation,
-    git,
-  });
-  const governanceStage = resolveGovernanceStage(governanceObservation.evidence.snapshot_stage);
-  const governanceNextAction = (params?.governanceNextActionReader ?? readGovernanceNextAction)({
-    repoRoot,
-    stage: governanceStage,
-    governanceObservation,
-  });
-  const canonicalIssues = appendGovernanceAttentionIssue({
-    issues: appendGovernanceBlockingIssue({
-      issues,
-      governanceObservation,
-      governanceNextAction,
-    }),
-    governanceObservation,
-    governanceNextAction,
   });
 
   const parity_profile =
@@ -979,6 +884,9 @@ export const runLifecycleDoctor = (params?: {
       ? compareDoctorParityProfile({ repoRoot, actual: parity_profile })
       : undefined;
 
+  const policyValidation = readLifecyclePolicyValidationSnapshot(repoRoot);
+  const policySignatureRemediation = buildPolicySignatureRemediation(policyValidation);
+
   return {
     repoRoot,
     packageVersion: version.effective,
@@ -990,11 +898,10 @@ export const runLifecycleDoctor = (params?: {
     hooksDirectory: hooksDirectory.path,
     hooksDirectoryResolution: hooksDirectory.source,
     policyValidation,
-    experimentalFeatures,
-    governanceNextAction,
-    governanceObservation,
-    tracking,
-    issues: canonicalIssues,
+    ...(policySignatureRemediation
+      ? { policy_signature_remediation: policySignatureRemediation }
+      : {}),
+    issues,
     deep,
     parity_profile,
     parity_comparison,
@@ -1006,16 +913,3 @@ export const doctorHasBlockingIssues = (report: LifecycleDoctorReport): boolean 
 
 export const doctorHasParityMismatch = (report: LifecycleDoctorReport): boolean =>
   typeof report.parity_comparison !== 'undefined' && report.parity_comparison.matches === false;
-
-export const doctorHasGovernanceAttention = (report: LifecycleDoctorReport): boolean =>
-  doctorGovernanceNeedsAttention(report.governanceObservation);
-
-export const doctorCommandShouldWarnHuman = (report: LifecycleDoctorReport): boolean =>
-  report.issues.length > 0
-  || report.deep?.checks.some((check) => check.status !== 'pass') === true
-  || doctorHasGovernanceAttention(report);
-
-export const doctorCommandShouldFailExit = (report: LifecycleDoctorReport): boolean =>
-  doctorHasBlockingIssues(report)
-  || doctorHasParityMismatch(report)
-  || doctorGovernanceIsBlocking(report.governanceObservation);

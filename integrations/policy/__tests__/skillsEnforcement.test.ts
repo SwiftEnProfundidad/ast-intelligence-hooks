@@ -23,14 +23,14 @@ const withSkillsEnforcementEnv = async <T>(
   }
 };
 
-test('resolveSkillsEnforcement defaults to advisory mode', async () => {
+test('resolveSkillsEnforcement defaults to strict mode', async () => {
   await withSkillsEnforcementEnv(undefined, () => {
     const resolved = resolveSkillsEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'advisory',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
     });
   });
 });
@@ -47,26 +47,26 @@ test('resolveSkillsEnforcement reads strict mode from environment', async () => 
   });
 });
 
-test('resolveSkillsEnforcement falls back to advisory on invalid environment value', async () => {
+test('resolveSkillsEnforcement falls back to strict on invalid environment value', async () => {
   await withSkillsEnforcementEnv('surprise', () => {
     const resolved = resolveSkillsEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'advisory',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
     });
   });
 });
 
-test('resolveSkillsEnforcement no hereda strict desde PRE_WRITE y permanece advisory por defecto', async () => {
+test('resolveSkillsEnforcement no necesita env para mantener strict por defecto', async () => {
   await withSkillsEnforcementEnv(undefined, () => {
     const resolved = resolveSkillsEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'advisory',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
     });
   });
 });

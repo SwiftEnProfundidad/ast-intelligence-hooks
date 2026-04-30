@@ -51,6 +51,31 @@ test('runLifecycleAdapterInstall genera scaffolding para repo (solo .pumuki/adap
   }
 });
 
+test('runLifecycleAdapterInstall repo fusiona adapter.json sin borrar claves propias del consumidor', () => {
+  const repo = createGitRepo();
+  mkdirSync(join(repo, '.pumuki'), { recursive: true });
+  writeFileSync(
+    join(repo, '.pumuki', 'adapter.json'),
+    `${JSON.stringify({ customOwnedByConsumer: { note: 'keep' } }, null, 2)}\n`,
+    'utf8'
+  );
+  try {
+    const result = runLifecycleAdapterInstall({
+      cwd: repo,
+      agent: 'repo',
+    });
+    assert.equal(result.changedFiles.includes('.pumuki/adapter.json'), true);
+    const payload = JSON.parse(readFileSync(join(repo, '.pumuki', 'adapter.json'), 'utf8')) as {
+      customOwnedByConsumer?: { note?: string };
+      mcp?: { enterprise?: { command?: string } };
+    };
+    assert.equal(payload.customOwnedByConsumer?.note, 'keep');
+    assert.match(payload.mcp?.enterprise?.command ?? '', /pumuki-mcp-enterprise/);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('runLifecycleAdapterInstall genera scaffolding para codex', () => {
   const repo = createGitRepo();
   try {
