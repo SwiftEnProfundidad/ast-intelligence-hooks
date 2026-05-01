@@ -286,6 +286,9 @@ test('persiste snapshot.rules_coverage con active/evaluated/matched/unevaluated 
 
   assert.deepEqual(result.snapshot.rules_coverage, {
     stage: 'PRE_PUSH',
+    contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+    scope_note:
+      'rules_coverage reports AUTO runtime rules applicable to this stage, not total DECLARATIVE registry surface.',
     active_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
     evaluated_rule_ids: ['skills.backend.no-empty-catch'],
     matched_rule_ids: ['skills.backend.no-empty-catch'],
@@ -326,6 +329,9 @@ test('normaliza telemetria por defecto cuando no se informa filesScanned ni eval
   });
   assert.deepEqual(result.snapshot.rules_coverage, {
     stage: 'PRE_COMMIT',
+    contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+    scope_note:
+      'No runtime rules were evaluated for this stage. DECLARATIVE registry rules are not runtime detectors.',
     active_rule_ids: [],
     evaluated_rule_ids: [],
     matched_rule_ids: [],
