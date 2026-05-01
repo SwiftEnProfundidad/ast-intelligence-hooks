@@ -4208,7 +4208,7 @@ test('hasMagicNumberPattern detecta literales numericos en runtime y omite enums
   assert.deepEqual(match.related_nodes, [
     { kind: 'member', name: 'numeric literal: 3', lines: [4] },
   ]);
-  assert.equal(hasMagicNumberPattern(enumAst), true);
+  assert.equal(hasMagicNumberPattern(enumAst), false);
   assert.equal(findMagicNumberPatternMatch(enumAst), undefined);
 });
 
@@ -4246,6 +4246,212 @@ test('hasHardcodedValuePattern detecta literals de configuracion y omite valores
     { kind: 'member', name: 'hardcoded value: https://api.example.com', lines: [3] },
   ]);
   assert.equal(hasHardcodedValuePattern(neutralLiteralAst), false);
+});
+
+test('hasHardcodedValuePattern usa tokens exactos y no subcadenas accidentales', () => {
+  const reportFunctionAst = {
+    type: 'FunctionDeclaration',
+    id: { type: 'Identifier', name: 'formatVintageEvidenceReportLines' },
+    loc: { start: { line: 1 }, end: { line: 5 } },
+    body: {
+      type: 'BlockStatement',
+      body: [
+        {
+          type: 'ReturnStatement',
+          argument: {
+            type: 'StringLiteral',
+            value: 'Advanced Project Audit',
+            loc: { start: { line: 3 }, end: { line: 3 } },
+          },
+        },
+      ],
+    },
+  };
+  const uiKeyAst = {
+    type: 'ObjectProperty',
+    key: { type: 'Identifier', name: 'key' },
+    value: {
+      type: 'StringLiteral',
+      value: 'ast-intelligence-legacy',
+      loc: { start: { line: 8 }, end: { line: 8 } },
+    },
+    loc: { start: { line: 8 }, end: { line: 8 } },
+  };
+  const configModuleDetectorAst = {
+    type: 'FunctionDeclaration',
+    id: { type: 'Identifier', name: 'isValidationConfigModuleCallExpression' },
+    body: {
+      type: 'BlockStatement',
+      body: [
+        {
+          type: 'ReturnStatement',
+          argument: {
+            type: 'LogicalExpression',
+            left: {
+              type: 'BinaryExpression',
+              left: { type: 'Identifier', name: 'objectName' },
+              operator: '===',
+              right: { type: 'StringLiteral', value: 'ConfigModule', loc: { start: { line: 16 }, end: { line: 16 } } },
+            },
+            operator: '&&',
+            right: {
+              type: 'BinaryExpression',
+              left: { type: 'Identifier', name: 'propertyName' },
+              operator: '===',
+              right: { type: 'StringLiteral', value: 'forRoot', loc: { start: { line: 16 }, end: { line: 16 } } },
+            },
+          },
+        },
+      ],
+    },
+  };
+  const apiVersionDetectorAst = {
+    type: 'VariableDeclaration',
+    declarations: [
+      {
+        type: 'VariableDeclarator',
+        id: { type: 'Identifier', name: 'apiVersionDecoratorNames' },
+        init: {
+          type: 'NewExpression',
+          callee: { type: 'Identifier', name: 'Set' },
+          arguments: [
+            {
+              type: 'ArrayExpression',
+              elements: [
+                { type: 'StringLiteral', value: 'controller', loc: { start: { line: 24 }, end: { line: 24 } } },
+                { type: 'StringLiteral', value: 'version', loc: { start: { line: 24 }, end: { line: 24 } } },
+              ],
+            },
+          ],
+        },
+      },
+    ],
+  };
+  const passwordDetectorAst = {
+    type: 'FunctionDeclaration',
+    id: { type: 'Identifier', name: 'isPasswordHashingCallExpression' },
+    body: {
+      type: 'BlockStatement',
+      body: [
+        {
+          type: 'IfStatement',
+          test: {
+            type: 'BinaryExpression',
+            left: { type: 'MemberExpression', object: { type: 'Identifier', name: 'node' }, property: { type: 'Identifier', name: 'type' } },
+            operator: '!==',
+            right: { type: 'StringLiteral', value: 'CallExpression', loc: { start: { line: 31 }, end: { line: 31 } } },
+          },
+        },
+        {
+          type: 'ReturnStatement',
+          argument: {
+            type: 'BinaryExpression',
+            left: { type: 'UnaryExpression', operator: 'typeof', argument: { type: 'Identifier', name: 'objectName' } },
+            operator: '===',
+            right: { type: 'StringLiteral', value: 'string', loc: { start: { line: 34 }, end: { line: 34 } } },
+          },
+        },
+        {
+          type: 'IfStatement',
+          test: {
+            type: 'BinaryExpression',
+            left: {
+              type: 'MemberExpression',
+              object: { type: 'Identifier', name: 'arguments' },
+              property: { type: 'Identifier', name: 'length' },
+            },
+            operator: '===',
+            right: { type: 'NumericLiteral', value: 0, loc: { start: { line: 37 }, end: { line: 37 } } },
+          },
+        },
+      ],
+    },
+  };
+  const timeoutDetectorAst = {
+    type: 'FunctionDeclaration',
+    id: { type: 'Identifier', name: 'hasSetTimeoutStringCallback' },
+    body: {
+      type: 'BlockStatement',
+      body: [
+        {
+          type: 'ReturnStatement',
+          argument: {
+            type: 'BinaryExpression',
+            left: { type: 'MemberExpression', object: { type: 'Identifier', name: 'callee' }, property: { type: 'Identifier', name: 'name' } },
+            operator: '!==',
+            right: { type: 'StringLiteral', value: 'setTimeout', loc: { start: { line: 45 }, end: { line: 45 } } },
+          },
+        },
+        {
+          type: 'ReturnStatement',
+          argument: {
+            type: 'BinaryExpression',
+            left: { type: 'MemberExpression', object: { type: 'Identifier', name: 'firstArg' }, property: { type: 'Identifier', name: 'type' } },
+            operator: '===',
+            right: { type: 'StringLiteral', value: 'TemplateLiteral', loc: { start: { line: 48 }, end: { line: 48 } } },
+          },
+        },
+      ],
+    },
+  };
+  const hardcodedDetectorAst = {
+    type: 'FunctionDeclaration',
+    id: { type: 'Identifier', name: 'hasHardcodedConfigNameToken' },
+    body: {
+      type: 'BlockStatement',
+      body: [
+        {
+          type: 'ReturnStatement',
+          argument: {
+            type: 'CallExpression',
+            callee: {
+              type: 'MemberExpression',
+              object: { type: 'Identifier', name: 'tokenSet' },
+              property: { type: 'Identifier', name: 'has' },
+            },
+            arguments: [{ type: 'StringLiteral', value: 'key', loc: { start: { line: 54 }, end: { line: 54 } } }],
+          },
+        },
+      ],
+    },
+  };
+  const processEnvDetectorAst = {
+    type: 'FunctionDeclaration',
+    id: { type: 'Identifier', name: 'isProcessEnvBaseAccess' },
+    body: {
+      type: 'BlockStatement',
+      body: [
+        {
+          type: 'ReturnStatement',
+          argument: {
+            type: 'LogicalExpression',
+            left: {
+              type: 'BinaryExpression',
+              left: { type: 'MemberExpression', object: { type: 'Identifier', name: 'object' }, property: { type: 'Identifier', name: 'name' } },
+              operator: '===',
+              right: { type: 'StringLiteral', value: 'process', loc: { start: { line: 60 }, end: { line: 60 } } },
+            },
+            operator: '&&',
+            right: {
+              type: 'BinaryExpression',
+              left: { type: 'MemberExpression', object: { type: 'Identifier', name: 'property' }, property: { type: 'Identifier', name: 'name' } },
+              operator: '===',
+              right: { type: 'StringLiteral', value: 'env', loc: { start: { line: 61 }, end: { line: 61 } } },
+            },
+          },
+        },
+      ],
+    },
+  };
+
+  assert.equal(hasHardcodedValuePattern(reportFunctionAst), false);
+  assert.equal(hasHardcodedValuePattern(uiKeyAst), false);
+  assert.equal(hasHardcodedValuePattern(configModuleDetectorAst), false);
+  assert.equal(hasHardcodedValuePattern(apiVersionDetectorAst), false);
+  assert.equal(hasHardcodedValuePattern(passwordDetectorAst), false);
+  assert.equal(hasHardcodedValuePattern(timeoutDetectorAst), false);
+  assert.equal(hasHardcodedValuePattern(hardcodedDetectorAst), false);
+  assert.equal(hasHardcodedValuePattern(processEnvDetectorAst), false);
 });
 
 test('hasEnvDefaultFallbackPattern detecta defaults implícitos sobre process.env y descarta accesos directos', () => {

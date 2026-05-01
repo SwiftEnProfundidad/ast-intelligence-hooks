@@ -361,6 +361,14 @@ const sortedUniqueLines = (lines: ReadonlyArray<number>): readonly number[] => {
     .sort((left, right) => left - right);
 };
 
+enum DetectorTraversalLimit {
+  DefaultLineMatches = 8,
+  SeparatedDtoVariants = 3,
+  MultiTableTransactionWrites = 2,
+  MinimumSecureBcryptSaltRounds = 10,
+  RecordStringUnknownTypeParameters = 2,
+}
+
 const containsNode = (root: unknown, target: AstNode): boolean => {
   if (!isObject(root)) {
     return false;
@@ -389,7 +397,10 @@ const collectLineMatchesWithAncestors = (
   predicate: (value: AstNode, ancestors: ReadonlyArray<AstNode>) => boolean,
   options?: { max?: number }
 ): readonly number[] => {
-  const max = Math.max(1, Math.trunc(options?.max ?? 8));
+  const max = Math.max(
+    1,
+    Math.trunc(options?.max ?? DetectorTraversalLimit.DefaultLineMatches)
+  );
   const matches: number[] = [];
 
   const walk = (value: unknown, ancestors: ReadonlyArray<AstNode>): void => {
@@ -3433,7 +3444,7 @@ const buildSeparatedDtoMatch = (node: unknown): TypeScriptSeparatedDtoMatch | un
   };
 
   walk(node);
-  if (classDeclarations.length < 3) {
+  if (classDeclarations.length < DetectorTraversalLimit.SeparatedDtoVariants) {
     return undefined;
   }
 
@@ -3707,7 +3718,10 @@ const buildBackendTransactionsMatch = (
       ? callNode.arguments[0]
       : undefined;
   const writeCalls = collectBackendTransactionWriteCalls(callbackNode);
-  if (mode === 'multi-table' && writeCalls.length < 2) {
+  if (
+    mode === 'multi-table' &&
+    writeCalls.length < DetectorTraversalLimit.MultiTableTransactionWrites
+  ) {
     return undefined;
   }
 
@@ -3990,7 +4004,11 @@ const buildPasswordHashingMatch = (node: unknown): TypeScriptPasswordHashingMatc
   }
 
   const roundsNode = passwordHashingRoundLiteralFromCall(callNode, methodName);
-  if (!roundsNode || typeof roundsNode.value !== 'number' || roundsNode.value >= 10) {
+  if (
+    !roundsNode ||
+    typeof roundsNode.value !== 'number' ||
+    roundsNode.value >= DetectorTraversalLimit.MinimumSecureBcryptSaltRounds
+  ) {
     return undefined;
   }
 
@@ -4569,8 +4587,12 @@ const buildCallbackHellPatternMatch = (
 const buildMagicNumberPatternMatch = (
   node: unknown
 ): TypeScriptMagicNumberMatch | undefined => {
+  const neutralNumericLiterals = new Set([0, 1]);
   const match = findFirstNodeWithAncestors(node, (value, ancestors) => {
     if (value.type !== 'NumericLiteral' || typeof value.value !== 'number') {
+      return false;
+    }
+    if (neutralNumericLiterals.has(value.value)) {
       return false;
     }
 
@@ -4626,9 +4648,6 @@ const buildMagicNumberPatternMatch = (
 };
 
 const hardcodedConfigNameTokens = [
-  'api',
-  'base',
-  'config',
   'endpoint',
   'env',
   'feature',
@@ -4652,8 +4671,40 @@ const hardcodedConfigNameTokens = [
   'offset',
 ];
 
-const normalizeIdentifierName = (value: string): string => {
-  return value.replace(/[^a-z0-9]+/gi, '').toLowerCase();
+const identifierNameTokens = (value: string): string[] => {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .split(/[^a-zA-Z0-9]+/)
+    .map((token) => token.trim().toLowerCase())
+    .filter((token) => token.length > 0);
+};
+
+const hasHardcodedConfigNameToken = (ownerName: string): boolean => {
+  const tokens = identifierNameTokens(ownerName);
+  const tokenSet = new Set(tokens);
+  const joined = tokens.join('');
+
+  if (tokenSet.has('hardcoded') && tokenSet.has('config')) {
+    return false;
+  }
+
+  if (
+    tokenSet.has('key') &&
+    (tokenSet.has('api') ||
+      tokenSet.has('auth') ||
+      tokenSet.has('client') ||
+      tokenSet.has('secret') ||
+      tokenSet.has('token'))
+  ) {
+    return true;
+  }
+  if (/^(api|auth|client|secret|token)key$/.test(joined)) {
+    return true;
+  }
+
+  return hardcodedConfigNameTokens
+    .filter((token) => token !== 'key')
+    .some((token) => tokenSet.has(token));
 };
 
 const hardcodedValueNameFromNode = (node: unknown): string | undefined => {
@@ -4678,6 +4729,69 @@ const hardcodedValueNameFromNode = (node: unknown): string | undefined => {
   }
 
   return undefined;
+};
+
+const astNodeTypeLiteralNames = new Set([
+  'ArrayExpression',
+  'AssignmentExpression',
+  'AssignmentPattern',
+  'BinaryExpression',
+  'BlockStatement',
+  'BooleanLiteral',
+  'CallExpression',
+  'ClassDeclaration',
+  'ClassProperty',
+  'FunctionDeclaration',
+  'Identifier',
+  'LogicalExpression',
+  'MemberExpression',
+  'NewExpression',
+  'NumericLiteral',
+  'ObjectPattern',
+  'ObjectProperty',
+  'ReturnStatement',
+  'StringLiteral',
+  'TSInterfaceDeclaration',
+  'VariableDeclarator',
+]);
+
+const primitiveTypeGuardLiteralNames = new Set([
+  'bigint',
+  'boolean',
+  'function',
+  'number',
+  'object',
+  'string',
+  'symbol',
+  'undefined',
+]);
+
+const runtimeApiLiteralNames = new Set(['env', 'process', 'setInterval', 'setTimeout']);
+const astNodeTypeLiteralPattern =
+  /^(?:[A-Z][A-Za-z]+(?:Declaration|Element|Expression|Keyword|Literal|Pattern|Property|Reference|Specifier|Statement)|JSX[A-Za-z]+|TS[A-Za-z]+)$/;
+
+const isAstNodeTypeLiteral = (node: AstNode): boolean => {
+  if (node.type !== 'StringLiteral') {
+    return false;
+  }
+  const value = String(node.value);
+  return astNodeTypeLiteralNames.has(value) || astNodeTypeLiteralPattern.test(value);
+};
+
+const isPrimitiveTypeGuardLiteral = (node: AstNode): boolean => {
+  return node.type === 'StringLiteral' && primitiveTypeGuardLiteralNames.has(String(node.value));
+};
+
+const isRuntimeApiLiteral = (node: AstNode): boolean => {
+  return node.type === 'StringLiteral' && runtimeApiLiteralNames.has(String(node.value));
+};
+
+const isNeutralHardcodedNumericLiteral = (node: AstNode): boolean => {
+  return node.type === 'NumericLiteral' && (node.value === 0 || node.value === 1);
+};
+
+const isTypeOnlyAstNode = (node: AstNode): boolean => {
+  return typeof node.type === 'string' && node.type.startsWith('TS');
 };
 
 const hardcodedValueAssignmentContextFromAncestors = (
@@ -4858,9 +4972,20 @@ const buildHardcodedValuePatternMatch = (
   const match = findFirstNodeWithAncestors(node, (value, ancestors) => {
     if (
       value.type !== 'StringLiteral' &&
-      value.type !== 'NumericLiteral' &&
-      value.type !== 'BooleanLiteral'
+      value.type !== 'NumericLiteral'
     ) {
+      return false;
+    }
+
+    if (
+      isAstNodeTypeLiteral(value) ||
+      isPrimitiveTypeGuardLiteral(value) ||
+      isRuntimeApiLiteral(value) ||
+      isNeutralHardcodedNumericLiteral(value)
+    ) {
+      return false;
+    }
+    if (ancestors.some(isTypeOnlyAstNode)) {
       return false;
     }
 
@@ -4869,8 +4994,7 @@ const buildHardcodedValuePatternMatch = (
       return false;
     }
 
-    const normalizedOwner = normalizeIdentifierName(context.ownerName);
-    return hardcodedConfigNameTokens.some((token) => normalizedOwner.includes(token));
+    return hasHardcodedConfigNameToken(context.ownerName);
   });
 
   if (!match) {
@@ -4880,7 +5004,7 @@ const buildHardcodedValuePatternMatch = (
   const literalNode = match.node;
   const literalLine = toPositiveLine(literalNode);
   const literalValue = isObject(literalNode)
-    ? literalNode.type === 'StringLiteral' || literalNode.type === 'NumericLiteral' || literalNode.type === 'BooleanLiteral'
+    ? literalNode.type === 'StringLiteral' || literalNode.type === 'NumericLiteral'
       ? literalNode.value
       : undefined
     : undefined;
@@ -4930,7 +5054,7 @@ export const findCallbackHellPatternMatch = (
 };
 
 export const hasMagicNumberPattern = (node: unknown): boolean => {
-  return hasNode(node, (value) => value.type === 'NumericLiteral' && typeof value.value === 'number');
+  return buildMagicNumberPatternMatch(node) !== undefined;
 };
 
 export const findMagicNumberPatternMatch = (
@@ -6222,7 +6346,7 @@ const isRecordStringUnknownTypeNode = (value: Record<string, string | number | b
     return false;
   }
   const params = typeReferenceParams(value);
-  if (params.length !== 2) {
+  if (params.length !== DetectorTraversalLimit.RecordStringUnknownTypeParameters) {
     return false;
   }
   const keyType = params[0];
@@ -6272,7 +6396,7 @@ const isRecordUnknownValueTypeNode = (unknownNode: AstNode, ancestors: ReadonlyA
       continue;
     }
     const params = typeReferenceParams(ancestor);
-    if (params.length !== 2) {
+    if (params.length !== DetectorTraversalLimit.RecordStringUnknownTypeParameters) {
       continue;
     }
     const valueType = params[1];
