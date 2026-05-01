@@ -123,7 +123,18 @@ const menu = async (): Promise<void> => {
           }
         }
       }
-      const option = (await rl.question('\nSelect option: ')).trim();
+      let option: string;
+      try {
+        option = (await rl.question('\nSelect option: ')).trim();
+      } catch (error) {
+        const code = error instanceof Error && 'code' in error
+          ? String((error as { code?: unknown }).code)
+          : '';
+        if (code === 'ABORT_ERR' || code === 'ERR_USE_AFTER_CLOSE') {
+          break;
+        }
+        throw error;
+      }
       const normalized = option.toUpperCase();
 
       if (mode === 'consumer' && normalized === 'A') {
@@ -142,7 +153,7 @@ const menu = async (): Promise<void> => {
           output.write('Invalid option.\n');
           continue;
         }
-        if (selectedConsumer.id === '10') {
+        if (selectedConsumer.id === '9') {
           break;
         }
         try {

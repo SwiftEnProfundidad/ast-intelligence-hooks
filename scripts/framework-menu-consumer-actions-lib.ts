@@ -26,23 +26,53 @@ export const createConsumerLegacyMenuActions = (
   return [
     {
       id: '1',
-      label: 'Consumer preflight + gate: ALL tracked files (PRE_COMMIT · writes evidence)',
+      label: 'Full audit (repo analysis)',
       execute: params.runFullAudit,
     },
     {
       id: '2',
-      label: 'Consumer preflight + gate: REPO+index contract (PRE_PUSH · disk skip risk if evidence tracked)',
+      label: 'Strict REPO+STAGING (CI/CD)',
       execute: params.runStrictRepoAndStaged,
     },
     {
       id: '3',
-      label: 'Consumer preflight + gate: STAGED only (PRE_COMMIT)',
+      label: 'Strict STAGING only (dev)',
       execute: params.runStrictStagedOnly,
     },
     {
       id: '4',
-      label: 'Consumer preflight + gate: working tree (PRE_PUSH policy · disk skip risk if evidence tracked)',
+      label: 'Standard CRITICAL/HIGH',
       execute: params.runStandardCriticalHigh,
+    },
+    {
+      id: '5',
+      label: 'Pattern checks',
+      execute: params.runPatternChecks,
+    },
+    {
+      id: '6',
+      label: 'ESLint Admin+Web',
+      execute: params.runEslintAudit,
+    },
+    {
+      id: '7',
+      label: 'AST Intelligence',
+      execute: params.runAstIntelligence,
+    },
+    {
+      id: '8',
+      label: 'Export Markdown',
+      execute: params.runExportMarkdown,
+    },
+    {
+      id: '9',
+      label: 'Exit',
+      execute: async () => {},
+    },
+    {
+      id: '10',
+      label: 'File diagnostics (top violated files)',
+      execute: params.runFileDiagnostics,
     },
     {
       id: '11',
@@ -63,36 +93,6 @@ export const createConsumerLegacyMenuActions = (
       id: '14',
       label: 'Engine audit · tracked repo files (AUTO runtime rules · PRE_COMMIT)',
       execute: params.runEngineFullRepoNoPreflight,
-    },
-    {
-      id: '5',
-      label: 'Legacy read-only pattern checks snapshot',
-      execute: params.runPatternChecks,
-    },
-    {
-      id: '6',
-      label: 'Legacy read-only ESLint evidence snapshot',
-      execute: params.runEslintAudit,
-    },
-    {
-      id: '7',
-      label: 'Legacy read-only AST snapshot',
-      execute: params.runAstIntelligence,
-    },
-    {
-      id: '8',
-      label: 'Export legacy read-only evidence snapshot',
-      execute: params.runExportMarkdown,
-    },
-    {
-      id: '9',
-      label: 'Legacy read-only file diagnostics snapshot',
-      execute: params.runFileDiagnostics,
-    },
-    {
-      id: '10',
-      label: 'Exit',
-      execute: async () => {},
     },
   ];
 };

@@ -11,7 +11,6 @@ import {
   buildCliDesignTokens,
   renderActionRow,
   renderBadge,
-  renderSectionHeader,
 } from './framework-menu-ui-components-lib';
 import { isMenuUiV2Enabled } from './framework-menu-ui-version-lib';
 import { buildGovernanceConsoleSummaryLines } from '../integrations/lifecycle/cliGovernanceConsole';
@@ -49,11 +48,9 @@ export const renderConsumerRuntimeClassicMenu = (
   const lines = [
     'PUMUKI — Hook-System (run: npx ast-hooks)',
     'AST Intelligence System Overview',
-    `Status: ${renderBadge(menuStatus.label, menuStatus.level, tokens)}`,
-    'A. Switch to advanced menu',
     '',
-    ...groupedActions.flatMap((group, groupIndex) => [
-      renderSectionHeader(groupIndex + 1, group.title, tokens),
+    ...groupedActions.flatMap((group) => [
+      ...(group.title.trim().length > 0 ? [group.title] : []),
       ...group.items.map((item) => renderActionRow({
         id: item.id,
         label: item.action.label,
@@ -95,7 +92,6 @@ export const renderConsumerRuntimeModernMenu = (
   const lines = [
     'PUMUKI — Hook-System (run: npx ast-hooks)',
     'AST Intelligence System Overview',
-    `Status: ${renderBadge(menuStatus.label, menuStatus.level, tokens)}`,
     ...(governanceConsole
       ? [
         '',
@@ -108,10 +104,9 @@ export const renderConsumerRuntimeModernMenu = (
         }).map((line) => `  ${line}`),
       ]
       : []),
-    'A. Switch to advanced menu',
     '',
     ...groupedActions.flatMap((group) => [
-      group.title,
+      ...(group.title.trim().length > 0 ? [group.title] : []),
       ...group.items.map((item) => renderActionRow({
         id: item.id,
         label: item.action.label,
