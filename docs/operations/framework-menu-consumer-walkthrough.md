@@ -1,20 +1,23 @@
-# README Menu Walkthrough (Option 1)
+# README Menu Walkthrough (Consumer Legacy)
 
-This walkthrough documents **Option 1: Full audit (repo analysis · PRE_COMMIT)** with real execution captures.
+This walkthrough documents the consumer legacy menu contract restored from tag `v0-legacy-last`, specifically `scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh`.
 
-## Capture 1 — Consumer Menu (v2)
+## Capture 1 — Consumer Menu (legacy)
 
-![Consumer Menu v2](../assets/readme/menu-option1/01-menu-consumer-v2.png)
+![Consumer Menu legacy](../assets/readme/menu-option1/01-menu-consumer-v2.png)
 
 What this shows:
 
-- Consumer menu grouped by operational flows.
-- Option `1` is the full repo audit path for `PRE_COMMIT` policy.
-- Current menu status reflects latest evidence context.
+- The consumer menu is a flat legacy surface with 9 options.
+- Option `1` is `Full audit (repo analysis)`.
+- Options `2-4` are the strict/staged/standard audit flows.
+- Options `5-8` keep the legacy diagnostics/export actions.
+- Option `9` is `Exit`.
+- The audit output follows the legacy `summarize_all` sections and severity counts.
 
-## Capture 2 — Option 1 Pre-flight (BLOCK context)
+## Capture 2 — Archived v2 Full-Audit Pre-flight (BLOCK context)
 
-![Option 1 Pre-flight Block](../assets/readme/menu-option1/02-option1-preflight-block.png)
+![Archived v2 Full-Audit Pre-flight Block](../assets/readme/menu-option1/02-option1-preflight-block.png)
 
 What this shows:
 
@@ -22,9 +25,9 @@ What this shows:
 - Runtime context includes branch/upstream/worktree/evidence freshness.
 - Operational hints explain why governance is currently blocked.
 
-## Capture 3 — Option 1 Final Summary (BLOCK)
+## Capture 3 — Archived v2 Full-Audit Final Summary (BLOCK)
 
-![Option 1 Final Summary Block](../assets/readme/menu-option1/03-option1-final-summary-block.png)
+![Archived v2 Full-Audit Final Summary Block](../assets/readme/menu-option1/03-option1-final-summary-block.png)
 
 What this shows:
 
@@ -34,18 +37,18 @@ What this shows:
   - `Outcome: BLOCK`
 - Actionable remediation next step.
 
-## Capture 4 — Option 1 Pre-flight (PASS scenario)
+## Capture 4 — Archived v2 Full-Audit Pre-flight (PASS scenario)
 
-![Option 1 Pre-flight Pass Scenario](../assets/readme/menu-option1/04-option1-preflight-pass.png)
+![Archived v2 Full-Audit Pre-flight Pass Scenario](../assets/readme/menu-option1/04-option1-preflight-pass.png)
 
 What this shows:
 
 - A clean fixture scenario where the run can complete without findings.
 - Pre-flight can still surface policy warnings while run execution proceeds.
 
-## Capture 5 — Option 1 Final Summary (PASS)
+## Capture 5 — Archived v2 Full-Audit Final Summary (PASS)
 
-![Option 1 Final Summary Pass](../assets/readme/menu-option1/05-option1-final-summary-pass.png)
+![Archived v2 Full-Audit Final Summary Pass](../assets/readme/menu-option1/05-option1-final-summary-pass.png)
 
 What this shows:
 
