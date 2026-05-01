@@ -46,20 +46,12 @@ const buildAdvancedActions = () => {
   });
 };
 
-test('resolveConsumerMenuLayout mantiene jerarquía por flujo', () => {
+test('resolveConsumerMenuLayout mantiene portada legacy AST Intelligence', () => {
   const actions = buildConsumerActions();
   const groups = resolveConsumerMenuLayout(actions);
-  assert.equal(groups.length, 5);
-  assert.equal(groups[0]?.title, 'Read-Only Gate Flows');
-  assert.deepEqual(groups[0]?.items.map((item) => item.id), ['1', '2', '3', '4']);
-  assert.equal(groups[1]?.title, 'Engine · working tree (no preflight)');
-  assert.deepEqual(groups[1]?.items.map((item) => item.id), ['11', '12', '13', '14']);
-  assert.equal(groups[2]?.title, 'Legacy Read-Only Export');
-  assert.deepEqual(groups[2]?.items.map((item) => item.id), ['8']);
-  assert.equal(groups[3]?.title, 'Legacy Read-Only Diagnostics');
-  assert.deepEqual(groups[3]?.items.map((item) => item.id), ['5', '6', '7', '9']);
-  assert.equal(groups[4]?.title, 'System');
-  assert.deepEqual(groups[4]?.items.map((item) => item.id), ['10']);
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0]?.title, '');
+  assert.deepEqual(groups[0]?.items.map((item) => item.id), ['1', '2', '3', '4', '5', '6', '7', '8', '9']);
 });
 
 test('resolveAdvancedMenuLayout agrupa por dominios', () => {

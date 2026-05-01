@@ -52,14 +52,14 @@ const buildAdvancedActions = () => {
 };
 
 test('flattenMenuLayoutIds conserva el orden declarado', () => {
-  assert.deepEqual(flattenMenuLayoutIds(CONSUMER_MENU_LAYOUT), ['1', '2', '3', '4', '11', '12', '13', '14', '8', '5', '6', '7', '9', '10']);
+  assert.deepEqual(flattenMenuLayoutIds(CONSUMER_MENU_LAYOUT), ['1', '2', '3', '4', '5', '6', '7', '8', '9']);
 });
 
-test('hasFullLayoutCoverage valida el layout consumer completo', () => {
+test('hasFullLayoutCoverage detecta que el layout consumer oculta acciones enterprise avanzadas', () => {
   const actions = buildConsumerActions();
   assert.equal(
     hasFullLayoutCoverage(CONSUMER_MENU_LAYOUT, actions.map((action) => action.id)),
-    true
+    false
   );
 });
 

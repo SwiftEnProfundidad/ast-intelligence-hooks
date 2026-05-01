@@ -6,7 +6,7 @@ import test from 'node:test';
 import { createConsumerMenuRuntime } from '../framework-menu-consumer-runtime-lib';
 import type { PumukiCriticalNotificationEvent } from '../framework-menu-system-notifications-lib';
 
-test('consumer runtime emite notificación audit summary tras opción 1', { concurrency: false }, async () => {
+test('consumer runtime emite notificación audit summary tras evidence update', { concurrency: false }, async () => {
   const previous = process.cwd();
   const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-notify-'));
   process.chdir(temp);
@@ -66,7 +66,7 @@ test('consumer runtime emite notificación audit summary tras opción 1', { conc
   }
 });
 
-test('consumer runtime emite notificación audit summary tras opción 2', { concurrency: false }, async () => {
+test('consumer runtime emite notificación audit summary tras acción enterprise REPO+STAGING', { concurrency: false }, async () => {
   const previous = process.cwd();
   const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-notify-opt2-'));
   process.chdir(temp);
@@ -125,7 +125,7 @@ test('consumer runtime emite notificación audit summary tras opción 2', { conc
   }
 });
 
-test('consumer runtime emite notificación audit summary tras opción 3', { concurrency: false }, async () => {
+test('consumer runtime emite notificación audit summary tras acción enterprise STAGING only', { concurrency: false }, async () => {
   const previous = process.cwd();
   const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-notify-opt3-'));
   process.chdir(temp);
@@ -181,7 +181,7 @@ test('consumer runtime emite notificación audit summary tras opción 3', { conc
   }
 });
 
-test('consumer runtime emite notificación audit summary tras opción 4', { concurrency: false }, async () => {
+test('consumer runtime emite notificación audit summary tras opción 4 legacy gate', { concurrency: false }, async () => {
   const previous = process.cwd();
   const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-notify-opt4-'));
   process.chdir(temp);
