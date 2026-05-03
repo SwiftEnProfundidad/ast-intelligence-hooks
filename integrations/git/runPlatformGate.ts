@@ -40,10 +40,15 @@ import {
   resolveGateScopePathPrefixesFromEnv,
 } from './filterFactsByPathPrefixes';
 import {
+  DEFAULT_MEMORY_SHADOW_DISPLAY_PRECISION,
   DEGRADED_MODE_ACTION_ALLOW,
   DEGRADED_MODE_ACTION_BLOCK,
   DEFAULT_GATE_AUDIT_MODE,
   DEFAULT_RULES_COVERAGE_RATIO_DECIMALS,
+  LIFECYCLE_GATE_STAGES,
+  MAX_IOS_TEST_QUALITY_SAMPLE_FILES,
+  MAX_OBSERVED_CODE_PATHS_SAMPLE,
+  MAX_SCOPE_SAMPLE_PATHS,
   LIST_SEPARATOR,
   MEMORY_SHADOW_CONFIDENCE_ALLOW,
   MEMORY_SHADOW_CONFIDENCE_BLOCK,
@@ -474,7 +479,9 @@ const toIosTestsQualityBlockingFinding = (params: {
     return undefined;
   }
 
-  const sampleFiles = invalidFiles.slice(0, 3).join(' | ');
+  const sampleFiles = invalidFiles
+    .slice(0, MAX_IOS_TEST_QUALITY_SAMPLE_FILES)
+    .join(' | ');
   return {
     ruleId: 'governance.skills.ios-test-quality.incomplete',
     severity: 'ERROR',
@@ -500,7 +507,7 @@ const toActiveRulesEmptyForCodeChangesBlockingFinding = (params: {
   if (codePaths.length === 0) {
     return undefined;
   }
-  const samplePaths = codePaths.slice(0, 5).join(', ');
+  const samplePaths = codePaths.slice(0, MAX_OBSERVED_CODE_PATHS_SAMPLE).join(', ');
   return {
     ruleId: 'governance.rules.active-rule-coverage.empty',
     severity: 'ERROR',
@@ -584,7 +591,7 @@ const toSkillsScopeComplianceBlockingFinding = (params: {
     if (!hasEvaluatedRules) {
       reasons.push(`evaluated_rules_prefix=${prefix} missing`);
     }
-    const samplePaths = scopePaths.slice(0, 3).join(', ');
+    const samplePaths = scopePaths.slice(0, MAX_SCOPE_SAMPLE_PATHS).join(', ');
     missingScopes.push(`${scope}{${reasons.join('; ')} sample_paths=[${samplePaths}]}`);
   }
 
@@ -1101,15 +1108,12 @@ export async function runPlatformGate(params: {
           policyTrace: params.policyTrace,
         })
       : undefined;
-  const degradedModeFinding =
-    params.policy.stage === 'PRE_COMMIT' ||
-    params.policy.stage === 'PRE_PUSH' ||
-    params.policy.stage === 'CI'
-      ? toDegradedModeFinding({
-          stage: params.policy.stage,
-          policyTrace: params.policyTrace,
-        })
-      : undefined;
+  const degradedModeFinding = LIFECYCLE_GATE_STAGES.includes(params.policy.stage)
+    ? toDegradedModeFinding({
+        stage: params.policy.stage,
+        policyTrace: params.policyTrace,
+      })
+    : undefined;
   const astIntelligenceDualValidation:
     | AstIntelligenceDualValidationResult
     | undefined =
@@ -1203,7 +1207,11 @@ export async function runPlatformGate(params: {
       coverage_ratio:
         coverage.activeRuleIds.length === 0
           ? 1
-          : Number((coverage.evaluatedRuleIds.length / coverage.activeRuleIds.length).toFixed(6)),
+          : Number(
+              (
+                coverage.evaluatedRuleIds.length / coverage.activeRuleIds.length
+              ).toFixed(DEFAULT_RULES_COVERAGE_RATIO_DECIMALS)
+            ),
     }
     : createEmptySnapshotRulesCoverage(params.policy.stage);
   const brownfieldHotspotFindings = dependencies.evaluateBrownfieldHotspotFindings({
@@ -1409,7 +1417,7 @@ export async function runPlatformGate(params: {
     if (params.silent !== true) {
       process.stdout.write(
         `[pumuki][memory-shadow] recommended=${memoryShadowRecommendation.recommendedOutcome}` +
-        ` confidence=${memoryShadowRecommendation.confidence.toFixed(2)}` +
+        ` confidence=${memoryShadowRecommendation.confidence.toFixed(DEFAULT_MEMORY_SHADOW_DISPLAY_PRECISION)}` +
         ` reasons=${memoryShadowRecommendation.reasonCodes.join(',')}\n`
       );
     }

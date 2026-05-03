@@ -655,7 +655,7 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
   assert.deepEqual(capturedEvaluateGateArgs?.policy, policy);
   assert.deepEqual(capturedEmitArgs, {
     stage: 'PRE_PUSH',
-    auditMode: undefined,
+    auditMode: 'gate',
     policyTrace,
     findings,
     gateOutcome: 'BLOCK',

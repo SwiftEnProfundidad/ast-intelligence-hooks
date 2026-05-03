@@ -10,3 +10,10 @@ export const DEFAULT_DEGRADED_MODE_ACTION_ALLOW = 'allow' as const;
 
 export const DEFAULT_RULES_COVERAGE_RATIO_DECIMALS = 6;
 export const DEFAULT_GATE_AUDIT_MODE = 'gate' as const;
+export const DEFAULT_MEMORY_SHADOW_DISPLAY_PRECISION = 2;
+
+export const MAX_IOS_TEST_QUALITY_SAMPLE_FILES = 3;
+export const MAX_OBSERVED_CODE_PATHS_SAMPLE = 5;
+export const MAX_SCOPE_SAMPLE_PATHS = 3;
+
+export const LIFECYCLE_GATE_STAGES = ['PRE_COMMIT', 'PRE_PUSH', 'CI'] as const;
