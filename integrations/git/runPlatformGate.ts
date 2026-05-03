@@ -39,6 +39,7 @@ import {
   filterFactsByPathPrefixes,
   resolveGateScopePathPrefixesFromEnv,
 } from './filterFactsByPathPrefixes';
+import type { Severity } from '../../core/rules/Severity';
 
 export type OperationalMemoryShadowRecommendation = {
   recommendedOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
@@ -80,13 +81,26 @@ const defaultServices: GateServices = {
   evidence: new EvidenceService(),
 };
 
+const SEVERITY_CRITICAL: Severity = 'CRITICAL';
+const SEVERITY_ERROR: Severity = 'ERROR';
+const SEVERITY_WARN: Severity = 'WARN';
+const LIST_SEPARATOR = ', ';
+const DEGRADED_MODE_ACTION_BLOCK = 'block';
+const DEGRADED_MODE_ACTION_ALLOW = 'allow';
+const MEMORY_SHADOW_CONFIDENCE_BLOCK = 0.9;
+const MEMORY_SHADOW_CONFIDENCE_WARN = 0.75;
+const MEMORY_SHADOW_CONFIDENCE_WARN_ADVISORY = 0.7;
+const MEMORY_SHADOW_CONFIDENCE_ALLOW = 0.65;
+
 const buildDefaultMemoryShadowRecommendation = (params: {
   findings: ReadonlyArray<Finding>;
   tddBddSnapshot?: TddBddSnapshot;
 }): OperationalMemoryShadowRecommendation | undefined => {
-  const hasCritical = params.findings.some((finding) => finding.severity === 'CRITICAL');
-  const hasError = params.findings.some((finding) => finding.severity === 'ERROR');
-  const hasWarn = params.findings.some((finding) => finding.severity === 'WARN');
+  const hasCritical = params.findings.some(
+    (finding) => finding.severity === SEVERITY_CRITICAL
+  );
+  const hasError = params.findings.some((finding) => finding.severity === SEVERITY_ERROR);
+  const hasWarn = params.findings.some((finding) => finding.severity === SEVERITY_WARN);
   const reasonCodes: string[] = [];
 
   if (hasCritical || hasError) {
@@ -108,27 +122,27 @@ const buildDefaultMemoryShadowRecommendation = (params: {
   if (hasCritical || hasError || params.tddBddSnapshot?.status === 'blocked') {
     return {
       recommendedOutcome: 'BLOCK',
-      confidence: 0.9,
+      confidence: MEMORY_SHADOW_CONFIDENCE_BLOCK,
       reasonCodes,
     };
   }
   if (hasWarn) {
     return {
       recommendedOutcome: 'WARN',
-      confidence: 0.75,
+      confidence: MEMORY_SHADOW_CONFIDENCE_WARN,
       reasonCodes,
     };
   }
   if (params.tddBddSnapshot?.status === 'advisory') {
     return {
       recommendedOutcome: 'WARN',
-      confidence: 0.7,
+      confidence: MEMORY_SHADOW_CONFIDENCE_WARN_ADVISORY,
       reasonCodes,
     };
   }
   return {
     recommendedOutcome: 'ALLOW',
-    confidence: 0.65,
+    confidence: MEMORY_SHADOW_CONFIDENCE_ALLOW,
     reasonCodes,
   };
 };
@@ -233,7 +247,7 @@ const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
     return undefined;
   }
 
-  const unsupportedRuleIdsToken = unsupportedRuleIds.join(', ');
+  const unsupportedRuleIdsToken = unsupportedRuleIds.join(LIST_SEPARATOR);
 
   return {
     ruleId: 'governance.skills.detector-mapping.incomplete',
@@ -616,13 +630,13 @@ const toDegradedModeFinding = (params: {
   if (!degraded?.enabled) {
     return undefined;
   }
-  if (degraded.action === 'block') {
+  if (degraded.action === DEGRADED_MODE_ACTION_BLOCK) {
     return {
       ruleId: 'governance.degraded-mode.blocked',
       severity: 'ERROR',
       code: degraded.code,
       message:
-        `Degraded mode is active at ${params.stage} with fail-closed action=block. ` +
+        `Degraded mode is active at ${params.stage} with fail-closed action=${DEGRADED_MODE_ACTION_BLOCK}. ` +
         `reason=${degraded.reason} source=${degraded.source}.`,
       filePath: '.pumuki/degraded-mode.json',
       matchedBy: 'DegradedModeGuard',
@@ -634,7 +648,7 @@ const toDegradedModeFinding = (params: {
     severity: 'INFO',
     code: degraded.code,
     message:
-      `Degraded mode is active at ${params.stage} with fail-open action=allow. ` +
+      `Degraded mode is active at ${params.stage} with fail-open action=${DEGRADED_MODE_ACTION_ALLOW}. ` +
       `reason=${degraded.reason} source=${degraded.source}.`,
     filePath: '.pumuki/degraded-mode.json',
     matchedBy: 'DegradedModeGuard',
@@ -775,7 +789,6 @@ const toCrossPlatformCriticalEnforcementBlockingFinding = (params: {
       .sort();
 
     if (criticalSkillRules.length === 0) {
-      gaps.push(`${platform}{critical_profile_rules=missing}`);
       continue;
     }
 

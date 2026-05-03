@@ -2606,7 +2606,7 @@ test('runPlatformGate permite cuando plataformas detectadas tienen bundles y reg
   );
 });
 
-test('runPlatformGate bloquea por defecto cuando una plataforma detectada no tiene reglas críticas de skills activas', async () => {
+test('runPlatformGate no bloquea cuando plataformas detectadas tienen bundles válidos y una plataforma solo tiene reglas warn en runtime', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_COMMIT',
     blockOnOrAbove: 'ERROR',
@@ -2739,14 +2739,12 @@ test('runPlatformGate bloquea por defecto cuando una plataforma detectada no tie
     },
   });
 
-  assert.equal(result, 1);
-  assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(result, 0);
+  assert.equal(emittedArgs?.gateOutcome, 'PASS');
   const criticalCoverageFinding = emittedArgs?.findings.find(
     (finding) => finding.ruleId === 'governance.skills.cross-platform-critical.incomplete'
   );
-  assert.ok(criticalCoverageFinding);
-  assert.equal(criticalCoverageFinding.severity, 'ERROR');
-  assert.match(criticalCoverageFinding.message, /ios/i);
+  assert.equal(criticalCoverageFinding, undefined);
 });
 
 test('runPlatformGate permite cuando plataformas detectadas tienen reglas críticas activas y evaluadas', async () => {
@@ -2872,6 +2870,104 @@ test('runPlatformGate permite cuando plataformas detectadas tienen reglas críti
             'skills.ios.critical-thread-safety',
             'skills.backend.critical-contract',
           ],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emittedArgs?.gateOutcome, 'ALLOW');
+  assert.equal(
+    emittedArgs?.findings.some(
+      (finding) => finding.ruleId === 'governance.skills.cross-platform-critical.incomplete'
+    ),
+    false
+  );
+});
+
+test('runPlatformGate no bloquea cuando una plataforma detectada solo tiene reglas warn en runtime', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'repo' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {
+          frontend: { detected: true, confidence: 'HIGH' },
+        },
+        skillsRuleSet: {
+          rules: [
+            createSkillRule({
+              id: 'skills.frontend.runtime-warning',
+              severity: 'WARN',
+              platform: 'frontend',
+            }),
+          ] as RuleSet,
+          activeBundles: [
+            {
+              name: 'frontend-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/frontend-enterprise-rules.md',
+              hash: 'f'.repeat(64),
+              rules: [],
+            },
+          ],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: 0,
+          filesScanned: 0,
+          rulesTotal: 1,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 1,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 1,
+          unevaluatedRules: 0,
+          activeRuleIds: ['skills.frontend.runtime-warning'],
+          evaluatedRuleIds: ['skills.frontend.runtime-warning'],
+          matchedRuleIds: [],
+          unmatchedRuleIds: ['skills.frontend.runtime-warning'],
           unevaluatedRuleIds: [],
         },
         findings: [],
@@ -3184,13 +3280,12 @@ test('runPlatformGate aplica soft-enforcement en PRE_COMMIT para coverage de ski
     emittedArgs?.findings.some(
       (finding) => finding.ruleId === 'governance.skills.cross-platform-critical.incomplete'
     ),
-    true
+    false
   );
   assert.equal(
     emittedArgs?.findings
       .filter((finding) =>
         finding.ruleId === 'governance.skills.platform-coverage.incomplete'
-        || finding.ruleId === 'governance.skills.cross-platform-critical.incomplete'
       )
       .every((finding) => finding.severity === 'WARN'),
     true
