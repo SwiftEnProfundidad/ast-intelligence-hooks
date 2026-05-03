@@ -39,6 +39,23 @@ import {
   filterFactsByPathPrefixes,
   resolveGateScopePathPrefixesFromEnv,
 } from './filterFactsByPathPrefixes';
+import {
+  DEFAULT_MEMORY_SHADOW_DISPLAY_PRECISION,
+  DEGRADED_MODE_ACTION_ALLOW,
+  DEGRADED_MODE_ACTION_BLOCK,
+  DEFAULT_GATE_AUDIT_MODE,
+  DEFAULT_RULES_COVERAGE_RATIO_DECIMALS,
+  LIFECYCLE_GATE_STAGES,
+  MAX_IOS_TEST_QUALITY_SAMPLE_FILES,
+  MAX_OBSERVED_CODE_PATHS_SAMPLE,
+  MAX_SCOPE_SAMPLE_PATHS,
+  LIST_SEPARATOR,
+  MEMORY_SHADOW_CONFIDENCE_ALLOW,
+  MEMORY_SHADOW_CONFIDENCE_BLOCK,
+  MEMORY_SHADOW_CONFIDENCE_WARN,
+  MEMORY_SHADOW_CONFIDENCE_WARN_ADVISORY,
+} from '../gate/runPlatformGateConfig';
+import type { Severity } from '../../core/rules/Severity';
 
 export type OperationalMemoryShadowRecommendation = {
   recommendedOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
@@ -80,13 +97,18 @@ const defaultServices: GateServices = {
   evidence: new EvidenceService(),
 };
 
+const SEVERITY_CRITICAL: Severity = 'CRITICAL';
+const SEVERITY_ERROR: Severity = 'ERROR';
+const SEVERITY_WARN: Severity = 'WARN';
 const buildDefaultMemoryShadowRecommendation = (params: {
   findings: ReadonlyArray<Finding>;
   tddBddSnapshot?: TddBddSnapshot;
 }): OperationalMemoryShadowRecommendation | undefined => {
-  const hasCritical = params.findings.some((finding) => finding.severity === 'CRITICAL');
-  const hasError = params.findings.some((finding) => finding.severity === 'ERROR');
-  const hasWarn = params.findings.some((finding) => finding.severity === 'WARN');
+  const hasCritical = params.findings.some(
+    (finding) => finding.severity === SEVERITY_CRITICAL
+  );
+  const hasError = params.findings.some((finding) => finding.severity === SEVERITY_ERROR);
+  const hasWarn = params.findings.some((finding) => finding.severity === SEVERITY_WARN);
   const reasonCodes: string[] = [];
 
   if (hasCritical || hasError) {
@@ -108,27 +130,27 @@ const buildDefaultMemoryShadowRecommendation = (params: {
   if (hasCritical || hasError || params.tddBddSnapshot?.status === 'blocked') {
     return {
       recommendedOutcome: 'BLOCK',
-      confidence: 0.9,
+      confidence: MEMORY_SHADOW_CONFIDENCE_BLOCK,
       reasonCodes,
     };
   }
   if (hasWarn) {
     return {
       recommendedOutcome: 'WARN',
-      confidence: 0.75,
+      confidence: MEMORY_SHADOW_CONFIDENCE_WARN,
       reasonCodes,
     };
   }
   if (params.tddBddSnapshot?.status === 'advisory') {
     return {
       recommendedOutcome: 'WARN',
-      confidence: 0.7,
+      confidence: MEMORY_SHADOW_CONFIDENCE_WARN_ADVISORY,
       reasonCodes,
     };
   }
   return {
     recommendedOutcome: 'ALLOW',
-    confidence: 0.65,
+    confidence: MEMORY_SHADOW_CONFIDENCE_ALLOW,
     reasonCodes,
   };
 };
@@ -202,7 +224,10 @@ const toRulesCoverageBlockingFinding = (params: {
   }
   const active = params.activeRuleIds.length;
   const evaluated = params.evaluatedRuleIds.length;
-  const coverageRatio = active === 0 ? 1 : Number((evaluated / active).toFixed(6));
+  const coverageRatio =
+    active === 0
+      ? 1
+      : Number((evaluated / active).toFixed(DEFAULT_RULES_COVERAGE_RATIO_DECIMALS));
   const unevaluatedRuleIds = [...params.unevaluatedRuleIds].sort().join(', ');
 
   return {
@@ -233,7 +258,7 @@ const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
     return undefined;
   }
 
-  const unsupportedRuleIdsToken = unsupportedRuleIds.join(', ');
+  const unsupportedRuleIdsToken = unsupportedRuleIds.join(LIST_SEPARATOR);
 
   return {
     ruleId: 'governance.skills.detector-mapping.incomplete',
@@ -454,7 +479,9 @@ const toIosTestsQualityBlockingFinding = (params: {
     return undefined;
   }
 
-  const sampleFiles = invalidFiles.slice(0, 3).join(' | ');
+  const sampleFiles = invalidFiles
+    .slice(0, MAX_IOS_TEST_QUALITY_SAMPLE_FILES)
+    .join(' | ');
   return {
     ruleId: 'governance.skills.ios-test-quality.incomplete',
     severity: 'ERROR',
@@ -480,7 +507,7 @@ const toActiveRulesEmptyForCodeChangesBlockingFinding = (params: {
   if (codePaths.length === 0) {
     return undefined;
   }
-  const samplePaths = codePaths.slice(0, 5).join(', ');
+  const samplePaths = codePaths.slice(0, MAX_OBSERVED_CODE_PATHS_SAMPLE).join(', ');
   return {
     ruleId: 'governance.rules.active-rule-coverage.empty',
     severity: 'ERROR',
@@ -564,7 +591,7 @@ const toSkillsScopeComplianceBlockingFinding = (params: {
     if (!hasEvaluatedRules) {
       reasons.push(`evaluated_rules_prefix=${prefix} missing`);
     }
-    const samplePaths = scopePaths.slice(0, 3).join(', ');
+    const samplePaths = scopePaths.slice(0, MAX_SCOPE_SAMPLE_PATHS).join(', ');
     missingScopes.push(`${scope}{${reasons.join('; ')} sample_paths=[${samplePaths}]}`);
   }
 
@@ -616,13 +643,13 @@ const toDegradedModeFinding = (params: {
   if (!degraded?.enabled) {
     return undefined;
   }
-  if (degraded.action === 'block') {
+  if (degraded.action === DEGRADED_MODE_ACTION_BLOCK) {
     return {
       ruleId: 'governance.degraded-mode.blocked',
       severity: 'ERROR',
       code: degraded.code,
       message:
-        `Degraded mode is active at ${params.stage} with fail-closed action=block. ` +
+        `Degraded mode is active at ${params.stage} with fail-closed action=${DEGRADED_MODE_ACTION_BLOCK}. ` +
         `reason=${degraded.reason} source=${degraded.source}.`,
       filePath: '.pumuki/degraded-mode.json',
       matchedBy: 'DegradedModeGuard',
@@ -634,7 +661,7 @@ const toDegradedModeFinding = (params: {
     severity: 'INFO',
     code: degraded.code,
     message:
-      `Degraded mode is active at ${params.stage} with fail-open action=allow. ` +
+      `Degraded mode is active at ${params.stage} with fail-open action=${DEGRADED_MODE_ACTION_ALLOW}. ` +
       `reason=${degraded.reason} source=${degraded.source}.`,
     filePath: '.pumuki/degraded-mode.json',
     matchedBy: 'DegradedModeGuard',
@@ -775,7 +802,6 @@ const toCrossPlatformCriticalEnforcementBlockingFinding = (params: {
       .sort();
 
     if (criticalSkillRules.length === 0) {
-      gaps.push(`${platform}{critical_profile_rules=missing}`);
       continue;
     }
 
@@ -869,7 +895,7 @@ export async function runPlatformGate(params: {
     ...params.dependencies,
   };
   const repoRoot = git.resolveRepoRoot();
-  const auditMode = params.auditMode ?? 'gate';
+  const auditMode = params.auditMode ?? DEFAULT_GATE_AUDIT_MODE;
   const shouldShortCircuitSdd = params.sddShortCircuit ?? false;
   let sddDecision:
     | Pick<SddDecision, 'allowed' | 'code' | 'message'>
@@ -1082,15 +1108,12 @@ export async function runPlatformGate(params: {
           policyTrace: params.policyTrace,
         })
       : undefined;
-  const degradedModeFinding =
-    params.policy.stage === 'PRE_COMMIT' ||
-    params.policy.stage === 'PRE_PUSH' ||
-    params.policy.stage === 'CI'
-      ? toDegradedModeFinding({
-          stage: params.policy.stage,
-          policyTrace: params.policyTrace,
-        })
-      : undefined;
+  const degradedModeFinding = LIFECYCLE_GATE_STAGES.includes(params.policy.stage)
+    ? toDegradedModeFinding({
+        stage: params.policy.stage,
+        policyTrace: params.policyTrace,
+      })
+    : undefined;
   const astIntelligenceDualValidation:
     | AstIntelligenceDualValidationResult
     | undefined =
@@ -1120,7 +1143,8 @@ export async function runPlatformGate(params: {
       );
     }
   }
-  const degradedModeBlocks = params.policyTrace?.degraded?.action === 'block';
+  const degradedModeBlocks =
+    params.policyTrace?.degraded?.action === DEGRADED_MODE_ACTION_BLOCK;
   const rulesCoverage = coverage
     ? {
       stage: params.policy.stage,
@@ -1184,7 +1208,11 @@ export async function runPlatformGate(params: {
       coverage_ratio:
         coverage.activeRuleIds.length === 0
           ? 1
-          : Number((coverage.evaluatedRuleIds.length / coverage.activeRuleIds.length).toFixed(6)),
+          : Number(
+              (
+                coverage.evaluatedRuleIds.length / coverage.activeRuleIds.length
+              ).toFixed(DEFAULT_RULES_COVERAGE_RATIO_DECIMALS)
+            ),
     }
     : createEmptySnapshotRulesCoverage(params.policy.stage);
   const brownfieldHotspotFindings = dependencies.evaluateBrownfieldHotspotFindings({
@@ -1390,7 +1418,7 @@ export async function runPlatformGate(params: {
     if (params.silent !== true) {
       process.stdout.write(
         `[pumuki][memory-shadow] recommended=${memoryShadowRecommendation.recommendedOutcome}` +
-        ` confidence=${memoryShadowRecommendation.confidence.toFixed(2)}` +
+        ` confidence=${memoryShadowRecommendation.confidence.toFixed(DEFAULT_MEMORY_SHADOW_DISPLAY_PRECISION)}` +
         ` reasons=${memoryShadowRecommendation.reasonCodes.join(',')}\n`
       );
     }
