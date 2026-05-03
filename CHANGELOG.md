@@ -6,6 +6,15 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.130] - 2026-05-03
+
+### Fixed
+
+- **Menú legacy restaurado para consumers:** la shell principal vuelve al contrato plano de 9 opciones y conserva los flujos avanzados fuera del menú por defecto.
+- **Cobertura por plataforma desde skills reales:** el full audit usa `skills.lock.json` y bindings de detectores para mostrar `rules evaluated=x/y` en iOS, Android, Backend y Frontend.
+- **Other deja de ser opaco:** la salida clásica explica que `Other` agrupa reglas transversales de governance, evidence, BDD y tipos compartidos.
+- **Contrato AvdLee visible:** `swift-testing-expert` y `core-data-expert` quedan declaradas como skills requeridas cuando entran en el lock AST.
+
 ## [6.3.129] - 2026-04-29
 
 ### Fixed
