@@ -45,6 +45,7 @@ const astBundles = [
       'skills.ios.no-observable-object',
       'skills.ios.no-on-tap-gesture',
       'skills.ios.no-passed-value-state-wrapper',
+      'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear',
       'skills.ios.no-scrollview-shows-indicators',
       'skills.ios.no-sheet-is-presented',
       'skills.ios.no-string-format',
