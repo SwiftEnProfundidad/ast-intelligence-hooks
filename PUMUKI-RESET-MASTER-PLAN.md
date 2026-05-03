@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - Validación del rollout 6.3.133 en consumers activos`. La incidencia `PUMUKI-INC-060` queda cerrada tras endurecer el bloqueo del baseline TDD/BDD; `PUMUKI-INC-059` ya quedó cerrada con el enforcement de skills; `PUMUKI-INC-061` queda resuelta en la release publicada `6.3.133` y la siguiente acción es verificar el repin operativo en consumers. |
+| Este plan | `[🚧] - Publicación y validación del rollout 6.3.134 en consumers activos`. La incidencia `PUMUKI-INC-060` queda cerrada tras endurecer el bloqueo del baseline TDD/BDD; `PUMUKI-INC-059` ya quedó cerrada con el enforcement de skills; `PUMUKI-INC-061` queda resuelta en la release publicada `6.3.134` y la siguiente acción es verificar el repin operativo en consumers. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
