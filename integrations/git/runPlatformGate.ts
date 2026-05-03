@@ -39,6 +39,15 @@ import {
   filterFactsByPathPrefixes,
   resolveGateScopePathPrefixesFromEnv,
 } from './filterFactsByPathPrefixes';
+import {
+  DEGRADED_MODE_ACTION_ALLOW,
+  DEGRADED_MODE_ACTION_BLOCK,
+  LIST_SEPARATOR,
+  MEMORY_SHADOW_CONFIDENCE_ALLOW,
+  MEMORY_SHADOW_CONFIDENCE_BLOCK,
+  MEMORY_SHADOW_CONFIDENCE_WARN,
+  MEMORY_SHADOW_CONFIDENCE_WARN_ADVISORY,
+} from '../gate/runPlatformGateConfig';
 import type { Severity } from '../../core/rules/Severity';
 
 export type OperationalMemoryShadowRecommendation = {
@@ -84,14 +93,6 @@ const defaultServices: GateServices = {
 const SEVERITY_CRITICAL: Severity = 'CRITICAL';
 const SEVERITY_ERROR: Severity = 'ERROR';
 const SEVERITY_WARN: Severity = 'WARN';
-const LIST_SEPARATOR = ', ';
-const DEGRADED_MODE_ACTION_BLOCK = 'block';
-const DEGRADED_MODE_ACTION_ALLOW = 'allow';
-const MEMORY_SHADOW_CONFIDENCE_BLOCK = 0.9;
-const MEMORY_SHADOW_CONFIDENCE_WARN = 0.75;
-const MEMORY_SHADOW_CONFIDENCE_WARN_ADVISORY = 0.7;
-const MEMORY_SHADOW_CONFIDENCE_ALLOW = 0.65;
-
 const buildDefaultMemoryShadowRecommendation = (params: {
   findings: ReadonlyArray<Finding>;
   tddBddSnapshot?: TddBddSnapshot;
