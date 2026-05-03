@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.135] - 2026-05-03
+
+### Fixed
+
+- **Bootstrap de pre-push por delta real:** cuando una rama no tiene upstream, el bootstrap de `PRE_PUSH` elige la base con menor delta real entre `main` y `develop`, evitando falsos positivos de atomicidad en branches nacidas de `main`.
+- **Repin desbloqueable:** esta versión corrige el bloqueo que impedía publicar el repin de `Flux_training` aunque el diff efectivo del cambio fuese mínimo.
+
 ## [6.3.134] - 2026-05-03
 
 ### Fixed

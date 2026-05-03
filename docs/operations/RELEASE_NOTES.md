@@ -4,6 +4,11 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-03 (v6.3.135)
+
+- **Bootstrap de pre-push por delta real:** en ramas sin upstream, `PRE_PUSH` elige la base con menor delta real entre `main` y `develop`, evitando que un rollout nacido de `main` se bloquee como si heredara todo `develop`.
+- **Repin desbloqueable:** esta release corrige el falso positivo que impedía publicar el repin de `Flux_training` aunque el diff efectivo fuese mínimo.
+
 ### 2026-05-03 (v6.3.134)
 
 - **Policy hash drift accionable:** `governanceObservationSnapshot`, `governanceNextAction` y el catálogo de remediación ya convierten la divergencia entre stages en una acción estricta y aplicable.
