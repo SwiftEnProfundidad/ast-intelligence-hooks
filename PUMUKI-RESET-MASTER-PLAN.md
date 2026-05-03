@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - Publicación y validación del rollout 6.3.134 en consumers activos`. La incidencia `PUMUKI-INC-060` queda cerrada tras endurecer el bloqueo del baseline TDD/BDD; `PUMUKI-INC-059` ya quedó cerrada con el enforcement de skills; `PUMUKI-INC-061` queda resuelta en la release publicada `6.3.134` y la siguiente acción es verificar el repin operativo en consumers. |
+| Este plan | `[🚧] - Validación del rollout 6.3.134 en consumers activos`. `SAAS` y `Flux_training` ya quedaron repineados y validados en `6.3.134`; `R_GO` sigue bloqueado por cambios ajenos en su worktree, así que el siguiente paso útil es validar o repinear solo cuando ese consumer tenga espacio limpio. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
