@@ -1143,7 +1143,8 @@ export async function runPlatformGate(params: {
       );
     }
   }
-  const degradedModeBlocks = params.policyTrace?.degraded?.action === 'block';
+  const degradedModeBlocks =
+    params.policyTrace?.degraded?.action === DEGRADED_MODE_ACTION_BLOCK;
   const rulesCoverage = coverage
     ? {
       stage: params.policy.stage,
