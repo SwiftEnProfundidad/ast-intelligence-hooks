@@ -507,6 +507,38 @@ const emptyResult = (): SkillsRuleSetLoadResult => {
   };
 };
 
+const IOS_CRITICAL_TEST_QUALITY_RULE: SkillsCompiledRule = {
+  id: 'skills.ios.critical-test-quality',
+  description:
+    'Critical iOS test quality contract: Swift tests must be covered by modern testing rules and XCTest compatibility guards.',
+  severity: 'ERROR',
+  platform: 'ios',
+  sourceSkill: 'ios-swift-testing-guidelines',
+  sourcePath: 'compat:synthetic/ios-critical-test-quality',
+  stage: 'PRE_COMMIT',
+  confidence: 'HIGH',
+  locked: true,
+  evaluationMode: 'AUTO',
+  origin: 'core',
+};
+
+const withSyntheticCompatibilityRules = (
+  bundles: ReadonlyArray<SkillsLockBundle>
+): SkillsLockBundle[] => {
+  return bundles.map((bundle) => {
+    if (bundle.name !== 'ios-swift-testing-guidelines') {
+      return bundle;
+    }
+    if (bundle.rules.some((rule) => rule.id === IOS_CRITICAL_TEST_QUALITY_RULE.id)) {
+      return bundle;
+    }
+    return {
+      ...bundle,
+      rules: [IOS_CRITICAL_TEST_QUALITY_RULE, ...bundle.rules],
+    };
+  });
+};
+
 export const loadSkillsRuleSetForStage = (
   stage: Exclude<GateStage, 'STAGED'>,
   repoRoot: string = process.cwd(),
@@ -521,13 +553,13 @@ export const loadSkillsRuleSetForStage = (
   const policy = loadSkillsPolicy(repoRoot);
   const defaultBundleEnabled = policy?.defaultBundleEnabled ?? true;
 
-  const activeBundles = lock.bundles.filter((bundle) => {
+  const activeBundles = withSyntheticCompatibilityRules(lock.bundles.filter((bundle) => {
     return resolveBundleEnabled({
       bundleName: bundle.name,
       defaultBundleEnabled,
       bundlePolicy: policy?.bundles[bundle.name],
     });
-  });
+  }));
 
   if (activeBundles.length === 0) {
     return emptyResult();

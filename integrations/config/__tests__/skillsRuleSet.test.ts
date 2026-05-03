@@ -198,6 +198,64 @@ test('falls back gracefully when lock/policy files are missing', async () => {
   }));
 });
 
+test('inyecta regla crítica iOS de calidad de tests en locks legacy con Swift Testing activo', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-ios-critical-test-quality-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/ios'), { recursive: true });
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'ios-swift-testing-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/swift-testing-expert.md',
+            hash: 'a'.repeat(64),
+            rules: [
+              {
+                id: 'skills.ios.prefer-swift-testing',
+                description: 'Prefer Swift Testing for modern unit tests.',
+                severity: 'ERROR',
+                platform: 'ios',
+                sourceSkill: 'ios-swift-testing-guidelines',
+                sourcePath: 'docs/codex-skills/swift-testing-expert.md',
+                stage: 'PRE_COMMIT',
+                evaluationMode: 'AUTO',
+                locked: true,
+                confidence: 'HIGH',
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+      const criticalRule = result.rules.find(
+        (rule) => rule.id === 'skills.ios.critical-test-quality'
+      );
+
+      assert.ok(criticalRule);
+      assert.equal(criticalRule.severity, 'ERROR');
+      assert.equal(
+        criticalRule.then.source?.includes('source_skill=ios-swift-testing-guidelines'),
+        true
+      );
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ios.testing.xctassert.ast'),
+        true
+      );
+      assert.equal(
+        result.mappedHeuristicRuleIds.has('heuristics.ios.testing.xctunwrap.ast'),
+        true
+      );
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+    })
+  );
+});
+
 test('returns empty result when defaultBundleEnabled is false and no bundle override exists', async () => {
   await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-disabled-', async (tempRoot) => {
     writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(sampleLock, null, 2));
