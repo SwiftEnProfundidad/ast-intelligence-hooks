@@ -2,29 +2,9 @@ import type { MenuLayoutGroup } from './framework-menu-layout-types';
 
 export const CONSUMER_MENU_LAYOUT: ReadonlyArray<MenuLayoutGroup> = [
   {
-    key: 'read-only-gates',
-    title: 'Read-Only Gate Flows',
-    itemIds: ['1', '2', '3', '4'],
-  },
-  {
-    key: 'engine-working-tree-no-preflight',
-    title: 'Engine · working tree (no preflight)',
-    itemIds: ['11', '12', '13', '14'],
-  },
-  {
-    key: 'export',
-    title: 'Legacy Read-Only Export',
-    itemIds: ['8'],
-  },
-  {
-    key: 'legacy-read-only-diagnostics',
-    title: 'Legacy Read-Only Diagnostics',
-    itemIds: ['5', '6', '7', '9'],
-  },
-  {
-    key: 'system',
-    title: 'System',
-    itemIds: ['10'],
+    key: 'ast-intelligence-legacy',
+    title: '',
+    itemIds: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
   },
 ];
 

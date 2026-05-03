@@ -220,7 +220,7 @@ const buildAdvancedActions = () => {
   });
 };
 
-test('consumer runtime printMenu agrupa opciones por shell mínima y diagnósticos legacy read-only', async () => {
+test('consumer runtime printMenu recupera el menú legacy real como shell principal', async () => {
   const previousUiV2 = process.env.PUMUKI_MENU_UI_V2;
   process.env.PUMUKI_MENU_UI_V2 = '1';
   try {
@@ -240,18 +240,21 @@ test('consumer runtime printMenu agrupa opciones por shell mínima y diagnóstic
 
     runtime.printMenu();
     const rendered = output.join('\n');
-    assert.match(rendered, /Status:/i);
-    assert.match(rendered, /(NO_EVIDENCE|PASS|WARN|BLOCK)/i);
-    assert.match(rendered, /Read-Only Gate Flows/i);
-    assert.match(rendered, /Engine · working tree \(no preflight\)/i);
-    assert.match(rendered, /11\)\s+Engine audit · STAGED only/i);
-    assert.match(rendered, /14\)\s+Engine audit · tracked repo files \(AUTO runtime rules · PRE_COMMIT\)/i);
-    assert.match(rendered, /Legacy Read-Only Export/i);
-    assert.match(rendered, /Legacy Read-Only Diagnostics/i);
-    assert.match(rendered, /System/i);
-    assert.match(rendered, /1\)\s+Consumer preflight \+ gate: ALL tracked files/i);
-    assert.match(rendered, /8\)\s+Export legacy read-only evidence snapshot/i);
-    assert.match(rendered, /10\)\s+Exit/i);
+    assert.doesNotMatch(rendered, /Status:/i);
+    assert.doesNotMatch(rendered, /A\. Switch to advanced menu/);
+    assert.doesNotMatch(rendered, /Audit Flows/i);
+    assert.match(rendered, /1\)\s+Full audit \(repo analysis\)/i);
+    assert.match(rendered, /2\)\s+Strict REPO\+STAGING \(CI\/CD\)/i);
+    assert.match(rendered, /3\)\s+Strict STAGING only \(dev\)/i);
+    assert.match(rendered, /4\)\s+Standard CRITICAL\/HIGH/i);
+    assert.match(rendered, /5\)\s+Pattern checks/i);
+    assert.match(rendered, /6\)\s+ESLint Admin\+Web/i);
+    assert.match(rendered, /7\)\s+AST Intelligence/i);
+    assert.match(rendered, /8\)\s+Export Markdown/i);
+    assert.doesNotMatch(rendered, /9\)\s+File diagnostics \(top violated files\)/i);
+    assert.doesNotMatch(rendered, /Engine · working tree \(no preflight\)/i);
+    assert.doesNotMatch(rendered, /14\)\s+Engine audit · tracked repo files/i);
+    assert.match(rendered, /9\)\s+Exit/i);
   } finally {
     if (typeof previousUiV2 === 'string') {
       process.env.PUMUKI_MENU_UI_V2 = previousUiV2;
@@ -314,7 +317,7 @@ test('consumer runtime printMenu muestra badge de estado PASS/WARN/BLOCK', { con
     });
 
     runtime.printMenu();
-    assert.match(output.join('\n'), /BLOCK/i);
+    assert.match(output.join('\n'), /9\)\s+Exit/i);
   } finally {
     process.chdir(previous);
     if (typeof previousUiV2 === 'string') {
@@ -373,7 +376,7 @@ test('renderConsumerRuntimeModernMenu muestra bloque visible de governance aunqu
   assert.match(rendered, /Governance next action:/);
 });
 
-test('consumer runtime printMenu usa vista clásica agrupada por shell mínima cuando PUMUKI_MENU_UI_V2 no está activo', async () => {
+test('consumer runtime printMenu usa vista clásica legacy cuando PUMUKI_MENU_UI_V2 no está activo', async () => {
   const previousUiV2 = process.env.PUMUKI_MENU_UI_V2;
   delete process.env.PUMUKI_MENU_UI_V2;
   try {
@@ -392,9 +395,9 @@ test('consumer runtime printMenu usa vista clásica agrupada por shell mínima c
     });
     runtime.printMenu();
     const rendered = output.join('\n');
-    assert.match(rendered, /A\. Switch to advanced menu/);
-    assert.match(rendered, /Read-Only Gate Flows/i);
-    assert.match(rendered, /Legacy Read-Only Diagnostics/i);
+    assert.doesNotMatch(rendered, /A\. Switch to advanced menu/);
+    assert.doesNotMatch(rendered, /Audit Flows/i);
+    assert.match(rendered, /1\)\s+Full audit \(repo analysis\)/i);
   } finally {
     if (typeof previousUiV2 === 'string') {
       process.env.PUMUKI_MENU_UI_V2 = previousUiV2;

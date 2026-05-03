@@ -71,7 +71,6 @@ export const createConsumerRuntimeActions = (
 ): ReadonlyArray<ConsumerAction> =>
   createConsumerLegacyMenuActions({
     runFullAudit: async () => {
-      await runConsumerRuntimePreflight(dependencies, 'PRE_COMMIT');
       await dependencies.runRepoGate();
       dependencies.clearSummaryOverride();
       notifyConsumerRuntimeAuditSummary(
@@ -87,7 +86,6 @@ export const createConsumerRuntimeActions = (
       );
     },
     runStrictRepoAndStaged: async () => {
-      await runConsumerRuntimePreflight(dependencies, 'PRE_PUSH');
       const gateResult = await dependencies.runRepoAndStagedGate();
       if (gateResult?.blocked) {
         dependencies.setSummaryOverride(
@@ -117,7 +115,6 @@ export const createConsumerRuntimeActions = (
       }
     },
     runStrictStagedOnly: async () => {
-      await runConsumerRuntimePreflight(dependencies, 'PRE_COMMIT');
       await dependencies.runStagedGate();
       dependencies.clearSummaryOverride();
       const summary = renderConsumerRuntimeSummary({
@@ -135,7 +132,6 @@ export const createConsumerRuntimeActions = (
       printConsumerRuntimeEmptyScopeHint({ write: dependencies.write }, summary, 'staged');
     },
     runStandardCriticalHigh: async () => {
-      await runConsumerRuntimePreflight(dependencies, 'PRE_PUSH');
       await dependencies.runWorkingTreeGate();
       dependencies.clearSummaryOverride();
       const summary = renderConsumerRuntimeSummary({

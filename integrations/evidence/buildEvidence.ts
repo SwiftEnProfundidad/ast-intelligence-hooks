@@ -824,7 +824,11 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
           ruleId: finding.ruleId,
           severity: finding.severity,
           file: finding.file,
-        }))
+        })),
+        {
+          activeRuleIds: normalizedRulesCoverage.active_rule_ids,
+          evaluatedRuleIds: normalizedRulesCoverage.evaluated_rule_ids,
+        }
       ),
     },
     ledger: updateLedger({

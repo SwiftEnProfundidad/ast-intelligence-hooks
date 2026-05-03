@@ -387,7 +387,11 @@ const toStableEvidence = (
           ruleId: finding.ruleId,
           severity: finding.severity,
           file: finding.file,
-        }))
+        })),
+        {
+          activeRuleIds: normalizedRulesCoverage.active_rule_ids,
+          evaluatedRuleIds: normalizedRulesCoverage.evaluated_rule_ids,
+        }
       ),
     },
     ledger: normalizedLedger,

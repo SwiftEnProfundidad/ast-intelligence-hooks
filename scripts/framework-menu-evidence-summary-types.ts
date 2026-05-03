@@ -19,6 +19,7 @@ export type EvidenceSnapshot = {
   outcome?: unknown;
   findings?: unknown;
   platforms?: unknown;
+  rules_coverage?: unknown;
 };
 
 export type EvidenceSeverityMetrics = {
@@ -28,6 +29,8 @@ export type EvidenceSeverityMetrics = {
 export type FrameworkMenuEvidencePlatformRow = {
   platform: string;
   violations: number;
+  activeRules?: number;
+  evaluatedRules?: number;
 };
 
 export type FrameworkMenuEvidenceSummary = {

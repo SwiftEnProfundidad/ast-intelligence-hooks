@@ -7,7 +7,7 @@ const runFrameworkMenu = (env: NodeJS.ProcessEnv) =>
     cwd: process.cwd(),
     env: { ...process.env, ...env },
     encoding: 'utf8',
-    input: '10\n',
+    input: '9\n',
   });
 
 test('framework menu CLI exits cleanly in classic mode', () => {

@@ -105,12 +105,16 @@ test('readEvidenceSummaryForMenu expone filas de plataforma cuando snapshot.plat
             files_affected: 1,
             by_severity: { CRITICAL: 0, HIGH: 1, MEDIUM: 0, LOW: 0 },
             top_violations: [],
+            active_rules: 42,
+            evaluated_rules: 42,
           },
           {
             platform: 'Other',
             files_affected: 0,
             by_severity: { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 },
             top_violations: [],
+            active_rules: 3,
+            evaluated_rules: 2,
           },
         ],
       },
@@ -120,8 +124,8 @@ test('readEvidenceSummaryForMenu expone filas de plataforma cuando snapshot.plat
     const summary = readEvidenceSummaryForMenu(repoRoot);
     assert.equal(summary.status, 'ok');
     assert.deepEqual(summary.platformAuditRows, [
-      { platform: 'iOS', violations: 1 },
-      { platform: 'Other', violations: 0 },
+      { platform: 'iOS', violations: 1, activeRules: 42, evaluatedRules: 42 },
+      { platform: 'Other', violations: 0, activeRules: 3, evaluatedRules: 2 },
     ]);
   });
 });
