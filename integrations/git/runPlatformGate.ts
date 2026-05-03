@@ -42,6 +42,8 @@ import {
 import {
   DEGRADED_MODE_ACTION_ALLOW,
   DEGRADED_MODE_ACTION_BLOCK,
+  DEFAULT_GATE_AUDIT_MODE,
+  DEFAULT_RULES_COVERAGE_RATIO_DECIMALS,
   LIST_SEPARATOR,
   MEMORY_SHADOW_CONFIDENCE_ALLOW,
   MEMORY_SHADOW_CONFIDENCE_BLOCK,
@@ -217,7 +219,10 @@ const toRulesCoverageBlockingFinding = (params: {
   }
   const active = params.activeRuleIds.length;
   const evaluated = params.evaluatedRuleIds.length;
-  const coverageRatio = active === 0 ? 1 : Number((evaluated / active).toFixed(6));
+  const coverageRatio =
+    active === 0
+      ? 1
+      : Number((evaluated / active).toFixed(DEFAULT_RULES_COVERAGE_RATIO_DECIMALS));
   const unevaluatedRuleIds = [...params.unevaluatedRuleIds].sort().join(', ');
 
   return {
@@ -883,7 +888,7 @@ export async function runPlatformGate(params: {
     ...params.dependencies,
   };
   const repoRoot = git.resolveRepoRoot();
-  const auditMode = params.auditMode ?? 'gate';
+  const auditMode = params.auditMode ?? DEFAULT_GATE_AUDIT_MODE;
   const shouldShortCircuitSdd = params.sddShortCircuit ?? false;
   let sddDecision:
     | Pick<SddDecision, 'allowed' | 'code' | 'message'>
