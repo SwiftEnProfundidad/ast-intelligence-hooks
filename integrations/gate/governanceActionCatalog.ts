@@ -207,6 +207,16 @@ export const resolveGovernanceCatalogAction = (params: {
           command: validateCommand,
         },
       };
+    case 'TDD_BDD_BASELINE_BLOCKED':
+      return {
+        reason_code: 'TDD_BDD_BASELINE_BLOCKED',
+        instruction: 'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de seguir.',
+        next_action: {
+          kind: 'run_command',
+          message: 'Revalida el stage actual tras reparar el baseline TDD/BDD y refrescar la evidencia.',
+          command: validateCommand,
+        },
+      };
     case 'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH':
     case 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES':
       return {

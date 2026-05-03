@@ -10,6 +10,8 @@ export const REMEDIATION_HINT_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_STALE: 'Refresca evidencia antes de continuar.',
   EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera evidencia desde este mismo repositorio.',
   EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual y reintenta.',
+  TDD_BDD_BASELINE_BLOCKED:
+    'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
   EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
   EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura coverage_ratio=1 y unevaluated=0.',
   ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:

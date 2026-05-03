@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-060`. Gap detección test roto en baseline reportado desde RuralGo; `PUMUKI-INC-059` queda cerrado con el endurecimiento del enforcement de skills, y `PUMUKI-INC-061` queda detrás en el mismo backlog consumer. |
+| Este plan | `[🚧] - PUMUKI-INC-061`. La incidencia `PUMUKI-INC-060` queda cerrada tras endurecer el bloqueo del baseline TDD/BDD; `PUMUKI-INC-059` ya quedó cerrada con el enforcement de skills y `PUMUKI-INC-061` pasa a ser la única tarea activa del backlog consumer. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.

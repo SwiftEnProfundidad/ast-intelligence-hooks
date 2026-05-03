@@ -3,11 +3,22 @@ import {
   type GovernanceCatalogNextAction,
 } from '../gate/governanceActionCatalog';
 import { evaluateAiGate, type AiGateStage, type AiGateViolation } from '../gate/evaluateAiGate';
+import { readEvidenceResult } from '../evidence/readEvidence';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
 import { readLifecyclePolicyValidationSnapshot } from '../lifecycle/policyValidationSnapshot';
 import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
 import { resolvePreWriteEnforcement } from '../policy/preWriteEnforcement';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
+
+const resolveTddStatus = (
+  repoRoot: string
+): 'skipped' | 'passed' | 'advisory' | 'blocked' | 'waived' | null => {
+  const evidenceResult = readEvidenceResult(repoRoot);
+  if (evidenceResult.kind !== 'valid') {
+    return null;
+  }
+  return evidenceResult.evidence.snapshot.tdd_bdd?.status ?? null;
+};
 
 const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_MISSING:
@@ -35,6 +46,8 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
     'Ejecuta `pumuki policy reconcile --strict --json`, materializa reglas críticas (p.ej. skills.ios.critical-test-quality) y revalida PRE_WRITE.',
   EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE:
     'Reconcilia policy/skills en modo estricto para enforcement crítico transversal y vuelve a validar PRE_WRITE.',
+  TDD_BDD_BASELINE_BLOCKED:
+    'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
     'Completa el contrato skills/policy para el stage solicitado y vuelve a validar.',
   EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
@@ -161,7 +174,7 @@ export type EnterprisePreFlightCheckResult = {
     hints: ReadonlyArray<string>;
     learning_context: SddLearningContext | null;
     ast_analysis: null;
-    tdd_status: null;
+    tdd_status: 'skipped' | 'passed' | 'advisory' | 'blocked' | 'waived' | null;
   };
 };
 
@@ -246,7 +259,7 @@ export const runEnterprisePreFlightCheck = (params: {
       hints,
       learning_context: learningContext,
       ast_analysis: null,
-      tdd_status: null,
+      tdd_status: resolveTddStatus(params.repoRoot),
     },
   };
 };

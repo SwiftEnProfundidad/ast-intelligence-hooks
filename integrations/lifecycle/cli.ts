@@ -1843,6 +1843,8 @@ const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
     'Reconcilia policy/skills en modo estricto y materializa reglas críticas (p.ej. skills.ios.critical-test-quality).',
   EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE:
     'Reconcilia policy/skills en modo estricto para completar enforcement crítico transversal.',
+  TDD_BDD_BASELINE_BLOCKED:
+    'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
     'Completa contrato skills/policy para el stage actual y vuelve a validar.',
   EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
