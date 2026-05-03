@@ -2,18 +2,27 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolveSkillsEnforcement } from '../skillsEnforcement';
 
-const withSkillsEnforcementEnv = async <T>(
-  value: string | undefined,
-  callback: () => Promise<T> | T
-): Promise<T> => {
+test('resolveSkillsEnforcement defaults to strict mode', async () => {
+  const resolved = resolveSkillsEnforcement();
+
+  assert.deepEqual(resolved, {
+    mode: 'strict',
+    source: 'default',
+    blocking: true,
+  });
+});
+
+test('resolveSkillsEnforcement ignora el entorno y sigue en strict', async () => {
   const previous = process.env.PUMUKI_SKILLS_ENFORCEMENT;
-  if (typeof value === 'undefined') {
-    delete process.env.PUMUKI_SKILLS_ENFORCEMENT;
-  } else {
-    process.env.PUMUKI_SKILLS_ENFORCEMENT = value;
-  }
+  process.env.PUMUKI_SKILLS_ENFORCEMENT = 'advisory';
   try {
-    return await callback();
+    const resolved = resolveSkillsEnforcement();
+
+    assert.deepEqual(resolved, {
+      mode: 'strict',
+      source: 'default',
+      blocking: true,
+    });
   } finally {
     if (typeof previous === 'undefined') {
       delete process.env.PUMUKI_SKILLS_ENFORCEMENT;
@@ -21,52 +30,4 @@ const withSkillsEnforcementEnv = async <T>(
       process.env.PUMUKI_SKILLS_ENFORCEMENT = previous;
     }
   }
-};
-
-test('resolveSkillsEnforcement defaults to strict mode', async () => {
-  await withSkillsEnforcementEnv(undefined, () => {
-    const resolved = resolveSkillsEnforcement();
-
-    assert.deepEqual(resolved, {
-      mode: 'strict',
-      source: 'default',
-      blocking: true,
-    });
-  });
-});
-
-test('resolveSkillsEnforcement reads strict mode from environment', async () => {
-  await withSkillsEnforcementEnv('strict', () => {
-    const resolved = resolveSkillsEnforcement();
-
-    assert.deepEqual(resolved, {
-      mode: 'strict',
-      source: 'env',
-      blocking: true,
-    });
-  });
-});
-
-test('resolveSkillsEnforcement falls back to strict on invalid environment value', async () => {
-  await withSkillsEnforcementEnv('surprise', () => {
-    const resolved = resolveSkillsEnforcement();
-
-    assert.deepEqual(resolved, {
-      mode: 'strict',
-      source: 'default',
-      blocking: true,
-    });
-  });
-});
-
-test('resolveSkillsEnforcement no necesita env para mantener strict por defecto', async () => {
-  await withSkillsEnforcementEnv(undefined, () => {
-    const resolved = resolveSkillsEnforcement();
-
-    assert.deepEqual(resolved, {
-      mode: 'strict',
-      source: 'default',
-      blocking: true,
-    });
-  });
 });
