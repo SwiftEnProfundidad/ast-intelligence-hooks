@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - Corregir el bootstrap base de PRE_PUSH para branches sin upstream`. `Flux_training` ya quedó repineado localmente a `6.3.134`, pero el push quedó bloqueado porque el bootstrap caía en `develop` en una rama nacida de `main`; `SAAS` sigue bloqueado por findings preexistentes del consumer y `R_GO` sigue bloqueado por cambios ajenos en su worktree. |
+| Este plan | `[🚧] - Corregir el bootstrap base de PRE_PUSH para branches sin upstream`. `Flux_training` quedó repineado localmente a `6.3.134`, pero el push quedó bloqueado porque el bootstrap caía en `develop` en una rama nacida de `main`; la siguiente release `6.3.135` corrige ese falso positivo para poder publicar y repinear sin inflar el delta. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
