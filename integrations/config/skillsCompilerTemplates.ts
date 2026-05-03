@@ -320,6 +320,16 @@ export const skillsCompilerTemplates: Record<string, SkillsCompilerTemplate> = {
       'Curated enforcement mapping for Swift Testing adoption in iOS unit and integration tests.',
     rules: [
       {
+        id: 'skills.ios.critical-test-quality',
+        description:
+          'Critical iOS test quality contract: Swift tests must be covered by modern testing rules and XCTest compatibility guards.',
+        severity: 'ERROR',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_COMMIT',
+        locked: true,
+      },
+      {
         id: 'skills.ios.prefer-swift-testing',
         description:
           'Prefer Swift Testing over XCTest-only unit and integration tests, including suites that can migrate to import Testing and @Test.',

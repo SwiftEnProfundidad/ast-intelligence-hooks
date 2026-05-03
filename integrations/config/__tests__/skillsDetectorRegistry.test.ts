@@ -181,6 +181,15 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     'heuristics.ios.testing.xctest-import.ast',
     'heuristics.ios.testing.xctest-suite-modernizable.ast',
   ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.critical-test-quality'), [
+    'heuristics.ios.testing.xctest-import.ast',
+    'heuristics.ios.testing.xctest-suite-modernizable.ast',
+    'heuristics.ios.testing.xctassert.ast',
+    'heuristics.ios.testing.xctunwrap.ast',
+    'heuristics.ios.testing.wait-for-expectations.ast',
+    'heuristics.ios.testing.legacy-expectation-description.ast',
+    'heuristics.ios.testing.mixed-frameworks.ast',
+  ]);
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-xctassert'), [
     'heuristics.ios.testing.xctassert.ast',
   ]);

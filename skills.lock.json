@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-04-29T22:58:10.446Z",
+  "generatedAt": "2026-05-03T12:45:29.960Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -8176,8 +8176,21 @@
       "name": "ios-swift-testing-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/swift-testing-expert/SKILL.md",
-      "hash": "48249808a0c025bb5fb16ac2e5cec4d44ac4b0634273509ee2165ad60d0fe81f",
+      "hash": "1d5d5236f9cd9fdd12a860048512fa3c2d6b9af5aedfafaaa4a18f837d2ca9e1",
       "rules": [
+        {
+          "id": "skills.ios.critical-test-quality",
+          "description": "Critical iOS test quality contract: Swift tests must be covered by modern testing rules and XCTest compatibility guards.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_COMMIT",
+          "locked": true,
+          "sourceSkill": "ios-swift-testing-guidelines",
+          "sourcePath": "vendor/skills/swift-testing-expert/SKILL.md",
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
         {
           "id": "skills.ios.guideline.ios-swift-testing.keep-tests-isolated-expressive-and-aligned-with-swift-concurrency",
           "description": "Keep tests isolated, expressive, and aligned with Swift Concurrency.",
