@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-03 (v6.3.130)
+
+- **Menú consumer legacy recuperado:** `pumuki-framework` vuelve a mostrar la portada plana de 9 opciones y la salida clásica de auditoría.
+- **Auditoría repo completo con cobertura real:** la opción `1) Full audit (repo analysis)` muestra iOS/Android/Backend/Frontend con `rules evaluated=x/y` y explica `Other`.
+- **Rollout recomendado:** publicar `pumuki@6.3.130`, repin inmediato en consumers activos y revalidar `node bin/pumuki-framework.js` opción `1`, `status` y `doctor`.
+
 ### 2026-04-29 (v6.3.129)
 
 - **Singletons Android con detector AST real:** `skills.android.no-singleton-usar-inyeccio-n-de-dependencias-hilt-dagger` queda vinculada a un detector que distingue singleton real de `@Module` / `@InstallIn` / `@EntryPoint`.
