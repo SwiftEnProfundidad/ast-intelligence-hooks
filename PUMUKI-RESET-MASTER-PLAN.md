@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - Validación del rollout 6.3.134 en consumers activos`. `SAAS` y `Flux_training` ya quedaron repineados y validados en `6.3.134`; `R_GO` sigue bloqueado por cambios ajenos en su worktree, así que el siguiente paso útil es validar o repinear solo cuando ese consumer tenga espacio limpio. |
+| Este plan | `[🚧] - Validación del rollout 6.3.134 en consumers activos`. `Flux_training` ya quedó repineado y validado en `6.3.134`; `SAAS` queda bloqueado por findings preexistentes del consumer y `R_GO` sigue bloqueado por cambios ajenos en su worktree, así que el siguiente paso útil es validar o repinear solo cuando esos consumers tengan estado limpio. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
