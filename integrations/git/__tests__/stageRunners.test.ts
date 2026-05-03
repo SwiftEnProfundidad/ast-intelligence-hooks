@@ -1285,7 +1285,7 @@ test('runPreCommitStage usa finding del snapshot PRE_COMMIT como causa primaria 
     assert.equal(blocked.length, 1);
     assert.equal(blocked[0]?.causeCode, 'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH');
     assert.match(blocked[0]?.causeMessage ?? '', /Active rules coverage is empty/i);
-    assert.match(blocked[0]?.remediation ?? '', /policy reconcile --strict --json/i);
+    assert.match(blocked[0]?.remediation ?? '', /policy reconcile --strict --apply --json/i);
     assert.equal(blocked[0]?.totalViolations, 1);
   });
 });
@@ -1351,7 +1351,7 @@ test('runPreCommitStage usa el primer finding bloqueante aunque existan warnings
     assert.equal(blocked.length, 1);
     assert.equal(blocked[0]?.causeCode, 'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH');
     assert.match(blocked[0]?.causeMessage ?? '', /Active rules coverage is empty/i);
-    assert.match(blocked[0]?.remediation ?? '', /policy reconcile --strict --json/i);
+    assert.match(blocked[0]?.remediation ?? '', /policy reconcile --strict --apply --json/i);
     assert.equal(blocked[0]?.totalViolations, 2);
   });
 });

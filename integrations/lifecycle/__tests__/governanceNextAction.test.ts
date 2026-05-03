@@ -41,3 +41,17 @@ test('readGovernanceNextAction mantiene POLICY_STAGE_NOT_STRICT cuando PRE_WRITE
 
   assert.equal(result.reason_code, 'POLICY_STAGE_NOT_STRICT');
 });
+
+test('readGovernanceNextAction propone reconcile con apply cuando hay divergencia de hashes de policy', () => {
+  const snapshot = buildSnapshot(['POLICY_HASH_DIVERGENCE']);
+
+  const result = readGovernanceNextAction({
+    repoRoot: process.cwd(),
+    stage: 'PRE_WRITE',
+    governanceObservation: snapshot,
+  });
+
+  assert.equal(result.reason_code, 'POLICY_HASH_DIVERGENCE');
+  assert.equal(result.next_action.kind, 'run_command');
+  assert.match(result.next_action.command ?? '', /policy reconcile --strict --apply --json/i);
+});

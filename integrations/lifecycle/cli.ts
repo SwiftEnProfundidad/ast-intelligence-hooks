@@ -1650,7 +1650,7 @@ const buildPreWriteValidateCommand = (params: {
 const buildPreWritePolicyReconcileCommand = (repoRoot?: string): string =>
   `${buildPinnedPumukiNpxCommand({
     repoRoot,
-    executableAndArgs: 'pumuki policy reconcile --strict --json',
+    executableAndArgs: 'pumuki policy reconcile --strict --apply --json',
   })} && ${buildPreWriteValidateCommand({ repoRoot, stage: 'PRE_WRITE' })}`;
 
 type PreWriteValidationEnvelope = {
@@ -1838,11 +1838,11 @@ const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
   EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura unevaluated=0 y coverage_ratio=1.',
   EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
-    'No hay active_rule_ids para plataforma de código detectada. Reconcilia policy/skills en modo estricto y revalida PRE_WRITE.',
+    'No hay active_rule_ids para plataforma de código detectada. Reconcilia policy/skills en modo estricto con apply y revalida PRE_WRITE.',
   EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING:
-    'Reconcilia policy/skills en modo estricto y materializa reglas críticas (p.ej. skills.ios.critical-test-quality).',
+    'Reconcilia policy/skills en modo estricto con apply y materializa reglas críticas (p.ej. skills.ios.critical-test-quality).',
   EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE:
-    'Reconcilia policy/skills en modo estricto para completar enforcement crítico transversal.',
+    'Reconcilia policy/skills en modo estricto con apply para completar enforcement crítico transversal.',
   TDD_BDD_BASELINE_BLOCKED:
     'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:

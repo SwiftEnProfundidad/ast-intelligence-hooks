@@ -748,7 +748,7 @@ test('pre_flight_check expone hint accionable de reconcile estricto cuando falta
       hint.startsWith('EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING:')
     );
     assert.ok(criticalHint);
-    assert.match(criticalHint, /policy reconcile --strict --json/i);
+    assert.match(criticalHint, /policy reconcile --strict --apply --json/i);
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }

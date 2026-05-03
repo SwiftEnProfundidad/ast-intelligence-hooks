@@ -26,7 +26,7 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_INVALID: 'Regenera .ai_evidence.json desde una opción de auditoría.',
   EVIDENCE_INTEGRITY_MISSING: 'Refresca evidencia para regenerar metadatos de integridad.',
   EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
-    'No hay active_rule_ids para plataforma de código detectada. Ejecuta reconcile --strict y revalida PRE_WRITE.',
+    'No hay active_rule_ids para plataforma de código detectada. Ejecuta reconcile --strict --apply y revalida PRE_WRITE.',
   EVIDENCE_STALE: 'Refresca evidencia antes de continuar con commit/push.',
   EVIDENCE_TIMESTAMP_INVALID: 'Regenera evidencia para obtener un timestamp válido.',
   EVIDENCE_GATE_BLOCKED: 'Corrige primero las violaciones bloqueantes y vuelve a auditar.',
@@ -43,9 +43,9 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING:
     'Carga los bundles de skills requeridos por plataforma detectada y regenera evidencia.',
   EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING:
-    'Ejecuta `pumuki policy reconcile --strict --json`, materializa reglas críticas (p.ej. skills.ios.critical-test-quality) y revalida PRE_WRITE.',
+    'Ejecuta `pumuki policy reconcile --strict --apply --json`, materializa reglas críticas (p.ej. skills.ios.critical-test-quality) y revalida PRE_WRITE.',
   EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE:
-    'Reconcilia policy/skills en modo estricto para enforcement crítico transversal y vuelve a validar PRE_WRITE.',
+    'Reconcilia policy/skills en modo estricto con apply para enforcement crítico transversal y vuelve a validar PRE_WRITE.',
   TDD_BDD_BASELINE_BLOCKED:
     'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:

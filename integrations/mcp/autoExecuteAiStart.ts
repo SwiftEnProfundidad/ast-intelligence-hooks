@@ -94,7 +94,7 @@ const nextActionFromViolation = (
         command:
           `${buildPinnedPumukiNpxCommand({
             repoRoot,
-            executableAndArgs: 'pumuki policy reconcile --strict --json',
+            executableAndArgs: 'pumuki policy reconcile --strict --apply --json',
           })} && ${buildPinnedPumukiNpxCommand({
             repoRoot,
             executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
@@ -121,7 +121,7 @@ const nextActionFromViolation = (
         command:
           `${buildPinnedPumukiNpxCommand({
             repoRoot,
-            executableAndArgs: 'pumuki policy reconcile --strict --json',
+            executableAndArgs: 'pumuki policy reconcile --strict --apply --json',
           })} && ${buildPinnedPumukiNpxCommand({
             repoRoot,
             executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',

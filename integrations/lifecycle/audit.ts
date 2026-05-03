@@ -55,7 +55,7 @@ type LifecycleAuditDependencies = {
 };
 
 const POLICY_RECONCILE_HINT =
-  'If .pumuki/policy-as-code.json signatures drift after a pumuki upgrade, run: pumuki policy reconcile --apply';
+  'If .pumuki/policy-as-code.json signatures drift after a pumuki upgrade, run: pumuki policy reconcile --strict --apply --json';
 
 const countUntrackedMatchingExtensions = (
   git: Pick<IGitService, 'resolveRepoRoot' | 'runGit'>,

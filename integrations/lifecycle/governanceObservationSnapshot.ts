@@ -263,6 +263,12 @@ export const readGovernanceObservationSnapshot = (params: {
   if (!policyValidation.stages.CI.strict) {
     attention.push('POLICY_CI_NOT_STRICT');
   }
+  const policyHashes = new Set(
+    Object.values(policyValidation.stages).map((stage) => stage.hash)
+  );
+  if (policyHashes.size > 1) {
+    attention.push('POLICY_HASH_DIVERGENCE');
+  }
   if (onProtected) {
     attention.push('GITFLOW_PROTECTED_BRANCH_CONTEXT');
   }
