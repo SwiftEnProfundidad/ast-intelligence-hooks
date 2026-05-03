@@ -228,12 +228,7 @@ const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
     return undefined;
   }
 
-  const unsupportedRuleIds = [
-    ...new Set([
-      ...params.unsupportedAutoRuleIds,
-      ...(params.unsupportedDetectorRuleIds ?? []),
-    ]),
-  ].sort();
+  const unsupportedRuleIds = [...new Set(params.unsupportedAutoRuleIds)].sort();
   if (unsupportedRuleIds.length === 0) {
     return undefined;
   }
@@ -246,8 +241,8 @@ const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
     code: 'SKILLS_DETECTOR_MAPPING_INCOMPLETE_HIGH',
     message:
       `Skills detector mapping incomplete at ${params.stage}: ` +
-      `unsupported_detector_rule_ids=[${unsupportedRuleIdsToken}]. ` +
-      'Map every skill rule to an intelligent AST detector before proceeding; DECLARATIVE is not an acceptable final coverage state.',
+      `unsupported_auto_rule_ids=[${unsupportedRuleIdsToken}]. ` +
+      'Map every stage-applicable AUTO skill rule to an intelligent AST detector before proceeding.',
     filePath: '.ai_evidence.json',
     matchedBy: 'SkillsDetectorMappingGuard',
     source: 'skills-detector-mapping',
