@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.132] - 2026-05-03
+
+### Fixed
+
+- **Reglas declarativas sin detector no bloquean el gate:** `unsupported_detector_rule_ids` se conserva en evidencia, pero deja de convertirse en `SKILLS_DETECTOR_MAPPING_INCOMPLETE_HIGH` cuando no hay reglas AUTO ejecutables sin detector.
+- **Bloqueo solo para AUTO real:** el guard de cobertura de skills ahora bloquea exclusivamente `unsupported_auto_rule_ids`, evitando que doctrina declarativa de skills vuelva a parar consumers con `coverage_ratio=1`.
+- **Regresión focalizada:** `runPlatformGate` cubre el caso en modo strict para asegurar que declarativas sin detector quedan como evidencia no bloqueante.
+
 ## [6.3.130] - 2026-05-03
 
 ### Fixed
