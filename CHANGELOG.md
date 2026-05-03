@@ -11,7 +11,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - **Policy hash drift accionable:** `governanceObservationSnapshot`, `governanceNextAction` y el catálogo de remediación ya convierten la divergencia entre stages en una acción estricta y aplicable.
-- **Release preparada para repin:** esta versión queda lista para publicarse y repinear consumers activos como RuralGo con el fix real ya distribuido.
+- **Release publicada y lista para repin:** esta versión ya está en npm y queda lista para repinear consumers activos como RuralGo con el fix real distribuido.
 
 ## [6.3.133] - 2026-05-03
 

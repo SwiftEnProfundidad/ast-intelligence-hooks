@@ -8,7 +8,7 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 - **Policy hash drift accionable:** `governanceObservationSnapshot`, `governanceNextAction` y el catálogo de remediación ya convierten la divergencia entre stages en una acción estricta y aplicable.
 - **Repin recomendado:** publicar `pumuki@6.3.134`, repinear RuralGo y revalidar `status`, `doctor`, `audit --stage=PRE_WRITE --json` y hooks gestionados.
-- **Contrato de release estable:** no hace falta cerrar más gaps funcionales para este fix; la solución ya quedó validada localmente y lo que falta es distribución.
+- **Contrato de release estable:** no hace falta cerrar más gaps funcionales para este fix; la solución ya quedó validada localmente y la distribución de `6.3.134` ya está publicada.
 
 ### 2026-05-03 (v6.3.133)
 
