@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - Alinear la suite `stageRunners` con el bootstrap sin upstream y los policy traces actuales de `PRE_COMMIT`/`PRE_PUSH`/`CI``. La release `6.3.135` ya corrige el falso positivo de bootstrap en ramas sin upstream; ahora falta dejar la batería de `stageRunners` y sus expectativas de policy trace coherentes con ese comportamiento real. |
+| Este plan | `[🚧] - Convertir `ios-swiftui-expert-guidelines` en cobertura AST/nodos real sobre el snapshot `ios-swiftui-modernization-v2`, cerrando la deuda declarativa iOS restante que el inventario actual todavía mantiene fuera de AUTO. La tarea `stageRunners` ya quedó validada con `51/51 pass` y pasa a `✅` en el historial del plan.` |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
