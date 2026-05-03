@@ -527,6 +527,48 @@ test('runPrePushStage sin upstream usa fallback bootstrap range cuando no hay st
   });
 });
 
+test('runPrePushStage sin upstream usa main como bootstrap range cuando la rama nace de main', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
+
+    runGit(repoRoot, ['checkout', '--quiet', '-b', 'develop']);
+    writeFileSync(join(repoRoot, 'develop-note.md'), 'develop\n', 'utf8');
+    runGit(repoRoot, ['add', 'develop-note.md']);
+    runGit(repoRoot, ['commit', '-m', 'docs: develop note']);
+
+    runGit(repoRoot, ['checkout', '--quiet', 'main']);
+    writeFileSync(join(repoRoot, 'main-note.md'), 'main\n', 'utf8');
+    runGit(repoRoot, ['add', 'main-note.md']);
+    runGit(repoRoot, ['commit', '-m', 'docs: main note']);
+
+    runGit(repoRoot, ['checkout', '--quiet', '-b', 'feature/no-upstream']);
+    stageBackendFile(repoRoot);
+    runGit(repoRoot, ['commit', '-m', 'feat: backend explicit any fixture']);
+
+    const capturedAtomicityArgs: Array<{ fromRef?: string; toRef?: string }> = [];
+    const exitCode = await runPrePushStage({
+      evaluateGitAtomicity: (params) => {
+        capturedAtomicityArgs.push({
+          fromRef: params.fromRef,
+          toRef: params.toRef,
+        });
+        return {
+          enabled: true,
+          allowed: true,
+          violations: [],
+        };
+      },
+      runPlatformGate: async () => 0,
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(capturedAtomicityArgs, [{ fromRef: 'main', toRef: 'HEAD' }]);
+  });
+});
+
 test('runPrePushStage sin upstream usa fallback working-tree cuando no hay stdin y no existe base bootstrap válida', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     setupBackendCommitRangeWithoutUpstream(repoRoot);

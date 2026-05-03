@@ -44,14 +44,30 @@ const resolveCiBaseRefInRepo = (repoRoot: string): string => {
 };
 
 const resolvePrePushBootstrapBaseRefInRepo = (repoRoot: string): string => {
-  const candidates = ['origin/develop', 'develop', resolveCiBaseRefInRepo(repoRoot)];
+  const candidates = ['origin/main', 'main', 'origin/develop', 'develop'];
+  let best: { ref: string; changedFiles: number } | undefined;
+
   for (const candidate of candidates) {
-    if (runGit(repoRoot, ['rev-parse', '--verify', candidate])) {
-      return candidate;
+    if (!runGit(repoRoot, ['rev-parse', '--verify', candidate])) {
+      continue;
+    }
+    try {
+      const changedFiles = runGit(
+        repoRoot,
+        ['diff', '--name-only', '--diff-filter=ACMR', `${candidate}..HEAD`]
+      )
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0).length;
+      if (!best || changedFiles < best.changedFiles) {
+        best = { ref: candidate, changedFiles };
+      }
+    } catch {
+      continue;
     }
   }
 
-  return 'HEAD';
+  return best?.ref ?? resolveCiBaseRefInRepo(repoRoot);
 };
 
 const shouldAllowBootstrapPrePush = (rawInput: string): boolean => {
