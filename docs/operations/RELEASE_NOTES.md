@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-03 (v6.3.133)
+
+- **Skills hard-blocking end-to-end:** `skillsEnforcement`, `evaluateAiGate`, `runPlatformGate` y el flujo CLI ya no dejan pasar advisory para violations de skills.
+- **Repin recomendado:** publicar `pumuki@6.3.133`, repinear RuralGo y revalidar `status`, `doctor`, `audit --stage=PRE_WRITE --json` y hooks gestionados.
+- **Contrato de release estable:** no hace falta cerrar más gaps funcionales para este fix; la solución ya quedó validada localmente y lo que falta es distribución.
+
 ### 2026-05-03 (v6.3.130)
 
 - **Menú consumer legacy recuperado:** `pumuki-framework` vuelve a mostrar la portada plana de 9 opciones y la salida clásica de auditoría.
