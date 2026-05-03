@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-059`. Gap de enforcement skills hard OCP/SRP/LISKOV/ISP/DIP/LOP en `PRE_WRITE` reportado desde RuralGo; foco actual del repo por prioridad externa, con `PUMUKI-INC-060` y `PUMUKI-INC-061` detrás en el mismo backlog consumer. |
+| Este plan | `[🚧] - PUMUKI-INC-060`. Gap detección test roto en baseline reportado desde RuralGo; `PUMUKI-INC-059` queda cerrado con el endurecimiento del enforcement de skills, y `PUMUKI-INC-061` queda detrás en el mismo backlog consumer. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
