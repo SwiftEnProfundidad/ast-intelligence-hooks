@@ -855,8 +855,8 @@ test('evaluateAiGate bloquea PRE_WRITE ante incoherencias múltiples de evidenci
   assert.equal(codes.has('EVIDENCE_TIMESTAMP_FUTURE'), true);
 });
 
-test('evaluateAiGate mantiene PRE_WRITE en advisory cuando falta cobertura de prefijos skills por plataforma detectada', async () => {
-  await withSkillsEnforcementEnv('advisory', async () => {
+test('evaluateAiGate bloquea PRE_WRITE cuando falta cobertura de prefijos skills por plataforma detectada', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
     const base = sampleEvidence();
     const result = evaluateAiGate(
     {
@@ -903,13 +903,13 @@ test('evaluateAiGate mantiene PRE_WRITE en advisory cuando falta cobertura de pr
     }
   );
 
-    assert.equal(result.status, 'ALLOWED');
-    assert.equal(result.allowed, true);
+    assert.equal(result.status, 'BLOCKED');
+    assert.equal(result.allowed, false);
     const violation = result.violations.find(
       (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
     );
     assert.ok(violation);
-    assert.equal(violation.severity, 'WARN');
+    assert.equal(violation.severity, 'ERROR');
   });
 });
 
@@ -1055,8 +1055,8 @@ test('evaluateAiGate bloquea PRE_WRITE cuando active_rule_ids está vacío y la 
   assert.match(violation?.message ?? '', /inferred code platforms=\[backend\]/i);
 });
 
-test('evaluateAiGate mantiene PRE_WRITE en advisory cuando faltan bundles skills requeridos por plataforma detectada', async () => {
-  await withSkillsEnforcementEnv('advisory', async () => {
+test('evaluateAiGate bloquea PRE_WRITE cuando faltan bundles skills requeridos por plataforma detectada', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
     const base = sampleEvidence();
     const result = evaluateAiGate(
     {
@@ -1097,13 +1097,13 @@ test('evaluateAiGate mantiene PRE_WRITE en advisory cuando faltan bundles skills
     }
   );
 
-    assert.equal(result.status, 'ALLOWED');
-    assert.equal(result.allowed, true);
+    assert.equal(result.status, 'BLOCKED');
+    assert.equal(result.allowed, false);
     const violation = result.violations.find(
       (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING'
     );
     assert.ok(violation);
-    assert.equal(violation.severity, 'WARN');
+    assert.equal(violation.severity, 'ERROR');
   });
 });
 
@@ -1185,8 +1185,8 @@ test('evaluateAiGate permite PRE_WRITE con plataformas detectadas cuando skills 
   );
 });
 
-test('evaluateAiGate mantiene PRE_WRITE en advisory cuando iOS detectado no incluye regla crítica de calidad de tests', async () => {
-  await withSkillsEnforcementEnv('advisory', async () => {
+test('evaluateAiGate bloquea PRE_WRITE cuando iOS detectado no incluye regla crítica de calidad de tests', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
     const base = sampleEvidence();
     const result = evaluateAiGate(
     {
@@ -1253,13 +1253,13 @@ test('evaluateAiGate mantiene PRE_WRITE en advisory cuando iOS detectado no incl
     }
   );
 
-    assert.equal(result.status, 'ALLOWED');
-    assert.equal(result.allowed, true);
+    assert.equal(result.status, 'BLOCKED');
+    assert.equal(result.allowed, false);
     const violation = result.violations.find(
       (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
     );
     assert.ok(violation);
-    assert.equal(violation.severity, 'WARN');
+    assert.equal(violation.severity, 'ERROR');
   });
 });
 
@@ -1346,8 +1346,8 @@ test('evaluateAiGate permite PRE_WRITE cuando iOS detectado incluye regla críti
   );
 });
 
-test('evaluateAiGate mantiene PRE_WRITE en advisory cuando plataforma backend detectada no cubre regla crítica transversal', async () => {
-  await withSkillsEnforcementEnv('advisory', async () => {
+test('evaluateAiGate bloquea PRE_WRITE cuando plataforma backend detectada no cubre regla crítica transversal', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
     const base = sampleEvidence();
     const result = evaluateAiGate(
     {
@@ -1394,13 +1394,13 @@ test('evaluateAiGate mantiene PRE_WRITE en advisory cuando plataforma backend de
     }
   );
 
-    assert.equal(result.status, 'ALLOWED');
-    assert.equal(result.allowed, true);
+    assert.equal(result.status, 'BLOCKED');
+    assert.equal(result.allowed, false);
     const violation = result.violations.find(
       (item) => item.code === 'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE'
     );
     assert.ok(violation);
-    assert.equal(violation.severity, 'WARN');
+    assert.equal(violation.severity, 'ERROR');
   });
 });
 
@@ -1554,8 +1554,8 @@ test('evaluateAiGate bloquea PRE_WRITE cuando se requiere recibo MCP y no existe
   );
 });
 
-test('evaluateAiGate mantiene PRE_PUSH en advisory cuando contrato skills/policy queda incompleto para plataforma detectada', async () => {
-  await withSkillsEnforcementEnv('advisory', async () => {
+test('evaluateAiGate bloquea PRE_PUSH cuando contrato skills/policy queda incompleto para plataforma detectada', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
     const base = sampleEvidence();
     const result = evaluateAiGate(
     {
@@ -1602,8 +1602,8 @@ test('evaluateAiGate mantiene PRE_PUSH en advisory cuando contrato skills/policy
     }
   );
 
-    assert.equal(result.status, 'ALLOWED');
-    assert.equal(result.allowed, true);
+    assert.equal(result.status, 'BLOCKED');
+    assert.equal(result.allowed, false);
     assert.equal(
       result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
       true
@@ -1611,7 +1611,7 @@ test('evaluateAiGate mantiene PRE_PUSH en advisory cuando contrato skills/policy
     assert.equal(
       result.violations.find((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE')
         ?.severity,
-      'WARN'
+      'ERROR'
     );
     assert.equal(result.skills_contract?.status, 'FAIL');
     assert.equal(

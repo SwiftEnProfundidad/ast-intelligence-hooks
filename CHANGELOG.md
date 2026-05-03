@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.133] - 2026-05-03
+
+### Fixed
+
+- **Skills enforcement endurecido a bloqueo duro:** `PRE_WRITE`, `PRE_COMMIT` y `PRE_PUSH` ya no admiten bypass advisory para violaciones de skills.
+- **Contrato de gate alineado de punta a punta:** `skillsEnforcement`, `evaluateAiGate`, `runPlatformGate` y el flujo CLI bloquean de forma consistente cuando falta cobertura, bundles o contrato de skills.
+- **Release listo para repin:** esta versión está preparada para publicarse y repinear consumers como RuralGo sin cerrar más gaps funcionales para este fix.
+
 ## [6.3.132] - 2026-05-03
 
 ### Fixed

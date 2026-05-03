@@ -13,9 +13,9 @@ Este documento es la **única fuente viva** de seguimiento interno del monorepo 
 - ⏳ Pendiente
 - ⛔ Bloqueado (falta decisión de producto, proveedor IDE/CLI, o datos de consumidor)
 - Convención hard de tracking: toda task viva o actualizada debe escribirse con el formato `[emoji] - tarea`.
-- Regla hard: solo puede existir una `[🚧] - tarea` activa en todo el documento.
+- Regla hard: solo puede existir una tarea activa marcada con `🚧` en todo el documento.
 - Regla hard: al cerrar una task, este MD debe actualizarse en el mismo turno para reflejar `[✅]`, `[⏳]` o `[⛔]` y activar la siguiente si aplica.
-- Regla hard de cierre operativo: tarea hecha, comprobada que funciona y con UX/UI correcta implica cierre inmediato del ciclo; en ese mismo turno pasa a check verde `[✅]` y la siguiente tarea se marca en construcción `[🚧]`. Este ciclo es obligatorio y no negociable.
+- Regla hard de cierre operativo: tarea hecha, comprobada que funciona y con UX/UI correcta implica cierre inmediato del ciclo; en ese mismo turno pasa a check verde `[✅]` y la siguiente tarea se marca en construcción. Este ciclo es obligatorio y no negociable.
 - Regla hard operativa: cuando no haya bugs externos abiertos, el avance del backlog interno debe ser constante; la slice pesada activa la ejecuta el agente principal y las subtareas ligeras, preparatorias o de baja conflictividad se delegan de forma continua a subagentes, siempre sin abrir una segunda `🚧` en este MD.
 
 ---
@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[✅] - PARITY-BACKEND-001`. Baseline backend equivalente a iOS cerrado con detector AST 1:1 para retornos de entidades directos, transacciones críticas y multi-tabla, rate limiting, validación, observabilidad y el resto del bundle backend ya enlazado en facts, preset, registry, markdown, tests y lock. |
+| Este plan | `[🚧] - PUMUKI-INC-060`. Gap detección test roto en baseline reportado desde RuralGo; `PUMUKI-INC-059` queda cerrado con el endurecimiento del enforcement de skills, y `PUMUKI-INC-061` queda detrás en el mismo backlog consumer. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.

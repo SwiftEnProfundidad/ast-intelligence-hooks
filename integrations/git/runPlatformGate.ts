@@ -32,7 +32,6 @@ import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { createEmptySnapshotRulesCoverage } from '../evidence/rulesCoverage';
 import { enforceTddBddPolicy } from '../tdd/enforcement';
 import type { TddBddSnapshot } from '../tdd/types';
-import { resolveSkillsEnforcement } from '../policy/skillsEnforcement';
 import { applyTddBddEnforcement } from '../policy/tddBddEnforcement';
 import { collectAiGateRepoPolicyFindings } from './aiGateRepoPolicyFindings';
 import {
@@ -845,35 +844,9 @@ const applySkillsFindingEnforcement = (
   if (!finding) {
     return undefined;
   }
-  const skillsEnforcement = resolveSkillsEnforcement();
-  if (skillsEnforcement.blocking) {
-    return finding;
-  }
   return {
     ...finding,
-    severity: 'WARN',
-  };
-};
-
-const toSoftPreCommitSkillsFinding = (params: {
-  finding: Finding | undefined;
-  enabled: boolean;
-  observedCodePaths: ReadonlyArray<string>;
-}): Finding | undefined => {
-  if (!params.finding) {
-    return undefined;
-  }
-  if (!params.enabled || !shouldBlockFromFinding(params.finding)) {
-    return params.finding;
-  }
-  return {
-    ...params.finding,
-    severity: 'WARN',
-    code: `${params.finding.code}_SOFT_PRECOMMIT`,
-    message:
-      `${params.finding.message} ` +
-      `Soft-enforced at PRE_COMMIT for low-risk scope (observed_code_paths=${params.observedCodePaths.length}). ` +
-      'Strict enforcement remains active at PRE_PUSH/CI.',
+    severity: 'ERROR',
   };
 };
 
@@ -1237,37 +1210,9 @@ export async function runPlatformGate(params: {
   const hasNativeBlockingFinding = findings.some(
     (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
   );
-  const preCommitSoftSkillsEnabled = process.env.PUMUKI_PRE_COMMIT_SOFT_SKILLS !== '0';
-  const lowRiskPreCommitWindow = observedCodePaths.length > 0 && observedCodePaths.length <= 3;
-  const shouldSoftEnforceSkillsFindings =
-    params.policy.stage === 'PRE_COMMIT'
-    && preCommitSoftSkillsEnabled
-    && lowRiskPreCommitWindow
-    && !sddBlockingFinding
-    && !degradedModeBlocks
-    && !shouldBlockFromFinding(policyAsCodeBlockingFinding)
-    && !shouldBlockFromFinding(effectiveUnsupportedSkillsMappingFinding)
-    && !shouldBlockFromFinding(coverageBlockingFinding)
-    && !shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding)
-    && !shouldBlockFromFinding(effectiveIosTestsQualityFinding)
-    && !shouldBlockFromFinding(astIntelligenceDualFinding)
-    && !hasTddBddBlockingFinding
-    && !hasNativeBlockingFinding;
-  const effectivePlatformSkillsCoverageFinding = toSoftPreCommitSkillsFinding({
-    finding: effectivePlatformSkillsCoverageInput,
-    enabled: shouldSoftEnforceSkillsFindings,
-    observedCodePaths,
-  });
-  const effectiveCrossPlatformCriticalFinding = toSoftPreCommitSkillsFinding({
-    finding: effectiveCrossPlatformCriticalInput,
-    enabled: shouldSoftEnforceSkillsFindings,
-    observedCodePaths,
-  });
-  const effectiveSkillsScopeComplianceFinding = toSoftPreCommitSkillsFinding({
-    finding: effectiveSkillsScopeComplianceInput,
-    enabled: shouldSoftEnforceSkillsFindings,
-    observedCodePaths,
-  });
+  const effectivePlatformSkillsCoverageFinding = effectivePlatformSkillsCoverageInput;
+  const effectiveCrossPlatformCriticalFinding = effectiveCrossPlatformCriticalInput;
+  const effectiveSkillsScopeComplianceFinding = effectiveSkillsScopeComplianceInput;
   const effectiveFindings = sddBlockingFinding
     ? [
       sddBlockingFinding,

@@ -66,8 +66,7 @@ Current enforcement scope:
 - curated template compilation (`skills.sources.json` -> `skills.lock.json`)
 - stage-aware policy resolution via `resolvePolicyForStage`
 - additive skills-derived rules merged through the shared gate runner
-- strict skills enforcement by default; `PUMUKI_SKILLS_ENFORCEMENT=advisory`
-  is an explicit opt-in escape hatch, not the product baseline
+- strict skills enforcement by default; advisory values are ignored by design
 - strict heuristics, TDD/BDD evidence, SDD completeness, and Git atomicity by
   default; their `advisory`/`0` env values are explicit legacy overrides, not
   the product baseline
