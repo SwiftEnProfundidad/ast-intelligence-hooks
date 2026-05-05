@@ -4600,6 +4600,36 @@ const buildMagicNumberPatternMatch = (
     }
     return false;
   };
+  const isStandardLibraryNumericArgument = (
+    value: AstNode,
+    ancestors: ReadonlyArray<AstNode>
+  ): boolean => {
+    let callExpression: AstNode | undefined;
+    for (let index = ancestors.length - 1; index >= 0; index -= 1) {
+      if (ancestors[index].type === 'CallExpression') {
+        callExpression = ancestors[index];
+        break;
+      }
+    }
+    if (!isObject(callExpression) || !Array.isArray(callExpression.arguments)) {
+      return false;
+    }
+    const argumentIndex = callExpression.arguments.indexOf(value);
+    const calleeName =
+      methodNameFromNode(callExpression.callee) ?? memberExpressionPropertyName(callExpression.callee);
+    const memberName = memberExpressionPropertyName(callExpression.callee);
+
+    if ((calleeName === 'parseInt' || memberName === 'parseInt') && argumentIndex === 1) {
+      return true;
+    }
+    if ((memberName === 'slice' || memberName === 'substring') && argumentIndex >= 0) {
+      return true;
+    }
+    if ((memberName === 'min' || memberName === 'max') && argumentIndex >= 0) {
+      return true;
+    }
+    return false;
+  };
 
   const match = findFirstNodeWithAncestors(node, (value, ancestors) => {
     if (value.type !== 'NumericLiteral' || typeof value.value !== 'number') {
@@ -4609,6 +4639,9 @@ const buildMagicNumberPatternMatch = (
       return false;
     }
     if (isNamedConstantInitializer(ancestors)) {
+      return false;
+    }
+    if (isStandardLibraryNumericArgument(value, ancestors)) {
       return false;
     }
 
@@ -4840,6 +4873,25 @@ const isBenignHardcodedConfigLiteral = (node: AstNode): boolean => {
   return false;
 };
 
+const isBenignConfigMetadataName = (value: string): boolean => {
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    return true;
+  }
+  if (
+    normalized.startsWith('skills.') ||
+    normalized.startsWith('heuristics.') ||
+    normalized.startsWith('common.') ||
+    normalized.startsWith('workflow.')
+  ) {
+    return true;
+  }
+  if (/^[A-Z][A-Z0-9_]+$/.test(normalized)) {
+    return true;
+  }
+  return false;
+};
+
 const isTypeOnlyAstNode = (node: AstNode): boolean => {
   return typeof node.type === 'string' && node.type.startsWith('TS');
 };
@@ -4853,6 +4905,9 @@ const hardcodedValueAssignmentContextFromAncestors = (
     if (ancestor.type === 'VariableDeclarator') {
       const ownerName = hardcodedValueNameFromNode(ancestor.id);
       if (typeof ownerName === 'string' && ownerName.length > 0) {
+        if (isBenignConfigMetadataName(ownerName)) {
+          return undefined;
+        }
         return {
           ownerName,
           ownerKind: 'member',
@@ -4864,6 +4919,9 @@ const hardcodedValueAssignmentContextFromAncestors = (
     if (ancestor.type === 'ObjectProperty' || ancestor.type === 'ClassProperty') {
       const ownerName = hardcodedValueNameFromNode(ancestor.key);
       if (typeof ownerName === 'string' && ownerName.length > 0) {
+        if (isBenignConfigMetadataName(ownerName)) {
+          return undefined;
+        }
         return {
           ownerName,
           ownerKind: 'member',
@@ -4875,6 +4933,9 @@ const hardcodedValueAssignmentContextFromAncestors = (
     if (ancestor.type === 'AssignmentExpression') {
       const ownerName = hardcodedValueNameFromNode(ancestor.left);
       if (typeof ownerName === 'string' && ownerName.length > 0) {
+        if (isBenignConfigMetadataName(ownerName)) {
+          return undefined;
+        }
         return {
           ownerName,
           ownerKind: 'member',
