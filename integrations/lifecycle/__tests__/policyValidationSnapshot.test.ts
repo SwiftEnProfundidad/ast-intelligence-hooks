@@ -48,12 +48,12 @@ test('readLifecyclePolicyValidationSnapshot trata PRE_WRITE como estricto por de
   }
 });
 
-test('readLifecyclePolicyValidationSnapshot refleja PRE_WRITE no estricto cuando el enforcement efectivo está en advisory', async () => {
+test('readLifecyclePolicyValidationSnapshot refleja PRE_WRITE estricto cuando el enforcement efectivo está en advisory', async () => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-policy-validation-prewrite-advisory-'));
   try {
     await withPreWriteMode('advisory', () => {
       const snapshot = readLifecyclePolicyValidationSnapshot(repoRoot);
-      assert.equal(snapshot.stages.PRE_WRITE.strict, false);
+      assert.equal(snapshot.stages.PRE_WRITE.strict, true);
     });
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });

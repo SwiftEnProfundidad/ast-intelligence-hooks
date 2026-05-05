@@ -220,8 +220,8 @@ Pumuki lifecycle commands:
 
 const LOOP_RUN_POLICY: GatePolicy = {
   stage: 'STAGED',
-  blockOnOrAbove: 'ERROR',
-  warnOnOrAbove: 'WARN',
+  blockOnOrAbove: 'INFO',
+  warnOnOrAbove: 'INFO',
 };
 
 const isLifecycleCommand = (value: string): value is LifecycleCommand =>

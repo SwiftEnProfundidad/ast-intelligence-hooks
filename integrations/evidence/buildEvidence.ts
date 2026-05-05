@@ -585,10 +585,7 @@ const normalizeAndDedupeFindings = (
 };
 
 const toGateOutcome = (findings: ReadonlyArray<SnapshotFinding>): GateOutcome => {
-  if (findings.some((finding) => finding.severity === 'CRITICAL')) {
-    return 'BLOCK';
-  }
-  return findings.length > 0 ? 'WARN' : 'PASS';
+  return findings.length > 0 ? 'BLOCK' : 'PASS';
 };
 
 const bySeverity = (findings: ReadonlyArray<SnapshotFinding>): Record<Severity, number> => {

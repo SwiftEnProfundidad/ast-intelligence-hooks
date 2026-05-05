@@ -1147,7 +1147,7 @@ test('runLifecycleCli watch --json delega en runLifecycleWatch y devuelve payloa
         }),
       }
     );
-    assert.equal(code, 0);
+    assert.equal(code, 1);
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       command?: string;
       stage?: string;
@@ -2245,7 +2245,7 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
     assert.equal(payload.sdd?.decision?.allowed, false);
     assert.equal(payload.sdd?.decision?.code, 'OPENSPEC_MISSING');
     assert.equal(payload.pre_write_enforcement?.mode, 'advisory');
-    assert.equal(payload.pre_write_enforcement?.blocking, false);
+    assert.equal(payload.pre_write_enforcement?.blocking, true);
     assert.equal(payload.bootstrap?.enabled, false);
     assert.equal(payload.bootstrap?.attempted, false);
     assert.equal(payload.bootstrap?.status, 'SKIPPED');

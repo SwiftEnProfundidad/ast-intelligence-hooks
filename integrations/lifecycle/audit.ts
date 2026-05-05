@@ -71,10 +71,10 @@ const countUntrackedMatchingExtensions = (
 };
 
 const isFindingBlocking = (finding: SnapshotFinding): boolean => {
-  if (typeof finding.blocking === 'boolean') {
-    return finding.blocking;
-  }
-  return finding.severity === 'CRITICAL' || finding.severity === 'ERROR';
+  return finding.severity === 'CRITICAL' ||
+    finding.severity === 'ERROR' ||
+    finding.severity === 'WARN' ||
+    finding.severity === 'INFO';
 };
 
 const toLifecycleAuditFinding = (finding: SnapshotFinding): LifecycleAuditFinding => ({
