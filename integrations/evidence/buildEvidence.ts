@@ -282,6 +282,10 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
     'skills.ios.no-passed-value-state-wrapper',
     'heuristics.ios.passed-value-state-wrapper.ast',
   ],
+  [
+    'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear',
+    'heuristics.ios.swiftui.state-wrapper-private.ast',
+  ],
   ['skills.ios.no-navigation-view', 'heuristics.ios.navigation-view.ast'],
   ['skills.ios.no-foreground-color', 'heuristics.ios.foreground-color.ast'],
   ['skills.ios.no-corner-radius', 'heuristics.ios.corner-radius.ast'],
@@ -581,10 +585,7 @@ const normalizeAndDedupeFindings = (
 };
 
 const toGateOutcome = (findings: ReadonlyArray<SnapshotFinding>): GateOutcome => {
-  if (findings.some((finding) => finding.severity === 'CRITICAL')) {
-    return 'BLOCK';
-  }
-  return findings.length > 0 ? 'WARN' : 'PASS';
+  return findings.length > 0 ? 'BLOCK' : 'PASS';
 };
 
 const bySeverity = (findings: ReadonlyArray<SnapshotFinding>): Record<Severity, number> => {

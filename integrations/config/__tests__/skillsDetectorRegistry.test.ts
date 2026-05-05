@@ -150,6 +150,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-passed-value-state-wrapper'), [
     'heuristics.ios.passed-value-state-wrapper.ast',
   ]);
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear'
+    ),
+    ['heuristics.ios.swiftui.state-wrapper-private.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-foreach-indices'), [
     'heuristics.ios.foreach-indices.ast',
   ]);

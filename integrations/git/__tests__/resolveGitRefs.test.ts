@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import test from 'node:test';
 import {
   resolveCiBaseRef,
@@ -104,15 +106,45 @@ test(
 );
 
 test(
-  'resolvePrePushBootstrapBaseRef prefers develop when available',
+  'resolvePrePushBootstrapBaseRef prefers develop when develop is the closer bootstrap base',
   { concurrency: false },
   async () => {
     await withResolveRepo(async (repoRoot) => {
       runGit(repoRoot, ['checkout', '--quiet', '-b', 'develop']);
+      writeFileSync(join(repoRoot, 'develop-note.md'), 'develop\n', 'utf8');
+      runGit(repoRoot, ['add', 'develop-note.md']);
+      runGit(repoRoot, ['commit', '--quiet', '-m', 'docs: develop note']);
       runGit(repoRoot, ['checkout', '--quiet', '-b', 'feature/bootstrap-base']);
+      writeFileSync(join(repoRoot, 'feature-note.md'), 'feature\n', 'utf8');
+      runGit(repoRoot, ['add', 'feature-note.md']);
+      runGit(repoRoot, ['commit', '--quiet', '-m', 'docs: feature note']);
 
       const resolved = resolvePrePushBootstrapBaseRef();
       assert.equal(resolved, 'develop');
+    });
+  }
+);
+
+test(
+  'resolvePrePushBootstrapBaseRef prefers main when main is the closer bootstrap base',
+  { concurrency: false },
+  async () => {
+    await withResolveRepo(async (repoRoot) => {
+      runGit(repoRoot, ['checkout', '--quiet', '-b', 'develop']);
+      writeFileSync(join(repoRoot, 'develop-note.md'), 'develop\n', 'utf8');
+      runGit(repoRoot, ['add', 'develop-note.md']);
+      runGit(repoRoot, ['commit', '--quiet', '-m', 'docs: develop note']);
+      runGit(repoRoot, ['checkout', '--quiet', 'main']);
+      writeFileSync(join(repoRoot, 'main-note.md'), 'main\n', 'utf8');
+      runGit(repoRoot, ['add', 'main-note.md']);
+      runGit(repoRoot, ['commit', '--quiet', '-m', 'docs: main note']);
+      runGit(repoRoot, ['checkout', '--quiet', '-b', 'feature/bootstrap-base']);
+      writeFileSync(join(repoRoot, 'feature-note.md'), 'feature\n', 'utf8');
+      runGit(repoRoot, ['add', 'feature-note.md']);
+      runGit(repoRoot, ['commit', '--quiet', '-m', 'docs: feature note']);
+
+      const resolved = resolvePrePushBootstrapBaseRef();
+      assert.equal(resolved, 'main');
     });
   }
 );

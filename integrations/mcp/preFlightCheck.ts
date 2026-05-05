@@ -3,11 +3,25 @@ import {
   type GovernanceCatalogNextAction,
 } from '../gate/governanceActionCatalog';
 import { evaluateAiGate, type AiGateStage, type AiGateViolation } from '../gate/evaluateAiGate';
+import { readEvidenceResult } from '../evidence/readEvidence';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
 import { readLifecyclePolicyValidationSnapshot } from '../lifecycle/policyValidationSnapshot';
 import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
 import { resolvePreWriteEnforcement } from '../policy/preWriteEnforcement';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
+
+const WORKTREE_SLICE_PLAN_COUNT = 3;
+const WORKTREE_SLICE_FILE_COUNT = 4;
+
+const resolveTddStatus = (
+  repoRoot: string
+): 'skipped' | 'passed' | 'advisory' | 'blocked' | 'waived' | null => {
+  const evidenceResult = readEvidenceResult(repoRoot);
+  if (evidenceResult.kind !== 'valid') {
+    return null;
+  }
+  return evidenceResult.evidence.snapshot.tdd_bdd?.status ?? null;
+};
 
 const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_MISSING:
@@ -15,7 +29,7 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_INVALID: 'Regenera .ai_evidence.json desde una opción de auditoría.',
   EVIDENCE_INTEGRITY_MISSING: 'Refresca evidencia para regenerar metadatos de integridad.',
   EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
-    'No hay active_rule_ids para plataforma de código detectada. Ejecuta reconcile --strict y revalida PRE_WRITE.',
+    'No hay active_rule_ids para plataforma de código detectada. Ejecuta reconcile --strict --apply y revalida PRE_WRITE.',
   EVIDENCE_STALE: 'Refresca evidencia antes de continuar con commit/push.',
   EVIDENCE_TIMESTAMP_INVALID: 'Regenera evidencia para obtener un timestamp válido.',
   EVIDENCE_GATE_BLOCKED: 'Corrige primero las violaciones bloqueantes y vuelve a auditar.',
@@ -32,9 +46,11 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING:
     'Carga los bundles de skills requeridos por plataforma detectada y regenera evidencia.',
   EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING:
-    'Ejecuta `pumuki policy reconcile --strict --json`, materializa reglas críticas (p.ej. skills.ios.critical-test-quality) y revalida PRE_WRITE.',
+    'Ejecuta `pumuki policy reconcile --strict --apply --json`, materializa reglas críticas (p.ej. skills.ios.critical-test-quality) y revalida PRE_WRITE.',
   EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE:
-    'Reconcilia policy/skills en modo estricto para enforcement crítico transversal y vuelve a validar PRE_WRITE.',
+    'Reconcilia policy/skills en modo estricto con apply para enforcement crítico transversal y vuelve a validar PRE_WRITE.',
+  TDD_BDD_BASELINE_BLOCKED:
+    'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
     'Completa el contrato skills/policy para el stage solicitado y vuelve a validar.',
   EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
@@ -101,8 +117,8 @@ const buildPreFlightHints = (params: {
   if (params.stage === 'PRE_WRITE' && hasWorktreeViolation) {
     const plan = collectWorktreeAtomicSlices({
       repoRoot: params.repoRoot,
-      maxSlices: 3,
-      maxFilesPerSlice: 4,
+      maxSlices: WORKTREE_SLICE_PLAN_COUNT,
+      maxFilesPerSlice: WORKTREE_SLICE_FILE_COUNT,
     });
     if (plan.slices.length > 0) {
       hints.push('ATOMIC_SLICES: staging sugerido por scope.');
@@ -161,7 +177,7 @@ export type EnterprisePreFlightCheckResult = {
     hints: ReadonlyArray<string>;
     learning_context: SddLearningContext | null;
     ast_analysis: null;
-    tdd_status: null;
+    tdd_status: 'skipped' | 'passed' | 'advisory' | 'blocked' | 'waived' | null;
   };
 };
 
@@ -246,7 +262,7 @@ export const runEnterprisePreFlightCheck = (params: {
       hints,
       learning_context: learningContext,
       ast_analysis: null,
-      tdd_status: null,
+      tdd_status: resolveTddStatus(params.repoRoot),
     },
   };
 };

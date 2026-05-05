@@ -7,6 +7,9 @@ import { readSddLearningContext, type SddLearningContext } from '../sdd/learning
 type AutoExecuteAction = 'proceed' | 'ask';
 type AutoExecutePhase = 'GREEN' | 'RED';
 
+const WORKTREE_SLICE_PLAN_COUNT = 3;
+const WORKTREE_SLICE_FILE_COUNT = 4;
+
 type AutoExecuteNextAction = {
   kind: 'info' | 'run_command';
   message: string;
@@ -94,7 +97,7 @@ const nextActionFromViolation = (
         command:
           `${buildPinnedPumukiNpxCommand({
             repoRoot,
-            executableAndArgs: 'pumuki policy reconcile --strict --json',
+            executableAndArgs: 'pumuki policy reconcile --strict --apply --json',
           })} && ${buildPinnedPumukiNpxCommand({
             repoRoot,
             executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
@@ -121,7 +124,7 @@ const nextActionFromViolation = (
         command:
           `${buildPinnedPumukiNpxCommand({
             repoRoot,
-            executableAndArgs: 'pumuki policy reconcile --strict --json',
+            executableAndArgs: 'pumuki policy reconcile --strict --apply --json',
           })} && ${buildPinnedPumukiNpxCommand({
             repoRoot,
             executableAndArgs: 'pumuki sdd validate --stage=PRE_WRITE --json',
@@ -132,8 +135,8 @@ const nextActionFromViolation = (
       {
         const plan = collectWorktreeAtomicSlices({
           repoRoot,
-          maxSlices: 3,
-          maxFilesPerSlice: 4,
+          maxSlices: WORKTREE_SLICE_PLAN_COUNT,
+          maxFilesPerSlice: WORKTREE_SLICE_FILE_COUNT,
         });
         if (plan.slices.length > 0) {
           const firstSlice = plan.slices[0];

@@ -21,6 +21,12 @@ export type TddBddSnapshot = {
     slices_invalid: number;
     integrity_ok: boolean;
     errors: string[];
+    baseline: {
+      required: boolean;
+      passed: number;
+      missing: number;
+      failed: number;
+    };
   };
   waiver: {
     applied: boolean;

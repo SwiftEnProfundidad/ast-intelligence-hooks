@@ -55,7 +55,7 @@ type LifecycleAuditDependencies = {
 };
 
 const POLICY_RECONCILE_HINT =
-  'If .pumuki/policy-as-code.json signatures drift after a pumuki upgrade, run: pumuki policy reconcile --apply';
+  'If .pumuki/policy-as-code.json signatures drift after a pumuki upgrade, run: pumuki policy reconcile --strict --apply --json';
 
 const countUntrackedMatchingExtensions = (
   git: Pick<IGitService, 'resolveRepoRoot' | 'runGit'>,
@@ -71,10 +71,10 @@ const countUntrackedMatchingExtensions = (
 };
 
 const isFindingBlocking = (finding: SnapshotFinding): boolean => {
-  if (typeof finding.blocking === 'boolean') {
-    return finding.blocking;
-  }
-  return finding.severity === 'CRITICAL' || finding.severity === 'ERROR';
+  return finding.severity === 'CRITICAL' ||
+    finding.severity === 'ERROR' ||
+    finding.severity === 'WARN' ||
+    finding.severity === 'INFO';
 };
 
 const toLifecycleAuditFinding = (finding: SnapshotFinding): LifecycleAuditFinding => ({

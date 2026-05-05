@@ -527,6 +527,36 @@ export const hasSwiftLegacySwiftUiObservableWrapperUsage = (source: string): boo
   return hasSwiftSanitizedRegexMatch(source, /@\s*(?:StateObject|ObservedObject)\b/);
 };
 
+export const hasSwiftStateWrapperWithoutPrivateUsage = (source: string): boolean => {
+  const typeDeclarations = parseSwiftTypeDeclarations(source);
+  if (typeDeclarations.length === 0) {
+    return false;
+  }
+
+  const sourceLines = source.split(/\r?\n/);
+  const stateWrapperPattern = /@\s*(?:State|StateObject)\b/;
+
+  for (const typeDeclaration of typeDeclarations) {
+    if (!typeDeclaration.conformances.includes('View')) {
+      continue;
+    }
+
+    const hasViolation = visitSwiftTopLevelTypeBodyLines(sourceLines, typeDeclaration, ({ line }) => {
+      if (!stateWrapperPattern.test(line)) {
+        return false;
+      }
+
+      return !/\bprivate\b/.test(line);
+    });
+
+    if (hasViolation) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 const hasSwiftPassedValueWrapperInitialization = (
   source: string,
   options: {

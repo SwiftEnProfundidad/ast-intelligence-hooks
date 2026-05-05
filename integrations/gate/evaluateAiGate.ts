@@ -1338,6 +1338,26 @@ const collectEvidencePolicyThresholdViolations = (params: {
   return [];
 };
 
+const collectTddBddBaselineViolations = (params: {
+  evidenceResult: EvidenceReadResult;
+}): AiGateViolation[] => {
+  if (params.evidenceResult.kind !== 'valid') {
+    return [];
+  }
+
+  const tddBdd = params.evidenceResult.evidence.snapshot.tdd_bdd;
+  if (tddBdd?.status !== 'blocked') {
+    return [];
+  }
+
+  return [
+    toErrorViolation(
+      'TDD_BDD_BASELINE_BLOCKED',
+      'TDD/BDD baseline snapshot is blocked. Fix the failing baseline tests and refresh evidence before continuing.'
+    ),
+  ];
+};
+
 const toEvidenceSourceDescriptor = (
   result: EvidenceReadResult,
   repoRoot: string
@@ -1688,9 +1708,13 @@ export const evaluateAiGate = (
     evidenceResult,
     policy: resolvedPolicy.policy,
   });
+  const tddBddBaselineViolations = collectTddBddBaselineViolations({
+    evidenceResult,
+  });
   const violations = [
     ...evidenceAssessment.violations,
     ...policyThresholdViolations,
+    ...tddBddBaselineViolations,
     ...stageSkillsContractViolations,
     ...gitflowViolations,
     ...trackingViolations,

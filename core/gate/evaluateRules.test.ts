@@ -38,8 +38,15 @@ test('evaluateRules genera finding cuando la condicion coincide y usa code expli
     code: 'BACKEND_FILE_MODIFIED',
     message: 'Backend file modified.',
     filePath: 'apps/backend/src/main.ts',
+    lines: undefined,
     matchedBy: 'FileChange',
     source: 'git',
+    blocking: true,
+    primary_node: undefined,
+    related_nodes: undefined,
+    why: undefined,
+    impact: undefined,
+    expected_fix: undefined,
   });
 });
 

@@ -291,7 +291,7 @@ test('runLifecycleCli sdd validate PRE_WRITE blocks missing OpenSpec in strict e
   }
 });
 
-test('runLifecycleCli sdd validate PRE_WRITE deja skills gap en advisory cuando skills enforcement no está activado explícitamente', async () => {
+test('runLifecycleCli sdd validate PRE_WRITE bloquea skills gap aunque PRE_WRITE esté en advisory', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
@@ -431,7 +431,7 @@ test('runLifecycleCli sdd validate PRE_WRITE deja skills gap en advisory cuando 
           runPlatformGate: async () => 0,
         })
       );
-      assert.equal(code, 0);
+      assert.equal(code, 1);
 
       const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
         sdd?: { decision?: { code?: string; allowed?: boolean } };
@@ -442,15 +442,15 @@ test('runLifecycleCli sdd validate PRE_WRITE deja skills gap en advisory cuando 
       assert.equal(payload.sdd?.decision?.allowed, true);
       assert.equal(payload.sdd?.decision?.code, 'ALLOWED');
       assert.equal(payload.pre_write_enforcement?.mode, 'advisory');
-      assert.equal(payload.pre_write_enforcement?.blocking, false);
-      assert.equal(payload.ai_gate?.allowed, true);
+      assert.equal(payload.pre_write_enforcement?.blocking, true);
+      assert.equal(payload.ai_gate?.allowed, false);
       assert.equal(
         (payload.ai_gate?.violations ?? []).some(
           (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
         ),
         true
       );
-      assert.equal(payload.next_action, undefined);
+      assert.equal(payload.next_action?.reason, 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING');
     } finally {
       process.stdout.write = originalStdoutWrite;
       process.chdir(previousCwd);
@@ -772,7 +772,7 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile cua
     assert.equal(payload.next_action?.reason, 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES');
     assert.equal(
       payload.next_action?.command,
-      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: repo })} pumuki policy reconcile --strict --json && npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: repo })} pumuki sdd validate --stage=PRE_WRITE --json`
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: repo })} pumuki policy reconcile --strict --apply --json && npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: repo })} pumuki sdd validate --stage=PRE_WRITE --json`
     );
   } finally {
     process.stdout.write = originalStdoutWrite;

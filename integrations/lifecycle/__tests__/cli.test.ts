@@ -1147,7 +1147,7 @@ test('runLifecycleCli watch --json delega en runLifecycleWatch y devuelve payloa
         }),
       }
     );
-    assert.equal(code, 0);
+    assert.equal(code, 1);
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       command?: string;
       stage?: string;
@@ -2245,7 +2245,7 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
     assert.equal(payload.sdd?.decision?.allowed, false);
     assert.equal(payload.sdd?.decision?.code, 'OPENSPEC_MISSING');
     assert.equal(payload.pre_write_enforcement?.mode, 'advisory');
-    assert.equal(payload.pre_write_enforcement?.blocking, false);
+    assert.equal(payload.pre_write_enforcement?.blocking, true);
     assert.equal(payload.bootstrap?.enabled, false);
     assert.equal(payload.bootstrap?.attempted, false);
     assert.equal(payload.bootstrap?.status, 'SKIPPED');
@@ -2609,7 +2609,7 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile cua
     assert.equal(payload.next_action?.reason, 'EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES');
     assert.equal(
       payload.next_action?.command,
-      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: repo })} pumuki policy reconcile --strict --json && npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: repo })} pumuki sdd validate --stage=PRE_WRITE --json`
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: repo })} pumuki policy reconcile --strict --apply --json && npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot: repo })} pumuki sdd validate --stage=PRE_WRITE --json`
     );
   } finally {
     process.stdout.write = originalStdoutWrite;

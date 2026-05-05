@@ -19,7 +19,7 @@ export const buildGovernanceValidateCommand = (stage: AiGateStage): string =>
   PRE_WRITE_VALIDATE_COMMAND.replace('PRE_WRITE', stage);
 
 export const buildGovernancePolicyReconcileCommand = (stage: AiGateStage): string =>
-  `npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && ${buildGovernanceValidateCommand(stage)}`;
+  `npx --yes --package pumuki@latest pumuki policy reconcile --strict --apply --json && ${buildGovernanceValidateCommand(stage)}`;
 
 const buildFallbackAction = (code: string): GovernanceCatalogAction => ({
   reason_code: code,
@@ -174,6 +174,17 @@ export const resolveGovernanceCatalogAction = (params: {
           command: buildGovernancePolicyReconcileCommand(stage),
         },
       };
+    case 'POLICY_HASH_DIVERGENCE':
+      return {
+        reason_code: 'POLICY_HASH_DIVERGENCE',
+        instruction: 'Reconcilia policy/skills y aplica el contrato canónico para reducir el drift entre stages.',
+        next_action: {
+          kind: 'run_command',
+          message:
+            'Los hashes de policy difieren entre stages. Ejecuta reconcile estricto con apply y vuelve a validar.',
+          command: buildGovernancePolicyReconcileCommand(stage),
+        },
+      };
     case 'SKILLS_CONTRACT_SURFACE_INCOMPLETE':
     case 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE':
       return {
@@ -204,6 +215,16 @@ export const resolveGovernanceCatalogAction = (params: {
         next_action: {
           kind: 'run_command',
           message: 'Revalida el stage actual y revisa findings WARN.',
+          command: validateCommand,
+        },
+      };
+    case 'TDD_BDD_BASELINE_BLOCKED':
+      return {
+        reason_code: 'TDD_BDD_BASELINE_BLOCKED',
+        instruction: 'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de seguir.',
+        next_action: {
+          kind: 'run_command',
+          message: 'Revalida el stage actual tras reparar el baseline TDD/BDD y refrescar la evidencia.',
           command: validateCommand,
         },
       };

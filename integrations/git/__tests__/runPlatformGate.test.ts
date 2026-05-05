@@ -57,6 +57,7 @@ const buildOutOfScopeTddBddResult = () => ({
       slices_invalid: 0,
       integrity_ok: true,
       errors: [],
+      baseline: { required: false, passed: 0, missing: 0, failed: 0 },
     },
     waiver: {
       applied: false,

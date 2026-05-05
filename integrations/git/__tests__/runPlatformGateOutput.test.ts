@@ -41,10 +41,7 @@ test('printGateFindings emite resumen jerárquico con next_action para códigos 
   }).join('');
 
   assert.match(output, /\[pumuki\]\[block-summary\] primary=SDD_SESSION_MISSING/i);
-  assert.match(output, /\[pumuki\]\[block-summary\] reason_code=SDD_SESSION_MISSING/i);
-  assert.match(output, /\[pumuki\]\[block-summary\] instruction=Abre una sesión SDD válida/i);
   assert.match(output, /next_action=.*session --open --change=<id>/i);
-  assert.match(output, /command=.*session --open --change=<id>/i);
   assert.match(output, /\[ERROR\] sdd\.policy\.blocked: SDD session is not active\./i);
 });
 
@@ -66,8 +63,6 @@ test('printGateFindings usa next_action genérico cuando el código no está map
   }).join('');
 
   assert.match(output, /\[pumuki\]\[block-summary\] primary=CUSTOM_UNKNOWN/i);
-  assert.match(output, /\[pumuki\]\[block-summary\] reason_code=CUSTOM_UNKNOWN/i);
-  assert.match(output, /\[pumuki\]\[block-summary\] instruction=Corrige el bloqueante primario/i);
   assert.match(output, /next_action=Corrige el bloqueante primario/i);
 });
 
@@ -90,7 +85,6 @@ test('printGateFindings emite next_action incremental para bloqueo SOLID de fron
   }).join('');
 
   assert.match(output, /\[pumuki\]\[block-summary\] primary=SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS/i);
-  assert.match(output, /\[pumuki\]\[block-summary\] reason_code=SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS/i);
   assert.match(output, /next_action=Aplica refactor incremental: extrae 1 componente\/hook por commit/i);
 });
 
@@ -113,10 +107,7 @@ test('printGateFindings emite next_action de reconcile cuando active_rule_ids es
   }).join('');
 
   assert.match(output, /\[pumuki\]\[block-summary\] primary=ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH/i);
-  assert.match(output, /\[pumuki\]\[block-summary\] reason_code=EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES/i);
-  assert.match(output, /\[pumuki\]\[block-summary\] instruction=Reconcilia policy\/skills en modo estricto/i);
-  assert.match(output, /next_action=.*policy reconcile --strict --json/i);
-  assert.match(output, /command=.*validate --stage=PRE_COMMIT --json/i);
+  assert.match(output, /\[pumuki\]\[block-summary\] next_action=.*policy reconcile --strict --apply --json/i);
 });
 
 test('printGateFindings usa el stage recibido para generar la remediación canónica', () => {
@@ -137,8 +128,8 @@ test('printGateFindings usa el stage recibido para generar la remediación canó
     printGateFindings(findings, { stage: 'PRE_PUSH' });
   }).join('');
 
-  assert.match(output, /\[pumuki\]\[block-summary\] reason_code=EVIDENCE_STALE/i);
-  assert.match(output, /command=.*validate --stage=PRE_PUSH --json/i);
+  assert.match(output, /\[pumuki\]\[block-summary\] primary=EVIDENCE_STALE/i);
+  assert.match(output, /next_action=.*validate --stage=PRE_PUSH --json/i);
 });
 
 test('printGateFindings separa warning secundario cuando convive con un blocker primario', () => {

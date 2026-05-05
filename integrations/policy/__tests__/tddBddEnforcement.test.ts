@@ -104,6 +104,7 @@ test('applyTddBddEnforcement downgrades blocking findings and snapshot only with
           slices_invalid: 0,
           integrity_ok: false,
           errors: ['missing_contract'],
+          baseline: { required: true, passed: 0, missing: 0, failed: 0 },
         },
         waiver: {
           applied: false,
@@ -149,6 +150,7 @@ test('applyTddBddEnforcement preserves blocking findings and snapshot in strict 
           slices_invalid: 0,
           integrity_ok: false,
           errors: ['missing_contract'],
+          baseline: { required: true, passed: 0, missing: 0, failed: 0 },
         },
         waiver: {
           applied: false,

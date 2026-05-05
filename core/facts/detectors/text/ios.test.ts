@@ -37,6 +37,7 @@ import {
   hasSwiftOperationQueueUsage,
   hasSwiftContainsUserFilterUsage,
   hasSwiftPassedValueStateWrapperUsage,
+  hasSwiftStateWrapperWithoutPrivateUsage,
   hasSwiftPreconcurrencyUsage,
   hasSwiftSheetIsPresentedUsage,
   hasSwiftScrollViewShowsIndicatorsUsage,
@@ -423,6 +424,24 @@ struct DetailView: View {
 
   assert.equal(hasSwiftPassedValueStateWrapperUsage(invalidOwnership), true);
   assert.equal(hasSwiftPassedValueStateWrapperUsage(validOwnership), false);
+});
+
+test('hasSwiftStateWrapperWithoutPrivateUsage detecta @State y @StateObject sin private en SwiftUI Views', () => {
+  const positive = `
+struct DetailView: View {
+  @State var filter: String = ""
+  @StateObject var viewModel = DetailViewModel()
+}
+`;
+  const negative = `
+struct DetailView: View {
+  @State private var filter: String = ""
+  @StateObject private var viewModel = DetailViewModel()
+}
+`;
+
+  assert.equal(hasSwiftStateWrapperWithoutPrivateUsage(positive), true);
+  assert.equal(hasSwiftStateWrapperWithoutPrivateUsage(negative), false);
 });
 
 test('hasSwiftModernizableXCTestSuiteUsage detecta suites legacy y excluye mixed/UI', () => {

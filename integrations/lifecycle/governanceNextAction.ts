@@ -91,6 +91,16 @@ const resolveBlockedAction = (
       message: 'La política efectiva todavía no es estricta en todos los stages requeridos.',
     };
   }
+  if (snapshot.attention_codes.includes('POLICY_HASH_DIVERGENCE')) {
+    return {
+      stage,
+      phase: 'RED',
+      action: 'ask',
+      confidence_pct: 58,
+      ...resolveGovernanceCatalogAction({ code: 'POLICY_HASH_DIVERGENCE', stage }),
+      message: 'Los hashes de policy difieren entre stages; reconcilia y aplica el contrato canónico.',
+    };
+  }
   if (!snapshot.contract_surface.skills_lock_json || !snapshot.contract_surface.skills_sources_json) {
     return {
       stage,

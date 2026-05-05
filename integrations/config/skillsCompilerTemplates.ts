@@ -184,6 +184,16 @@ export const skillsCompilerTemplates: Record<string, SkillsCompilerTemplate> = {
         locked: true,
       },
       {
+        id: 'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear',
+        description:
+          'Always mark @State and @StateObject as private (makes dependencies clear).',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'MEDIUM',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
         id: 'skills.ios.no-navigation-view',
         description: 'Avoid NavigationView in modern iOS code; prefer NavigationStack.',
         severity: 'WARN',

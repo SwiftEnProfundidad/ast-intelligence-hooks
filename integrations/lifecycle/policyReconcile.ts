@@ -20,6 +20,8 @@ type PolicyReconcileDriftCode =
   | 'POLICY_HASH_DIVERGENCE'
   | 'POLICY_STAGE_NON_STRICT';
 
+const POLICY_CONTRACT_JSON_INDENT = 2;
+
 export type PolicyReconcileDrift = {
   code: PolicyReconcileDriftCode;
   severity: PolicyReconcileSeverity;
@@ -117,6 +119,9 @@ const tryApplyPolicyAutofix = (params: {
   }
 
   const preWriteStage = params.report.stages.PRE_WRITE;
+  const preCommitStage = params.report.stages.PRE_COMMIT;
+  const prePushStage = params.report.stages.PRE_PUSH;
+  const ciStage = params.report.stages.CI;
   const signatures = {
     PRE_WRITE: createPolicyAsCodeSignature({
       stage: 'PRE_COMMIT',
@@ -125,9 +130,27 @@ const tryApplyPolicyAutofix = (params: {
       hash: preWriteStage.hash,
       version: '1.0',
     }),
-    PRE_COMMIT: params.report.stages.PRE_COMMIT.signature,
-    PRE_PUSH: params.report.stages.PRE_PUSH.signature,
-    CI: params.report.stages.CI.signature,
+    PRE_COMMIT: createPolicyAsCodeSignature({
+      stage: 'PRE_COMMIT',
+      source: toContractSource(preCommitStage.source),
+      bundle: preCommitStage.bundle,
+      hash: preCommitStage.hash,
+      version: '1.0',
+    }),
+    PRE_PUSH: createPolicyAsCodeSignature({
+      stage: 'PRE_PUSH',
+      source: toContractSource(prePushStage.source),
+      bundle: prePushStage.bundle,
+      hash: prePushStage.hash,
+      version: '1.0',
+    }),
+    CI: createPolicyAsCodeSignature({
+      stage: 'CI',
+      source: toContractSource(ciStage.source),
+      bundle: ciStage.bundle,
+      hash: ciStage.hash,
+      version: '1.0',
+    }),
   };
   if (!signatures.PRE_COMMIT || !signatures.PRE_PUSH || !signatures.CI) {
     return {
@@ -159,7 +182,7 @@ const tryApplyPolicyAutofix = (params: {
 
   try {
     mkdirSync(dirname(contractPath), { recursive: true });
-    writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`, 'utf8');
+    writeFileSync(contractPath, `${JSON.stringify(contract, null, POLICY_CONTRACT_JSON_INDENT)}\n`, 'utf8');
     return {
       attempted: true,
       status: 'APPLIED',

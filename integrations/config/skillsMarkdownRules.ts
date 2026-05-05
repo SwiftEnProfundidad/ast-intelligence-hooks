@@ -346,6 +346,13 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.ios.no-passed-value-state-wrapper';
     }
+    if (
+      (includes('always mark') && includes('state') && includes('stateobject') && includes('private')) ||
+      (includes('state and stateobject as private') && includes('dependencies clear')) ||
+      (includes('mark state and stateobject as private') && includes('makes dependencies clear'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear';
+    }
     if (includes('navigationview') || includes('navigation view')) {
       return 'skills.ios.no-navigation-view';
     }

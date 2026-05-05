@@ -10,12 +10,14 @@ export const REMEDIATION_HINT_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_STALE: 'Refresca evidencia antes de continuar.',
   EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera evidencia desde este mismo repositorio.',
   EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual y reintenta.',
+  TDD_BDD_BASELINE_BLOCKED:
+    'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
   EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
   EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura coverage_ratio=1 y unevaluated=0.',
   ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
-    'Reconcilia policy/skills y reintenta PRE_COMMIT: npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki-pre-commit',
+    'Reconcilia policy/skills y reintenta PRE_COMMIT: npx --yes --package pumuki@latest pumuki policy reconcile --strict --apply --json && npx --yes --package pumuki@latest pumuki-pre-commit',
   EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
-    'Reconcilia policy/skills y revalida PRE_WRITE: npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
+    'Reconcilia policy/skills y revalida PRE_WRITE: npx --yes --package pumuki@latest pumuki policy reconcile --strict --apply --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
   GITFLOW_PROTECTED_BRANCH: 'Trabaja en feature/* y evita ramas protegidas.',
   GITFLOW_BRANCH_NAMING_INVALID:
     'Renombra o recrea la rama con un prefijo GitFlow válido (feature/*, bugfix/*, hotfix/*, release/*, chore/*, refactor/* o docs/*).',

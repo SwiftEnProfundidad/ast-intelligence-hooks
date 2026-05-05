@@ -6,6 +6,47 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.139] - 2026-05-05
+
+### Fixed
+
+- **PUMUKI-INC-060 baseline test gate:** la evidencia TDD/BDD exige ahora un baseline test `passed` por slice antes del evento `red`; si falta o falla, el gate bloquea con `TDD_BASELINE_TEST_REQUIRED` o `TDD_BASELINE_TEST_MUST_PASS`.
+- **Alineación all-severities en evidencia:** los tests de evidencia quedan sincronizados con el contrato publicado de bloqueo por cualquier severidad (`BLOCK` / `BLOCKED`), incluyendo findings `WARN`.
+
+## [6.3.138] - 2026-05-05
+
+### Fixed
+
+- **Doc-only evidence hygiene:** en commits documentales, `.ai_evidence.json` trackeado queda restaurado a `HEAD` y no deja modificaciones de hook que hagan fallar integraciones `pre-commit` con `files were modified by this hook`.
+
+## [6.3.137] - 2026-05-05
+
+### Fixed
+
+- **PUMUKI-INC-061 evidence/atomicity:** el guard de atomicidad ignora `.ai_evidence.json` / `.AI_EVIDENCE.json` gestionados por Pumuki al contar ficheros y scopes staged, evitando que un auto-restage de evidencia bloquee repins atómicos de consumers.
+
+## [6.3.136] - 2026-05-05
+
+### Fixed
+
+- **PUMUKI-INC-059 all-severities blocking:** `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI` bloquean cualquier finding de reglas/skills AST Intelligence, incluyendo `WARN/MEDIUM` e `INFO/LOW`.
+- **Políticas no relajables:** `skills.policy`, perfiles hard-mode y `PRE_WRITE=advisory` ya no pueden rebajar el threshold efectivo por debajo de `INFO`.
+- **Replay RuralGo:** validado con binario local contra RuralGo: PRE_WRITE `115/115` findings bloqueantes y PRE_COMMIT `118/118` findings bloqueantes.
+
+## [6.3.135] - 2026-05-03
+
+### Fixed
+
+- **Bootstrap de pre-push por delta real:** cuando una rama no tiene upstream, el bootstrap de `PRE_PUSH` elige la base con menor delta real entre `main` y `develop`, evitando falsos positivos de atomicidad en branches nacidas de `main`.
+- **Repin desbloqueable:** esta versión corrige el bloqueo que impedía publicar el repin de `Flux_training` aunque el diff efectivo del cambio fuese mínimo.
+
+## [6.3.134] - 2026-05-03
+
+### Fixed
+
+- **Policy hash drift accionable:** `governanceObservationSnapshot`, `governanceNextAction` y el catálogo de remediación ya convierten la divergencia entre stages en una acción estricta y aplicable.
+- **Release publicada y lista para repin:** esta versión ya está en npm y queda lista para repinear consumers activos como RuralGo con el fix real distribuido.
+
 ## [6.3.133] - 2026-05-03
 
 ### Fixed

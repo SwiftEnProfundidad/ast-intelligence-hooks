@@ -251,7 +251,7 @@ test('emitGateBlockedNotification añade contexto de tracking al evento emitido'
         totalViolations: 1,
         causeCode: 'EVIDENCE_GATE_BLOCKED',
         causeMessage: 'Evidence AI gate status is BLOCKED.',
-        remediation: 'pumuki policy reconcile --strict --json',
+        remediation: 'pumuki policy reconcile --strict --apply --json',
       },
       {
         emitSystemNotification: ({ event }) => {

@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-060`. Gap detección test roto en baseline reportado desde RuralGo; `PUMUKI-INC-059` queda cerrado con el endurecimiento del enforcement de skills, y `PUMUKI-INC-061` queda detrás en el mismo backlog consumer. |
+| Este plan | `[🚧] - PUMUKI-INC-060 / RuralGo: cierre de distribución y ramas tras publicar el fix de baseline tests. Estado real 2026-05-05: `pumuki@6.3.139` queda publicado en npm; RuralGo queda repineado y revalidado en worktree aislado `/private/tmp/R_GO__pumuki-inc-059-061-revalidation` con `status` alineado en `6.3.139` y auditorías `PRE_WRITE=115/115`, `PRE_COMMIT=117/117`, `PRE_PUSH=438/438`, `CI=438/438`, `coverage_ratio=1`; Flux queda repineado y alineado en `6.3.139`; SAAS no puede commitear repin porque su propio gate conserva `PRE_COMMIT` en `109/109` bloqueantes. Progreso de cierre de rama: el bloqueo previo `GIT_ATOMICITY_TOO_MANY_FILES changed_files=67 > max_files=25` queda corregido evaluando atomicidad `PRE_PUSH` por commit individual; los falsos positivos restantes de skills `hardcoded-values`/`magic-numbers` en ficheros cambiados quedan reducidos a `0` en audit local `PRE_PUSH`; pendiente ejecutar commit/push de la rama sin bypass y, si pasa, publicar la siguiente patch y repinear primero RuralGo.` |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.

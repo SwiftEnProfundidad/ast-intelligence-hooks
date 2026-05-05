@@ -396,7 +396,7 @@ test('auto_execute_ai_start devuelve next_action de reconcile cuando PRE_WRITE d
     );
     assert.equal(
       result.result.next_action.command,
-      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki policy reconcile --strict --json && npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd validate --stage=PRE_WRITE --json`
+      `npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki policy reconcile --strict --apply --json && npx --yes --package pumuki@${getCurrentPumukiVersion({ repoRoot })} pumuki sdd validate --stage=PRE_WRITE --json`
     );
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });

@@ -372,6 +372,60 @@ test('evaluateAiGate bloquea cuando evidencia válida ya está BLOCKED', () => {
   assert.equal(result.violations.some((item) => item.code === 'EVIDENCE_GATE_BLOCKED'), true);
 });
 
+test('evaluateAiGate bloquea cuando el snapshot tdd_bdd está bloqueado', () => {
+  const evidence = sampleEvidence({
+    snapshot: {
+      ...sampleEvidence().snapshot,
+      tdd_bdd: {
+        status: 'blocked',
+        scope: {
+          in_scope: true,
+          is_new_feature: true,
+          is_complex_change: true,
+          reasons: ['new_feature', 'complex_change'],
+          metrics: {
+            changed_files: 3,
+            estimated_loc: 180,
+            critical_path_files: 1,
+            public_interface_files: 1,
+          },
+        },
+        evidence: {
+          path: '.pumuki/artifacts/pumuki-evidence-v1.json',
+          state: 'valid',
+          slices_total: 1,
+          slices_valid: 0,
+          slices_invalid: 1,
+          integrity_ok: true,
+          errors: ['TDD_BDD_GREEN_REFACTOR_MUST_PASS'],
+        },
+        waiver: {
+          applied: false,
+        },
+      },
+    },
+  });
+
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(evidence),
+      captureRepoState: () => evidence.repo_state!,
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
+  assert.equal(
+    result.violations.some((item) => item.code === 'TDD_BDD_BASELINE_BLOCKED'),
+    true
+  );
+});
+
 test('evaluateAiGate normaliza package_version/lifecycle_version cuando captureRepoState llega desalineado', () => {
   const repoState = sampleEvidence().repo_state!;
   const result = evaluateAiGate(

@@ -4,6 +4,39 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.139)
+
+- **Baseline tests antes de editar:** Pumuki bloquea cambios TDD/BDD in-scope si cada slice no registra un baseline test pasado antes de RED.
+- **RuralGo INC060:** cierra el gap por el que una regresión de test preexistente en un componente relacionado podía pasar desapercibida antes de iterar.
+- **Rollout:** publicar `pumuki@6.3.139`, repinear RuralGo primero y revalidar `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI`.
+
+### 2026-05-05 (v6.3.138)
+
+- **Doc-only sin worktree sucio:** cuando el índice solo contiene `*.md` / `*.mdx`, Pumuki restaura `.ai_evidence.json` trackeado a `HEAD` tras refrescar el gate, evitando el fallo del framework `pre-commit` por “files were modified by this hook”.
+- **RuralGo follow-up:** corrige el bloqueo observado al commitear el feedback `docs/technical/08-validation/refactor/pumuki-integration-feedback.md` después del repin.
+
+### 2026-05-05 (v6.3.137)
+
+- **Atomicidad compatible con evidencia gestionada:** `.ai_evidence.json` / `.AI_EVIDENCE.json` ya no cuentan como scope o fichero funcional en `git-atomicity`, de modo que un commit de repin no queda bloqueado solo porque el hook refresque evidencia trackeada.
+- **RuralGo follow-up:** corrige el bloqueo observado al intentar commitear el repin `package.json` + `package-lock.json`, donde Pumuki auto-restageaba evidencia y elevaba el commit a 3 scopes.
+
+### 2026-05-05 (v6.3.136)
+
+- **All-severities blocking para consumers:** `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI` bloquean por cualquier violación de skills/reglas AST Intelligence, sin permitir rebajas por `skills.policy`, hard-mode `critical-high` ni `PRE_WRITE=advisory`.
+- **RuralGo primero:** replay local previo a publicación confirma PRE_WRITE `115/115` bloqueantes y PRE_COMMIT `118/118` bloqueantes, con iOS y Android visibles en la auditoría.
+- **Rollout recomendado:** publicar `pumuki@6.3.136`, repinear RuralGo antes que cualquier otro consumer y revalidar `status`, `doctor`, `audit --stage=PRE_WRITE --json`, `audit --stage=PRE_COMMIT --json` y hooks gestionados.
+
+### 2026-05-03 (v6.3.135)
+
+- **Bootstrap de pre-push por delta real:** en ramas sin upstream, `PRE_PUSH` elige la base con menor delta real entre `main` y `develop`, evitando que un rollout nacido de `main` se bloquee como si heredara todo `develop`.
+- **Repin desbloqueable:** esta release corrige el falso positivo que impedía publicar el repin de `Flux_training` aunque el diff efectivo fuese mínimo.
+
+### 2026-05-03 (v6.3.134)
+
+- **Policy hash drift accionable:** `governanceObservationSnapshot`, `governanceNextAction` y el catálogo de remediación ya convierten la divergencia entre stages en una acción estricta y aplicable.
+- **Repin recomendado:** publicar `pumuki@6.3.134`, repinear RuralGo y revalidar `status`, `doctor`, `audit --stage=PRE_WRITE --json` y hooks gestionados.
+- **Contrato de release estable:** no hace falta cerrar más gaps funcionales para este fix; la solución ya quedó validada localmente y la distribución de `6.3.134` ya está publicada.
+
 ### 2026-05-03 (v6.3.133)
 
 - **Skills hard-blocking end-to-end:** `skillsEnforcement`, `evaluateAiGate`, `runPlatformGate` y el flujo CLI ya no dejan pasar advisory para violations de skills.

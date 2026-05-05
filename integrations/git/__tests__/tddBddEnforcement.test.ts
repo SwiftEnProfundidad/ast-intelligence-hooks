@@ -98,6 +98,7 @@ test('enforceTddBddPolicy pasa cuando contrato es valido y enlaza .feature exist
             {
               id: 'slice-1',
               scenario_ref: 'features/checkout.feature:2',
+              baseline: { status: 'passed', timestamp: '2026-02-26T09:59:00.000Z' },
               red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
               green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
               refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
@@ -119,7 +120,120 @@ test('enforceTddBddPolicy pasa cuando contrato es valido y enlaza .feature exist
     assert.equal(result.snapshot.status, 'passed');
     assert.equal(result.snapshot.evidence.state, 'valid');
     assert.equal(result.snapshot.evidence.slices_valid, 1);
+    assert.deepEqual(result.snapshot.evidence.baseline, {
+      required: true,
+      passed: 1,
+      missing: 0,
+      failed: 0,
+    });
     assert.equal(result.findings.length, 0);
+  });
+});
+
+test('enforceTddBddPolicy bloquea cuando falta baseline verde antes del RED', async () => {
+  await withTempDir('pumuki-tdd-enforce-missing-baseline-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki', 'artifacts'), { recursive: true });
+    mkdirSync(join(repoRoot, 'features'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'features', 'checkout.feature'),
+      'Feature: Checkout\n  Scenario: user checkout\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json'),
+      JSON.stringify(
+        {
+          version: '1',
+          generated_at: '2026-02-26T10:00:00.000Z',
+          slices: [
+            {
+              id: 'slice-1',
+              scenario_ref: 'features/checkout.feature:2',
+              red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
+              green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
+              refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
+            },
+          ],
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const result = enforceTddBddPolicy({
+      repoRoot,
+      branch: 'feature/tdd',
+      facts: addedFeatureFacts(),
+    });
+
+    assert.equal(result.snapshot.status, 'blocked');
+    assert.deepEqual(result.snapshot.evidence.baseline, {
+      required: true,
+      passed: 0,
+      missing: 1,
+      failed: 0,
+    });
+    assert.equal(
+      result.findings.some((finding) => finding.code === 'TDD_BASELINE_TEST_REQUIRED'),
+      true
+    );
+  });
+});
+
+test('enforceTddBddPolicy bloquea cuando el baseline previo falla', async () => {
+  await withTempDir('pumuki-tdd-enforce-failing-baseline-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki', 'artifacts'), { recursive: true });
+    mkdirSync(join(repoRoot, 'features'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'features', 'checkout.feature'),
+      'Feature: Checkout\n  Scenario: user checkout\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json'),
+      JSON.stringify(
+        {
+          version: '1',
+          generated_at: '2026-02-26T10:00:00.000Z',
+          slices: [
+            {
+              id: 'slice-1',
+              scenario_ref: 'features/checkout.feature:2',
+              baseline: {
+                status: 'failed',
+                timestamp: '2026-02-26T09:59:00.000Z',
+                test_ref: 'xcodebuild test -only-testing:RuralGoMacTests/LaunchFlowModelTests/test_completeOnboarding_marksCompletedAndRoutesToLogin',
+              },
+              red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
+              green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
+              refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
+            },
+          ],
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const result = enforceTddBddPolicy({
+      repoRoot,
+      branch: 'feature/tdd',
+      facts: addedFeatureFacts(),
+    });
+
+    assert.equal(result.snapshot.status, 'blocked');
+    assert.deepEqual(result.snapshot.evidence.baseline, {
+      required: true,
+      passed: 0,
+      missing: 0,
+      failed: 1,
+    });
+    assert.equal(
+      result.findings.some((finding) => finding.code === 'TDD_BASELINE_TEST_MUST_PASS'),
+      true
+    );
   });
 });
 
@@ -136,6 +250,7 @@ test('enforceTddBddPolicy bloquea cuando scenario_ref no apunta a archivo .featu
             {
               id: 'slice-1',
               scenario_ref: 'features/not-found.feature:2',
+              baseline: { status: 'passed', timestamp: '2026-02-26T09:59:00.000Z' },
               red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
               green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
               refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },

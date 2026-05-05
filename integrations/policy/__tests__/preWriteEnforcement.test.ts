@@ -104,7 +104,7 @@ test('resolvePreWriteEnforcement accepts legacy environment as compatibility fal
       assert.deepEqual(resolved, {
         mode: 'advisory',
         source: 'legacy-env',
-        blocking: false,
+        blocking: true,
         layer: 'experimental',
         activationVariable: 'PUMUKI_EXPERIMENTAL_PRE_WRITE',
         legacyActivationVariable: 'PUMUKI_PREWRITE_ENFORCEMENT',
