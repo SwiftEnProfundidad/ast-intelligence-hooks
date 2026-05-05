@@ -691,6 +691,50 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
   );
 });
 
+test('does not emit Swift Testing migration findings for compatible brownfield XCTest unit suites', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Tests/Mac/Presentation/LoginModelTests.spec.swift',
+        [
+          'import XCTest',
+          '',
+          'final class LoginModelTests: XCTestCase {',
+          '  func test_submit_validCredentials_storesSession() async throws {',
+          '    let (sut, repository) = makeSUT()',
+          '    try await sut.submit()',
+          '    XCTAssertEqual(repository.receivedRequests.count, 1)',
+          '    let session = try XCTUnwrap(repository.savedSession)',
+          '    XCTAssertEqual(session.userId, "buyer-1")',
+          '  }',
+          '',
+          '  private func makeSUT(',
+          '    file: StaticString = #filePath,',
+          '    line: UInt = #line',
+          '  ) -> (LoginModel, AuthRepositorySpy) {',
+          '    let repository = AuthRepositorySpy()',
+          '    let sut = LoginModel(repository: repository)',
+          '    trackForMemoryLeaks(sut, testCase: self, file: file, line: line)',
+          '    trackForMemoryLeaks(repository, testCase: self, file: file, line: line)',
+          '    return (sut, repository)',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  const testingFindings = findings.filter((finding) =>
+    finding.ruleId.startsWith('heuristics.ios.testing.')
+  );
+
+  assert.deepEqual(testingFindings.map((finding) => finding.ruleId), []);
+});
+
 test('detects IOS-CANARY-001 semantic heuristic with primary_node and related_nodes', () => {
   const extracted = extractHeuristicFacts({
     facts: [
