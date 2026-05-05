@@ -1877,6 +1877,8 @@ test('detects Android existing structure heuristics in production path', () => {
 
   assert.deepEqual(toRuleIds(findings), [
     'heuristics.android.analizar-estructura-existente-mo-dulos-interfaces-dependencias-gradle.ast',
+    'heuristics.android.hilt-di-framework-no-manual-factories.ast',
+    'heuristics.android.module-installin-provide-dependencies.ast',
   ]);
 });
 
@@ -1986,6 +1988,8 @@ test('detects Android Binds heuristics in production path', () => {
 
   assert.deepEqual(toRuleIds(findings), [
     'heuristics.android.binds-para-implementaciones-de-interfaces-ma-s-eficiente.ast',
+    'heuristics.android.hilt-di-framework-no-manual-factories.ast',
+    'heuristics.android.module-installin-provide-dependencies.ast',
   ]);
 });
 
@@ -2017,6 +2021,8 @@ test('detects Android Provides heuristics in production path', () => {
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
 
   assert.deepEqual(toRuleIds(findings), [
+    'heuristics.android.hilt-di-framework-no-manual-factories.ast',
+    'heuristics.android.module-installin-provide-dependencies.ast',
     'heuristics.android.provides-para-interfaces-o-third-party.ast',
   ]);
 });

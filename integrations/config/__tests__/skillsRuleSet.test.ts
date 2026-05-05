@@ -531,6 +531,16 @@ test('mapea reglas Android Hilt a detectores AST heuristics', async () => {
                 locked: true,
               },
               {
+                id: 'skills.android.guideline.android.androidentrypoint-activity-fragment-viewmodel',
+                description: '@AndroidEntryPoint - Activity, Fragment, ViewModel',
+                severity: 'WARN',
+                platform: 'android',
+                sourceSkill: 'android-guidelines',
+                sourcePath: 'docs/codex-skills/android-enterprise-rules.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+              },
+              {
                 id: 'skills.android.guideline.android.workmanager-androidx-work-work-runtime-ktx',
                 description: 'WorkManager - androidx.work:work-runtime-ktx',
                 severity: 'WARN',
@@ -608,7 +618,7 @@ test('mapea reglas Android Hilt a detectores AST heuristics', async () => {
       writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
 
       const result = loadSkillsRuleSetForStage('PRE_PUSH', tempRoot);
-      assert.equal(result.rules.length, 11);
+      assert.equal(result.rules.length, 12);
       assert.deepEqual(result.unsupportedAutoRuleIds, []);
 
       const hiltAndroidAppRule = result.rules.find(
@@ -623,6 +633,10 @@ test('mapea reglas Android Hilt a detectores AST heuristics', async () => {
       );
       const providesRule = result.rules.find(
         (rule) => rule.id === 'skills.android.guideline.android.provides-para-interfaces-o-third-party'
+      );
+      const androidEntryPointRule = result.rules.find(
+        (rule) =>
+          rule.id === 'skills.android.guideline.android.androidentrypoint-activity-fragment-viewmodel'
       );
       const workManagerDependencyRule = result.rules.find(
         (rule) => rule.id === 'skills.android.guideline.android.workmanager-androidx-work-work-runtime-ktx'
@@ -652,6 +666,7 @@ test('mapea reglas Android Hilt a detectores AST heuristics', async () => {
       assert.ok(moduleInstallInRule);
       assert.ok(bindsRule);
       assert.ok(providesRule);
+      assert.ok(androidEntryPointRule);
       assert.ok(workManagerDependencyRule);
       assert.ok(stringsXmlRule);
       assert.ok(stringFormattingRule);
@@ -675,6 +690,12 @@ test('mapea reglas Android Hilt a detectores AST heuristics', async () => {
       );
       assert.equal(
         result.mappedHeuristicRuleIds.has('heuristics.android.provides-para-interfaces-o-third-party.ast'),
+        true
+      );
+      assert.equal(
+        result.mappedHeuristicRuleIds.has(
+          'heuristics.android.androidentrypoint-activity-fragment-viewmodel.ast'
+        ),
         true
       );
       assert.equal(
@@ -722,6 +743,12 @@ test('mapea reglas Android Hilt a detectores AST heuristics', async () => {
       assert.equal(
         hiltAndroidAppRule?.then.source?.includes(
           'ast_nodes=[heuristics.android.hiltandroidapp-application-class.ast]'
+        ),
+        true
+      );
+      assert.equal(
+        androidEntryPointRule?.then.source?.includes(
+          'ast_nodes=[heuristics.android.androidentrypoint-activity-fragment-viewmodel.ast]'
         ),
         true
       );
