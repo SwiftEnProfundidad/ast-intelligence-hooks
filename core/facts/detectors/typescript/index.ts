@@ -4628,10 +4628,13 @@ const buildMagicNumberPatternMatch = (
     if (memberName === 'toFixed' && argumentIndex === 0) {
       return true;
     }
+    if (memberName === 'toString' && argumentIndex === 0) {
+      return true;
+    }
     if ((memberName === 'min' || memberName === 'max') && argumentIndex >= 0) {
       return true;
     }
-    if (value.value === 1000 && ancestors.some((ancestor) => memberExpressionPropertyName(ancestor) === 'floor')) {
+    if (value.value === 1000 && memberExpressionPropertyName(callExpression.callee) === 'floor') {
       return true;
     }
     return false;
@@ -4854,6 +4857,21 @@ const isBenignHardcodedConfigLiteral = (node: AstNode): boolean => {
     return true;
   }
   if (/^(?:0|1|true|false|yes|no|on|off)$/i.test(value)) {
+    return true;
+  }
+  if (
+    [
+      'all-severities',
+      'critical-high',
+      'default',
+      'detected',
+      'engine',
+      'gate',
+      'hard-mode',
+      'inferred',
+      'skills.policy',
+    ].includes(value)
+  ) {
     return true;
   }
   if (/^\d+(?:\.\d+)+$/.test(value)) {

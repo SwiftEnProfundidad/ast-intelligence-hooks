@@ -20,6 +20,8 @@ type PolicyReconcileDriftCode =
   | 'POLICY_HASH_DIVERGENCE'
   | 'POLICY_STAGE_NON_STRICT';
 
+const POLICY_CONTRACT_JSON_INDENT = 2;
+
 export type PolicyReconcileDrift = {
   code: PolicyReconcileDriftCode;
   severity: PolicyReconcileSeverity;
@@ -180,7 +182,7 @@ const tryApplyPolicyAutofix = (params: {
 
   try {
     mkdirSync(dirname(contractPath), { recursive: true });
-    writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`, 'utf8');
+    writeFileSync(contractPath, `${JSON.stringify(contract, null, POLICY_CONTRACT_JSON_INDENT)}\n`, 'utf8');
     return {
       attempted: true,
       status: 'APPLIED',

@@ -27,6 +27,9 @@ export type WriteEvidenceResult = {
 
 const EVIDENCE_FILE_NAME = '.ai_evidence.json';
 const TEMP_EVIDENCE_PREFIX = '.ai_evidence.json.tmp-';
+const RANDOM_SUFFIX_RADIX = 16;
+const RANDOM_SUFFIX_START_INDEX = 2;
+const RANDOM_SUFFIX_END_INDEX = 10;
 
 const normalizeLines = (lines?: EvidenceLines): EvidenceLines | undefined => {
   if (typeof lines === 'undefined') {
@@ -435,7 +438,9 @@ const resolveRepoRoot = (): string => {
 };
 
 const buildTempEvidencePath = (repoRoot: string): string => {
-  const uniqueSuffix = `${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+  const uniqueSuffix = `${process.pid}-${Date.now()}-${Math.random()
+    .toString(RANDOM_SUFFIX_RADIX)
+    .slice(RANDOM_SUFFIX_START_INDEX, RANDOM_SUFFIX_END_INDEX)}`;
   return join(repoRoot, `${TEMP_EVIDENCE_PREFIX}${uniqueSuffix}`);
 };
 

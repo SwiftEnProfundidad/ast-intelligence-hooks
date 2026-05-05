@@ -10,6 +10,9 @@ import { resolveLearningContextExperimentalFeature } from '../policy/experimenta
 import { resolvePreWriteEnforcement } from '../policy/preWriteEnforcement';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
 
+const WORKTREE_SLICE_PLAN_COUNT = 3;
+const WORKTREE_SLICE_FILE_COUNT = 4;
+
 const resolveTddStatus = (
   repoRoot: string
 ): 'skipped' | 'passed' | 'advisory' | 'blocked' | 'waived' | null => {
@@ -114,8 +117,8 @@ const buildPreFlightHints = (params: {
   if (params.stage === 'PRE_WRITE' && hasWorktreeViolation) {
     const plan = collectWorktreeAtomicSlices({
       repoRoot: params.repoRoot,
-      maxSlices: 3,
-      maxFilesPerSlice: 4,
+      maxSlices: WORKTREE_SLICE_PLAN_COUNT,
+      maxFilesPerSlice: WORKTREE_SLICE_FILE_COUNT,
     });
     if (plan.slices.length > 0) {
       hints.push('ATOMIC_SLICES: staging sugerido por scope.');

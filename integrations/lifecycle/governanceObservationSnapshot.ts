@@ -13,6 +13,7 @@ import { writeInfo } from './cliOutputs';
 import { formatTrackingActionableContext } from './trackingState';
 
 const DEFAULT_PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
+const STRICT_ENV_VALUE = 'strict';
 
 export type GovernanceEvidenceSummary = {
   path: string;
@@ -78,7 +79,7 @@ const truthyEnv = (value: string | undefined): boolean => {
     return false;
   }
   const normalized = value.trim().toLowerCase();
-  return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'strict';
+  return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === STRICT_ENV_VALUE;
 };
 
 const readCurrentBranch = (git: ILifecycleGitService, repoRoot: string): string | null => {
