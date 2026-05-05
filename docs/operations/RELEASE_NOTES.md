@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.145)
+
+- **RuralGo PUMUKI-INC-124:** `skills.ios.critical-test-quality` deja de bloquear tests XCTest de UI automation/performance cuando usan `XCUIApplication`, `XCTMetric` o `measure`.
+- **Swift Testing sin regresión:** los unit/integration tests XCTest modernizables siguen bloqueados si incumplen el contrato; solo se respeta la compatibilidad explícita que `swift-testing-expert` permite para UI/performance.
+- **Rollout:** publicar `pumuki@6.3.145`, repinear primero RuralGo y revalidar el smoke UI XCTest que estaba bloqueado.
+
 ### 2026-05-05 (v6.3.144)
 
 - **RuralGo PUMUKI-INC-122:** `pumuki sdd evidence` serializa escrituras concurrentes del artefacto `.pumuki/artifacts/pumuki-evidence-v1.json` con lock local y rename atómico.
