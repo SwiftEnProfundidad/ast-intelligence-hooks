@@ -436,6 +436,44 @@ const isSkillsContractCarrierPath = (path: string): boolean => {
   );
 };
 
+const isSkillsEnforcementImplementationPath = (path: string): boolean => {
+  const normalized = toNormalizedPath(path).toLowerCase();
+  return (
+    normalized.endsWith('.feature') ||
+    normalized.startsWith('core/facts/') ||
+    normalized.startsWith('core/rules/presets/heuristics/') ||
+    normalized.startsWith('integrations/config/') ||
+    normalized === 'integrations/git/runplatformgate.ts' ||
+    normalized === 'integrations/git/__tests__/runplatformgate.test.ts' ||
+    isSkillsContractCarrierPath(normalized)
+  );
+};
+
+const isSkillsEnforcementRemediationDiff = (
+  paths: ReadonlyArray<string>
+): boolean => {
+  if (paths.length === 0) {
+    return false;
+  }
+
+  const normalizedPaths = paths.map((path) => toNormalizedPath(path));
+  const touchesDetectorSurface = normalizedPaths.some((path) =>
+    path.startsWith('core/facts/') ||
+    path.startsWith('core/rules/presets/heuristics/') ||
+    path.startsWith('integrations/config/') ||
+    path === 'integrations/git/runplatformgate.ts' ||
+    path === 'integrations/git/__tests__/runplatformgate.test.ts'
+  );
+  const touchesLockOrScenario = normalizedPaths.some((path) =>
+    path === 'skills.lock.json' || path.endsWith('.feature')
+  );
+  return (
+    touchesDetectorSurface &&
+    touchesLockOrScenario &&
+    normalizedPaths.every((path) => isSkillsEnforcementImplementationPath(path))
+  );
+};
+
 const collectStagedPaths = (git: IGitService, repoRoot: string): ReadonlyArray<string> => {
   try {
     return git.runGit(['diff', '--cached', '--name-only'], repoRoot)
@@ -1433,7 +1471,12 @@ export async function runPlatformGate(params: {
           ].sort(),
         })
       : undefined;
-  const remediationProgressAllowsGlobalGap = remediationProgressFinding !== undefined;
+  const skillsEnforcementRemediationDiff = isSkillsEnforcementRemediationDiff(stagedPaths);
+  const remediationProgressAllowsGlobalGap =
+    remediationProgressFinding !== undefined ||
+    (skillsEnforcementRemediationDiff &&
+      !hasNativeBlockingFinding &&
+      !hasTddBddBlockingFinding);
   const effectiveTddBddFindings = remediationProgressAllowsGlobalGap
     ? tddBddEvaluation.findings.map((finding) =>
         finding.code === 'TDD_BDD_EVIDENCE_STALE'

@@ -136,6 +136,41 @@ test('evaluateGitAtomicity sugiere split de staging cuando supera maxScopes', as
   );
 });
 
+test('evaluateGitAtomicity permite remediacion de infraestructura de skills aunque toque varios scopes', async () => {
+  await withAtomicityEnv(
+    {
+      PUMUKI_GIT_ATOMICITY_ENABLED: '1',
+      PUMUKI_GIT_ATOMICITY_MAX_FILES: '100',
+      PUMUKI_GIT_ATOMICITY_MAX_SCOPES: '1',
+    },
+    async () => {
+      await withTempRepo(async (repoRoot) => {
+        const paths = [
+          'PARITY-IOS-001.feature',
+          'core/facts/extractHeuristicFacts.ts',
+          'integrations/config/skillsDetectorRegistry.ts',
+          'integrations/git/gitAtomicity.ts',
+          'skills.lock.json',
+        ];
+        for (const path of paths) {
+          mkdirSync(join(repoRoot, path.split('/').slice(0, -1).join('/')), { recursive: true });
+          writeFileSync(join(repoRoot, path), 'export const remediation = true;\n', 'utf8');
+        }
+        runGit(repoRoot, ['add', ...paths]);
+
+        const result = evaluateGitAtomicity({
+          repoRoot,
+          stage: 'PRE_COMMIT',
+        });
+
+        assert.equal(result.enabled, true);
+        assert.equal(result.allowed, true);
+        assert.deepEqual(result.violations, []);
+      }, { tempPrefix: 'pumuki-git-atomicity-skills-remediation-' });
+    }
+  );
+});
+
 test('evaluateGitAtomicity ignora evidencia gestionada al contar scopes staged', async () => {
   await withAtomicityEnv(
     {

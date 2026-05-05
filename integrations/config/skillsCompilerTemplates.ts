@@ -258,6 +258,24 @@ export const skillsCompilerTemplates: Record<string, SkillsCompilerTemplate> = {
         locked: true,
       },
       {
+        id: 'skills.ios.guideline.ios-swiftui-expert.avoid-inline-filtering-in-foreach-prefilter-and-cache',
+        description: 'Avoid inline filtering in ForEach; prefilter and cache before rendering.',
+        severity: 'ERROR',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
+        id: 'skills.ios.guideline.ios-swiftui-expert.prefer-static-member-lookup-blue-vs-color-blue',
+        description: 'Prefer SwiftUI contextual static member lookup such as .blue instead of Color.blue.',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
         id: 'skills.ios.no-contains-user-filter',
         description:
           'Avoid contains() in user-facing filter flows; prefer localizedStandardContains() for SwiftUI search text matching.',

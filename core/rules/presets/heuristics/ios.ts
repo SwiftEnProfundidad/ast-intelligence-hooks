@@ -326,6 +326,42 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.inline-filtering-in-foreach.ast',
+    description: 'Detects inline filter chains inside SwiftUI ForEach rendering paths.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.inline-filtering-in-foreach.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected inline filtering inside ForEach; prefilter and cache before rendering.',
+      code: 'HEURISTICS_IOS_SWIFTUI_INLINE_FILTERING_IN_FOREACH_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.swiftui.explicit-color-static-member.ast',
+    description: 'Detects explicit Color.* static member lookup in SwiftUI presentation code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.explicit-color-static-member.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected explicit Color static member lookup where contextual .color style is preferred.',
+      code: 'HEURISTICS_IOS_SWIFTUI_EXPLICIT_COLOR_STATIC_MEMBER_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.contains-user-filter.ast',
     description: 'Detects contains() usage in user-facing filter flows where localizedStandardContains() may be preferred.',
     severity: 'WARN',
