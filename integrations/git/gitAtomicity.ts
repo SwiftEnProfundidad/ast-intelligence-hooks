@@ -267,6 +267,136 @@ const collectCommitSubjects = (params: {
   }
 };
 
+const collectCommitHashes = (params: {
+  git: IGitService;
+  repoRoot: string;
+  fromRef?: string;
+  toRef?: string;
+}): ReadonlyArray<string> => {
+  if (!params.fromRef || !params.toRef) {
+    return [];
+  }
+  try {
+    return parseLines(
+      params.git.runGit(['log', '--format=%H', '--reverse', `${params.fromRef}..${params.toRef}`], params.repoRoot)
+    );
+  } catch (error) {
+    if (isUnresolvableRevisionError(error)) {
+      return [];
+    }
+    throw error;
+  }
+};
+
+const collectCommitChangedPaths = (params: {
+  git: IGitService;
+  repoRoot: string;
+  commitHash: string;
+}): ReadonlyArray<string> => {
+  try {
+    return parseLines(
+      params.git.runGit(
+        ['diff-tree', '--no-commit-id', '--name-only', '-r', '--diff-filter=ACMR', params.commitHash],
+        params.repoRoot
+      )
+    );
+  } catch (error) {
+    if (isUnresolvableRevisionError(error)) {
+      return [];
+    }
+    throw error;
+  }
+};
+
+const buildPathLimitViolations = (params: {
+  changedPaths: ReadonlyArray<string>;
+  config: GitAtomicityConfig;
+  stage: GitAtomicityStage;
+  atomicSlicesRemediation?: string;
+  label?: string;
+}): GitAtomicityViolation[] => {
+  const violations: GitAtomicityViolation[] = [];
+  const labelSuffix = params.label ? ` (${params.label})` : '';
+
+  if (params.changedPaths.length > params.config.maxFiles) {
+    violations.push({
+      code: 'GIT_ATOMICITY_TOO_MANY_FILES',
+      message:
+        `Git atomicity guard blocked at ${params.stage}${labelSuffix}: changed_files=${params.changedPaths.length} exceeds max_files=${params.config.maxFiles}.`,
+      remediation:
+        `Divide los cambios en commits más pequeños (máximo ${params.config.maxFiles} archivos por commit).`
+        + (params.atomicSlicesRemediation ? ` ${params.atomicSlicesRemediation}` : ''),
+    });
+  }
+
+  const scopePaths = collectScopePaths(params.changedPaths);
+  const scopeKeys = new Set(scopePaths.keys());
+  if (scopeKeys.size > params.config.maxScopes) {
+    const sortedScopes = [...scopeKeys].sort();
+    const suggestedScopeAdds = sortedScopes
+      .slice(0, Math.max(1, Math.min(params.config.maxScopes + 1, 3)))
+      .map((scope) => `git add ${scope}/`)
+      .join(' && ');
+    const scopeBreakdown = sortedScopes
+      .map((scope) => {
+        const paths = scopePaths.get(scope) ?? [];
+        const sample = paths.slice(0, 3);
+        return `${scope}{count=${paths.length}; sample=[${sample.join(', ')}]}`;
+      })
+      .join(' | ');
+    violations.push({
+      code: 'GIT_ATOMICITY_TOO_MANY_SCOPES',
+      message:
+        `Git atomicity guard blocked at ${params.stage}${labelSuffix}: changed_scopes=${scopeKeys.size} exceeds max_scopes=${params.config.maxScopes}. ` +
+        `scope_files=${scopeBreakdown}.`,
+      remediation:
+        `Agrupa cambios por ámbito funcional (máximo ${params.config.maxScopes} scopes por commit). ` +
+        `scopes_detectados=[${sortedScopes.join(', ')}]. ` +
+        `Sugerencia split: git restore --staged . && ${suggestedScopeAdds} && git commit -m "<tipo>: <scope>".`
+        + (params.atomicSlicesRemediation ? ` ${params.atomicSlicesRemediation}` : ''),
+    });
+  }
+
+  return violations;
+};
+
+const buildPrePushCommitPathLimitViolations = (params: {
+  git: IGitService;
+  repoRoot: string;
+  config: GitAtomicityConfig;
+  fromRef?: string;
+  toRef?: string;
+}): GitAtomicityViolation[] | undefined => {
+  const commitHashes = collectCommitHashes({
+    git: params.git,
+    repoRoot: params.repoRoot,
+    fromRef: params.fromRef,
+    toRef: params.toRef,
+  });
+  if (commitHashes.length === 0) {
+    return undefined;
+  }
+
+  const violations: GitAtomicityViolation[] = [];
+  for (const commitHash of commitHashes) {
+    const changedPaths = collectCommitChangedPaths({
+      git: params.git,
+      repoRoot: params.repoRoot,
+      commitHash,
+    }).filter((path) => !isManagedEvidencePath(path));
+    violations.push(
+      ...buildPathLimitViolations({
+        changedPaths,
+        config: params.config,
+        stage: 'PRE_PUSH',
+        label: `commit=${commitHash.slice(0, 12)}`,
+      })
+    );
+  }
+
+  return violations;
+};
+
 export const evaluateGitAtomicity = (params: {
   git?: IGitService;
   repoRoot?: string;
@@ -299,44 +429,26 @@ export const evaluateGitAtomicity = (params: {
     stage: params.stage,
   });
 
-  if (changedPaths.length > config.maxFiles) {
-    violations.push({
-      code: 'GIT_ATOMICITY_TOO_MANY_FILES',
-      message:
-        `Git atomicity guard blocked at ${params.stage}: changed_files=${changedPaths.length} exceeds max_files=${config.maxFiles}.`,
-      remediation:
-        `Divide los cambios en commits más pequeños (máximo ${config.maxFiles} archivos por commit).`
-        + (atomicSlicesRemediation ? ` ${atomicSlicesRemediation}` : ''),
-    });
-  }
+  const prePushCommitViolations =
+    params.stage === 'PRE_PUSH'
+      ? buildPrePushCommitPathLimitViolations({
+          git,
+          repoRoot,
+          config,
+          fromRef: params.fromRef,
+          toRef: params.toRef,
+        })
+      : undefined;
 
-  const scopePaths = collectScopePaths(changedPaths);
-  const scopeKeys = new Set(scopePaths.keys());
-  if (scopeKeys.size > config.maxScopes) {
-    const sortedScopes = [...scopeKeys].sort();
-    const suggestedScopeAdds = sortedScopes
-      .slice(0, Math.max(1, Math.min(config.maxScopes + 1, 3)))
-      .map((scope) => `git add ${scope}/`)
-      .join(' && ');
-    const scopeBreakdown = sortedScopes
-      .map((scope) => {
-        const paths = scopePaths.get(scope) ?? [];
-        const sample = paths.slice(0, 3);
-        return `${scope}{count=${paths.length}; sample=[${sample.join(', ')}]}`;
-      })
-      .join(' | ');
-    violations.push({
-      code: 'GIT_ATOMICITY_TOO_MANY_SCOPES',
-      message:
-        `Git atomicity guard blocked at ${params.stage}: changed_scopes=${scopeKeys.size} exceeds max_scopes=${config.maxScopes}. ` +
-        `scope_files=${scopeBreakdown}.`,
-      remediation:
-        `Agrupa cambios por ámbito funcional (máximo ${config.maxScopes} scopes por commit). ` +
-        `scopes_detectados=[${sortedScopes.join(', ')}]. ` +
-        `Sugerencia split: git restore --staged . && ${suggestedScopeAdds} && git commit -m "<tipo>: <scope>".`
-        + (atomicSlicesRemediation ? ` ${atomicSlicesRemediation}` : ''),
-    });
-  }
+  violations.push(
+    ...(prePushCommitViolations
+      ?? buildPathLimitViolations({
+        changedPaths,
+        config,
+        stage: params.stage,
+        atomicSlicesRemediation,
+      }))
+  );
 
   if (config.enforceCommitMessagePattern && params.stage !== 'PRE_COMMIT') {
     let pattern: RegExp;

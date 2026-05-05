@@ -239,6 +239,94 @@ test('evaluateGitAtomicity bloquea PRE_PUSH cuando detecta commits sin patrón t
   );
 });
 
+test('evaluateGitAtomicity permite PRE_PUSH con diff agregado grande cuando cada commit es atómico', async () => {
+  await withAtomicityEnv(
+    {
+      PUMUKI_GIT_ATOMICITY_ENABLED: '1',
+      PUMUKI_GIT_ATOMICITY_MAX_FILES: '2',
+      PUMUKI_GIT_ATOMICITY_MAX_SCOPES: '1',
+      PUMUKI_GIT_ATOMICITY_ENFORCE_COMMIT_PATTERN: '1',
+    },
+    async () => {
+      await withTempRepo(async (repoRoot) => {
+        writeFileSync(join(repoRoot, 'README.md'), '# baseline\n', 'utf8');
+        runGit(repoRoot, ['add', 'README.md']);
+        runGit(repoRoot, ['commit', '-m', 'chore: baseline']);
+
+        runGit(repoRoot, ['checkout', '--quiet', '-b', 'feature/atomic-release-train']);
+        mkdirSync(join(repoRoot, 'integrations', 'gate'), { recursive: true });
+        writeFileSync(join(repoRoot, 'integrations', 'gate', 'a.ts'), 'export const a = 1;\n', 'utf8');
+        writeFileSync(join(repoRoot, 'integrations', 'gate', 'b.ts'), 'export const b = 2;\n', 'utf8');
+        runGit(repoRoot, ['add', 'integrations/gate/a.ts', 'integrations/gate/b.ts']);
+        runGit(repoRoot, ['commit', '-m', 'fix(gate): keep release slice atomic']);
+
+        mkdirSync(join(repoRoot, 'docs', 'operations'), { recursive: true });
+        writeFileSync(join(repoRoot, 'docs', 'operations', 'a.md'), 'A\n', 'utf8');
+        writeFileSync(join(repoRoot, 'docs', 'operations', 'b.md'), 'B\n', 'utf8');
+        runGit(repoRoot, ['add', 'docs/operations/a.md', 'docs/operations/b.md']);
+        runGit(repoRoot, ['commit', '-m', 'docs(release): record atomic train']);
+
+        const result = evaluateGitAtomicity({
+          repoRoot,
+          stage: 'PRE_PUSH',
+          fromRef: 'main',
+          toRef: 'HEAD',
+        });
+
+        assert.equal(result.enabled, true);
+        assert.equal(result.allowed, true);
+        assert.equal(result.violations.length, 0);
+      }, { tempPrefix: 'pumuki-git-atomicity-pre-push-commit-range-' });
+    }
+  );
+});
+
+test('evaluateGitAtomicity bloquea PRE_PUSH cuando un commit individual no es atómico', async () => {
+  await withAtomicityEnv(
+    {
+      PUMUKI_GIT_ATOMICITY_ENABLED: '1',
+      PUMUKI_GIT_ATOMICITY_MAX_FILES: '2',
+      PUMUKI_GIT_ATOMICITY_MAX_SCOPES: '2',
+      PUMUKI_GIT_ATOMICITY_ENFORCE_COMMIT_PATTERN: '1',
+    },
+    async () => {
+      await withTempRepo(async (repoRoot) => {
+        writeFileSync(join(repoRoot, 'README.md'), '# baseline\n', 'utf8');
+        runGit(repoRoot, ['add', 'README.md']);
+        runGit(repoRoot, ['commit', '-m', 'chore: baseline']);
+
+        runGit(repoRoot, ['checkout', '--quiet', '-b', 'feature/non-atomic-commit']);
+        mkdirSync(join(repoRoot, 'integrations', 'gate'), { recursive: true });
+        writeFileSync(join(repoRoot, 'integrations', 'gate', 'a.ts'), 'export const a = 1;\n', 'utf8');
+        writeFileSync(join(repoRoot, 'integrations', 'gate', 'b.ts'), 'export const b = 2;\n', 'utf8');
+        writeFileSync(join(repoRoot, 'integrations', 'gate', 'c.ts'), 'export const c = 3;\n', 'utf8');
+        runGit(repoRoot, [
+          'add',
+          'integrations/gate/a.ts',
+          'integrations/gate/b.ts',
+          'integrations/gate/c.ts',
+        ]);
+        runGit(repoRoot, ['commit', '-m', 'fix(gate): add non atomic fixture']);
+
+        const result = evaluateGitAtomicity({
+          repoRoot,
+          stage: 'PRE_PUSH',
+          fromRef: 'main',
+          toRef: 'HEAD',
+        });
+
+        assert.equal(result.enabled, true);
+        assert.equal(result.allowed, false);
+        const violation = result.violations.find(
+          (candidate) => candidate.code === 'GIT_ATOMICITY_TOO_MANY_FILES'
+        );
+        assert.ok(violation);
+        assert.match(violation.message, /commit=/);
+      }, { tempPrefix: 'pumuki-git-atomicity-pre-push-non-atomic-commit-' });
+    }
+  );
+});
+
 test('evaluateGitAtomicity no rompe bootstrap en repo sin HEAD inicial para PRE_PUSH/CI', async () => {
   await withAtomicityEnv(
     {
