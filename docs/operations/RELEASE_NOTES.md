@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.143)
+
+- **RuralGo PUMUKI-INC-060:** PRE_WRITE deja de aceptar evidencia TDD/BDD de baseline caducada para cambios in-scope.
+- **Baseline antes de editar:** si el componente tocado requiere TDD/BDD, la evidencia debe ser reciente y pasada; si no, Pumuki bloquea y pide reejecutar baseline tests.
+- **Rollout:** publicar `pumuki@6.3.143`, repinear primero RuralGo y revalidar `status`, `doctor` y el bloqueo por evidencia stale.
+
 ### 2026-05-05 (v6.3.142)
 
 - **RuralGo PUMUKI-INC-059:** PRE_WRITE vuelve a pedir hechos AST para iOS SOLID aunque el flag experimental de heurísticas esté apagado.

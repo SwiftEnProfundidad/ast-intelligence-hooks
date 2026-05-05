@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.143] - 2026-05-05
+
+### Fixed
+
+- **PUMUKI-INC-060 baseline TDD/BDD fresco:** los cambios in-scope bloquean si la evidencia de baseline TDD/BDD está caducada, obligando a reejecutar los tests baseline del componente antes de editar código relacionado.
+- **Ventana configurable de evidencia:** `PUMUKI_TDD_BDD_EVIDENCE_MAX_AGE_SECONDS` permite ajustar la frescura máxima; por defecto son 900 segundos y los valores inválidos mantienen el modo estricto.
+
 ## [6.3.142] - 2026-05-05
 
 ### Fixed
