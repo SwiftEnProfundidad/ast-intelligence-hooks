@@ -1300,11 +1300,26 @@ const toHighestTriggeredSeverity = (
   return null;
 };
 
+const hasAppliedGateWaiver = (evidenceResult: EvidenceReadResult): boolean => {
+  if (evidenceResult.kind !== 'valid') {
+    return false;
+  }
+  return evidenceResult.evidence.snapshot.findings.some(
+    (finding) => finding.code === 'GATE_WAIVER_APPLIED'
+  );
+};
+
 const collectEvidencePolicyThresholdViolations = (params: {
   evidenceResult: EvidenceReadResult;
   policy: ReturnType<typeof resolvePolicyForStage>['policy'];
 }): AiGateViolation[] => {
   if (params.evidenceResult.kind !== 'valid') {
+    return [];
+  }
+  if (
+    params.evidenceResult.evidence.ai_gate.status === 'ALLOWED' &&
+    hasAppliedGateWaiver(params.evidenceResult)
+  ) {
     return [];
   }
 

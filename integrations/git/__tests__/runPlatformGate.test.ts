@@ -198,9 +198,19 @@ test('runPlatformGate silent evita salida humana en stdout para contratos JSON',
           detectedPlatforms: {},
           skillsRuleSet: {
             rules: [],
-            activeBundles: [],
+            activeBundles: [
+              {
+                name: 'frontend-guidelines',
+                version: '1.0.0',
+                source: 'file:docs/codex-skills/frontend-enterprise-rules.md',
+                hash: 'a'.repeat(64),
+                rules: [],
+              },
+            ],
             mappedHeuristicRuleIds: new Set<string>(),
             requiresHeuristicFacts: false,
+            unsupportedAutoRuleIds: [],
+            unsupportedDetectorRuleIds: [],
           },
           projectRules: [] as RuleSet,
           heuristicRules: [] as RuleSet,
@@ -690,6 +700,15 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
         unevaluated: 0,
       },
       coverage_ratio: 1,
+      auto_runtime_coverage_ratio: 1,
+      semantic_enforcement_ratio: 1,
+      global_skills_enforcement: {
+        status: 'enforced',
+        registry_total: 0,
+        detector_supported: 0,
+        declarative_only: 0,
+        unsupported_detector: 0,
+      },
     },
     repoRoot: '/repo/root',
     detectedPlatforms: evaluationResult.detectedPlatforms,
@@ -2109,10 +2128,10 @@ test('runPlatformGate bloquea en modo strict cuando existen reglas AUTO de skill
   });
 });
 
-test('runPlatformGate no bloquea reglas declarativas sin detector cuando la cobertura AUTO esta completa', async () => {
+test('runPlatformGate bloquea reglas declarativas hard sin detector aunque la cobertura AUTO este completa', async () => {
   await withSkillsEnforcementEnv('strict', async () => {
     const policy: GatePolicy = {
-      stage: 'PRE_PUSH',
+      stage: 'PRE_WRITE',
       blockOnOrAbove: 'ERROR',
       warnOnOrAbove: 'WARN',
     };
@@ -2167,6 +2186,19 @@ test('runPlatformGate no bloquea reglas declarativas sin detector cuando la cobe
             unsupportedDetectorRuleIds: [
               'skills.backend.guideline.backend.clean-architecture',
             ],
+            registryCoverage: {
+              contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+              stage: 'PRE_WRITE',
+              registryTotals: {
+                total: 845,
+                auto: 177,
+                declarative: 668,
+              },
+              stageApplicableAutoRuleIds: ['skills.backend.no-empty-catch'],
+              declarativeRuleIds: ['skills.backend.guideline.backend.clean-architecture'],
+              excludedDeclarativeReason:
+                'DECLARATIVE skills are registry contract/policy rules. They are not executed as PRE_COMMIT runtime detectors; only AUTO rules applicable to the current stage are evaluated.',
+            },
           },
           projectRules: [] as RuleSet,
           heuristicRules: [] as RuleSet,
@@ -2208,14 +2240,20 @@ test('runPlatformGate no bloquea reglas declarativas sin detector cuando la cobe
       },
     });
 
-    assert.equal(result, 0);
-    assert.equal(emittedArgs?.gateOutcome, 'PASS');
+    assert.equal(result, 1);
+    assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
     assert.equal(
       emittedArgs?.findings.some(
-        (finding) => finding.ruleId === 'governance.skills.detector-mapping.incomplete'
+        (finding) => finding.ruleId === 'governance.skills.global-enforcement.incomplete'
       ),
-      false
+      true
     );
+    const globalFinding = emittedArgs?.findings.find(
+      (finding) => finding.ruleId === 'governance.skills.global-enforcement.incomplete'
+    );
+    assert.equal(globalFinding?.code, 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL');
+    assert.match(globalFinding?.message ?? '', /registry_total=845/);
+    assert.match(globalFinding?.message ?? '', /unsupported_detector=1/);
     assert.equal(emittedArgs?.rulesCoverage?.unsupported_auto_rule_ids, undefined);
     assert.deepEqual(emittedArgs?.rulesCoverage?.unsupported_detector_rule_ids, [
       'skills.backend.guideline.backend.clean-architecture',
@@ -4434,9 +4472,19 @@ test('runPlatformGate no bloquea PRE_WRITE por tamaño implícito sin hotspot de
           detectedPlatforms: { frontend: { detected: true, confidence: 'HIGH' } },
           skillsRuleSet: {
             rules: [],
-            activeBundles: [],
+            activeBundles: [
+              {
+                name: 'frontend-guidelines',
+                version: '1.0.0',
+                source: 'file:docs/codex-skills/frontend-enterprise-rules.md',
+                hash: 'a'.repeat(64),
+                rules: [],
+              },
+            ],
             mappedHeuristicRuleIds: new Set<string>(),
             requiresHeuristicFacts: false,
+            unsupportedAutoRuleIds: [],
+            unsupportedDetectorRuleIds: [],
           },
           projectRules: [] as RuleSet,
           heuristicRules: [] as RuleSet,

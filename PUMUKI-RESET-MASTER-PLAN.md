@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-059` / RuralGo: cerrar el gap de enforcement hard de skills en `PRE_WRITE` para OCP/SRP/LSP/ISP/DIP/LOP, empezando por la reproducción real donde `PRE_WRITE` no bloqueó un switch sobre enum propio en `LaunchFlowCoordinator.bootstrap` ni suites de tests con responsabilidades mezcladas. Estado 2026-05-05: `PUMUKI-INC-124` queda fixed y repineado en `pumuki@6.3.147` (PR Pumuki #867/#868, RuralGo PR #1914 y rama activa `bugfix/ruralgo-tracking-build-stability` actualizada); el MD externo de RuralGo deja `PUMUKI-INC-059` como único High activo. |
+| Este plan | [🚧] - `PUMUKI-INC-125` / RuralGo: cerrar el gap crítico de confianza donde `pumuki@6.3.147` reporta `coverage_ratio=1` aunque esa métrica solo cubre reglas AUTO del stage y deja `registry_declarative=668` / `unsupported_detector=664` sin enforcement AST operativo. Estado 2026-05-05: la prioridad externa sube por encima de `PUMUKI-INC-059`; el cierre exige distinguir `auto_runtime_coverage_ratio` de cobertura global de skills, exponer `semantic_enforcement_ratio`, y bloquear fail-closed en `PRE_WRITE`, `PRE_COMMIT` y `PRE_PUSH` cuando una skill hard quede como declarativa/unsupported sin detector sobre archivos escaneados. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
