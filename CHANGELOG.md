@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.137] - 2026-05-05
+
+### Fixed
+
+- **PUMUKI-INC-061 evidence/atomicity:** el guard de atomicidad ignora `.ai_evidence.json` / `.AI_EVIDENCE.json` gestionados por Pumuki al contar ficheros y scopes staged, evitando que un auto-restage de evidencia bloquee repins atómicos de consumers.
+
 ## [6.3.136] - 2026-05-05
 
 ### Fixed

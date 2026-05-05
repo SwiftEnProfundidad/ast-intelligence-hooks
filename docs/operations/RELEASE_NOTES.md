@@ -4,6 +4,11 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.137)
+
+- **Atomicidad compatible con evidencia gestionada:** `.ai_evidence.json` / `.AI_EVIDENCE.json` ya no cuentan como scope o fichero funcional en `git-atomicity`, de modo que un commit de repin no queda bloqueado solo porque el hook refresque evidencia trackeada.
+- **RuralGo follow-up:** corrige el bloqueo observado al intentar commitear el repin `package.json` + `package-lock.json`, donde Pumuki auto-restageaba evidencia y elevaba el commit a 3 scopes.
+
 ### 2026-05-05 (v6.3.136)
 
 - **All-severities blocking para consumers:** `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI` bloquean por cualquier violación de skills/reglas AST Intelligence, sin permitir rebajas por `skills.policy`, hard-mode `critical-high` ni `PRE_WRITE=advisory`.
