@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.136)
+
+- **All-severities blocking para consumers:** `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI` bloquean por cualquier violación de skills/reglas AST Intelligence, sin permitir rebajas por `skills.policy`, hard-mode `critical-high` ni `PRE_WRITE=advisory`.
+- **RuralGo primero:** replay local previo a publicación confirma PRE_WRITE `115/115` bloqueantes y PRE_COMMIT `118/118` bloqueantes, con iOS y Android visibles en la auditoría.
+- **Rollout recomendado:** publicar `pumuki@6.3.136`, repinear RuralGo antes que cualquier otro consumer y revalidar `status`, `doctor`, `audit --stage=PRE_WRITE --json`, `audit --stage=PRE_COMMIT --json` y hooks gestionados.
+
 ### 2026-05-03 (v6.3.135)
 
 - **Bootstrap de pre-push por delta real:** en ramas sin upstream, `PRE_PUSH` elige la base con menor delta real entre `main` y `develop`, evitando que un rollout nacido de `main` se bloquee como si heredara todo `develop`.

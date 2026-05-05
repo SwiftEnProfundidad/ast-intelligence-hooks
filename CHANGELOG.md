@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.136] - 2026-05-05
+
+### Fixed
+
+- **PUMUKI-INC-059 all-severities blocking:** `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI` bloquean cualquier finding de reglas/skills AST Intelligence, incluyendo `WARN/MEDIUM` e `INFO/LOW`.
+- **Políticas no relajables:** `skills.policy`, perfiles hard-mode y `PRE_WRITE=advisory` ya no pueden rebajar el threshold efectivo por debajo de `INFO`.
+- **Replay RuralGo:** validado con binario local contra RuralGo: PRE_WRITE `115/115` findings bloqueantes y PRE_COMMIT `118/118` findings bloqueantes.
+
 ## [6.3.135] - 2026-05-03
 
 ### Fixed
