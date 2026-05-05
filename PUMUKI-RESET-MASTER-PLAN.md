@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-123` / RuralGo: corregir el mensaje visible de bloqueo para que no diga que el problema es tracking cuando la causa raíz real es evidencia BDD/TDD inválida o escenario faltante. Estado 2026-05-05: `PUMUKI-INC-124` queda cerrado y publicado en `pumuki@6.3.145`; PR Pumuki #862/#863 mergeadas, npm `latest=6.3.145` verificado y RuralGo PR #1913 mergeado en `develop`. El feedback externo mantiene `PUMUKI-INC-123` como único High activo; `PUMUKI-INC-061` sigue aparcado hasta cerrar el High. |
+| Este plan | [🚧] - `PUMUKI-INC-124` / RuralGo: corregir `skills.ios.critical-test-quality` para que permita XCTest unitario/Mac en módulos brownfield cuando el archivo cumple el contrato de calidad local (`makeSUT`, `trackForMemoryLeaks`, aislamiento y async correcto), sin dejar pasar XCTest nuevo o deficiente. Estado 2026-05-05: RuralGo reabre `PUMUKI-INC-124` con commit `281f56fd0` tras comprobar que `pumuki@6.3.145` solo cubría UI automation (`XCUIApplication`) y seguía bloqueando XCTest brownfield válido; el repin `6.3.146` queda pausado hasta publicar una versión útil para este High activo. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
