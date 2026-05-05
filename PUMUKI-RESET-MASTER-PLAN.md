@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-124` / RuralGo: corregir `skills.ios.critical-test-quality` para que permita XCTest unitario/Mac en módulos brownfield cuando el archivo cumple el contrato de calidad local (`makeSUT`, `trackForMemoryLeaks`, aislamiento y async correcto), sin dejar pasar XCTest nuevo o deficiente. Estado 2026-05-05: RuralGo reabre `PUMUKI-INC-124` con commit `281f56fd0` tras comprobar que `pumuki@6.3.145` solo cubría UI automation (`XCUIApplication`) y seguía bloqueando XCTest brownfield válido; el repin `6.3.146` queda pausado hasta publicar una versión útil para este High activo. |
+| Este plan | [🚧] - `PUMUKI-INC-059` / RuralGo: cerrar el gap de enforcement hard de skills en `PRE_WRITE` para OCP/SRP/LSP/ISP/DIP/LOP, empezando por la reproducción real donde `PRE_WRITE` no bloqueó un switch sobre enum propio en `LaunchFlowCoordinator.bootstrap` ni suites de tests con responsabilidades mezcladas. Estado 2026-05-05: `PUMUKI-INC-124` queda fixed y repineado en `pumuki@6.3.147` (PR Pumuki #867/#868, RuralGo PR #1914 y rama activa `bugfix/ruralgo-tracking-build-stability` actualizada); el MD externo de RuralGo deja `PUMUKI-INC-059` como único High activo. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
