@@ -4909,7 +4909,7 @@ const isBenignConfigMetadataName = (value: string): boolean => {
     return true;
   }
   const tokenSet = new Set(identifierNameTokens(normalized));
-  if (tokenSet.has('ast') && tokenSet.has('node') && tokenSet.has('token')) {
+  if (tokenSet.has('ast') && (tokenSet.has('node') || tokenSet.has('nodes')) && tokenSet.has('token')) {
     return true;
   }
   if (

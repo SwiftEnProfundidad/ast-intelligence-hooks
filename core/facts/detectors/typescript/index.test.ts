@@ -4259,9 +4259,21 @@ test('hasHardcodedValuePattern no bloquea tokens internos de metadata AST', () =
     },
     loc: { start: { line: 4 }, end: { line: 4 } },
   };
+  const astNodesTokenAst = {
+    type: 'VariableDeclarator',
+    id: { type: 'Identifier', name: 'astNodesToken' },
+    init: {
+      type: 'StringLiteral',
+      value: 'none',
+      loc: { start: { line: 8 }, end: { line: 8 } },
+    },
+    loc: { start: { line: 8 }, end: { line: 8 } },
+  };
 
   assert.equal(hasHardcodedValuePattern(astNodeTokenAst), false);
   assert.equal(findHardcodedValuePatternMatch(astNodeTokenAst), undefined);
+  assert.equal(hasHardcodedValuePattern(astNodesTokenAst), false);
+  assert.equal(findHardcodedValuePatternMatch(astNodesTokenAst), undefined);
 });
 
 test('hasHardcodedValuePattern usa tokens exactos y no subcadenas accidentales', () => {
