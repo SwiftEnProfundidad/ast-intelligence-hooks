@@ -23,8 +23,7 @@ type FindingTarget = {
   expected_fix?: string;
 };
 
-const isBlockingSeverity = (severity: RuleDefinition['severity']): boolean =>
-  severity === 'CRITICAL' || severity === 'ERROR';
+const isBlockingSeverity = (_severity: RuleDefinition['severity']): boolean => true;
 
 export type EvaluateRulesCoverageResult = {
   findings: ReadonlyArray<Finding>;
