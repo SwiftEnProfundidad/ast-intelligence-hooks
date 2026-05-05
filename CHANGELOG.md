@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.141] - 2026-05-05
+
+### Fixed
+
+- **PRE_PUSH en ramas actualizadas desde base:** el guard de atomicidad ignora commits heredados de `main`/`develop` y commits merge al validar trazabilidad y límites por commit, evitando bloqueos falsos en rollouts que solo resolvieron conflictos con la rama base.
+
 ## [6.3.140] - 2026-05-05
 
 ### Fixed
