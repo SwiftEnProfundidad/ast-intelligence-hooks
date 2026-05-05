@@ -4908,6 +4908,10 @@ const isBenignConfigMetadataName = (value: string): boolean => {
   if (normalized.length === 0) {
     return true;
   }
+  const tokenSet = new Set(identifierNameTokens(normalized));
+  if (tokenSet.has('ast') && tokenSet.has('node') && tokenSet.has('token')) {
+    return true;
+  }
   if (
     normalized.startsWith('skills.') ||
     normalized.startsWith('heuristics.') ||
