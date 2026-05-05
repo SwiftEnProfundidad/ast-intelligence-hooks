@@ -447,6 +447,88 @@ const collectStagedPaths = (git: IGitService, repoRoot: string): ReadonlyArray<s
   }
 };
 
+const toBlockingFindingsForPaths = (
+  findings: ReadonlyArray<Finding>,
+  paths: ReadonlySet<string>
+): ReadonlyArray<Finding> => {
+  return findings.filter((finding) => {
+    if (finding.severity !== 'ERROR' && finding.severity !== 'CRITICAL') {
+      return false;
+    }
+    const path = finding.filePath ? toNormalizedPath(finding.filePath) : '';
+    return path.length > 0 && paths.has(path);
+  });
+};
+
+const buildHeadFactsForPaths = (params: {
+  git: IGitService;
+  repoRoot: string;
+  paths: ReadonlyArray<string>;
+}): ReadonlyArray<Fact> => {
+  const facts: Fact[] = [];
+  for (const path of params.paths) {
+    try {
+      const content = params.git.runGit(['show', `HEAD:${path}`], params.repoRoot);
+      facts.push({
+        kind: 'FileChange',
+        path,
+        changeType: 'modified',
+        source: 'git:staged:HEAD',
+      });
+      facts.push({
+        kind: 'FileContent',
+        path,
+        content,
+        source: 'git:staged:HEAD',
+      });
+    } catch {
+      continue;
+    }
+  }
+  return facts;
+};
+
+const toRemediationProgressAllowedFinding = (params: {
+  stage: Exclude<GateStage, 'STAGED'>;
+  currentBlockingCount: number;
+  previousBlockingCount: number;
+  paths: ReadonlyArray<string>;
+  ruleIds: ReadonlyArray<string>;
+}): Finding => {
+  const samplePaths = params.paths.slice(0, MAX_SCOPE_SAMPLE_PATHS).join(LIST_SEPARATOR);
+  const sampleRuleIds = params.ruleIds.slice(0, MAX_SCOPE_SAMPLE_PATHS).join(LIST_SEPARATOR);
+  return {
+    ruleId: 'governance.remediation.progress.allowed',
+    severity: 'INFO',
+    code: 'REMEDIATION_PROGRESS_ALLOWED',
+    message:
+      `Remediation progress allowed at ${params.stage}: ` +
+      `previous_blocking_findings=${params.previousBlockingCount} ` +
+      `current_blocking_findings=${params.currentBlockingCount} ` +
+      `paths=[${samplePaths}] remediated_rule_ids=[${sampleRuleIds}]. ` +
+      'Feature work remains blocked until global skills enforcement is complete.',
+    filePath: '.ai_evidence.json',
+    matchedBy: 'RemediationProgressGuard',
+    source: 'remediation-progress',
+    blocking: false,
+  };
+};
+
+const toRemediationProgressAdvisoryFinding = (finding: Finding): Finding => ({
+  ...finding,
+  severity: 'INFO',
+  code:
+    finding.code === 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL'
+      ? 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_REMEDIATION_ADVISORY'
+      : finding.code === 'TDD_BDD_EVIDENCE_STALE'
+        ? 'TDD_BDD_EVIDENCE_STALE_REMEDIATION_ADVISORY'
+        : finding.code,
+  message:
+    `${finding.message} Remediation progress mode converted this blocker to advisory ` +
+    'because the staged diff reduces existing supported-detector findings and introduces none.',
+  blocking: false,
+});
+
 const shouldAugmentStagedSkillsContractFactsWithRepoFacts = (params: {
   scope: GateScope;
   facts: ReadonlyArray<Fact>;
@@ -1305,16 +1387,91 @@ export async function runPlatformGate(params: {
   const hasNativeBlockingFinding = findings.some(
     (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
   );
+  const stagedCodePaths = stagedPaths.filter((path) => isObservedCodePath(path));
+  const stagedCodePathSet = new Set(stagedCodePaths);
+  const currentBlockingFindingsForStagedPaths = toBlockingFindingsForPaths(
+    findings,
+    stagedCodePathSet
+  );
+  const previousFactsForStagedPaths =
+    isStrictEnforcementStage(params.policy.stage) &&
+    params.scope.kind === 'staged' &&
+    stagedCodePaths.length > 0 &&
+    currentBlockingFindingsForStagedPaths.length === 0
+      ? buildHeadFactsForPaths({
+          git,
+          repoRoot,
+          paths: stagedCodePaths,
+        })
+      : [];
+  const previousEvaluationForStagedPaths =
+    previousFactsForStagedPaths.length > 0
+      ? dependencies.evaluatePlatformGateFindings({
+          facts: previousFactsForStagedPaths,
+          stage: params.policy.stage,
+          repoRoot,
+        })
+      : undefined;
+  const previousBlockingFindingsForStagedPaths = previousEvaluationForStagedPaths
+    ? toBlockingFindingsForPaths(
+        previousEvaluationForStagedPaths.findings,
+        stagedCodePathSet
+      )
+    : [];
+  const remediationProgressFinding =
+    previousBlockingFindingsForStagedPaths.length > currentBlockingFindingsForStagedPaths.length &&
+    currentBlockingFindingsForStagedPaths.length === 0
+      ? toRemediationProgressAllowedFinding({
+          stage: params.policy.stage as Exclude<GateStage, 'STAGED'>,
+          currentBlockingCount: currentBlockingFindingsForStagedPaths.length,
+          previousBlockingCount: previousBlockingFindingsForStagedPaths.length,
+          paths: stagedCodePaths,
+          ruleIds: [
+            ...new Set(
+              previousBlockingFindingsForStagedPaths.map((finding) => finding.ruleId)
+            ),
+          ].sort(),
+        })
+      : undefined;
+  const remediationProgressAllowsGlobalGap = remediationProgressFinding !== undefined;
+  const effectiveTddBddFindings = remediationProgressAllowsGlobalGap
+    ? tddBddEvaluation.findings.map((finding) =>
+        finding.code === 'TDD_BDD_EVIDENCE_STALE'
+          ? toRemediationProgressAdvisoryFinding(finding)
+          : finding
+      )
+    : tddBddEvaluation.findings;
+  const effectiveTddBddSnapshot =
+    remediationProgressAllowsGlobalGap &&
+    tddBddSnapshot?.status === 'blocked' &&
+    tddBddEvaluation.findings.length > 0 &&
+    tddBddEvaluation.findings.every((finding) => finding.code === 'TDD_BDD_EVIDENCE_STALE')
+      ? {
+          ...tddBddSnapshot,
+          status: 'advisory' as const,
+          evidence: {
+            ...tddBddSnapshot.evidence,
+            errors: ['TDD_BDD_EVIDENCE_STALE_REMEDIATION_ADVISORY'],
+          },
+        }
+      : tddBddSnapshot;
+  const effectiveHasTddBddBlockingFinding = effectiveTddBddFindings.some(
+    (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
+  );
   const effectivePlatformSkillsCoverageFinding = effectivePlatformSkillsCoverageInput;
   const effectiveCrossPlatformCriticalFinding = effectiveCrossPlatformCriticalInput;
   const effectiveSkillsScopeComplianceFinding = effectiveSkillsScopeComplianceInput;
+  const effectiveUnsupportedDetectorSkillsFindingForOutcome =
+    remediationProgressAllowsGlobalGap && effectiveUnsupportedDetectorSkillsFinding
+      ? toRemediationProgressAdvisoryFinding(effectiveUnsupportedDetectorSkillsFinding)
+      : effectiveUnsupportedDetectorSkillsFinding;
   const effectiveFindings = sddBlockingFinding
     ? [
       sddBlockingFinding,
       ...(degradedModeFinding ? [degradedModeFinding] : []),
       ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
       ...(effectiveUnsupportedSkillsMappingFinding ? [effectiveUnsupportedSkillsMappingFinding] : []),
-      ...(effectiveUnsupportedDetectorSkillsFinding ? [effectiveUnsupportedDetectorSkillsFinding] : []),
+      ...(effectiveUnsupportedDetectorSkillsFindingForOutcome ? [effectiveUnsupportedDetectorSkillsFindingForOutcome] : []),
       ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
       ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
       ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
@@ -1323,11 +1480,12 @@ export async function runPlatformGate(params: {
       ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
       ...brownfieldHotspotFindings,
-      ...tddBddEvaluation.findings,
+      ...effectiveTddBddFindings,
+      ...(remediationProgressFinding ? [remediationProgressFinding] : []),
       ...findings,
     ]
     : effectiveUnsupportedSkillsMappingFinding
-      || effectiveUnsupportedDetectorSkillsFinding
+      || effectiveUnsupportedDetectorSkillsFindingForOutcome
       || effectivePlatformSkillsCoverageFinding
       || effectiveCrossPlatformCriticalFinding
       || effectiveSkillsScopeComplianceFinding
@@ -1338,12 +1496,13 @@ export async function runPlatformGate(params: {
       || brownfieldHotspotFindings.length > 0
       || policyAsCodeBlockingFinding
       || degradedModeFinding
-      || tddBddEvaluation.findings.length > 0
+      || effectiveTddBddFindings.length > 0
+      || remediationProgressFinding
       ? [
         ...(degradedModeFinding ? [degradedModeFinding] : []),
         ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
         ...(effectiveUnsupportedSkillsMappingFinding ? [effectiveUnsupportedSkillsMappingFinding] : []),
-        ...(effectiveUnsupportedDetectorSkillsFinding ? [effectiveUnsupportedDetectorSkillsFinding] : []),
+        ...(effectiveUnsupportedDetectorSkillsFindingForOutcome ? [effectiveUnsupportedDetectorSkillsFindingForOutcome] : []),
         ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
         ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
         ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
@@ -1352,20 +1511,22 @@ export async function runPlatformGate(params: {
         ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
         ...brownfieldHotspotFindings,
-        ...tddBddEvaluation.findings,
+        ...effectiveTddBddFindings,
+        ...(remediationProgressFinding ? [remediationProgressFinding] : []),
         ...findings,
       ]
       : brownfieldHotspotFindings.length > 0
         ? [...brownfieldHotspotFindings, ...findings]
         : findings;
   const hasAstIntelligenceBlockingFinding = shouldBlockFromFinding(astIntelligenceDualFinding);
-  const decision = dependencies.evaluateGate([...effectiveFindings], params.policy);
+  const gateDecisionFindings = effectiveFindings.filter((finding) => finding.blocking !== false);
+  const decision = dependencies.evaluateGate([...gateDecisionFindings], params.policy);
   const baseGateOutcome =
     sddBlockingFinding ||
     degradedModeBlocks ||
     shouldBlockFromFinding(policyAsCodeBlockingFinding) ||
     shouldBlockFromFinding(effectiveUnsupportedSkillsMappingFinding) ||
-    shouldBlockFromFinding(effectiveUnsupportedDetectorSkillsFinding) ||
+    shouldBlockFromFinding(effectiveUnsupportedDetectorSkillsFindingForOutcome) ||
     shouldBlockFromFinding(effectivePlatformSkillsCoverageFinding) ||
     shouldBlockFromFinding(effectiveCrossPlatformCriticalFinding) ||
     shouldBlockFromFinding(effectiveSkillsScopeComplianceFinding) ||
@@ -1374,9 +1535,9 @@ export async function runPlatformGate(params: {
     hasAstIntelligenceBlockingFinding ||
     shouldBlockFromFinding(coverageBlockingFinding) ||
     brownfieldHotspotFindings.some((finding) => shouldBlockFromFinding(finding)) ||
-    hasTddBddBlockingFinding
+    effectiveHasTddBddBlockingFinding
       ? 'BLOCK'
-      : (decision.outcome === 'PASS' && tddBddSnapshot?.status === 'advisory'
+      : (decision.outcome === 'PASS' && effectiveTddBddSnapshot?.status === 'advisory'
           ? 'WARN'
           : decision.outcome);
   const gateWaiverStage =
@@ -1426,7 +1587,7 @@ export async function runPlatformGate(params: {
     try {
       memoryShadowRecommendation = dependencies.buildMemoryShadowRecommendation({
         findings: findingsWithWaiver,
-        ...(tddBddSnapshot ? { tddBddSnapshot } : {}),
+        ...(effectiveTddBddSnapshot ? { tddBddSnapshot: effectiveTddBddSnapshot } : {}),
       });
     } catch (error) {
       const rawReason = error instanceof Error ? error.message : String(error);
@@ -1477,7 +1638,7 @@ export async function runPlatformGate(params: {
     filesScanned,
     evaluationMetrics,
     rulesCoverage,
-    ...(tddBddSnapshot ? { tddBdd: tddBddSnapshot } : {}),
+    ...(effectiveTddBddSnapshot ? { tddBdd: effectiveTddBddSnapshot } : {}),
     ...(memoryShadow ? { memoryShadow } : {}),
     repoRoot,
     detectedPlatforms,
