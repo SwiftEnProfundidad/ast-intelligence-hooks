@@ -588,6 +588,77 @@ test('evaluateAiGate bloquea cuando la policy promociona WARN a BLOCK aunque ai_
   );
 });
 
+test('evaluateAiGate respeta waiver de gate aplicado y no rebloquea por severidades agregadas', () => {
+  const baseEvidence = sampleEvidence();
+  const evidence = sampleEvidence({
+    snapshot: {
+      ...baseEvidence.snapshot,
+      findings: [
+        {
+          ruleId: 'governance.skills.global-enforcement.incomplete',
+          severity: 'ERROR',
+          code: 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL',
+          message: 'global skills enforcement incomplete',
+          file: '.ai_evidence.json',
+        },
+        {
+          ruleId: 'governance.waiver.applied',
+          severity: 'INFO',
+          code: 'GATE_WAIVER_APPLIED',
+          message: 'waiver applied',
+          file: '.pumuki/waivers/gate.json',
+        },
+      ],
+    },
+    ai_gate: {
+      status: 'ALLOWED',
+      violations: [],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'ALLOWED',
+      total_violations: 2,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 1,
+        WARN: 0,
+        INFO: 1,
+      },
+    },
+  });
+
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(evidence),
+      captureRepoState: () => evidence.repo_state!,
+      resolvePolicyForStage: () => ({
+        policy: {
+          stage: 'PRE_COMMIT',
+          blockOnOrAbove: 'INFO',
+          warnOnOrAbove: 'INFO',
+        },
+        trace: {
+          source: 'default',
+          bundle: 'gate-policy.default.PRE_COMMIT',
+          hash: 'a'.repeat(64),
+        },
+      }),
+    }
+  );
+
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some((item) => item.code === 'EVIDENCE_POLICY_THRESHOLD_BLOCK'),
+    false
+  );
+});
+
 test('evaluateAiGate emite WARN cuando la policy solo requiere aviso por severidad', () => {
   const baseEvidence = sampleEvidence();
   const evidence = sampleEvidence({

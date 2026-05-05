@@ -76,6 +76,15 @@ export type SnapshotRulesCoverage = {
     unsupported_detector?: number;
   };
   coverage_ratio: number;
+  auto_runtime_coverage_ratio?: number;
+  semantic_enforcement_ratio?: number;
+  global_skills_enforcement?: {
+    status: 'enforced' | 'partially_enforced' | 'unsupported';
+    registry_total: number;
+    detector_supported: number;
+    declarative_only: number;
+    unsupported_detector: number;
+  };
 };
 
 export type Snapshot = {
