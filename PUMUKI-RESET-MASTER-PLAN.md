@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-124` / RuralGo: corregir `skills.ios.critical-test-quality` para no bloquear tests XCTest de UI automation cuando la propia skill `swift-testing-expert` permite XCTest con `XCUIApplication`, manteniendo bloqueo real sobre XCTest unitario que debe migrar o cumplir reglas. Estado 2026-05-05: `PUMUKI-INC-122` queda cerrado y publicado en `pumuki@6.3.144`, PR Pumuki #860/#861 mergeadas, npm publicado y RuralGo PR #1912 mergeado en `develop`; RuralGo informa bloqueo operativo por `PUMUKI-INC-124`, por lo que se prioriza sobre `PUMUKI-INC-123` y `PUMUKI-INC-061` hasta desbloquear el consumer. |
+| Este plan | [🚧] - `PUMUKI-INC-123` / RuralGo: corregir el mensaje visible de bloqueo para que no diga que el problema es tracking cuando la causa raíz real es evidencia BDD/TDD inválida o escenario faltante. Estado 2026-05-05: `PUMUKI-INC-124` queda cerrado y publicado en `pumuki@6.3.145`; PR Pumuki #862/#863 mergeadas, npm `latest=6.3.145` verificado y RuralGo PR #1913 mergeado en `develop`. El feedback externo mantiene `PUMUKI-INC-123` como único High activo; `PUMUKI-INC-061` sigue aparcado hasta cerrar el High. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
@@ -951,6 +951,9 @@ Snapshot de rollout `6.3.143` (2026-05-05):
 
 Snapshot de rollout `6.3.144` (2026-05-05):
 - `R_GO` (`chore/pumuki-6-3-144-rollout`, PR #1912): repin a `pumuki@6.3.144` completado y mergeado en `develop`; `status` y `doctor` reportan `runtime=consumerInstalled=lifecycleInstalled=6.3.144`, `driftWarning=null`, `issues=[]`; canary concurrente de `pumuki sdd evidence` conserva dos slices paralelos y deja JSON válido sin `.lock`/`.tmp` residual; feedback externo actualizado para cerrar `PUMUKI-INC-122` y dejar `PUMUKI-INC-123`/`PUMUKI-INC-124` como High activos.
+
+Snapshot de rollout `6.3.145` (2026-05-05):
+- `R_GO` (`chore/pumuki-6-3-145-rollout`, PR #1913): repin a `pumuki@6.3.145` completado y mergeado en `develop`; `status` y `doctor` reportan `runtime=consumerInstalled=lifecycleInstalled=6.3.145`, `driftWarning=null`, `issues=[]`; canary `PRE_COMMIT` limitado a `apps/ios/Tests/iOS/BuyerUISmoke/BuyerCommerceUISmokeTests.swift` devuelve `gate_exit_code=0`, `files_scanned=1` y no emite findings `ios-test-quality` ni `xctassert`; feedback externo actualizado para cerrar `PUMUKI-INC-124` y dejar `PUMUKI-INC-123` como único High activo.
 
 Snapshot de rollout `6.3.85` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-83-rollout`): verde sobre `6.3.85`; PR mergeada contra `main`: `app-supermercados#10` (`https://github.com/SwiftEnProfundidad/app-supermercados/pull/10`), squash `e643f9f83d6f860cbd72f7bee67855b74dea213e`.
