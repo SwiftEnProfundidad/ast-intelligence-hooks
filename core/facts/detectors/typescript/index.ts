@@ -4588,11 +4588,27 @@ const buildMagicNumberPatternMatch = (
   node: unknown
 ): TypeScriptMagicNumberMatch | undefined => {
   const neutralNumericLiterals = new Set([0, 1]);
+  const isNamedConstantInitializer = (ancestors: ReadonlyArray<AstNode>): boolean => {
+    for (let index = ancestors.length - 1; index >= 0; index -= 1) {
+      const ancestor = ancestors[index];
+      if (ancestor.type === 'CallExpression' || ancestor.type === 'NewExpression') {
+        return false;
+      }
+      if (ancestor.type === 'VariableDeclarator') {
+        return true;
+      }
+    }
+    return false;
+  };
+
   const match = findFirstNodeWithAncestors(node, (value, ancestors) => {
     if (value.type !== 'NumericLiteral' || typeof value.value !== 'number') {
       return false;
     }
     if (neutralNumericLiterals.has(value.value)) {
+      return false;
+    }
+    if (isNamedConstantInitializer(ancestors)) {
       return false;
     }
 
@@ -4790,6 +4806,40 @@ const isNeutralHardcodedNumericLiteral = (node: AstNode): boolean => {
   return node.type === 'NumericLiteral' && (node.value === 0 || node.value === 1);
 };
 
+const isBenignHardcodedConfigLiteral = (node: AstNode): boolean => {
+  if (node.type !== 'StringLiteral') {
+    return false;
+  }
+  const value = String(node.value).trim();
+  if (value.length === 0) {
+    return true;
+  }
+  if (
+    value.startsWith('skills.') ||
+    value.startsWith('heuristics.') ||
+    value.startsWith('common.') ||
+    value.startsWith('workflow.')
+  ) {
+    return true;
+  }
+  if (value.startsWith('.pumuki/') || value.startsWith('openspec/')) {
+    return true;
+  }
+  if (/^\.[a-z0-9]+$/i.test(value)) {
+    return true;
+  }
+  if (/^[A-Z][A-Z0-9_]+$/.test(value)) {
+    return true;
+  }
+  if (/^--[a-z0-9-]+$/i.test(value)) {
+    return true;
+  }
+  if (/^[()[\]{}.,:;!/\-\\]+$/.test(value)) {
+    return true;
+  }
+  return false;
+};
+
 const isTypeOnlyAstNode = (node: AstNode): boolean => {
   return typeof node.type === 'string' && node.type.startsWith('TS');
 };
@@ -4981,6 +5031,7 @@ const buildHardcodedValuePatternMatch = (
       isAstNodeTypeLiteral(value) ||
       isPrimitiveTypeGuardLiteral(value) ||
       isRuntimeApiLiteral(value) ||
+      isBenignHardcodedConfigLiteral(value) ||
       isNeutralHardcodedNumericLiteral(value)
     ) {
       return false;
