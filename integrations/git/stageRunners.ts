@@ -20,9 +20,7 @@ import {
 } from '../notifications/emitAuditSummaryNotification';
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildEvidenceOperationalHints } from '../evidence/operationalHints';
 import { readEvidence, readEvidenceResult } from '../evidence/readEvidence';
-import { writeEvidence } from '../evidence/writeEvidence';
 import type { EvidenceReadResult } from '../evidence/readEvidence';
 import type { SnapshotFinding } from '../evidence/schema';
 import { ensureRuntimeArtifactsIgnored } from '../lifecycle/artifacts';
@@ -135,6 +133,7 @@ type StageRunnerDependencies = {
   isPathTracked: (repoRoot: string, relativePath: string) => boolean;
   listStagedIndexPaths: (repoRoot: string) => ReadonlyArray<string>;
   stagePath: (repoRoot: string, relativePath: string) => void;
+  restorePathFromHead: (repoRoot: string, relativePath: string) => void;
   resolveHeadOid: (repoRoot: string) => string | null;
   resolveGitAtomicityEnforcement: () => GitAtomicityEnforcementResolution;
 };
@@ -222,6 +221,9 @@ const defaultDependencies: StageRunnerDependencies = {
   },
   stagePath: (repoRoot, relativePath) => {
     new GitService().runGit(['add', '--', relativePath], repoRoot);
+  },
+  restorePathFromHead: (repoRoot, relativePath) => {
+    new GitService().runGit(['checkout', '--', relativePath], repoRoot);
   },
   resolveHeadOid: (repoRoot) => {
     try {
@@ -507,26 +509,6 @@ const runHookGateWithPolicyRetry = async (params: {
   }
 };
 
-const patchOperationalHintsAfterDocumentationOnlyEvidenceSync = (repoRoot: string): void => {
-  const evidenceRead = readEvidenceResult(repoRoot);
-  if (evidenceRead.kind !== 'valid') {
-    return;
-  }
-  const evidence = evidenceRead.evidence;
-  const hints = buildEvidenceOperationalHints({
-    stage: evidence.snapshot.stage,
-    outcome: evidence.snapshot.outcome,
-    findings: evidence.snapshot.findings,
-    rulesCoverage: evidence.snapshot.rules_coverage,
-    evaluationMetrics: evidence.snapshot.evaluation_metrics,
-    extra: {
-      requires_second_pass: true,
-      second_pass_reason: 'tracked_evidence_refreshed_on_disk_not_staged_documentation_only_commit',
-    },
-  });
-  writeEvidence({ ...evidence, operational_hints: hints }, { repoRoot });
-};
-
 const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
   dependencies: StageRunnerDependencies;
   repoRoot: string;
@@ -547,12 +529,11 @@ const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
   ) {
     if (!params.dependencies.isQuietMode()) {
       process.stderr.write(
-        `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} updated on disk but not auto-staged (documentation-only staged paths: *.md / *.mdx). ` +
-          `Include in this commit if needed: git add -- ${EVIDENCE_FILE_PATH}. ` +
+        `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} left unchanged for documentation-only staged paths (*.md / *.mdx). ` +
           `Force previous behavior: PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1\n`
       );
     }
-    patchOperationalHintsAfterDocumentationOnlyEvidenceSync(params.repoRoot);
+    params.dependencies.restorePathFromHead(params.repoRoot, EVIDENCE_FILE_PATH);
     return false;
   }
   try {
