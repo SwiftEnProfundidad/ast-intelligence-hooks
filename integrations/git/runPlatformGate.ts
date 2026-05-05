@@ -442,6 +442,10 @@ const isXCTestSource = (content: string): boolean => {
   return /\bimport\s+XCTest\b/.test(content) || /\bXCTestCase\b/.test(content);
 };
 
+const isXCTestUiOrPerformanceCompatibilitySource = (content: string): boolean => {
+  return /\bXCUIApplication\b|\bXCTMetric\b|\bmeasure\s*(?:\(|\{)/.test(content);
+};
+
 const hasMakeSUTPattern = (content: string): boolean => /\bmakeSUT\s*\(/.test(content);
 
 const hasTrackForMemoryLeaksPattern = (content: string): boolean =>
@@ -459,6 +463,9 @@ const toIosTestsQualityBlockingFinding = (params: {
   const invalidFiles: string[] = [];
   for (const testFile of testFiles) {
     if (!isXCTestSource(testFile.content)) {
+      continue;
+    }
+    if (isXCTestUiOrPerformanceCompatibilitySource(testFile.content)) {
       continue;
     }
     const missingMarkers: string[] = [];

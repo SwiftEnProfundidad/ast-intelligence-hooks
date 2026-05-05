@@ -532,6 +532,23 @@ let text = "XCTAssertEqual(value, expected)"
   assert.equal(hasSwiftXCTestAssertionUsage(ignored), false);
 });
 
+test('hasSwiftXCTestAssertionUsage excluye XCTest compatible con UI automation', () => {
+  const uiSource = `
+import XCTest
+
+final class BuyerCommerceUISmokeTests: XCTestCase {
+  func test_buyer_flow() {
+    let app = XCUIApplication()
+    app.launch()
+    XCTAssertTrue(app.buttons["Comprar"].exists)
+  }
+}
+`;
+
+  assert.equal(hasSwiftXCTestAssertionUsage(uiSource), false);
+  assert.equal(hasSwiftXCTUnwrapUsage(`${uiSource}\nlet value = try XCTUnwrap(optional)`), false);
+});
+
 test('hasSwiftXCTUnwrapUsage detecta XCTUnwrap real y evita strings', () => {
   const source = `
 let value = try XCTUnwrap(optionalValue)

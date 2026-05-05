@@ -767,6 +767,10 @@ export const hasSwiftMixedTestingFrameworksUsage = (source: string): boolean => 
 };
 
 export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
+  if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
+    return false;
+  }
+
   return (
     collectSwiftRegexLines(source, /\bXCTAssert[A-Za-z0-9_]*\s*\(/).length > 0 ||
     collectSwiftRegexLines(source, /\bXCTFail\s*\(/).length > 0
@@ -774,6 +778,10 @@ export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
 };
 
 export const hasSwiftXCTUnwrapUsage = (source: string): boolean => {
+  if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
+    return false;
+  }
+
   return collectSwiftRegexLines(source, /\bXCTUnwrap\s*\(/).length > 0;
 };
 

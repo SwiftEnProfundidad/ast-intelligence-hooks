@@ -3615,6 +3615,151 @@ final class LoginUseCaseTests: XCTestCase {
   assert.match(finding.message, /trackForMemoryLeaks/i);
 });
 
+test('runPlatformGate permite XCTest en iOS UI automation aunque use XCTAssert sin makeSUT ni trackForMemoryLeaks', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+  const facts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileContent',
+      path: 'apps/ios/Tests/iOS/BuyerUISmoke/BuyerCommerceUISmokeTests.swift',
+      content: `
+import XCTest
+
+final class BuyerCommerceUISmokeTests: XCTestCase {
+  func test_buyer_flow() {
+    let app = XCUIApplication()
+    app.launch()
+    XCTAssertTrue(app.buttons["Buy"].exists)
+  }
+}
+      `.trim(),
+      source: 'git:staged',
+    },
+  ];
+
+  let emitted:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'PASS' | 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => facts,
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {
+          ios: { detected: true, confidence: 'HIGH' },
+        },
+        skillsRuleSet: {
+          rules: [
+            createSkillRule({
+              id: 'skills.ios.critical-test-quality',
+              severity: 'ERROR',
+              platform: 'ios',
+            }),
+          ] as RuleSet,
+          activeBundles: [
+            {
+              name: 'ios-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+              hash: 'a'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-concurrency-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swift-concurrency.md',
+              hash: 'b'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-swiftui-expert-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swiftui-expert-skill.md',
+              hash: 'c'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-swift-testing-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swift-testing-expert.md',
+              hash: 'd'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-core-data-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/core-data-expert.md',
+              hash: 'e'.repeat(64),
+              rules: [],
+            },
+          ],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: facts.length,
+          filesScanned: 1,
+          rulesTotal: 1,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 1,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 1,
+          unevaluatedRules: 0,
+          activeRuleIds: ['skills.ios.critical-test-quality'],
+          evaluatedRuleIds: ['skills.ios.critical-test-quality'],
+          matchedRuleIds: [],
+          unmatchedRuleIds: ['skills.ios.critical-test-quality'],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: (findingsArg) => evaluateGateFromFindings(findingsArg, policy),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emitted = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emitted?.gateOutcome, 'PASS');
+  assert.equal(
+    emitted?.findings.some(
+      (entry) => entry.ruleId === 'governance.skills.ios-test-quality.incomplete'
+    ),
+    false
+  );
+});
+
 test('runPlatformGate bloquea cuando test iOS XCTest usa makeSUT y trackForMemoryLeaks pero el contrato de skills sigue incompleto', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_COMMIT',
