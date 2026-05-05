@@ -4248,6 +4248,34 @@ test('hasHardcodedValuePattern detecta literals de configuracion y omite valores
   assert.equal(hasHardcodedValuePattern(neutralLiteralAst), false);
 });
 
+test('hasHardcodedValuePattern no bloquea tokens internos de metadata AST', () => {
+  const astNodeTokenAst = {
+    type: 'VariableDeclarator',
+    id: { type: 'Identifier', name: 'astNodeToken' },
+    init: {
+      type: 'StringLiteral',
+      value: 'none',
+      loc: { start: { line: 4 }, end: { line: 4 } },
+    },
+    loc: { start: { line: 4 }, end: { line: 4 } },
+  };
+  const astNodesTokenAst = {
+    type: 'VariableDeclarator',
+    id: { type: 'Identifier', name: 'astNodesToken' },
+    init: {
+      type: 'StringLiteral',
+      value: 'none',
+      loc: { start: { line: 8 }, end: { line: 8 } },
+    },
+    loc: { start: { line: 8 }, end: { line: 8 } },
+  };
+
+  assert.equal(hasHardcodedValuePattern(astNodeTokenAst), false);
+  assert.equal(findHardcodedValuePatternMatch(astNodeTokenAst), undefined);
+  assert.equal(hasHardcodedValuePattern(astNodesTokenAst), false);
+  assert.equal(findHardcodedValuePatternMatch(astNodesTokenAst), undefined);
+});
+
 test('hasHardcodedValuePattern usa tokens exactos y no subcadenas accidentales', () => {
   const reportFunctionAst = {
     type: 'FunctionDeclaration',

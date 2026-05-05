@@ -652,6 +652,20 @@ test('aplica stage canónico PRE_PUSH para no-solid-violations cuando markdown n
   assert.equal(rules[0]?.stage, 'PRE_PUSH');
 });
 
+test('normaliza SOLID iOS a regla canonica bloqueante desde PRE_WRITE', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '✅ **Verificar que NO viole SOLID** (SRP, OCP, LSP, ISP, DIP)',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(rules[0]?.id, 'skills.ios.no-solid-violations');
+  assert.equal(rules[0]?.platform, 'ios');
+  assert.equal(rules[0]?.stage, 'PRE_WRITE');
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+});
+
 test('respeta stage explícito en markdown para no-solid-violations', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'backend-guidelines',

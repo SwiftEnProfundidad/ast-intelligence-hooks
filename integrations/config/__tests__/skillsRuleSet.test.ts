@@ -4485,7 +4485,7 @@ test('resuelve callback hell frontend como AUTO con heuristica callback hell', a
   );
 });
 
-test('promueve no-solid-violations a ERROR en PRE_PUSH aunque la skill fuente llegue como WARN', async () => {
+test('promueve no-solid-violations a ERROR desde PRE_COMMIT aunque la skill fuente llegue como WARN', async () => {
   await withCoreSkillsDisabled(async () =>
     withTempDir('pumuki-skills-ruleset-solid-promotion-', async (tempRoot) => {
       mkdirSync(join(tempRoot, 'apps/backend/src/runtime'), { recursive: true });
@@ -4539,8 +4539,65 @@ test('promueve no-solid-violations a ERROR en PRE_PUSH aunque la skill fuente ll
         (rule) => rule.id === 'skills.backend.no-solid-violations'
       );
 
-      assert.equal(preCommitRule?.severity, 'WARN');
+      assert.equal(preCommitRule?.severity, 'ERROR');
       assert.equal(prePushRule?.severity, 'ERROR');
+    })
+  );
+});
+
+test('activa y promueve SOLID iOS desde PRE_WRITE con nodos OCP/SRP/DIP/ISP/LSP', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-ios-solid-prewrite-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/ios/Presentation/Onboarding'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-05-05T00:00:00.000Z',
+        bundles: [
+          {
+            name: 'ios-guidelines',
+            version: '1.0.0',
+            source: 'file:vendor/skills/ios-enterprise-rules/SKILL.md',
+            hash: 'c'.repeat(64),
+            rules: [
+              {
+                id: 'skills.ios.no-solid-violations',
+                description: 'Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)',
+                severity: 'WARN',
+                platform: 'ios',
+                confidence: 'MEDIUM',
+                sourceSkill: 'ios-guidelines',
+                sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+                stage: 'PRE_WRITE',
+                evaluationMode: 'AUTO',
+                locked: true,
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage(
+        'PRE_WRITE',
+        tempRoot,
+        { ios: { detected: true, confidence: 'HIGH' } },
+        ['apps/ios/Presentation/Onboarding/LaunchFlowCoordinator.swift']
+      );
+      const rule = result.rules.find((entry) => entry.id === 'skills.ios.no-solid-violations');
+
+      assert.ok(rule);
+      assert.equal(rule.severity, 'ERROR');
+      assert.equal(result.requiresHeuristicFacts, true);
+      assert.deepEqual([...result.mappedHeuristicRuleIds].sort(), [
+        'heuristics.ios.solid.dip.concrete-framework-dependency.ast',
+        'heuristics.ios.solid.isp.fat-protocol-dependency.ast',
+        'heuristics.ios.solid.lsp.narrowed-precondition.ast',
+        'heuristics.ios.solid.ocp.discriminator-switch.ast',
+        'heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast',
+      ]);
     })
   );
 });

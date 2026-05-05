@@ -90,6 +90,8 @@ const inferRuleStage = (raw: string): SkillsStage | undefined => {
 };
 
 const KNOWN_RULE_DEFAULT_STAGE: Readonly<Record<string, SkillsStage>> = {
+  'skills.ios.no-solid-violations': 'PRE_WRITE',
+  'skills.ios.guideline.ios.verificar-que-no-viole-solid-srp-ocp-lsp-isp-dip': 'PRE_WRITE',
   'skills.backend.no-solid-violations': 'PRE_PUSH',
   'skills.frontend.no-solid-violations': 'PRE_PUSH',
   'skills.backend.enforce-clean-architecture': 'PRE_PUSH',
@@ -275,8 +277,27 @@ const normalizeKnownRuleTarget = (
   normalizedDescription: string
 ): string | null => {
   const includes = (needle: string): boolean => normalizedDescription.includes(needle);
+  const hasWord = (needle: string): boolean =>
+    new RegExp(`(^|\\s)${needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`).test(
+      normalizedDescription
+    );
 
   if (platform === 'ios') {
+    if (
+      includes('solid') ||
+      includes('single responsibility') ||
+      hasWord('srp') ||
+      hasWord('ocp') ||
+      hasWord('lsp') ||
+      hasWord('isp') ||
+      hasWord('dip') ||
+      includes('open closed') ||
+      includes('open-closed') ||
+      includes('verificar que no viole solid') ||
+      includes('no viole solid')
+    ) {
+      return 'skills.ios.no-solid-violations';
+    }
     if (
       includes('force unwrap') ||
       includes('force unwrapping') ||

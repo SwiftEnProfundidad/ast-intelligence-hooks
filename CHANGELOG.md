@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.142] - 2026-05-05
+
+### Fixed
+
+- **PUMUKI-INC-059 iOS SOLID en PRE_WRITE:** la skill iOS `Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)` se normaliza al id canónico `skills.ios.no-solid-violations` y al alias real del lock legacy, activa los nodos AST OCP/SRP/DIP/ISP/LSP y bloquea desde `PRE_WRITE` sin depender de `PUMUKI_ENABLE_AST_HEURISTICS`.
+- **Skills hard-blocking multi-stage:** `no-solid-violations` se promueve a bloqueo desde `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI`, evitando que una violación iOS OCP/SRP llegue a disco o al commit.
+
 ## [6.3.141] - 2026-05-05
 
 ### Fixed

@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.142)
+
+- **RuralGo PUMUKI-INC-059:** PRE_WRITE vuelve a pedir hechos AST para iOS SOLID aunque el flag experimental de heurísticas esté apagado.
+- **OCP/SRP iOS bloqueante temprano:** `skills.ios.no-solid-violations` y el id real legacy del lock se vinculan a OCP/SRP/DIP/ISP/LSP; los findings se promueven a `ERROR` desde PRE_WRITE.
+- **Rollout:** publicar `pumuki@6.3.142`, repinear primero RuralGo y revalidar `status`, `doctor` y un canary OCP iOS en PRE_WRITE/PRE_COMMIT.
+
 ### 2026-05-05 (v6.3.141)
 
 - **PRE_PUSH sin falso bloqueo por historial base:** ramas de rollout que integran `main`/`develop` dejan de fallar por commits merge heredados como `Merge pull request ...`.

@@ -369,7 +369,10 @@ const resolveRuleSeverity = (params: {
   const promotedRuleIds = params.bundlePolicy?.promoteToErrorRuleIds ?? [];
   const shouldPromoteBySolidContract =
     params.rule.id.endsWith('.no-solid-violations') &&
-    (params.stage === 'PRE_PUSH' || params.stage === 'CI');
+    (params.stage === 'PRE_WRITE' ||
+      params.stage === 'PRE_COMMIT' ||
+      params.stage === 'PRE_PUSH' ||
+      params.stage === 'CI');
   const shouldPromote =
     shouldPromoteBySolidContract || promotedRuleIds.includes(params.rule.id);
 
