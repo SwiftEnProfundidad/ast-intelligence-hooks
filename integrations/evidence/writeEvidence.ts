@@ -272,6 +272,12 @@ const normalizeTddBddSnapshot = (snapshot: TddBddSnapshot | undefined): TddBddSn
       slices_invalid: snapshot.evidence.slices_invalid,
       integrity_ok: snapshot.evidence.integrity_ok,
       errors: [...snapshot.evidence.errors],
+      baseline: {
+        required: snapshot.evidence.baseline.required,
+        passed: snapshot.evidence.baseline.passed,
+        missing: snapshot.evidence.baseline.missing,
+        failed: snapshot.evidence.baseline.failed,
+      },
     },
     waiver: {
       applied: snapshot.waiver.applied,

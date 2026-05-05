@@ -104,6 +104,12 @@ export const enforceTddBddPolicy = (params: {
       slices_invalid: 0,
       integrity_ok: true,
       errors: [],
+      baseline: {
+        required: scope.inScope,
+        passed: 0,
+        missing: 0,
+        failed: 0,
+      },
     },
     waiver: {
       applied: false,
@@ -207,6 +213,9 @@ export const enforceTddBddPolicy = (params: {
   const sliceFindings: Finding[] = [];
   const seenSliceIds = new Set<string>();
   let validSlices = 0;
+  let baselinePassed = 0;
+  let baselineMissing = 0;
+  let baselineFailed = 0;
 
   if (evidenceRead.evidence.slices.length === 0) {
     sliceFindings.push(
@@ -257,6 +266,30 @@ export const enforceTddBddPolicy = (params: {
       );
     }
 
+    if (!slice.baseline) {
+      baselineMissing += 1;
+      sliceFindings.push(
+        buildFinding({
+          ruleId: 'generic_tdd_baseline_required',
+          code: 'TDD_BASELINE_TEST_REQUIRED',
+          message: `Slice ${slice.id} must include passing baseline test evidence before RED.`,
+          filePath: evidenceRead.path,
+        })
+      );
+    } else if (slice.baseline.status !== 'passed') {
+      baselineFailed += 1;
+      sliceFindings.push(
+        buildFinding({
+          ruleId: 'generic_tdd_baseline_required',
+          code: 'TDD_BASELINE_TEST_MUST_PASS',
+          message: `Slice ${slice.id} baseline test evidence must pass before editing related code.`,
+          filePath: evidenceRead.path,
+        })
+      );
+    } else {
+      baselinePassed += 1;
+    }
+
     if (slice.red.status !== 'failed') {
       sliceFindings.push(
         buildFinding({
@@ -281,6 +314,7 @@ export const enforceTddBddPolicy = (params: {
 
     if (
       !isTimelineOrdered([
+        slice.baseline?.timestamp,
         slice.red.timestamp,
         slice.green.timestamp,
         slice.refactor.timestamp,
@@ -320,6 +354,12 @@ export const enforceTddBddPolicy = (params: {
         slices_invalid: invalidSlices,
         integrity_ok: evidenceRead.integrity.valid,
         errors: sliceFindings.map((finding) => finding.code),
+        baseline: {
+          required: true,
+          passed: baselinePassed,
+          missing: baselineMissing,
+          failed: baselineFailed,
+        },
       },
       waiver: {
         applied: false,
