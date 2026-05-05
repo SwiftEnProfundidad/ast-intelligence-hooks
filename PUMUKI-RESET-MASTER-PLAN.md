@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-127` / RuralGo reporta divergencia High entre `npx pumuki-pre-commit --quiet` y el hook real de `git commit`: el pre-commit directo permite el staged remediation fix con `pumuki@6.3.151`, pero el tramo chained `PRE_WRITE` del commit sigue bloqueando por `EVIDENCE_POLICY_THRESHOLD_BLOCK` al tratar advisories `INFO` de remediation progress como bloqueo hard. Prioridad absoluta por MD externo; cualquier slice interna queda congelada hasta reproducir, corregir, cubrir con regresión, publicar si aplica y repinear primero RuralGo. |
+| Este plan | [🚧] - `PARITY-ANDROID-001` / Single Activity - Multiples Composables/Fragments, no Activities. Estado 2026-05-05: los bugs externos activos quedan a 0 tras cerrar `PUMUKI-INC-127` en `pumuki@6.3.153` y repinear primero RuralGo; se reactiva el baseline Android por AST real siguiendo la siguiente pieza lógica ya registrada en este plan. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
