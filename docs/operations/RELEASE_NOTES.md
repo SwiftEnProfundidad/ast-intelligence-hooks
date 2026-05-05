@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.141)
+
+- **PRE_PUSH sin falso bloqueo por historial base:** ramas de rollout que integran `main`/`develop` dejan de fallar por commits merge heredados como `Merge pull request ...`.
+- **Flux/SAAS follow-up:** esta patch desbloquea el push de las resoluciones de conflicto de los PRs de repin abiertos tras `6.3.140`.
+- **Rollout:** publicar `pumuki@6.3.141`, repinear primero RuralGo y repetir Flux/SAAS sin bypass.
+
 ### 2026-05-05 (v6.3.140)
 
 - **PRE_PUSH compatible con ramas largas:** la atomicidad se valida por commit individual, no por diff agregado de rama.
