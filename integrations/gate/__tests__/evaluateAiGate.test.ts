@@ -588,6 +588,74 @@ test('evaluateAiGate bloquea cuando la policy promociona WARN a BLOCK aunque ai_
   );
 });
 
+test('evaluateAiGate no rebloquea advisories no bloqueantes aunque block_on_or_above sea INFO', () => {
+  const baseEvidence = sampleEvidence();
+  const evidence = sampleEvidence({
+    snapshot: {
+      ...baseEvidence.snapshot,
+      findings: [
+        {
+          ruleId: 'governance.remediation.progress.allowed',
+          severity: 'INFO',
+          code: 'REMEDIATION_PROGRESS_ALLOWED',
+          message: 'remediation progress allowed',
+          file: '.ai_evidence.json',
+          blocking: false,
+        },
+        {
+          ruleId: 'governance.skills.global-enforcement.incomplete',
+          severity: 'INFO',
+          code: 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_REMEDIATION_ADVISORY',
+          message: 'global skills enforcement converted to advisory',
+          file: '.ai_evidence.json',
+          blocking: false,
+        },
+      ],
+    },
+    severity_metrics: {
+      gate_status: 'ALLOWED',
+      total_violations: 2,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 0,
+        INFO: 2,
+      },
+    },
+  });
+
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(evidence),
+      captureRepoState: () => evidence.repo_state!,
+      resolvePolicyForStage: () => ({
+        policy: {
+          stage: 'PRE_WRITE',
+          blockOnOrAbove: 'INFO',
+          warnOnOrAbove: 'INFO',
+        },
+        trace: {
+          source: 'file:.pumuki/policy-as-code.json',
+          bundle: 'gate-policy.default.PRE_WRITE',
+          hash: 'a'.repeat(64),
+        },
+      }),
+    }
+  );
+
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some((item) => item.code === 'EVIDENCE_POLICY_THRESHOLD_BLOCK'),
+    false
+  );
+});
+
 test('evaluateAiGate respeta waiver de gate aplicado y no rebloquea por severidades agregadas', () => {
   const baseEvidence = sampleEvidence();
   const evidence = sampleEvidence({
