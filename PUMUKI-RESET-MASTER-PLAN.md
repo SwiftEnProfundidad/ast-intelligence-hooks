@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-060` / RuralGo: cerrar gap de detección de test baseline roto antes de ediciones sobre el mismo componente. Estado 2026-05-05: `PUMUKI-INC-059` queda cerrado upstream y adoptado en RuralGo: `pumuki@6.3.142` publicado, PR Pumuki #855 mergeado, PR RuralGo #1908 mergeado en `develop`, `status`/`doctor` alineados en `6.3.142`, hooks managed `PRE_WRITE`/`PRE_COMMIT`/`PRE_PUSH` en ALLOW para el repin, y canary staged en worktree aislado bloquea `ios.solid.ocp.discriminator-switch-branching` + `skills.ios.no-solid-violations` en PRE_WRITE. Siguiente bug externo activo: `PUMUKI-INC-060` (`LaunchFlowModelTests.test_completeOnboarding_marksCompletedAndRoutesToLogin` roto en baseline no detectado por gate/preflight). |
+| Este plan | [🚧] - `PUMUKI-INC-061` / RuralGo: cerrar remediación auto-sugerida no funcional en gate de gobernanza. Estado 2026-05-05: `PUMUKI-INC-060` queda cerrado upstream y adoptado en RuralGo: `pumuki@6.3.143` publicado, PR Pumuki #857/#858 mergeados, PR RuralGo #1910 mergeado en `develop`, feedback externo PR #1911 mergeado, `status`/`doctor` alineados en `6.3.143`, y canary staged con evidencia TDD/BDD caducada bloquea `PRE_WRITE` con `TDD_BDD_EVIDENCE_STALE`. Siguiente bug externo activo: `PUMUKI-INC-061` (`policy reconcile --strict` y `sdd validate --stage=PRE_WRITE` sugeridos no desbloquean el gate de gobernanza ni aportan remediación accionable). |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
@@ -945,6 +945,9 @@ Snapshot de rollout `6.3.83` (2026-04-20):
 
 Snapshot de rollout `6.3.142` (2026-05-05):
 - `R_GO` (`chore/pumuki-6-3-142-rollout`, PR #1908): repin a `pumuki@6.3.142` completado y mergeado en `develop`; `status` y `doctor` reportan `packageVersion=6.3.142` sin issues; canary staged en worktree aislado confirma bloqueo PRE_WRITE por `ios.solid.ocp.discriminator-switch-branching` y `skills.ios.no-solid-violations`; commit y push pasaron hooks managed sin `--no-verify`.
+
+Snapshot de rollout `6.3.143` (2026-05-05):
+- `R_GO` (`chore/pumuki-6-3-143-rollout`, PR #1910): repin a `pumuki@6.3.143` completado y mergeado en `develop`; `status` y `doctor` reportan `packageVersion=6.3.143` sin issues; canary staged en worktree aislado confirma bloqueo `PRE_WRITE` por evidencia TDD/BDD caducada (`TDD_BDD_EVIDENCE_STALE`); feedback externo actualizado en PR #1911 para cerrar `PUMUKI-INC-060` y dejar `PUMUKI-INC-061` como siguiente bug vivo.
 
 Snapshot de rollout `6.3.85` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-83-rollout`): verde sobre `6.3.85`; PR mergeada contra `main`: `app-supermercados#10` (`https://github.com/SwiftEnProfundidad/app-supermercados/pull/10`), squash `e643f9f83d6f860cbd72f7bee67855b74dea213e`.
