@@ -35,6 +35,7 @@ import {
   DEFAULT_GATE_REMEDIATION as DEFAULT_BLOCKED_REMEDIATION,
   REMEDIATION_HINT_BY_CODE as BLOCKED_REMEDIATION_BY_CODE,
 } from '../gate/remediationCatalog';
+import { resolvePrimaryBlockingCause } from '../gate/blockingCause';
 
 const PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE =
   'pumuki pre-push blocked: branch has no upstream tracking reference. Configure upstream first (for example: git push --set-upstream origin <branch>) and retry.';
@@ -273,10 +274,16 @@ const notifyGateBlockedForStage = (params: {
     evidence?.snapshot.stage === params.stage
       ? evidence.snapshot.findings
       : [];
-  const primaryStageFinding = resolvePrimaryBlockedStageFinding(stageFindings);
-  const firstViolation = evidence?.ai_gate.violations[0];
-  const causeCode = primaryStageFinding?.code ?? firstViolation?.code ?? params.fallbackCauseCode;
-  const causeMessage = primaryStageFinding?.message ?? firstViolation?.message ?? params.fallbackCauseMessage;
+  const blockingStageFindings = stageFindings.filter((finding) =>
+    isSeverityAtLeast(finding.severity, 'ERROR')
+  );
+  const primaryCause = resolvePrimaryBlockingCause([
+    ...blockingStageFindings,
+    ...(evidence?.ai_gate.violations ?? []),
+  ]);
+  const primaryStageFinding = primaryCause ?? resolvePrimaryBlockedStageFinding(stageFindings);
+  const causeCode = primaryStageFinding?.code ?? params.fallbackCauseCode;
+  const causeMessage = primaryStageFinding?.message ?? params.fallbackCauseMessage;
   const remediation =
     BLOCKED_REMEDIATION_BY_CODE[causeCode]
     ?? params.fallbackRemediation

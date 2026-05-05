@@ -36,6 +36,7 @@ import {
   resolveGitAtomicityEnforcement,
   type GitAtomicityEnforcementResolution,
 } from '../policy/gitAtomicityEnforcement';
+import { resolvePrimaryBlockingCause } from '../gate/blockingCause';
 
 export type LifecycleWatchStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 export type LifecycleWatchScope = 'workingTree' | 'staged' | 'repoAndStaged' | 'repo';
@@ -119,6 +120,11 @@ type LifecycleWatchDependencies = {
 };
 
 const defaultGitService = new GitService();
+const GIT_STATUS_PORCELAIN_ARGS = [
+  'status',
+  '--porcelain=v1',
+  '--untracked-files=all',
+] as const;
 
 class RepoScopedGitService extends GitService implements IGitService {
   constructor(private readonly repoRoot: string) {
@@ -137,7 +143,7 @@ class RepoScopedGitService extends GitService implements IGitService {
 const defaultDependencies: LifecycleWatchDependencies = {
   resolveRepoRoot: () => defaultGitService.resolveRepoRoot(),
   readChangeToken: (repoRoot) =>
-    defaultGitService.runGit(['status', '--porcelain=v1', '--untracked-files=all'], repoRoot),
+    defaultGitService.runGit([...GIT_STATUS_PORCELAIN_ARGS], repoRoot),
   resolvePolicyForStage: (stage) => resolvePolicyForStage(stage),
   resolveUpstreamRef,
   resolvePrePushBootstrapBaseRef,
@@ -155,7 +161,10 @@ const defaultDependencies: LifecycleWatchDependencies = {
   ensureRuntimeArtifactsIgnored: (repoRoot) => {
     try {
       ensureRuntimeArtifactsIgnored(repoRoot);
-    } catch {
+    } catch (error) {
+      process.stderr.write(
+        `[pumuki][watch] unable to ensure runtime artifacts are ignored: ${String(error)}\n`
+      );
     }
   },
   emitAuditSummaryNotificationFromEvidence,
@@ -180,6 +189,16 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   SDD_SESSION_MISSING: 'Abre sesión SDD y vuelve a intentar.',
   SDD_SESSION_INVALID: 'Refresca la sesión SDD y vuelve a intentar.',
   OPENSPEC_MISSING: 'Instala OpenSpec y reintenta la validación.',
+  TDD_BDD_EVIDENCE_INVALID:
+    'Regenera la evidencia TDD/BDD válida del escenario afectado y vuelve a ejecutar el gate.',
+  TDD_BDD_SCENARIO_FILE_MISSING:
+    'Crea o corrige el fichero .feature referenciado por la evidencia TDD/BDD y revalida.',
+  TDD_BDD_EVIDENCE_STALE:
+    'Reejecuta los tests baseline del componente tocado, refresca la evidencia TDD/BDD y revalida.',
+  TDD_BDD_EVIDENCE_MISSING:
+    'Genera evidencia TDD/BDD para el cambio actual antes de continuar.',
+  TDD_BDD_BASELINE_BLOCKED:
+    'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
   MCP_ENTERPRISE_RECEIPT_MISSING: 'Genera el receipt enterprise de MCP antes de continuar.',
   MANIFEST_MUTATION_DETECTED:
     'Validación no debe mutar package.json/lockfiles. Revisa wiring y realiza upgrades solo con comando explícito.',
@@ -369,12 +388,13 @@ const toFirstCause = (params: {
   evidence: AiEvidenceV2_1 | undefined;
   matchedFindings: ReadonlyArray<SnapshotFinding>;
 }): { code: string; message: string; remediation: string } => {
-  const firstFinding = params.matchedFindings[0];
-  const firstViolation = params.evidence?.ai_gate.violations[0];
-  const code = firstFinding?.code ?? firstViolation?.code ?? 'WATCH_GATE_BLOCKED';
+  const primaryCause = resolvePrimaryBlockingCause([
+    ...params.matchedFindings,
+    ...(params.evidence?.ai_gate.violations ?? []),
+  ]);
+  const code = primaryCause?.code ?? 'WATCH_GATE_BLOCKED';
   const message =
-    firstFinding?.message ??
-    firstViolation?.message ??
+    primaryCause?.message ??
     `Watch gate bloqueado (${code}).`;
   const remediation =
     BLOCKED_REMEDIATION_BY_CODE[code] ??

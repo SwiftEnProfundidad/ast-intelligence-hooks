@@ -7,12 +7,23 @@ import {
   extractNotificationTrackingContext,
   TRACKING_BLOCKED_REMEDIATION,
 } from './framework-menu-system-notifications-tracking';
+import { isTddBddBlockingCause } from '../integrations/gate/blockingCause';
 
 type BlockedRemediationVariant = 'banner' | 'dialog';
 
 const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_GATE_BLOCKED:
     'Revisa status/doctor para ver la causa exacta del gate, corrígela y revalida.',
+  TDD_BDD_EVIDENCE_INVALID:
+    'Regenera la evidencia TDD/BDD válida del escenario afectado y vuelve a ejecutar el gate.',
+  TDD_BDD_SCENARIO_FILE_MISSING:
+    'Crea o corrige el fichero .feature referenciado por la evidencia TDD/BDD y revalida.',
+  TDD_BDD_EVIDENCE_STALE:
+    'Reejecuta los tests baseline del componente tocado, refresca la evidencia TDD/BDD y revalida.',
+  TDD_BDD_EVIDENCE_MISSING:
+    'Genera evidencia TDD/BDD para el cambio actual antes de continuar.',
+  TDD_BDD_BASELINE_BLOCKED:
+    'Corrige la baseline TDD/BDD rota, registra evidencia pasada y vuelve a ejecutar el gate.',
   EVIDENCE_MISSING: 'Genera la evidencia del slice actual y vuelve a validar esta fase.',
   EVIDENCE_INVALID: 'Regenera la evidencia de esta iteración y repite la validación.',
   EVIDENCE_CHAIN_INVALID: 'Regenera la evidencia para restaurar la cadena de integridad y vuelve a validar.',
@@ -105,6 +116,9 @@ export const resolveBlockedRemediation = (
   const fromEvent = event.remediation
     ? normalizeBlockedRemediation(event.remediation)
     : '';
+  if (isTddBddBlockingCause({ code: causeCode, message: event.causeMessage })) {
+    return truncateNotificationText(resolveFallbackRemediation(causeCode), maxLength);
+  }
   if (extractNotificationTrackingContext(event.causeMessage)) {
     return truncateNotificationText(TRACKING_BLOCKED_REMEDIATION, maxLength);
   }
