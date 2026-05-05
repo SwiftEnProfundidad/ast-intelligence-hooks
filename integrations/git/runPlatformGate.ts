@@ -445,6 +445,11 @@ const isSkillsEnforcementImplementationPath = (path: string): boolean => {
     normalized.startsWith('integrations/config/') ||
     normalized === 'integrations/git/runplatformgate.ts' ||
     normalized === 'integrations/git/__tests__/runplatformgate.test.ts' ||
+    normalized === 'integrations/git/gitatomicity.ts' ||
+    normalized === 'integrations/git/__tests__/gitatomicity.test.ts' ||
+    normalized === 'pumuki-reset-master-plan.md' ||
+    normalized === 'package.json' ||
+    normalized === 'package-lock.json' ||
     isSkillsContractCarrierPath(normalized)
   );
 };
@@ -462,7 +467,9 @@ const isSkillsEnforcementRemediationDiff = (
     path.startsWith('core/rules/presets/heuristics/') ||
     path.startsWith('integrations/config/') ||
     path === 'integrations/git/runplatformgate.ts' ||
-    path === 'integrations/git/__tests__/runplatformgate.test.ts'
+    path === 'integrations/git/__tests__/runplatformgate.test.ts' ||
+    path === 'integrations/git/gitatomicity.ts' ||
+    path === 'integrations/git/__tests__/gitatomicity.test.ts'
   );
   const touchesLockOrScenario = normalizedPaths.some((path) =>
     path === 'skills.lock.json' || path.endsWith('.feature')
@@ -483,6 +490,37 @@ const collectStagedPaths = (git: IGitService, repoRoot: string): ReadonlyArray<s
   } catch {
     return [];
   }
+};
+
+const BASELINE_BRANCH_REFS = [
+  'origin/develop',
+  'origin/main',
+  'upstream/develop',
+  'upstream/main',
+  'develop',
+  'main',
+];
+
+const collectPrePushChangedPaths = (
+  git: IGitService,
+  repoRoot: string
+): ReadonlyArray<string> => {
+  for (const baselineRef of BASELINE_BRANCH_REFS) {
+    try {
+      git.runGit(['rev-parse', '--verify', baselineRef], repoRoot);
+      const mergeBase = git.runGit(['merge-base', baselineRef, 'HEAD'], repoRoot).trim();
+      if (mergeBase.length === 0) {
+        continue;
+      }
+      return git.runGit(['diff', '--name-only', `${mergeBase}..HEAD`], repoRoot)
+        .split('\n')
+        .map((line) => toNormalizedPath(line).toLowerCase())
+        .filter((line) => line.length > 0);
+    } catch {
+      continue;
+    }
+  }
+  return [];
 };
 
 const toBlockingFindingsForPaths = (
@@ -1471,7 +1509,13 @@ export async function runPlatformGate(params: {
           ].sort(),
         })
       : undefined;
-  const skillsEnforcementRemediationDiff = isSkillsEnforcementRemediationDiff(stagedPaths);
+  const skillsEnforcementRemediationDiff = isSkillsEnforcementRemediationDiff(
+    stagedPaths.length > 0
+      ? stagedPaths
+      : params.policy.stage === 'PRE_PUSH'
+        ? collectPrePushChangedPaths(git, repoRoot)
+        : []
+  );
   const remediationProgressAllowsGlobalGap =
     remediationProgressFinding !== undefined ||
     (skillsEnforcementRemediationDiff &&
