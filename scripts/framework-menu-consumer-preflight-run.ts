@@ -2,6 +2,7 @@ import {
   evaluateAiGate,
   type AiGateCheckResult,
 } from '../integrations/gate/evaluateAiGate';
+import { resolvePrimaryBlockingCause } from '../integrations/gate/blockingCause';
 import { readLifecycleExperimentalFeaturesSnapshot } from '../integrations/lifecycle/experimentalFeaturesSnapshot';
 import { LifecycleGitService } from '../integrations/lifecycle/gitService';
 import { readGovernanceObservationSnapshot } from '../integrations/lifecycle/governanceObservationSnapshot';
@@ -36,6 +37,8 @@ const defaultDependencies: ConsumerPreflightDependencies = {
   readGovernanceNextAction,
 };
 
+const SECONDS_PER_MINUTE = 60;
+
 const buildNotificationEvents = (
   result: AiGateCheckResult
 ): ReadonlyArray<PumukiCriticalNotificationEvent> => {
@@ -45,7 +48,7 @@ const buildNotificationEvents = (
     events.push({
       kind: 'evidence.stale',
       evidencePath: '.ai_evidence.json',
-      ageMinutes: Math.max(1, Math.ceil(ageSeconds / 60)),
+      ageMinutes: Math.max(1, Math.ceil(ageSeconds / SECONDS_PER_MINUTE)),
     });
   }
   if (hasViolationCode(result.violations, 'GITFLOW_PROTECTED_BRANCH')) {
@@ -56,13 +59,13 @@ const buildNotificationEvents = (
     });
   }
   if (result.status === 'BLOCKED') {
-    const firstViolation = result.violations[0];
-    const causeCode = firstViolation?.code ?? 'GATE_BLOCKED';
+    const primaryViolation = resolvePrimaryBlockingCause(result.violations);
+    const causeCode = primaryViolation?.code ?? 'GATE_BLOCKED';
     const causeMessage =
-      firstViolation?.message
+      primaryViolation?.message
       ?? `Detected ${result.violations.length} blocking violations in stage ${result.stage}.`;
     const remediation =
-      (firstViolation ? ACTIONABLE_HINTS_BY_CODE[firstViolation.code] : undefined)
+      (primaryViolation ? ACTIONABLE_HINTS_BY_CODE[primaryViolation.code] : undefined)
       ?? 'Corrige la causa bloqueante y vuelve a ejecutar el gate.';
     events.push({
       kind: 'gate.blocked',

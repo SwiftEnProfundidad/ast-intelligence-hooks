@@ -12,6 +12,14 @@ export const REMEDIATION_HINT_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual y reintenta.',
   TDD_BDD_BASELINE_BLOCKED:
     'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
+  TDD_BDD_EVIDENCE_INVALID:
+    'Regenera la evidencia TDD/BDD válida del escenario afectado y vuelve a ejecutar el gate.',
+  TDD_BDD_SCENARIO_FILE_MISSING:
+    'Crea o corrige el fichero .feature referenciado por la evidencia TDD/BDD y revalida.',
+  TDD_BDD_EVIDENCE_STALE:
+    'Reejecuta los tests baseline del componente tocado, refresca la evidencia TDD/BDD y revalida.',
+  TDD_BDD_EVIDENCE_MISSING:
+    'Genera evidencia TDD/BDD para el cambio actual antes de continuar.',
   EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
   EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura coverage_ratio=1 y unevaluated=0.',
   ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:

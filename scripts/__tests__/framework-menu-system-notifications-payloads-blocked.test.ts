@@ -59,3 +59,22 @@ test('buildGateBlockedPayload muestra causa y solución coherentes para tracking
   assert.match(payload.message, /comando:/i);
   assert.match(payload.message, /siguiente acción:/i);
 });
+
+test('buildGateBlockedPayload no culpa al tracking cuando la causa real es TDD/BDD', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 2,
+      causeCode: 'TDD_BDD_EVIDENCE_INVALID',
+      causeMessage:
+        'TDD/BDD evidence is invalid. code=TDD_BDD_EVIDENCE_INVALID active_entries=RGO-1900-01@L53 tracking_source=docs/RURALGO_SEGUIMIENTO.md',
+    },
+    'R_GO · '
+  );
+
+  assert.match(payload.subtitle ?? '', /R_GO/);
+  assert.match(payload.subtitle ?? '', /TDD\/BDD/i);
+  assert.doesNotMatch(payload.subtitle ?? '', /Tracking bloqueado/i);
+  assert.doesNotMatch(payload.message, /corrige el MD de tracking/i);
+});
