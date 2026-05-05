@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-125` / RuralGo: cerrar el gap crítico de confianza donde `pumuki@6.3.147` reporta `coverage_ratio=1` aunque esa métrica solo cubre reglas AUTO del stage y deja `registry_declarative=668` / `unsupported_detector=664` sin enforcement AST operativo. Estado 2026-05-05: la prioridad externa sube por encima de `PUMUKI-INC-059`; el cierre exige distinguir `auto_runtime_coverage_ratio` de cobertura global de skills, exponer `semantic_enforcement_ratio`, y bloquear fail-closed en `PRE_WRITE`, `PRE_COMMIT` y `PRE_PUSH` cuando una skill hard quede como declarativa/unsupported sin detector sobre archivos escaneados. |
+| Este plan | [🚧] - `PUMUKI-INC-059` / RuralGo: corregir el gap de enforcement de skills hard OCP/SRP/LISKOV/ISP/DIP/LOP en `PRE_WRITE`, `PRE_COMMIT` y `PRE_PUSH` tras cerrar `PUMUKI-INC-125` en `pumuki@6.3.148`. Estado 2026-05-05: `PUMUKI-INC-125` ya falla cerrado cuando el enforcement global de skills queda incompleto; la siguiente prioridad externa es demostrar detección/bloqueo semántico real de las violaciones OCP/SRP reportadas por RuralGo, no solo bloquear por el gap global de cobertura. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
