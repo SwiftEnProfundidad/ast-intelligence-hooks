@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-059` / RuralGo: corregir el gap de enforcement de skills hard OCP/SRP/LISKOV/ISP/DIP/LOP en `PRE_WRITE`, `PRE_COMMIT` y `PRE_PUSH` tras cerrar `PUMUKI-INC-125` en `pumuki@6.3.148`. Estado 2026-05-05: `PUMUKI-INC-125` ya falla cerrado cuando el enforcement global de skills queda incompleto; la siguiente prioridad externa es demostrar detección/bloqueo semántico real de las violaciones OCP/SRP reportadas por RuralGo, no solo bloquear por el gap global de cobertura. |
+| Este plan | [🚧] - `PUMUKI-INC-061` / RuralGo: hacer accionable la remediación visible de governance cuando el bloqueo requiere reconciliar policy-as-code. Estado 2026-05-05: `PUMUKI-INC-060` queda verificado en RuralGo con `pumuki@6.3.149` (`PRE_WRITE` bloquea por `TDD_BDD_EVIDENCE_STALE`); la prioridad externa viva es evitar que notificaciones/hooks sugieran `policy reconcile --strict --json` sin `--apply` cuando la convergencia real requiere escribir contrato. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.

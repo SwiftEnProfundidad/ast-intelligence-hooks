@@ -57,7 +57,27 @@ test('buildGateBlockedPayload muestra causa y solución coherentes para tracking
   assert.match(payload.subtitle ?? '', /Tracking bloqueado/i);
   assert.match(payload.message, /tracking/i);
   assert.match(payload.message, /comando:/i);
+  assert.match(payload.message, /policy reconcile --strict --apply --json/i);
   assert.match(payload.message, /siguiente acción:/i);
+});
+
+test('buildGateBlockedPayload recomienda reconcile con apply para drift de policy', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE',
+      causeMessage: 'Active rules coverage is empty at PRE_COMMIT.',
+    },
+    {
+      projectPrefix: 'R_GO · ',
+      repoRoot: '/tmp/rgo',
+    }
+  );
+
+  assert.match(payload.message, /policy reconcile --strict --apply --json/i);
+  assert.doesNotMatch(payload.message, /policy reconcile --strict --json(?!\s*&&)/i);
 });
 
 test('buildGateBlockedPayload no culpa al tracking cuando la causa real es TDD/BDD', () => {
