@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-061 / RuralGo: corregir el bloqueo de remediación/repin provocado por `.ai_evidence.json` auto-restageada contando como scope funcional en `git-atomicity`. `PUMUKI-INC-059` ya quedó publicado en `pumuki@6.3.136` y revalidado en RuralGo con PRE_WRITE `115/115`, PRE_COMMIT `117/117`, PRE_PUSH `438/438` y CI `438/438` findings bloqueantes.` |
+| Este plan | `[🚧] - PUMUKI-INC-061 / RuralGo: cerrar completamente el bloqueo de remediación/repin provocado por evidencia trackeada: `pumuki@6.3.137` corrige atomicity con `.ai_evidence.json`; `pumuki@6.3.138` corrige commits doc-only que ensucian `.ai_evidence.json` y fallan con `files were modified by this hook`. `PUMUKI-INC-059` ya quedó publicado en `pumuki@6.3.136` y revalidado en RuralGo con PRE_WRITE `115/115`, PRE_COMMIT `117/117`, PRE_PUSH `438/438` y CI `438/438` findings bloqueantes.` |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
