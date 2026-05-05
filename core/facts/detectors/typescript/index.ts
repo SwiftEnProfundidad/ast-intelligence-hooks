@@ -4625,7 +4625,13 @@ const buildMagicNumberPatternMatch = (
     if ((memberName === 'slice' || memberName === 'substring') && argumentIndex >= 0) {
       return true;
     }
+    if (memberName === 'toFixed' && argumentIndex === 0) {
+      return true;
+    }
     if ((memberName === 'min' || memberName === 'max') && argumentIndex >= 0) {
+      return true;
+    }
+    if (value.value === 1000 && ancestors.some((ancestor) => memberExpressionPropertyName(ancestor) === 'floor')) {
       return true;
     }
     return false;
@@ -4845,6 +4851,12 @@ const isBenignHardcodedConfigLiteral = (node: AstNode): boolean => {
   }
   const value = String(node.value).trim();
   if (value.length === 0) {
+    return true;
+  }
+  if (/^(?:0|1|true|false|yes|no|on|off)$/i.test(value)) {
+    return true;
+  }
+  if (/^\d+(?:\.\d+)+$/.test(value)) {
     return true;
   }
   if (
