@@ -901,11 +901,30 @@ export const extractHeuristicFacts = (
       }
     }
 
-    if (
-      params.detectedPlatforms.ios?.detected &&
-      isIOSSwiftPath(fileFact.path) &&
-      !isSwiftTestPath(fileFact.path)
-    ) {
+    if (params.detectedPlatforms.ios?.detected && isIOSSwiftPath(fileFact.path)) {
+      if (isSwiftTestPath(fileFact.path)) {
+        const semanticTestSrpMatch = TextIOS.findSwiftXCTestSrpMatch(fileFact.content);
+        if (semanticTestSrpMatch) {
+          heuristicFacts.push(
+            createHeuristicFact({
+              ruleId: 'heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast',
+              code: 'HEURISTICS_IOS_SOLID_SRP_XCTEST_MIXED_RESPONSIBILITIES_AST',
+              message:
+                'Semantic iOS SRP heuristic detected an XCTestCase suite mixing multiple responsibilities.',
+              filePath: fileFact.path,
+              lines: semanticTestSrpMatch.lines,
+              severity: 'CRITICAL',
+              primary_node: semanticTestSrpMatch.primary_node,
+              related_nodes: semanticTestSrpMatch.related_nodes,
+              why: semanticTestSrpMatch.why,
+              impact: semanticTestSrpMatch.impact,
+              expected_fix: semanticTestSrpMatch.expected_fix,
+            })
+          );
+        }
+      }
+
+      if (!isSwiftTestPath(fileFact.path)) {
       if (isIOSApplicationOrPresentationPath(fileFact.path)) {
         const semanticOcpMatch = TextIOS.findSwiftOpenClosedSwitchMatch(fileFact.content);
         if (semanticOcpMatch) {
@@ -1026,6 +1045,7 @@ export const extractHeuristicFacts = (
             expected_fix: semanticCanaryMatch.expected_fix,
           })
         );
+      }
       }
     }
 

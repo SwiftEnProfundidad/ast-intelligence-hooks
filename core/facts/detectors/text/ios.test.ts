@@ -6,6 +6,7 @@ import {
   findSwiftOpenClosedSwitchMatch,
   findSwiftConcreteDependencyDipMatch,
   findSwiftPresentationSrpMatch,
+  findSwiftXCTestSrpMatch,
   hasSwiftAnyViewUsage,
   hasSwiftCallbackStyleSignature,
   hasSwiftCornerRadiusUsage,
@@ -886,6 +887,69 @@ final class PumukiOcpIosCanaryUseCase {
   assert.match(match.why, /OCP/i);
   assert.match(match.impact, /nuevo caso|nuevo comportamiento/i);
   assert.match(match.expected_fix, /estrategia|protocolo|registry/i);
+});
+
+test('findSwiftOpenClosedSwitchMatch detecta switch sobre outcome en Coordinator iOS', () => {
+  const source = `public final class LaunchFlowCoordinator {
+  public func bootstrap() async {
+    let outcome = await appConfigurationUseCase.execute()
+    switch outcome {
+    case .mandatoryUpdate:
+      route = .updateRequired
+    case .maintenance:
+      route = .maintenance
+    case .proceed:
+      route = .home
+    }
+  }
+}
+`;
+
+  const match = findSwiftOpenClosedSwitchMatch(source);
+
+  assert.ok(match);
+  assert.equal(match.primary_node.name, 'LaunchFlowCoordinator');
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'discriminator switch: outcome', lines: [4] },
+    { kind: 'member', name: 'case .mandatoryUpdate', lines: [5] },
+    { kind: 'member', name: 'case .maintenance', lines: [7] },
+    { kind: 'member', name: 'case .proceed', lines: [9] },
+  ]);
+  assert.match(match.why, /OCP/);
+});
+
+test('findSwiftXCTestSrpMatch detecta XCTestCase con responsabilidades mezcladas', () => {
+  const source = `import XCTest
+
+final class LaunchFlowCoordinatorConfigTests: XCTestCase {
+  func test_bootstrap_whenMandatoryUpdate_routesToUpdateRequired() async {}
+  func test_bootstrap_whenSessionIsValid_routesHome() async {}
+  func test_completeOnboarding_marksProgressAndRoutesToLogin() async {}
+}
+`;
+
+  const match = findSwiftXCTestSrpMatch(source);
+
+  assert.ok(match);
+  assert.equal(match.primary_node.name, 'LaunchFlowCoordinatorConfigTests');
+  assert.deepEqual(match.related_nodes, [
+    { kind: 'member', name: 'session routing tests', lines: [5] },
+    { kind: 'member', name: 'onboarding progress tests', lines: [6] },
+  ]);
+  assert.match(match.why, /XCTestCase|SRP/);
+});
+
+test('findSwiftXCTestSrpMatch permite XCTestCase enfocado en una responsabilidad', () => {
+  const source = `import XCTest
+
+final class LaunchFlowCoordinatorNonBlockingConfigTests: XCTestCase {
+  func test_bootstrap_whenConfigFetchFailsWithCache_usesCachedConfigAndContinues() async {}
+  func test_bootstrap_whenOptionalUpdate_allowsAccessAndContinues() async {}
+  func test_bootstrap_whenProceed_continuesToSessionValidation() async {}
+}
+`;
+
+  assert.equal(findSwiftXCTestSrpMatch(source), undefined);
 });
 
 test('findSwiftInterfaceSegregationMatch devuelve payload semantico para ISP-iOS en application', () => {
