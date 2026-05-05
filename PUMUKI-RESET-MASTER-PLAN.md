@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-061 / RuralGo: cerrar completamente el bloqueo de remediación/repin provocado por evidencia trackeada: `pumuki@6.3.137` corrige atomicity con `.ai_evidence.json`; `pumuki@6.3.138` corrige commits doc-only que ensucian `.ai_evidence.json` y fallan con `files were modified by this hook`. `PUMUKI-INC-059` ya quedó publicado en `pumuki@6.3.136` y revalidado en RuralGo con PRE_WRITE `115/115`, PRE_COMMIT `117/117`, PRE_PUSH `438/438` y CI `438/438` findings bloqueantes.` |
+| Este plan | `[🚧] - PUMUKI-INC-060 / RuralGo: cerrar el gap de detección de tests baseline rotos antes de editar componentes relacionados. Estado previo: `PUMUKI-INC-059` queda publicado en `pumuki@6.3.136` y revalidado en RuralGo temporal con PRE_WRITE `115/115`, PRE_COMMIT `117/117`, PRE_PUSH `438/438` y CI `438/438`; `PUMUKI-INC-061` queda publicado en `pumuki@6.3.138` y validado con commit documental sin dirty `.ai_evidence.json`. El worktree principal de RuralGo no se toca para no cruzar cambios activos; el cierre externo está preparado en `/private/tmp/R_GO__pumuki-inc-059-061-revalidation` y debe integrarse sin pisar el trabajo del usuario.` |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
