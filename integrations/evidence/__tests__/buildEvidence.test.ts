@@ -841,8 +841,8 @@ test('infers gate outcome from findings when gateOutcome is not provided', () =>
     detectedPlatforms: {},
     loadedRulesets: [],
   });
-  assert.equal(warnResult.snapshot.outcome, 'WARN');
-  assert.equal(warnResult.ai_gate.status, 'ALLOWED');
+  assert.equal(warnResult.snapshot.outcome, 'BLOCK');
+  assert.equal(warnResult.ai_gate.status, 'BLOCKED');
 });
 
 test('preserves finding traceability fields in snapshot and compatibility violations', () => {
@@ -968,6 +968,7 @@ test('persiste snapshot.tdd_bdd cuando se informa enforcement vertical', () => {
         slices_invalid: 1,
         integrity_ok: false,
         errors: ['integrity_hash_mismatch'],
+        baseline: { required: true, passed: 0, missing: 0, failed: 1 },
       },
       waiver: {
         applied: false,

@@ -73,6 +73,7 @@ test('buildHotspotsSaasIngestionPayloadFromLocalSignals compone payload desde se
             slices_invalid: 0,
             integrity_ok: true,
             errors: [],
+            baseline: { required: true, passed: 1, missing: 0, failed: 0 },
           },
           waiver: {
             applied: false,

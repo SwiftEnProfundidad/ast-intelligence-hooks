@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-060 / RuralGo: cerrar el gap de detección de tests baseline rotos antes de editar componentes relacionados. Estado previo: `PUMUKI-INC-059` queda publicado en `pumuki@6.3.136` y revalidado en RuralGo temporal con PRE_WRITE `115/115`, PRE_COMMIT `117/117`, PRE_PUSH `438/438` y CI `438/438`; `PUMUKI-INC-061` queda publicado en `pumuki@6.3.138` y validado con commit documental sin dirty `.ai_evidence.json`. El worktree principal de RuralGo no se toca para no cruzar cambios activos; el cierre externo está preparado en `/private/tmp/R_GO__pumuki-inc-059-061-revalidation` y debe integrarse sin pisar el trabajo del usuario.` |
+| Este plan | `[🚧] - PUMUKI-INC-060 / RuralGo: cerrar el gap de detección de tests baseline rotos antes de editar componentes relacionados. Estado previo: `PUMUKI-INC-059` queda publicado en `pumuki@6.3.136` y revalidado en RuralGo temporal con PRE_WRITE `115/115`, PRE_COMMIT `117/117`, PRE_PUSH `438/438` y CI `438/438`; `PUMUKI-INC-061` queda publicado en `pumuki@6.3.138` y validado con commit documental sin dirty `.ai_evidence.json`. Slice integrada sobre `6.3.138`: el contrato TDD/BDD exige ahora evidencia `baseline.status=passed` antes de RED para cambios in-scope; si falta o falla, Pumuki bloquea con `TDD_BASELINE_TEST_REQUIRED` / `TDD_BASELINE_TEST_MUST_PASS`. Siguiente paso: versionar/publicar `6.3.139`, repinear primero RuralGo y validar el caso consumidor.` |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
