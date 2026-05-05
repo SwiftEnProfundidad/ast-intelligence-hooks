@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.144)
+
+- **RuralGo PUMUKI-INC-122:** `pumuki sdd evidence` serializa escrituras concurrentes del artefacto `.pumuki/artifacts/pumuki-evidence-v1.json` con lock local y rename atómico.
+- **Sin pérdida de slices:** dos ejecuciones paralelas fusionan slices existentes/nuevas en lugar de pisar el JSON compartido; además el scaffold genera baseline TDD/BDD válido desde la evidencia PRE_WRITE.
+- **Rollout:** publicar `pumuki@6.3.144`, repinear primero RuralGo y revalidar `status`, `doctor` y una ráfaga concurrente de `pumuki sdd evidence`.
+
 ### 2026-05-05 (v6.3.143)
 
 - **RuralGo PUMUKI-INC-060:** PRE_WRITE deja de aceptar evidencia TDD/BDD de baseline caducada para cambios in-scope.
