@@ -503,6 +503,9 @@ const buildPrePushCommitPathLimitViolations = (params: {
       repoRoot: params.repoRoot,
       commitHash: commitRecord.hash,
     }).filter((path) => !isManagedEvidencePath(path));
+    if (isSkillsEnforcementRemediationDiff(changedPaths)) {
+      continue;
+    }
     violations.push(
       ...buildPathLimitViolations({
         changedPaths,
