@@ -1309,6 +1309,26 @@ const hasAppliedGateWaiver = (evidenceResult: EvidenceReadResult): boolean => {
   );
 };
 
+const collectBlockingSeverityCounts = (
+  evidenceResult: Extract<EvidenceReadResult, { kind: 'valid' }>
+): Record<'INFO' | 'WARN' | 'ERROR' | 'CRITICAL', number> => {
+  const counts = {
+    INFO: 0,
+    WARN: 0,
+    ERROR: 0,
+    CRITICAL: 0,
+  };
+
+  for (const finding of evidenceResult.evidence.snapshot.findings) {
+    if (finding.blocking === false) {
+      continue;
+    }
+    counts[finding.severity] += 1;
+  }
+
+  return counts;
+};
+
 const collectEvidencePolicyThresholdViolations = (params: {
   evidenceResult: EvidenceReadResult;
   policy: ReturnType<typeof resolvePolicyForStage>['policy'];
@@ -1323,7 +1343,7 @@ const collectEvidencePolicyThresholdViolations = (params: {
     return [];
   }
 
-  const severityCounts = params.evidenceResult.evidence.severity_metrics.by_severity;
+  const severityCounts = collectBlockingSeverityCounts(params.evidenceResult);
   const blockSeverity = toHighestTriggeredSeverity(
     severityCounts,
     params.policy.blockOnOrAbove

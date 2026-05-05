@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-126` / RuralGo: permitir commits staged de remediación neta sin bypass cuando el diff reduce una violación soportada por detector y no introduce findings nuevos, aunque el fail-closed global de skills siga bloqueando feature work por `SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL`. Estado 2026-05-05: `PUMUKI-INC-060` queda verificado en RuralGo con `pumuki@6.3.149`; `PUMUKI-INC-061` queda publicado en `pumuki@6.3.150`; la prioridad externa viva es desbloquear el fix iOS `ios.no-force-unwrap` en `BuyerProfilePresentation.swift` sin usar `--no-verify`. |
+| Este plan | [🚧] - `PARITY-ANDROID-001` / Single Activity - Multiples Composables/Fragments, no Activities. Estado 2026-05-05: los bugs externos activos quedan a 0 tras cerrar `PUMUKI-INC-127` en `pumuki@6.3.153` y repinear primero RuralGo; se reactiva el baseline Android por AST real siguiendo la siguiente pieza lógica ya registrada en este plan. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
