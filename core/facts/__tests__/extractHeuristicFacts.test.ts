@@ -1157,6 +1157,78 @@ test('detects semantic OCP heuristic for iOS application types with discriminato
   assert.match(finding.expected_fix ?? '', /estrategia|protocolo|registry/i);
 });
 
+test('detects semantic OCP heuristic for iOS coordinator switch over outcome', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Onboarding/LaunchFlowCoordinator.swift',
+        [
+          'public final class LaunchFlowCoordinator {',
+          '  public func bootstrap() async {',
+          '    let outcome = await appConfigurationUseCase.execute()',
+          '    switch outcome {',
+          '    case .mandatoryUpdate:',
+          '      route = .updateRequired',
+          '    case .maintenance:',
+          '      route = .maintenance',
+          '    case .proceed:',
+          '      route = .home',
+          '    }',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.solid.ocp.discriminator-switch.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.primary_node?.name, 'LaunchFlowCoordinator');
+  assert.deepEqual(finding.related_nodes, [
+    { kind: 'member', name: 'discriminator switch: outcome', lines: [4] },
+    { kind: 'member', name: 'case .mandatoryUpdate', lines: [5] },
+    { kind: 'member', name: 'case .maintenance', lines: [7] },
+    { kind: 'member', name: 'case .proceed', lines: [9] },
+  ]);
+});
+
+test('detects semantic SRP heuristic for XCTestCase suites with mixed responsibilities', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Tests/Mac/Presentation/LaunchFlowCoordinatorConfigTests.spec.swift',
+        [
+          'import XCTest',
+          '',
+          'final class LaunchFlowCoordinatorConfigTests: XCTestCase {',
+          '  func test_bootstrap_whenMandatoryUpdate_routesToUpdateRequired() async {}',
+          '  func test_bootstrap_whenSessionIsValid_routesHome() async {}',
+          '  func test_completeOnboarding_marksProgressAndRoutesToLogin() async {}',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_IOS_SOLID_SRP_XCTEST_MIXED_RESPONSIBILITIES_AST');
+  assert.equal(finding.primary_node?.name, 'LaunchFlowCoordinatorConfigTests');
+  assert.match(finding.why ?? '', /XCTestCase|SRP/);
+});
+
 test('detects semantic OCP heuristic for backend application types with discriminator branching', () => {
   const extracted = extractHeuristicFacts({
     facts: [

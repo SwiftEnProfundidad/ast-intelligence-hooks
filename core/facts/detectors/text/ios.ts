@@ -32,6 +32,8 @@ export type SwiftPresentationSrpMatch = {
   lines: readonly number[];
 };
 
+export type SwiftXCTestSrpMatch = SwiftPresentationSrpMatch;
+
 export type SwiftConcreteDependencyDipMatch = {
   primary_node: SwiftSemanticNodeMatch;
   related_nodes: readonly SwiftSemanticNodeMatch[];
@@ -1185,6 +1187,100 @@ export const findSwiftPresentationSrpMatch = (
   };
 };
 
+export const findSwiftXCTestSrpMatch = (source: string): SwiftXCTestSrpMatch | undefined => {
+  if (!hasSwiftXCTestCaseSubclassUsage(source)) {
+    return undefined;
+  }
+
+  const classPattern = /\b(?:final\s+)?class\s+([A-Za-z0-9_]*Tests?)\s*:\s*XCTestCase\b/;
+  const classLines = collectSwiftRegexLines(source, classPattern);
+  if (classLines.length === 0) {
+    return undefined;
+  }
+
+  const classLine = source.split(/\r?\n/)[classLines[0] - 1] ?? '';
+  const className = classLine.match(classPattern)?.[1];
+  if (!className) {
+    return undefined;
+  }
+
+  const sourceLines = source.split(/\r?\n/);
+  const familyPatterns: ReadonlyArray<{
+    key: string;
+    name: string;
+    tokens: readonly string[];
+  }> = [
+    { key: 'configuration', name: 'configuration outcome tests', tokens: ['config', 'configuration', 'update', 'cache'] },
+    { key: 'session', name: 'session routing tests', tokens: ['session', 'login', 'auth', 'valid', 'invalid'] },
+    { key: 'onboarding', name: 'onboarding progress tests', tokens: ['onboarding', 'progress', 'completeonboarding'] },
+    { key: 'permissions', name: 'permissions routing tests', tokens: ['permission', 'camera', 'location', 'notification'] },
+    { key: 'tutorial', name: 'tutorial or feature discovery tests', tokens: ['tutorial', 'featurediscovery'] },
+    { key: 'splash', name: 'splash delay tests', tokens: ['splash', 'delay', 'start'] },
+  ];
+  const matchesFamily = (value: string, tokens: readonly string[]): boolean => {
+    const normalizedValue = value.toLowerCase();
+    return tokens.some((token) => normalizedValue.includes(token));
+  };
+
+  const classFamilyKeys = new Set(
+    familyPatterns
+      .filter((entry) => matchesFamily(className, entry.tokens))
+      .map((entry) => entry.key)
+  );
+  const matchedFamilies = new Map<string, SwiftSemanticNodeMatch>();
+
+  sourceLines.forEach((line, index) => {
+    const sanitizedLine = stripSwiftLineForSemanticScan(line);
+    const methodMatch = sanitizedLine.match(/\bfunc\s+(test[A-Za-z0-9_]+)\s*\(/);
+    const methodName = methodMatch?.[1];
+    if (!methodName) {
+      return;
+    }
+
+    for (const family of familyPatterns) {
+      if (!matchesFamily(methodName, family.tokens)) {
+        continue;
+      }
+      if (classFamilyKeys.has(family.key)) {
+        continue;
+      }
+      if (!matchedFamilies.has(family.key)) {
+        matchedFamilies.set(family.key, {
+          kind: 'member',
+          name: family.name,
+          lines: [index + 1],
+        });
+      }
+    }
+  });
+
+  const relatedNodes = [...matchedFamilies.values()];
+  if (relatedNodes.length < 2) {
+    return undefined;
+  }
+
+  const relatedNodeNames = relatedNodes.map((node) => node.name).join(', ');
+  const allLines = sortedUniqueLines([
+    ...classLines,
+    ...relatedNodes.flatMap((node) => [...node.lines]),
+  ]);
+
+  return {
+    primary_node: {
+      kind: 'class',
+      name: className,
+      lines: classLines,
+    },
+    related_nodes: relatedNodes,
+    why: `${className} mezcla ${relatedNodeNames} dentro del mismo XCTestCase, rompiendo SRP en la suite de tests.`,
+    impact:
+      'La suite acumula múltiples razones de cambio, oculta regresiones por responsabilidad y hace más difícil aislar el baseline afectado antes de PRE_WRITE.',
+    expected_fix:
+      'Divide la suite por responsabilidad observable: configuración, sesión, onboarding, permisos, tutorial o splash deben vivir en XCTestCase separados.',
+    lines: allLines,
+  };
+};
+
 export const findSwiftConcreteDependencyDipMatch = (
   source: string
 ): SwiftConcreteDependencyDipMatch | undefined => {
@@ -1275,7 +1371,7 @@ export const findSwiftOpenClosedSwitchMatch = (
   }
 
   const lines = source.split(/\r?\n/);
-  const discriminatorPattern = /\b(?:kind|type|mode|channel|variant|provider|route|flow|source|experience)\b/i;
+  const discriminatorPattern = /\b(?:kind|type|mode|channel|variant|provider|route|flow|source|experience|outcome|state|status|configuration|config)\b/i;
   const switchPattern = /\bswitch\s+([A-Za-z_][A-Za-z0-9_\.]*)\s*\{/;
 
   for (let index = 0; index < lines.length; index += 1) {
