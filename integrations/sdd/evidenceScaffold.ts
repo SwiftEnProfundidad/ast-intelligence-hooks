@@ -81,6 +81,7 @@ type SddEvidenceArtifact = SddEvidenceScaffoldResult['artifact'];
 const LOCK_WAIT_BUFFER_BYTES = 4;
 const EVIDENCE_ARTIFACT_LOCK_TIMEOUT_MS = 5000;
 const EVIDENCE_ARTIFACT_LOCK_RETRY_DELAY_MS = 25;
+const EVIDENCE_ARTIFACT_JSON_INDENT_SPACES = 2;
 
 const computeDigest = (value: string): string =>
   `sha256:${createHash('sha256').update(value, 'utf8').digest('hex')}`;
@@ -159,7 +160,7 @@ const writeSddEvidenceArtifactAtomically = (params: {
       existing: readExistingSddEvidenceArtifact(params.outputPath),
       next: params.artifact,
     });
-    const serialized = `${JSON.stringify(artifact, null, 2)}\n`;
+    const serialized = `${JSON.stringify(artifact, null, EVIDENCE_ARTIFACT_JSON_INDENT_SPACES)}\n`;
     writeFileSync(tempPath, serialized, 'utf8');
     renameSync(tempPath, params.outputPath);
     return { artifact, serialized };
@@ -195,7 +196,7 @@ const resolveRepoBoundPath = (params: {
   return resolved;
 };
 
-const isPlaceholderToken = (value: string): boolean => {
+const isReservedInputValue = (value: string): boolean => {
   const normalized = value.trim().toLowerCase();
   return (
     normalized === 'todo' ||
@@ -214,7 +215,7 @@ const normalizeRequired = (value: string | undefined, flagName: string): string 
   if (normalized.length === 0) {
     throw new Error(`[pumuki][sdd] evidence requires ${flagName}.`);
   }
-  if (isPlaceholderToken(normalized)) {
+  if (isReservedInputValue(normalized)) {
     throw new Error(`[pumuki][sdd] evidence ${flagName} must not be a placeholder value.`);
   }
   return normalized;
