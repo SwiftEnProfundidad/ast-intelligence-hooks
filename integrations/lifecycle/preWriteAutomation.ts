@@ -116,7 +116,7 @@ export const buildPreWriteAutomationTrace = async (params: {
           warnOnOrAbove: 'INFO',
         },
         scope: {
-          kind: 'workingTree',
+          kind: 'staged',
         },
         auditMode: 'gate',
         dependencies: {
