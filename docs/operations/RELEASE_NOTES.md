@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.150)
+
+- **RuralGo PUMUKI-INC-061:** las notificaciones de bloqueo ya recomiendan `policy reconcile --strict --apply --json` cuando la remediación real requiere converger policy-as-code.
+- **UX sin loop falso:** `EVIDENCE_GATE_BLOCKED` y gaps de skills/policy dejan de mostrar un comando dry-run que no puede desbloquear el repo por sí solo.
+- **Rollout:** publicar `pumuki@6.3.150`, repinear primero RuralGo y revalidar un bloqueo de governance verificando el comando visible.
+
 ### 2026-05-05 (v6.3.145)
 
 - **RuralGo PUMUKI-INC-124:** `skills.ios.critical-test-quality` deja de bloquear tests XCTest de UI automation/performance cuando usan `XCUIApplication`, `XCTMetric` o `measure`.
