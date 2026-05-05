@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.139] - 2026-05-05
+
+### Fixed
+
+- **PUMUKI-INC-060 baseline test gate:** la evidencia TDD/BDD exige ahora un baseline test `passed` por slice antes del evento `red`; si falta o falla, el gate bloquea con `TDD_BASELINE_TEST_REQUIRED` o `TDD_BASELINE_TEST_MUST_PASS`.
+- **Alineación all-severities en evidencia:** los tests de evidencia quedan sincronizados con el contrato publicado de bloqueo por cualquier severidad (`BLOCK` / `BLOCKED`), incluyendo findings `WARN`.
+
 ## [6.3.138] - 2026-05-05
 
 ### Fixed

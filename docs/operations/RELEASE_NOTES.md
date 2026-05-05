@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.139)
+
+- **Baseline tests antes de editar:** Pumuki bloquea cambios TDD/BDD in-scope si cada slice no registra un baseline test pasado antes de RED.
+- **RuralGo INC060:** cierra el gap por el que una regresión de test preexistente en un componente relacionado podía pasar desapercibida antes de iterar.
+- **Rollout:** publicar `pumuki@6.3.139`, repinear RuralGo primero y revalidar `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI`.
+
 ### 2026-05-05 (v6.3.138)
 
 - **Doc-only sin worktree sucio:** cuando el índice solo contiene `*.md` / `*.mdx`, Pumuki restaura `.ai_evidence.json` trackeado a `HEAD` tras refrescar el gate, evitando el fallo del framework `pre-commit` por “files were modified by this hook”.
