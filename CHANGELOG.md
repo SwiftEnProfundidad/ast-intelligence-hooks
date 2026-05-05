@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.138] - 2026-05-05
+
+### Fixed
+
+- **Doc-only evidence hygiene:** en commits documentales, `.ai_evidence.json` trackeado queda restaurado a `HEAD` y no deja modificaciones de hook que hagan fallar integraciones `pre-commit` con `files were modified by this hook`.
+
 ## [6.3.137] - 2026-05-05
 
 ### Fixed

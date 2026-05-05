@@ -4,6 +4,11 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.138)
+
+- **Doc-only sin worktree sucio:** cuando el índice solo contiene `*.md` / `*.mdx`, Pumuki restaura `.ai_evidence.json` trackeado a `HEAD` tras refrescar el gate, evitando el fallo del framework `pre-commit` por “files were modified by this hook”.
+- **RuralGo follow-up:** corrige el bloqueo observado al commitear el feedback `docs/technical/08-validation/refactor/pumuki-integration-feedback.md` después del repin.
+
 ### 2026-05-05 (v6.3.137)
 
 - **Atomicidad compatible con evidencia gestionada:** `.ai_evidence.json` / `.AI_EVIDENCE.json` ya no cuentan como scope o fichero funcional en `git-atomicity`, de modo que un commit de repin no queda bloqueado solo porque el hook refresque evidencia trackeada.
