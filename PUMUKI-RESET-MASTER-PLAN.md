@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-061` / RuralGo: cerrar remediación auto-sugerida no funcional en gate de gobernanza. Estado 2026-05-05: `PUMUKI-INC-060` queda cerrado upstream y adoptado en RuralGo: `pumuki@6.3.143` publicado, PR Pumuki #857/#858 mergeados, PR RuralGo #1910 mergeado en `develop`, feedback externo PR #1911 mergeado, `status`/`doctor` alineados en `6.3.143`, y canary staged con evidencia TDD/BDD caducada bloquea `PRE_WRITE` con `TDD_BDD_EVIDENCE_STALE`. Siguiente bug externo activo: `PUMUKI-INC-061` (`policy reconcile --strict` y `sdd validate --stage=PRE_WRITE` sugeridos no desbloquean el gate de gobernanza ni aportan remediación accionable). |
+| Este plan | [🚧] - `PUMUKI-INC-122` / RuralGo: evitar corrupción de `.pumuki/artifacts/pumuki-evidence-v1.json` cuando dos `pumuki sdd evidence` escriben en paralelo el mismo artefacto. Estado 2026-05-05: el feedback externo de RuralGo en `docs/technical/08-validation/refactor/pumuki-integration-feedback.md` reporta dos High activos nuevos (`PUMUKI-INC-122`, `PUMUKI-INC-123`), por lo que `PUMUKI-INC-061` queda aparcado en stash `wip-pumuki-inc-061-governance-remediation-before-inc122` hasta cerrar el bug High prioritario. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
