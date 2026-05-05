@@ -44,7 +44,7 @@ export const iosEnterpriseRuleSet: RuleSet = [
       'Blocks iOS application or presentation types that must be modified to support new discriminator cases instead of extending behavior through abstractions.',
     severity: 'CRITICAL',
     platform: 'ios',
-    stage: 'PRE_COMMIT',
+    stage: 'PRE_WRITE',
     locked: true,
     scope: {
       include: ['**/*.swift'],
@@ -70,7 +70,7 @@ export const iosEnterpriseRuleSet: RuleSet = [
       'Blocks iOS application or presentation types that depend directly on concrete framework services instead of abstractions.',
     severity: 'CRITICAL',
     platform: 'ios',
-    stage: 'PRE_COMMIT',
+    stage: 'PRE_WRITE',
     locked: true,
     scope: {
       include: ['**/*.swift'],
@@ -96,7 +96,7 @@ export const iosEnterpriseRuleSet: RuleSet = [
       'Blocks iOS application or presentation types that depend on fat protocols instead of a minimal port tailored to the members they actually use.',
     severity: 'CRITICAL',
     platform: 'ios',
-    stage: 'PRE_COMMIT',
+    stage: 'PRE_WRITE',
     locked: true,
     scope: {
       include: ['**/*.swift'],
@@ -122,7 +122,7 @@ export const iosEnterpriseRuleSet: RuleSet = [
       'Blocks iOS application or presentation types whose subtype narrows the contract preconditions and becomes unsafe to substitute for the base protocol or abstraction.',
     severity: 'CRITICAL',
     platform: 'ios',
-    stage: 'PRE_COMMIT',
+    stage: 'PRE_WRITE',
     locked: true,
     scope: {
       include: ['**/*.swift'],
@@ -148,7 +148,7 @@ export const iosEnterpriseRuleSet: RuleSet = [
       'Blocks iOS presentation types that mix session, networking, persistence and navigation responsibilities in the same semantic node.',
     severity: 'CRITICAL',
     platform: 'ios',
-    stage: 'PRE_COMMIT',
+    stage: 'PRE_WRITE',
     locked: true,
     scope: {
       include: ['**/*.swift'],

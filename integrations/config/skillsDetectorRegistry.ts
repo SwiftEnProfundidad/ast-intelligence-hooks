@@ -160,6 +160,21 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.core-data.nsmanagedobject-state-leak',
     ['heuristics.ios.core-data.nsmanagedobject-state-leak.ast']
   ),
+  'skills.ios.no-solid-violations': heuristicDetector('ios.solid', [
+    'heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast',
+    'heuristics.ios.solid.dip.concrete-framework-dependency.ast',
+    'heuristics.ios.solid.ocp.discriminator-switch.ast',
+    'heuristics.ios.solid.isp.fat-protocol-dependency.ast',
+    'heuristics.ios.solid.lsp.narrowed-precondition.ast',
+  ]),
+  'skills.ios.guideline.ios.verificar-que-no-viole-solid-srp-ocp-lsp-isp-dip':
+    heuristicDetector('ios.solid', [
+      'heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast',
+      'heuristics.ios.solid.dip.concrete-framework-dependency.ast',
+      'heuristics.ios.solid.ocp.discriminator-switch.ast',
+      'heuristics.ios.solid.isp.fat-protocol-dependency.ast',
+      'heuristics.ios.solid.lsp.narrowed-precondition.ast',
+    ]),
   'skills.android.no-solid-violations': heuristicDetector('android.solid', [
     'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     'heuristics.android.solid.dip.concrete-framework-dependency.ast',

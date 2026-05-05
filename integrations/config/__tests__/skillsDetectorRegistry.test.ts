@@ -218,6 +218,25 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-nsmanagedobject-state-leak'), [
     'heuristics.ios.core-data.nsmanagedobject-state-leak.ast',
   ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-solid-violations'), [
+    'heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast',
+    'heuristics.ios.solid.dip.concrete-framework-dependency.ast',
+    'heuristics.ios.solid.ocp.discriminator-switch.ast',
+    'heuristics.ios.solid.isp.fat-protocol-dependency.ast',
+    'heuristics.ios.solid.lsp.narrowed-precondition.ast',
+  ]);
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.verificar-que-no-viole-solid-srp-ocp-lsp-isp-dip'
+    ),
+    [
+      'heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast',
+      'heuristics.ios.solid.dip.concrete-framework-dependency.ast',
+      'heuristics.ios.solid.ocp.discriminator-switch.ast',
+      'heuristics.ios.solid.isp.fat-protocol-dependency.ast',
+      'heuristics.ios.solid.lsp.narrowed-precondition.ast',
+    ]
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-globalscope'), [
     'heuristics.android.globalscope.ast',
   ]);

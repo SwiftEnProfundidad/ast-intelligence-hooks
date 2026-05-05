@@ -33,6 +33,11 @@ test('iosEnterpriseRuleSet define reglas locked para plataforma ios', () => {
   assert.equal(byId.get('ios.solid.isp.fat-protocol-dependency')?.when.kind, 'Heuristic');
   assert.equal(byId.get('ios.solid.lsp.narrowed-precondition-substitution')?.when.kind, 'Heuristic');
   assert.equal(byId.get('ios.solid.srp.presentation-mixed-responsibilities')?.when.kind, 'Heuristic');
+  assert.equal(byId.get('ios.solid.ocp.discriminator-switch-branching')?.stage, 'PRE_WRITE');
+  assert.equal(byId.get('ios.solid.dip.concrete-framework-dependency')?.stage, 'PRE_WRITE');
+  assert.equal(byId.get('ios.solid.isp.fat-protocol-dependency')?.stage, 'PRE_WRITE');
+  assert.equal(byId.get('ios.solid.lsp.narrowed-precondition-substitution')?.stage, 'PRE_WRITE');
+  assert.equal(byId.get('ios.solid.srp.presentation-mixed-responsibilities')?.stage, 'PRE_WRITE');
   assert.equal(byId.get('ios.canary-001.presentation-mixed-responsibilities')?.when.kind, 'Heuristic');
   assert.equal(byId.get('ios.tdd.domain-changes-require-tests')?.when.kind, 'All');
   assert.equal(byId.get('ios.no-completion-handlers-outside-bridges')?.when.kind, 'Heuristic');
