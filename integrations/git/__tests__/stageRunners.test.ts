@@ -1029,9 +1029,9 @@ test('runPreCommitStage bloquea con causa explícita si no puede restagear evide
     assert.equal(exitCode, 1);
     assert.equal(blocked.length, 1);
     assert.equal(blocked[0]?.stage, 'PRE_COMMIT');
-    assert.equal(blocked[0]?.causeCode, 'SKILLS_SKILLS_BACKEND_AVOID_EXPLICIT_ANY');
-    assert.match(blocked[0]?.causeMessage ?? '', /explicit any/i);
-    assert.match(blocked[0]?.remediation ?? '', /Corrige la causa del bloqueo/i);
+    assert.equal(blocked[0]?.causeCode, 'TDD_BDD_EVIDENCE_STALE');
+    assert.match(blocked[0]?.causeMessage ?? '', /TDD\/BDD evidence is stale/i);
+    assert.match(blocked[0]?.remediation ?? '', /TDD\/BDD/i);
   });
 });
 

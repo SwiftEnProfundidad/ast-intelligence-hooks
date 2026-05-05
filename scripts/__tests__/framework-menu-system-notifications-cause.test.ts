@@ -51,6 +51,25 @@ test('resolveBlockedCauseSummary explica bloqueos de tracking enriquecidos', () 
   assert.doesNotMatch(result, /Evidence AI gate status/i);
 });
 
+test('resolveBlockedCauseSummary prioriza TDD/BDD sobre tracking enriquecido', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 2,
+      causeCode: 'TDD_BDD_SCENARIO_FILE_MISSING',
+      causeMessage:
+        'TDD/BDD evidence scenario file is missing. code=TDD_BDD_SCENARIO_FILE_MISSING active_entries=RGO-1900-01@L53 tracking_source=docs/RURALGO_SEGUIMIENTO.md',
+    },
+    'TDD_BDD_SCENARIO_FILE_MISSING'
+  );
+
+  assert.match(result, /escenario/i);
+  assert.match(result, /TDD\/BDD/i);
+  assert.doesNotMatch(result, /tracking bloqueado/i);
+  assert.doesNotMatch(result, /RGO-1900-01/);
+});
+
 test('resolveBlockedCauseSummary traduce el bloqueo umbrella de evidencia', () => {
   const result = resolveBlockedCauseSummary(
     {
