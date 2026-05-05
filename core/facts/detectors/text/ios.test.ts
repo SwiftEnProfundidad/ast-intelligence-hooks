@@ -376,10 +376,33 @@ final class SyncTests: XCTestCase {
   }
 }
 `;
+  const brownfieldCompatibleUnitTest = `
+import XCTest
+
+final class LoginModelTests: XCTestCase {
+  func test_submit_validCredentials_storesSession() async throws {
+    let (sut, repository) = makeSUT()
+    try await sut.submit()
+    XCTAssertEqual(repository.receivedRequests.count, 1)
+  }
+
+  private func makeSUT(
+    file: StaticString = #filePath,
+    line: UInt = #line
+  ) -> (LoginModel, AuthRepositorySpy) {
+    let repository = AuthRepositorySpy()
+    let sut = LoginModel(repository: repository)
+    trackForMemoryLeaks(sut, testCase: self, file: file, line: line)
+    trackForMemoryLeaks(repository, testCase: self, file: file, line: line)
+    return (sut, repository)
+  }
+}
+`;
 
   assert.equal(hasSwiftLegacyXCTestImportUsage(unitTest), true);
   assert.equal(hasSwiftLegacyXCTestImportUsage(uiTest), false);
   assert.equal(hasSwiftLegacyXCTestImportUsage(performanceTest), false);
+  assert.equal(hasSwiftLegacyXCTestImportUsage(brownfieldCompatibleUnitTest), false);
 });
 
 test('hasSwiftLegacySwiftUiObservableWrapperUsage detecta @StateObject/@ObservedObject legacy', () => {
@@ -477,10 +500,33 @@ final class LoginUITests: XCTestCase {
   }
 }
 `;
+  const brownfieldCompatibleSuite = `
+import XCTest
+
+final class LoginModelTests: XCTestCase {
+  func test_submit_validCredentials_storesSession() async throws {
+    let (sut, repository) = makeSUT()
+    try await sut.submit()
+    XCTAssertEqual(repository.receivedRequests.count, 1)
+  }
+
+  private func makeSUT(
+    file: StaticString = #filePath,
+    line: UInt = #line
+  ) -> (LoginModel, AuthRepositorySpy) {
+    let repository = AuthRepositorySpy()
+    let sut = LoginModel(repository: repository)
+    trackForMemoryLeaks(sut, testCase: self, file: file, line: line)
+    trackForMemoryLeaks(repository, testCase: self, file: file, line: line)
+    return (sut, repository)
+  }
+}
+`;
 
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(legacySuite), true);
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(mixedSuite), false);
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(uiSuite), false);
+  assert.equal(hasSwiftModernizableXCTestSuiteUsage(brownfieldCompatibleSuite), false);
 });
 
 test('hasSwiftMixedTestingFrameworksUsage detecta mezcla XCTestCase y Testing/@Test', () => {
@@ -547,6 +593,46 @@ final class BuyerCommerceUISmokeTests: XCTestCase {
 
   assert.equal(hasSwiftXCTestAssertionUsage(uiSource), false);
   assert.equal(hasSwiftXCTUnwrapUsage(`${uiSource}\nlet value = try XCTUnwrap(optional)`), false);
+});
+
+test('hasSwiftXCTestAssertionUsage excluye XCTest brownfield compatible y bloquea suites sin contrato de calidad', () => {
+  const compatibleSource = `
+import XCTest
+
+final class LoginModelTests: XCTestCase {
+  func test_submit_validCredentials_storesSession() async throws {
+    let (sut, repository) = makeSUT()
+    try await sut.submit()
+    XCTAssertEqual(repository.receivedRequests.count, 1)
+    let session = try XCTUnwrap(repository.savedSession)
+    XCTAssertEqual(session.userId, "buyer-1")
+  }
+
+  private func makeSUT(
+    file: StaticString = #filePath,
+    line: UInt = #line
+  ) -> (LoginModel, AuthRepositorySpy) {
+    let repository = AuthRepositorySpy()
+    let sut = LoginModel(repository: repository)
+    trackForMemoryLeaks(sut, testCase: self, file: file, line: line)
+    trackForMemoryLeaks(repository, testCase: self, file: file, line: line)
+    return (sut, repository)
+  }
+}
+`;
+  const missingQualityContract = `
+import XCTest
+
+final class LoginModelTests: XCTestCase {
+  func test_submit_validCredentials_storesSession() async throws {
+    XCTAssertEqual(repository.receivedRequests.count, 1)
+  }
+}
+`;
+
+  assert.equal(hasSwiftXCTestAssertionUsage(compatibleSource), false);
+  assert.equal(hasSwiftXCTUnwrapUsage(compatibleSource), false);
+  assert.equal(hasSwiftXCTestAssertionUsage(missingQualityContract), true);
 });
 
 test('hasSwiftXCTUnwrapUsage detecta XCTUnwrap real y evita strings', () => {

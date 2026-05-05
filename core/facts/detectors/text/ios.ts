@@ -730,12 +730,40 @@ const hasSwiftLegacyXCTestMethodUsage = (source: string): boolean => {
     .length > 0;
 };
 
+const hasSwiftMakeSutUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\bmakeSUT\s*\(/);
+};
+
+const hasSwiftMemoryLeakTrackingUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\btrackForMemoryLeaks\s*\(/);
+};
+
+const hasSwiftBrownfieldCompatibleXCTestUsage = (source: string): boolean => {
+  if (!hasSwiftXCTestImportUsage(source) || !hasSwiftXCTestCaseSubclassUsage(source)) {
+    return false;
+  }
+
+  if (!hasSwiftLegacyXCTestMethodUsage(source)) {
+    return false;
+  }
+
+  if (hasSwiftTestingImportUsage(source) || hasSwiftTestingSuiteAttributeUsage(source)) {
+    return false;
+  }
+
+  return hasSwiftMakeSutUsage(source) && hasSwiftMemoryLeakTrackingUsage(source);
+};
+
 export const hasSwiftLegacyXCTestImportUsage = (source: string): boolean => {
   if (!hasSwiftXCTestImportUsage(source)) {
     return false;
   }
 
   if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
+    return false;
+  }
+
+  if (hasSwiftBrownfieldCompatibleXCTestUsage(source)) {
     return false;
   }
 
@@ -771,6 +799,10 @@ export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
     return false;
   }
 
+  if (hasSwiftBrownfieldCompatibleXCTestUsage(source)) {
+    return false;
+  }
+
   return (
     collectSwiftRegexLines(source, /\bXCTAssert[A-Za-z0-9_]*\s*\(/).length > 0 ||
     collectSwiftRegexLines(source, /\bXCTFail\s*\(/).length > 0
@@ -779,6 +811,10 @@ export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
 
 export const hasSwiftXCTUnwrapUsage = (source: string): boolean => {
   if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
+    return false;
+  }
+
+  if (hasSwiftBrownfieldCompatibleXCTestUsage(source)) {
     return false;
   }
 
