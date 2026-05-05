@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - Convertir `ios-swiftui-expert-guidelines` en cobertura AST/nodos real sobre el snapshot `ios-swiftui-modernization-v2`, cerrando la deuda declarativa iOS restante que el inventario actual todavía mantiene fuera de AUTO. La tarea `stageRunners` ya quedó validada con `51/51 pass` y pasa a `✅` en el historial del plan.` |
+| Este plan | `[🚧] - PUMUKI-INC-059 / RuralGo: endurecer PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI para que cualquier finding de skills/reglas AST Intelligence bloquee en todas las severidades (`CRITICAL`, `HIGH/ERROR`, `MEDIUM/WARN`, `LOW/INFO`) y ningún perfil `skills.policy`, hard-mode `critical-high` o modo `advisory` rebaje el gate. Evidencia local inicial: suite dirigida `213/213 pass`; replay RuralGo con binario local en `/private/tmp/R_GO__pumuki-inc-059-061-revalidation`: PRE_WRITE `findings_count=115`, `blocking_findings_count=115`, `gate_exit_code=1`; PRE_COMMIT `findings_count=118`, `blocking_findings_count=118`, `gate_exit_code=1`, con hallazgos iOS y Android visibles.` |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
