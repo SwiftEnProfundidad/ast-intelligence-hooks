@@ -136,6 +136,33 @@ test('evaluateGitAtomicity sugiere split de staging cuando supera maxScopes', as
   );
 });
 
+test('evaluateGitAtomicity ignora evidencia gestionada al contar scopes staged', async () => {
+  await withAtomicityEnv(
+    {
+      PUMUKI_GIT_ATOMICITY_ENABLED: '1',
+      PUMUKI_GIT_ATOMICITY_MAX_FILES: '10',
+      PUMUKI_GIT_ATOMICITY_MAX_SCOPES: '2',
+    },
+    async () => {
+      await withTempRepo(async (repoRoot) => {
+        writeFileSync(join(repoRoot, 'package.json'), '{"name":"fixture"}\n', 'utf8');
+        writeFileSync(join(repoRoot, 'package-lock.json'), '{"lockfileVersion":3}\n', 'utf8');
+        writeFileSync(join(repoRoot, '.ai_evidence.json'), '{"version":"2.1"}\n', 'utf8');
+        runGit(repoRoot, ['add', 'package.json', 'package-lock.json', '.ai_evidence.json']);
+
+        const result = evaluateGitAtomicity({
+          repoRoot,
+          stage: 'PRE_COMMIT',
+        });
+
+        assert.equal(result.enabled, true);
+        assert.equal(result.allowed, true);
+        assert.equal(result.violations.length, 0);
+      }, { tempPrefix: 'pumuki-git-atomicity-evidence-scope-' });
+    }
+  );
+});
+
 test('evaluateGitAtomicity sugiere slices concretos cuando supera maxFiles en PRE_COMMIT', async () => {
   await withAtomicityEnv(
     {

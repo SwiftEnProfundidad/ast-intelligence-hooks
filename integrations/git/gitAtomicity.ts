@@ -31,6 +31,7 @@ type GitAtomicityConfig = {
 const ATOMICITY_CONFIG_FILE = '.pumuki/git-atomicity.json';
 const DEFAULT_COMMIT_PATTERN =
   '^(feat|fix|chore|refactor|docs|test|perf|build|ci|revert)(\\([^)]+\\))?:\\s.+$';
+const MANAGED_EVIDENCE_PATHS = new Set(['.ai_evidence.json', '.AI_EVIDENCE.json']);
 
 const defaultConfig: GitAtomicityConfig = {
   enabled: true,
@@ -138,6 +139,9 @@ const parseLines = (value: string): ReadonlyArray<string> =>
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
+
+const isManagedEvidencePath = (path: string): boolean =>
+  MANAGED_EVIDENCE_PATHS.has(path.replace(/\\/g, '/').trim());
 
 const toErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
@@ -288,7 +292,7 @@ export const evaluateGitAtomicity = (params: {
     stage: params.stage,
     fromRef: params.fromRef,
     toRef: params.toRef,
-  });
+  }).filter((path) => !isManagedEvidencePath(path));
   const atomicSlicesRemediation = buildAtomicSlicesRemediation({
     git,
     repoRoot,
