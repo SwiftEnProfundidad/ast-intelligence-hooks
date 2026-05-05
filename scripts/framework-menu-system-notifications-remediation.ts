@@ -41,7 +41,7 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   TRACKING_CANONICAL_IN_PROGRESS_INVALID: TRACKING_BLOCKED_REMEDIATION,
   TRACKING_CANONICAL_SOURCE_CONFLICT: TRACKING_BLOCKED_REMEDIATION,
   ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
-    'Ejecuta `pumuki policy reconcile --strict --json` y revalida antes de continuar.',
+    'Ejecuta `pumuki policy reconcile --strict --apply --json` y revalida antes de continuar.',
 };
 
 const BLOCKED_REMEDIATION_MAX_LENGTH_BY_VARIANT: Readonly<Record<BlockedRemediationVariant, number>> = {

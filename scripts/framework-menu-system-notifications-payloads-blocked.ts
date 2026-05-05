@@ -64,7 +64,7 @@ export const resolveBlockedCommand = (params: {
     case 'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE':
       return `${buildPinnedPumukiCommand({
         repoRoot: params.repoRoot,
-        executableAndArgs: 'pumuki policy reconcile --strict --json',
+        executableAndArgs: 'pumuki policy reconcile --strict --apply --json',
       })} && ${buildPinnedPumukiCommand({
         repoRoot: params.repoRoot,
         executableAndArgs: `pumuki sdd validate --stage=${params.event.stage} --json`,
@@ -79,7 +79,7 @@ export const resolveBlockedCommand = (params: {
     case 'EVIDENCE_GATE_BLOCKED':
       return `${buildPinnedPumukiCommand({
         repoRoot: params.repoRoot,
-        executableAndArgs: 'pumuki policy reconcile --strict --json',
+        executableAndArgs: 'pumuki policy reconcile --strict --apply --json',
       })} && ${buildPinnedPumukiCommand({
         repoRoot: params.repoRoot,
         executableAndArgs: `pumuki sdd validate --stage=${params.event.stage} --json`,
