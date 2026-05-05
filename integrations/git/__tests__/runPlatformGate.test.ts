@@ -3934,6 +3934,176 @@ final class LoginUseCaseTests: XCTestCase {
   );
 });
 
+test('runPlatformGate permite remediation staged que elimina findings soportados aunque el enforcement global siga incompleto', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const repoRoot = '/repo/root';
+  const stagedPath = 'apps/ios/Presentation/BuyerProfilePresentation.swift';
+  const git = buildGitStub(repoRoot);
+  git.runGit = (args) => {
+    const command = args.join(' ');
+    if (command === 'diff --cached --name-only') {
+      return stagedPath;
+    }
+    if (command === `show HEAD:${stagedPath}`) {
+      return 'let greeting = userName!';
+    }
+    return '';
+  };
+  const evidence = buildEvidenceStub();
+  const stagedFacts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileChange',
+      path: stagedPath,
+      changeType: 'modified',
+      source: 'git:staged',
+    },
+    {
+      kind: 'FileContent',
+      path: stagedPath,
+      content: 'if let userName { print(userName) }',
+      source: 'git:staged',
+    },
+  ];
+  const iosBundles = [
+    'ios-guidelines',
+    'ios-concurrency-guidelines',
+    'ios-swiftui-expert-guidelines',
+    'ios-swift-testing-guidelines',
+    'ios-core-data-guidelines',
+  ].map((name, index) => ({
+    name,
+    version: '1.0.0',
+    source: 'test',
+    hash: String(index).repeat(64).slice(0, 64).padEnd(64, '0'),
+    rules: [],
+  }));
+  let emitted:
+    | {
+      gateOutcome: 'PASS' | 'WARN' | 'BLOCK';
+      findings: ReadonlyArray<Finding>;
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope: { kind: 'staged' },
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      resolveFactsForGateScope: async () => stagedFacts,
+      evaluatePlatformGateFindings: ({ facts }) => {
+        const content = facts
+          .filter((fact): fact is Extract<Fact, { kind: 'FileContent' }> => fact.kind === 'FileContent')
+          .map((fact) => fact.content)
+          .join('\n');
+        const previousFindings: ReadonlyArray<Finding> = content.includes('userName!')
+          ? [
+            {
+              ruleId: 'skills.ios.no-force-unwrap',
+              severity: 'CRITICAL',
+              code: 'SKILLS_IOS_NO_FORCE_UNWRAP',
+              message: 'Force unwrap is not allowed.',
+              filePath: stagedPath,
+              matchedBy: 'Heuristic',
+              source: 'heuristics:ast',
+            },
+          ]
+          : [];
+        return {
+          detectedPlatforms: {
+            ios: { detected: true, confidence: 'HIGH' },
+          },
+          skillsRuleSet: {
+            rules: [
+              createSkillRule({
+                id: 'skills.ios.no-force-unwrap',
+                severity: 'CRITICAL',
+                platform: 'ios',
+              }),
+            ],
+            activeBundles: iosBundles,
+            mappedHeuristicRuleIds: new Set(['heuristics.ios.force-unwrap.ast']),
+            requiresHeuristicFacts: true,
+            unsupportedAutoRuleIds: [],
+            unsupportedDetectorRuleIds: ['skills.ios.guideline.declarative-only'],
+            registryCoverage: {
+              contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+              stage: 'PRE_COMMIT',
+              registryTotals: {
+                total: 2,
+                auto: 1,
+                declarative: 1,
+              },
+              stageApplicableAutoRuleIds: ['skills.ios.no-force-unwrap'],
+              declarativeRuleIds: ['skills.ios.guideline.declarative-only'],
+              excludedDeclarativeReason: 'declarative-only',
+            },
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: facts.length,
+            filesScanned: 1,
+            rulesTotal: 1,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 1,
+            projectRules: 0,
+            matchedRules: previousFindings.length,
+            unmatchedRules: previousFindings.length === 0 ? 1 : 0,
+            unevaluatedRules: 0,
+            activeRuleIds: ['skills.ios.no-force-unwrap'],
+            evaluatedRuleIds: ['skills.ios.no-force-unwrap'],
+            matchedRuleIds: previousFindings.length > 0 ? ['skills.ios.no-force-unwrap'] : [],
+            unmatchedRuleIds: previousFindings.length === 0 ? ['skills.ios.no-force-unwrap'] : [],
+            unevaluatedRuleIds: [],
+          },
+          findings: previousFindings,
+        };
+      },
+      evaluateGate: (findingsArg) => evaluateGateFromFindings(findingsArg, policy),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveActiveGateWaiver: () => ({
+        kind: 'none',
+        path: '.pumuki/waivers/gate.json',
+      }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emitted = {
+          gateOutcome: paramsArg.gateOutcome,
+          findings: paramsArg.findings,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emitted?.gateOutcome, 'PASS');
+  assert.equal(
+    emitted?.findings.some((finding) => finding.code === 'REMEDIATION_PROGRESS_ALLOWED'),
+    true
+  );
+  assert.equal(
+    emitted?.findings.some(
+      (finding) =>
+        finding.code === 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_REMEDIATION_ADVISORY' &&
+        finding.severity === 'INFO'
+    ),
+    true
+  );
+});
+
 test('runPlatformGate permite continuar cuando existe waiver de gate válido para stage bloqueante', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_PUSH',
