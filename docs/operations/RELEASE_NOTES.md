@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-05 (v6.3.140)
+
+- **PRE_PUSH compatible con ramas largas:** la atomicidad se valida por commit individual, no por diff agregado de rama.
+- **Skills sin falsos positivos de metadata:** el diff de release queda con `hardcoded-values`/`magic-numbers` a `0` para ficheros cambiados.
+- **Rollout:** publicar `pumuki@6.3.140`, repinear primero RuralGo y repetir validaciones `status`, `doctor` y hooks gestionados.
+
 ### 2026-05-05 (v6.3.139)
 
 - **Baseline tests antes de editar:** Pumuki bloquea cambios TDD/BDD in-scope si cada slice no registra un baseline test pasado antes de RED.

@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.140] - 2026-05-05
+
+### Fixed
+
+- **PRE_PUSH atomicity por commit:** el guard de atomicidad evalúa cada commit del rango de push de forma independiente, evitando que una rama formada por commits atómicos quede bloqueada por el diff agregado.
+- **Falsos positivos de metadata:** `hardcoded-values` y `magic-numbers` dejan de bloquear literales internos de policy/evidence/analytics y constantes estándar, manteniendo la detección real de configuración hardcoded.
+
 ## [6.3.139] - 2026-05-05
 
 ### Fixed
