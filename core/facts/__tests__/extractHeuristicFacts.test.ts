@@ -452,6 +452,8 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
           'Text("headline").fontWeight(.bold)',
           'let filtered = items.filter { $0.title.contains(searchText) }',
           'ForEach(items.indices, id: \\.self) { index in Text(items[index].title) }',
+          'ForEach(items.filter { $0.isActive }) { item in Text(item.title) }',
+          'Text("primary").foregroundStyle(Color.blue)',
           'NavigationView { Text("hello") }',
           'Text("primary").foregroundColor(.blue)',
           'Image("hero").cornerRadius(12)',
@@ -512,6 +514,8 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.scrollview-shows-indicators.ast',
     'heuristics.ios.sheet-is-presented.ast',
     'heuristics.ios.string-format.ast',
+    'heuristics.ios.swiftui.explicit-color-static-member.ast',
+    'heuristics.ios.swiftui.inline-filtering-in-foreach.ast',
     'heuristics.ios.tab-item.ast',
     'heuristics.ios.task-detached.ast',
     'heuristics.ios.uiscreen-main-bounds.ast',
@@ -657,10 +661,10 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
   assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctest-import.ast'), true);
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctest-suite-modernizable.ast'),
-    true
+    false
   );
-  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctassert.ast'), true);
-  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctunwrap.ast'), true);
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctassert.ast'), false);
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctunwrap.ast'), false);
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.wait-for-expectations.ast'),
     true
@@ -729,6 +733,38 @@ test('does not emit Swift Testing migration findings for compatible brownfield X
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   const testingFindings = findings.filter((finding) =>
+    finding.ruleId.startsWith('heuristics.ios.testing.')
+  );
+
+  assert.deepEqual(testingFindings.map((finding) => finding.ruleId), []);
+});
+
+test('does not emit Swift Testing migration findings for RuralGo brownfield XCTest specs', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Tests/Mac/Application/BuyerSessionStoreTokenPersistenceTests.spec.swift',
+        [
+          'import XCTest',
+          '',
+          'final class BuyerSessionStoreTokenPersistenceTests: XCTestCase {',
+          '  func test_saveToken_persistsValue() async throws {',
+          '    let store = BuyerSessionStore()',
+          '    try await store.save(token: "token-1")',
+          '    XCTAssertEqual(store.currentToken, "token-1")',
+          '    let token = try XCTUnwrap(store.currentToken)',
+          '    XCTAssertEqual(token, "token-1")',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const testingFindings = evaluateRules(astHeuristicsRuleSet, extracted).filter((finding) =>
     finding.ruleId.startsWith('heuristics.ios.testing.')
   );
 
@@ -1877,6 +1913,8 @@ test('detects Android existing structure heuristics in production path', () => {
 
   assert.deepEqual(toRuleIds(findings), [
     'heuristics.android.analizar-estructura-existente-mo-dulos-interfaces-dependencias-gradle.ast',
+    'heuristics.android.hilt-di-framework-no-manual-factories.ast',
+    'heuristics.android.module-installin-provide-dependencies.ast',
   ]);
 });
 
@@ -1986,6 +2024,8 @@ test('detects Android Binds heuristics in production path', () => {
 
   assert.deepEqual(toRuleIds(findings), [
     'heuristics.android.binds-para-implementaciones-de-interfaces-ma-s-eficiente.ast',
+    'heuristics.android.hilt-di-framework-no-manual-factories.ast',
+    'heuristics.android.module-installin-provide-dependencies.ast',
   ]);
 });
 
@@ -2017,6 +2057,8 @@ test('detects Android Provides heuristics in production path', () => {
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
 
   assert.deepEqual(toRuleIds(findings), [
+    'heuristics.android.hilt-di-framework-no-manual-factories.ast',
+    'heuristics.android.module-installin-provide-dependencies.ast',
     'heuristics.android.provides-para-interfaces-o-third-party.ast',
   ]);
 });

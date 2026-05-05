@@ -3,7 +3,7 @@ import test from 'node:test';
 import { androidRules } from './android';
 
 test('androidRules define reglas heurísticas locked para plataforma android', () => {
-  assert.equal(androidRules.length, 76);
+  assert.equal(androidRules.length, 82);
 
   const ids = androidRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -39,9 +39,15 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
     'heuristics.android.single-source-of-truth-viewmodel-es-la-fuente.ast',
   'heuristics.android.skip-recomposition-para-metros-inmutables-o-estables.ast',
   'heuristics.android.stability-composables-estables-recomponen-menos.ast',
-  'heuristics.android.string-formatting-1-s-2-d-para-argumentos.ast',
+    'heuristics.android.string-formatting-1-s-2-d-para-argumentos.ast',
     'heuristics.android.binds-para-implementaciones-de-interfaces-ma-s-eficiente.ast',
     'heuristics.android.provides-para-interfaces-o-third-party.ast',
+    'heuristics.android.hilt-di-framework-no-manual-factories.ast',
+    'heuristics.android.hiltandroidapp-application-class.ast',
+    'heuristics.android.androidentrypoint-activity-fragment-viewmodel.ast',
+    'heuristics.android.inject-constructor-constructor-injection.ast',
+    'heuristics.android.module-installin-provide-dependencies.ast',
+    'heuristics.android.viewmodelscoped-para-dependencias-de-viewmodel.ast',
     'heuristics.android.workmanager-androidx-work-work-runtime-ktx.ast',
     'heuristics.android.version-catalogs-libs-versions-toml-para-dependencias.ast',
     'heuristics.android.workmanager-background-tasks.ast',
@@ -178,6 +184,30 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
   assert.equal(
     byId.get('heuristics.android.provides-para-interfaces-o-third-party.ast')?.then.code,
     'HEURISTICS_ANDROID_PROVIDES_PARA_INTERFACES_O_THIRD_PARTY_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.hilt-di-framework-no-manual-factories.ast')?.then.code,
+    'HEURISTICS_ANDROID_HILT_DI_FRAMEWORK_NO_MANUAL_FACTORIES_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.hiltandroidapp-application-class.ast')?.then.code,
+    'HEURISTICS_ANDROID_HILTANDROIDAPP_APPLICATION_CLASS_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.androidentrypoint-activity-fragment-viewmodel.ast')?.then.code,
+    'HEURISTICS_ANDROID_ANDROIDENTRYPOINT_ACTIVITY_FRAGMENT_VIEWMODEL_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.inject-constructor-constructor-injection.ast')?.then.code,
+    'HEURISTICS_ANDROID_INJECT_CONSTRUCTOR_CONSTRUCTOR_INJECTION_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.module-installin-provide-dependencies.ast')?.then.code,
+    'HEURISTICS_ANDROID_MODULE_INSTALLIN_PROVIDE_DEPENDENCIES_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.viewmodelscoped-para-dependencias-de-viewmodel.ast')?.then.code,
+    'HEURISTICS_ANDROID_VIEWMODELSCOPED_PARA_DEPENDENCIAS_DE_VIEWMODEL_AST'
   );
   assert.equal(
     byId.get('heuristics.android.workmanager-androidx-work-work-runtime-ktx.ast')?.then.code,

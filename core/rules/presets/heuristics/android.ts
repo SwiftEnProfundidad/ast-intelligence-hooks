@@ -664,6 +664,116 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.hilt-di-framework-no-manual-factories.ast',
+    description: 'Detects Hilt DI framework usage in Android production Kotlin files.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.hilt-di-framework-no-manual-factories.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Hilt DI framework usage instead of manual factories in Android production code.',
+      code: 'HEURISTICS_ANDROID_HILT_DI_FRAMEWORK_NO_MANUAL_FACTORIES_AST',
+    },
+  },
+  {
+    id: 'heuristics.android.hiltandroidapp-application-class.ast',
+    description: 'Detects @HiltAndroidApp usage in Android production Kotlin files.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.hiltandroidapp-application-class.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected @HiltAndroidApp usage in Android production code.',
+      code: 'HEURISTICS_ANDROID_HILTANDROIDAPP_APPLICATION_CLASS_AST',
+    },
+  },
+  {
+    id: 'heuristics.android.androidentrypoint-activity-fragment-viewmodel.ast',
+    description: 'Detects @AndroidEntryPoint usage in Android production Kotlin files.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.androidentrypoint-activity-fragment-viewmodel.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected @AndroidEntryPoint usage in Android production code where Activity, Fragment, and ViewModel injection boundaries should remain explicit.',
+      code: 'HEURISTICS_ANDROID_ANDROIDENTRYPOINT_ACTIVITY_FRAGMENT_VIEWMODEL_AST',
+    },
+  },
+  {
+    id: 'heuristics.android.inject-constructor-constructor-injection.ast',
+    description: 'Detects @Inject constructor usage in Android production Kotlin files.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.inject-constructor-constructor-injection.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected @Inject constructor usage in Android production code.',
+      code: 'HEURISTICS_ANDROID_INJECT_CONSTRUCTOR_CONSTRUCTOR_INJECTION_AST',
+    },
+  },
+  {
+    id: 'heuristics.android.module-installin-provide-dependencies.ast',
+    description: 'Detects @Module + @InstallIn usage in Android production Kotlin files.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.module-installin-provide-dependencies.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected @Module + @InstallIn usage in Android production code.',
+      code: 'HEURISTICS_ANDROID_MODULE_INSTALLIN_PROVIDE_DEPENDENCIES_AST',
+    },
+  },
+  {
+    id: 'heuristics.android.viewmodelscoped-para-dependencias-de-viewmodel.ast',
+    description: 'Detects @ViewModelScoped usage in Android production Kotlin files.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.viewmodelscoped-para-dependencias-de-viewmodel.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected @ViewModelScoped usage in Android production code.',
+      code: 'HEURISTICS_ANDROID_VIEWMODELSCOPED_PARA_DEPENDENCIAS_DE_VIEWMODEL_AST',
+    },
+  },
+  {
     id: 'heuristics.android.workmanager-androidx-work-work-runtime-ktx.ast',
     description: 'Detects WorkManager dependency usage in Android build files.',
     severity: 'WARN',

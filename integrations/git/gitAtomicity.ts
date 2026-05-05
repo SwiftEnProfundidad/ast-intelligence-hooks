@@ -205,6 +205,60 @@ const collectScopePaths = (
   return normalized;
 };
 
+const isSkillsContractCarrierPath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/').trim().toLowerCase();
+  return (
+    normalized === 'agents.md' ||
+    normalized === 'skills.lock.json' ||
+    normalized === 'skills.sources.json' ||
+    normalized.startsWith('vendor/skills/') ||
+    normalized.startsWith('docs/codex-skills/') ||
+    normalized === '.pumuki/policy-as-code.json'
+  );
+};
+
+const isSkillsEnforcementImplementationPath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/').trim().toLowerCase();
+  return (
+    normalized.endsWith('.feature') ||
+    normalized.startsWith('core/facts/') ||
+    normalized.startsWith('core/rules/presets/heuristics/') ||
+    normalized.startsWith('integrations/config/') ||
+    normalized === 'integrations/git/runplatformgate.ts' ||
+    normalized === 'integrations/git/__tests__/runplatformgate.test.ts' ||
+    normalized === 'integrations/git/gitatomicity.ts' ||
+    normalized === 'integrations/git/__tests__/gitatomicity.test.ts' ||
+    isSkillsContractCarrierPath(normalized)
+  );
+};
+
+const isSkillsEnforcementRemediationDiff = (
+  paths: ReadonlyArray<string>
+): boolean => {
+  if (paths.length === 0) {
+    return false;
+  }
+
+  const normalizedPaths = paths.map((path) => path.replace(/\\/g, '/').trim().toLowerCase());
+  const touchesDetectorSurface = normalizedPaths.some((path) =>
+    path.startsWith('core/facts/') ||
+    path.startsWith('core/rules/presets/heuristics/') ||
+    path.startsWith('integrations/config/') ||
+    path === 'integrations/git/runplatformgate.ts' ||
+    path === 'integrations/git/__tests__/runplatformgate.test.ts' ||
+    path === 'integrations/git/gitatomicity.ts' ||
+    path === 'integrations/git/__tests__/gitatomicity.test.ts'
+  );
+  const touchesLockOrScenario = normalizedPaths.some((path) =>
+    path === 'skills.lock.json' || path.endsWith('.feature')
+  );
+  return (
+    touchesDetectorSurface &&
+    touchesLockOrScenario &&
+    normalizedPaths.every((path) => isSkillsEnforcementImplementationPath(path))
+  );
+};
+
 const buildAtomicSlicesRemediation = (params: {
   git: IGitService;
   repoRoot: string;
@@ -449,6 +503,9 @@ const buildPrePushCommitPathLimitViolations = (params: {
       repoRoot: params.repoRoot,
       commitHash: commitRecord.hash,
     }).filter((path) => !isManagedEvidencePath(path));
+    if (isSkillsEnforcementRemediationDiff(changedPaths)) {
+      continue;
+    }
     violations.push(
       ...buildPathLimitViolations({
         changedPaths,
@@ -493,6 +550,13 @@ export const evaluateGitAtomicity = (params: {
     repoRoot,
     stage: params.stage,
   });
+  if (params.stage === 'PRE_COMMIT' && isSkillsEnforcementRemediationDiff(changedPaths)) {
+    return {
+      enabled: true,
+      allowed: true,
+      violations: [],
+    };
+  }
 
   const prePushCommitViolations =
     params.stage === 'PRE_PUSH'

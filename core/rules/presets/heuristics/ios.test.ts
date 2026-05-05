@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 42);
+  assert.equal(iosRules.length, 44);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -25,6 +25,8 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.legacy-swiftui-observable-wrapper.ast',
     'heuristics.ios.passed-value-state-wrapper.ast',
     'heuristics.ios.foreach-indices.ast',
+    'heuristics.ios.swiftui.inline-filtering-in-foreach.ast',
+    'heuristics.ios.swiftui.explicit-color-static-member.ast',
     'heuristics.ios.contains-user-filter.ast',
     'heuristics.ios.geometryreader.ast',
     'heuristics.ios.font-weight-bold.ast',
@@ -83,6 +85,14 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.foreach-indices.ast')?.then.code,
     'HEURISTICS_IOS_FOREACH_INDICES_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.inline-filtering-in-foreach.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_INLINE_FILTERING_IN_FOREACH_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.explicit-color-static-member.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_EXPLICIT_COLOR_STATIC_MEMBER_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.contains-user-filter.ast')?.then.code,

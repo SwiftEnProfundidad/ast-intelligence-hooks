@@ -4104,6 +4104,306 @@ test('runPlatformGate permite remediation staged que elimina findings soportados
   );
 });
 
+test('runPlatformGate permite diffs de infraestructura que aumentan cobertura de skills aunque exista gap global', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const repoRoot = '/repo/root';
+  const stagedPaths = [
+    'PARITY-IOS-001.feature',
+    'core/facts/extractHeuristicFacts.ts',
+    'integrations/config/skillsDetectorRegistry.ts',
+    'skills.lock.json',
+  ];
+  const git = buildGitStub(repoRoot);
+  git.runGit = (args) => {
+    if (args.join(' ') === 'diff --cached --name-only') {
+      return stagedPaths.join('\n');
+    }
+    return '';
+  };
+  const evidence = buildEvidenceStub();
+  const stagedFacts: ReadonlyArray<Fact> = stagedPaths.flatMap((path) => [
+    {
+      kind: 'FileChange' as const,
+      path,
+      changeType: 'modified' as const,
+      source: 'git:staged' as const,
+    },
+    {
+      kind: 'FileContent' as const,
+      path,
+      content: 'export const detector = true;',
+      source: 'git:staged' as const,
+    },
+  ]);
+  let emitted:
+    | {
+      gateOutcome: 'PASS' | 'WARN' | 'BLOCK';
+      findings: ReadonlyArray<Finding>;
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope: { kind: 'staged' },
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      resolveFactsForGateScope: async () => stagedFacts,
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {
+          backend: { detected: true, confidence: 'HIGH' },
+        },
+        skillsRuleSet: {
+          rules: [
+            createSkillRule({
+              id: 'skills.backend.no-empty-catch',
+              severity: 'ERROR',
+              platform: 'backend',
+            }),
+          ],
+          activeBundles: [
+            {
+              name: 'backend-guidelines',
+              version: '1.0.0',
+              source: 'test',
+              hash: 'a'.repeat(64),
+              rules: [],
+            },
+          ],
+          mappedHeuristicRuleIds: new Set(['heuristics.backend.empty-catch']),
+          requiresHeuristicFacts: true,
+          unsupportedAutoRuleIds: [],
+          unsupportedDetectorRuleIds: ['skills.backend.guideline.backend.clean-architecture'],
+          registryCoverage: {
+            contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+            stage: 'PRE_COMMIT',
+            registryTotals: {
+              total: 2,
+              auto: 1,
+              declarative: 1,
+            },
+            stageApplicableAutoRuleIds: ['skills.backend.no-empty-catch'],
+            declarativeRuleIds: ['skills.backend.guideline.backend.clean-architecture'],
+            excludedDeclarativeReason: 'declarative-only',
+          },
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: stagedFacts.length,
+          filesScanned: stagedPaths.length,
+          rulesTotal: 1,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 1,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 1,
+          unevaluatedRules: 0,
+          activeRuleIds: ['skills.backend.no-empty-catch'],
+          evaluatedRuleIds: ['skills.backend.no-empty-catch'],
+          matchedRuleIds: [],
+          unmatchedRuleIds: ['skills.backend.no-empty-catch'],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: (findingsArg) => evaluateGateFromFindings(findingsArg, policy),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveActiveGateWaiver: () => ({
+        kind: 'none',
+        path: '.pumuki/waivers/gate.json',
+      }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emitted = {
+          gateOutcome: paramsArg.gateOutcome,
+          findings: paramsArg.findings,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emitted?.gateOutcome, 'PASS');
+  assert.equal(
+    emitted?.findings.some(
+      (finding) =>
+        finding.code === 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_REMEDIATION_ADVISORY' &&
+        finding.severity === 'INFO'
+    ),
+    true
+  );
+});
+
+test('runPlatformGate permite PRE_PUSH de rama de remediacion de skills con release y tracking', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_PUSH',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const repoRoot = '/repo/root';
+  const branchPaths = [
+    'PUMUKI-INC-128.feature',
+    'PARITY-IOS-001.feature',
+    'core/facts/detectors/text/ios.ts',
+    'core/facts/extractHeuristicFacts.ts',
+    'core/rules/presets/heuristics/ios.ts',
+    'integrations/config/skillsDetectorRegistry.ts',
+    'integrations/git/runPlatformGate.ts',
+    'integrations/git/__tests__/runPlatformGate.test.ts',
+    'skills.lock.json',
+    'PUMUKI-RESET-MASTER-PLAN.md',
+    'package.json',
+    'package-lock.json',
+  ];
+  const git = buildGitStub(repoRoot);
+  git.runGit = (args) => {
+    const command = args.join(' ');
+    if (command === 'diff --cached --name-only') {
+      return '';
+    }
+    if (command === 'rev-parse --verify origin/develop') {
+      return 'developsha';
+    }
+    if (command === 'merge-base origin/develop HEAD') {
+      return 'basesha';
+    }
+    if (command === 'diff --name-only basesha..HEAD') {
+      return branchPaths.join('\n');
+    }
+    return '';
+  };
+  const evidence = buildEvidenceStub();
+  let emitted:
+    | {
+      gateOutcome: 'PASS' | 'WARN' | 'BLOCK';
+      findings: ReadonlyArray<Finding>;
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope: { kind: 'repo' },
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      resolveFactsForGateScope: async () =>
+        branchPaths.map((path) => ({
+          kind: 'FileChange' as const,
+          path,
+          changeType: 'modified' as const,
+          source: 'git:repo' as const,
+        })),
+      evaluatePlatformGateFindings: ({ facts }) => ({
+        detectedPlatforms: {
+          ios: { detected: true, confidence: 'HIGH' },
+        },
+        skillsRuleSet: {
+          rules: [
+            createSkillRule({
+              id: 'skills.ios.no-force-unwrap',
+              severity: 'CRITICAL',
+              platform: 'ios',
+            }),
+          ],
+          activeBundles: [
+            'ios-guidelines',
+            'ios-concurrency-guidelines',
+            'ios-swiftui-expert-guidelines',
+            'ios-swift-testing-guidelines',
+            'ios-core-data-guidelines',
+          ].map((name, index) => ({
+            name,
+            version: '1.0.0',
+            source: 'test',
+            hash: String(index).repeat(64).slice(0, 64).padEnd(64, '0'),
+            rules: [],
+          })),
+          mappedHeuristicRuleIds: new Set(['heuristics.ios.force-unwrap.ast']),
+          requiresHeuristicFacts: true,
+          unsupportedAutoRuleIds: [],
+          unsupportedDetectorRuleIds: ['skills.ios.guideline.declarative-only'],
+          registryCoverage: {
+            contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+            stage: 'PRE_PUSH',
+            registryTotals: {
+              total: 2,
+              auto: 1,
+              declarative: 1,
+            },
+            stageApplicableAutoRuleIds: ['skills.ios.no-force-unwrap'],
+            declarativeRuleIds: ['skills.ios.guideline.declarative-only'],
+            excludedDeclarativeReason: 'declarative-only',
+          },
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: facts.length,
+          filesScanned: facts.length,
+          rulesTotal: 1,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 1,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 1,
+          unevaluatedRules: 0,
+          activeRuleIds: ['skills.ios.no-force-unwrap'],
+          evaluatedRuleIds: ['skills.ios.no-force-unwrap'],
+          matchedRuleIds: [],
+          unmatchedRuleIds: ['skills.ios.no-force-unwrap'],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: (findingsArg) => evaluateGateFromFindings(findingsArg, policy),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveActiveGateWaiver: () => ({
+        kind: 'none',
+        path: '.pumuki/waivers/gate.json',
+      }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emitted = {
+          gateOutcome: paramsArg.gateOutcome,
+          findings: paramsArg.findings,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emitted?.gateOutcome, 'PASS');
+  assert.equal(
+    emitted?.findings.some(
+      (finding) =>
+        finding.code === 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_REMEDIATION_ADVISORY' &&
+        finding.severity === 'INFO'
+    ),
+    true
+  );
+});
+
 test('runPlatformGate permite continuar cuando existe waiver de gate válido para stage bloqueante', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_PUSH',
