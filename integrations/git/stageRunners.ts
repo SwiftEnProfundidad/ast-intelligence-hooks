@@ -530,6 +530,7 @@ const patchOperationalHintsAfterDocumentationOnlyEvidenceSync = (repoRoot: strin
 const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
   dependencies: StageRunnerDependencies;
   repoRoot: string;
+  gateBlocked: boolean;
 }): boolean => {
   const evidenceAbsolutePath = join(params.repoRoot, EVIDENCE_FILE_PATH);
   if (!existsSync(evidenceAbsolutePath)) {
@@ -562,6 +563,9 @@ const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
     process.stderr.write(
       `[pumuki][evidence-sync] unable to restage tracked ${EVIDENCE_FILE_PATH}: ${details}\n`
     );
+    if (params.gateBlocked) {
+      return false;
+    }
     params.dependencies.notifyGateBlocked({
       repoRoot: params.repoRoot,
       stage: 'PRE_COMMIT',
@@ -824,10 +828,10 @@ export async function runPreCommitStage(
     return 1;
   }
   if (
-    result.exitCode === 0 &&
     syncTrackedEvidenceAfterSuccessfulPreCommit({
       dependencies: activeDependencies,
       repoRoot,
+      gateBlocked: result.exitCode !== 0,
     })
   ) {
     return 1;
