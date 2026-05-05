@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawn } from 'node:child_process';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -183,6 +191,60 @@ test('runSddEvidenceScaffold aplica artefacto cuando dry-run=false', async () =>
       assert.equal(evidenceRead.evidence.version, '1');
       assert.equal(evidenceRead.evidence.slices.length, 1);
     }
+  });
+});
+
+test('runSddEvidenceScaffold mantiene JSON válido y conserva slices con escrituras paralelas', async () => {
+  await withFixtureRepo('pumuki-sdd-evidence-parallel-', async (repoRoot) => {
+    writeValidEvidence(repoRoot);
+    const testOutput = join(repoRoot, '.audit-reports', 'parallel.txt');
+    mkdirSync(join(repoRoot, '.audit-reports'), { recursive: true });
+    writeFileSync(testOutput, 'ok\n', 'utf8');
+    const modulePath = join(process.cwd(), 'integrations', 'sdd', 'evidenceScaffold.ts');
+    const script = `
+      import { createRequire } from 'node:module';
+      const require = createRequire(import.meta.url);
+      const { runSddEvidenceScaffold } = require(${JSON.stringify(modulePath)});
+      runSddEvidenceScaffold({
+        repoRoot: process.argv[1],
+        scenarioId: process.argv[2],
+        testCommand: 'npm run test:unit -- --grep ' + process.argv[2],
+        testStatus: 'passed',
+        testOutputPath: '.audit-reports/parallel.txt'
+      });
+    `;
+    const run = (scenarioId: string): Promise<void> =>
+      new Promise((resolveProcess, rejectProcess) => {
+        const child = spawn(process.execPath, ['--import', 'tsx', '-e', script, repoRoot, scenarioId], {
+          cwd: process.cwd(),
+          stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        let stderr = '';
+        child.stderr.on('data', (chunk: Buffer) => {
+          stderr += chunk.toString('utf8');
+        });
+        child.on('error', rejectProcess);
+        child.on('exit', (code) => {
+          if (code === 0) {
+            resolveProcess();
+            return;
+          }
+          rejectProcess(new Error(stderr));
+        });
+      });
+
+    await Promise.all([run('BDD-001'), run('BDD-002')]);
+
+    const outputPath = join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json');
+    const artifact = JSON.parse(readFileSync(outputPath, 'utf8')) as {
+      slices?: Array<{ id?: string }>;
+    };
+    assert.deepEqual(
+      (artifact.slices ?? []).map((slice) => slice.id).sort(),
+      ['BDD-001', 'BDD-002']
+    );
+    const artifacts = readdirSync(join(repoRoot, '.pumuki', 'artifacts'));
+    assert.equal(artifacts.some((entry) => entry.endsWith('.lock') || entry.endsWith('.tmp')), false);
   });
 });
 
