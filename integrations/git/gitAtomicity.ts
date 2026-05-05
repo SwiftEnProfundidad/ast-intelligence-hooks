@@ -32,6 +32,14 @@ const ATOMICITY_CONFIG_FILE = '.pumuki/git-atomicity.json';
 const DEFAULT_COMMIT_PATTERN =
   '^(feat|fix|chore|refactor|docs|test|perf|build|ci|revert)(\\([^)]+\\))?:\\s.+$';
 const MANAGED_EVIDENCE_PATHS = new Set(['.ai_evidence.json', '.AI_EVIDENCE.json']);
+const BASELINE_BRANCH_REFS = [
+  'origin/main',
+  'origin/develop',
+  'upstream/main',
+  'upstream/develop',
+  'main',
+  'develop',
+];
 
 const defaultConfig: GitAtomicityConfig = {
   enabled: true,
@@ -252,33 +260,90 @@ const collectCommitSubjects = (params: {
   fromRef?: string;
   toRef?: string;
 }): ReadonlyArray<string> => {
-  if (!params.fromRef || !params.toRef) {
-    return [];
-  }
+  return collectCommitRecords(params)
+    .filter((record) => shouldEvaluateCommitRecord({ git: params.git, repoRoot: params.repoRoot, record }))
+    .map((record) => record.subject);
+};
+
+type CommitRecord = {
+  hash: string;
+  parents: ReadonlyArray<string>;
+  subject: string;
+};
+
+const parseCommitRecords = (value: string): ReadonlyArray<CommitRecord> =>
+  value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const [hash = '', parents = '', subject = ''] = line.split('\u0001');
+      return {
+        hash: hash.trim(),
+        parents: parents.split(' ').map((parent) => parent.trim()).filter((parent) => parent.length > 0),
+        subject: subject.trim(),
+      };
+    })
+    .filter((record) => record.hash.length > 0);
+
+const isCommitReachableFromRef = (params: {
+  git: IGitService;
+  repoRoot: string;
+  commitHash: string;
+  ref: string;
+}): boolean => {
   try {
-    return parseLines(
-      params.git.runGit(['log', '--format=%s', `${params.fromRef}..${params.toRef}`], params.repoRoot)
-    );
-  } catch (error) {
-    if (isUnresolvableRevisionError(error)) {
-      return [];
-    }
-    throw error;
+    params.git.runGit(['merge-base', '--is-ancestor', params.commitHash, params.ref], params.repoRoot);
+    return true;
+  } catch {
+    return false;
   }
 };
 
-const collectCommitHashes = (params: {
+const isInheritedBaselineCommit = (params: {
+  git: IGitService;
+  repoRoot: string;
+  commitHash: string;
+}): boolean =>
+  BASELINE_BRANCH_REFS.some((ref) =>
+    isCommitReachableFromRef({
+      git: params.git,
+      repoRoot: params.repoRoot,
+      commitHash: params.commitHash,
+      ref,
+    })
+  );
+
+const shouldEvaluateCommitRecord = (params: {
+  git: IGitService;
+  repoRoot: string;
+  record: CommitRecord;
+}): boolean => {
+  if (params.record.parents.length > 1) {
+    return false;
+  }
+  return !isInheritedBaselineCommit({
+    git: params.git,
+    repoRoot: params.repoRoot,
+    commitHash: params.record.hash,
+  });
+};
+
+const collectCommitRecords = (params: {
   git: IGitService;
   repoRoot: string;
   fromRef?: string;
   toRef?: string;
-}): ReadonlyArray<string> => {
+}): ReadonlyArray<CommitRecord> => {
   if (!params.fromRef || !params.toRef) {
     return [];
   }
   try {
-    return parseLines(
-      params.git.runGit(['log', '--format=%H', '--reverse', `${params.fromRef}..${params.toRef}`], params.repoRoot)
+    return parseCommitRecords(
+      params.git.runGit(
+        ['log', '--format=%H%x01%P%x01%s', '--reverse', `${params.fromRef}..${params.toRef}`],
+        params.repoRoot
+      )
     );
   } catch (error) {
     if (isUnresolvableRevisionError(error)) {
@@ -367,29 +432,29 @@ const buildPrePushCommitPathLimitViolations = (params: {
   fromRef?: string;
   toRef?: string;
 }): GitAtomicityViolation[] | undefined => {
-  const commitHashes = collectCommitHashes({
+  const commitRecords = collectCommitRecords({
     git: params.git,
     repoRoot: params.repoRoot,
     fromRef: params.fromRef,
     toRef: params.toRef,
-  });
-  if (commitHashes.length === 0) {
+  }).filter((record) => shouldEvaluateCommitRecord({ git: params.git, repoRoot: params.repoRoot, record }));
+  if (commitRecords.length === 0) {
     return undefined;
   }
 
   const violations: GitAtomicityViolation[] = [];
-  for (const commitHash of commitHashes) {
+  for (const commitRecord of commitRecords) {
     const changedPaths = collectCommitChangedPaths({
       git: params.git,
       repoRoot: params.repoRoot,
-      commitHash,
+      commitHash: commitRecord.hash,
     }).filter((path) => !isManagedEvidencePath(path));
     violations.push(
       ...buildPathLimitViolations({
         changedPaths,
         config: params.config,
         stage: 'PRE_PUSH',
-        label: `commit=${commitHash.slice(0, 12)}`,
+        label: `commit=${commitRecord.hash.slice(0, 12)}`,
       })
     );
   }

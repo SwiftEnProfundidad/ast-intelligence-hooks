@@ -239,6 +239,63 @@ test('evaluateGitAtomicity bloquea PRE_PUSH cuando detecta commits sin patrón t
   );
 });
 
+test('evaluateGitAtomicity ignora merges e historial heredado de main al validar PRE_PUSH de rollout', async () => {
+  await withAtomicityEnv(
+    {
+      PUMUKI_GIT_ATOMICITY_ENABLED: '1',
+      PUMUKI_GIT_ATOMICITY_MAX_FILES: '4',
+      PUMUKI_GIT_ATOMICITY_MAX_SCOPES: '2',
+      PUMUKI_GIT_ATOMICITY_ENFORCE_COMMIT_PATTERN: '1',
+      PUMUKI_GIT_ATOMICITY_COMMIT_PATTERN:
+        '^(feat|fix|chore|refactor|docs|test|perf|build|ci|revert)(\\([^)]+\\))?:\\s.+$',
+    },
+    async () => {
+      await withTempRepo(async (repoRoot) => {
+        writeFileSync(join(repoRoot, 'README.md'), '# baseline\n', 'utf8');
+        runGit(repoRoot, ['add', 'README.md']);
+        runGit(repoRoot, ['commit', '-m', 'chore: baseline']);
+
+        runGit(repoRoot, ['checkout', '--quiet', '-b', 'chore/pumuki-6-3-134-rollout']);
+        writeFileSync(join(repoRoot, 'package.json'), '{"devDependencies":{"pumuki":"6.3.135"}}\n', 'utf8');
+        runGit(repoRoot, ['add', 'package.json']);
+        runGit(repoRoot, ['commit', '-m', 'chore(pumuki): previous rollout']);
+        runGit(repoRoot, ['branch', 'rollout-upstream']);
+
+        runGit(repoRoot, ['checkout', '--quiet', 'main']);
+        runGit(repoRoot, ['checkout', '--quiet', '-b', 'chore/repin-pumuki-6-3-133']);
+        writeFileSync(join(repoRoot, 'main-rollout.txt'), 'main rollout\n', 'utf8');
+        runGit(repoRoot, ['add', 'main-rollout.txt']);
+        runGit(repoRoot, ['commit', '-m', 'chore: repin pumuki 6.3.133']);
+        runGit(repoRoot, ['checkout', '--quiet', 'main']);
+        runGit(repoRoot, [
+          'merge',
+          '--no-ff',
+          'chore/repin-pumuki-6-3-133',
+          '-m',
+          'Merge pull request #12 from SwiftEnProfundidad/chore/repin-pumuki-6-3-133',
+        ]);
+
+        runGit(repoRoot, ['checkout', '--quiet', 'chore/pumuki-6-3-134-rollout']);
+        writeFileSync(join(repoRoot, 'package.json'), '{"devDependencies":{"pumuki":"6.3.140"}}\n', 'utf8');
+        runGit(repoRoot, ['add', 'package.json']);
+        runGit(repoRoot, ['commit', '-m', 'chore(pumuki): repin to 6.3.140']);
+        runGit(repoRoot, ['merge', '--no-ff', 'main', '-m', "Merge remote-tracking branch 'origin/main'"]);
+
+        const result = evaluateGitAtomicity({
+          repoRoot,
+          stage: 'PRE_PUSH',
+          fromRef: 'rollout-upstream',
+          toRef: 'HEAD',
+        });
+
+        assert.equal(result.enabled, true);
+        assert.equal(result.allowed, true);
+        assert.equal(result.violations.length, 0);
+      }, { tempPrefix: 'pumuki-git-atomicity-pre-push-inherited-main-' });
+    }
+  );
+});
+
 test('evaluateGitAtomicity permite PRE_PUSH con diff agregado grande cuando cada commit es atómico', async () => {
   await withAtomicityEnv(
     {
