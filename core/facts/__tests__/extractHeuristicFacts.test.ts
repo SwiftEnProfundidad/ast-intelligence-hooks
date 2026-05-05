@@ -657,10 +657,10 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
   assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctest-import.ast'), true);
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctest-suite-modernizable.ast'),
-    true
+    false
   );
-  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctassert.ast'), true);
-  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctunwrap.ast'), true);
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctassert.ast'), false);
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctunwrap.ast'), false);
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.wait-for-expectations.ast'),
     true
@@ -729,6 +729,38 @@ test('does not emit Swift Testing migration findings for compatible brownfield X
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   const testingFindings = findings.filter((finding) =>
+    finding.ruleId.startsWith('heuristics.ios.testing.')
+  );
+
+  assert.deepEqual(testingFindings.map((finding) => finding.ruleId), []);
+});
+
+test('does not emit Swift Testing migration findings for RuralGo brownfield XCTest specs', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Tests/Mac/Application/BuyerSessionStoreTokenPersistenceTests.spec.swift',
+        [
+          'import XCTest',
+          '',
+          'final class BuyerSessionStoreTokenPersistenceTests: XCTestCase {',
+          '  func test_saveToken_persistsValue() async throws {',
+          '    let store = BuyerSessionStore()',
+          '    try await store.save(token: "token-1")',
+          '    XCTAssertEqual(store.currentToken, "token-1")',
+          '    let token = try XCTUnwrap(store.currentToken)',
+          '    XCTAssertEqual(token, "token-1")',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const testingFindings = evaluateRules(astHeuristicsRuleSet, extracted).filter((finding) =>
     finding.ruleId.startsWith('heuristics.ios.testing.')
   );
 

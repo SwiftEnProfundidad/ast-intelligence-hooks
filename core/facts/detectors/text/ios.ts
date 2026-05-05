@@ -479,6 +479,17 @@ export const hasSwiftForEachIndicesUsage = (source: string): boolean => {
   );
 };
 
+export const hasSwiftInlineFilteringInForEachUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bForEach\s*\(\s*[A-Za-z_][A-Za-z0-9_.]*\s*\.\s*filter\s*\{/g
+  );
+};
+
+export const hasSwiftExplicitColorStaticMemberUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\bColor\s*\.\s*[a-z][A-Za-z0-9_]*\b/g);
+};
+
 const isUserSearchIdentifier = (value: string): boolean => {
   return /^(?:query|search(?:Text|Term|Query|Value)?|filter(?:Text|Value)?|text|term|input)$/i.test(
     value
@@ -756,6 +767,18 @@ const hasSwiftBrownfieldCompatibleXCTestUsage = (source: string): boolean => {
   return hasSwiftMakeSutUsage(source) && hasSwiftMemoryLeakTrackingUsage(source);
 };
 
+const hasSwiftXCTestOnlyBrownfieldSuiteUsage = (source: string): boolean => {
+  if (!hasSwiftXCTestImportUsage(source) || !hasSwiftXCTestCaseSubclassUsage(source)) {
+    return false;
+  }
+
+  if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
+    return false;
+  }
+
+  return !hasSwiftTestingImportUsage(source) && !hasSwiftTestingSuiteAttributeUsage(source);
+};
+
 export const hasSwiftLegacyXCTestImportUsage = (source: string): boolean => {
   if (!hasSwiftXCTestImportUsage(source)) {
     return false;
@@ -765,7 +788,7 @@ export const hasSwiftLegacyXCTestImportUsage = (source: string): boolean => {
     return false;
   }
 
-  if (hasSwiftBrownfieldCompatibleXCTestUsage(source)) {
+  if (hasSwiftXCTestOnlyBrownfieldSuiteUsage(source)) {
     return false;
   }
 
@@ -801,7 +824,7 @@ export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
     return false;
   }
 
-  if (hasSwiftBrownfieldCompatibleXCTestUsage(source)) {
+  if (hasSwiftXCTestOnlyBrownfieldSuiteUsage(source)) {
     return false;
   }
 
@@ -816,7 +839,7 @@ export const hasSwiftXCTUnwrapUsage = (source: string): boolean => {
     return false;
   }
 
-  if (hasSwiftBrownfieldCompatibleXCTestUsage(source)) {
+  if (hasSwiftXCTestOnlyBrownfieldSuiteUsage(source)) {
     return false;
   }
 

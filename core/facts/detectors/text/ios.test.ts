@@ -13,6 +13,7 @@ import {
   hasSwiftDispatchGroupUsage,
   hasSwiftDispatchQueueUsage,
   hasSwiftDispatchSemaphoreUsage,
+  hasSwiftExplicitColorStaticMemberUsage,
   hasSwiftForEachIndicesUsage,
   hasSwiftForceCastUsage,
   hasSwiftFontWeightBoldUsage,
@@ -20,6 +21,7 @@ import {
   hasSwiftForceTryUsage,
   hasSwiftForceUnwrap,
   hasSwiftGeometryReaderUsage,
+  hasSwiftInlineFilteringInForEachUsage,
   hasSwiftLegacyOnChangeUsage,
   hasSwiftLegacyExpectationDescriptionUsage,
   hasSwiftLegacySwiftUiObservableWrapperUsage,
@@ -243,7 +245,9 @@ MainActor.assumeIsolated { reload() }
   assert.equal(hasSwiftNonisolatedUnsafeUsage(source), true);
   assert.equal(hasSwiftAssumeIsolatedUsage(source), true);
   assert.equal(hasSwiftForEachIndicesUsage(source), true);
+  assert.equal(hasSwiftInlineFilteringInForEachUsage('ForEach(items.filter { $0.isActive }) { item in Text(item.title) }'), true);
   assert.equal(hasSwiftContainsUserFilterUsage(source), true);
+  assert.equal(hasSwiftExplicitColorStaticMemberUsage('Text("A").foregroundStyle(Color.blue)'), true);
   assert.equal(hasSwiftGeometryReaderUsage(source), true);
   assert.equal(hasSwiftFontWeightBoldUsage(source), true);
   assert.equal(hasSwiftObservableObjectUsage(source), true);
@@ -289,7 +293,9 @@ let t = "MainActor.assumeIsolated { reload() }"
   assert.equal(hasSwiftNonisolatedUnsafeUsage(source), false);
   assert.equal(hasSwiftAssumeIsolatedUsage(source), false);
   assert.equal(hasSwiftForEachIndicesUsage(source), false);
+  assert.equal(hasSwiftInlineFilteringInForEachUsage(source), false);
   assert.equal(hasSwiftContainsUserFilterUsage(source), false);
+  assert.equal(hasSwiftExplicitColorStaticMemberUsage('Text("A").foregroundStyle(.blue)'), false);
   assert.equal(hasSwiftGeometryReaderUsage(source), false);
   assert.equal(hasSwiftFontWeightBoldUsage(source), false);
   assert.equal(hasSwiftTaskDetachedUsage(source), false);
@@ -400,7 +406,7 @@ final class LoginModelTests: XCTestCase {
 }
 `;
 
-  assert.equal(hasSwiftLegacyXCTestImportUsage(unitTest), true);
+  assert.equal(hasSwiftLegacyXCTestImportUsage(unitTest), false);
   assert.equal(hasSwiftLegacyXCTestImportUsage(uiTest), false);
   assert.equal(hasSwiftLegacyXCTestImportUsage(performanceTest), false);
   assert.equal(hasSwiftLegacyXCTestImportUsage(brownfieldCompatibleUnitTest), false);
@@ -524,7 +530,7 @@ final class LoginModelTests: XCTestCase {
 }
 `;
 
-  assert.equal(hasSwiftModernizableXCTestSuiteUsage(legacySuite), true);
+  assert.equal(hasSwiftModernizableXCTestSuiteUsage(legacySuite), false);
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(mixedSuite), false);
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(uiSuite), false);
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(brownfieldCompatibleSuite), false);
@@ -596,7 +602,7 @@ final class BuyerCommerceUISmokeTests: XCTestCase {
   assert.equal(hasSwiftXCTUnwrapUsage(`${uiSource}\nlet value = try XCTUnwrap(optional)`), false);
 });
 
-test('hasSwiftXCTestAssertionUsage excluye XCTest brownfield compatible y bloquea suites sin contrato de calidad', () => {
+test('detectores Swift Testing excluyen XCTest brownfield y dejan la calidad a su guard dedicado', () => {
   const compatibleSource = `
 import XCTest
 
@@ -633,7 +639,11 @@ final class LoginModelTests: XCTestCase {
 
   assert.equal(hasSwiftXCTestAssertionUsage(compatibleSource), false);
   assert.equal(hasSwiftXCTUnwrapUsage(compatibleSource), false);
-  assert.equal(hasSwiftXCTestAssertionUsage(missingQualityContract), true);
+  assert.equal(hasSwiftLegacyXCTestImportUsage(compatibleSource), false);
+  assert.equal(hasSwiftModernizableXCTestSuiteUsage(compatibleSource), false);
+  assert.equal(hasSwiftXCTestAssertionUsage(missingQualityContract), false);
+  assert.equal(hasSwiftLegacyXCTestImportUsage(missingQualityContract), false);
+  assert.equal(hasSwiftModernizableXCTestSuiteUsage(missingQualityContract), false);
 });
 
 test('hasSwiftXCTUnwrapUsage detecta XCTUnwrap real y evita strings', () => {
