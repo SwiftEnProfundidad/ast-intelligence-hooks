@@ -1,5 +1,14 @@
-import { createHash } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { createHash, randomUUID } from 'node:crypto';
+import {
+  closeSync,
+  existsSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
 import { readEvidenceResult, type EvidenceReadResult } from '../evidence/readEvidence';
 
@@ -27,6 +36,11 @@ export type SddEvidenceScaffoldResult = {
     slices: Array<{
       id: string;
       scenario_ref: string;
+      baseline: {
+        status: 'passed';
+        timestamp: string;
+        test_ref: string;
+      };
       red: {
         status: 'failed';
         timestamp: string;
@@ -62,8 +76,99 @@ export type SddEvidenceScaffoldResult = {
   };
 };
 
+type SddEvidenceArtifact = SddEvidenceScaffoldResult['artifact'];
+
+const LOCK_WAIT_BUFFER_BYTES = 4;
+const EVIDENCE_ARTIFACT_LOCK_TIMEOUT_MS = 5000;
+const EVIDENCE_ARTIFACT_LOCK_RETRY_DELAY_MS = 25;
+const EVIDENCE_ARTIFACT_JSON_INDENT_SPACES = 2;
+
 const computeDigest = (value: string): string =>
   `sha256:${createHash('sha256').update(value, 'utf8').digest('hex')}`;
+
+const sleepSync = (milliseconds: number): void => {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(LOCK_WAIT_BUFFER_BYTES)), 0, 0, milliseconds);
+};
+
+const acquireFileLock = (lockPath: string): (() => void) => {
+  const startedAt = Date.now();
+  mkdirSync(dirname(lockPath), { recursive: true });
+  while (true) {
+    try {
+      const fd = openSync(lockPath, 'wx');
+      writeFileSync(fd, `${process.pid}:${new Date().toISOString()}\n`, 'utf8');
+      return () => {
+        closeSync(fd);
+        rmSync(lockPath, { force: true });
+      };
+    } catch (error) {
+      const code = error instanceof Error && 'code' in error
+        ? String((error as NodeJS.ErrnoException).code)
+        : '';
+      if (code !== 'EEXIST') {
+        throw error;
+      }
+      if (Date.now() - startedAt > EVIDENCE_ARTIFACT_LOCK_TIMEOUT_MS) {
+        throw new Error(
+          `[pumuki][sdd] evidence artifact is locked by another process: ${lockPath}. Retry when the current evidence write finishes.`
+        );
+      }
+      sleepSync(EVIDENCE_ARTIFACT_LOCK_RETRY_DELAY_MS);
+    }
+  }
+};
+
+const readExistingSddEvidenceArtifact = (path: string): SddEvidenceArtifact | null => {
+  if (!existsSync(path)) {
+    return null;
+  }
+  const parsed = JSON.parse(readFileSync(path, 'utf8')) as Partial<SddEvidenceArtifact>;
+  if (parsed.version !== '1' || !Array.isArray(parsed.slices)) {
+    return null;
+  }
+  return parsed as SddEvidenceArtifact;
+};
+
+const mergeSddEvidenceArtifacts = (params: {
+  existing: SddEvidenceArtifact | null;
+  next: SddEvidenceArtifact;
+}): SddEvidenceArtifact => {
+  if (!params.existing) {
+    return params.next;
+  }
+  const slices = params.existing.slices.filter(
+    (slice) => !params.next.slices.some((nextSlice) => nextSlice.id === slice.id)
+  );
+  return {
+    ...params.next,
+    slices: [...slices, ...params.next.slices],
+  };
+};
+
+const writeSddEvidenceArtifactAtomically = (params: {
+  outputPath: string;
+  artifact: SddEvidenceArtifact;
+}): {
+  artifact: SddEvidenceArtifact;
+  serialized: string;
+} => {
+  const lockPath = `${params.outputPath}.lock`;
+  const release = acquireFileLock(lockPath);
+  const tempPath = `${params.outputPath}.${process.pid}.${randomUUID()}.tmp`;
+  try {
+    const artifact = mergeSddEvidenceArtifacts({
+      existing: readExistingSddEvidenceArtifact(params.outputPath),
+      next: params.artifact,
+    });
+    const serialized = `${JSON.stringify(artifact, null, EVIDENCE_ARTIFACT_JSON_INDENT_SPACES)}\n`;
+    writeFileSync(tempPath, serialized, 'utf8');
+    renameSync(tempPath, params.outputPath);
+    return { artifact, serialized };
+  } finally {
+    rmSync(tempPath, { force: true });
+    release();
+  }
+};
 
 const resolveRepoBoundPath = (params: {
   repoRoot: string;
@@ -91,7 +196,7 @@ const resolveRepoBoundPath = (params: {
   return resolved;
 };
 
-const isPlaceholderToken = (value: string): boolean => {
+const isReservedInputValue = (value: string): boolean => {
   const normalized = value.trim().toLowerCase();
   return (
     normalized === 'todo' ||
@@ -110,7 +215,7 @@ const normalizeRequired = (value: string | undefined, flagName: string): string 
   if (normalized.length === 0) {
     throw new Error(`[pumuki][sdd] evidence requires ${flagName}.`);
   }
-  if (isPlaceholderToken(normalized)) {
+  if (isReservedInputValue(normalized)) {
     throw new Error(`[pumuki][sdd] evidence ${flagName} must not be a placeholder value.`);
   }
   return normalized;
@@ -214,6 +319,11 @@ export const runSddEvidenceScaffold = (params?: {
       {
         id: scenarioId,
         scenario_ref: resolveScenarioReference(scenarioId),
+        baseline: {
+          status: 'passed',
+          timestamp: validEvidence.source_descriptor.generated_at ?? generatedAt,
+          test_ref: 'pumuki sdd validate --stage=PRE_WRITE --json',
+        },
         red: {
           status: 'failed',
           timestamp: generatedAt,
@@ -249,13 +359,19 @@ export const runSddEvidenceScaffold = (params?: {
       status: 'valid',
     },
   };
-  const serialized = `${JSON.stringify(artifact, null, 2)}\n`;
-  const digest = computeDigest(serialized);
+  let finalArtifact = artifact;
+  let serialized = `${JSON.stringify(finalArtifact, null, 2)}\n`;
 
   if (!dryRun) {
     mkdirSync(dirname(outputAbsolutePath), { recursive: true });
-    writeFileSync(outputAbsolutePath, serialized, 'utf8');
+    const writeResult = writeSddEvidenceArtifactAtomically({
+      outputPath: outputAbsolutePath,
+      artifact,
+    });
+    finalArtifact = writeResult.artifact;
+    serialized = writeResult.serialized;
   }
+  const digest = computeDigest(serialized);
 
   return {
     command: 'pumuki sdd evidence',
@@ -273,6 +389,6 @@ export const runSddEvidenceScaffold = (params?: {
       written: !dryRun,
       digest,
     },
-    artifact,
+    artifact: finalArtifact,
   };
 };
