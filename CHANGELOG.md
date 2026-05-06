@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.169] - 2026-05-06
+
+### Fixed
+
+- **Tracked evidence working-tree hygiene:** successful `pumuki-pre-commit` now restores tracked `.ai_evidence.json` from `HEAD` when the file was not staged at hook start, preventing pre-commit frameworks from failing with “files were modified by this hook” while still excluding evidence from code commits.
+
 ## [6.3.168] - 2026-05-06
 
 ### Fixed

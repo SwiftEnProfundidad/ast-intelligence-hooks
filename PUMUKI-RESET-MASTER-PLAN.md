@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-131` / RuralGo reporta que `pumuki-pre-commit` fuerza `git add -- .ai_evidence.json` en commits de código aunque el developer no la hubiera staged, y `skip-worktree` hace fallar el hook con `EVIDENCE_STAGE_SYNC_FAILED`. Estado 2026-05-06: fix implementado para respetar el índice inicial cuando el gate pasa; pendiente publicar y repinear primero RuralGo. `PARITY-IOS-SWIFTDATA-001` permanece aparcada en `feature/ios-swiftdata-coredata-ast` con stashes de continuidad hasta cerrar esta incidencia externa. |
+| Este plan | [🚧] - `PUMUKI-INC-131` / RuralGo reporta que `pumuki-pre-commit` fuerza `git add -- .ai_evidence.json` en commits de código aunque el developer no la hubiera staged, y `skip-worktree` hace fallar el hook con `EVIDENCE_STAGE_SYNC_FAILED`. Estado 2026-05-06: fix completo implementado para respetar el índice inicial y restaurar `.ai_evidence.json` desde `HEAD` cuando el gate pasa y el archivo no estaba staged; pendiente publicar `6.3.169` y repinear primero RuralGo. `PARITY-IOS-SWIFTDATA-001` permanece aparcada en `feature/ios-swiftdata-coredata-ast` con stashes de continuidad hasta cerrar esta incidencia externa. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
@@ -960,6 +960,9 @@ Snapshot de rollout `6.3.167` (2026-05-06):
 
 Snapshot de rollout `6.3.168` (2026-05-06):
 - `PUMUKI-INC-131` corrige higiene de `.ai_evidence.json` trackeado: si el gate `PRE_COMMIT` pasa y `.ai_evidence.json` no estaba staged al inicio, Pumuki no lo restagea automáticamente; commits doc-only mantienen la restauración de drift y `PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1` conserva el comportamiento legacy. Validación: `stageRunners.test.ts` 52/52 verde.
+
+Snapshot de rollout `6.3.169` (2026-05-06):
+- `PUMUKI-INC-131` completa la higiene para frameworks `pre-commit`: además de no restagear `.ai_evidence.json`, Pumuki restaura el archivo desde `HEAD` si no estaba staged al inicio y el gate pasa, evitando el fallo `files were modified by this hook`. Validación: `stageRunners.test.ts` 52/52 verde.
 
 Snapshot de rollout `6.3.85` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-83-rollout`): verde sobre `6.3.85`; PR mergeada contra `main`: `app-supermercados#10` (`https://github.com/SwiftEnProfundidad/app-supermercados/pull/10`), squash `e643f9f83d6f860cbd72f7bee67855b74dea213e`.
