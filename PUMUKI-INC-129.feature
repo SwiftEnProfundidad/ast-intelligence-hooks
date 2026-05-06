@@ -7,4 +7,5 @@ Feature: PUMUKI-INC-129 RuralGo iOS remediation commits must not be blocked by g
     When Pumuki evaluates PRE_COMMIT
     Then the supported remediation is allowed to commit
     And governance.skills.global-enforcement.incomplete is downgraded to an advisory for that remediation commit
+    And Pumuki recognizes mixed-case detector implementation paths as skills-enforcement remediation
     And system notifications remain disabled when PUMUKI_SYSTEM_NOTIFICATIONS=0 or PUMUKI_NOTIFICATIONS=0

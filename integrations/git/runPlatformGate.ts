@@ -461,7 +461,7 @@ const isSkillsEnforcementRemediationDiff = (
     return false;
   }
 
-  const normalizedPaths = paths.map((path) => toNormalizedPath(path));
+  const normalizedPaths = paths.map((path) => toNormalizedPath(path).toLowerCase());
   const touchesDetectorSurface = normalizedPaths.some((path) =>
     path.startsWith('core/facts/') ||
     path.startsWith('core/rules/presets/heuristics/') ||
