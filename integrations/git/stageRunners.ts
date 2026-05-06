@@ -77,6 +77,9 @@ const shouldSkipRestagingTrackedEvidenceForDocumentationOnlyScope = (params: {
   return paths.every(isDocumentationOnlyStagedPath);
 };
 
+const hasStagedEvidencePath = (paths: ReadonlyArray<string>): boolean =>
+  paths.some((path) => path === '.ai_evidence.json' || path === '.AI_EVIDENCE.json');
+
 const PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS = 900;
 const PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS = 1800;
 const HOOK_GATE_PROGRESS_REMINDER_MS = 2000;
@@ -520,6 +523,7 @@ const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
   dependencies: StageRunnerDependencies;
   repoRoot: string;
   gateBlocked: boolean;
+  evidenceWasStagedAtStart: boolean;
 }): boolean => {
   const evidenceAbsolutePath = join(params.repoRoot, EVIDENCE_FILE_PATH);
   if (!existsSync(evidenceAbsolutePath)) {
@@ -541,6 +545,19 @@ const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
       );
     }
     params.dependencies.restorePathFromHead(params.repoRoot, EVIDENCE_FILE_PATH);
+    return false;
+  }
+  if (
+    !params.gateBlocked &&
+    !params.evidenceWasStagedAtStart &&
+    !isTruthyEnvFlag(process.env.PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE)
+  ) {
+    if (!params.dependencies.isQuietMode()) {
+      process.stderr.write(
+        `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} left unstaged because it was not staged before PRE_COMMIT. ` +
+          `Force previous behavior: PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1\n`
+      );
+    }
     return false;
   }
   try {
@@ -787,6 +804,7 @@ export async function runPreCommitStage(
   const activeDependencies = getDependencies(dependencies);
   const repoRoot = activeDependencies.resolveRepoRoot();
   const manifestSnapshot = captureManifestGuardSnapshot(repoRoot);
+  const initiallyStagedPaths = activeDependencies.listStagedIndexPaths(repoRoot);
   activeDependencies.ensureRuntimeArtifactsIgnored(repoRoot);
   if (
     enforceGitAtomicityGate({
@@ -820,6 +838,7 @@ export async function runPreCommitStage(
       dependencies: activeDependencies,
       repoRoot,
       gateBlocked: result.exitCode !== 0,
+      evidenceWasStagedAtStart: hasStagedEvidencePath(initiallyStagedPaths),
     })
   ) {
     return 1;

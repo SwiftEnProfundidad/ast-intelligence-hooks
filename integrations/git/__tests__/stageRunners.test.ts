@@ -1000,6 +1000,38 @@ test('runPreCommitStage no intenta trackear .ai_evidence.json cuando no estaba v
   });
 });
 
+test('runPreCommitStage no restagea .ai_evidence.json trackeado si no estaba staged al inicio y el gate pasa', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
+    runGit(repoRoot, ['checkout', '-b', 'feature/evidence-not-staged']);
+
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), '{}\n', 'utf8');
+    runGit(repoRoot, ['add', '-f', '.ai_evidence.json']);
+    runGit(repoRoot, ['commit', '-m', 'chore: track ai evidence']);
+
+    stageBackendFile(repoRoot);
+    const stagedPaths: string[] = [];
+
+    const exitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+      isQuietMode: () => true,
+      runPlatformGate: async () => 0,
+      stagePath: (_repoRoot, relativePath) => {
+        stagedPaths.push(relativePath);
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(stagedPaths, []);
+    assert.equal(
+      runGit(repoRoot, ['diff', '--cached', '--name-only', '--', '.ai_evidence.json']),
+      ''
+    );
+  });
+});
+
 test('runPreCommitStage bloquea con causa explícita si no puede restagear evidencia trackeada', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     stageBackendFile(repoRoot);
