@@ -788,6 +788,10 @@ const hasSwiftTestingSuiteAttributeUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(source, /\B@(?:Test|Suite)\b/);
 };
 
+const hasSwiftTestingFrameworkMarkerUsage = (source: string): boolean => {
+  return hasSwiftTestingImportUsage(source) || hasSwiftTestingSuiteAttributeUsage(source);
+};
+
 const hasSwiftXCTestCaseSubclassUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(
     source,
@@ -869,11 +873,7 @@ export const hasSwiftModernizableXCTestSuiteUsage = (source: string): boolean =>
 };
 
 export const hasSwiftMixedTestingFrameworksUsage = (source: string): boolean => {
-  if (!hasSwiftXCTestImportUsage(source) || !hasSwiftXCTestCaseSubclassUsage(source)) {
-    return false;
-  }
-
-  return hasSwiftTestingImportUsage(source) || hasSwiftTestingSuiteAttributeUsage(source);
+  return hasSwiftXCTestCaseSubclassUsage(source) && hasSwiftTestingFrameworkMarkerUsage(source);
 };
 
 export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
