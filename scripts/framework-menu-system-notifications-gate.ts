@@ -3,14 +3,21 @@ import type {
   SystemNotificationEmitResult,
   SystemNotificationsConfig,
 } from './framework-menu-system-notifications-types';
-import { isTruthyEnvValue } from './framework-menu-system-notifications-env';
+import {
+  isFalsyEnvValue,
+  isTruthyEnvValue,
+} from './framework-menu-system-notifications-env';
 
 export const resolveSystemNotificationGate = (params: {
   config: SystemNotificationsConfig;
   nowMs: number;
   env?: NodeJS.ProcessEnv;
 }): SystemNotificationEmitResult | null => {
-  if (isTruthyEnvValue(params.env?.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS)) {
+  if (
+    isTruthyEnvValue(params.env?.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS) ||
+    isFalsyEnvValue(params.env?.PUMUKI_SYSTEM_NOTIFICATIONS) ||
+    isFalsyEnvValue(params.env?.PUMUKI_NOTIFICATIONS)
+  ) {
     return { delivered: false, reason: 'disabled' };
   }
   if (!params.config.enabled) {
