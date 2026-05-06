@@ -840,6 +840,14 @@ const hasSwiftXCTestOnlyBrownfieldSuiteUsage = (source: string): boolean => {
   return !hasSwiftTestingImportUsage(source) && !hasSwiftTestingSuiteAttributeUsage(source);
 };
 
+const hasSwiftXCTestHelperOrFactoryUsage = (source: string): boolean => {
+  return (
+    hasSwiftXCTestImportUsage(source) &&
+    !hasSwiftXCTestCaseSubclassUsage(source) &&
+    !hasSwiftLegacyXCTestMethodUsage(source)
+  );
+};
+
 export const hasSwiftLegacyXCTestImportUsage = (source: string): boolean => {
   if (!hasSwiftXCTestImportUsage(source)) {
     return false;
@@ -885,6 +893,10 @@ export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
     return false;
   }
 
+  if (hasSwiftXCTestHelperOrFactoryUsage(source)) {
+    return false;
+  }
+
   if (hasSwiftXCTestOnlyBrownfieldSuiteUsage(source)) {
     return false;
   }
@@ -897,6 +909,10 @@ export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
 
 export const hasSwiftXCTUnwrapUsage = (source: string): boolean => {
   if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
+    return false;
+  }
+
+  if (hasSwiftXCTestHelperOrFactoryUsage(source)) {
     return false;
   }
 
@@ -916,6 +932,10 @@ const hasSwiftConfirmationUsage = (source: string): boolean => {
 };
 
 export const hasSwiftWaitForExpectationsUsage = (source: string): boolean => {
+  if (hasSwiftXCTestHelperOrFactoryUsage(source)) {
+    return false;
+  }
+
   const legacyWaitPattern = /\bwait\s*\(\s*for\s*:|\bwaitForExpectations\s*\(/;
   return collectSwiftFunctionDeclarations(source).some((declaration) => {
     if (!/\basync\b/.test(declaration.signature)) {
@@ -927,6 +947,10 @@ export const hasSwiftWaitForExpectationsUsage = (source: string): boolean => {
 };
 
 export const hasSwiftLegacyExpectationDescriptionUsage = (source: string): boolean => {
+  if (hasSwiftXCTestHelperOrFactoryUsage(source)) {
+    return false;
+  }
+
   return collectSwiftFunctionDeclarations(source).some((declaration) => {
     if (!/\basync\b/.test(declaration.signature)) {
       return false;

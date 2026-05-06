@@ -683,10 +683,46 @@ func trackForMemoryLeaks(_ instance: AnyObject, file: StaticString = #filePath, 
   addTeardownBlock { _ = instance }
 }
   `;
+  const ruralGoHelperSource = `
+import XCTest
+
+final class WeakReference<T: AnyObject> {
+  weak var value: T?
+
+  init(_ value: T) {
+    self.value = value
+  }
+}
+
+func trackForMemoryLeaks(
+  _ instance: AnyObject,
+  testCase: XCTestCase,
+  file: StaticString = #filePath,
+  line: UInt = #line
+) {
+  nonisolated(unsafe) let reference = makeSUT(instance)
+  testCase.addTeardownBlock {
+    XCTAssertNil(
+      reference.value,
+      "Instance should have been deallocated. Potential memory leak.",
+      file: file,
+      line: line
+    )
+  }
+}
+
+private func makeSUT<T: AnyObject>(_ instance: T) -> WeakReference<T> {
+  WeakReference(instance)
+}
+  `;
 
   assert.equal(hasSwiftLegacyXCTestImportUsage(helperSource), false);
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(helperSource), false);
   assert.equal(hasSwiftXCTestAssertionUsage(helperSource), false);
+  assert.equal(hasSwiftLegacyXCTestImportUsage(ruralGoHelperSource), false);
+  assert.equal(hasSwiftModernizableXCTestSuiteUsage(ruralGoHelperSource), false);
+  assert.equal(hasSwiftXCTestAssertionUsage(ruralGoHelperSource), false);
+  assert.equal(hasSwiftXCTUnwrapUsage(ruralGoHelperSource), false);
 });
 
 test('hasSwiftXCTUnwrapUsage detecta XCTUnwrap real y evita strings', () => {

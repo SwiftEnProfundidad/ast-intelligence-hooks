@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PARITY-IOS-SWIFTDATA-001` / iOS: diseñar y materializar `swiftdata-enterprise-rules` y el mix brownfield Core Data + SwiftData como reglas AST Intelligence por nodos. Alcance inicial: detectar `import SwiftData`, `@Model`, `ModelContext`, `ModelContainer`, `@Query`, `FetchDescriptor`; bloquear fugas de `ModelContext`/modelos persistentes fuera de infraestructura/repositorio; y bloquear mezcla peligrosa con `NSManagedObject`/`NSPersistentContainer` sin frontera explícita de migración. Estado 2026-05-06: `PUMUKI-INC-130` quedó publicado en `pumuki@6.3.163`, PR #886 mergeada, RuralGo repineado primero y `pumuki-pre-commit --quiet` devuelve 0; siguiente slice vuelve a paridad iOS. |
+| Este plan | [🚧] - `PUMUKI-INC-130` / RuralGo reabre bloqueo parcial de helpers XCTest brownfield: `pumuki@6.3.163` ya elimina `skills.ios.prefer-swift-testing`, pero `apps/ios/Tests/iOS/Common/TestHelpers.swift` sigue bloqueando `skills.ios.critical-test-quality` por `XCTAssertNil` dentro de `trackForMemoryLeaks`. Estado 2026-05-06: `PARITY-IOS-SWIFTDATA-001` queda aparcada en `feature/ios-swiftdata-coredata-ast` con stashes de continuidad; prioridad actual es cerrar esta cola de INC-130, publicar parche y repinear primero RuralGo. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
