@@ -565,10 +565,33 @@ struct LoginModernTests {
   @Test func login() async {}
 }
 `;
+  const mixedWithReexportedTesting = `
+import XCTest
+
+final class LoginTests: XCTestCase {
+  func testLegacyLogin() {}
+}
+
+struct LoginModernTests {
+  @Test func login() async {}
+}
+`;
+  const ignoredCommentsAndStrings = `
+import XCTest
+
+final class LoginTests: XCTestCase {
+  func testLegacyLogin() {
+    let text = "@Test func login() async {}"
+    // @Suite
+  }
+}
+`;
 
   assert.equal(hasSwiftMixedTestingFrameworksUsage(mixedSuite), true);
+  assert.equal(hasSwiftMixedTestingFrameworksUsage(mixedWithReexportedTesting), true);
   assert.equal(hasSwiftMixedTestingFrameworksUsage(legacyOnly), false);
   assert.equal(hasSwiftMixedTestingFrameworksUsage(modernOnly), false);
+  assert.equal(hasSwiftMixedTestingFrameworksUsage(ignoredCommentsAndStrings), false);
 });
 
 test('hasSwiftXCTestAssertionUsage detecta XCTAssert y XCTFail reales', () => {
