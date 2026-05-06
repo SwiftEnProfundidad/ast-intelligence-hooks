@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PARITY-IOS-001` / cerrar primero cobertura AST por nodos de skills iOS. Estado 2026-05-05: `PUMUKI-INC-128` queda corregido, publicado y repineado primero en RuralGo; la versión útil vigente es `pumuki@6.3.157`, que incluye XCTest brownfield, dos reglas SwiftUI AST nuevas y la excepción segura de `PRE_PUSH` para ramas de remediación de skills. RuralGo ya no bloquea por migración Swift Testing obligatoria en XCTest brownfield, aunque mantiene bloqueos propios de tracking/calidad XCTest cuando sus cambios staged no cumplen el contrato del consumer. Siguiente paso interno: continuar iOS con la siguiente sub-slice de reglas declarativas de `ios-enterprise-rules`, `swift-concurrency`, `swiftui-expert-skill`, `swift-testing-expert` y `core-data-expert`, sin mezclar cambios de RuralGo. |
+| Este plan | [🚧] - `PUMUKI-INC-129` / RuralGo: permitir commit de remediación iOS que elimina `makeSUT()` + `trackForMemoryLeaks()` sin bloquear por `governance.skills.global-enforcement.incomplete`, y respetar aliases de notificaciones desactivadas (`PUMUKI_SYSTEM_NOTIFICATIONS=0`, `PUMUKI_NOTIFICATIONS=0`). Estado 2026-05-06: bug externo activo; congelada la continuación interna de `PARITY-IOS-001` hasta publicar fix, repinear primero RuralGo y validar commit normal sin `--no-verify`. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
