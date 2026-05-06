@@ -6,6 +6,19 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.165] - 2026-05-06
+
+### Fixed
+
+- **MCP evidence stdio PRE_PUSH:** los defaults de host, ruta, puerto y timeout quedan nombrados como constantes para cumplir reglas backend de configuración y evitar bloqueos del hook al publicar ramas de release.
+
+## [6.3.164] - 2026-05-06
+
+### Fixed
+
+- **PUMUKI-INC-130 XCTest helpers brownfield:** `trackForMemoryLeaks`/factory helpers that import `XCTest` but do not define `XCTestCase` suites or `test...` methods no longer trigger `skills.ios.critical-test-quality`.
+- **Skills runtime enforcement:** declarative skill registry rules stay visible in coverage metadata without being counted as missing runtime AST detectors; AUTO rules without detector mapping still fail closed.
+
 ## [6.3.143] - 2026-05-05
 
 ### Fixed
