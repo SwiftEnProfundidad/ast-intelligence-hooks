@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-130` / RuralGo reabre bloqueo parcial de helpers XCTest brownfield: `pumuki@6.3.163` ya elimina `skills.ios.prefer-swift-testing`, pero `apps/ios/Tests/iOS/Common/TestHelpers.swift` sigue bloqueando `skills.ios.critical-test-quality` por `XCTAssertNil` dentro de `trackForMemoryLeaks`. Estado 2026-05-06: `PARITY-IOS-SWIFTDATA-001` queda aparcada en `feature/ios-swiftdata-coredata-ast` con stashes de continuidad; prioridad actual es cerrar esta cola de INC-130, publicar parche y repinear primero RuralGo. |
+| Este plan | [🚧] - Bug externo activo siguiente pendiente de selección tras `PUMUKI-INC-130`. Estado 2026-05-06: `PUMUKI-INC-130` queda corregida y publicada en `pumuki@6.3.167`; RuralGo repineado a `6.3.167` y `npx pumuki-pre-commit --quiet` devuelve `0`, sin `skills.ios.critical-test-quality` sobre `apps/ios/Tests/iOS/Common/TestHelpers.swift`. El commit normal de RuralGo sigue bloqueado por su contrato `PRE_WRITE`/tracking (`EVIDENCE_SKILLS_CONTRACT_INCOMPLETE`, `docs/RURALGO_SEGUIMIENTO.md`), no por el bug XCTest helper. `PARITY-IOS-SWIFTDATA-001` permanece aparcada en `feature/ios-swiftdata-coredata-ast` con stashes de continuidad hasta revisar el siguiente bug externo abierto. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
@@ -954,6 +954,9 @@ Snapshot de rollout `6.3.144` (2026-05-05):
 
 Snapshot de rollout `6.3.145` (2026-05-05):
 - `R_GO` (`chore/pumuki-6-3-145-rollout`, PR #1913): repin a `pumuki@6.3.145` completado y mergeado en `develop`; `status` y `doctor` reportan `runtime=consumerInstalled=lifecycleInstalled=6.3.145`, `driftWarning=null`, `issues=[]`; canary `PRE_COMMIT` limitado a `apps/ios/Tests/iOS/BuyerUISmoke/BuyerCommerceUISmokeTests.swift` devuelve `gate_exit_code=0`, `files_scanned=1` y no emite findings `ios-test-quality` ni `xctassert`; feedback externo actualizado para cerrar `PUMUKI-INC-124` y dejar `PUMUKI-INC-123` como único High activo.
+
+Snapshot de rollout `6.3.167` (2026-05-06):
+- `R_GO` (`bugfix/ruralgo-tracking-build-stability`): repin local a `pumuki@6.3.167` aplicado sobre `package.json`/`package-lock.json`; `node -p` confirma `node_modules/pumuki=6.3.167` y `pkg=6.3.167`; `npx pumuki-pre-commit --quiet` devuelve `0`, cerrando la cola de `PUMUKI-INC-130` para helpers/factories XCTest brownfield. Commit normal no cerrado porque el `PRE_WRITE` del consumer bloquea por `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE` y tracking `RGO-1900-01` en `docs/RURALGO_SEGUIMIENTO.md`; los cambios de producto RuralGo quedan sin tocar desde Pumuki.
 
 Snapshot de rollout `6.3.85` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-83-rollout`): verde sobre `6.3.85`; PR mergeada contra `main`: `app-supermercados#10` (`https://github.com/SwiftEnProfundidad/app-supermercados/pull/10`), squash `e643f9f83d6f860cbd72f7bee67855b74dea213e`.
