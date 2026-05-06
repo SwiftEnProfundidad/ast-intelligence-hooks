@@ -1494,17 +1494,30 @@ export async function runPlatformGate(params: {
         stagedCodePathSet
       )
     : [];
+  const previousIosTestsQualityFinding =
+    previousFactsForStagedPaths.length > 0 &&
+    iosTestsQualityFinding === undefined &&
+    isStrictEnforcementStage(params.policy.stage)
+      ? toIosTestsQualityBlockingFinding({
+          stage: params.policy.stage,
+          facts: previousFactsForStagedPaths,
+        })
+      : undefined;
+  const previousRemediationBlockingFindings = [
+    ...previousBlockingFindingsForStagedPaths,
+    ...(previousIosTestsQualityFinding ? [previousIosTestsQualityFinding] : []),
+  ];
   const remediationProgressFinding =
-    previousBlockingFindingsForStagedPaths.length > currentBlockingFindingsForStagedPaths.length &&
+    previousRemediationBlockingFindings.length > currentBlockingFindingsForStagedPaths.length &&
     currentBlockingFindingsForStagedPaths.length === 0
       ? toRemediationProgressAllowedFinding({
           stage: params.policy.stage as Exclude<GateStage, 'STAGED'>,
           currentBlockingCount: currentBlockingFindingsForStagedPaths.length,
-          previousBlockingCount: previousBlockingFindingsForStagedPaths.length,
+          previousBlockingCount: previousRemediationBlockingFindings.length,
           paths: stagedCodePaths,
           ruleIds: [
             ...new Set(
-              previousBlockingFindingsForStagedPaths.map((finding) => finding.ruleId)
+              previousRemediationBlockingFindings.map((finding) => finding.ruleId)
             ),
           ].sort(),
         })

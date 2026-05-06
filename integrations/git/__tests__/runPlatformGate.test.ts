@@ -4104,6 +4104,179 @@ test('runPlatformGate permite remediation staged que elimina findings soportados
   );
 });
 
+test('runPlatformGate permite remediation staged que elimina deuda makeSUT y leak tracking aunque el enforcement global siga incompleto', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const repoRoot = '/repo/root';
+  const stagedPath = 'apps/ios/Tests/Mac/Auth/AuthErrorMapperTests.swift';
+  const git = buildGitStub(repoRoot);
+  git.runGit = (args) => {
+    const command = args.join(' ');
+    if (command === 'diff --cached --name-only') {
+      return stagedPath;
+    }
+    if (command === `show HEAD:${stagedPath}`) {
+      return `
+import XCTest
+
+final class AuthErrorMapperTests: XCTestCase {
+  func test_mapsError() {
+    XCTAssertTrue(true)
+  }
+}
+      `.trim();
+    }
+    return '';
+  };
+  const evidence = buildEvidenceStub();
+  const stagedFacts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileChange',
+      path: stagedPath,
+      changeType: 'modified',
+      source: 'git:staged',
+    },
+    {
+      kind: 'FileContent',
+      path: stagedPath,
+      content: `
+import XCTest
+
+final class AuthErrorMapperTests: XCTestCase {
+  func test_mapsError() {
+    let sut = makeSUT()
+    trackForMemoryLeaks(sut)
+    XCTAssertTrue(true)
+  }
+
+  private func makeSUT() -> AnyObject {
+    NSObject()
+  }
+}
+      `.trim(),
+      source: 'git:staged',
+    },
+  ];
+  const iosBundles = [
+    'ios-guidelines',
+    'ios-concurrency-guidelines',
+    'ios-swiftui-expert-guidelines',
+    'ios-swift-testing-guidelines',
+    'ios-core-data-guidelines',
+  ].map((name, index) => ({
+    name,
+    version: '1.0.0',
+    source: 'test',
+    hash: String(index).repeat(64).slice(0, 64).padEnd(64, '0'),
+    rules: [],
+  }));
+  let emitted:
+    | {
+      gateOutcome: 'PASS' | 'WARN' | 'BLOCK';
+      findings: ReadonlyArray<Finding>;
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope: { kind: 'staged' },
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      resolveFactsForGateScope: async () => stagedFacts,
+      evaluatePlatformGateFindings: ({ facts }) => ({
+        detectedPlatforms: {
+          ios: { detected: true, confidence: 'HIGH' },
+        },
+        skillsRuleSet: {
+          rules: [
+            createSkillRule({
+              id: 'skills.ios.critical-test-quality',
+              severity: 'ERROR',
+              platform: 'ios',
+            }),
+          ],
+          activeBundles: iosBundles,
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+          unsupportedDetectorRuleIds: ['skills.ios.guideline.declarative-only'],
+          registryCoverage: {
+            contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+            stage: 'PRE_COMMIT',
+            registryTotals: {
+              total: 2,
+              auto: 1,
+              declarative: 1,
+            },
+            stageApplicableAutoRuleIds: ['skills.ios.critical-test-quality'],
+            declarativeRuleIds: ['skills.ios.guideline.declarative-only'],
+            excludedDeclarativeReason: 'declarative-only',
+          },
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: facts.length,
+          filesScanned: 1,
+          rulesTotal: 1,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 1,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 1,
+          unevaluatedRules: 0,
+          activeRuleIds: ['skills.ios.critical-test-quality'],
+          evaluatedRuleIds: ['skills.ios.critical-test-quality'],
+          matchedRuleIds: [],
+          unmatchedRuleIds: ['skills.ios.critical-test-quality'],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: (findingsArg) => evaluateGateFromFindings(findingsArg, policy),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveActiveGateWaiver: () => ({
+        kind: 'none',
+        path: '.pumuki/waivers/gate.json',
+      }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emitted = {
+          gateOutcome: paramsArg.gateOutcome,
+          findings: paramsArg.findings,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emitted?.gateOutcome, 'PASS');
+  assert.equal(
+    emitted?.findings.some((finding) => finding.code === 'REMEDIATION_PROGRESS_ALLOWED'),
+    true
+  );
+  assert.equal(
+    emitted?.findings.some(
+      (finding) =>
+        finding.code === 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_REMEDIATION_ADVISORY' &&
+        finding.severity === 'INFO'
+    ),
+    true
+  );
+});
+
 test('runPlatformGate permite diffs de infraestructura que aumentan cobertura de skills aunque exista gap global', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_COMMIT',
