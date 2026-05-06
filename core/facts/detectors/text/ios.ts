@@ -934,17 +934,37 @@ export const hasSwiftLegacyExpectationDescriptionUsage = (source: string): boole
   });
 };
 
-export const hasSwiftNSManagedObjectBoundaryUsage = (source: string): boolean => {
-  return hasSwiftSanitizedRegexMatch(
-    source,
-    /\bfunc\b[\s\S]{0,240}\([^)]*\bNSManagedObject\b(?!ID\b|Context\b)[^)]*\)|\b(?:var|let)\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*(?:\[[^\]]*NSManagedObject\b(?!ID\b|Context\b)[^\]]*\]|NSManagedObject\b(?!ID\b|Context\b))/g
+const swiftManagedObjectBoundaryTypePattern = /\bNSManagedObject\b(?!ID\b|Context\b)/;
+const swiftStoredPropertyBoundaryPattern =
+  /\b(?:var|let)\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*[^=\n]*\bNSManagedObject\b(?!ID\b|Context\b)/;
+const swiftManagedObjectSubclassPattern =
+  /\b(?:final\s+)?class\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*NSManagedObject\b/;
+
+const hasSwiftManagedObjectBoundaryTypeUsage = (source: string): boolean => {
+  return collectSwiftFunctionDeclarations(source).some((declaration) =>
+    swiftManagedObjectBoundaryTypePattern.test(declaration.signature)
   );
 };
 
+export const hasSwiftNSManagedObjectBoundaryUsage = (source: string): boolean => {
+  if (hasSwiftManagedObjectBoundaryTypeUsage(source)) {
+    return true;
+  }
+
+  return source.split(/\r?\n/).some((line) => {
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    return (
+      swiftStoredPropertyBoundaryPattern.test(sanitized) &&
+      !swiftManagedObjectSubclassPattern.test(sanitized)
+    );
+  });
+};
+
 export const hasSwiftNSManagedObjectAsyncBoundaryUsage = (source: string): boolean => {
-  return hasSwiftSanitizedRegexMatch(
-    source,
-    /\bfunc\b[\s\S]{0,240}\basync\b[\s\S]{0,200}(?:\([^)]*\bNSManagedObject\b(?!ID\b|Context\b)[^)]*\)|->\s*(?:\[[^\]]*NSManagedObject\b(?!ID\b|Context\b)[^\]]*\]|NSManagedObject\b(?!ID\b|Context\b)))/g
+  return collectSwiftFunctionDeclarations(source).some(
+    (declaration) =>
+      /\basync\b/.test(declaration.signature) &&
+      swiftManagedObjectBoundaryTypePattern.test(declaration.signature)
   );
 };
 

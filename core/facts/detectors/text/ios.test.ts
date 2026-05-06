@@ -752,11 +752,14 @@ test('hasSwiftNSManagedObjectBoundaryUsage detecta boundaries con NSManagedObjec
   const source = `
 func persist(_ entity: NSManagedObject) {}
 var selectedEntity: NSManagedObject?
+let cachedEntities: Result<[NSManagedObject], Error>
 `;
   const ignored = `
 final class TodoEntity: NSManagedObject {}
 var selectedID: NSManagedObjectID?
 let context: NSManagedObjectContext
+let text = "var selectedEntity: NSManagedObject?"
+// func persist(_ entity: NSManagedObject) {}
 `;
 
   assert.equal(hasSwiftNSManagedObjectBoundaryUsage(source), true);
@@ -768,9 +771,15 @@ test('hasSwiftNSManagedObjectAsyncBoundaryUsage detecta async APIs con NSManaged
 func fetchEntity() async throws -> NSManagedObject {
   fatalError()
 }
+func fetchEntities() async throws -> Result<[NSManagedObject], Error> {
+  fatalError()
+}
 `;
   const ignored = `
 func fetchEntityID() async throws -> NSManagedObjectID {
+  fatalError()
+}
+func fetchContext() async throws -> NSManagedObjectContext {
   fatalError()
 }
 `;
