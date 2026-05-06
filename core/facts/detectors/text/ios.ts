@@ -100,6 +100,63 @@ const hasSwiftSanitizedRegexMatch = (source: string, regex: RegExp): boolean => 
   return regex.test(sanitizeSwiftSourceForMultilineRegex(source));
 };
 
+type SwiftFunctionDeclaration = {
+  signature: string;
+  body: string;
+};
+
+const collectSwiftFunctionDeclarations = (source: string): readonly SwiftFunctionDeclaration[] => {
+  const lines = source.split(/\r?\n/);
+  const functions: SwiftFunctionDeclaration[] = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const firstLine = stripSwiftLineForSemanticScan(lines[index] ?? '');
+    if (!/\bfunc\b/.test(firstLine)) {
+      continue;
+    }
+
+    const signatureLines: string[] = [];
+    let cursor = index;
+    let openingLineIndex = -1;
+    for (; cursor < lines.length && cursor < index + 24; cursor += 1) {
+      const line = stripSwiftLineForSemanticScan(lines[cursor] ?? '');
+      signatureLines.push(line);
+      if (line.includes('{')) {
+        openingLineIndex = cursor;
+        break;
+      }
+      if (line.includes('}')) {
+        break;
+      }
+    }
+
+    if (openingLineIndex < 0) {
+      continue;
+    }
+
+    const bodyLines: string[] = [];
+    let braceDepth = 0;
+    for (let bodyCursor = openingLineIndex; bodyCursor < lines.length; bodyCursor += 1) {
+      const line = stripSwiftLineForSemanticScan(lines[bodyCursor] ?? '');
+      braceDepth += countTokenOccurrences(line, '{');
+      braceDepth -= countTokenOccurrences(line, '}');
+      bodyLines.push(line);
+      if (bodyCursor > openingLineIndex && braceDepth <= 0) {
+        cursor = bodyCursor;
+        break;
+      }
+    }
+
+    functions.push({
+      signature: signatureLines.join('\n'),
+      body: bodyLines.join('\n'),
+    });
+    index = cursor;
+  }
+
+  return functions;
+};
+
 const hasSwiftUiModernizationSnapshotMatch = (source: string, entryId: string): boolean => {
   const entry = getIosSwiftUiModernizationEntry(entryId);
   if (!entry) {
@@ -855,10 +912,14 @@ const hasSwiftConfirmationUsage = (source: string): boolean => {
 };
 
 export const hasSwiftWaitForExpectationsUsage = (source: string): boolean => {
-  return hasSwiftSanitizedRegexMatch(
-    source,
-    /\bwait\s*\(\s*for\s*:|\bwaitForExpectations\s*\(/
-  );
+  const legacyWaitPattern = /\bwait\s*\(\s*for\s*:|\bwaitForExpectations\s*\(/;
+  return collectSwiftFunctionDeclarations(source).some((declaration) => {
+    if (!/\basync\b/.test(declaration.signature)) {
+      return false;
+    }
+    legacyWaitPattern.lastIndex = 0;
+    return legacyWaitPattern.test(declaration.body);
+  });
 };
 
 export const hasSwiftLegacyExpectationDescriptionUsage = (source: string): boolean => {
