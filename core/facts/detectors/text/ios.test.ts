@@ -669,6 +669,26 @@ final class LoginModelTests: XCTestCase {
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(missingQualityContract), false);
 });
 
+test('detectores Swift Testing excluyen helpers y factories XCTest brownfield sin XCTestCase', () => {
+  const helperSource = `
+import XCTest
+
+final class AuthTestFactories {
+  static func makeToken() -> String {
+    "token"
+  }
+}
+
+func trackForMemoryLeaks(_ instance: AnyObject, file: StaticString = #filePath, line: UInt = #line) {
+  addTeardownBlock { _ = instance }
+}
+  `;
+
+  assert.equal(hasSwiftLegacyXCTestImportUsage(helperSource), false);
+  assert.equal(hasSwiftModernizableXCTestSuiteUsage(helperSource), false);
+  assert.equal(hasSwiftXCTestAssertionUsage(helperSource), false);
+});
+
 test('hasSwiftXCTUnwrapUsage detecta XCTUnwrap real y evita strings', () => {
   const source = `
 let value = try XCTUnwrap(optionalValue)
