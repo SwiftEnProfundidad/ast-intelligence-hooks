@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `PUMUKI-INC-129` / RuralGo: permitir commit de remediación iOS que elimina `makeSUT()` + `trackForMemoryLeaks()` sin bloquear por `governance.skills.global-enforcement.incomplete`, y respetar aliases de notificaciones desactivadas (`PUMUKI_SYSTEM_NOTIFICATIONS=0`, `PUMUKI_NOTIFICATIONS=0`). Estado 2026-05-06: bug externo activo; congelada la continuación interna de `PARITY-IOS-001` hasta publicar fix, repinear primero RuralGo y validar commit normal sin `--no-verify`. |
+| Este plan | [🚧] - `PUMUKI-INC-130` / RuralGo: permitir helpers y factories XCTest brownfield (`AuthTestFactories.swift`, `TestHelpers.swift`) sin tratarlos como suites migrables a Swift Testing ni exigir `makeSUT()`/`trackForMemoryLeaks()` en archivos que no contienen `XCTestCase` con métodos `test...`. Estado 2026-05-06: bug externo activo; congelada la continuación interna de `PARITY-IOS-001` hasta publicar fix, repinear primero RuralGo y validar hook normal sin `--no-verify`. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.

@@ -845,6 +845,10 @@ export const hasSwiftLegacyXCTestImportUsage = (source: string): boolean => {
     return false;
   }
 
+  if (!hasSwiftXCTestCaseSubclassUsage(source) || !hasSwiftLegacyXCTestMethodUsage(source)) {
+    return false;
+  }
+
   if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
     return false;
   }
