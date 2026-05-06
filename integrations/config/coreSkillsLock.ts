@@ -8,6 +8,15 @@ const PACKAGE_ROOT = resolve(__dirname, '..', '..');
 
 let cachedCoreSkillsLock: SkillsLockV1 | undefined;
 
+const writeDebugFallback = (error: unknown): void => {
+  if (process.env.PUMUKI_DEBUG !== '1') {
+    return;
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  process.stderr.write(`[pumuki][skills-lock] compile fallback: ${message}\n`);
+};
+
 export const resolveCoreSkillsLockForPackageRoot = (
   packageRoot: string
 ): SkillsLockV1 | undefined => {
@@ -20,7 +29,8 @@ export const resolveCoreSkillsLockForPackageRoot = (
     if (compiledLock.bundles.length > 0) {
       return compiledLock;
     }
-  } catch {
+  } catch (error) {
+    writeDebugFallback(error);
   }
 
   return loadSkillsLock(packageRoot);

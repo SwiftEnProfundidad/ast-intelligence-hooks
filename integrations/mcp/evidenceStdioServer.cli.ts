@@ -21,6 +21,12 @@ type JsonRpcResponse = {
 };
 
 const MCP_PROTOCOL_VERSION = '2024-11-05';
+const JSON_RPC_VERSION = '2.0';
+const DEFAULT_EVIDENCE_HOST = '127.0.0.1';
+const DEFAULT_EVIDENCE_ROUTE = '/ai-evidence';
+const DEFAULT_EVIDENCE_PORT = 7341;
+const PORT_PROBE_TIMEOUT_MS = 600;
+const JSON_RPC_INVALID_REQUEST = -32600;
 
 const toJsonRpcId = (value: unknown): JsonRpcId => {
   if (typeof value === 'string' || typeof value === 'number' || value === null) {
@@ -35,7 +41,7 @@ const sendMessage = (message: JsonRpcResponse): void => {
 
 const sendResult = (id: JsonRpcId, result: unknown): void => {
   sendMessage({
-    jsonrpc: '2.0',
+    jsonrpc: JSON_RPC_VERSION,
     id,
     result,
   });
@@ -52,10 +58,10 @@ const sendError = (id: JsonRpcId, code: number, message: string): void => {
   });
 };
 
-const isPortInUse = async (host: string, port: number): Promise<boolean> =>
+const canConnectToAddress = async (host: string, port: number): Promise<boolean> =>
   await new Promise((resolve) => {
     const socket = new Socket();
-    socket.setTimeout(600);
+    socket.setTimeout(PORT_PROBE_TIMEOUT_MS);
     socket.once('connect', () => {
       socket.destroy();
       resolve(true);
@@ -71,7 +77,7 @@ const isPortInUse = async (host: string, port: number): Promise<boolean> =>
     socket.connect(port, host);
   });
 
-const findEphemeralPort = async (host: string): Promise<number> =>
+const findAvailableListenerNumber = async (host: string): Promise<number> =>
   await new Promise((resolve, reject) => {
     const probe = createServer();
     probe.once('error', reject);
@@ -91,16 +97,26 @@ const fetchJson = async (url: string): Promise<unknown> => {
   return JSON.parse(text) as unknown;
 };
 
+const writeDebugHealthProbeFailure = (error: unknown): void => {
+  if (process.env.PUMUKI_DEBUG !== '1') {
+    return;
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  process.stderr.write(`[pumuki-mcp-evidence-stdio] health probe fallback: ${message}\n`);
+};
+
 const startOrReuseEvidenceHttp = async (): Promise<{
   host: string;
   port: number;
   route: string;
 }> => {
-  const host = process.env.PUMUKI_EVIDENCE_HOST ?? '127.0.0.1';
-  const route = process.env.PUMUKI_EVIDENCE_ROUTE ?? '/ai-evidence';
+  const host = process.env.PUMUKI_EVIDENCE_HOST ?? DEFAULT_EVIDENCE_HOST;
+  const route = process.env.PUMUKI_EVIDENCE_ROUTE ?? DEFAULT_EVIDENCE_ROUTE;
   const parsedPort = Number.parseInt(process.env.PUMUKI_EVIDENCE_PORT ?? '', 10);
-  const preferredPort = Number.isFinite(parsedPort) ? parsedPort : 7341;
-  const requestedPort = preferredPort > 0 ? preferredPort : await findEphemeralPort(host);
+  const preferredPort = Number.isFinite(parsedPort) ? parsedPort : DEFAULT_EVIDENCE_PORT;
+  const requestedPort =
+    preferredPort > 0 ? preferredPort : await findAvailableListenerNumber(host);
   const healthUrl = `http://${host}:${requestedPort}/health`;
 
   try {
@@ -108,12 +124,12 @@ const startOrReuseEvidenceHttp = async (): Promise<{
     if (health.status === 'ok') {
       return { host, port: requestedPort, route };
     }
-  } catch {
-    // ignored
+  } catch (error) {
+    writeDebugHealthProbeFailure(error);
   }
 
-  const portInUse = await isPortInUse(host, requestedPort);
-  const resolvedPort = portInUse ? await findEphemeralPort(host) : requestedPort;
+  const portInUse = await canConnectToAddress(host, requestedPort);
+  const resolvedPort = portInUse ? await findAvailableListenerNumber(host) : requestedPort;
   startEvidenceContextServer({
     host,
     port: resolvedPort,
@@ -191,8 +207,8 @@ const run = async (): Promise<void> => {
   ] as const;
 
   const handleRequest = async (request: JsonRpcRequest): Promise<void> => {
-    if (request.jsonrpc !== '2.0') {
-      sendError(toJsonRpcId(request.id), -32600, 'Invalid JSON-RPC version.');
+    if (request.jsonrpc !== JSON_RPC_VERSION) {
+      sendError(toJsonRpcId(request.id), JSON_RPC_INVALID_REQUEST, 'Invalid JSON-RPC version.');
       return;
     }
 

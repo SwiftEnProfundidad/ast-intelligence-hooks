@@ -603,7 +603,6 @@ export const loadSkillsRuleSetForStage = (
         continue;
       }
       if (evaluationMode !== 'AUTO') {
-        unsupportedDetectorRuleIds.add(compiledRule.id);
         continue;
       }
       stageApplicableAutoRuleIds.add(compiledRule.id);

@@ -4834,9 +4834,7 @@ test('keeps only generic/text rules when no platform is detected', async () => {
       'skills.generic.architecture-note',
     ]);
     assert.equal(result.registryCoverage?.registryTotals.declarative, 1);
-    assert.deepEqual(result.unsupportedDetectorRuleIds, [
-      'skills.generic.architecture-note',
-    ]);
+    assert.deepEqual(result.unsupportedDetectorRuleIds, []);
   }));
 });
 

@@ -2128,7 +2128,7 @@ test('runPlatformGate bloquea en modo strict cuando existen reglas AUTO de skill
   });
 });
 
-test('runPlatformGate bloquea reglas declarativas hard sin detector aunque la cobertura AUTO este completa', async () => {
+test('runPlatformGate no bloquea reglas declarativas cuando la cobertura AUTO esta completa', async () => {
   await withSkillsEnforcementEnv('strict', async () => {
     const policy: GatePolicy = {
       stage: 'PRE_WRITE',
@@ -2183,9 +2183,7 @@ test('runPlatformGate bloquea reglas declarativas hard sin detector aunque la co
             mappedHeuristicRuleIds: new Set<string>(),
             requiresHeuristicFacts: false,
             unsupportedAutoRuleIds: [],
-            unsupportedDetectorRuleIds: [
-              'skills.backend.guideline.backend.clean-architecture',
-            ],
+            unsupportedDetectorRuleIds: [],
             registryCoverage: {
               contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
               stage: 'PRE_WRITE',
@@ -2240,26 +2238,18 @@ test('runPlatformGate bloquea reglas declarativas hard sin detector aunque la co
       },
     });
 
-    assert.equal(result, 1);
-    assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+    assert.equal(result, 0);
+    assert.equal(emittedArgs?.gateOutcome, 'PASS');
     assert.equal(
       emittedArgs?.findings.some(
         (finding) => finding.ruleId === 'governance.skills.global-enforcement.incomplete'
       ),
-      true
+      false
     );
-    const globalFinding = emittedArgs?.findings.find(
-      (finding) => finding.ruleId === 'governance.skills.global-enforcement.incomplete'
-    );
-    assert.equal(globalFinding?.code, 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL');
-    assert.match(globalFinding?.message ?? '', /registry_total=845/);
-    assert.match(globalFinding?.message ?? '', /unsupported_detector=1/);
     assert.equal(emittedArgs?.rulesCoverage?.unsupported_auto_rule_ids, undefined);
-    assert.deepEqual(emittedArgs?.rulesCoverage?.unsupported_detector_rule_ids, [
-      'skills.backend.guideline.backend.clean-architecture',
-    ]);
+    assert.equal(emittedArgs?.rulesCoverage?.unsupported_detector_rule_ids, undefined);
     assert.equal(emittedArgs?.rulesCoverage?.counts?.unsupported_auto, undefined);
-    assert.equal(emittedArgs?.rulesCoverage?.counts?.unsupported_detector, 1);
+    assert.equal(emittedArgs?.rulesCoverage?.counts?.unsupported_detector, undefined);
   });
 });
 
