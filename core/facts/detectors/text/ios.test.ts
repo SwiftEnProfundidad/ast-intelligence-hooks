@@ -659,17 +659,28 @@ let text = "XCTUnwrap(optionalValue)"
 });
 
 test('hasSwiftWaitForExpectationsUsage detecta waits legacy y excluye await fulfillment', () => {
-  const legacyWait = `
+  const legacyAsyncWait = `
+func testLegacyAsync() async {
 let expectation = expectation(description: "Done")
 wait(for: [expectation], timeout: 1)
 waitForExpectations(timeout: 1)
+}
+`;
+  const legacySyncWait = `
+func testLegacySync() {
+let expectation = expectation(description: "Done")
+wait(for: [expectation], timeout: 1)
+}
 `;
   const modernWait = `
+func testModernAsync() async {
 let expectation = expectation(description: "Done")
 await fulfillment(of: [expectation], timeout: 1)
+}
 `;
 
-  assert.equal(hasSwiftWaitForExpectationsUsage(legacyWait), true);
+  assert.equal(hasSwiftWaitForExpectationsUsage(legacyAsyncWait), true);
+  assert.equal(hasSwiftWaitForExpectationsUsage(legacySyncWait), false);
   assert.equal(hasSwiftWaitForExpectationsUsage(modernWait), false);
 });
 
