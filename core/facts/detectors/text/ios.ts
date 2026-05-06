@@ -923,20 +923,15 @@ export const hasSwiftWaitForExpectationsUsage = (source: string): boolean => {
 };
 
 export const hasSwiftLegacyExpectationDescriptionUsage = (source: string): boolean => {
-  const hasLegacyExpectation = collectSwiftRegexLines(
-    source,
-    /\bexpectation\s*\(\s*description\s*:/
-  ).length > 0;
-
-  if (!hasLegacyExpectation) {
-    return false;
-  }
-
-  if (hasSwiftAwaitFulfillmentUsage(source) || hasSwiftConfirmationUsage(source)) {
-    return false;
-  }
-
-  return true;
+  return collectSwiftFunctionDeclarations(source).some((declaration) => {
+    if (!/\basync\b/.test(declaration.signature)) {
+      return false;
+    }
+    if (!hasSwiftSanitizedRegexMatch(declaration.body, /\bexpectation\s*\(\s*description\s*:/)) {
+      return false;
+    }
+    return !hasSwiftAwaitFulfillmentUsage(declaration.body) && !hasSwiftConfirmationUsage(declaration.body);
+  });
 };
 
 export const hasSwiftNSManagedObjectBoundaryUsage = (source: string): boolean => {

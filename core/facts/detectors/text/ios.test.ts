@@ -684,26 +684,45 @@ await fulfillment(of: [expectation], timeout: 1)
   assert.equal(hasSwiftWaitForExpectationsUsage(modernWait), false);
 });
 
-test('hasSwiftLegacyExpectationDescriptionUsage detecta expectation(description:) sin flujo moderno', () => {
-  const legacyExpectation = `
+test('hasSwiftLegacyExpectationDescriptionUsage detecta expectation(description:) en tests async sin flujo moderno', () => {
+  const legacyAsyncExpectation = `
+func testLegacyAsync() async {
 let expectation = expectation(description: "Done")
 doWork { expectation.fulfill() }
-waitForExpectations(timeout: 1)
+}
 `;
-  const modernExpectation = `
+  const legacySyncExpectation = `
+func testLegacySync() {
+let expectation = expectation(description: "Done")
+doWork { expectation.fulfill() }
+}
+`;
+  const modernAsyncExpectation = `
+func testModernAsync() async {
 let expectation = expectation(description: "Done")
 doWork { expectation.fulfill() }
 await fulfillment(of: [expectation], timeout: 1)
+}
 `;
-  const confirmationOnly = `
+  const confirmationFlow = `
+func testConfirmation() async {
 await confirmation("Done") { confirm in
   await doWork { confirm() }
 }
+}
+`;
+  const commentedExpectation = `
+func testModernAsync() async {
+// let expectation = expectation(description: "Done")
+await confirmation("Done") { confirm in confirm() }
+}
 `;
 
-  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(legacyExpectation), true);
-  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(modernExpectation), false);
-  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(confirmationOnly), false);
+  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(legacyAsyncExpectation), true);
+  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(legacySyncExpectation), false);
+  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(modernAsyncExpectation), false);
+  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(confirmationFlow), false);
+  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(commentedExpectation), false);
 });
 
 test('hasSwiftNSManagedObjectBoundaryUsage detecta boundaries con NSManagedObject y excluye IDs o subclases', () => {
