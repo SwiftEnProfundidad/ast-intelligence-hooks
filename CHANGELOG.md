@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.166] - 2026-05-06
+
+### Fixed
+
+- **Backend heuristic false positives:** JSON-RPC protocol codes and MCP listener resolution no longer trigger backend hardcoded config or magic-number blockers during `PRE_PUSH`.
+
 ## [6.3.165] - 2026-05-06
 
 ### Fixed
