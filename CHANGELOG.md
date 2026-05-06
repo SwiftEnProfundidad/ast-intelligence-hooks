@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.167] - 2026-05-06
+
+### Fixed
+
+- **MCP evidence stdio strict backend gate:** the MCP bridge now uses explicit JSON-RPC constants and requires adapter-provided evidence env vars instead of production defaults, keeping `PRE_PUSH` fail-closed without false backend blockers.
+
 ## [6.3.166] - 2026-05-06
 
 ### Fixed
