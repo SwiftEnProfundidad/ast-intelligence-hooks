@@ -554,10 +554,11 @@ const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
   ) {
     if (!params.dependencies.isQuietMode()) {
       process.stderr.write(
-        `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} left unstaged because it was not staged before PRE_COMMIT. ` +
+        `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} restored because it was not staged before PRE_COMMIT. ` +
           `Force previous behavior: PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1\n`
       );
     }
+    params.dependencies.restorePathFromHead(params.repoRoot, EVIDENCE_FILE_PATH);
     return false;
   }
   try {

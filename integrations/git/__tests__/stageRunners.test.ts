@@ -936,6 +936,7 @@ test('runPreCommitStage no auto-restaguea evidencia trackeada si el índice solo
       runGit(repoRoot, ['diff', '--cached', '--name-only', '--', '.ai_evidence.json']),
       ''
     );
+    assert.equal(runGit(repoRoot, ['diff', '--name-only', '--', '.ai_evidence.json']), '');
   });
 });
 
