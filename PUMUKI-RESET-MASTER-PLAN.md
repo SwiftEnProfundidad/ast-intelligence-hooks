@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - Bug externo activo siguiente pendiente de selección tras `PUMUKI-INC-130`. Estado 2026-05-06: `PUMUKI-INC-130` queda corregida y publicada en `pumuki@6.3.167`; RuralGo repineado a `6.3.167` y `npx pumuki-pre-commit --quiet` devuelve `0`, sin `skills.ios.critical-test-quality` sobre `apps/ios/Tests/iOS/Common/TestHelpers.swift`. El commit normal de RuralGo sigue bloqueado por su contrato `PRE_WRITE`/tracking (`EVIDENCE_SKILLS_CONTRACT_INCOMPLETE`, `docs/RURALGO_SEGUIMIENTO.md`), no por el bug XCTest helper. `PARITY-IOS-SWIFTDATA-001` permanece aparcada en `feature/ios-swiftdata-coredata-ast` con stashes de continuidad hasta revisar el siguiente bug externo abierto. |
+| Este plan | [🚧] - `PUMUKI-INC-131` / RuralGo reporta que `pumuki-pre-commit` fuerza `git add -- .ai_evidence.json` en commits de código aunque el developer no la hubiera staged, y `skip-worktree` hace fallar el hook con `EVIDENCE_STAGE_SYNC_FAILED`. Estado 2026-05-06: fix implementado para respetar el índice inicial cuando el gate pasa; pendiente publicar y repinear primero RuralGo. `PARITY-IOS-SWIFTDATA-001` permanece aparcada en `feature/ios-swiftdata-coredata-ast` con stashes de continuidad hasta cerrar esta incidencia externa. |
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
@@ -957,6 +957,9 @@ Snapshot de rollout `6.3.145` (2026-05-05):
 
 Snapshot de rollout `6.3.167` (2026-05-06):
 - `R_GO` (`bugfix/ruralgo-tracking-build-stability`): repin local a `pumuki@6.3.167` aplicado sobre `package.json`/`package-lock.json`; `node -p` confirma `node_modules/pumuki=6.3.167` y `pkg=6.3.167`; `npx pumuki-pre-commit --quiet` devuelve `0`, cerrando la cola de `PUMUKI-INC-130` para helpers/factories XCTest brownfield. Commit normal no cerrado porque el `PRE_WRITE` del consumer bloquea por `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE` y tracking `RGO-1900-01` en `docs/RURALGO_SEGUIMIENTO.md`; los cambios de producto RuralGo quedan sin tocar desde Pumuki.
+
+Snapshot de rollout `6.3.168` (2026-05-06):
+- `PUMUKI-INC-131` corrige higiene de `.ai_evidence.json` trackeado: si el gate `PRE_COMMIT` pasa y `.ai_evidence.json` no estaba staged al inicio, Pumuki no lo restagea automáticamente; commits doc-only mantienen la restauración de drift y `PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1` conserva el comportamiento legacy. Validación: `stageRunners.test.ts` 52/52 verde.
 
 Snapshot de rollout `6.3.85` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-83-rollout`): verde sobre `6.3.85`; PR mergeada contra `main`: `app-supermercados#10` (`https://github.com/SwiftEnProfundidad/app-supermercados/pull/10`), squash `e643f9f83d6f860cbd72f7bee67855b74dea213e`.

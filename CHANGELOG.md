@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.168] - 2026-05-06
+
+### Fixed
+
+- **Tracked evidence commit hygiene:** `pumuki-pre-commit` now respects tracked `.ai_evidence.json` when it was not staged by the developer before a successful code commit. Documentation-only commits still restore evidence drift, and `PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1` preserves the previous forced restage behavior.
+
 ## [6.3.167] - 2026-05-06
 
 ### Fixed
