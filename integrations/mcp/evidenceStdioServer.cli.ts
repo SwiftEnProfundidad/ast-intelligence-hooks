@@ -22,11 +22,30 @@ type JsonRpcResponse = {
 
 const MCP_PROTOCOL_VERSION = '2024-11-05';
 const JSON_RPC_VERSION = '2.0';
-const DEFAULT_EVIDENCE_HOST = '127.0.0.1';
-const DEFAULT_EVIDENCE_ROUTE = '/ai-evidence';
-const DEFAULT_EVIDENCE_PORT = 7341;
+const EVIDENCE_HOST_ENV = 'PUMUKI_EVIDENCE_HOST';
+const EVIDENCE_ROUTE_ENV = 'PUMUKI_EVIDENCE_ROUTE';
+const EVIDENCE_PORT_ENV = 'PUMUKI_EVIDENCE_PORT';
 const PORT_PROBE_TIMEOUT_MS = 600;
+const EPHEMERAL_LISTENER_PORT = 0;
+const EMPTY_TEXT_LENGTH = 0;
+const DECIMAL_RADIX = 10;
+const PROCESS_FAILURE_EXIT_CODE = 1;
+const LINE_BREAK_WIDTH = 1;
+const TOOL_IMPLEMENTATION_VERSION = '1.0.0';
 const JSON_RPC_INVALID_REQUEST = -32600;
+const JSON_RPC_METHOD_NOT_FOUND = -32601;
+const JSON_RPC_INVALID_PARAMS = -32602;
+const JSON_RPC_INTERNAL_ERROR = -32603;
+const JSON_RPC_PARSE_ERROR = -32700;
+const LINE_BREAK_NOT_FOUND = -1;
+
+const readRequiredEnv = (name: string): string => {
+  const value = process.env[name];
+  if (typeof value === 'string' && value.trim().length > EMPTY_TEXT_LENGTH) {
+    return value;
+  }
+  throw new Error(`${name} is required for pumuki MCP evidence stdio bridge.`);
+};
 
 const toJsonRpcId = (value: unknown): JsonRpcId => {
   if (typeof value === 'string' || typeof value === 'number' || value === null) {
@@ -49,7 +68,7 @@ const sendResult = (id: JsonRpcId, result: unknown): void => {
 
 const sendError = (id: JsonRpcId, code: number, message: string): void => {
   sendMessage({
-    jsonrpc: '2.0',
+    jsonrpc: JSON_RPC_VERSION,
     id,
     error: {
       code,
@@ -81,9 +100,10 @@ const findAvailableListenerNumber = async (host: string): Promise<number> =>
   await new Promise((resolve, reject) => {
     const probe = createServer();
     probe.once('error', reject);
-    probe.listen(0, host, () => {
+    probe.listen(EPHEMERAL_LISTENER_PORT, host, () => {
       const address = probe.address();
-      const port = address && typeof address === 'object' ? address.port : 0;
+      const port =
+        address && typeof address === 'object' ? address.port : EPHEMERAL_LISTENER_PORT;
       probe.close(() => resolve(port));
     });
   });
@@ -91,7 +111,7 @@ const findAvailableListenerNumber = async (host: string): Promise<number> =>
 const fetchJson = async (url: string): Promise<unknown> => {
   const response = await fetch(url);
   const text = await response.text();
-  if (text.trim().length === 0) {
+  if (text.trim().length === EMPTY_TEXT_LENGTH) {
     return {};
   }
   return JSON.parse(text) as unknown;
@@ -111,14 +131,17 @@ const startOrReuseEvidenceHttp = async (): Promise<{
   port: number;
   route: string;
 }> => {
-  const host = process.env.PUMUKI_EVIDENCE_HOST ?? DEFAULT_EVIDENCE_HOST;
-  const route = process.env.PUMUKI_EVIDENCE_ROUTE ?? DEFAULT_EVIDENCE_ROUTE;
-  const parsedListener = Number.parseInt(process.env.PUMUKI_EVIDENCE_PORT ?? '', 10);
-  const preferredListener = Number.isFinite(parsedListener)
-    ? parsedListener
-    : DEFAULT_EVIDENCE_PORT;
+  const host = readRequiredEnv(EVIDENCE_HOST_ENV);
+  const route = readRequiredEnv(EVIDENCE_ROUTE_ENV);
+  const parsedListener = Number.parseInt(readRequiredEnv(EVIDENCE_PORT_ENV), DECIMAL_RADIX);
+  if (!Number.isFinite(parsedListener)) {
+    throw new Error(`${EVIDENCE_PORT_ENV} must be a valid listener number.`);
+  }
+  const preferredListener = parsedListener;
   const requestedListener =
-    preferredListener > 0 ? preferredListener : await findAvailableListenerNumber(host);
+    preferredListener > EPHEMERAL_LISTENER_PORT
+      ? preferredListener
+      : await findAvailableListenerNumber(host);
   const healthUrl = `http://${host}:${requestedListener}/health`;
 
   try {
@@ -228,7 +251,7 @@ const run = async (): Promise<void> => {
         protocolVersion: MCP_PROTOCOL_VERSION,
         serverInfo: {
           name: 'pumuki-evidence-stdio',
-          version: '1.0.0',
+          version: TOOL_IMPLEMENTATION_VERSION,
         },
         capabilities: {
           tools: {
@@ -269,7 +292,7 @@ const run = async (): Promise<void> => {
       const name = typeof params.name === 'string' ? params.name : '';
       const tool = toolsCatalog.find((entry) => entry.name === name);
       if (!tool) {
-        sendError(id, -32602, `Unknown tool: ${name}`);
+        sendError(id, JSON_RPC_INVALID_PARAMS, `Unknown tool: ${name}`);
         return;
       }
       const payload = await fetchJson(`${baseUrl}${tool.path}`);
@@ -304,7 +327,7 @@ const run = async (): Promise<void> => {
       const uri = typeof params.uri === 'string' ? params.uri : '';
       const resource = resourcesCatalog.find((entry) => entry.uri === uri);
       if (!resource) {
-        sendError(id, -32602, `Unknown resource URI: ${uri}`);
+        sendError(id, JSON_RPC_INVALID_PARAMS, `Unknown resource URI: ${uri}`);
         return;
       }
       const payload = await fetchJson(`${baseUrl}${resource.path}`);
@@ -320,31 +343,31 @@ const run = async (): Promise<void> => {
       return;
     }
 
-    sendError(id, -32601, `Method not found: ${method}`);
+    sendError(id, JSON_RPC_METHOD_NOT_FOUND, `Method not found: ${method}`);
   };
 
   const processBuffer = (): void => {
     while (true) {
       const lineEnd = textBuffer.indexOf('\n');
-      if (lineEnd === -1) {
+      if (lineEnd === LINE_BREAK_NOT_FOUND) {
         return;
       }
       const rawLine = textBuffer.slice(0, lineEnd).trim();
-      textBuffer = textBuffer.slice(lineEnd + 1);
-      if (rawLine.length === 0) {
+      textBuffer = textBuffer.slice(lineEnd + LINE_BREAK_WIDTH);
+      if (rawLine.length === EMPTY_TEXT_LENGTH) {
         continue;
       }
       let payload: JsonRpcRequest;
       try {
         payload = JSON.parse(rawLine) as JsonRpcRequest;
       } catch {
-        sendError(null, -32700, 'Parse error');
+        sendError(null, JSON_RPC_PARSE_ERROR, 'Parse error');
         continue;
       }
       void handleRequest(payload).catch((error) => {
         const id = toJsonRpcId(payload.id);
         const message = error instanceof Error ? error.message : 'Internal error';
-        sendError(id, -32603, message);
+        sendError(id, JSON_RPC_INTERNAL_ERROR, message);
       });
     }
   };
@@ -358,5 +381,5 @@ const run = async (): Promise<void> => {
 void run().catch((error) => {
   const message = error instanceof Error ? error.message : 'Unknown MCP stdio bridge error';
   process.stderr.write(`[pumuki-mcp-evidence-stdio] ${message}\n`);
-  process.exit(1);
+  process.exit(PROCESS_FAILURE_EXIT_CODE);
 });
