@@ -655,6 +655,13 @@ const isXCTestSource = (content: string): boolean => {
   return /\bimport\s+XCTest\b/.test(content) || /\bXCTestCase\b/.test(content);
 };
 
+const isXCTestSuiteSource = (content: string): boolean => {
+  return (
+    /\bclass\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*XCTestCase\b/.test(content) &&
+    /^\s*(?:override\s+)?func\s+test[A-Za-z0-9_]*\s*\(/m.test(content)
+  );
+};
+
 const isXCTestUiOrPerformanceCompatibilitySource = (content: string): boolean => {
   return /\bXCUIApplication\b|\bXCTMetric\b|\bmeasure\s*(?:\(|\{)/.test(content);
 };
@@ -676,6 +683,9 @@ const toIosTestsQualityBlockingFinding = (params: {
   const invalidFiles: string[] = [];
   for (const testFile of testFiles) {
     if (!isXCTestSource(testFile.content)) {
+      continue;
+    }
+    if (!isXCTestSuiteSource(testFile.content)) {
       continue;
     }
     if (isXCTestUiOrPerformanceCompatibilitySource(testFile.content)) {
