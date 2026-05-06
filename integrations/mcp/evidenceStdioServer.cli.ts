@@ -113,33 +113,37 @@ const startOrReuseEvidenceHttp = async (): Promise<{
 }> => {
   const host = process.env.PUMUKI_EVIDENCE_HOST ?? DEFAULT_EVIDENCE_HOST;
   const route = process.env.PUMUKI_EVIDENCE_ROUTE ?? DEFAULT_EVIDENCE_ROUTE;
-  const parsedPort = Number.parseInt(process.env.PUMUKI_EVIDENCE_PORT ?? '', 10);
-  const preferredPort = Number.isFinite(parsedPort) ? parsedPort : DEFAULT_EVIDENCE_PORT;
-  const requestedPort =
-    preferredPort > 0 ? preferredPort : await findAvailableListenerNumber(host);
-  const healthUrl = `http://${host}:${requestedPort}/health`;
+  const parsedListener = Number.parseInt(process.env.PUMUKI_EVIDENCE_PORT ?? '', 10);
+  const preferredListener = Number.isFinite(parsedListener)
+    ? parsedListener
+    : DEFAULT_EVIDENCE_PORT;
+  const requestedListener =
+    preferredListener > 0 ? preferredListener : await findAvailableListenerNumber(host);
+  const healthUrl = `http://${host}:${requestedListener}/health`;
 
   try {
     const health = (await fetchJson(healthUrl)) as { status?: string };
     if (health.status === 'ok') {
-      return { host, port: requestedPort, route };
+      return { host, port: requestedListener, route };
     }
   } catch (error) {
     writeDebugHealthProbeFailure(error);
   }
 
-  const portInUse = await canConnectToAddress(host, requestedPort);
-  const resolvedPort = portInUse ? await findAvailableListenerNumber(host) : requestedPort;
+  const listenerInUse = await canConnectToAddress(host, requestedListener);
+  const resolvedListener = listenerInUse
+    ? await findAvailableListenerNumber(host)
+    : requestedListener;
   startEvidenceContextServer({
     host,
-    port: resolvedPort,
+    port: resolvedListener,
     route,
     repoRoot: process.cwd(),
   });
 
   return {
     host,
-    port: resolvedPort,
+    port: resolvedListener,
     route,
   };
 };

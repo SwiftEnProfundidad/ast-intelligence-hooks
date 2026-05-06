@@ -4845,7 +4845,12 @@ const isRuntimeApiLiteral = (node: AstNode): boolean => {
 };
 
 const isNeutralHardcodedNumericLiteral = (node: AstNode): boolean => {
-  return node.type === 'NumericLiteral' && (node.value === 0 || node.value === 1);
+  return (
+    node.type === 'NumericLiteral' &&
+    (node.value === 0 ||
+      node.value === 1 ||
+      (typeof node.value === 'number' && node.value >= -32768 && node.value <= -32000))
+  );
 };
 
 const isBenignHardcodedConfigLiteral = (node: AstNode): boolean => {
