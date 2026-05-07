@@ -937,6 +937,7 @@ Snapshot README-ENTRYPOINT-001 (2026-05-07):
 - `[✅] - README-ENTRYPOINT-001 / README y npm entrypoint profesional`: README principal reescrito como puerta de entrada real del producto, sin convertirlo en changelog ni promesa no verificable.
 - Evidencia visual real: nuevas capturas bajo `assets/readme/current/` generadas desde `pumuki@6.3.169` contra fixture Git temporal con `any` y `console.log`; se conserva el walkthrough antiguo en `assets/readme/menu-option1/`.
 - Metadata npm preparada: `package.json.description` pasa a describir Git hooks, SDD/OpenSpec, skills enforcement, MCP context y evidencia auditada para las cuatro plataformas.
+- Auditoría de precisión posterior: el README distingue `enterprise-operating-system` como skill contractual de operación, no como bundle detector por archivo; nombra los binarios MCP stdio reales; y no promete `pumuki install` si el repo falla los safety checks.
 - La tarea actual vuelve a `PARITY-IOS-SWIFTDATA-001` porque no hay bugs externos abiertos y el owner priorizó cerrar primero iOS/Core Data/SwiftData.
 
 Snapshot de rollout `6.3.81` (2026-04-20):

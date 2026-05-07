@@ -31,7 +31,7 @@ diagnostic contract for operation:
 | Skills enforcement | iOS, Android, backend, frontend, and common governance skills are compiled into deterministic rule coverage. AUTO rules block through detectors; declarative rules remain visible as contracts and are not silently claimed as semantic enforcement. |
 | Evidence contract | `.ai_evidence.json` records stage, outcome, policy metadata, rule coverage, findings, and operational hints for follow-up automation. |
 | SDD/OpenSpec flow | Enterprise repos can require SDD sessions, change folders, and stage validation before writes, commits, pushes, or CI. |
-| Agent-ready context | `.pumuki/adapter.json` and MCP stdio commands expose the same product truth to Codex, Claude, Cursor, Windsurf, OpenCode, and other clients without making the baseline IDE-dependent. |
+| Agent-ready context | `.pumuki/adapter.json` and MCP stdio commands (`pumuki-mcp-enterprise-stdio`, `pumuki-mcp-evidence-stdio`) expose the same product truth to Codex, Claude, Cursor, Windsurf, OpenCode, and other clients without making the baseline IDE-dependent. |
 
 ## Real Output
 
@@ -60,7 +60,7 @@ Requirements:
 Install Pumuki in a consumer repository:
 
 ```bash
-npm install --save-exact pumuki
+npm install --save-dev --save-exact pumuki
 npx --yes pumuki status --json
 npx --yes pumuki doctor --json
 npx --yes pumuki audit --stage=PRE_COMMIT --json
@@ -74,6 +74,10 @@ npx --yes pumuki-pre-commit
 npx --yes pumuki-pre-push
 npx --yes pumuki-ci
 ```
+
+`pumuki-pre-push` is the same binary used by the managed Git hook. Running it
+manually is useful for diagnostics, but the full signal depends on a real branch
+and pre-push context.
 
 Bootstrap an enterprise repo with SDD/OpenSpec and agent context:
 
@@ -107,7 +111,14 @@ for that chaining is explicit: `PUMUKI_SKIP_CHAINED_PRE_WRITE=1`.
 
 ## Skills And Platforms
 
-Pumuki is multi-platform by design. The default enterprise skill surface covers:
+Pumuki is multi-platform by design. The default enterprise skill surface has two
+layers:
+
+- platform rule bundles compiled into `skills.lock.json`
+- operating contract skills shipped with Pumuki and consumed through
+  `AGENTS.md` / `vendor/skills`
+
+The platform rule surface covers:
 
 - `ios-enterprise-rules`
 - `swift-concurrency`
@@ -117,7 +128,6 @@ Pumuki is multi-platform by design. The default enterprise skill surface covers:
 - `android-enterprise-rules`
 - `backend-enterprise-rules`
 - `frontend-enterprise-rules`
-- `enterprise-operating-system`
 
 Rule coverage is intentionally explicit:
 
@@ -126,6 +136,10 @@ Rule coverage is intentionally explicit:
   counted as semantic AST enforcement unless a detector exists.
 - Unsupported or incomplete active-rule coverage can fail closed under strict
   enterprise policy, because false confidence is worse than a noisy block.
+
+`enterprise-operating-system` is the operating contract skill for project mode,
+tracking, evidence, GitFlow, and STOP/GO discipline. It is shipped as a skill
+contract, not as a per-file detector bundle.
 
 ## Evidence And Adapters
 
@@ -138,10 +152,10 @@ Pumuki writes and reads `.ai_evidence.json` as the shared audit artifact for:
 - active skill coverage
 - operational hints and next actions
 
-After `pumuki install`, the baseline is IDE-agnostic. Pumuki installs managed
-Git hooks and ensures `.pumuki/adapter.json` with canonical commands for MCP
-stdio and agent clients. IDE-specific files such as `.cursor/mcp.json` remain
-opt-in.
+When repository safety checks pass, `pumuki install` keeps the baseline
+IDE-agnostic. Pumuki installs managed Git hooks and ensures
+`.pumuki/adapter.json` with canonical commands for MCP stdio and agent clients.
+IDE-specific files such as `.cursor/mcp.json` remain opt-in.
 
 ## Command Map
 
