@@ -52,10 +52,14 @@ const resolvePrePushBootstrapBaseRefInRepo = (repoRoot: string): string => {
       continue;
     }
     try {
-      const changedFiles = runGit(
+      const diffOutput = runGit(
         repoRoot,
         ['diff', '--name-only', '--diff-filter=ACMR', `${candidate}..HEAD`]
-      )
+      );
+      if (diffOutput === null) {
+        continue;
+      }
+      const changedFiles = diffOutput
         .split('\n')
         .map((line) => line.trim())
         .filter((line) => line.length > 0).length;

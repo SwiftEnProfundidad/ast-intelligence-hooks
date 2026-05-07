@@ -179,6 +179,8 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
         };
         rules_coverage?: {
           stage?: string;
+          contract?: string;
+          scope_note?: string;
           active_rule_ids?: unknown[];
           evaluated_rule_ids?: unknown[];
           matched_rule_ids?: unknown[];
@@ -190,6 +192,15 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
             unevaluated?: number;
           };
           coverage_ratio?: number;
+          auto_runtime_coverage_ratio?: number;
+          semantic_enforcement_ratio?: number;
+          global_skills_enforcement?: {
+            status?: string;
+            registry_total?: number;
+            detector_supported?: number;
+            declarative_only?: number;
+            unsupported_detector?: number;
+          };
         };
         findings?: unknown[];
       };
@@ -215,6 +226,8 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
     });
     assert.deepEqual(evidence.snapshot?.rules_coverage, {
       stage: 'PRE_COMMIT',
+      contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+      scope_note: 'No runtime rules were evaluated for this stage. DECLARATIVE registry rules are not runtime detectors.',
       active_rule_ids: [],
       evaluated_rule_ids: [],
       matched_rule_ids: [],
@@ -226,6 +239,15 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
         unevaluated: 0,
       },
       coverage_ratio: 1,
+      auto_runtime_coverage_ratio: 1,
+      semantic_enforcement_ratio: 1,
+      global_skills_enforcement: {
+        status: 'enforced',
+        registry_total: 0,
+        detector_supported: 0,
+        declarative_only: 0,
+        unsupported_detector: 0,
+      },
     });
     assert.deepEqual(evidence.snapshot?.findings, []);
     assert.equal(realpathSync(evidence.repo_state?.repo_root ?? ''), realpathSync(repo));

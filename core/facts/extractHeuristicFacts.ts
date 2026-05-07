@@ -460,6 +460,7 @@ type ASTDetectorRegistryEntry = {
   readonly code: string;
   readonly message: string;
   readonly pathCheck?: (path: string) => boolean;
+  readonly excludePaths?: ReadonlyArray<(path: string) => boolean>;
   readonly includeTestPaths?: boolean;
 };
 
