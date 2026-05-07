@@ -933,6 +933,13 @@ git checkout -b refactor/s1-governance-console
 |-----------|-----------------|
 | Este plan | [🚧] - `PARITY-IOS-SWIFTDATA-001` / iOS: diseñar y materializar `swiftdata-enterprise-rules` y el mix brownfield Core Data + SwiftData como reglas AST Intelligence por nodos. Alcance inicial: detectar `import SwiftData`, `@Model`, `ModelContext`, `ModelContainer`, `@Query`, `FetchDescriptor`; bloquear fugas de `ModelContext`/modelos persistentes fuera de infraestructura/repositorio; y bloquear mezcla peligrosa con `NSManagedObject`/`NSPersistentContainer` sin frontera explícita de migración. Estado 2026-05-06: `PUMUKI-INC-130` quedó publicado en `pumuki@6.3.163`, PR #886 mergeada, RuralGo repineado primero y `pumuki-pre-commit --quiet` devuelve 0; siguiente slice vuelve a paridad iOS. |
 
+Snapshot README-ENTRYPOINT-001 (2026-05-07):
+- `[✅] - README-ENTRYPOINT-001 / README y npm entrypoint profesional`: README principal reescrito como puerta de entrada real del producto, sin convertirlo en changelog ni promesa no verificable.
+- Evidencia visual real: nuevas capturas bajo `assets/readme/current/` generadas desde `pumuki@6.3.169` contra fixture Git temporal con `any` y `console.log`; se conserva el walkthrough antiguo en `assets/readme/menu-option1/`.
+- Metadata npm preparada: `package.json.description` pasa a describir Git hooks, SDD/OpenSpec, skills enforcement, MCP context y evidencia auditada para las cuatro plataformas.
+- Auditoría de precisión posterior: el README distingue `enterprise-operating-system` como skill contractual de operación, no como bundle detector por archivo; nombra los binarios MCP stdio reales; y no promete `pumuki install` si el repo falla los safety checks.
+- La tarea actual vuelve a `PARITY-IOS-SWIFTDATA-001` porque no hay bugs externos abiertos y el owner priorizó cerrar primero iOS/Core Data/SwiftData.
+
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
 - `Flux_training` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` ya reflejan `lifecycleState.version=6.3.81`, pero `pumuki-pre-commit` sigue bloqueado por `TRACKING_CANONICAL_SOURCE_CONFLICT`; no es regresión nueva de `pumuki`, sino deuda viva del consumer.
