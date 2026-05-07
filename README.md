@@ -19,12 +19,14 @@ Git scope -> facts -> AST Intelligence rules -> gate -> .ai_evidence.json
 
 ## What Pumuki Does
 
-Pumuki gives a team one enforcement model across local development, hooks, CI,
-CLI, menu UI, and MCP surfaces:
+Pumuki gives a team one governance model across local development, hooks, CI,
+CLI, menu UI, and MCP surfaces. The hard enforcement path remains Git hooks and
+CI; CLI, menu, and MCP expose the same product state, stage runners, and
+diagnostic contract for operation:
 
 | Capability | What it means in practice |
 | --- | --- |
-| Git hook governance | Managed `pre-commit` and `pre-push` hooks run the same policy gates used by the CLI. Managed hooks chain `pumuki-pre-write` first unless explicitly disabled with `PUMUKI_SKIP_CHAINED_PRE_WRITE=1`. |
+| Git hook governance | Managed `pre-commit` and `pre-push` hooks run the same stage gate engine exposed by the CLI runners. Managed hooks chain `pumuki-pre-write` first unless explicitly disabled with `PUMUKI_SKIP_CHAINED_PRE_WRITE=1`. |
 | AST Intelligence | Rules are evaluated from extracted facts and AST/text nodes, not from a README promise. Findings include severity, rule id, stage, file, line, and remediation context. |
 | Skills enforcement | iOS, Android, backend, frontend, and common governance skills are compiled into deterministic rule coverage. AUTO rules block through detectors; declarative rules remain visible as contracts and are not silently claimed as semantic enforcement. |
 | Evidence contract | `.ai_evidence.json` records stage, outcome, policy metadata, rule coverage, findings, and operational hints for follow-up automation. |
@@ -136,9 +138,10 @@ Pumuki writes and reads `.ai_evidence.json` as the shared audit artifact for:
 - active skill coverage
 - operational hints and next actions
 
-After `pumuki install`, the baseline is IDE-agnostic. Pumuki manages Git hooks
-and writes `.pumuki/adapter.json` with canonical commands for MCP stdio and
-agent clients. IDE-specific files such as `.cursor/mcp.json` remain opt-in.
+After `pumuki install`, the baseline is IDE-agnostic. Pumuki installs managed
+Git hooks and ensures `.pumuki/adapter.json` with canonical commands for MCP
+stdio and agent clients. IDE-specific files such as `.cursor/mcp.json` remain
+opt-in.
 
 ## Command Map
 
