@@ -4,6 +4,12 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-07 (v6.3.170)
+
+- **npm README entrypoint:** la ficha pública de npm pasa a mostrar el README premium real, con capturas actuales de menú/auditoría, límites explícitos de hooks/CI, binarios MCP stdio y cobertura AUTO vs DECLARATIVE de skills.
+- **Release typecheck:** la línea publicada recupera `npm run typecheck` con fixes conservadores en detectores TypeScript y helpers lifecycle/MCP, sin cambiar semántica de detección.
+- **Rollout:** publicar `pumuki@6.3.170` para sustituir el README antiguo visible en `pumuki@6.3.169` sin degradar la línea de paquete ya publicada.
+
 ### 2026-05-05 (v6.3.150)
 
 - **RuralGo PUMUKI-INC-061:** las notificaciones de bloqueo ya recomiendan `policy reconcile --strict --apply --json` cuando la remediación real requiere converger policy-as-code.
