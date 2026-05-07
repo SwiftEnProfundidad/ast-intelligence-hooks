@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.170] - 2026-05-07
+
+### Fixed
+
+- **npm README entrypoint:** published package metadata now uses the real premium README with current menu/audit captures, explicit hook/CI enforcement boundaries, MCP stdio binary names, and clear AUTO vs DECLARATIVE skills coverage.
+- **Release typecheck:** restored `npm run typecheck` on the published line by tightening TypeScript detector node typing and null-safe lifecycle/MCP helpers without changing detector semantics.
+
 ## [6.3.169] - 2026-05-06
 
 ### Fixed

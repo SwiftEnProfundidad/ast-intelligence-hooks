@@ -931,7 +931,13 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `EXTERNAL-BUG-SWEEP-2026-05-06` / `PUMUKI-INC-131` queda cerrado en el snapshot `6.3.169`: fix publicado en `pumuki@6.3.169` y RuralGo repineado primero en `bugfix/ruralgo-tracking-build-stability` con commit `2a5d991ea`, validando commit normal con hooks activos y sin incluir `.ai_evidence.json`. Siguiente foco obligatorio: revisar los MDs externos canónicos (`SAAS`, `R_GO`, `Flux`) y priorizar cualquier bug abierto antes de reanudar `PARITY-IOS-SWIFTDATA-001` aparcada en `feature/ios-swiftdata-coredata-ast`. |
+| Este plan | [🚧] - `README-ENTRYPOINT-001` / hotfix npm `6.3.170`: publicar el README premium real en npm sin degradar la línea publicada `6.3.169`, con capturas reales, metadata npm honesta, fix previo de `typecheck` y validación de tarball antes de publicar. |
+
+Snapshot README-ENTRYPOINT-001 (2026-05-07):
+- El README publicado en `pumuki@6.3.169` seguía siendo el antiguo; se confirma como gap de release, no como problema de npm.
+- La publicación debe salir desde la línea real `6.3.169`, no desde `develop`/rama docs en `6.3.163`, para evitar regresión de paquete.
+- `typecheck` fallaba ya en la línea publicada; se corrige antes de empaquetar `6.3.170`.
+- La tarea siguiente tras publicar/verificar npm vuelve a revisar MDs externos canónicos y después retomar `PARITY-IOS-SWIFTDATA-001` si no hay bugs abiertos.
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.
