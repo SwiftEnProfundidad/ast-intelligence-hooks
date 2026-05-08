@@ -30,6 +30,7 @@ import {
   hasSwiftModernizableXCTestSuiteUsage,
   hasSwiftAssumeIsolatedUsage,
   hasSwiftCoreDataLayerLeakUsage,
+  hasSwiftSwiftDataLayerLeakUsage,
   hasSwiftNonisolatedUnsafeUsage,
   hasSwiftNSManagedObjectAsyncBoundaryUsage,
   hasSwiftNSManagedObjectBoundaryUsage,
@@ -867,6 +868,44 @@ struct DetailView: View {
 
   assert.equal(hasSwiftCoreDataLayerLeakUsage(source), true);
   assert.equal(hasSwiftCoreDataLayerLeakUsage(ignored), false);
+});
+
+test('hasSwiftSwiftDataLayerLeakUsage detecta SwiftData fuera de infraestructura', () => {
+  const source = `
+import SwiftData
+
+struct DetailView: View {
+  @Environment(\\.modelContext) private var modelContext
+  @Query(sort: \\TodoModel.title) private var todos: [TodoModel]
+}
+
+final class DetailUseCase {
+  private let container: ModelContainer
+  private let context: ModelContext
+  private let descriptor = FetchDescriptor<TodoModel>()
+}
+
+@Model
+final class TodoModel {
+  var title: String
+}
+`;
+  const ignored = `
+import Foundation
+
+struct DetailView: View {
+  let selectedID: Todo.ID?
+}
+
+final class DetailUseCase {
+  func execute() async throws -> [Todo] { [] }
+  private let predicate: Predicate<Todo>?
+  private let sort = SortDescriptor(\\Todo.title)
+}
+`;
+
+  assert.equal(hasSwiftSwiftDataLayerLeakUsage(source), true);
+  assert.equal(hasSwiftSwiftDataLayerLeakUsage(ignored), false);
 });
 
 test('hasSwiftNSManagedObjectStateLeakUsage detecta fugas a SwiftUI state y ViewModels', () => {
