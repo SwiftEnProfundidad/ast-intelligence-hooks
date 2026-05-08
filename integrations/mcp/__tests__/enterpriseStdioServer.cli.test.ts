@@ -290,8 +290,5 @@ test('pumuki enterprise stdio bridge no consume el transporte stdin en PRE_PUSH 
     assert.equal(toolNames.includes('ai_gate_check'), true);
   } finally {
     child.kill('SIGTERM');
-    await new Promise((resolvePromise) => {
-      staleServer.server.close(() => resolvePromise(undefined));
-    });
   }
 });

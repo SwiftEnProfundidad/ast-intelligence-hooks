@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 44);
+  assert.equal(iosRules.length, 45);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -50,6 +50,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.core-data.nsmanagedobject-boundary.ast',
     'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
     'heuristics.ios.core-data.layer-leak.ast',
+    'heuristics.ios.swiftdata.layer-leak.ast',
     'heuristics.ios.core-data.nsmanagedobject-state-leak.ast',
   ]);
 
@@ -146,6 +147,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.core-data.layer-leak.ast')?.then.code,
     'HEURISTICS_IOS_CORE_DATA_LAYER_LEAK_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftdata.layer-leak.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTDATA_LAYER_LEAK_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.core-data.nsmanagedobject-state-leak.ast')?.then.code,

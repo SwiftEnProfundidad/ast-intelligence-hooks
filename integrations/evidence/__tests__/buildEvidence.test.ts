@@ -300,6 +300,15 @@ test('persiste snapshot.rules_coverage con active/evaluated/matched/unevaluated 
       unevaluated: 1,
     },
     coverage_ratio: 0.5,
+    auto_runtime_coverage_ratio: 0.5,
+    semantic_enforcement_ratio: 1,
+    global_skills_enforcement: {
+      status: 'enforced',
+      registry_total: 0,
+      detector_supported: 0,
+      declarative_only: 0,
+      unsupported_detector: 0,
+    },
   });
 });
 
@@ -343,6 +352,15 @@ test('normaliza telemetria por defecto cuando no se informa filesScanned ni eval
       unevaluated: 0,
     },
     coverage_ratio: 1,
+    auto_runtime_coverage_ratio: 1,
+    semantic_enforcement_ratio: 1,
+    global_skills_enforcement: {
+      status: 'enforced',
+      registry_total: 0,
+      detector_supported: 0,
+      declarative_only: 0,
+      unsupported_detector: 0,
+    },
   });
 });
 

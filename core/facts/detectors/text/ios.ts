@@ -1003,6 +1003,13 @@ export const hasSwiftCoreDataLayerLeakUsage = (source: string): boolean => {
   );
 };
 
+export const hasSwiftSwiftDataLayerLeakUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bimport\s+SwiftData\b|@\s*Query\b|@\s*Model\b|\b(?:ModelContext|ModelContainer|FetchDescriptor)\b|\.modelContext\b/g
+  );
+};
+
 export const hasSwiftNSManagedObjectStateLeakUsage = (source: string): boolean => {
   const typeDeclarations = parseSwiftTypeDeclarations(source);
   if (typeDeclarations.length === 0) {

@@ -227,6 +227,9 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-core-data-layer-leak'), [
     'heuristics.ios.core-data.layer-leak.ast',
   ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-swiftdata-layer-leak'), [
+    'heuristics.ios.swiftdata.layer-leak.ast',
+  ]);
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-nsmanagedobject-state-leak'), [
     'heuristics.ios.core-data.nsmanagedobject-state-leak.ast',
   ]);

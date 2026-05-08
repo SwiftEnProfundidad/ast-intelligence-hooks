@@ -535,6 +535,17 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-core-data-layer-leak';
     }
     if (
+      includes('swiftdata orchestration inside infrastructure') ||
+      includes('swiftdata apis in application or presentation code') ||
+      includes('avoid swiftdata apis in application or presentation code') ||
+      includes('modelcontext') ||
+      includes('modelcontainer') ||
+      includes('model context') ||
+      includes('model container')
+    ) {
+      return 'skills.ios.no-swiftdata-layer-leak';
+    }
+    if (
       includes('managed objects into swiftui state or view models') ||
       includes('nsmanagedobject instances into swiftui state or view models') ||
       includes('nsmanagedobject leaking into swiftui state') ||

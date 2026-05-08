@@ -638,12 +638,16 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
         'apps/ios/App/Presentation/Feature/DetailView.swift',
         [
           'import CoreData',
+          'import SwiftData',
           '',
           'final class TodoEntity: NSManagedObject {}',
+          '@Model final class TodoModel { var title: String }',
           '',
           'struct DetailView: View {',
           '  @Environment(\\.managedObjectContext) private var context',
+          '  @Environment(\\.modelContext) private var modelContext',
           '  @State private var selectedEntity: TodoEntity?',
+          '  @Query(sort: \\TodoModel.title) private var todos: [TodoModel]',
           '}',
           '',
           'final class DetailViewModel: ObservableObject {',
@@ -687,6 +691,10 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
   );
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ios.core-data.layer-leak.ast'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ios.swiftdata.layer-leak.ast'),
     true
   );
   assert.equal(

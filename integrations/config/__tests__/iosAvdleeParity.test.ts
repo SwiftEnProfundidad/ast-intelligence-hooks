@@ -75,6 +75,7 @@ const astBundles = [
       'skills.ios.no-nsmanagedobject-async-boundary',
       'skills.ios.no-nsmanagedobject-boundary',
       'skills.ios.no-nsmanagedobject-state-leak',
+      'skills.ios.no-swiftdata-layer-leak',
     ],
   },
 ] as const;

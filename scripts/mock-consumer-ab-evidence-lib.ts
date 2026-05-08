@@ -48,3 +48,23 @@ export const isEvidenceHealthy = (
   assessment.version === '2.1' &&
   assessment.stage === 'CI' &&
   assessment.outcome === expectedOutcome;
+
+export const isBlockEvidenceOrPreGateBlockHealthy = (
+  assessment: EvidenceAssessment,
+  blockReady: boolean
+): boolean => {
+  if (!blockReady) {
+    return false;
+  }
+  if (!assessment.exists) {
+    return true;
+  }
+  return (
+    !assessment.parseError &&
+    assessment.version === '2.1' &&
+    assessment.outcome === 'BLOCK' &&
+    (assessment.stage === 'PRE_COMMIT' ||
+      assessment.stage === 'PRE_PUSH' ||
+      assessment.stage === 'CI')
+  );
+};
