@@ -933,6 +933,12 @@ git checkout -b refactor/s1-governance-console
 |-----------|-----------------|
 | Este plan | [🚧] - `PARITY-IOS-SWIFTDATA-001` / iOS persistence skills parity: analizar y cerrar la integración Core Data + SwiftData en skills/reglas AST por nodos sin romper brownfield Core Data ni prometer enforcement inexistente. |
 
+Snapshot PARITY-IOS-SWIFTDATA-001 (2026-05-08):
+- Diagnóstico: `core-data-expert` ya tenía reglas AUTO para Core Data (`NSManagedObject` boundary, async boundary, layer leak, state leak), pero SwiftData solo aparecía como guideline declarativa en `ios-enterprise-rules`.
+- Implementación: se añade `skills.ios.no-swiftdata-layer-leak` al bundle `ios-core-data-guidelines` y se cablea a `heuristics.ios.swiftdata.layer-leak.ast` con detector para `SwiftData`, `ModelContext`, `ModelContainer`, `@Query`, `@Model`, `FetchDescriptor` y `modelContext` en rutas iOS `Application`/`Presentation`.
+- Alcance explícito: no se declara cobertura total de SwiftData; esta slice cierra la frontera de capas enterprise para APIs de persistencia SwiftData y mantiene intactas las reglas brownfield Core Data existentes.
+- Evidencia local inicial: tests enfocados iOS/Core Data/SwiftData `9/9 pass`; `npm run -s skills:lock:check` -> `FRESH`; `npm run -s typecheck` -> OK. La ejecución completa de `skillsMarkdownRules.test.ts` sigue mostrando 6 fallos backend históricos no tocados por esta slice.
+
 Snapshot EXTERNAL-BACKLOG-TRIAGE-001 (2026-05-08):
 - `SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md`: tablero vivo con `🚧=0`, `⏳=0`, `⛔=0`; backlog externo cerrado.
 - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`: tablero vivo con `🚧=0`, `⏳=0`, `⛔=0`; las menciones históricas `REPORTED` no figuran como activas en el snapshot operativo.
