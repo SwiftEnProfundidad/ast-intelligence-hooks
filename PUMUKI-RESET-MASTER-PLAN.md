@@ -931,12 +931,14 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `README-ENTRYPOINT-001` / hotfix npm `6.3.170`: publicar el README premium real en npm sin degradar la línea publicada `6.3.169`, con capturas reales, metadata npm honesta, fix previo de `typecheck` y validación de tarball antes de publicar. |
+| Este plan | [🚧] - `EXTERNAL-BACKLOG-TRIAGE-001` / post-release: revalidar MDs externos canónicos (`SAAS`, `R_GO`, `Flux`) tras publicar `pumuki@6.3.170`; si siguen sin bugs activos, retomar la siguiente slice interna permitida (`PARITY-IOS-SWIFTDATA-001`). |
 
 Snapshot README-ENTRYPOINT-001 (2026-05-07):
 - El README publicado en `pumuki@6.3.169` seguía siendo el antiguo; se confirma como gap de release, no como problema de npm.
 - La publicación debe salir desde la línea real `6.3.169`, no desde `develop`/rama docs en `6.3.163`, para evitar regresión de paquete.
 - `typecheck` fallaba ya en la línea publicada; se corrige antes de empaquetar `6.3.170`.
+- Cierre 2026-05-08: `pumuki@6.3.170` queda publicado en npm y `latest=6.3.170`; `npm view pumuki readme` expone el nuevo README premium real con capturas, metadata honesta, contrato de skills, MCP, stages y distinción `AUTO`/`DECLARATIVE`.
+- Evidencia de cierre: `npm run -s typecheck`; `npm run -s validation:tracking-single-active`; `git diff --check`; suite enfocada `223/223 pass`; check README `localLinkCount=10 localImageCount=3 missing=[]`; `npm pack --dry-run --json` incluye README, binarios, skills y capturas; `npm publish` devuelve `+ pumuki@6.3.170`; `git push -u origin hotfix/npm-readme-entrypoint-6-3-170` pasa hooks `PRE_WRITE` y `PRE_PUSH`.
 - La tarea siguiente tras publicar/verificar npm vuelve a revisar MDs externos canónicos y después retomar `PARITY-IOS-SWIFTDATA-001` si no hay bugs abiertos.
 
 Snapshot de rollout `6.3.81` (2026-04-20):
