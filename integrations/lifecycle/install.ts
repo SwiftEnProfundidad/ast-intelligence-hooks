@@ -13,6 +13,7 @@ import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { readOpenSpecManagedArtifacts, writeLifecycleState } from './state';
 import { ensureRuntimeArtifactsIgnored } from './artifacts';
 import { runLifecycleAdapterInstall } from './adapter';
+import { writeLifecycleBootstrapManifest } from './bootstrapManifest';
 import { runPolicyReconcile } from './policyReconcile';
 import { emitGateBlockedNotification } from '../notifications/emitAuditSummaryNotification';
 
@@ -20,6 +21,10 @@ export type LifecycleInstallResult = {
   repoRoot: string;
   version: string;
   changedHooks: ReadonlyArray<string>;
+  bootstrapManifest: {
+    path: string;
+    changed: boolean;
+  };
   openSpecBootstrap?: OpenSpecBootstrapResult;
   degradedDoctorBypass?: boolean;
 };
@@ -127,10 +132,18 @@ export const runLifecycleInstall = (params?: {
       });
       ensureRepoBaselineAdapter(report.repoRoot);
       materializeStrictPolicyAsCode(report.repoRoot);
+      const bootstrapManifest = writeLifecycleBootstrapManifest({
+        git,
+        repoRoot: report.repoRoot,
+      });
       return {
         repoRoot: report.repoRoot,
         version,
         changedHooks,
+        bootstrapManifest: {
+          path: bootstrapManifest.path,
+          changed: bootstrapManifest.changed,
+        },
         openSpecBootstrap: undefined,
         degradedDoctorBypass: true,
       };
@@ -179,11 +192,19 @@ export const runLifecycleInstall = (params?: {
   });
   ensureRepoBaselineAdapter(report.repoRoot);
   materializeStrictPolicyAsCode(report.repoRoot);
+  const bootstrapManifest = writeLifecycleBootstrapManifest({
+    git,
+    repoRoot: report.repoRoot,
+  });
 
   return {
     repoRoot: report.repoRoot,
     version,
     changedHooks,
+    bootstrapManifest: {
+      path: bootstrapManifest.path,
+      changed: bootstrapManifest.changed,
+    },
     openSpecBootstrap,
   };
 };

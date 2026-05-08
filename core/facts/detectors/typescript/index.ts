@@ -340,7 +340,10 @@ type AstNodeWithAncestors = {
   ancestors: readonly AstNode[];
 };
 
-const toPositiveLine = (node: AstNode): number | null => {
+const toPositiveLine = (node: unknown): number | null => {
+  if (!isObject(node)) {
+    return null;
+  }
   const loc = node.loc;
   if (!isObject(loc)) {
     return null;
@@ -745,15 +748,18 @@ const toSemanticMemberNode = (
   };
 };
 
-const toSingleLineArray = (line: number | null): readonly number[] | undefined => {
+const toSingleLineArray = (line: number | null | undefined): readonly number[] | undefined => {
   return typeof line === 'number' ? [line] : undefined;
 };
 
 const dedupeSemanticNodes = (
-  nodes: ReadonlyArray<TypeScriptSemanticNode>
+  nodes: ReadonlyArray<TypeScriptSemanticNode | undefined>
 ): readonly TypeScriptSemanticNode[] => {
   const unique = new Map<string, TypeScriptSemanticNode>();
   for (const node of nodes) {
+    if (!node) {
+      continue;
+    }
     const key = `${node.kind}:${node.name}:${(node.lines ?? []).join(',')}`;
     if (!unique.has(key)) {
       unique.set(key, node);
@@ -3355,7 +3361,10 @@ const buildDtoBoundaryMatch = (node: unknown): TypeScriptDtoBoundaryMatch | unde
 
   const classNode = match.node;
   const className = methodNameFromNode(classNode.id);
-  const classBody = isObject(classNode.body) && classNode.body.type === 'ClassBody' ? classNode.body.body : [];
+  const classBody =
+    isObject(classNode.body) && classNode.body.type === 'ClassBody' && Array.isArray(classNode.body.body)
+      ? classNode.body.body
+      : [];
   const classLine = toPositiveLine(classNode);
 
   const propertyEntries = classBody.filter((member) => {
@@ -3725,12 +3734,12 @@ const buildBackendTransactionsMatch = (
     return undefined;
   }
 
-  const ownerNode = semanticOwnerFromAncestors(match.ancestors) ?? {
+  const ownerNode: TypeScriptSemanticNode = semanticOwnerFromAncestors(match.ancestors) ?? {
     kind: 'member',
     name: `${boundaryObjectName}.${boundaryName}`,
     lines: toSingleLineArray(callLine),
   };
-  const primaryNode =
+  const primaryNode: TypeScriptSemanticNode =
     ownerNode.kind === 'class' || ownerNode.kind === 'member'
       ? ownerNode
       : {
@@ -4154,7 +4163,7 @@ const buildRateLimitingThrottlerMatch = (
     ...(calleeName === 'Throttle'
       ? [
           {
-            kind: 'member',
+            kind: 'member' as const,
             name: '@nestjs/throttler',
             lines: toSingleLineArray(callLine),
           },
@@ -4163,7 +4172,7 @@ const buildRateLimitingThrottlerMatch = (
     ...(calleeName === 'UseGuards'
       ? [
           {
-            kind: 'member',
+            kind: 'member' as const,
             name: 'ThrottlerGuard',
             lines: toSingleLineArray(callLine),
           },
@@ -4172,7 +4181,7 @@ const buildRateLimitingThrottlerMatch = (
     ...(calleeName === 'forRoot' || calleeName === 'forRootAsync'
       ? [
           {
-            kind: 'member',
+            kind: 'member' as const,
             name: 'ThrottlerModule',
             lines: toSingleLineArray(callLine),
           },
@@ -4557,7 +4566,7 @@ const buildCallbackHellPatternMatch = (
             lines: toSingleLineArray(toPositiveLine(nestedCall)),
           }
         : undefined,
-    ].filter((entry): entry is TypeScriptSemanticNode => entry !== undefined)
+    ]
   );
   const lines = sortedUniqueLines([
     ...(primaryNode.lines ?? []),
@@ -5046,7 +5055,12 @@ const buildEnvDefaultFallbackPatternMatch = (
       if (value.operator !== '||' && value.operator !== '??') {
         return false;
       }
-      return typeof memberExpressionPropertyName(value.left) === 'string' && isProcessEnvBaseAccess(value.left.object);
+      const leftNode = value.left;
+      return (
+        isObject(leftNode) &&
+        typeof memberExpressionPropertyName(leftNode) === 'string' &&
+        isProcessEnvBaseAccess(leftNode.object)
+      );
     }
 
     if (value.type !== 'AssignmentPattern') {
@@ -5493,6 +5507,7 @@ const buildProductionMockMatch = (
     return (
       isObject(objectNode) &&
       objectNode.type === 'Identifier' &&
+      typeof objectNode.name === 'string' &&
       productionMockLibraryPattern.test(objectNode.name) &&
       isObject(propertyNode) &&
       propertyNode.type === 'Identifier' &&
@@ -5649,7 +5664,7 @@ const buildExceptionFilterMatch = (
     return methodNameFromNode(expression) === 'Catch';
   });
 
-  const primaryNode = {
+  const primaryNode: TypeScriptSemanticNode = {
     kind: 'class',
     name: className,
     lines: typeof classLine === 'number' ? [classLine] : [],
@@ -5664,7 +5679,7 @@ const buildExceptionFilterMatch = (
     ...(hasCatchDecorator
       ? [
           {
-            kind: 'member',
+            kind: 'member' as const,
             name: '@Catch',
             lines: typeof classLine === 'number' ? [classLine] : [],
           },
@@ -5740,7 +5755,8 @@ const buildGuardMatch = (node: unknown): TypeScriptGuardMatch | undefined => {
       ? classOrMemberNode.lines[0]
       : toPositiveLine(classOrMemberNode ?? decoratorNode);
   const decoratorLine = toPositiveLine(decoratorNode);
-  const guardArgument = expression.arguments.find((argument) => methodNameFromNode(argument) === 'JwtAuthGuard');
+  const expressionArguments = Array.isArray(expression.arguments) ? expression.arguments : [];
+  const guardArgument = expressionArguments.find((argument) => methodNameFromNode(argument) === 'JwtAuthGuard');
   const guardLine = toPositiveLine(guardArgument) ?? decoratorLine;
   const ownerName =
     classOrMemberNode?.kind === 'class' || classOrMemberNode?.kind === 'member'
@@ -5845,7 +5861,8 @@ const buildInterceptorMatch = (node: unknown): TypeScriptInterceptorMatch | unde
       ? classOrMemberNode.lines[0]
       : toPositiveLine(classOrMemberNode ?? decoratorNode);
   const decoratorLine = toPositiveLine(decoratorNode);
-  const interceptorArgument = expression.arguments.find((argument) => {
+  const expressionArguments = Array.isArray(expression.arguments) ? expression.arguments : [];
+  const interceptorArgument = expressionArguments.find((argument) => {
     const name = interceptorNameFromNode(argument);
     return typeof name === 'string' && /Interceptor$/u.test(name);
   });
@@ -6174,7 +6191,7 @@ const buildReactClassComponentMatch = (
           lines: toSingleLineArray(reactImportInfo.importLines[0]),
         }
       : undefined,
-  ].filter((entry): entry is TypeScriptSemanticNode => entry !== undefined));
+  ]);
 
   const lines = sortedUniqueLines([
     ...(typeof classLine === 'number' ? [classLine] : []),
@@ -6367,7 +6384,7 @@ const buildSingletonPatternMatch = (
             lines: toSingleLineArray(toPositiveLine(singletonFactoryMethodMember)),
           }
         : undefined,
-    ].filter((entry): entry is TypeScriptSemanticNode => entry !== undefined)
+    ]
   );
 
   const lines = sortedUniqueLines([

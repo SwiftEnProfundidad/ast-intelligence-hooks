@@ -10,7 +10,6 @@ import type { ILifecycleGitService } from './gitService';
 import { LifecycleGitService } from './gitService';
 import type { LifecyclePolicyValidationSnapshot } from './policyValidationSnapshot';
 import { writeInfo } from './cliOutputs';
-import { formatTrackingActionableContext } from './trackingState';
 
 const DEFAULT_PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
 const STRICT_ENV_VALUE = 'strict';
@@ -206,9 +205,8 @@ const buildHints = (
     hints.push(`Falta el tracking canónico declarado (${tracking.canonical_path ?? 'sin resolver'}).`);
   }
   if (tracking.enforced && tracking.single_in_progress_valid === false) {
-    const actionableContext = formatTrackingActionableContext(tracking);
     hints.push(
-      `El tracking canónico debe dejar exactamente una 🚧 (actual=${tracking.in_progress_count ?? 'n/a'}${actionableContext ? `, ${actionableContext}` : ''}).`
+      `El tracking canónico debe dejar exactamente una 🚧 (actual=${tracking.in_progress_count ?? 'n/a'}).`
     );
   }
   hints.push('SDD/OpenSpec: usa PUMUKI_EXPERIMENTAL_SDD=advisory|strict cuando el loop SDD esté activo.');
@@ -351,9 +349,8 @@ export const buildGovernanceObservationSummaryLines = (
     lines.push(`Attention: ${snapshot.attention_codes.join(', ')}`);
   }
   if (snapshot.tracking.enforced && snapshot.tracking.single_in_progress_valid === false) {
-    const actionableContext = formatTrackingActionableContext(snapshot.tracking);
     lines.push(
-      `Tracking: canonical=${snapshot.tracking.canonical_path ?? 'unknown'} in_progress_count=${snapshot.tracking.in_progress_count ?? 'n/a'}${actionableContext ? ` ${actionableContext}` : ''}`
+      `Tracking: canonical=${snapshot.tracking.canonical_path ?? 'unknown'} in_progress_count=${snapshot.tracking.in_progress_count ?? 'n/a'}`
     );
   }
   return lines;

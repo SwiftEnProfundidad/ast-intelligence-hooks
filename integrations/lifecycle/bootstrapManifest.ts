@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import type { AiGateStage } from '../gate/evaluateAiGate'
 import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager'
 import { LifecycleGitService, type ILifecycleGitService } from './gitService'
 import {
@@ -14,6 +15,15 @@ import { readLifecyclePolicyValidationSnapshot } from './policyValidationSnapsho
 import { readLifecycleState } from './state'
 
 export const BOOTSTRAP_MANIFEST_RELATIVE_PATH = '.pumuki/bootstrap-manifest.json'
+
+const JSON_PRETTY_PRINT_SPACES = 2
+
+const toAiGateStage = (stage: string | undefined): AiGateStage => {
+  if (stage === 'PRE_WRITE' || stage === 'PRE_COMMIT' || stage === 'PRE_PUSH' || stage === 'CI') {
+    return stage
+  }
+  return 'PRE_WRITE'
+}
 
 type AdapterCommandContract = {
   path: string
@@ -174,7 +184,7 @@ export const buildLifecycleBootstrapManifest = (params: {
   })
   const governanceNextAction = readGovernanceNextAction({
     repoRoot,
-    stage: governanceObservation.evidence.snapshot_stage ?? 'PRE_WRITE',
+    stage: toAiGateStage(governanceObservation.evidence.snapshot_stage),
     governanceObservation,
   })
   const hooksDirectory = resolvePumukiHooksDirectory(repoRoot)
@@ -223,7 +233,7 @@ export const buildLifecycleBootstrapManifest = (params: {
 }
 
 const serializeManifest = (manifest: LifecycleBootstrapManifest): string =>
-  `${JSON.stringify(manifest, null, 2)}\n`
+  `${JSON.stringify(manifest, null, JSON_PRETTY_PRINT_SPACES)}\n`
 
 export const writeLifecycleBootstrapManifest = (params: {
   repoRoot: string

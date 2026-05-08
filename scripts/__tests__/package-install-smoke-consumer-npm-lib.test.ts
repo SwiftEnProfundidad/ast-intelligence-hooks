@@ -1,10 +1,28 @@
 import assert from 'node:assert/strict';
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { verifyInstalledPumukiBinaryVersion } from '../package-install-smoke-consumer-npm-lib';
 import type { SmokeWorkspace } from '../package-install-smoke-workspace-contract';
+
+const currentPackageVersion = (): string => {
+  const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')) as {
+    version?: unknown;
+  };
+  assert.equal(typeof packageJson.version, 'string');
+  return packageJson.version;
+};
+
+const statusJsonForCurrentVersion = (): string => {
+  const version = currentPackageVersion();
+  return JSON.stringify({
+    packageVersion: version,
+    version: {
+      effective: version,
+    },
+  });
+};
 
 const createWorkspace = (): SmokeWorkspace => {
   const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-consumer-npm-lib-'));
@@ -40,8 +58,9 @@ const withFakeNpx = async (scriptBody: string, callback: () => void): Promise<vo
 test('verifyInstalledPumukiBinaryVersion valida npx --no-install pumuki status --json y registra comando', async () => {
   const workspace = createWorkspace();
   try {
+    const statusJson = statusJsonForCurrentVersion();
     await withFakeNpx(
-      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.72","version":{"effective":"6.3.72"}}\\n\'\nexit 0\n',
+      `#!/usr/bin/env sh\nprintf '${statusJson}\\n'\nexit 0\n`,
       () => {
         verifyInstalledPumukiBinaryVersion(workspace);
       }
@@ -80,9 +99,10 @@ test('verifyInstalledPumukiBinaryVersion usa fallback local cuando npx --no-inst
     const localBinDir = join(workspace.consumerRepo, 'node_modules', '.bin');
     mkdirSync(localBinDir, { recursive: true });
     const localPumukiBin = join(localBinDir, 'pumuki');
+    const statusJson = statusJsonForCurrentVersion();
     writeFileSync(
       localPumukiBin,
-      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.72","version":{"effective":"6.3.72"}}\\n\'\nexit 0\n',
+      `#!/usr/bin/env sh\nprintf '${statusJson}\\n'\nexit 0\n`,
       'utf8'
     );
     chmodSync(localPumukiBin, 0o755);
