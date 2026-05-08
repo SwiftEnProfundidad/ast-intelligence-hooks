@@ -38,7 +38,10 @@ export const runGateStep = (
   step: SmokeGateStep,
   expectation: SmokeExpectation
 ): { outcome: string; exitCode: number } => {
-  const gateEnv: NodeJS.ProcessEnv = {
+  const processOverrides: NodeJS.ProcessEnv = {
+    PUMUKI_DISABLE_STDERR_NOTIFICATIONS: '1',
+    PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS: '1',
+    PUMUKI_MACOS_BLOCKED_DIALOG: '0',
     PUMUKI_SDD_BYPASS: '1',
     ...(step.label === 'ci' ? { GITHUB_BASE_REF: 'main' } : {}),
   };
@@ -47,7 +50,7 @@ export const runGateStep = (
     cwd: workspace.consumerRepo,
     executable: step.command,
     args: step.args,
-    env: gateEnv,
+    env: processOverrides,
   });
 
   pushCommandLog(workspace.commandLog, result);
