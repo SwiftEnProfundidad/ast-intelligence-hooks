@@ -144,8 +144,76 @@ test('build-mock-consumer-ab-report returns READY for healthy smoke summaries an
       'utf8'
     );
     assert.match(report, /- verdict: READY/);
-    assert.match(report, /- block_evidence_schema_v2_1: PASS/);
+    assert.match(report, /- block_evidence_or_pregate_block: PASS/);
     assert.match(report, /- minimal_evidence_schema_v2_1: PASS/);
+  });
+});
+
+test('build-mock-consumer-ab-report acepta bloqueo pre-gate sin evidencia CI block', async () => {
+  await withTempDir('pumuki-mock-ab-pregate-block-', (tempRoot) => {
+    const smokeRoot = join(tempRoot, '.audit-reports', 'package-smoke');
+    mkdirSync(join(smokeRoot, 'block'), { recursive: true });
+    mkdirSync(join(smokeRoot, 'minimal'), { recursive: true });
+
+    writeFileSync(
+      join(smokeRoot, 'block', 'summary.md'),
+      [
+        '# Package Install Smoke Report',
+        '',
+        '- Smoke mode: `block`',
+        '- Status: PASS',
+        '- pre-commit exit: `1` (BLOCK)',
+        '- pre-push exit: `1` (BLOCK)',
+        '- ci exit: `1` (BLOCK)',
+      ].join('\n'),
+      'utf8'
+    );
+
+    writeFileSync(
+      join(smokeRoot, 'minimal', 'summary.md'),
+      [
+        '# Package Install Smoke Report',
+        '',
+        '- Smoke mode: `minimal`',
+        '- Status: PASS',
+        '- pre-commit exit: `0` (PASS)',
+        '- pre-push exit: `0` (PASS)',
+        '- ci exit: `0` (PASS)',
+      ].join('\n'),
+      'utf8'
+    );
+
+    writeFileSync(
+      join(smokeRoot, 'minimal', 'ci.ai_evidence.json'),
+      JSON.stringify(
+        {
+          version: '2.1',
+          snapshot: {
+            stage: 'CI',
+            outcome: 'PASS',
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const result = runReport({
+      cwd: tempRoot,
+      repo: 'mock/consumer',
+      out: '.audit-reports/mock-consumer/mock-consumer-ab-report.md',
+    });
+
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /verdict=READY/);
+
+    const report = readFileSync(
+      join(tempRoot, '.audit-reports/mock-consumer/mock-consumer-ab-report.md'),
+      'utf8'
+    );
+    assert.match(report, /- block_evidence_or_pregate_block: PASS/);
+    assert.match(report, /- block_evidence_snapshot_stage: missing/);
   });
 });
 
@@ -198,7 +266,7 @@ test('build-mock-consumer-ab-report returns BLOCKED when smoke/evidence assertio
       report,
       /Package smoke minimal mode summary is not in expected pass state/
     );
-    assert.match(report, /block evidence does not expose expected v2\.1 CI BLOCK snapshot/);
+    assert.match(report, /block evidence does not expose expected v2\.1 BLOCK snapshot or pre-gate block summary/);
     assert.match(report, /minimal evidence file is missing/);
   });
 });

@@ -1,4 +1,7 @@
-import { isEvidenceHealthy } from './mock-consumer-ab-evidence-lib';
+import {
+  isBlockEvidenceOrPreGateBlockHealthy,
+  isEvidenceHealthy,
+} from './mock-consumer-ab-evidence-lib';
 import type { MockConsumerAbMarkdownParams } from './mock-consumer-ab-markdown-contract';
 
 export const buildMockConsumerAbAssertionsLines = (
@@ -8,8 +11,8 @@ export const buildMockConsumerAbAssertionsLines = (
   '',
   `- smoke_block_expected: ${source.blockReady ? 'PASS' : 'FAIL'}`,
   `- smoke_minimal_expected: ${source.minimalReady ? 'PASS' : 'FAIL'}`,
-  `- block_evidence_schema_v2_1: ${
-    isEvidenceHealthy(source.blockEvidence, 'BLOCK') ? 'PASS' : 'FAIL'
+  `- block_evidence_or_pregate_block: ${
+    isBlockEvidenceOrPreGateBlockHealthy(source.blockEvidence, source.blockReady) ? 'PASS' : 'FAIL'
   }`,
   `- minimal_evidence_schema_v2_1: ${
     isEvidenceHealthy(source.minimalEvidence, 'PASS') ? 'PASS' : 'FAIL'

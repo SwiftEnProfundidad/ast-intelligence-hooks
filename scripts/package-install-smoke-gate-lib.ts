@@ -19,6 +19,20 @@ export type SmokeGateStep = {
   stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 };
 
+const isExpectedPreGateBlock = (
+  resultOutput: string,
+  step: SmokeGateStep,
+  expectation: SmokeExpectation
+): boolean => {
+  if (expectation.expectedOutcome !== 'BLOCK' || resultOutput.length === 0) {
+    return false;
+  }
+  if (step.stage === 'PRE_PUSH' || step.stage === 'CI') {
+    return /\[pumuki\]\[git-atomicity\]|GIT_ATOMICITY_/.test(resultOutput);
+  }
+  return false;
+};
+
 export const runGateStep = (
   workspace: SmokeWorkspace,
   step: SmokeGateStep,
@@ -44,12 +58,22 @@ export const runGateStep = (
     );
   }
 
-  copyFileSync(
-    join(workspace.consumerRepo, '.ai_evidence.json'),
-    join(workspace.reportRoot, step.evidenceFile)
-  );
+  const sourceEvidencePath = join(workspace.consumerRepo, '.ai_evidence.json');
+  const reportEvidencePath = join(workspace.reportRoot, step.evidenceFile);
+  const sourceEvidence = parseEvidence(sourceEvidencePath);
+  if (
+    (sourceEvidence.version !== '2.1' || sourceEvidence.stage !== step.stage) &&
+    isExpectedPreGateBlock(result.combined, step, expectation)
+  ) {
+    return {
+      outcome: expectation.expectedOutcome,
+      exitCode: result.exitCode,
+    };
+  }
 
-  const evidence = parseEvidence(join(workspace.reportRoot, step.evidenceFile));
+  copyFileSync(sourceEvidencePath, reportEvidencePath);
+
+  const evidence = parseEvidence(reportEvidencePath);
   if (evidence.version !== '2.1' || evidence.stage !== step.stage) {
     throw new Error(
       `Invalid ${step.stage} evidence metadata: version=${evidence.version} stage=${evidence.stage}`

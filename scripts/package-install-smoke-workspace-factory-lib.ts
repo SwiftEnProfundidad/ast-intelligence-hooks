@@ -12,6 +12,7 @@ export const createSmokeWorkspace = (mode: SmokeMode): SmokeWorkspace => {
   const repoRoot = resolve(process.cwd());
   const reportsDir = join(REPORTS_DIR_ROOT, mode);
   const reportRoot = join(repoRoot, reportsDir);
+  rmSync(reportRoot, { recursive: true, force: true });
   ensureDirectory(reportRoot);
 
   const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-package-smoke-'));

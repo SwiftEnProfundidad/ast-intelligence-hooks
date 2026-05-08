@@ -38,6 +38,7 @@ const writeEvidence = (params: {
   timestamp: string;
   status: 'ALLOWED' | 'BLOCKED';
   snapshotStage?: 'PRE_WRITE' | 'PRE_COMMIT';
+  includeBackendRuleset?: boolean;
 }): void => {
   const evidence: AiEvidenceV2_1 = {
     version: '2.1',
@@ -77,7 +78,9 @@ const writeEvidence = (params: {
       },
     },
     platforms: {},
-    rulesets: [],
+    rulesets: params.includeBackendRuleset
+      ? [{ platform: 'skills', bundle: 'backend-guidelines@1.0.0', hash: 'skills-backend-hash' }]
+      : [],
     ledger: [],
     human_intent: null,
   };
@@ -228,6 +231,7 @@ test('auto_execute_ai_start devuelve proceed cuando gate está en verde', () => 
       timestamp: new Date().toISOString(),
       status: 'ALLOWED',
       snapshotStage: 'PRE_COMMIT',
+      includeBackendRuleset: true,
     });
 
     const result = runEnterpriseAutoExecuteAiStart({
@@ -313,10 +317,10 @@ test('auto_execute_ai_start devuelve next_action de remediación para cobertura 
       stage: 'PRE_WRITE',
     });
 
-    assert.equal(result.result.action, 'proceed');
-    assert.equal(result.result.phase, 'GREEN');
+    assert.equal(result.result.action, 'ask');
+    assert.equal(result.result.phase, 'RED');
     assert.equal(result.result.reason_code, 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE');
-    assert.equal(result.result.next_action.kind, 'info');
+    assert.equal(result.result.next_action.kind, 'run_command');
     assert.equal(result.result.next_action.message.length > 0, true);
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
@@ -454,6 +458,16 @@ test('auto_execute_ai_start devuelve next_action de reconcile estricto cuando fa
           bundle: 'ios-swiftui-expert-guidelines@1.0.0',
           hash: 'skills-ios-swiftui-hash',
         },
+        {
+          platform: 'skills',
+          bundle: 'ios-swift-testing-guidelines@1.0.0',
+          hash: 'skills-ios-swift-testing-hash',
+        },
+        {
+          platform: 'skills',
+          bundle: 'ios-core-data-guidelines@1.0.0',
+          hash: 'skills-ios-core-data-hash',
+        },
       ],
       ai_gate: {
         status: 'ALLOWED',
@@ -481,10 +495,10 @@ test('auto_execute_ai_start devuelve next_action de reconcile estricto cuando fa
       stage: 'PRE_WRITE',
     });
 
-    assert.equal(result.result.action, 'proceed');
-    assert.equal(result.result.phase, 'GREEN');
+    assert.equal(result.result.action, 'ask');
+    assert.equal(result.result.phase, 'RED');
     assert.equal(result.result.reason_code, 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING');
-    assert.equal(result.result.next_action.kind, 'info');
+    assert.equal(result.result.next_action.kind, 'run_command');
     assert.equal(result.result.next_action.message.length > 0, true);
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });

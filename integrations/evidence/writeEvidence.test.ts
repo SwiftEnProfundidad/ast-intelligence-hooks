@@ -198,6 +198,15 @@ test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', asy
           unevaluated: 1,
         },
         coverage_ratio: 0.5,
+        auto_runtime_coverage_ratio: 0.5,
+        semantic_enforcement_ratio: 1,
+        global_skills_enforcement: {
+          status: 'enforced',
+          registry_total: 0,
+          detector_supported: 0,
+          declarative_only: 0,
+          unsupported_detector: 0,
+        },
       });
       assert.equal(written.snapshot.findings[0]?.ruleId, 'a.rule');
       assert.equal(written.snapshot.findings[0]?.file, 'apps/backend/A.ts');
