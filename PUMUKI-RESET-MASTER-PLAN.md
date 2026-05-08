@@ -931,7 +931,13 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | [🚧] - `EXTERNAL-BACKLOG-TRIAGE-001` / post-release: revalidar MDs externos canónicos (`SAAS`, `R_GO`, `Flux`) tras publicar `pumuki@6.3.170`; si siguen sin bugs activos, retomar la siguiente slice interna permitida (`PARITY-IOS-SWIFTDATA-001`). |
+| Este plan | [🚧] - `PARITY-IOS-SWIFTDATA-001` / iOS persistence skills parity: analizar y cerrar la integración Core Data + SwiftData en skills/reglas AST por nodos sin romper brownfield Core Data ni prometer enforcement inexistente. |
+
+Snapshot EXTERNAL-BACKLOG-TRIAGE-001 (2026-05-08):
+- `SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md`: tablero vivo con `🚧=0`, `⏳=0`, `⛔=0`; backlog externo cerrado.
+- `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`: tablero vivo con `🚧=0`, `⏳=0`, `⛔=0`; las menciones históricas `REPORTED` no figuran como activas en el snapshot operativo.
+- `Flux_training/docs/BUGS_Y_MEJORAS_PUMUKI.md`: sin filas activas en el backlog actual; solo estado histórico cerrado.
+- Decisión: no hay bug consumer activo que bloquee trabajo interno; se habilita retomar `PARITY-IOS-SWIFTDATA-001`.
 
 Snapshot README-ENTRYPOINT-001 (2026-05-07):
 - El README publicado en `pumuki@6.3.169` seguía siendo el antiguo; se confirma como gap de release, no como problema de npm.
