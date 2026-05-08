@@ -764,6 +764,7 @@ test('normaliza reglas Core Data a ids canonicos del slice phase8', () => {
     sourcePath: 'docs/codex-skills/core-data-expert.md',
     sourceContent: [
       '- ✅ Keep Core Data orchestration inside infrastructure or repository layers instead of presentation code.',
+      '- ✅ Keep SwiftData orchestration inside infrastructure or repository layers instead of application or presentation code.',
       '- ❌ Leaking context-scoped managed objects into SwiftUI state or view models.',
     ].join('\n'),
   });
@@ -772,6 +773,7 @@ test('normaliza reglas Core Data a ids canonicos del slice phase8', () => {
   assert.deepEqual(ids, [
     'skills.ios.no-core-data-layer-leak',
     'skills.ios.no-nsmanagedobject-state-leak',
+    'skills.ios.no-swiftdata-layer-leak',
   ]);
 });
 

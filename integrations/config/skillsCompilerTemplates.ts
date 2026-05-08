@@ -451,6 +451,16 @@ export const skillsCompilerTemplates: Record<string, SkillsCompilerTemplate> = {
         locked: true,
       },
       {
+        id: 'skills.ios.no-swiftdata-layer-leak',
+        description:
+          'Keep SwiftData orchestration inside infrastructure or repository layers; avoid SwiftData APIs in application or presentation code.',
+        severity: 'ERROR',
+        platform: 'ios',
+        confidence: 'HIGH',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
         id: 'skills.ios.no-nsmanagedobject-state-leak',
         description:
           'Avoid leaking context-scoped NSManagedObject instances into SwiftUI state or view models; prefer object IDs or mapped models.',
