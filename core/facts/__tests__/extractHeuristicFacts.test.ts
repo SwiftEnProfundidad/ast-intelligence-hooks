@@ -1288,6 +1288,14 @@ test('detects Android heuristics in production path and skips tests', () => {
         ['suspend fun execute() = supervisorScope { launch { syncRemote() } }'].join('\n')
       ),
       fileContentFact(
+        'apps/android/app/src/main/java/com/acme/application/SafeSyncUseCase.kt',
+        [
+          'suspend fun execute() {',
+          '  try { syncRemote() } catch (error: IOException) { recover(error) }',
+          '}',
+        ].join('\n')
+      ),
+      fileContentFact(
         'apps/android/app/src/test/java/com/acme/FeatureTest.kt',
         [
           'Thread.sleep(10)',
@@ -1308,6 +1316,7 @@ test('detects Android heuristics in production path and skips tests', () => {
     'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
     'heuristics.android.coroutines.manual-scope-in-viewmodel.ast',
     'heuristics.android.coroutines.supervisor-scope.ast',
+    'heuristics.android.coroutines.try-catch.ast',
     'heuristics.android.flow.livedata-state-exposure.ast',
     'heuristics.android.globalscope.ast',
     'heuristics.android.run-blocking.ast',

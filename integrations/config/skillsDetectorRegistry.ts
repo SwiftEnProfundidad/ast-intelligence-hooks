@@ -235,6 +235,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'android.coroutines.supervisor-scope',
     ['heuristics.android.coroutines.supervisor-scope.ast']
   ),
+  'skills.android.guideline.android.try-catch-manejo-de-errores-en-coroutines': heuristicDetector(
+    'android.coroutines.try-catch',
+    ['heuristics.android.coroutines.try-catch.ast']
+  ),
   'skills.android.guideline.android.stateflow-estado-mutable-observable': heuristicDetector(
     'android.flow.state-exposure',
     ['heuristics.android.flow.livedata-state-exposure.ast']
