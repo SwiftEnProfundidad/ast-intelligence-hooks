@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-04-05T00:13:54.218Z",
+  "generatedAt": "2026-05-12T18:32:01.654Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -2492,7 +2492,7 @@
       "name": "backend-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/backend-enterprise-rules/SKILL.md",
-      "hash": "0a5b328dd65c74972e3506f55942c2bf5f812e55c25e49d54aef3b68e61ba3a9",
+      "hash": "83b74fb23950df5c32ef69f2a3af5dd78d29cf932904479a2548411a0f62a9db",
       "rules": [
         {
           "id": "skills.backend.avoid-explicit-any",
@@ -5752,7 +5752,7 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "f2b2d9cee6e4b36785916bc98bd355b42afa9915e71938c02fd20d29d9b5c811",
+      "hash": "cadb9547991b6309ad35b1e503c6fafda8b655823e51b52023b037bac267c129",
       "rules": [
         {
           "id": "skills.ios.guideline.ios.accessibility-identifiers-para-localizar-elementos",
@@ -6992,8 +6992,8 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios.massive-view-controllers-viewcontrollers-300-li-neas",
-          "description": "Massive View Controllers - ViewControllers >300 líneas",
+          "id": "skills.ios.guideline.ios.massive-view-controllers-viewcontrollers-que-mezclan-presentacio-n-nav",
+          "description": "Massive View Controllers - ViewControllers que mezclan presentación, navegación, estado, acceso a datos o coordinación de infraestructura",
           "severity": "ERROR",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",

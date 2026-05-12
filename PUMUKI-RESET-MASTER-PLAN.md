@@ -931,7 +931,12 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-119 cobertura stage-aware e IDs de auditoría`. Bug consumer RuralGo/Codex: `pumuki audit --stage=PRE_COMMIT --json` no distinguía el alcance real AUTO por stage frente a la superficie DECLARATIVE del registry y no declaraba la normalización entre `ruleId` runtime y reglas del registry. |
+| Este plan | `[🚧] - PARITY-IOS-SWIFTDATA-001`. Se retoma la paridad iOS/SwiftData tras cerrar el bug externo `PUMUKI-INC-128` en `pumuki@6.3.172`; `PRE_WRITE` usa `scope=staged` cuando hay staged soportado y convierte la deuda global ajena en advisory no bloqueante para audits acotados. |
+
+Snapshot de cierre `6.3.172` (2026-05-12):
+- `PUMUKI-INC-128`: cerrado con release publicada `pumuki@6.3.172`; `npm view pumuki version` devuelve `6.3.172` y `npm view pumuki@6.3.172 dist.shasum` devuelve `25c761cef3376a4b230fa4eeb526327e33568548`.
+- Regresión local Pumuki: `npx tsx --test integrations/lifecycle/__tests__/audit.test.ts` cubre `scope=staged` en `PRE_WRITE` y advisory `AUDIT_SCOPED_GLOBAL_ENFORCEMENT_ADVISORY`.
+- Replay consumer aislado en `/tmp/stack-my-architecture__pumuki-inc-128-replay`: `npx --yes --package pumuki@6.3.172 pumuki audit --stage=PRE_WRITE --json` devuelve `exit=0`, `scope.kind=staged`, `staged_matching_extensions_count=1`, `files_scanned=1`, `blocking_findings_count=0` y un único advisory no bloqueante.
 
 Snapshot de rollout `6.3.81` (2026-04-20):
 - `SAAS` (`chore/pumuki-6-3-81-rollout`): repin a `pumuki@6.3.81` completado; `status` y `doctor` alineados en `6.3.81`; `pumuki-pre-commit` termina en `ALLOW`.

@@ -23,7 +23,7 @@ export type LifecycleAuditResult = {
   command: 'pumuki audit';
   repo_root: string;
   stage: LifecycleAuditStage;
-  scope: { kind: 'repo' };
+  scope: { kind: 'repo' | 'staged'; staged_matching_extensions_count: number };
   audit_mode: 'gate' | 'engine';
   gate_exit_code: number;
   files_scanned: number | null;
@@ -54,6 +54,8 @@ type LifecycleAuditDependencies = {
   runPlatformGate: typeof runPlatformGate;
 };
 
+type LifecycleAuditScope = { kind: 'repo' } | { kind: 'staged' };
+
 const POLICY_RECONCILE_HINT =
   'If .pumuki/policy-as-code.json signatures drift after a pumuki upgrade, run: pumuki policy reconcile --apply';
 
@@ -68,6 +70,28 @@ const countUntrackedMatchingExtensions = (
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
     .filter((path) => hasAllowedExtension(path, extensions)).length;
+};
+
+const collectStagedMatchingExtensions = (
+  git: Pick<IGitService, 'resolveRepoRoot' | 'runGit'>,
+  extensions: ReadonlyArray<string>
+): string[] => {
+  const repoRoot = git.resolveRepoRoot();
+  return git.runGit(['diff', '--cached', '--name-only'], repoRoot)
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .filter((path) => hasAllowedExtension(path, extensions));
+};
+
+const resolveLifecycleAuditScope = (params: {
+  stage: LifecycleAuditStage;
+  stagedMatchingExtensions: ReadonlyArray<string>;
+}): LifecycleAuditScope => {
+  if (params.stage === 'PRE_WRITE' && params.stagedMatchingExtensions.length > 0) {
+    return { kind: 'staged' };
+  }
+  return { kind: 'repo' };
 };
 
 const isFindingBlocking = (finding: SnapshotFinding): boolean => {
@@ -159,6 +183,30 @@ const buildRuleIdNormalization = (params: {
   };
 };
 
+const isScopedPreWriteGlobalEnforcementOnly = (params: {
+  stage: LifecycleAuditStage;
+  scope: LifecycleAuditScope;
+  findings: ReadonlyArray<LifecycleAuditFinding>;
+}): boolean =>
+  params.stage === 'PRE_WRITE' &&
+  params.scope.kind === 'staged' &&
+  params.findings.length > 0 &&
+  params.findings.every(
+    (finding) => finding.code === 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL'
+  );
+
+const toScopedAuditAdvisoryFinding = (
+  finding: LifecycleAuditFinding
+): LifecycleAuditFinding => ({
+  ...finding,
+  severity: 'INFO',
+  code: 'AUDIT_SCOPED_GLOBAL_ENFORCEMENT_ADVISORY',
+  message:
+    'Scoped PRE_WRITE audit evaluated only the staged supported files; global skills enforcement debt is retained as advisory for repo-wide work. ' +
+    finding.message,
+  blocking: false,
+});
+
 export const runLifecycleAudit = async (params: {
   stage: LifecycleAuditStage;
   auditMode: 'gate' | 'engine';
@@ -179,13 +227,18 @@ export const runLifecycleAudit = async (params: {
   );
   const extensions = DEFAULT_FACT_FILE_EXTENSIONS;
   const untrackedMatchingExtensionsCount = countUntrackedMatchingExtensions(git, extensions);
+  const stagedMatchingExtensions = collectStagedMatchingExtensions(git, extensions);
+  const scope = resolveLifecycleAuditScope({
+    stage: params.stage,
+    stagedMatchingExtensions,
+  });
 
   const gateParams =
     params.auditMode === 'engine'
       ? {
           policy: resolved.policy,
           policyTrace: resolved.trace,
-          scope: { kind: 'repo' as const },
+          scope,
           silent: true,
           auditMode: 'engine' as const,
           dependencies: {
@@ -204,12 +257,12 @@ export const runLifecycleAudit = async (params: {
       : {
           policy: resolved.policy,
           policyTrace: resolved.trace,
-          scope: { kind: 'repo' as const },
+          scope,
           silent: true,
           auditMode: 'gate' as const,
         };
 
-  const gateExitCode = await activeDependencies.runPlatformGate(gateParams);
+  const originalGateExitCode = await activeDependencies.runPlatformGate(gateParams);
   const evidence = activeDependencies.readEvidence(repoRoot);
   const filesScanned =
     typeof evidence?.snapshot.files_scanned === 'number' &&
@@ -220,29 +273,41 @@ export const runLifecycleAudit = async (params: {
     typeof evidence?.snapshot.outcome === 'string' ? evidence.snapshot.outcome : null;
   const findings = extractAuditFindings({
     evidence,
-    gateExitCode,
+    gateExitCode: originalGateExitCode,
     stage: params.stage,
     snapshotOutcome,
   });
+  const scopedGlobalEnforcementOnly = isScopedPreWriteGlobalEnforcementOnly({
+    stage: params.stage,
+    scope,
+    findings,
+  });
+  const effectiveFindings = scopedGlobalEnforcementOnly
+    ? findings.map(toScopedAuditAdvisoryFinding)
+    : findings;
+  const gateExitCode = scopedGlobalEnforcementOnly ? 0 : originalGateExitCode;
 
   return {
     command: 'pumuki audit',
     repo_root: repoRoot,
     stage: params.stage,
-    scope: { kind: 'repo' },
+    scope: {
+      kind: scope.kind,
+      staged_matching_extensions_count: stagedMatchingExtensions.length,
+    },
     audit_mode: params.auditMode,
     gate_exit_code: gateExitCode,
     files_scanned: filesScanned,
     untracked_matching_extensions_count: untrackedMatchingExtensionsCount,
     snapshot_outcome: snapshotOutcome,
-    findings_count: findings.length,
-    blocking_findings_count: findings.filter((finding) => finding.blocking).length,
+    findings_count: effectiveFindings.length,
+    blocking_findings_count: effectiveFindings.filter((finding) => finding.blocking).length,
     rules_coverage: evidence?.snapshot.rules_coverage ?? null,
     rule_id_normalization: buildRuleIdNormalization({
-      findings,
+      findings: effectiveFindings,
       rulesCoverage: evidence?.snapshot.rules_coverage,
     }),
-    findings,
+    findings: effectiveFindings,
     policy_reconcile_hint: POLICY_RECONCILE_HINT,
   };
 };

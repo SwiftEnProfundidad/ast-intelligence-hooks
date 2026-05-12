@@ -2,11 +2,15 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { AiEvidenceV2_1 } from '../../evidence/schema';
 import type { IGitService } from '../../git/GitService';
+import type { runPlatformGate } from '../../git/runPlatformGate';
 import { runLifecycleAudit } from '../audit';
 
-const buildGitStub = (repoRoot: string, untracked = ''): IGitService => ({
+const buildGitStub = (repoRoot: string, untracked = '', staged = ''): IGitService => ({
   resolveRepoRoot: () => repoRoot,
   runGit: (args) => {
+    if (args.join(' ') === 'diff --cached --name-only') {
+      return staged;
+    }
     if (args.join(' ') === 'ls-files --others --exclude-standard') {
       return untracked;
     }
@@ -194,4 +198,87 @@ test('runLifecycleAudit mantiene JSON accionable si el gate bloquea sin findings
   assert.equal(result.findings_count, 1);
   assert.equal(result.blocking_findings_count, 1);
   assert.equal(result.findings[0]?.code, 'AUDIT_BLOCKED_WITHOUT_FINDINGS');
+});
+
+test('runLifecycleAudit usa scope staged en PRE_WRITE cuando hay staged soportado', async () => {
+  let observedScope: Parameters<typeof runPlatformGate>[0]['scope'] | undefined;
+  const result = await runLifecycleAudit({
+    stage: 'PRE_WRITE',
+    auditMode: 'gate',
+    dependencies: {
+      git: buildGitStub(
+        '/repo',
+        '',
+        [
+          'stack-my-architecture-governance/project/GovernanceKit/Package.swift',
+          'stack-my-architecture-governance/project/GovernanceKit/README.md',
+        ].join('\n')
+      ),
+      resolvePolicyForStage: (stage) =>
+        ({
+          policy: { stage, blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          trace: { stage },
+        }) as never,
+      runPlatformGate: async (params) => {
+        observedScope = params.scope;
+        return 0;
+      },
+      readEvidence: () =>
+        buildEvidence({
+          stage: 'PRE_WRITE',
+          outcome: 'PASS',
+          files_scanned: 1,
+          findings: [],
+        }),
+    },
+  });
+
+  assert.equal(observedScope?.kind, 'staged');
+  assert.equal(result.scope.kind, 'staged');
+  assert.equal(result.scope.staged_matching_extensions_count, 1);
+  assert.equal(result.gate_exit_code, 0);
+  assert.equal(result.findings_count, 0);
+});
+
+test('runLifecycleAudit no bloquea audit staged PRE_WRITE solo por enforcement global incompleto', async () => {
+  const result = await runLifecycleAudit({
+    stage: 'PRE_WRITE',
+    auditMode: 'gate',
+    dependencies: {
+      git: buildGitStub(
+        '/repo',
+        '',
+        'stack-my-architecture-governance/project/GovernanceKit/Package.swift'
+      ),
+      resolvePolicyForStage: (stage) =>
+        ({
+          policy: { stage, blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          trace: { stage },
+        }) as never,
+      runPlatformGate: async () => 1,
+      readEvidence: () =>
+        buildEvidence({
+          stage: 'PRE_WRITE',
+          outcome: 'BLOCK',
+          files_scanned: 1,
+          findings: [
+            {
+              ruleId: 'governance.skills.global-enforcement.incomplete',
+              severity: 'ERROR',
+              code: 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL',
+              message: 'Global skills enforcement incomplete.',
+              file: '.ai_evidence.json',
+              blocking: true,
+            },
+          ],
+        }),
+    },
+  });
+
+  assert.equal(result.scope.kind, 'staged');
+  assert.equal(result.gate_exit_code, 0);
+  assert.equal(result.findings_count, 1);
+  assert.equal(result.blocking_findings_count, 0);
+  assert.equal(result.findings[0]?.code, 'AUDIT_SCOPED_GLOBAL_ENFORCEMENT_ADVISORY');
+  assert.equal(result.findings[0]?.blocking, false);
 });
