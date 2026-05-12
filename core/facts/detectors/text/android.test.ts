@@ -8,6 +8,7 @@ import {
   findKotlinPresentationSrpMatch,
   hasKotlinGlobalScopeUsage,
   hasKotlinLiveDataStateExposureUsage,
+  hasKotlinManualCoroutineScopeInViewModelUsage,
   hasKotlinRunBlockingUsage,
   hasKotlinThreadSleepCall,
 } from './android';
@@ -112,6 +113,32 @@ class OrdersViewModel : ViewModel() {
 }
 `;
   assert.equal(hasKotlinLiveDataStateExposureUsage(source), false);
+});
+
+test('hasKotlinManualCoroutineScopeInViewModelUsage detecta CoroutineScope manual dentro de ViewModel', () => {
+  const source = `
+class OrdersViewModel : ViewModel() {
+  private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+}
+`;
+  assert.equal(hasKotlinManualCoroutineScopeInViewModelUsage(source), true);
+});
+
+test('hasKotlinManualCoroutineScopeInViewModelUsage ignora imports, comentarios y uso fuera de ViewModel', () => {
+  const source = `
+import kotlinx.coroutines.CoroutineScope
+// private val scope = CoroutineScope(SupervisorJob())
+val sample = "CoroutineScope(SupervisorJob())"
+class OrdersWorker {
+  private val scope = CoroutineScope(SupervisorJob())
+}
+class OrdersViewModel : ViewModel() {
+  fun load() {
+    viewModelScope.launch { }
+  }
+}
+`;
+  assert.equal(hasKotlinManualCoroutineScopeInViewModelUsage(source), false);
 });
 
 test('findKotlinPresentationSrpMatch devuelve payload semantico para SRP-Android en presentation', () => {

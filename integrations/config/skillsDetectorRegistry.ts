@@ -220,6 +220,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
       'heuristics.android.run-blocking.ast',
     ]
   ),
+  'skills.android.guideline.android.viewmodelscope-scope-de-viewmodel-cancelado-automa-ticamente': heuristicDetector(
+    'android.coroutines.viewmodel-scope',
+    ['heuristics.android.coroutines.manual-scope-in-viewmodel.ast']
+  ),
   'skills.android.guideline.android.stateflow-estado-mutable-observable': heuristicDetector(
     'android.flow.state-exposure',
     ['heuristics.android.flow.livedata-state-exposure.ast']
