@@ -126,7 +126,8 @@ app/
 ✅ `skills.android.guideline.android.coroutines-async-await-no-callbacks` debe mapear a señales ejecutables existentes de uso inseguro de coroutines, empezando por `GlobalScope` y `runBlocking`.
 ✅ `skills.android.guideline.android.viewmodelscope-scope-de-viewmodel-cancelado-automa-ticamente` debe mapear a señales ejecutables de scopes manuales dentro de `ViewModel`, empezando por `CoroutineScope(...)` construido en presentation.
 ✅ `skills.android.guideline.android.dispatchers-main-ui-io-network-disk-default-cpu` debe mapear a señales ejecutables de dispatchers mal ubicados: `Dispatchers.Main` fuera de `presentation` y `Dispatchers.IO` / `Dispatchers.Default` hardcodeados en `domain` o `application` en lugar de entrar por frontera inyectable.
-✅ El baseline inicial de coroutines es parcial: cubre APIs bloqueantes, scopes no estructurados, scopes manuales en `ViewModel`, filtraciones de `Dispatchers.Main` y hardcode de dispatchers de background en dominio/aplicación, pero no declara todavía cobertura completa de `Flow`, `supervisorScope`, dispatchers ni cancelación cooperativa.
+✅ `skills.android.guideline.android.supervisorscope-errores-no-cancelan-otros-jobs` debe mapear a señal ejecutable de `supervisorScope` en `domain` o `application`.
+✅ El baseline inicial de coroutines es parcial: cubre APIs bloqueantes, scopes no estructurados, scopes manuales en `ViewModel`, filtraciones de `Dispatchers.Main`, hardcode de dispatchers de background en dominio/aplicación y `supervisorScope`, pero no declara todavía cobertura completa de `Flow`, dispatchers, try-catch ni cancelación cooperativa.
 ✅ Si se amplía esta cobertura, cada nueva regla debe aterrizar como detector AST/textual semántico con test dirigido antes de declararse cubierta en el registry.
 
 ### Enforcement AST inicial de Flow/StateFlow Android

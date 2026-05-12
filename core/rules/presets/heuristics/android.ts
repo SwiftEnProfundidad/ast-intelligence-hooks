@@ -136,6 +136,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.coroutines.supervisor-scope.ast',
+    description:
+      'Detects supervisorScope usage in Android domain/application code.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.coroutines.supervisor-scope.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected supervisorScope usage in Android domain/application code.',
+      code: 'HEURISTICS_ANDROID_COROUTINES_SUPERVISOR_SCOPE_AST',
+    },
+  },
+  {
     id: 'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     description:
       'Detects Android presentation types mixing session, networking, persistence and navigation responsibilities.',
