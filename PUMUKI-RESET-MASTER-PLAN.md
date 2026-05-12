@@ -944,6 +944,7 @@ Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.
 - Alcance explícito: esta slice abre paridad Android con SOLID semántico inicial; quedan fuera Compose state, Room, Hilt, Navigation y coroutines avanzadas hasta slices posteriores.
 - Avance coroutines inicial: `skills.android.guideline.android.coroutines-async-await-no-callbacks` queda enlazada a los detectores ejecutables existentes `GlobalScope` y `runBlocking`, manteniendo explícitamente fuera `Flow`, `viewModelScope`, dispatchers y cancelación cooperativa hasta slices posteriores.
+- Avance Flow/StateFlow inicial: las reglas declarativas de `StateFlow` / `StateFlow-SharedFlow` quedan enlazadas a `heuristics.android.flow.livedata-state-exposure.ast`, que detecta `LiveData` / `MutableLiveData` en presentation como estado observable legacy. No se declara todavía cobertura completa de `Flow`, `collectAsState`, `stateIn`, Room observable queries ni SharedFlow events.
 
 Snapshot PUMUKI-INC-061 (2026-05-12):
 - Cerrado con release publicada `pumuki@6.3.175`.

@@ -127,6 +127,11 @@ app/
 ✅ El baseline inicial de coroutines es parcial: cubre APIs bloqueantes o scopes no estructurados, pero no declara todavía cobertura completa de `Flow`, `viewModelScope`, `supervisorScope`, dispatchers ni cancelación cooperativa.
 ✅ Si se amplía esta cobertura, cada nueva regla debe aterrizar como detector AST/textual semántico con test dirigido antes de declararse cubierta en el registry.
 
+### Enforcement AST inicial de Flow/StateFlow Android
+✅ Las reglas de `StateFlow` / `StateFlow-SharedFlow` deben mapear a señales ejecutables de estado observable legacy, empezando por exposición de `LiveData` / `MutableLiveData` en presentation.
+✅ Este baseline no obliga a que todo ViewModel use Flow; solo detecta una alternativa legacy concreta cuando aparece en código de presentación Android.
+✅ `Flow`, `collectAsState`, `stateIn`, Room observable queries y SharedFlow events quedan fuera hasta que tengan detectores propios y regresiones dirigidas.
+
 ### Dependency Injection (Hilt):
 ✅ **Hilt** - DI framework (NO manual factories)
 ✅ **@HiltAndroidApp** - Application class

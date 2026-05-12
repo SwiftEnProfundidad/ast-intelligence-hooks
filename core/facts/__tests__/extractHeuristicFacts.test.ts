@@ -1267,8 +1267,17 @@ test('detects Android heuristics in production path and skips tests', () => {
         ['Thread.sleep(10)', 'GlobalScope.launch { }', 'runBlocking { }'].join('\n')
       ),
       fileContentFact(
+        'apps/android/app/src/main/java/com/acme/presentation/FeatureViewModel.kt',
+        ['private val mutableState = MutableLiveData<FeatureUiState>()'].join('\n')
+      ),
+      fileContentFact(
         'apps/android/app/src/test/java/com/acme/FeatureTest.kt',
-        ['Thread.sleep(10)', 'GlobalScope.launch { }', 'runBlocking { }'].join('\n')
+        [
+          'Thread.sleep(10)',
+          'GlobalScope.launch { }',
+          'runBlocking { }',
+          'private val mutableState = MutableLiveData<FeatureUiState>()',
+        ].join('\n')
       ),
     ],
     detectedPlatforms: {
@@ -1278,6 +1287,7 @@ test('detects Android heuristics in production path and skips tests', () => {
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   assert.deepEqual(toRuleIds(findings), [
+    'heuristics.android.flow.livedata-state-exposure.ast',
     'heuristics.android.globalscope.ast',
     'heuristics.android.run-blocking.ast',
     'heuristics.android.thread-sleep.ast',

@@ -220,6 +220,18 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
       'heuristics.android.run-blocking.ast',
     ]
   ),
+  'skills.android.guideline.android.stateflow-estado-mutable-observable': heuristicDetector(
+    'android.flow.state-exposure',
+    ['heuristics.android.flow.livedata-state-exposure.ast']
+  ),
+  'skills.android.guideline.android.stateflow-hot-stream-siempre-tiene-valor-para-estado': heuristicDetector(
+    'android.flow.state-exposure',
+    ['heuristics.android.flow.livedata-state-exposure.ast']
+  ),
+  'skills.android.guideline.android.stateflow-sharedflow-para-exponer-estado-del-viewmodel': heuristicDetector(
+    'android.flow.state-exposure',
+    ['heuristics.android.flow.livedata-state-exposure.ast']
+  ),
   'skills.android.no-solid-violations': heuristicDetector('android.solid', [
     'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     'heuristics.android.solid.ocp.discriminator-branching.ast',
