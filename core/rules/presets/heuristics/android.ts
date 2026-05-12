@@ -116,6 +116,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.testing.junit4-usage.ast',
+    description:
+      'Detects JUnit4 usage in Android Kotlin tests where JUnit5 is preferred.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.testing.junit4-usage.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected JUnit4 usage in Android Kotlin tests.',
+      code: 'HEURISTICS_ANDROID_TESTING_JUNIT4_USAGE_AST',
+    },
+  },
+  {
     id: 'heuristics.android.coroutines.manual-scope-in-viewmodel.ast',
     description:
       'Detects manual CoroutineScope construction inside Android ViewModel classes where viewModelScope should be preferred.',

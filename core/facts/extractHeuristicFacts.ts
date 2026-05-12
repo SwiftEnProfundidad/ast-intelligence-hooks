@@ -161,6 +161,10 @@ const isKotlinTestPath = (path: string): boolean => {
   );
 };
 
+const isAndroidKotlinTestPath = (path: string): boolean => {
+  return isAndroidKotlinPath(path) && isKotlinTestPath(path);
+};
+
 const isExcludedProjectScanPath = (path: string): boolean => {
   const normalized = path.replace(/\\/g, '/').toLowerCase();
   return (
@@ -654,6 +658,7 @@ const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinRunBlockingUsage, ruleId: 'heuristics.android.run-blocking.ast', code: 'HEURISTICS_ANDROID_RUN_BLOCKING_AST', message: 'AST heuristic detected runBlocking usage in production Kotlin code.' },
   { platform: 'android', pathCheck: isAndroidLocalPropertiesPath, excludePaths: [], detect: detectsTrackedFilePresence, ruleId: 'heuristics.android.security.local-properties-tracked.ast', code: 'HEURISTICS_ANDROID_SECURITY_LOCAL_PROPERTIES_TRACKED_AST', message: 'AST heuristic detected tracked Android local.properties file.' },
   { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinSharedPreferencesUsage, ruleId: 'heuristics.android.persistence.shared-preferences-usage.ast', code: 'HEURISTICS_ANDROID_PERSISTENCE_SHARED_PREFERENCES_USAGE_AST', message: 'AST heuristic detected SharedPreferences usage in Android production Kotlin code.' },
+  { platform: 'android', pathCheck: isAndroidKotlinTestPath, excludePaths: [], detect: TextAndroid.hasKotlinJUnit4Usage, ruleId: 'heuristics.android.testing.junit4-usage.ast', code: 'HEURISTICS_ANDROID_TESTING_JUNIT4_USAGE_AST', message: 'AST heuristic detected JUnit4 usage in Android Kotlin tests where JUnit5 is preferred.' },
   { platform: 'android', pathCheck: isAndroidPresentationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinLiveDataStateExposureUsage, ruleId: 'heuristics.android.flow.livedata-state-exposure.ast', code: 'HEURISTICS_ANDROID_FLOW_LIVEDATA_STATE_EXPOSURE_AST', message: 'AST heuristic detected LiveData state exposure in Android presentation code where StateFlow or SharedFlow should be preferred.' },
   { platform: 'android', pathCheck: isAndroidPresentationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinManualCoroutineScopeInViewModelUsage, ruleId: 'heuristics.android.coroutines.manual-scope-in-viewmodel.ast', code: 'HEURISTICS_ANDROID_COROUTINES_MANUAL_SCOPE_IN_VIEWMODEL_AST', message: 'AST heuristic detected manual CoroutineScope inside an Android ViewModel where viewModelScope should be preferred.' },
   { platform: 'android', pathCheck: isAndroidNonPresentationKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinDispatcherMainBoundaryLeakUsage, ruleId: 'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast', code: 'HEURISTICS_ANDROID_COROUTINES_DISPATCHERS_MAIN_BOUNDARY_LEAK_AST', message: 'AST heuristic detected Dispatchers.Main outside Android presentation code.' },

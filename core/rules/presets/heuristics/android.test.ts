@@ -3,7 +3,7 @@ import test from 'node:test';
 import { androidRules } from './android';
 
 test('androidRules define reglas heurísticas locked para plataforma android', () => {
-  assert.equal(androidRules.length, 18);
+  assert.equal(androidRules.length, 19);
 
   const ids = androidRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -13,6 +13,7 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
     'heuristics.android.flow.livedata-state-exposure.ast',
     'heuristics.android.security.local-properties-tracked.ast',
     'heuristics.android.persistence.shared-preferences-usage.ast',
+    'heuristics.android.testing.junit4-usage.ast',
     'heuristics.android.coroutines.manual-scope-in-viewmodel.ast',
     'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast',
     'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
@@ -61,6 +62,10 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
   assert.equal(
     byId.get('heuristics.android.persistence.shared-preferences-usage.ast')?.then.code,
     'HEURISTICS_ANDROID_PERSISTENCE_SHARED_PREFERENCES_USAGE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.testing.junit4-usage.ast')?.then.code,
+    'HEURISTICS_ANDROID_TESTING_JUNIT4_USAGE_AST'
   );
   assert.equal(
     byId.get('heuristics.android.coroutines.manual-scope-in-viewmodel.ast')?.then.code,
