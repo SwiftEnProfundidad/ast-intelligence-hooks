@@ -4,7 +4,7 @@ import { GitService, type IGitService } from '../git/GitService';
 import { hasAllowedExtension } from '../git/gitDiffUtils';
 import { runPlatformGate } from '../git/runPlatformGate';
 import { evaluatePlatformGateFindings } from '../git/runPlatformGateEvaluation';
-import { DEFAULT_FACT_FILE_EXTENSIONS, type GateScope } from '../git/runPlatformGateFacts';
+import { DEFAULT_FACT_FILE_EXTENSIONS } from '../git/runPlatformGateFacts';
 import { resolvePolicyForStage, type ResolvedStagePolicy } from '../gate/stagePolicies';
 
 export type LifecycleAuditStage = 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
@@ -54,6 +54,8 @@ type LifecycleAuditDependencies = {
   runPlatformGate: typeof runPlatformGate;
 };
 
+type LifecycleAuditScope = { kind: 'repo' } | { kind: 'staged' };
+
 const POLICY_RECONCILE_HINT =
   'If .pumuki/policy-as-code.json signatures drift after a pumuki upgrade, run: pumuki policy reconcile --apply';
 
@@ -85,7 +87,7 @@ const collectStagedMatchingExtensions = (
 const resolveLifecycleAuditScope = (params: {
   stage: LifecycleAuditStage;
   stagedMatchingExtensions: ReadonlyArray<string>;
-}): GateScope => {
+}): LifecycleAuditScope => {
   if (params.stage === 'PRE_WRITE' && params.stagedMatchingExtensions.length > 0) {
     return { kind: 'staged' };
   }
@@ -183,7 +185,7 @@ const buildRuleIdNormalization = (params: {
 
 const isScopedPreWriteGlobalEnforcementOnly = (params: {
   stage: LifecycleAuditStage;
-  scope: GateScope;
+  scope: LifecycleAuditScope;
   findings: ReadonlyArray<LifecycleAuditFinding>;
 }): boolean =>
   params.stage === 'PRE_WRITE' &&
