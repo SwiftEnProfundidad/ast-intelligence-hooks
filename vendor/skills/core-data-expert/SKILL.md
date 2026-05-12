@@ -1,12 +1,13 @@
-# Core Data Expert
+# Core Data + SwiftData Expert
 
-Use this skill when auditing or implementing Core Data code that must remain safe across contexts, layers, and async boundaries.
+Use this skill when auditing or implementing Core Data or SwiftData code that must remain safe across contexts, layers, and async boundaries.
 
 ## Focus areas
 
 - ✅ Prefer `NSManagedObjectID` or mapped DTO/domain models over passing `NSManagedObject` across boundaries.
 - ✅ Avoid returning or accepting `NSManagedObject` in async APIs that cross actor or context boundaries.
 - ✅ Keep Core Data orchestration inside infrastructure or repository layers instead of presentation code.
+- ✅ Keep SwiftData orchestration (`ModelContext`, `ModelContainer`, `@Query`, `@Model`) inside infrastructure or repository layers instead of application or presentation code in enterprise Clean Architecture.
 - ✅ Make context ownership explicit and keep merge boundaries controlled.
 - ✅ Treat managed objects as context-scoped references, not as portable domain entities.
 
@@ -21,3 +22,4 @@ Use this skill when auditing or implementing Core Data code that must remain saf
 - ❌ Passing `NSManagedObject` through service, use-case, or presentation boundaries.
 - ❌ Async APIs that return `NSManagedObject` directly.
 - ❌ Leaking context-scoped managed objects into SwiftUI state or view models.
+- ❌ Using SwiftData contexts, containers, queries, or persistence models directly in application or presentation code when the repo requires Clean Architecture boundaries.
