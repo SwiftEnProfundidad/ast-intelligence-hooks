@@ -156,6 +156,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.coroutines.lifecycle-scope-boundary-leak.ast',
+    description:
+      'Detects lifecycleScope usage in Android domain/application code where lifecycle ownership belongs to UI lifecycle owners.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.coroutines.lifecycle-scope-boundary-leak.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected lifecycleScope usage in Android domain/application code.',
+      code: 'HEURISTICS_ANDROID_COROUTINES_LIFECYCLE_SCOPE_BOUNDARY_LEAK_AST',
+    },
+  },
+  {
     id: 'heuristics.android.coroutines.supervisor-scope.ast',
     description:
       'Detects supervisorScope usage in Android domain/application code.',

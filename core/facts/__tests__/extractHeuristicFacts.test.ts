@@ -1288,6 +1288,10 @@ test('detects Android heuristics in production path and skips tests', () => {
         ['suspend fun execute() = supervisorScope { launch { syncRemote() } }'].join('\n')
       ),
       fileContentFact(
+        'apps/android/app/src/main/java/com/acme/application/LifecycleLeakUseCase.kt',
+        ['fun execute() { lifecycleScope.launch { syncRemote() } }'].join('\n')
+      ),
+      fileContentFact(
         'apps/android/app/src/main/java/com/acme/application/SafeSyncUseCase.kt',
         [
           'suspend fun execute() {',
@@ -1314,6 +1318,7 @@ test('detects Android heuristics in production path and skips tests', () => {
   assert.deepEqual(toRuleIds(findings), [
     'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast',
     'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
+    'heuristics.android.coroutines.lifecycle-scope-boundary-leak.ast',
     'heuristics.android.coroutines.manual-scope-in-viewmodel.ast',
     'heuristics.android.coroutines.supervisor-scope.ast',
     'heuristics.android.coroutines.try-catch.ast',
