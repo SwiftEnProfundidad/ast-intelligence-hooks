@@ -91,6 +91,13 @@ const isAndroidKotlinPath = (path: string): boolean => {
   return (path.endsWith('.kt') || path.endsWith('.kts')) && path.startsWith('apps/android/');
 };
 
+const isAndroidLocalPropertiesPath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/').toLowerCase();
+  return normalized.startsWith('apps/android/') && normalized.endsWith('/local.properties');
+};
+
+const detectsTrackedFilePresence = (_source: string): boolean => true;
+
 const isAndroidPresentationPath = (path: string): boolean => {
   return isAndroidKotlinPath(path) && path.includes('/presentation/');
 };
@@ -645,6 +652,7 @@ const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinThreadSleepCall, ruleId: 'heuristics.android.thread-sleep.ast', code: 'HEURISTICS_ANDROID_THREAD_SLEEP_AST', message: 'AST heuristic detected Thread.sleep usage in production Kotlin code.' },
   { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinGlobalScopeUsage, ruleId: 'heuristics.android.globalscope.ast', code: 'HEURISTICS_ANDROID_GLOBAL_SCOPE_AST', message: 'AST heuristic detected GlobalScope coroutine usage in production Kotlin code.' },
   { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinRunBlockingUsage, ruleId: 'heuristics.android.run-blocking.ast', code: 'HEURISTICS_ANDROID_RUN_BLOCKING_AST', message: 'AST heuristic detected runBlocking usage in production Kotlin code.' },
+  { platform: 'android', pathCheck: isAndroidLocalPropertiesPath, excludePaths: [], detect: detectsTrackedFilePresence, ruleId: 'heuristics.android.security.local-properties-tracked.ast', code: 'HEURISTICS_ANDROID_SECURITY_LOCAL_PROPERTIES_TRACKED_AST', message: 'AST heuristic detected tracked Android local.properties file.' },
   { platform: 'android', pathCheck: isAndroidPresentationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinLiveDataStateExposureUsage, ruleId: 'heuristics.android.flow.livedata-state-exposure.ast', code: 'HEURISTICS_ANDROID_FLOW_LIVEDATA_STATE_EXPOSURE_AST', message: 'AST heuristic detected LiveData state exposure in Android presentation code where StateFlow or SharedFlow should be preferred.' },
   { platform: 'android', pathCheck: isAndroidPresentationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinManualCoroutineScopeInViewModelUsage, ruleId: 'heuristics.android.coroutines.manual-scope-in-viewmodel.ast', code: 'HEURISTICS_ANDROID_COROUTINES_MANUAL_SCOPE_IN_VIEWMODEL_AST', message: 'AST heuristic detected manual CoroutineScope inside an Android ViewModel where viewModelScope should be preferred.' },
   { platform: 'android', pathCheck: isAndroidNonPresentationKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinDispatcherMainBoundaryLeakUsage, ruleId: 'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast', code: 'HEURISTICS_ANDROID_COROUTINES_DISPATCHERS_MAIN_BOUNDARY_LEAK_AST', message: 'AST heuristic detected Dispatchers.Main outside Android presentation code.' },

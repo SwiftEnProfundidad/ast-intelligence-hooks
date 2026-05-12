@@ -247,6 +247,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'android.coroutines.try-catch',
     ['heuristics.android.coroutines.try-catch.ast']
   ),
+  'skills.android.guideline.android.local-properties-api-keys-no-subir-a-git': heuristicDetector(
+    'android.security.local-properties',
+    ['heuristics.android.security.local-properties-tracked.ast']
+  ),
   'skills.android.guideline.android.stateflow-estado-mutable-observable': heuristicDetector(
     'android.flow.state-exposure',
     ['heuristics.android.flow.livedata-state-exposure.ast']

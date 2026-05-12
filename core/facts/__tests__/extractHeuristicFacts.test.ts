@@ -1267,6 +1267,10 @@ test('detects Android heuristics in production path and skips tests', () => {
         ['Thread.sleep(10)', 'GlobalScope.launch { }', 'runBlocking { }'].join('\n')
       ),
       fileContentFact(
+        'apps/android/local.properties',
+        ['sdk.dir=/Users/demo/Library/Android/sdk'].join('\n')
+      ),
+      fileContentFact(
         'apps/android/app/src/main/java/com/acme/presentation/FeatureViewModel.kt',
         [
           'class FeatureViewModel : ViewModel() {',
@@ -1327,6 +1331,7 @@ test('detects Android heuristics in production path and skips tests', () => {
     'heuristics.android.flow.livedata-state-exposure.ast',
     'heuristics.android.globalscope.ast',
     'heuristics.android.run-blocking.ast',
+    'heuristics.android.security.local-properties-tracked.ast',
     'heuristics.android.thread-sleep.ast',
   ]);
 });
