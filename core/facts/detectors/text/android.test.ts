@@ -8,6 +8,7 @@ import {
   findKotlinPresentationSrpMatch,
   hasKotlinDispatcherMainBoundaryLeakUsage,
   hasKotlinGlobalScopeUsage,
+  hasKotlinHardcodedBackgroundDispatcherUsage,
   hasKotlinLiveDataStateExposureUsage,
   hasKotlinManualCoroutineScopeInViewModelUsage,
   hasKotlinRunBlockingUsage,
@@ -161,6 +162,33 @@ class SyncOrdersUseCase {
 }
 `;
   assert.equal(hasKotlinDispatcherMainBoundaryLeakUsage(source), false);
+});
+
+test('hasKotlinHardcodedBackgroundDispatcherUsage detecta Dispatchers.IO y Dispatchers.Default', () => {
+  const ioSource = `
+class SyncOrdersUseCase {
+  suspend fun execute() = withContext(Dispatchers.IO) { }
+}
+`;
+  const defaultSource = `
+class BuildCatalogIndexUseCase {
+  suspend fun execute() = withContext(Dispatchers.Default) { }
+}
+`;
+  assert.equal(hasKotlinHardcodedBackgroundDispatcherUsage(ioSource), true);
+  assert.equal(hasKotlinHardcodedBackgroundDispatcherUsage(defaultSource), true);
+});
+
+test('hasKotlinHardcodedBackgroundDispatcherUsage ignora imports, comentarios, strings y Main', () => {
+  const source = `
+import kotlinx.coroutines.Dispatchers
+// withContext(Dispatchers.IO) { }
+val sample = "Dispatchers.Default"
+class SyncOrdersUseCase {
+  suspend fun execute() = withContext(Dispatchers.Main) { }
+}
+`;
+  assert.equal(hasKotlinHardcodedBackgroundDispatcherUsage(source), false);
 });
 
 test('findKotlinPresentationSrpMatch devuelve payload semantico para SRP-Android en presentation', () => {

@@ -226,7 +226,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   ),
   'skills.android.guideline.android.dispatchers-main-ui-io-network-disk-default-cpu': heuristicDetector(
     'android.coroutines.dispatchers',
-    ['heuristics.android.coroutines.dispatchers-main-boundary-leak.ast']
+    [
+      'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast',
+      'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
+    ]
   ),
   'skills.android.guideline.android.stateflow-estado-mutable-observable': heuristicDetector(
     'android.flow.state-exposure',

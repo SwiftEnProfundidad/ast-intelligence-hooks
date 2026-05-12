@@ -255,6 +255,10 @@ const parseKotlinTypeDeclarations = (source: string): readonly KotlinTypeDeclara
   return declarations;
 };
 
+export const hasKotlinHardcodedBackgroundDispatcherUsage = (source: string): boolean => {
+  return collectKotlinRegexLines(source, /\bDispatchers\s*\.\s*(?:IO|Default)\b/).length > 0;
+};
+
 export const hasKotlinThreadSleepCall = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: kotlinSource, index, current }) => {
     if (current !== 'T') {

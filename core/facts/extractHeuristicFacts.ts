@@ -99,6 +99,10 @@ const isAndroidApplicationOrPresentationPath = (path: string): boolean => {
   return isAndroidKotlinPath(path) && (path.includes('/application/') || path.includes('/presentation/'));
 };
 
+const isAndroidDomainOrApplicationPath = (path: string): boolean => {
+  return isAndroidKotlinPath(path) && (path.includes('/domain/') || path.includes('/application/'));
+};
+
 const isAndroidNonPresentationKotlinPath = (path: string): boolean => {
   return isAndroidKotlinPath(path) && !path.includes('/presentation/');
 };
@@ -644,6 +648,7 @@ const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   { platform: 'android', pathCheck: isAndroidPresentationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinLiveDataStateExposureUsage, ruleId: 'heuristics.android.flow.livedata-state-exposure.ast', code: 'HEURISTICS_ANDROID_FLOW_LIVEDATA_STATE_EXPOSURE_AST', message: 'AST heuristic detected LiveData state exposure in Android presentation code where StateFlow or SharedFlow should be preferred.' },
   { platform: 'android', pathCheck: isAndroidPresentationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinManualCoroutineScopeInViewModelUsage, ruleId: 'heuristics.android.coroutines.manual-scope-in-viewmodel.ast', code: 'HEURISTICS_ANDROID_COROUTINES_MANUAL_SCOPE_IN_VIEWMODEL_AST', message: 'AST heuristic detected manual CoroutineScope inside an Android ViewModel where viewModelScope should be preferred.' },
   { platform: 'android', pathCheck: isAndroidNonPresentationKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinDispatcherMainBoundaryLeakUsage, ruleId: 'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast', code: 'HEURISTICS_ANDROID_COROUTINES_DISPATCHERS_MAIN_BOUNDARY_LEAK_AST', message: 'AST heuristic detected Dispatchers.Main outside Android presentation code.' },
+  { platform: 'android', pathCheck: isAndroidDomainOrApplicationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinHardcodedBackgroundDispatcherUsage, ruleId: 'heuristics.android.coroutines.hardcoded-background-dispatcher.ast', code: 'HEURISTICS_ANDROID_COROUTINES_HARDCODED_BACKGROUND_DISPATCHER_AST', message: 'AST heuristic detected hard-coded Dispatchers.IO or Dispatchers.Default in Android domain/application code.' },
 ];
 
 const extractWorkflowHeuristicFacts = (
