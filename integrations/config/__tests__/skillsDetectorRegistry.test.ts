@@ -114,7 +114,10 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     resolveMappedHeuristicRuleIds(
       'skills.android.guideline.android.dispatchers-main-ui-io-network-disk-default-cpu'
     ),
-    ['heuristics.android.coroutines.dispatchers-main-boundary-leak.ast']
+    [
+      'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast',
+      'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
+    ]
   );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-solid-violations'), [
     'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',

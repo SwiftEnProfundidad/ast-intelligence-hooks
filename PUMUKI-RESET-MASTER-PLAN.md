@@ -1128,3 +1128,5 @@ Esta sección es backlog estratégico futuro. No sustituye ni mueve la `🚧` ac
 2. Definir para cada plataforma su pack mínimo de reglas hard, anti-patterns y criterios de arquitectura y test comparables a iOS.
 3. Respaldar cada skill nueva o ampliada con fuentes oficiales y, cuando aporte valor, con uno o más repos de referencia mantenidos.
 4. Integrar esa paridad en compiler templates, detector registry y documentación operativa sin degradar la línea base agnóstica del producto.
+
+Último avance operativo: `[✅] - PARITY-ANDROID-001 / Dispatchers - hardcode background en dominio/aplicación` amplía la sub-slice Android de dispatchers con detector AST real para `Dispatchers.IO` y `Dispatchers.Default` hardcodeados en `domain` o `application`, enlazado en extractor, preset, registry y markdown. La tarea principal sigue activa para continuar con el baseline Android restante. Evidencia local pendiente en rama `feature/parity-android-dispatcher-injection-baseline`.

@@ -1280,6 +1280,10 @@ test('detects Android heuristics in production path and skips tests', () => {
         ['suspend fun execute() = withContext(Dispatchers.Main) { }'].join('\n')
       ),
       fileContentFact(
+        'apps/android/app/src/main/java/com/acme/domain/BuildCatalogIndexUseCase.kt',
+        ['suspend fun execute() = withContext(Dispatchers.Default) { }'].join('\n')
+      ),
+      fileContentFact(
         'apps/android/app/src/test/java/com/acme/FeatureTest.kt',
         [
           'Thread.sleep(10)',
@@ -1297,6 +1301,7 @@ test('detects Android heuristics in production path and skips tests', () => {
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   assert.deepEqual(toRuleIds(findings), [
     'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast',
+    'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
     'heuristics.android.coroutines.manual-scope-in-viewmodel.ast',
     'heuristics.android.flow.livedata-state-exposure.ast',
     'heuristics.android.globalscope.ast',

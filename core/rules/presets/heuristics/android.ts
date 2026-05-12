@@ -116,6 +116,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
+    description:
+      'Detects hard-coded Dispatchers.IO or Dispatchers.Default usage in Android domain/application code.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected hard-coded background dispatcher in Android domain/application code.',
+      code: 'HEURISTICS_ANDROID_COROUTINES_HARDCODED_BACKGROUND_DISPATCHER_AST',
+    },
+  },
+  {
     id: 'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     description:
       'Detects Android presentation types mixing session, networking, persistence and navigation responsibilities.',
