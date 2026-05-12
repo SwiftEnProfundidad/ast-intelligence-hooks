@@ -89,6 +89,15 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-globalscope'), [
     'heuristics.android.globalscope.ast',
   ]);
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.coroutines-async-await-no-callbacks'
+    ),
+    [
+      'heuristics.android.globalscope.ast',
+      'heuristics.android.run-blocking.ast',
+    ]
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-solid-violations'), [
     'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     'heuristics.android.solid.ocp.discriminator-branching.ast',

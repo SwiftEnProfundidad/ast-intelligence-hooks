@@ -122,6 +122,11 @@ app/
 ✅ El baseline Android debe cubrir al menos SRP en presentation, OCP por branching de discriminadores, DIP por dependencias concretas de framework, ISP por interfaces demasiado anchas y LSP por precondiciones estrechadas.
 ✅ Estos detectores son paridad parcial Android: no sustituyen una auditoría completa de arquitectura, pero sí evitan que reglas SOLID críticas queden como doctrina declarativa sin señal ejecutable.
 
+### Enforcement AST inicial de coroutines Android
+✅ `skills.android.guideline.android.coroutines-async-await-no-callbacks` debe mapear a señales ejecutables existentes de uso inseguro de coroutines, empezando por `GlobalScope` y `runBlocking`.
+✅ El baseline inicial de coroutines es parcial: cubre APIs bloqueantes o scopes no estructurados, pero no declara todavía cobertura completa de `Flow`, `viewModelScope`, `supervisorScope`, dispatchers ni cancelación cooperativa.
+✅ Si se amplía esta cobertura, cada nueva regla debe aterrizar como detector AST/textual semántico con test dirigido antes de declararse cubierta en el registry.
+
 ### Dependency Injection (Hilt):
 ✅ **Hilt** - DI framework (NO manual factories)
 ✅ **@HiltAndroidApp** - Application class
