@@ -251,6 +251,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'android.security.local-properties',
     ['heuristics.android.security.local-properties-tracked.ast']
   ),
+  'skills.android.guideline.android.datastore-androidx-datastore-datastore-preferences-reemplazo-de-shared': heuristicDetector(
+    'android.persistence.shared-preferences',
+    ['heuristics.android.persistence.shared-preferences-usage.ast']
+  ),
   'skills.android.guideline.android.stateflow-estado-mutable-observable': heuristicDetector(
     'android.flow.state-exposure',
     ['heuristics.android.flow.livedata-state-exposure.ast']

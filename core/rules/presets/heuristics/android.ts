@@ -96,6 +96,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.persistence.shared-preferences-usage.ast',
+    description:
+      'Detects SharedPreferences usage in Android production Kotlin code where DataStore may be preferred.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.persistence.shared-preferences-usage.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected SharedPreferences usage in Android production Kotlin code.',
+      code: 'HEURISTICS_ANDROID_PERSISTENCE_SHARED_PREFERENCES_USAGE_AST',
+    },
+  },
+  {
     id: 'heuristics.android.coroutines.manual-scope-in-viewmodel.ast',
     description:
       'Detects manual CoroutineScope construction inside Android ViewModel classes where viewModelScope should be preferred.',
