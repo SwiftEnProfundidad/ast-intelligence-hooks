@@ -117,6 +117,11 @@ app/
   di/                      # Hilt modules
 ```
 
+### Enforcement AST inicial de arquitectura Android
+✅ `skills.android.no-solid-violations` debe mapear a detectores AST semánticos, no a conteos de líneas ni umbrales arbitrarios.
+✅ El baseline Android debe cubrir al menos SRP en presentation, OCP por branching de discriminadores, DIP por dependencias concretas de framework, ISP por interfaces demasiado anchas y LSP por precondiciones estrechadas.
+✅ Estos detectores son paridad parcial Android: no sustituyen una auditoría completa de arquitectura, pero sí evitan que reglas SOLID críticas queden como doctrina declarativa sin señal ejecutable.
+
 ### Dependency Injection (Hilt):
 ✅ **Hilt** - DI framework (NO manual factories)
 ✅ **@HiltAndroidApp** - Application class
