@@ -96,6 +96,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast',
+    description:
+      'Detects Dispatchers.Main usage outside Android presentation code.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Dispatchers.Main outside Android presentation code.',
+      code: 'HEURISTICS_ANDROID_COROUTINES_DISPATCHERS_MAIN_BOUNDARY_LEAK_AST',
+    },
+  },
+  {
     id: 'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     description:
       'Detects Android presentation types mixing session, networking, persistence and navigation responsibilities.',

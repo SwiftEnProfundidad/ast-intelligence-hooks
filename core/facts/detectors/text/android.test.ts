@@ -6,6 +6,7 @@ import {
   findKotlinLiskovSubstitutionMatch,
   findKotlinOpenClosedWhenMatch,
   findKotlinPresentationSrpMatch,
+  hasKotlinDispatcherMainBoundaryLeakUsage,
   hasKotlinGlobalScopeUsage,
   hasKotlinLiveDataStateExposureUsage,
   hasKotlinManualCoroutineScopeInViewModelUsage,
@@ -139,6 +140,27 @@ class OrdersViewModel : ViewModel() {
 }
 `;
   assert.equal(hasKotlinManualCoroutineScopeInViewModelUsage(source), false);
+});
+
+test('hasKotlinDispatcherMainBoundaryLeakUsage detecta Dispatchers.Main como dispatcher UI explícito', () => {
+  const source = `
+class SyncOrdersUseCase {
+  suspend fun execute() = withContext(Dispatchers.Main) { }
+}
+`;
+  assert.equal(hasKotlinDispatcherMainBoundaryLeakUsage(source), true);
+});
+
+test('hasKotlinDispatcherMainBoundaryLeakUsage ignora imports, comentarios y strings', () => {
+  const source = `
+import kotlinx.coroutines.Dispatchers
+// withContext(Dispatchers.Main) { }
+val sample = "Dispatchers.Main"
+class SyncOrdersUseCase {
+  suspend fun execute() = withContext(Dispatchers.IO) { }
+}
+`;
+  assert.equal(hasKotlinDispatcherMainBoundaryLeakUsage(source), false);
 });
 
 test('findKotlinPresentationSrpMatch devuelve payload semantico para SRP-Android en presentation', () => {

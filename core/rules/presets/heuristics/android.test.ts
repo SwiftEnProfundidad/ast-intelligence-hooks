@@ -3,7 +3,7 @@ import test from 'node:test';
 import { androidRules } from './android';
 
 test('androidRules define reglas heurísticas locked para plataforma android', () => {
-  assert.equal(androidRules.length, 10);
+  assert.equal(androidRules.length, 11);
 
   const ids = androidRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -12,6 +12,7 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
     'heuristics.android.run-blocking.ast',
     'heuristics.android.flow.livedata-state-exposure.ast',
     'heuristics.android.coroutines.manual-scope-in-viewmodel.ast',
+    'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast',
     'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     'heuristics.android.solid.ocp.discriminator-branching.ast',
     'heuristics.android.solid.dip.concrete-framework-dependency.ast',
@@ -49,6 +50,10 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
   assert.equal(
     byId.get('heuristics.android.coroutines.manual-scope-in-viewmodel.ast')?.then.code,
     'HEURISTICS_ANDROID_COROUTINES_MANUAL_SCOPE_IN_VIEWMODEL_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.coroutines.dispatchers-main-boundary-leak.ast')?.then.code,
+    'HEURISTICS_ANDROID_COROUTINES_DISPATCHERS_MAIN_BOUNDARY_LEAK_AST'
   );
   assert.equal(
     byId.get('heuristics.android.solid.srp.presentation-mixed-responsibilities.ast')?.then.code,
