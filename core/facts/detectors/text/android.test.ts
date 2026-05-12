@@ -12,6 +12,7 @@ import {
   hasKotlinHardcodedBackgroundDispatcherUsage,
   hasKotlinLiveDataStateExposureUsage,
   hasKotlinLifecycleScopeUsage,
+  hasKotlinSharedPreferencesUsage,
   hasKotlinWithContextUsage,
   hasKotlinManualCoroutineScopeInViewModelUsage,
   hasKotlinRunBlockingUsage,
@@ -245,6 +246,33 @@ class SyncOrdersUseCase {
 }
 `;
   assert.equal(hasKotlinLifecycleScopeUsage(source), false);
+});
+
+test('hasKotlinSharedPreferencesUsage detecta SharedPreferences y getSharedPreferences', () => {
+  const typeSource = `
+class PreferencesStore(private val preferences: SharedPreferences) {
+  fun read() = preferences.getString("token", null)
+}
+`;
+  const callSource = `
+class PreferencesStore(private val context: Context) {
+  fun read() = context.getSharedPreferences("user", Context.MODE_PRIVATE)
+}
+`;
+  assert.equal(hasKotlinSharedPreferencesUsage(typeSource), true);
+  assert.equal(hasKotlinSharedPreferencesUsage(callSource), true);
+});
+
+test('hasKotlinSharedPreferencesUsage ignora imports, comentarios, strings y nombres parciales', () => {
+  const source = `
+import android.content.SharedPreferences
+// val preferences: SharedPreferences = legacy()
+val sample = "getSharedPreferences(\"user\")"
+class PreferencesStore {
+  fun read() = customSharedPreferencesProvider()
+}
+`;
+  assert.equal(hasKotlinSharedPreferencesUsage(source), false);
 });
 
 test('hasKotlinSupervisorScopeUsage detecta supervisorScope con parentesis y llaves', () => {

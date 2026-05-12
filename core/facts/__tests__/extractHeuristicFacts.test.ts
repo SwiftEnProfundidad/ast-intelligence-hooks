@@ -1271,6 +1271,10 @@ test('detects Android heuristics in production path and skips tests', () => {
         ['sdk.dir=/Users/demo/Library/Android/sdk'].join('\n')
       ),
       fileContentFact(
+        'apps/android/app/src/main/java/com/acme/data/LegacyPreferencesStore.kt',
+        ['class LegacyPreferencesStore(private val preferences: SharedPreferences)'].join('\n')
+      ),
+      fileContentFact(
         'apps/android/app/src/main/java/com/acme/presentation/FeatureViewModel.kt',
         [
           'class FeatureViewModel : ViewModel() {',
@@ -1330,6 +1334,7 @@ test('detects Android heuristics in production path and skips tests', () => {
     'heuristics.android.coroutines.with-context.ast',
     'heuristics.android.flow.livedata-state-exposure.ast',
     'heuristics.android.globalscope.ast',
+    'heuristics.android.persistence.shared-preferences-usage.ast',
     'heuristics.android.run-blocking.ast',
     'heuristics.android.security.local-properties-tracked.ast',
     'heuristics.android.thread-sleep.ast',

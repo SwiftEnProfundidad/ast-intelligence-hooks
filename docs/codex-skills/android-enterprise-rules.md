@@ -137,6 +137,10 @@ app/
 ✅ `skills.android.guideline.android.local-properties-api-keys-no-subir-a-git` debe mapear a señal ejecutable de `local.properties` versionado bajo `apps/android/`.
 ✅ Este baseline no imprime ni analiza valores secretos; solo reporta la presencia del archivo versionado y exige retirarlo del control de versiones.
 
+### Enforcement AST inicial de persistencia Android
+✅ `skills.android.guideline.android.datastore-androidx-datastore-datastore-preferences-reemplazo-de-shared` debe mapear a señal ejecutable de uso legacy de `SharedPreferences` en Kotlin Android production.
+✅ Este baseline no prohíbe `EncryptedSharedPreferences` todavía ni declara cobertura completa de migración a DataStore; solo detecta el uso legacy explícito de `SharedPreferences` / `getSharedPreferences(...)`.
+
 ### Enforcement AST inicial de Flow/StateFlow Android
 ✅ Las reglas de `StateFlow` / `StateFlow-SharedFlow` deben mapear a señales ejecutables de estado observable legacy, empezando por exposición de `LiveData` / `MutableLiveData` en presentation.
 ✅ Este baseline no obliga a que todo ViewModel use Flow; solo detecta una alternativa legacy concreta cuando aparece en código de presentación Android.

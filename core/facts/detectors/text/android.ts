@@ -267,6 +267,10 @@ export const hasKotlinLifecycleScopeUsage = (source: string): boolean => {
   return collectKotlinRegexLines(source, /\blifecycleScope\s*\./).length > 0;
 };
 
+export const hasKotlinSharedPreferencesUsage = (source: string): boolean => {
+  return collectKotlinRegexLines(source, /\b(?:SharedPreferences|PreferenceManager\s*\.|getSharedPreferences\s*\()/).length > 0;
+};
+
 export const hasKotlinSupervisorScopeUsage = (source: string): boolean => {
   return collectKotlinRegexLines(source, /\bsupervisorScope\s*(?:<[^>\n]+>\s*)?(?:\(|\{)/).length > 0;
 };
