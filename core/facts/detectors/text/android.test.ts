@@ -11,6 +11,7 @@ import {
   hasKotlinGlobalScopeUsage,
   hasKotlinHardcodedBackgroundDispatcherUsage,
   hasKotlinLiveDataStateExposureUsage,
+  hasKotlinWithContextUsage,
   hasKotlinManualCoroutineScopeInViewModelUsage,
   hasKotlinRunBlockingUsage,
   hasKotlinSupervisorScopeUsage,
@@ -191,6 +192,33 @@ class SyncOrdersUseCase {
 }
 `;
   assert.equal(hasKotlinHardcodedBackgroundDispatcherUsage(source), false);
+});
+
+test('hasKotlinWithContextUsage detecta withContext con dispatcher y con generics', () => {
+  const dispatcherSource = `
+class SyncOrdersUseCase {
+  suspend fun execute() = withContext(Dispatchers.IO) { syncRemote() }
+}
+`;
+  const genericSource = `
+class SyncOrdersUseCase {
+  suspend fun execute() = withContext<Unit>(dispatcher) { syncRemote() }
+}
+`;
+  assert.equal(hasKotlinWithContextUsage(dispatcherSource), true);
+  assert.equal(hasKotlinWithContextUsage(genericSource), true);
+});
+
+test('hasKotlinWithContextUsage ignora imports, comentarios, strings y nombres parciales', () => {
+  const source = `
+import kotlinx.coroutines.withContext
+// withContext(Dispatchers.IO) { }
+val sample = "withContext(Dispatchers.Default)"
+class SyncOrdersUseCase {
+  suspend fun execute() = customWithContext(dispatcher) { syncRemote() }
+}
+`;
+  assert.equal(hasKotlinWithContextUsage(source), false);
 });
 
 test('hasKotlinSupervisorScopeUsage detecta supervisorScope con parentesis y llaves', () => {

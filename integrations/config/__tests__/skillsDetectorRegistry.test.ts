@@ -121,6 +121,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.withcontext-cambiar-dispatcher'
+    ),
+    ['heuristics.android.coroutines.with-context.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.android.guideline.android.supervisorscope-errores-no-cancelan-otros-jobs'
     ),
     ['heuristics.android.coroutines.supervisor-scope.ast']
