@@ -181,6 +181,30 @@ const buildRuleIdNormalization = (params: {
   };
 };
 
+const isScopedPreWriteGlobalEnforcementOnly = (params: {
+  stage: LifecycleAuditStage;
+  scope: GateScope;
+  findings: ReadonlyArray<LifecycleAuditFinding>;
+}): boolean =>
+  params.stage === 'PRE_WRITE' &&
+  params.scope.kind === 'staged' &&
+  params.findings.length > 0 &&
+  params.findings.every(
+    (finding) => finding.code === 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL'
+  );
+
+const toScopedAuditAdvisoryFinding = (
+  finding: LifecycleAuditFinding
+): LifecycleAuditFinding => ({
+  ...finding,
+  severity: 'INFO',
+  code: 'AUDIT_SCOPED_GLOBAL_ENFORCEMENT_ADVISORY',
+  message:
+    'Scoped PRE_WRITE audit evaluated only the staged supported files; global skills enforcement debt is retained as advisory for repo-wide work. ' +
+    finding.message,
+  blocking: false,
+});
+
 export const runLifecycleAudit = async (params: {
   stage: LifecycleAuditStage;
   auditMode: 'gate' | 'engine';
@@ -236,7 +260,7 @@ export const runLifecycleAudit = async (params: {
           auditMode: 'gate' as const,
         };
 
-  const gateExitCode = await activeDependencies.runPlatformGate(gateParams);
+  const rawGateExitCode = await activeDependencies.runPlatformGate(gateParams);
   const evidence = activeDependencies.readEvidence(repoRoot);
   const filesScanned =
     typeof evidence?.snapshot.files_scanned === 'number' &&
@@ -247,10 +271,19 @@ export const runLifecycleAudit = async (params: {
     typeof evidence?.snapshot.outcome === 'string' ? evidence.snapshot.outcome : null;
   const findings = extractAuditFindings({
     evidence,
-    gateExitCode,
+    gateExitCode: rawGateExitCode,
     stage: params.stage,
     snapshotOutcome,
   });
+  const scopedPreWriteGlobalEnforcementOnly = isScopedPreWriteGlobalEnforcementOnly({
+    stage: params.stage,
+    scope,
+    findings,
+  });
+  const effectiveFindings = scopedPreWriteGlobalEnforcementOnly
+    ? findings.map(toScopedAuditAdvisoryFinding)
+    : findings;
+  const gateExitCode = scopedPreWriteGlobalEnforcementOnly ? 0 : rawGateExitCode;
 
   return {
     command: 'pumuki audit',
@@ -265,14 +298,14 @@ export const runLifecycleAudit = async (params: {
     files_scanned: filesScanned,
     untracked_matching_extensions_count: untrackedMatchingExtensionsCount,
     snapshot_outcome: snapshotOutcome,
-    findings_count: findings.length,
-    blocking_findings_count: findings.filter((finding) => finding.blocking).length,
+    findings_count: effectiveFindings.length,
+    blocking_findings_count: effectiveFindings.filter((finding) => finding.blocking).length,
     rules_coverage: evidence?.snapshot.rules_coverage ?? null,
     rule_id_normalization: buildRuleIdNormalization({
-      findings,
+      findings: effectiveFindings,
       rulesCoverage: evidence?.snapshot.rules_coverage,
     }),
-    findings,
+    findings: effectiveFindings,
     policy_reconcile_hint: POLICY_RECONCILE_HINT,
   };
 };
