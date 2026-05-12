@@ -62,18 +62,25 @@ const isDocumentationOnlyStagedPath = (relativePath: string): boolean => {
   return /\.(md|mdx)$/i.test(normalized);
 };
 
-const shouldSkipRestagingTrackedEvidenceForDocumentationOnlyScope = (params: {
+const shouldSkipRestagingTrackedEvidence = (params: {
   listStagedIndexPaths: (repoRoot: string) => ReadonlyArray<string>;
   repoRoot: string;
 }): boolean => {
   if (isTruthyEnvFlag(process.env.PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE)) {
     return false;
   }
-  const paths = params.listStagedIndexPaths(params.repoRoot).filter(
+  const stagedPaths = params.listStagedIndexPaths(params.repoRoot);
+  if (
+    !stagedPaths.includes('.ai_evidence.json') &&
+    !stagedPaths.includes('.AI_EVIDENCE.json')
+  ) {
+    return true;
+  }
+  const paths = stagedPaths.filter(
     (p) => p !== '.ai_evidence.json' && p !== '.AI_EVIDENCE.json'
   );
   if (paths.length === 0) {
-    return true;
+    return false;
   }
   return paths.every(isDocumentationOnlyStagedPath);
 };
@@ -539,14 +546,14 @@ const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
     return false;
   }
   if (
-    shouldSkipRestagingTrackedEvidenceForDocumentationOnlyScope({
+    shouldSkipRestagingTrackedEvidence({
       repoRoot: params.repoRoot,
       listStagedIndexPaths: params.dependencies.listStagedIndexPaths,
     })
   ) {
     if (!params.dependencies.isQuietMode()) {
       process.stderr.write(
-        `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} updated on disk but not auto-staged (documentation-only staged paths: *.md / *.mdx). ` +
+        `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} updated on disk but not auto-staged because it was not part of the staged set. ` +
           `Include in this commit if needed: git add -- ${EVIDENCE_FILE_PATH}. ` +
           `Force previous behavior: PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1\n`
       );

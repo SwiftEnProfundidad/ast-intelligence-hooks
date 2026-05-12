@@ -668,6 +668,9 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
     },
     rulesCoverage: {
       stage: 'PRE_PUSH',
+      contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+      scope_note:
+        'rules_coverage reports AUTO runtime rules applicable to this stage; it does not claim full DECLARATIVE registry execution.',
       active_rule_ids: ['rules.backend.no-console-log'],
       evaluated_rule_ids: ['rules.backend.no-console-log'],
       matched_rule_ids: ['rules.backend.no-console-log'],
@@ -1961,6 +1964,129 @@ test('runPlatformGate mantiene advisory cuando existen reglas AUTO de skills sin
     'skills.backend.guideline.backend.verificar-que-no-viole-solid-srp-ocp-lsp-isp-dip',
   ]);
   assert.equal(emittedArgs?.rulesCoverage?.counts?.unsupported_auto, 1);
+});
+
+test('runPlatformGate no bloquea PRE_COMMIT scoped por deuda global de detectores si el staged backend queda limpio', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
+    const policy: GatePolicy = {
+      stage: 'PRE_COMMIT',
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
+    };
+    const scope = { kind: 'staged' as const };
+    const git = buildGitStub('/repo/root');
+    const evidence = buildEvidenceStub();
+    const stagedFacts: Fact[] = [
+      {
+        kind: 'FileChange',
+        path: 'apps/backend/scripts/check-incidents.ts',
+        changeType: 'modified',
+        source: 'git',
+      },
+      {
+        kind: 'FileContent',
+        path: 'apps/backend/scripts/check-incidents.ts',
+        content: 'const parseIncident = (error: unknown) => String(error);',
+        source: 'git',
+      },
+    ];
+
+    let emittedArgs:
+      | {
+          findings: ReadonlyArray<Finding>;
+          gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+          rulesCoverage?: {
+            unsupported_auto_rule_ids?: string[];
+          };
+        }
+      | undefined;
+
+    const result = await runPlatformGate({
+      policy,
+      scope,
+      services: {
+        git,
+        evidence,
+      },
+      dependencies: {
+        evaluateSddForStage: () => ({
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        }),
+        resolveFactsForGateScope: async () => stagedFacts,
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: { backend: { detected: true, confidence: 'HIGH' } },
+          skillsRuleSet: {
+            rules: [
+              createSkillRule({
+                id: 'skills.backend.avoid-explicit-any',
+                severity: 'ERROR',
+                platform: 'backend',
+              }),
+            ] as RuleSet,
+            activeBundles: [
+              {
+                name: 'backend-guidelines',
+                version: '1.0.0',
+                source: 'file:docs/codex-skills/backend-enterprise-rules.md',
+                hash: 'b'.repeat(64),
+                rules: [],
+              },
+            ],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
+            unsupportedAutoRuleIds: [
+              'skills.backend.guideline.backend.verificar-que-no-viole-solid-srp-ocp-lsp-isp-dip',
+            ],
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: stagedFacts.length,
+            filesScanned: 1,
+            rulesTotal: 1,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 1,
+            projectRules: 0,
+            matchedRules: 0,
+            unmatchedRules: 1,
+            unevaluatedRules: 0,
+            activeRuleIds: ['skills.backend.avoid-explicit-any'],
+            evaluatedRuleIds: ['skills.backend.avoid-explicit-any'],
+            matchedRuleIds: [],
+            unmatchedRuleIds: ['skills.backend.avoid-explicit-any'],
+            unevaluatedRuleIds: [],
+          },
+          findings: [],
+        }),
+        evaluateGate: (findingsArg) => evaluateGateFromFindings(findingsArg, policy),
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedArgs = {
+            findings: paramsArg.findings,
+            gateOutcome: paramsArg.gateOutcome,
+            rulesCoverage: paramsArg.rulesCoverage as {
+              unsupported_auto_rule_ids?: string[];
+            },
+          };
+        },
+        printGateFindings: () => {},
+      },
+    });
+
+    assert.equal(result, 0);
+    assert.equal(emittedArgs?.gateOutcome, 'WARN');
+    const mappingFinding = emittedArgs?.findings.find(
+      (finding) => finding.ruleId === 'governance.skills.detector-mapping.incomplete'
+    );
+    assert.ok(mappingFinding);
+    assert.equal(mappingFinding.severity, 'WARN');
+    assert.match(mappingFinding.code, /SOFT_PRECOMMIT$/);
+    assert.deepEqual(emittedArgs?.rulesCoverage?.unsupported_auto_rule_ids, [
+      'skills.backend.guideline.backend.verificar-que-no-viole-solid-srp-ocp-lsp-isp-dip',
+    ]);
+  });
 });
 
 test('runPlatformGate bloquea en modo strict cuando existen reglas AUTO de skills sin detector AST mapeado', async () => {
