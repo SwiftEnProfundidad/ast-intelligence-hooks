@@ -996,7 +996,7 @@ export async function runPlatformGate(params: {
         unsupportedAutoRuleIds: skillsRuleSet.unsupportedAutoRuleIds ?? [],
       })
       : undefined;
-  const effectiveUnsupportedSkillsMappingFinding = applySkillsFindingEnforcement(
+  const effectiveUnsupportedSkillsMappingInput = applySkillsFindingEnforcement(
     unsupportedSkillsMappingFinding
   );
   const platformSkillsCoverageFinding =
@@ -1196,13 +1196,17 @@ export async function runPlatformGate(params: {
     && !sddBlockingFinding
     && !degradedModeBlocks
     && !shouldBlockFromFinding(policyAsCodeBlockingFinding)
-    && !shouldBlockFromFinding(effectiveUnsupportedSkillsMappingFinding)
     && !shouldBlockFromFinding(coverageBlockingFinding)
     && !shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding)
     && !shouldBlockFromFinding(effectiveIosTestsQualityFinding)
     && !shouldBlockFromFinding(astIntelligenceDualFinding)
     && !hasTddBddBlockingFinding
     && !hasNativeBlockingFinding;
+  const effectiveUnsupportedSkillsMappingFinding = toSoftPreCommitSkillsFinding({
+    finding: effectiveUnsupportedSkillsMappingInput,
+    enabled: shouldSoftEnforceSkillsFindings,
+    observedCodePaths,
+  });
   const effectivePlatformSkillsCoverageFinding = toSoftPreCommitSkillsFinding({
     finding: effectivePlatformSkillsCoverageInput,
     enabled: shouldSoftEnforceSkillsFindings,

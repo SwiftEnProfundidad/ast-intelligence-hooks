@@ -889,7 +889,7 @@ test('runPreCommitStage dispara notificación de resumen tras evaluar el gate', 
   });
 });
 
-test('runPreCommitStage restagea .ai_evidence.json cuando ya estaba trackeado', async () => {
+test('runPreCommitStage restagea .ai_evidence.json cuando ya estaba staged', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     stageBackendFile(repoRoot);
     const stagedPaths: string[] = [];
@@ -897,6 +897,10 @@ test('runPreCommitStage restagea .ai_evidence.json cuando ya estaba trackeado', 
     const exitCode = await runPreCommitStage({
       resolveRepoRoot: () => repoRoot,
       isPathTracked: (_repoRoot, relativePath) => relativePath === '.ai_evidence.json',
+      listStagedIndexPaths: () => [
+        'apps/backend/src/service.ts',
+        '.ai_evidence.json',
+      ],
       stagePath: (_repoRoot, relativePath) => {
         stagedPaths.push(relativePath);
       },
@@ -904,6 +908,29 @@ test('runPreCommitStage restagea .ai_evidence.json cuando ya estaba trackeado', 
 
     assert.equal(exitCode, 0);
     assert.deepEqual(stagedPaths, ['.ai_evidence.json']);
+  });
+});
+
+test('runPreCommitStage no auto-restaguea evidencia trackeada si no estaba staged', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const stagedPaths: string[] = [];
+
+    const exitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+      isPathTracked: (_repoRoot, relativePath) => relativePath === '.ai_evidence.json',
+      listStagedIndexPaths: () => [
+        'apps/ios/Tests/iOS/BuyerAuthToStoresLiveFlowTests.spec.swift',
+        'apps/ios/Tests/Mac/Features/BuyerCommerce/BuyerCommerceDecodingTests.spec.swift',
+        'docs/RURALGO_SEGUIMIENTO.md',
+      ],
+      stagePath: (_repoRoot, relativePath) => {
+        stagedPaths.push(relativePath);
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(stagedPaths, []);
   });
 });
 
@@ -1013,6 +1040,10 @@ test('runPreCommitStage bloquea con causa explícita si no puede restagear evide
     const exitCode = await runPreCommitStage({
       resolveRepoRoot: () => repoRoot,
       isPathTracked: (_repoRoot, relativePath) => relativePath === '.ai_evidence.json',
+      listStagedIndexPaths: () => [
+        'apps/backend/src/service.ts',
+        '.ai_evidence.json',
+      ],
       stagePath: () => {
         throw new Error('git add failed');
       },
@@ -1055,6 +1086,10 @@ test('runPreCommitStage no deja drift de working tree en .ai_evidence.json cuand
 
     const exitCode = await runPreCommitStage({
       resolveRepoRoot: () => repoRoot,
+      listStagedIndexPaths: () => [
+        'apps/backend/src/service.ts',
+        '.ai_evidence.json',
+      ],
     });
 
     assert.equal(exitCode, 0);
