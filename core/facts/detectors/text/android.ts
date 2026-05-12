@@ -299,6 +299,38 @@ export const hasKotlinLiveDataStateExposureUsage = (source: string): boolean => 
   ).length > 0;
 };
 
+export const hasKotlinManualCoroutineScopeInViewModelUsage = (source: string): boolean => {
+  const lines = source.split(/\r?\n/);
+  let insideViewModel = false;
+  let braceDepth = 0;
+
+  for (const rawLine of lines) {
+    const sanitized = stripKotlinLineForSemanticScan(rawLine);
+    if (sanitized.trimStart().startsWith('import ')) {
+      continue;
+    }
+
+    if (!insideViewModel && /\bclass\s+\w*ViewModel\b/.test(sanitized)) {
+      insideViewModel = true;
+      braceDepth =
+        countTokenOccurrences(sanitized, '{') - countTokenOccurrences(sanitized, '}');
+    } else if (insideViewModel) {
+      braceDepth += countTokenOccurrences(sanitized, '{');
+      braceDepth -= countTokenOccurrences(sanitized, '}');
+    }
+
+    if (insideViewModel && /\bCoroutineScope\s*\(/.test(sanitized)) {
+      return true;
+    }
+
+    if (insideViewModel && braceDepth <= 0 && sanitized.includes('}')) {
+      insideViewModel = false;
+    }
+  }
+
+  return false;
+};
+
 export const findKotlinPresentationSrpMatch = (
   source: string
 ): KotlinPresentationSrpMatch | undefined => {
