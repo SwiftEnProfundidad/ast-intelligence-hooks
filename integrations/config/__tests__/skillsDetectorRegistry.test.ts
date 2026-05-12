@@ -98,6 +98,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
       'heuristics.android.run-blocking.ast',
     ]
   );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.stateflow-sharedflow-para-exponer-estado-del-viewmodel'
+    ),
+    ['heuristics.android.flow.livedata-state-exposure.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-solid-violations'), [
     'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     'heuristics.android.solid.ocp.discriminator-branching.ast',

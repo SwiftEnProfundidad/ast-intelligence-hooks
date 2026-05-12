@@ -7,6 +7,7 @@ import {
   findKotlinOpenClosedWhenMatch,
   findKotlinPresentationSrpMatch,
   hasKotlinGlobalScopeUsage,
+  hasKotlinLiveDataStateExposureUsage,
   hasKotlinRunBlockingUsage,
   hasKotlinThreadSleepCall,
 } from './android';
@@ -89,6 +90,28 @@ fun main() {
 `;
   assert.equal(hasKotlinRunBlockingUsage(commentedSource), false);
   assert.equal(hasKotlinRunBlockingUsage(partialSource), false);
+});
+
+test('hasKotlinLiveDataStateExposureUsage detecta LiveData y MutableLiveData como estado observable legacy', () => {
+  const source = `
+class OrdersViewModel : ViewModel() {
+  private val mutableState = MutableLiveData<OrdersUiState>()
+  val state: LiveData<OrdersUiState> = mutableState
+}
+`;
+  assert.equal(hasKotlinLiveDataStateExposureUsage(source), true);
+});
+
+test('hasKotlinLiveDataStateExposureUsage ignora imports, comentarios y strings', () => {
+  const source = `
+import androidx.lifecycle.LiveData
+// val state = MutableLiveData<OrdersUiState>()
+val sample = "LiveData<OrdersUiState>"
+class OrdersViewModel : ViewModel() {
+  val state: StateFlow<OrdersUiState> = MutableStateFlow(OrdersUiState())
+}
+`;
+  assert.equal(hasKotlinLiveDataStateExposureUsage(source), false);
 });
 
 test('findKotlinPresentationSrpMatch devuelve payload semantico para SRP-Android en presentation', () => {

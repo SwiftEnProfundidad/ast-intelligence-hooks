@@ -56,6 +56,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.flow.livedata-state-exposure.ast',
+    description:
+      'Detects LiveData state exposure in Android presentation code where StateFlow or SharedFlow should be preferred.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.flow.livedata-state-exposure.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected LiveData state exposure in Android presentation code.',
+      code: 'HEURISTICS_ANDROID_FLOW_LIVEDATA_STATE_EXPOSURE_AST',
+    },
+  },
+  {
     id: 'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     description:
       'Detects Android presentation types mixing session, networking, persistence and navigation responsibilities.',

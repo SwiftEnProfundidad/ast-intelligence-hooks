@@ -3,13 +3,14 @@ import test from 'node:test';
 import { androidRules } from './android';
 
 test('androidRules define reglas heurísticas locked para plataforma android', () => {
-  assert.equal(androidRules.length, 8);
+  assert.equal(androidRules.length, 9);
 
   const ids = androidRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
     'heuristics.android.thread-sleep.ast',
     'heuristics.android.globalscope.ast',
     'heuristics.android.run-blocking.ast',
+    'heuristics.android.flow.livedata-state-exposure.ast',
     'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     'heuristics.android.solid.ocp.discriminator-branching.ast',
     'heuristics.android.solid.dip.concrete-framework-dependency.ast',
@@ -39,6 +40,10 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
   assert.equal(
     byId.get('heuristics.android.run-blocking.ast')?.then.code,
     'HEURISTICS_ANDROID_RUN_BLOCKING_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.flow.livedata-state-exposure.ast')?.then.code,
+    'HEURISTICS_ANDROID_FLOW_LIVEDATA_STATE_EXPOSURE_AST'
   );
   assert.equal(
     byId.get('heuristics.android.solid.srp.presentation-mixed-responsibilities.ast')?.then.code,

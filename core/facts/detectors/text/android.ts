@@ -292,6 +292,13 @@ export const hasKotlinRunBlockingUsage = (source: string): boolean => {
   });
 };
 
+export const hasKotlinLiveDataStateExposureUsage = (source: string): boolean => {
+  return collectKotlinRegexLines(
+    source,
+    /\b(?:MutableLiveData|LiveData)\s*(?:<|\(|\.)/
+  ).length > 0;
+};
+
 export const findKotlinPresentationSrpMatch = (
   source: string
 ): KotlinPresentationSrpMatch | undefined => {
