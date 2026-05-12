@@ -133,6 +133,10 @@ app/
 ✅ El baseline inicial de coroutines es parcial: cubre APIs bloqueantes, scopes no estructurados, scopes manuales en `ViewModel`, filtraciones de `Dispatchers.Main`, hardcode de dispatchers de background en dominio/aplicación, `withContext`, fuga de `lifecycleScope`, `supervisorScope` y `try/catch` en coroutines, pero no declara todavía cobertura completa de `Flow`, dispatchers ni cancelación cooperativa.
 ✅ Si se amplía esta cobertura, cada nueva regla debe aterrizar como detector AST/textual semántico con test dirigido antes de declararse cubierta en el registry.
 
+### Enforcement AST inicial de seguridad Android
+✅ `skills.android.guideline.android.local-properties-api-keys-no-subir-a-git` debe mapear a señal ejecutable de `local.properties` versionado bajo `apps/android/`.
+✅ Este baseline no imprime ni analiza valores secretos; solo reporta la presencia del archivo versionado y exige retirarlo del control de versiones.
+
 ### Enforcement AST inicial de Flow/StateFlow Android
 ✅ Las reglas de `StateFlow` / `StateFlow-SharedFlow` deben mapear a señales ejecutables de estado observable legacy, empezando por exposición de `LiveData` / `MutableLiveData` en presentation.
 ✅ Este baseline no obliga a que todo ViewModel use Flow; solo detecta una alternativa legacy concreta cuando aparece en código de presentación Android.

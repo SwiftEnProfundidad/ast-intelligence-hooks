@@ -143,6 +143,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ),
     ['heuristics.android.coroutines.try-catch.ast']
   );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.local-properties-api-keys-no-subir-a-git'
+    ),
+    ['heuristics.android.security.local-properties-tracked.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-solid-violations'), [
     'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     'heuristics.android.solid.ocp.discriminator-branching.ast',

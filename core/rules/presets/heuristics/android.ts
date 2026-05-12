@@ -76,6 +76,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.security.local-properties-tracked.ast',
+    description:
+      'Detects tracked Android local.properties files that may expose machine-local SDK paths or secrets.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.security.local-properties-tracked.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected tracked Android local.properties file.',
+      code: 'HEURISTICS_ANDROID_SECURITY_LOCAL_PROPERTIES_TRACKED_AST',
+    },
+  },
+  {
     id: 'heuristics.android.coroutines.manual-scope-in-viewmodel.ast',
     description:
       'Detects manual CoroutineScope construction inside Android ViewModel classes where viewModelScope should be preferred.',
