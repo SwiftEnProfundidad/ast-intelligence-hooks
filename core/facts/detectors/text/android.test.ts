@@ -6,6 +6,7 @@ import {
   findKotlinLiskovSubstitutionMatch,
   findKotlinOpenClosedWhenMatch,
   findKotlinPresentationSrpMatch,
+  hasKotlinCoroutineTryCatchUsage,
   hasKotlinDispatcherMainBoundaryLeakUsage,
   hasKotlinGlobalScopeUsage,
   hasKotlinHardcodedBackgroundDispatcherUsage,
@@ -221,6 +222,53 @@ class SyncOrdersUseCase {
 }
 `;
   assert.equal(hasKotlinSupervisorScopeUsage(source), false);
+});
+
+test('hasKotlinCoroutineTryCatchUsage detecta try-catch dentro de contexto coroutine', () => {
+  const suspendSource = `
+class SyncOrdersUseCase {
+  suspend fun execute() {
+    try {
+      syncRemote()
+    } catch (error: IOException) {
+      recover(error)
+    }
+  }
+}
+`;
+  const launchSource = `
+class SyncOrdersUseCase {
+  fun execute() {
+    launch {
+      try {
+        syncRemote()
+      } catch (error: IOException) {
+        recover(error)
+      }
+    }
+  }
+}
+`;
+  assert.equal(hasKotlinCoroutineTryCatchUsage(suspendSource), true);
+  assert.equal(hasKotlinCoroutineTryCatchUsage(launchSource), true);
+});
+
+test('hasKotlinCoroutineTryCatchUsage ignora imports, comentarios, strings y try-catch no coroutine', () => {
+  const source = `
+import kotlin.runCatching
+// suspend fun execute() { try { syncRemote() } catch (error: IOException) { recover(error) } }
+val sample = "try { syncRemote() } catch (error: IOException) { recover(error) }"
+class SyncOrdersUseCase {
+  fun execute() {
+    try {
+      syncRemote()
+    } catch (error: IOException) {
+      recover(error)
+    }
+  }
+}
+`;
+  assert.equal(hasKotlinCoroutineTryCatchUsage(source), false);
 });
 
 test('findKotlinPresentationSrpMatch devuelve payload semantico para SRP-Android en presentation', () => {

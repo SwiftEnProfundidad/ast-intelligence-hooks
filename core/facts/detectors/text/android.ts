@@ -263,6 +263,19 @@ export const hasKotlinSupervisorScopeUsage = (source: string): boolean => {
   return collectKotlinRegexLines(source, /\bsupervisorScope\s*(?:<[^>\n]+>\s*)?(?:\(|\{)/).length > 0;
 };
 
+export const hasKotlinCoroutineTryCatchUsage = (source: string): boolean => {
+  const sanitizedSource = source
+    .split(/\r?\n/)
+    .map((line) => stripKotlinLineForSemanticScan(line))
+    .filter((line) => !line.trimStart().startsWith('import '))
+    .join('\n');
+
+  return (
+    /\btry\s*\{[\s\S]*\bcatch\s*\(/.test(sanitizedSource) &&
+    /\b(?:suspend\s+fun|launch\s*\{|async\s*\{|withContext\s*\(|supervisorScope\s*(?:<[^>\n]+>\s*)?(?:\(|\{))/.test(sanitizedSource)
+  );
+};
+
 export const hasKotlinThreadSleepCall = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: kotlinSource, index, current }) => {
     if (current !== 'T') {

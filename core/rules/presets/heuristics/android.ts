@@ -156,6 +156,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.coroutines.try-catch.ast',
+    description:
+      'Detects try-catch error handling in Android coroutine code.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.coroutines.try-catch.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected try-catch handling in Android coroutine code.',
+      code: 'HEURISTICS_ANDROID_COROUTINES_TRY_CATCH_AST',
+    },
+  },
+  {
     id: 'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     description:
       'Detects Android presentation types mixing session, networking, persistence and navigation responsibilities.',
