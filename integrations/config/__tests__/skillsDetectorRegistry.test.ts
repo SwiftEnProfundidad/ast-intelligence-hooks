@@ -89,6 +89,13 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-globalscope'), [
     'heuristics.android.globalscope.ast',
   ]);
+  assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-solid-violations'), [
+    'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
+    'heuristics.android.solid.ocp.discriminator-branching.ast',
+    'heuristics.android.solid.dip.concrete-framework-dependency.ast',
+    'heuristics.android.solid.isp.fat-interface-dependency.ast',
+    'heuristics.android.solid.lsp.narrowed-precondition.ast',
+  ]);
 });
 
 test('devuelve lista ordenada de bindings y binding completo por ruleId', () => {

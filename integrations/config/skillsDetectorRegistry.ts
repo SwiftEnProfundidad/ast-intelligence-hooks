@@ -213,6 +213,13 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.android.no-runblocking': heuristicDetector('android.run-blocking', [
     'heuristics.android.run-blocking.ast',
   ]),
+  'skills.android.no-solid-violations': heuristicDetector('android.solid', [
+    'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
+    'heuristics.android.solid.ocp.discriminator-branching.ast',
+    'heuristics.android.solid.dip.concrete-framework-dependency.ast',
+    'heuristics.android.solid.isp.fat-interface-dependency.ast',
+    'heuristics.android.solid.lsp.narrowed-precondition.ast',
+  ]),
 };
 
 export const listSkillsDetectorBindings = (): ReadonlyArray<{

@@ -931,12 +931,18 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-SWIFTDATA-001` / iOS persistence skills parity: cerrar en rama limpia la integración Core Data + SwiftData en skills/reglas AST por nodos, sin romper brownfield Core Data ni prometer enforcement inexistente. |
+| Este plan | `[🚧] - PARITY-ANDROID-001` / Android enterprise baseline parity: abrir el baseline Android equivalente con bindings AST semánticos reales, empezando por SOLID en Kotlin/Compose sin prometer cobertura Android total. |
 
 Snapshot PARITY-IOS-SWIFTDATA-001 (2026-05-12):
 - Reapertura limpia: PR #890 queda descartado como ruta de merge directa porque estaba basado en `bugfix/pumuki-inc130-ios-helper-critical-quality-final2` y no en `main`, arrastrando historia antigua.
 - Implementación objetivo: rehacer la slice en `feature/parity-ios-swiftdata-clean` desde `origin/main`, aplicando solo el patch SwiftData/Core Data.
 - Alcance explícito: no se declara cobertura total de SwiftData; esta slice cierra la frontera de capas enterprise para APIs de persistencia SwiftData y mantiene intactas las reglas brownfield Core Data existentes.
+- Cierre: PR #899 mergeado en `main`, release `pumuki@6.3.176` publicada y RuralGo repineado a `6.3.176` con `status` sin drift y policy válida en `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI`.
+
+Snapshot PARITY-ANDROID-001 (2026-05-12):
+- Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
+- Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.
+- Alcance explícito: esta slice abre paridad Android con SOLID semántico inicial; quedan fuera Compose state, Room, Hilt, Navigation y coroutines avanzadas hasta slices posteriores.
 
 Snapshot PUMUKI-INC-061 (2026-05-12):
 - Cerrado con release publicada `pumuki@6.3.175`.
