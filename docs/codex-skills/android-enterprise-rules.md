@@ -146,6 +146,11 @@ app/
 ✅ Este baseline no obliga a que todo ViewModel use Flow; solo detecta una alternativa legacy concreta cuando aparece en código de presentación Android.
 ✅ `Flow`, `collectAsState`, `stateIn`, Room observable queries y SharedFlow events quedan fuera hasta que tengan detectores propios y regresiones dirigidas.
 
+### Enforcement AST inicial de testing Android
+✅ `skills.android.guideline.android.junit5-framework-de-testing-preferido-sobre-junit4` debe mapear a señal ejecutable de uso JUnit4 en tests Kotlin Android.
+✅ Este baseline detecta imports/anotaciones JUnit4 (`org.junit.Test`, `org.junit.Assert`, `@RunWith`, reglas JUnit4) bajo `apps/android/**/test/**` y `apps/android/**/androidTest/**`.
+✅ JUnit5/Jupiter queda preservado como caso limpio; migración completa de runner, Gradle y APIs de assertions queda fuera hasta tener detectores propios.
+
 ### Dependency Injection (Hilt):
 ✅ **Hilt** - DI framework (NO manual factories)
 ✅ **@HiltAndroidApp** - Application class

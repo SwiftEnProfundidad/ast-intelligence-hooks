@@ -10,6 +10,7 @@ import {
   hasKotlinDispatcherMainBoundaryLeakUsage,
   hasKotlinGlobalScopeUsage,
   hasKotlinHardcodedBackgroundDispatcherUsage,
+  hasKotlinJUnit4Usage,
   hasKotlinLiveDataStateExposureUsage,
   hasKotlinLifecycleScopeUsage,
   hasKotlinSharedPreferencesUsage,
@@ -273,6 +274,45 @@ class PreferencesStore {
 }
 `;
   assert.equal(hasKotlinSharedPreferencesUsage(source), false);
+});
+
+test('hasKotlinJUnit4Usage detecta imports y anotaciones JUnit4 en tests Kotlin Android', () => {
+  const importSource = `
+import org.junit.Test
+import org.junit.Assert
+
+class OrdersViewModelTest {
+  @Test
+  fun loadsOrders() {
+    Assert.assertEquals(1, 1)
+  }
+}
+`;
+  const runnerSource = `
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class OrdersInstrumentedTest
+`;
+
+  assert.equal(hasKotlinJUnit4Usage(importSource), true);
+  assert.equal(hasKotlinJUnit4Usage(runnerSource), true);
+});
+
+test('hasKotlinJUnit4Usage ignora JUnit5, comentarios y strings', () => {
+  const source = `
+import org.junit.jupiter.api.Test
+// import org.junit.Test
+val sample = "Assert.assertEquals(1, 1)"
+
+class OrdersViewModelTest {
+  @Test
+  fun loadsOrders() {
+    assertEquals(1, 1)
+  }
+}
+`;
+  assert.equal(hasKotlinJUnit4Usage(source), false);
 });
 
 test('hasKotlinSupervisorScopeUsage detecta supervisorScope con parentesis y llaves', () => {

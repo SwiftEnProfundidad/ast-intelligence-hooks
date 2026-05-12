@@ -255,6 +255,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'android.persistence.shared-preferences',
     ['heuristics.android.persistence.shared-preferences-usage.ast']
   ),
+  'skills.android.guideline.android.junit5-framework-de-testing-preferido-sobre-junit4': heuristicDetector(
+    'android.testing.junit4-usage',
+    ['heuristics.android.testing.junit4-usage.ast']
+  ),
   'skills.android.guideline.android.stateflow-estado-mutable-observable': heuristicDetector(
     'android.flow.state-exposure',
     ['heuristics.android.flow.livedata-state-exposure.ast']

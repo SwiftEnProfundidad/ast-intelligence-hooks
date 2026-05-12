@@ -1316,6 +1316,20 @@ test('detects Android heuristics in production path and skips tests', () => {
           'private val mutableState = MutableLiveData<FeatureUiState>()',
         ].join('\n')
       ),
+      fileContentFact(
+        'apps/android/app/src/test/java/com/acme/LegacyJUnit4Test.kt',
+        [
+          'import org.junit.Test',
+          'import org.junit.Assert',
+          '',
+          'class LegacyJUnit4Test {',
+          '  @Test',
+          '  fun verifiesLegacyAssertion() {',
+          '    Assert.assertEquals(1, 1)',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
     ],
     detectedPlatforms: {
       android: { detected: true },
@@ -1337,6 +1351,7 @@ test('detects Android heuristics in production path and skips tests', () => {
     'heuristics.android.persistence.shared-preferences-usage.ast',
     'heuristics.android.run-blocking.ast',
     'heuristics.android.security.local-properties-tracked.ast',
+    'heuristics.android.testing.junit4-usage.ast',
     'heuristics.android.thread-sleep.ast',
   ]);
 });

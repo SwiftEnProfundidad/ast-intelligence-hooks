@@ -271,6 +271,17 @@ export const hasKotlinSharedPreferencesUsage = (source: string): boolean => {
   return collectKotlinRegexLines(source, /\b(?:SharedPreferences|PreferenceManager\s*\.|getSharedPreferences\s*\()/).length > 0;
 };
 
+export const hasKotlinJUnit4Usage = (source: string): boolean => {
+  return source.split(/\r?\n/).some((line) => {
+    const sanitized = stripKotlinLineForSemanticScan(line);
+    return (
+      /\bimport\s+org\.junit\.(?:Test|Before|After|BeforeClass|AfterClass|Assert|Rule|ClassRule|runner\.RunWith|rules\.)\b/.test(sanitized) ||
+      /@(?:RunWith|Rule|ClassRule)\b/.test(sanitized) ||
+      /\bAssert\s*\./.test(sanitized)
+    );
+  });
+};
+
 export const hasKotlinSupervisorScopeUsage = (source: string): boolean => {
   return collectKotlinRegexLines(source, /\bsupervisorScope\s*(?:<[^>\n]+>\s*)?(?:\(|\{)/).length > 0;
 };
