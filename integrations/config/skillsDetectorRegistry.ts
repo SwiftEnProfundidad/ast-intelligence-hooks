@@ -231,6 +231,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
       'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
     ]
   ),
+  'skills.android.guideline.android.withcontext-cambiar-dispatcher': heuristicDetector(
+    'android.coroutines.with-context',
+    ['heuristics.android.coroutines.with-context.ast']
+  ),
   'skills.android.guideline.android.supervisorscope-errores-no-cancelan-otros-jobs': heuristicDetector(
     'android.coroutines.supervisor-scope',
     ['heuristics.android.coroutines.supervisor-scope.ast']

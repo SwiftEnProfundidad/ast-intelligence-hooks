@@ -136,6 +136,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.coroutines.with-context.ast',
+    description:
+      'Detects withContext usage in Android domain/application code.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.coroutines.with-context.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected withContext usage in Android domain/application code.',
+      code: 'HEURISTICS_ANDROID_COROUTINES_WITH_CONTEXT_AST',
+    },
+  },
+  {
     id: 'heuristics.android.coroutines.supervisor-scope.ast',
     description:
       'Detects supervisorScope usage in Android domain/application code.',

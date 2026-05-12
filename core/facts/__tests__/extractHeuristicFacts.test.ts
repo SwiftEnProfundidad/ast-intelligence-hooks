@@ -1317,6 +1317,8 @@ test('detects Android heuristics in production path and skips tests', () => {
     'heuristics.android.coroutines.manual-scope-in-viewmodel.ast',
     'heuristics.android.coroutines.supervisor-scope.ast',
     'heuristics.android.coroutines.try-catch.ast',
+    'heuristics.android.coroutines.with-context.ast',
+    'heuristics.android.coroutines.with-context.ast',
     'heuristics.android.flow.livedata-state-exposure.ast',
     'heuristics.android.globalscope.ast',
     'heuristics.android.run-blocking.ast',
