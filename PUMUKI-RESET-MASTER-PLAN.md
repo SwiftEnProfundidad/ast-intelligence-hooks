@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-133/PUMUKI-INC-134 RuralGo bloqueado`. Prioridad hard por backlog externo R_GO: evitar que `.ai_evidence.json` se auto-restagee si no formaba parte del staged set inicial y permitir commits staged de remediación backend limpios sin bloqueo por deuda global de detectores ajena al cambio. |
+| Este plan | `[🚧] - PUMUKI-INC-061 RuralGo policy reconcile no funcional`. Prioridad hard por backlog externo R_GO: `policy reconcile --strict --apply --json` debe recalcular firmas válidas para todos los stages y converger realmente a `PASS` cuando `.pumuki/policy-as-code.json` contiene firmas obsoletas o inválidas. |
 
 Snapshot de cierre `6.3.172` (2026-05-12):
 - `PUMUKI-INC-128`: cerrado con release publicada `pumuki@6.3.172`; `npm view pumuki version` devuelve `6.3.172` y `npm view pumuki@6.3.172 dist.shasum` devuelve `25c761cef3376a4b230fa4eeb526327e33568548`.

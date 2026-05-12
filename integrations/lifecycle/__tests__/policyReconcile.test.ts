@@ -229,3 +229,63 @@ test('runPolicyReconcile --strict --apply genera contrato y converge a PASS sin 
     assert.equal(writtenContract.strict?.CI, true);
   });
 });
+
+test('runPolicyReconcile --strict --apply recalcula firmas inválidas y converge a PASS', async () => {
+  await withFixtureRepo('pumuki-policy-reconcile-invalid-signatures-', async (repoRoot) => {
+    writeValidAgentsAndSkillsLock(repoRoot);
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'policy-as-code.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          source: 'default',
+          strict: {
+            PRE_WRITE: true,
+            PRE_COMMIT: true,
+            PRE_PUSH: true,
+            CI: true,
+          },
+          signatures: {
+            PRE_WRITE: '0'.repeat(64),
+            PRE_COMMIT: '1'.repeat(64),
+            PRE_PUSH: '2'.repeat(64),
+            CI: '3'.repeat(64),
+          },
+          expires_at: '2999-01-01T00:00:00.000Z',
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const initial = runPolicyReconcile({
+      repoRoot,
+      strict: true,
+    });
+    assert.equal(initial.summary.status, 'BLOCKED');
+    assert.ok(
+      initial.drifts.some(
+        (drift) =>
+          drift.code === 'POLICY_STAGE_INVALID' &&
+          drift.context?.validation_code === 'POLICY_AS_CODE_SIGNATURE_MISMATCH'
+      )
+    );
+
+    const report = runPolicyReconcile({
+      repoRoot,
+      strict: true,
+      apply: true,
+    });
+
+    assert.equal(report.autofix.status, 'APPLIED');
+    assert.equal(report.summary.status, 'PASS');
+    assert.equal(report.summary.blocking, 0);
+    const validation = readLifecyclePolicyValidationSnapshot(repoRoot);
+    assert.equal(validation.stages.PRE_WRITE.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(validation.stages.PRE_COMMIT.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(validation.stages.PRE_PUSH.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(validation.stages.CI.validationCode, 'POLICY_AS_CODE_VALID');
+  });
+});
