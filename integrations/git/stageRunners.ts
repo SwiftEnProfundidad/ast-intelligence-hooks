@@ -20,9 +20,7 @@ import {
 } from '../notifications/emitAuditSummaryNotification';
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildEvidenceOperationalHints } from '../evidence/operationalHints';
 import { readEvidence, readEvidenceResult } from '../evidence/readEvidence';
-import { writeEvidence } from '../evidence/writeEvidence';
 import type { EvidenceReadResult } from '../evidence/readEvidence';
 import type { SnapshotFinding } from '../evidence/schema';
 import { ensureRuntimeArtifactsIgnored } from '../lifecycle/artifacts';
@@ -142,6 +140,7 @@ type StageRunnerDependencies = {
   isPathTracked: (repoRoot: string, relativePath: string) => boolean;
   listStagedIndexPaths: (repoRoot: string) => ReadonlyArray<string>;
   stagePath: (repoRoot: string, relativePath: string) => void;
+  restorePathFromHead: (repoRoot: string, relativePath: string) => void;
   resolveHeadOid: (repoRoot: string) => string | null;
   resolveGitAtomicityEnforcement: () => GitAtomicityEnforcementResolution;
 };
@@ -229,6 +228,9 @@ const defaultDependencies: StageRunnerDependencies = {
   },
   stagePath: (repoRoot, relativePath) => {
     new GitService().runGit(['add', '--', relativePath], repoRoot);
+  },
+  restorePathFromHead: (repoRoot, relativePath) => {
+    new GitService().runGit(['restore', '--worktree', '--source=HEAD', '--', relativePath], repoRoot);
   },
   resolveHeadOid: (repoRoot) => {
     try {
@@ -514,26 +516,6 @@ const runHookGateWithPolicyRetry = async (params: {
   }
 };
 
-const patchOperationalHintsAfterDocumentationOnlyEvidenceSync = (repoRoot: string): void => {
-  const evidenceRead = readEvidenceResult(repoRoot);
-  if (evidenceRead.kind !== 'valid') {
-    return;
-  }
-  const evidence = evidenceRead.evidence;
-  const hints = buildEvidenceOperationalHints({
-    stage: evidence.snapshot.stage,
-    outcome: evidence.snapshot.outcome,
-    findings: evidence.snapshot.findings,
-    rulesCoverage: evidence.snapshot.rules_coverage,
-    evaluationMetrics: evidence.snapshot.evaluation_metrics,
-    extra: {
-      requires_second_pass: true,
-      second_pass_reason: 'tracked_evidence_refreshed_on_disk_not_staged_documentation_only_commit',
-    },
-  });
-  writeEvidence({ ...evidence, operational_hints: hints }, { repoRoot });
-};
-
 const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
   dependencies: StageRunnerDependencies;
   repoRoot: string;
@@ -551,14 +533,33 @@ const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
       listStagedIndexPaths: params.dependencies.listStagedIndexPaths,
     })
   ) {
-    if (!params.dependencies.isQuietMode()) {
+    try {
+      params.dependencies.restorePathFromHead(params.repoRoot, EVIDENCE_FILE_PATH);
+      if (!params.dependencies.isQuietMode()) {
+        process.stderr.write(
+          `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} was refreshed but restored because it was not part of the staged set. ` +
+            `Stage it before committing if this commit must update evidence: git add -- ${EVIDENCE_FILE_PATH}. ` +
+            `Force previous behavior: PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1\n`
+        );
+      }
+    } catch (error) {
+      const details = error instanceof Error ? error.message : String(error);
       process.stderr.write(
-        `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} updated on disk but not auto-staged because it was not part of the staged set. ` +
-          `Include in this commit if needed: git add -- ${EVIDENCE_FILE_PATH}. ` +
-          `Force previous behavior: PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1\n`
+        `[pumuki][evidence-sync] unable to restore unstaged tracked ${EVIDENCE_FILE_PATH}: ${details}\n`
       );
+      params.dependencies.notifyGateBlocked({
+        repoRoot: params.repoRoot,
+        stage: 'PRE_COMMIT',
+        totalViolations: 1,
+        causeCode: 'EVIDENCE_STAGE_SYNC_FAILED',
+        causeMessage:
+          `Unable to restore unstaged tracked ${EVIDENCE_FILE_PATH} after successful PRE_COMMIT gate.`,
+        remediation: BLOCKED_REMEDIATION_BY_CODE.EVIDENCE_STAGE_SYNC_FAILED
+          ?? DEFAULT_BLOCKED_REMEDIATION,
+      });
+      notifyAuditSummaryForStage(params.dependencies, 'PRE_COMMIT');
+      return true;
     }
-    patchOperationalHintsAfterDocumentationOnlyEvidenceSync(params.repoRoot);
     return false;
   }
   try {
