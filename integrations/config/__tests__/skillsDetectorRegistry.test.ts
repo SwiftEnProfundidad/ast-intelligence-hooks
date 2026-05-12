@@ -110,6 +110,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ),
     ['heuristics.android.coroutines.manual-scope-in-viewmodel.ast']
   );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.dispatchers-main-ui-io-network-disk-default-cpu'
+    ),
+    ['heuristics.android.coroutines.dispatchers-main-boundary-leak.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-solid-violations'), [
     'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     'heuristics.android.solid.ocp.discriminator-branching.ast',

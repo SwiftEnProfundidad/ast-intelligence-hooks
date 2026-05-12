@@ -331,6 +331,10 @@ export const hasKotlinManualCoroutineScopeInViewModelUsage = (source: string): b
   return false;
 };
 
+export const hasKotlinDispatcherMainBoundaryLeakUsage = (source: string): boolean => {
+  return collectKotlinRegexLines(source, /\bDispatchers\s*\.\s*Main\b/).length > 0;
+};
+
 export const findKotlinPresentationSrpMatch = (
   source: string
 ): KotlinPresentationSrpMatch | undefined => {
