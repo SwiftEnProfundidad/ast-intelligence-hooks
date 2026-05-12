@@ -13,6 +13,7 @@ import {
   hasKotlinJUnit4Usage,
   hasKotlinLiveDataStateExposureUsage,
   hasKotlinLifecycleScopeUsage,
+  hasKotlinProductionMockUsage,
   hasKotlinSharedPreferencesUsage,
   hasKotlinWithContextUsage,
   hasKotlinManualCoroutineScopeInViewModelUsage,
@@ -313,6 +314,42 @@ class OrdersViewModelTest {
 }
 `;
   assert.equal(hasKotlinJUnit4Usage(source), false);
+});
+
+test('hasKotlinProductionMockUsage detecta mocks y spies en Kotlin Android production', () => {
+  const mockkSource = `
+class OrdersRepositoryFactory {
+  fun create(): OrdersRepository = mockk(relaxed = true)
+}
+`;
+  const mockitoSource = `
+class OrdersRepositoryFactory {
+  private val api = Mockito.mock(OrdersApi::class.java)
+}
+`;
+  const annotationSource = `
+class OrdersRepositoryFactory {
+  @Spy
+  lateinit var repository: OrdersRepository
+}
+`;
+
+  assert.equal(hasKotlinProductionMockUsage(mockkSource), true);
+  assert.equal(hasKotlinProductionMockUsage(mockitoSource), true);
+  assert.equal(hasKotlinProductionMockUsage(annotationSource), true);
+});
+
+test('hasKotlinProductionMockUsage ignora imports, comentarios, strings y nombres parciales', () => {
+  const source = `
+import io.mockk.mockk
+import org.mockito.Mockito
+// val api = mockk<OrdersApi>()
+val sample = "Mockito.mock(OrdersApi::class.java)"
+class OrdersRepositoryFactory {
+  fun create() = mockkitoFactory()
+}
+`;
+  assert.equal(hasKotlinProductionMockUsage(source), false);
 });
 
 test('hasKotlinSupervisorScopeUsage detecta supervisorScope con parentesis y llaves', () => {

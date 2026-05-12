@@ -259,6 +259,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'android.testing.junit4-usage',
     ['heuristics.android.testing.junit4-usage.ast']
   ),
+  'skills.android.guideline.android.en-produccio-n-ni-un-mocks-ni-un-spies-todo-real-de-apis-y-persistenci': heuristicDetector(
+    'android.testing.production-mock-usage',
+    ['heuristics.android.testing.production-mock-usage.ast']
+  ),
   'skills.android.guideline.android.stateflow-estado-mutable-observable': heuristicDetector(
     'android.flow.state-exposure',
     ['heuristics.android.flow.livedata-state-exposure.ast']
