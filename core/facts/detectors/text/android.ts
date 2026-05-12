@@ -259,6 +259,10 @@ export const hasKotlinHardcodedBackgroundDispatcherUsage = (source: string): boo
   return collectKotlinRegexLines(source, /\bDispatchers\s*\.\s*(?:IO|Default)\b/).length > 0;
 };
 
+export const hasKotlinSupervisorScopeUsage = (source: string): boolean => {
+  return collectKotlinRegexLines(source, /\bsupervisorScope\s*(?:<[^>\n]+>\s*)?(?:\(|\{)/).length > 0;
+};
+
 export const hasKotlinThreadSleepCall = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: kotlinSource, index, current }) => {
     if (current !== 'T') {

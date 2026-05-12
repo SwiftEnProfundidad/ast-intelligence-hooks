@@ -119,6 +119,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
       'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
     ]
   );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.supervisorscope-errores-no-cancelan-otros-jobs'
+    ),
+    ['heuristics.android.coroutines.supervisor-scope.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.android.no-solid-violations'), [
     'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
     'heuristics.android.solid.ocp.discriminator-branching.ast',

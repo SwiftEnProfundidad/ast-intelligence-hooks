@@ -12,6 +12,7 @@ import {
   hasKotlinLiveDataStateExposureUsage,
   hasKotlinManualCoroutineScopeInViewModelUsage,
   hasKotlinRunBlockingUsage,
+  hasKotlinSupervisorScopeUsage,
   hasKotlinThreadSleepCall,
 } from './android';
 
@@ -189,6 +190,37 @@ class SyncOrdersUseCase {
 }
 `;
   assert.equal(hasKotlinHardcodedBackgroundDispatcherUsage(source), false);
+});
+
+test('hasKotlinSupervisorScopeUsage detecta supervisorScope con parentesis y llaves', () => {
+  const parenthesesSource = `
+class SyncOrdersUseCase {
+  suspend fun execute() = supervisorScope {
+    launch { syncRemote() }
+  }
+}
+`;
+  const genericSource = `
+class SyncOrdersUseCase {
+  suspend fun execute() = supervisorScope<Unit> {
+    launch { syncRemote() }
+  }
+}
+`;
+  assert.equal(hasKotlinSupervisorScopeUsage(parenthesesSource), true);
+  assert.equal(hasKotlinSupervisorScopeUsage(genericSource), true);
+});
+
+test('hasKotlinSupervisorScopeUsage ignora imports, comentarios, strings y nombres parciales', () => {
+  const source = `
+import kotlinx.coroutines.supervisorScope
+// supervisorScope { launch { } }
+val sample = "supervisorScope { launch { } }"
+class SyncOrdersUseCase {
+  suspend fun execute() = customSupervisorScope { }
+}
+`;
+  assert.equal(hasKotlinSupervisorScopeUsage(source), false);
 });
 
 test('findKotlinPresentationSrpMatch devuelve payload semantico para SRP-Android en presentation', () => {
