@@ -263,6 +263,10 @@ export const hasKotlinWithContextUsage = (source: string): boolean => {
   return collectKotlinRegexLines(source, /\bwithContext\s*(?:<[^>\n]+>\s*)?\(/).length > 0;
 };
 
+export const hasKotlinLifecycleScopeUsage = (source: string): boolean => {
+  return collectKotlinRegexLines(source, /\blifecycleScope\s*\./).length > 0;
+};
+
 export const hasKotlinSupervisorScopeUsage = (source: string): boolean => {
   return collectKotlinRegexLines(source, /\bsupervisorScope\s*(?:<[^>\n]+>\s*)?(?:\(|\{)/).length > 0;
 };

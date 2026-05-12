@@ -235,6 +235,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'android.coroutines.with-context',
     ['heuristics.android.coroutines.with-context.ast']
   ),
+  'skills.android.guideline.android.lifecyclescope-scope-de-activity-fragment': heuristicDetector(
+    'android.coroutines.lifecycle-scope',
+    ['heuristics.android.coroutines.lifecycle-scope-boundary-leak.ast']
+  ),
   'skills.android.guideline.android.supervisorscope-errores-no-cancelan-otros-jobs': heuristicDetector(
     'android.coroutines.supervisor-scope',
     ['heuristics.android.coroutines.supervisor-scope.ast']

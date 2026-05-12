@@ -127,6 +127,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.lifecyclescope-scope-de-activity-fragment'
+    ),
+    ['heuristics.android.coroutines.lifecycle-scope-boundary-leak.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.android.guideline.android.supervisorscope-errores-no-cancelan-otros-jobs'
     ),
     ['heuristics.android.coroutines.supervisor-scope.ast']

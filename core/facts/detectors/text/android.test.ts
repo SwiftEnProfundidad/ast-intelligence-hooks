@@ -11,6 +11,7 @@ import {
   hasKotlinGlobalScopeUsage,
   hasKotlinHardcodedBackgroundDispatcherUsage,
   hasKotlinLiveDataStateExposureUsage,
+  hasKotlinLifecycleScopeUsage,
   hasKotlinWithContextUsage,
   hasKotlinManualCoroutineScopeInViewModelUsage,
   hasKotlinRunBlockingUsage,
@@ -219,6 +220,31 @@ class SyncOrdersUseCase {
 }
 `;
   assert.equal(hasKotlinWithContextUsage(source), false);
+});
+
+test('hasKotlinLifecycleScopeUsage detecta lifecycleScope con llamadas encadenadas', () => {
+  const source = `
+class SyncOrdersUseCase {
+  fun execute() {
+    lifecycleScope.launch { syncRemote() }
+  }
+}
+`;
+  assert.equal(hasKotlinLifecycleScopeUsage(source), true);
+});
+
+test('hasKotlinLifecycleScopeUsage ignora imports, comentarios, strings y nombres parciales', () => {
+  const source = `
+import androidx.lifecycle.lifecycleScope
+// lifecycleScope.launch { syncRemote() }
+val sample = "lifecycleScope.launch { syncRemote() }"
+class SyncOrdersUseCase {
+  fun execute() {
+    customLifecycleScope.launch { syncRemote() }
+  }
+}
+`;
+  assert.equal(hasKotlinLifecycleScopeUsage(source), false);
 });
 
 test('hasKotlinSupervisorScopeUsage detecta supervisorScope con parentesis y llaves', () => {
