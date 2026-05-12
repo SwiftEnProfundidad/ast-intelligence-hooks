@@ -915,6 +915,7 @@ test('runPreCommitStage no auto-restaguea evidencia trackeada si no estaba stage
   await withStageRunnerRepo(async (repoRoot) => {
     stageBackendFile(repoRoot);
     const stagedPaths: string[] = [];
+    const restoredPaths: string[] = [];
 
     const exitCode = await runPreCommitStage({
       resolveRepoRoot: () => repoRoot,
@@ -927,10 +928,14 @@ test('runPreCommitStage no auto-restaguea evidencia trackeada si no estaba stage
       stagePath: (_repoRoot, relativePath) => {
         stagedPaths.push(relativePath);
       },
+      restorePathFromHead: (_repoRoot, relativePath) => {
+        restoredPaths.push(relativePath);
+      },
     });
 
     assert.equal(exitCode, 0);
     assert.deepEqual(stagedPaths, []);
+    assert.deepEqual(restoredPaths, ['.ai_evidence.json']);
   });
 });
 
@@ -963,6 +968,8 @@ test('runPreCommitStage no auto-restaguea evidencia trackeada si el índice solo
 
     assert.equal(secondExit, 0);
     assert.deepEqual(stagedPaths, []);
+    assert.equal(runGit(repoRoot, ['diff', '--name-only', '--', '.ai_evidence.json']), '');
+    assert.equal(runGit(repoRoot, ['diff', '--cached', '--name-only', '--', '.ai_evidence.json']), '');
   });
 });
 
