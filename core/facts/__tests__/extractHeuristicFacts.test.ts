@@ -1275,6 +1275,10 @@ test('detects Android heuristics in production path and skips tests', () => {
         ['class LegacyPreferencesStore(private val preferences: SharedPreferences)'].join('\n')
       ),
       fileContentFact(
+        'apps/android/app/src/main/java/com/acme/data/FakeOrdersRepositoryFactory.kt',
+        ['class FakeOrdersRepositoryFactory { fun create(): OrdersRepository = mockk(relaxed = true) }'].join('\n')
+      ),
+      fileContentFact(
         'apps/android/app/src/main/java/com/acme/presentation/FeatureViewModel.kt',
         [
           'class FeatureViewModel : ViewModel() {',
@@ -1352,6 +1356,7 @@ test('detects Android heuristics in production path and skips tests', () => {
     'heuristics.android.run-blocking.ast',
     'heuristics.android.security.local-properties-tracked.ast',
     'heuristics.android.testing.junit4-usage.ast',
+    'heuristics.android.testing.production-mock-usage.ast',
     'heuristics.android.thread-sleep.ast',
   ]);
 });

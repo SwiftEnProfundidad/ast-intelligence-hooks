@@ -150,6 +150,9 @@ app/
 ✅ `skills.android.guideline.android.junit5-framework-de-testing-preferido-sobre-junit4` debe mapear a señal ejecutable de uso JUnit4 en tests Kotlin Android.
 ✅ Este baseline detecta imports/anotaciones JUnit4 (`org.junit.Test`, `org.junit.Assert`, `@RunWith`, reglas JUnit4) bajo `apps/android/**/test/**` y `apps/android/**/androidTest/**`.
 ✅ JUnit5/Jupiter queda preservado como caso limpio; migración completa de runner, Gradle y APIs de assertions queda fuera hasta tener detectores propios.
+✅ `skills.android.guideline.android.en-produccio-n-ni-un-mocks-ni-un-spies-todo-real-de-apis-y-persistenci` debe mapear a señal ejecutable de mocks/spies en Kotlin Android production.
+✅ Este baseline detecta usos explícitos de MockK/Mockito y anotaciones `@Mock`/`@Spy` fuera de `test` y `androidTest`; los dobles en tests siguen permitidos.
+✅ La regla no prohíbe clases fake de test doubles en suites de test ni analiza wiring Gradle todavía.
 
 ### Dependency Injection (Hilt):
 ✅ **Hilt** - DI framework (NO manual factories)

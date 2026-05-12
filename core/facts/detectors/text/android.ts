@@ -282,6 +282,13 @@ export const hasKotlinJUnit4Usage = (source: string): boolean => {
   });
 };
 
+export const hasKotlinProductionMockUsage = (source: string): boolean => {
+  return collectKotlinRegexLines(
+    source,
+    /(?:\b(?:mockk|spyk|mockkObject|mockkStatic|mockkConstructor|mockito|mockitoSession|mockitoRule)\s*(?:<[^>\n]+>\s*)?\(|\bMockito\s*\.\s*(?:mock|spy)\s*\(|@(?:Mock|Spy|MockK|RelaxedMockK)\b)/
+  ).length > 0;
+};
+
 export const hasKotlinSupervisorScopeUsage = (source: string): boolean => {
   return collectKotlinRegexLines(source, /\bsupervisorScope\s*(?:<[^>\n]+>\s*)?(?:\(|\{)/).length > 0;
 };

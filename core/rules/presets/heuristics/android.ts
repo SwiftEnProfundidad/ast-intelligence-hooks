@@ -136,6 +136,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.testing.production-mock-usage.ast',
+    description:
+      'Detects mock or spy usage in Android production Kotlin code.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.testing.production-mock-usage.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected mock or spy usage in Android production Kotlin code.',
+      code: 'HEURISTICS_ANDROID_TESTING_PRODUCTION_MOCK_USAGE_AST',
+    },
+  },
+  {
     id: 'heuristics.android.coroutines.manual-scope-in-viewmodel.ast',
     description:
       'Detects manual CoroutineScope construction inside Android ViewModel classes where viewModelScope should be preferred.',
