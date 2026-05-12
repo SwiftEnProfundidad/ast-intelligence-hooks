@@ -18,6 +18,16 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
   ]);
 
   const byId = new Map(androidRules.map((rule) => [rule.id, rule]));
+  const coroutineRuleIds = [
+    'heuristics.android.globalscope.ast',
+    'heuristics.android.run-blocking.ast',
+  ];
+
+  for (const ruleId of coroutineRuleIds) {
+    assert.equal(byId.get(ruleId)?.platform, 'android');
+    assert.equal(byId.get(ruleId)?.locked, true);
+  }
+
   assert.equal(
     byId.get('heuristics.android.thread-sleep.ast')?.then.code,
     'HEURISTICS_ANDROID_THREAD_SLEEP_AST'
