@@ -931,7 +931,17 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-061 RuralGo policy reconcile no funcional`. Prioridad hard por backlog externo R_GO: `policy reconcile --strict --apply --json` debe recalcular firmas válidas para todos los stages y converger realmente a `PASS` cuando `.pumuki/policy-as-code.json` contiene firmas obsoletas o inválidas. |
+| Este plan | `[🚧] - PARITY-IOS-SWIFTDATA-001` / iOS persistence skills parity: cerrar en rama limpia la integración Core Data + SwiftData en skills/reglas AST por nodos, sin romper brownfield Core Data ni prometer enforcement inexistente. |
+
+Snapshot PARITY-IOS-SWIFTDATA-001 (2026-05-12):
+- Reapertura limpia: PR #890 queda descartado como ruta de merge directa porque estaba basado en `bugfix/pumuki-inc130-ios-helper-critical-quality-final2` y no en `main`, arrastrando historia antigua.
+- Implementación objetivo: rehacer la slice en `feature/parity-ios-swiftdata-clean` desde `origin/main`, aplicando solo el patch SwiftData/Core Data.
+- Alcance explícito: no se declara cobertura total de SwiftData; esta slice cierra la frontera de capas enterprise para APIs de persistencia SwiftData y mantiene intactas las reglas brownfield Core Data existentes.
+
+Snapshot PUMUKI-INC-061 (2026-05-12):
+- Cerrado con release publicada `pumuki@6.3.175`.
+- RuralGo repineado y validado: `policy reconcile --strict --apply --json` recalcula firmas deterministas para `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI`, y converge a `summary.status=PASS` con `POLICY_AS_CODE_VALID` en todos los stages.
+- MD externo de RuralGo sincronizado; no quedan incidencias consumer activas reales en SAAS/R_GO/Flux antes de retomar la task interna.
 
 Snapshot de cierre `6.3.172` (2026-05-12):
 - `PUMUKI-INC-128`: cerrado con release publicada `pumuki@6.3.172`; `npm view pumuki version` devuelve `6.3.172` y `npm view pumuki@6.3.172 dist.shasum` devuelve `25c761cef3376a4b230fa4eeb526327e33568548`.

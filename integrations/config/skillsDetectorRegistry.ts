@@ -143,6 +143,9 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-core-data-layer-leak': heuristicDetector('ios.core-data.layer-leak', [
     'heuristics.ios.core-data.layer-leak.ast',
   ]),
+  'skills.ios.no-swiftdata-layer-leak': heuristicDetector('ios.swiftdata.layer-leak', [
+    'heuristics.ios.swiftdata.layer-leak.ast',
+  ]),
   'skills.ios.no-nsmanagedobject-state-leak': heuristicDetector(
     'ios.core-data.nsmanagedobject-state-leak',
     ['heuristics.ios.core-data.nsmanagedobject-state-leak.ast']

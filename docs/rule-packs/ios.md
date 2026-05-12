@@ -49,4 +49,4 @@
 - No XCTest-only `XCTestCase` suites that are directly modernizable to `import Testing` + `@Test`, and no mixed `XCTestCase`/`Testing` suites without explicit compatibility reason
 - No `String(format:)` and no `UIScreen.main.bounds` in SwiftUI presentation/layout paths
 - No `ForEach(...indices...)`, no user-facing `contains()` filters instead of `localizedStandardContains()`, and no avoidable `GeometryReader` / `fontWeight(.bold)` patterns in modern SwiftUI paths
-- No Core Data APIs in iOS `Application` / `Presentation` paths, and no `NSManagedObject` escaping into SwiftUI state or ViewModels
+- No Core Data or SwiftData APIs in iOS `Application` / `Presentation` paths, and no `NSManagedObject` escaping into SwiftUI state or ViewModels

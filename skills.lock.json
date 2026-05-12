@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-12T18:32:01.654Z",
+  "generatedAt": "2026-05-12T19:46:23.268Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5644,8 +5644,20 @@
       "name": "ios-core-data-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/core-data-expert/SKILL.md",
-      "hash": "0f4f9e67e60990dea6f946d09b8d7314d759d8cb03a0a3806a172818e84cc31e",
+      "hash": "d91f2cad6499310a4299b39593d47f40a507299a0562c21bc64aad9b5d27c66f",
       "rules": [
+        {
+          "id": "skills.ios.guideline.ios-core-data.keep-swiftdata-orchestration-modelcontext-modelcontainer-query-model-i",
+          "description": "Keep SwiftData orchestration (ModelContext, ModelContainer, @Query, @Model) inside infrastructure or repository layers instead of application or presentation code in enterprise Clean Architecture.",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-core-data-guidelines",
+          "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
         {
           "id": "skills.ios.guideline.ios-core-data.make-context-ownership-explicit-and-keep-merge-boundaries-controlled",
           "description": "Make context ownership explicit and keep merge boundaries controlled.",
@@ -5690,6 +5702,18 @@
           "sourceSkill": "ios-core-data-guidelines",
           "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
           "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.guideline.ios-core-data.using-swiftdata-contexts-containers-queries-or-persistence-models-dire",
+          "description": "Using SwiftData contexts, containers, queries, or persistence models directly in application or presentation code when the repo requires Clean Architecture boundaries.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "sourceSkill": "ios-core-data-guidelines",
+          "sourcePath": "vendor/skills/core-data-expert/SKILL.md",
+          "confidence": "HIGH",
           "locked": true,
           "evaluationMode": "DECLARATIVE",
           "origin": "core"

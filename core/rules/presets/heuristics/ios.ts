@@ -744,6 +744,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftdata.layer-leak.ast',
+    description: 'Detects SwiftData APIs leaking into iOS application or presentation layers.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftdata.layer-leak.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected SwiftData APIs leaking into application/presentation code.',
+      code: 'HEURISTICS_IOS_SWIFTDATA_LAYER_LEAK_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.core-data.nsmanagedobject-state-leak.ast',
     description: 'Detects NSManagedObject leaking into SwiftUI state or ViewModel state.',
     severity: 'WARN',
