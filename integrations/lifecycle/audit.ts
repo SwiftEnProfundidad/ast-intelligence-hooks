@@ -4,7 +4,7 @@ import { GitService, type IGitService } from '../git/GitService';
 import { hasAllowedExtension } from '../git/gitDiffUtils';
 import { runPlatformGate } from '../git/runPlatformGate';
 import { evaluatePlatformGateFindings } from '../git/runPlatformGateEvaluation';
-import { DEFAULT_FACT_FILE_EXTENSIONS } from '../git/runPlatformGateFacts';
+import { DEFAULT_FACT_FILE_EXTENSIONS, type GateScope } from '../git/runPlatformGateFacts';
 import { resolvePolicyForStage, type ResolvedStagePolicy } from '../gate/stagePolicies';
 
 export type LifecycleAuditStage = 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
@@ -23,7 +23,7 @@ export type LifecycleAuditResult = {
   command: 'pumuki audit';
   repo_root: string;
   stage: LifecycleAuditStage;
-  scope: { kind: 'repo' };
+  scope: { kind: 'repo' | 'staged'; staged_matching_extensions_count: number };
   audit_mode: 'gate' | 'engine';
   gate_exit_code: number;
   files_scanned: number | null;
@@ -68,6 +68,28 @@ const countUntrackedMatchingExtensions = (
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
     .filter((path) => hasAllowedExtension(path, extensions)).length;
+};
+
+const collectStagedMatchingExtensions = (
+  git: Pick<IGitService, 'resolveRepoRoot' | 'runGit'>,
+  extensions: ReadonlyArray<string>
+): string[] => {
+  const repoRoot = git.resolveRepoRoot();
+  return git.runGit(['diff', '--cached', '--name-only'], repoRoot)
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .filter((path) => hasAllowedExtension(path, extensions));
+};
+
+const resolveLifecycleAuditScope = (params: {
+  stage: LifecycleAuditStage;
+  stagedMatchingExtensions: ReadonlyArray<string>;
+}): GateScope => {
+  if (params.stage === 'PRE_WRITE' && params.stagedMatchingExtensions.length > 0) {
+    return { kind: 'staged' };
+  }
+  return { kind: 'repo' };
 };
 
 const isFindingBlocking = (finding: SnapshotFinding): boolean => {
@@ -179,13 +201,18 @@ export const runLifecycleAudit = async (params: {
   );
   const extensions = DEFAULT_FACT_FILE_EXTENSIONS;
   const untrackedMatchingExtensionsCount = countUntrackedMatchingExtensions(git, extensions);
+  const stagedMatchingExtensions = collectStagedMatchingExtensions(git, extensions);
+  const scope = resolveLifecycleAuditScope({
+    stage: params.stage,
+    stagedMatchingExtensions,
+  });
 
   const gateParams =
     params.auditMode === 'engine'
       ? {
           policy: resolved.policy,
           policyTrace: resolved.trace,
-          scope: { kind: 'repo' as const },
+          scope,
           silent: true,
           auditMode: 'engine' as const,
           dependencies: {
@@ -204,7 +231,7 @@ export const runLifecycleAudit = async (params: {
       : {
           policy: resolved.policy,
           policyTrace: resolved.trace,
-          scope: { kind: 'repo' as const },
+          scope,
           silent: true,
           auditMode: 'gate' as const,
         };
@@ -229,7 +256,10 @@ export const runLifecycleAudit = async (params: {
     command: 'pumuki audit',
     repo_root: repoRoot,
     stage: params.stage,
-    scope: { kind: 'repo' },
+    scope: {
+      kind: scope.kind === 'staged' ? 'staged' : 'repo',
+      staged_matching_extensions_count: stagedMatchingExtensions.length,
+    },
     audit_mode: params.auditMode,
     gate_exit_code: gateExitCode,
     files_scanned: filesScanned,
