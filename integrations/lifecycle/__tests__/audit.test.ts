@@ -23,6 +23,24 @@ const buildGitStub = (repoRoot: string, untracked = '', staged = ''): IGitServic
   getStagedAndUnstagedFacts: () => [],
 });
 
+const withEnv = async (key: string, value: string | undefined, run: () => Promise<void>) => {
+  const previous = process.env[key];
+  if (typeof value === 'undefined') {
+    delete process.env[key];
+  } else {
+    process.env[key] = value;
+  }
+  try {
+    await run();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env[key];
+    } else {
+      process.env[key] = previous;
+    }
+  }
+};
+
 const buildEvidence = (
   snapshot: Partial<AiEvidenceV2_1['snapshot']>
 ): AiEvidenceV2_1 =>
@@ -320,4 +338,145 @@ test('runLifecycleAudit no bloquea audit staged PRE_WRITE solo por enforcement g
   assert.equal(result.blocking_findings_count, 0);
   assert.equal(result.findings[0]?.code, 'AUDIT_SCOPED_GLOBAL_ENFORCEMENT_ADVISORY');
   assert.equal(result.findings[0]?.blocking, false);
+});
+
+test('runLifecycleAudit usa scope range en PRE_PUSH para particiones atomicas desde origin/develop', async () => {
+  await withEnv('PUMUKI_AUDIT_PRE_PUSH_BASE_REF', undefined, async () => {
+    let observedScope: Parameters<typeof runPlatformGate>[0]['scope'] | undefined;
+    const git: IGitService = {
+      ...buildGitStub('/repo'),
+      runGit: (args) => {
+        const command = args.join(' ');
+        if (command === 'ls-files --others --exclude-standard') {
+          return '';
+        }
+        if (command === 'diff --cached --name-only') {
+          return '';
+        }
+        if (command === 'rev-parse --abbrev-ref HEAD') {
+          return 'chore/ruralgo-pumuki-6-3-193-rollout';
+        }
+        if (command === 'rev-parse --abbrev-ref --symbolic-full-name @{upstream}') {
+          return '';
+        }
+        if (command === 'rev-parse --verify origin/develop') {
+          return 'developsha';
+        }
+        if (command === 'merge-base origin/develop HEAD') {
+          return 'basesha';
+        }
+        if (command === 'diff --name-only basesha..HEAD') {
+          return [
+            'package.json',
+            'package-lock.json',
+            'docs/RURALGO_SEGUIMIENTO.md',
+            'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
+          ].join('\n');
+        }
+        return '';
+      },
+    };
+
+    const result = await runLifecycleAudit({
+      stage: 'PRE_PUSH',
+      auditMode: 'gate',
+      dependencies: {
+        git,
+        resolvePolicyForStage: (stage) =>
+          ({
+            policy: { stage, blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            trace: { stage },
+          }) as never,
+        runPlatformGate: async (params) => {
+          observedScope = params.scope;
+          return 0;
+        },
+        readEvidence: () =>
+          buildEvidence({
+            stage: 'PRE_PUSH',
+            outcome: 'PASS',
+            files_scanned: 0,
+            findings: [],
+          }),
+      },
+    });
+
+    assert.equal(observedScope?.kind, 'range');
+    assert.deepEqual(observedScope, {
+      kind: 'range',
+      fromRef: 'basesha',
+      toRef: 'HEAD',
+      extensions: ['.swift', '.ts', '.tsx', '.js', '.jsx', '.kt', '.kts'],
+    });
+    assert.equal(result.scope.kind, 'range');
+    assert.equal(result.scope.base_ref, 'origin/develop');
+    assert.equal(result.scope.from_ref, 'basesha');
+    assert.equal(result.scope.to_ref, 'HEAD');
+    assert.equal(result.scope.range_matching_extensions_count, 0);
+    assert.equal(result.gate_exit_code, 0);
+    assert.equal(result.blocking_findings_count, 0);
+  });
+});
+
+test('runLifecycleAudit permite base explicita para audit PRE_PUSH', async () => {
+  await withEnv('PUMUKI_AUDIT_PRE_PUSH_BASE_REF', 'origin/release-base', async () => {
+    let observedScope: Parameters<typeof runPlatformGate>[0]['scope'] | undefined;
+    const git: IGitService = {
+      ...buildGitStub('/repo'),
+      runGit: (args) => {
+        const command = args.join(' ');
+        if (command === 'ls-files --others --exclude-standard') {
+          return '';
+        }
+        if (command === 'diff --cached --name-only') {
+          return '';
+        }
+        if (command === 'rev-parse --abbrev-ref HEAD') {
+          return 'bugfix/custom-base';
+        }
+        if (command === 'rev-parse --abbrev-ref --symbolic-full-name @{upstream}') {
+          return 'origin/bugfix/custom-base';
+        }
+        if (command === 'rev-parse --verify origin/release-base') {
+          return 'basesha';
+        }
+        if (command === 'merge-base origin/release-base HEAD') {
+          return 'explicitbase';
+        }
+        if (command === 'diff --name-only explicitbase..HEAD') {
+          return 'apps/backend/src/domain/entities/CacheEntry.ts';
+        }
+        return '';
+      },
+    };
+
+    const result = await runLifecycleAudit({
+      stage: 'PRE_PUSH',
+      auditMode: 'gate',
+      dependencies: {
+        git,
+        resolvePolicyForStage: (stage) =>
+          ({
+            policy: { stage, blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            trace: { stage },
+          }) as never,
+        runPlatformGate: async (params) => {
+          observedScope = params.scope;
+          return 0;
+        },
+        readEvidence: () =>
+          buildEvidence({
+            stage: 'PRE_PUSH',
+            outcome: 'PASS',
+            files_scanned: 1,
+            findings: [],
+          }),
+      },
+    });
+
+    assert.equal(observedScope?.kind, 'range');
+    assert.equal(result.scope.kind, 'range');
+    assert.equal(result.scope.base_ref, 'origin/release-base');
+    assert.equal(result.scope.range_matching_extensions_count, 1);
+  });
 });
