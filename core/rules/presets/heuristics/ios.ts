@@ -201,6 +201,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.memory.strong-self-escaping-closure.ast',
+    description: 'Detects strong self captures in escaping iOS closures.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.memory.strong-self-escaping-closure.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected strong self capture in an escaping iOS closure; weak or unowned captures remain the preferred baseline when ownership is not explicit.',
+      code: 'HEURISTICS_IOS_MEMORY_STRONG_SELF_ESCAPING_CLOSURE_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.logging.adhoc-print.ast',
     description: 'Detects print/debugPrint/dump/NSLog/os_log usage in iOS production code.',
     severity: 'WARN',

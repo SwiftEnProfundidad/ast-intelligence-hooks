@@ -423,14 +423,17 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.ios.guideline.ios.accessibility-labels-accessibilitylabel';
     }
+    if (includes('weak delegates') || includes('delegation pattern')) {
+      return 'skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles';
+    }
     if (
-      includes('weak delegates') ||
-      includes('delegation pattern') ||
       includes('closures delegates') ||
+      includes('weak self') ||
+      includes('capture list') ||
       includes('avoid retain cycles') ||
       includes('evitar retain cycles')
     ) {
-      return 'skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles';
+      return 'skills.ios.guideline.ios.evitar-retain-cycles-especialmente-en-closures-delegates';
     }
     if (
       includes('mixing legacy xctest style') ||

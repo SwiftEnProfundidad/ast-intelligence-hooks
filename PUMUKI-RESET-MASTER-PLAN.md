@@ -1000,6 +1000,11 @@ Snapshot PARITY-IOS-MEMORY-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.memory.strong-delegate.ast` como WARN brownfield-aware para propiedades `delegate`/`dataSource` o tipos `*Delegate`/`*DataSource` declaradas sin `weak var`, ignorando strings/comentarios y sin marcar `weak var`.
 - Alcance explícito: esta slice cubre delegates fuertes; no declara todavía cobertura completa de `[weak self]` en closures/tasks, `Timer`, `NotificationCenter` o ciclos de Combine.
 
+Snapshot PARITY-IOS-MEMORY-002 (2026-05-13):
+- Diagnóstico: la regla iOS de retain cycles seguía cubriendo solo delegates fuertes, pero no capturas fuertes de `self` en closures escapables comunes de Swift production.
+- Implementación: se añade `heuristics.ios.memory.strong-self-escaping-closure.ast` como WARN brownfield-aware para `Task`, `DispatchQueue.async`, `Timer.scheduledTimer`, `NotificationCenter.addObserver`, `Combine.sink` y `handleEvents` cuando capturan `self.` sin capture list `[weak self]` o `[unowned self]`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no intenta demostrar propiedad de ciclo real ni bloquear deuda brownfield; señala ownership no explícito en APIs escapables para remediación progresiva.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

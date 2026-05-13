@@ -450,6 +450,75 @@ export const hasSwiftStrongDelegateReferenceUsage = (source: string): boolean =>
   });
 };
 
+const swiftStrongSelfEscapingClosurePatterns = [
+  /\bTask\s*(?:\([^)]*\))?\s*\{/g,
+  /\bDispatchQueue\s*\.\s*[A-Za-z0-9_.]+\s*\.\s*async(?:After)?\s*(?:\([^)]*\))?\s*\{/g,
+  /\bTimer\s*\.\s*scheduledTimer\s*\([\s\S]{0,320}?\)\s*\{/g,
+  /\bNotificationCenter\s*\.\s*default\s*\.\s*addObserver\s*\([\s\S]{0,420}?\busing\s*:\s*\{/g,
+  /\.\s*sink\s*\([\s\S]{0,420}?\b(?:receiveValue|receiveCompletion)\s*:\s*\{/g,
+  /\.\s*sink\s*\{/g,
+  /\.\s*handleEvents\s*\([\s\S]{0,420}?\b(?:receiveOutput|receiveCompletion|receiveCancel)\s*:\s*\{/g,
+];
+
+const findMatchingSwiftBraceIndex = (source: string, openingBraceIndex: number): number => {
+  let depth = 0;
+  for (let index = openingBraceIndex; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === '{') {
+      depth += 1;
+      continue;
+    }
+    if (char !== '}') {
+      continue;
+    }
+    depth -= 1;
+    if (depth === 0) {
+      return index;
+    }
+  }
+  return -1;
+};
+
+const hasWeakOrUnownedSelfCaptureList = (closureBody: string): boolean => {
+  const trimmedStart = closureBody.trimStart();
+  if (!trimmedStart.startsWith('[')) {
+    return false;
+  }
+  const captureListEndIndex = trimmedStart.indexOf(']');
+  if (captureListEndIndex < 0) {
+    return false;
+  }
+  const captureList = trimmedStart.slice(1, captureListEndIndex);
+  return /\b(?:weak|unowned)\s+self\b/.test(captureList);
+};
+
+export const hasSwiftStrongSelfEscapingClosureUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  for (const pattern of swiftStrongSelfEscapingClosurePatterns) {
+    pattern.lastIndex = 0;
+    for (const match of sanitized.matchAll(pattern)) {
+      const matchedSource = match[0] ?? '';
+      const openingBraceOffset = matchedSource.lastIndexOf('{');
+      if (openingBraceOffset < 0 || match.index === undefined) {
+        continue;
+      }
+      const openingBraceIndex = match.index + openingBraceOffset;
+      const closingBraceIndex = findMatchingSwiftBraceIndex(sanitized, openingBraceIndex);
+      if (closingBraceIndex < 0) {
+        continue;
+      }
+      const closureBody = sanitized.slice(openingBraceIndex + 1, closingBraceIndex);
+      if (hasWeakOrUnownedSelfCaptureList(closureBody)) {
+        continue;
+      }
+      if (/\bself\s*\./.test(closureBody)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
 export const hasSwiftAdHocLoggingUsage = (source: string): boolean => {
   return collectSwiftRegexLines(
     source,

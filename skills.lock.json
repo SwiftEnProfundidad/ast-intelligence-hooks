@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T12:26:53.436Z",
+  "generatedAt": "2026-05-13T12:37:42.811Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5764,7 +5764,7 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "672f428af5b852cb406bda732533581a045a0cc7e40a1f5c32b4ba57a5b248f7",
+      "hash": "32c74edc740622834bf48fa060ebc04f8d5ee0c826e9a6dd48a068212dfc2552",
       "rules": [
         {
           "id": "skills.ios.guideline.ios.accessibility-identifiers-para-localizar-elementos",
@@ -6033,18 +6033,6 @@
         {
           "id": "skills.ios.guideline.ios.cancellables-almacenar-en-set-anycancellable",
           "description": "Cancellables - Almacenar en Set<AnyCancellable>",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.capture-lists-capturar-valores-no-referencias",
-          "description": "Capture lists - Capturar valores, no referencias",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",
@@ -6508,6 +6496,18 @@
           "confidence": "MEDIUM",
           "locked": true,
           "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.guideline.ios.evitar-retain-cycles-especialmente-en-closures-delegates",
+          "description": "[weak self] - En closures que pueden outlive self",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {
@@ -8230,18 +8230,6 @@
         {
           "id": "skills.ios.guideline.ios.wait-for-existence-xctwaiter-para-elementos-asi-ncronos",
           "description": "Wait for existence - XCTWaiter para elementos asíncronos",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.weak-self-en-closures-que-pueden-outlive-self",
-          "description": "[weak self] - En closures que pueden outlive self",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",

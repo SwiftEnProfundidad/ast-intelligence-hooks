@@ -55,6 +55,7 @@ import {
   hasSwiftJSONSerializationUsage,
   hasSwiftStringFormatUsage,
   hasSwiftStrongDelegateReferenceUsage,
+  hasSwiftStrongSelfEscapingClosureUsage,
   hasSwiftTabItemUsage,
   hasSwiftTaskDetachedUsage,
   hasSwiftWaitForExpectationsUsage,
@@ -207,6 +208,56 @@ final class CheckoutCoordinator {
 `;
 
   assert.equal(hasSwiftStrongDelegateReferenceUsage(source), false);
+});
+
+test('hasSwiftStrongSelfEscapingClosureUsage detecta self fuerte en closures escapables iOS', () => {
+  const source = `
+final class CartViewModel {
+  private var cancellables = Set<AnyCancellable>()
+
+  func bind() {
+    Task {
+      await self.reload()
+    }
+    DispatchQueue.main.async {
+      self.render()
+    }
+    Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
+      self.tick(timer)
+    }
+    NotificationCenter.default.addObserver(forName: .cartChanged, object: nil, queue: .main) { notification in
+      self.handle(notification)
+    }
+    publisher.sink { value in
+      self.consume(value)
+    }
+  }
+}
+`;
+
+  assert.equal(hasSwiftStrongSelfEscapingClosureUsage(source), true);
+});
+
+test('hasSwiftStrongSelfEscapingClosureUsage preserva capture lists weak/unowned e ignora comentarios y strings', () => {
+  const source = `
+final class CartViewModel {
+  func bind() {
+    Task { [weak self] in
+      await self?.reload()
+    }
+    DispatchQueue.main.async { [unowned self] in
+      render()
+    }
+    publisher.sink(receiveValue: { [weak self] value in
+      self?.consume(value)
+    })
+    let text = "Task { self.reload() }"
+    // Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in self.tick() }
+  }
+}
+`;
+
+  assert.equal(hasSwiftStrongSelfEscapingClosureUsage(source), false);
 });
 
 test('detectores de logging iOS detectan logs ad-hoc y PII en produccion', () => {

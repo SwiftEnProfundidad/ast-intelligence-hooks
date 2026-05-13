@@ -171,7 +171,10 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.evitar-retain-cycles-especialmente-en-closures-delegates'
     ),
-    ['heuristics.ios.memory.strong-delegate.ast']
+    [
+      'heuristics.ios.memory.strong-delegate.ast',
+      'heuristics.ios.memory.strong-self-escaping-closure.ast',
+    ]
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),

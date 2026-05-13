@@ -52,8 +52,11 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     ['heuristics.ios.memory.strong-delegate.ast']
   ),
   'skills.ios.guideline.ios.evitar-retain-cycles-especialmente-en-closures-delegates': heuristicDetector(
-    'ios.memory.strong-delegate',
-    ['heuristics.ios.memory.strong-delegate.ast']
+    'ios.memory.retain-cycles',
+    [
+      'heuristics.ios.memory.strong-delegate.ast',
+      'heuristics.ios.memory.strong-self-escaping-closure.ast',
+    ]
   ),
   'skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc': heuristicDetector(
     'ios.logging.adhoc-print',
