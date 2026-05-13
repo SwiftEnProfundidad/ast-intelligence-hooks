@@ -43,6 +43,7 @@ import {
   hasSwiftOperationQueueUsage,
   hasSwiftContainsUserFilterUsage,
   hasSwiftPassedValueStateWrapperUsage,
+  hasSwiftPhysicalTextAlignmentUsage,
   hasSwiftPreconcurrencyUsage,
   hasSwiftSheetIsPresentedUsage,
   hasSwiftScrollViewShowsIndicatorsUsage,
@@ -333,6 +334,24 @@ let text = "UIFont.systemFont(ofSize: 16)"
 
   assert.equal(hasSwiftFixedFontSizeUsage(source), true);
   assert.equal(hasSwiftFixedFontSizeUsage(ignored), false);
+});
+
+test('detector iOS de localización detecta alineación física sin confundir leading/trailing', () => {
+  const source = `
+Text("Name").multilineTextAlignment(.left)
+Text("Price").frame(maxWidth: .infinity, alignment: .right)
+let textAlignment = TextAlignment.right
+label.textAlignment = NSTextAlignment.left
+`;
+  const ignored = `
+Text("Name").multilineTextAlignment(.leading)
+Text("Price").frame(maxWidth: .infinity, alignment: .trailing)
+let sample = "TextAlignment.right"
+// Text("Name").multilineTextAlignment(.left)
+`;
+
+  assert.equal(hasSwiftPhysicalTextAlignmentUsage(source), true);
+  assert.equal(hasSwiftPhysicalTextAlignmentUsage(ignored), false);
 });
 
 test('hasSwiftUncheckedSendableUsage detecta @unchecked Sendable', () => {

@@ -398,6 +398,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.localization.physical-text-alignment.ast',
+    description: 'Detects physical left/right text alignment where leading/trailing are the preferred RTL-safe iOS baseline.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.localization.physical-text-alignment.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected physical left/right text alignment in iOS production code; leading/trailing remain the preferred RTL-safe baseline.',
+      code: 'HEURISTICS_IOS_LOCALIZATION_PHYSICAL_TEXT_ALIGNMENT_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',

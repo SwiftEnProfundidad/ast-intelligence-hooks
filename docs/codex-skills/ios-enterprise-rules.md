@@ -628,6 +628,11 @@ struct APIEndpoint: Sendable {
 - `skills.ios.guideline.ios.dynamic-type-fuentes-escalables-y-layouts-adaptativos` se mapea a `heuristics.ios.accessibility.fixed-font-size.ast`.
 - En `PROJECT MODE: brownfield`, este hallazgo detecta tamaños de fuente fijos (`.font(.system(size:))`, `Font.system(size:)`, `UIFont.systemFont(ofSize:)`) como señal de adopción hacia Dynamic Type y estilos semánticos. No marca `.font(.headline)`, `.font(.body)` ni otros estilos semánticos.
 
+### Enforcement AST inicial de RTL iOS
+
+- `skills.ios.guideline.ios.rtl-support-right-to-left-para-a-rabe-hebreo` se mapea a `heuristics.ios.localization.physical-text-alignment.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta alineaciones físicas `.left`/`.right` en texto y frames (`multilineTextAlignment`, `frame(alignment:)`, `TextAlignment`, `NSTextAlignment`) como señal de adopción hacia `.leading`/`.trailing`. No marca `.leading` ni `.trailing`.
+
 ### Combine (Reactive):
 ✅ **Publishers** - AsyncSequence para async, Combine para streams complejos
 ✅ **@Published** - En ViewModels para binding con Views

@@ -123,6 +123,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.accessibility.fixed-font-size',
     ['heuristics.ios.accessibility.fixed-font-size.ast']
   ),
+  'skills.ios.guideline.ios.rtl-support-right-to-left-para-a-rabe-hebreo': heuristicDetector(
+    'ios.localization.physical-text-alignment',
+    ['heuristics.ios.localization.physical-text-alignment.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),
