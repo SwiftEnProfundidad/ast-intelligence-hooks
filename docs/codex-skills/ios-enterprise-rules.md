@@ -617,6 +617,11 @@ struct APIEndpoint: Sendable {
 - En `PROJECT MODE: brownfield`, este hallazgo detecta `Localizable.strings` bajo `apps/ios/**` como señal de baseline/adopción sin bloquear deuda histórica salvo promoción explícita de policy. String Catalogs (`.xcstrings`) permanece como baseline preferente.
 - También detecta literales de texto visibles en SwiftUI (`Text`, `Button`, `Label`, `TextField`, `SecureField`, `navigationTitle`, `accessibilityLabel`) como señal de adopción hacia `String(localized:)` y String Catalogs, ignorando keys como `orders.title`.
 
+### Enforcement AST inicial de assets iOS
+
+- `skills.ios.guideline.ios.assets-en-asset-catalogs-con-soporte-para-todos-los-taman-os` se mapea a `heuristics.ios.assets.loose-resource.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta carga de imágenes sueltas desde bundle/filesystem (`UIImage(contentsOfFile:)`, `NSImage(contentsOfFile:)`, `Bundle.main.path/url(...png|jpg|jpeg|pdf|svg|webp)`) como señal de adopción hacia Asset Catalogs. No marca `Image("asset")` ni `UIImage(named:)`.
+
 ### Combine (Reactive):
 ✅ **Publishers** - AsyncSequence para async, Combine para streams complejos
 ✅ **@Published** - En ViewModels para binding con Views

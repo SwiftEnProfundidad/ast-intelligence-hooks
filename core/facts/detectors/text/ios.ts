@@ -543,6 +543,23 @@ export const hasSwiftHardcodedUiStringUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftLooseAssetResourceUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  return withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    return (
+      /\bUIImage\s*\(\s*contentsOfFile\s*:/.test(sanitized) ||
+      /\bNSImage\s*\(\s*contentsOfFile\s*:/.test(sanitized) ||
+      /\bBundle\s*\.\s*main\s*\.\s*(?:path|url)\s*\(\s*forResource\s*:\s*""\s*,\s*withExtension\s*:\s*""/.test(
+        sanitized
+      )
+    );
+  });
+};
+
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@unchecked', index)) {
