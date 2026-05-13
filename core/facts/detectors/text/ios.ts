@@ -475,6 +475,23 @@ export const hasSwiftJSONSerializationUsage = (source: string): boolean => {
   return collectSwiftRegexLines(source, /\bJSONSerialization\s*\./).length > 0;
 };
 
+export const hasSwiftSensitiveUserDefaultsStorageUsage = (source: string): boolean => {
+  return source.split(/\r?\n/).some((line) => {
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    const lineWithoutComments = line.replace(/\/\/.*$/, '');
+    const hasUserDefaultsWrite = /\bUserDefaults\s*\.\s*standard\s*\.\s*set\s*\(/.test(sanitized);
+    const hasAppStorage = /@\s*AppStorage\s*\(/.test(sanitized);
+
+    if (!hasUserDefaultsWrite && !hasAppStorage) {
+      return false;
+    }
+
+    return /\b(?:accessToken|refreshToken|authToken|token|password|secret|credential|authorization|bearer|apiKey|sessionId)\b/i.test(
+      lineWithoutComments
+    );
+  });
+};
+
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@unchecked', index)) {
