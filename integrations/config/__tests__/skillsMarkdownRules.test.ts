@@ -59,6 +59,19 @@ test('respeta stage explícito en markdown para no-solid-violations', () => {
   assert.equal(rules[0]?.stage, 'PRE_COMMIT');
 });
 
+test('normaliza regla SwiftUI navigationDestination a detector canonico de navegación tipada', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- Use navigationDestination(for:) for type-safe navigation',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios-swiftui-expert.use-navigationdestination-for-for-type-safe-navigation',
+  ]);
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+});
+
 test('normaliza reglas SwiftUI modernas a ids canonicos de snapshot phase 2', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-swiftui-expert-guidelines',

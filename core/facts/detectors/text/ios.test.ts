@@ -48,6 +48,7 @@ import {
   hasSwiftNSManagedObjectBoundaryUsage,
   hasSwiftNSManagedObjectStateLeakUsage,
   hasSwiftNavigationViewUsage,
+  hasSwiftUntypedNavigationLinkDestinationUsage,
   hasSwiftNonPrivateStateOwnershipUsage,
   hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage,
   hasSwiftObservableObjectUsage,
@@ -289,6 +290,59 @@ struct CheckoutView: View {
 
   assert.equal(hasSwiftUiInlineActionLogicUsage(source), true);
   assert.equal(hasSwiftUiInlineActionLogicUsage(safe), false);
+});
+
+test('hasSwiftUntypedNavigationLinkDestinationUsage detecta NavigationLink no tipado y preserva value navigation', () => {
+  const source = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    NavigationStack {
+      List(items) { item in
+        NavigationLink(destination: DetailView(item: item)) {
+          Text(item.title)
+        }
+      }
+    }
+  }
+}
+`;
+  const trailing = `
+struct FeedView: View {
+  var body: some View {
+    NavigationLink {
+      DetailView()
+    } label: {
+      Text("Open")
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    NavigationStack {
+      List(items) { item in
+        NavigationLink(value: item) {
+          Text(item.title)
+        }
+      }
+      .navigationDestination(for: Item.self) { item in
+        DetailView(item: item)
+      }
+    }
+    let sample = "NavigationLink(destination: DetailView())"
+    // NavigationLink { DetailView() } label: { Text("Open") }
+  }
+}
+`;
+
+  assert.equal(hasSwiftUntypedNavigationLinkDestinationUsage(source), true);
+  assert.equal(hasSwiftUntypedNavigationLinkDestinationUsage(trailing), true);
+  assert.equal(hasSwiftUntypedNavigationLinkDestinationUsage(safe), false);
 });
 
 test('hasSwiftForceTryUsage detecta try! y descarta try?', () => {

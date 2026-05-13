@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T16:36:55.011Z",
+  "generatedAt": "2026-05-13T16:44:08.385Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5764,8 +5764,20 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "2d56094eff6a0b688d9f20ef6970de5945dfa74aaf3a3973dfee2091b9e98542",
+      "hash": "a70065766533e822f2139da42d7933b6f240634c93939ee60969e3fd009409ce",
       "rules": [
+        {
+          "id": "skills.ios.guideline.ios-swiftui-expert.use-navigationdestination-for-for-type-safe-navigation",
+          "description": "navigationDestination(for:) - Destinos tipados",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.use-task-modifier-for-automatic-cancellation-of-async-work",
           "description": ".task/.task(id:) - Trabajos async con cancelación automática",
@@ -7042,30 +7054,6 @@
         {
           "id": "skills.ios.guideline.ios.navegacio-n-event-driven-estilo-tca-cuando-el-modelo-lo-requiera-event",
           "description": "Navegación event-driven estilo TCA cuando el modelo lo requiera (Event Bus + Router)",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.navigationdestination-for-destinos-tipados",
-          "description": "navigationDestination(for:) - Destinos tipados",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.navigationdestination-for-para-destinos",
-          "description": "NavigationDestination(for:) para destinos",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",
@@ -8632,7 +8620,7 @@
       "name": "ios-swiftui-expert-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/swiftui-expert-skill/SKILL.md",
-      "hash": "87916172b71811a09b147336b1625bce94571b1f9c66885bd136cfac27079b0d",
+      "hash": "92aa9bdb43b5641206e53aaba4647a5c88b88a7aca83dc00eea373d5e70b7080",
       "rules": [
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.action-handlers-should-reference-methods-not-contain-inline-logic",
@@ -8895,7 +8883,7 @@
           "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
           "confidence": "MEDIUM",
           "locked": true,
-          "evaluationMode": "DECLARATIVE",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {

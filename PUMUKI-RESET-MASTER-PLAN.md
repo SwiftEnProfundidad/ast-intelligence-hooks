@@ -1096,6 +1096,11 @@ Snapshot PARITY-IOS-SWIFTUI-FOREACH-CONSTANT-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.swiftui.foreach-conditional-view-count.ast` como WARN brownfield-aware para `ForEach(...) { ... if/switch ... }`, preservando rows simples que delegan la decisión a una subview o modificador; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no bloquea todos los condicionales SwiftUI ni infiere identidad runtime; marca solo el caso remediable de branching dentro del closure de `ForEach`.
 
+Snapshot PARITY-IOS-SWIFTUI-NAVIGATION-001 (2026-05-13):
+- Diagnóstico: `Use navigationDestination(for:) for type-safe navigation` seguía como baseline SwiftUI declarativo aunque los `NavigationLink(destination:)` y trailing destination links son detectables en Presentation.
+- Implementación: se añade `heuristics.ios.swiftui.untyped-navigation-link-destination.ast` como WARN brownfield-aware para navegación no tipada, preservando `NavigationLink(value:)` con `navigationDestination(for:)`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no bloquea toda navegación SwiftUI ni UIKit coordinators; solo marca el caso remediable de links SwiftUI no tipados en Presentation.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

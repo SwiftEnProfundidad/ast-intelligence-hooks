@@ -278,6 +278,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-navigation-view';
     }
     if (
+      includes('navigationdestination for') ||
+      (includes('navigationdestination') && includes('type safe navigation')) ||
+      (includes('navigationlink') && includes('value') && includes('navigationdestination'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-navigationdestination-for-for-type-safe-navigation';
+    }
+    if (
       includes('foregroundstyle instead of foregroundcolor') ||
       includes('foregroundstyle over foregroundcolor') ||
       includes('foregroundcolor') ||

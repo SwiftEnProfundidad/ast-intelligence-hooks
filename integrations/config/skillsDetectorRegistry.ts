@@ -211,6 +211,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-navigation-view': heuristicDetector('ios.navigation-view', [
     'heuristics.ios.navigation-view.ast',
   ]),
+  'skills.ios.guideline.ios-swiftui-expert.use-navigationdestination-for-for-type-safe-navigation':
+    heuristicDetector('ios.swiftui.untyped-navigation-link-destination', [
+      'heuristics.ios.swiftui.untyped-navigation-link-destination.ast',
+    ]),
   'skills.ios.no-foreground-color': heuristicDetector('ios.foreground-color', [
     'heuristics.ios.foreground-color.ast',
   ]),

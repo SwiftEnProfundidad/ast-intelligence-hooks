@@ -1017,6 +1017,15 @@ export const hasSwiftNavigationViewUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftUntypedNavigationLinkDestinationUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const destinationParameterPattern = /\bNavigationLink\s*\([^)]*\bdestination\s*:/;
+  const trailingDestinationPattern =
+    /\bNavigationLink\s*\{[\s\S]{0,900}\b[A-Z][A-Za-z0-9_]*View\s*\([^}]*\)[\s\S]{0,900}\}\s*label\s*:/;
+
+  return destinationParameterPattern.test(swiftSource) || trailingDestinationPattern.test(swiftSource);
+};
+
 export const hasSwiftForegroundColorUsage = (source: string): boolean => {
   return hasSwiftUiModernizationSnapshotMatch(source, 'foreground-color');
 };

@@ -21,6 +21,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-force-unwrap'), [
     'heuristics.ios.force-unwrap.ast',
   ]);
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.use-navigationdestination-for-for-type-safe-navigation'
+    ),
+    ['heuristics.ios.swiftui.untyped-navigation-link-destination.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-foreground-color'), [
     'heuristics.ios.foreground-color.ast',
   ]);

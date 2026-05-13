@@ -1025,6 +1025,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.untyped-navigation-link-destination.ast',
+    description: 'Detects untyped SwiftUI NavigationLink destination usage.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.untyped-navigation-link-destination.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected untyped NavigationLink destination usage; prefer NavigationLink(value:) with navigationDestination(for:) for type-safe navigation.',
+      code: 'HEURISTICS_IOS_SWIFTUI_UNTYPED_NAVIGATION_LINK_DESTINATION_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.foreground-color.ast',
     description: 'Detects foregroundColor usage in modern SwiftUI code paths.',
     severity: 'WARN',
