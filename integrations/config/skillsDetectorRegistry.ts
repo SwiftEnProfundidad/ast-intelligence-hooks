@@ -246,6 +246,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.swiftui.explicit-color-static-member', [
       'heuristics.ios.swiftui.explicit-color-static-member.ast',
     ]),
+  'skills.ios.guideline.ios-swiftui-expert.prefer-viewbuilder-let-content-content-over-closure-based-content-prop':
+    heuristicDetector('ios.swiftui.closure-based-viewbuilder-content', [
+      'heuristics.ios.swiftui.closure-based-viewbuilder-content.ast',
+    ]),
   'skills.ios.no-scrollview-shows-indicators': heuristicDetector(
     'ios.scrollview-shows-indicators',
     ['heuristics.ios.scrollview-shows-indicators.ast']

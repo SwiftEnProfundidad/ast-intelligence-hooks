@@ -1061,6 +1061,11 @@ Snapshot PARITY-IOS-SWIFTUI-STYLE-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.swiftui.explicit-color-static-member.ast` como WARN brownfield-aware para `Color.blue`, `Color.primary` y equivalentes estándar; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no marca `Color("AssetName")` ni colores custom; solo recomienda static member lookup en miembros estándar de SwiftUI.
 
+Snapshot PARITY-IOS-SWIFTUI-COMPOSITION-001 (2026-05-13):
+- Diagnóstico: `Prefer @ViewBuilder let content: Content over closure-based content properties` seguía como baseline SwiftUI declarativo aunque los contenedores que almacenan `content: () -> Content` son detectables en Presentation.
+- Implementación: se añade `heuristics.ios.swiftui.closure-based-viewbuilder-content.ast` como WARN brownfield-aware para propiedades `content: () -> Content` o `content: @escaping () -> Content`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no marca inicializadores `@ViewBuilder` por sí mismos ni `@ViewBuilder let content: Content`; solo señala almacenamiento closure-based del contenido.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

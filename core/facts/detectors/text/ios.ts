@@ -870,6 +870,13 @@ export const hasSwiftExplicitColorStaticMemberUsage = (source: string): boolean 
   );
 };
 
+export const hasSwiftClosureBasedViewBuilderContentUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\b(?:let|var)\s+content\s*:\s*(?:\(\s*\)\s*->|@\s*escaping\s*\(\s*\)\s*->)\s*(?:some\s+View|Content)\b/g
+  );
+};
+
 export const hasSwiftLegacySwiftUiObservableWrapperUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(source, /@\s*(?:StateObject|ObservedObject)\b/);
 };

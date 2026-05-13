@@ -347,6 +347,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios-swiftui-expert.prefer-static-member-lookup-blue-vs-color-blue';
     }
     if (
+      includes('viewbuilder let content') ||
+      (includes('closure-based content') && includes('content')) ||
+      (includes('content: content') && includes('viewbuilder'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.prefer-viewbuilder-let-content-content-over-closure-based-content-prop';
+    }
+    if (
       includes('scrollindicators hidden') ||
       includes('scroll indicators hidden') ||
       includes('showsindicators false') ||

@@ -62,6 +62,7 @@ import {
   hasSwiftInsecureTransportUsage,
   hasSwiftJSONSerializationUsage,
   hasSwiftExplicitColorStaticMemberUsage,
+  hasSwiftClosureBasedViewBuilderContentUsage,
   hasSwiftInlineForEachTransformUsage,
   hasSwiftStringFormatUsage,
   hasSwiftStrongDelegateReferenceUsage,
@@ -735,6 +736,7 @@ GeometryReader { proxy in
 }
 Text("Headline").fontWeight(.bold)
 Text("State").foregroundStyle(Color.green)
+let content: () -> Content
 let filtered = items.filter { $0.title.contains(searchText) }
 ForEach(items.indices, id: \\.self) { index in
   Text(items[index].title)
@@ -782,6 +784,7 @@ MainActor.assumeIsolated { reload() }
   assert.equal(hasSwiftGeometryReaderUsage(source), true);
   assert.equal(hasSwiftFontWeightBoldUsage(source), true);
   assert.equal(hasSwiftExplicitColorStaticMemberUsage(source), true);
+  assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), true);
   assert.equal(hasSwiftObservableObjectUsage(source), true);
   assert.equal(hasSwiftLegacySwiftUiObservableWrapperUsage(source), true);
   assert.equal(hasSwiftNavigationViewUsage(source), true);
@@ -822,6 +825,7 @@ let s = "nonisolated(unsafe) static var sharedBridge: Model?"
 let t = "MainActor.assumeIsolated { reload() }"
 let u = "ForEach(items.filter { $0.isVisible }) { item in }"
 let v = "Color.green"
+let w = "let content: () -> Content"
 `;
   assert.equal(hasSwiftPreconcurrencyUsage(source), false);
   assert.equal(hasSwiftNonisolatedUnsafeUsage(source), false);
@@ -832,6 +836,7 @@ let v = "Color.green"
   assert.equal(hasSwiftGeometryReaderUsage(source), false);
   assert.equal(hasSwiftFontWeightBoldUsage(source), false);
   assert.equal(hasSwiftExplicitColorStaticMemberUsage(source), false);
+  assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), false);
   assert.equal(hasSwiftTaskDetachedUsage(source), false);
   assert.equal(hasSwiftNavigationViewUsage(source), false);
   assert.equal(hasSwiftForegroundColorUsage(source), false);
@@ -850,6 +855,7 @@ test('detectores snapshot SwiftUI ignoran reemplazos modernos', () => {
   const source = `
 Text("Primary").foregroundStyle(.blue)
 Text("State").foregroundStyle(.green)
+@ViewBuilder let content: Content
 Image("hero").clipShape(.rect(cornerRadius: 12))
 Text("Headline").bold()
 TabView {
@@ -884,6 +890,7 @@ ScrollView {
   assert.equal(hasSwiftGeometryReaderUsage(source), false);
   assert.equal(hasSwiftFontWeightBoldUsage(source), false);
   assert.equal(hasSwiftExplicitColorStaticMemberUsage(source), false);
+  assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), false);
   assert.equal(hasSwiftForegroundColorUsage(source), false);
   assert.equal(hasSwiftCornerRadiusUsage(source), false);
   assert.equal(hasSwiftTabItemUsage(source), false);
@@ -915,6 +922,28 @@ let ignored = "Color.green"
 
   assert.equal(hasSwiftExplicitColorStaticMemberUsage(source), true);
   assert.equal(hasSwiftExplicitColorStaticMemberUsage(safe), false);
+});
+
+test('hasSwiftClosureBasedViewBuilderContentUsage detecta content closure y preserva @ViewBuilder let content', () => {
+  const source = `
+struct Card<Content: View>: View {
+  private let content: () -> Content
+
+  init(@ViewBuilder content: @escaping () -> Content) {
+    self.content = content
+  }
+}
+`;
+  const safe = `
+struct Card<Content: View>: View {
+  @ViewBuilder let content: Content
+}
+let ignored = "let content: () -> Content"
+// let content: () -> Content
+`;
+
+  assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), true);
+  assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(safe), false);
 });
 
 test('hasSwiftLegacyXCTestImportUsage detecta XCTest unitario y excluye UI/performance', () => {
