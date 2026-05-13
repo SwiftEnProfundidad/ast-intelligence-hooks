@@ -931,12 +931,18 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-136` / RuralGo atomic split baseline blocker. |
+| Este plan | `[🚧] - PARITY-IOS-001` / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS. |
 
-- Estado: 🚧 PUMUKI-INC-136 / RuralGo atomic split baseline blocker.
+- Estado: 🚧 PARITY-IOS-001 / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS.
+
+Snapshot PUMUKI-INC-136 (2026-05-13):
 - Origen externo: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` commit `4e12f0303 docs: report atomic split baseline blocker`.
 - Diagnóstico: `pumuki audit --stage=PRE_PUSH --json` evaluaba `scope=repo` en CLI y reactivaba deuda baseline de `origin/develop` al intentar partir una rama acumulada en slices atómicos, aunque el slice solo tocara `package*.json` y MDs de seguimiento.
-- Implementación objetivo: `audit PRE_PUSH` debe resolver un rango GitFlow (`merge-base(base, HEAD)..HEAD`) y pasar `scope=range` al gate cuando exista base resoluble, con `PUMUKI_AUDIT_PRE_PUSH_BASE_REF` como override explícito; si no hay base resoluble, se conserva fallback `repo`. Si el rango no contiene archivos de código soportados, deuda SDD baseline como `SDD_CHANGE_MISSING` no debe bloquear el slice atómico documental/repin y debe quedar como advisory.
+- Cierre: ✅ FIXED en `pumuki@6.3.206`.
+- Implementación: `audit PRE_PUSH` resuelve un rango GitFlow (`merge-base(base, HEAD)..HEAD`) y pasa `scope=range` al gate cuando existe base resoluble, con `PUMUKI_AUDIT_PRE_PUSH_BASE_REF` como override explícito; si no hay base resoluble, conserva fallback `repo`. Si el rango no contiene archivos de código soportados, deuda SDD baseline como `SDD_CHANGE_MISSING` no bloquea el slice atómico documental/repin y queda como advisory.
+- Evidencia Pumuki: `integrations/lifecycle/__tests__/audit.test.ts` -> `8/8 pass`; `npm run -s typecheck` -> OK; `git diff --check` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.206.tgz`; `npm dist-tag ls pumuki` -> `latest: 6.3.206`.
+- Evidencia RuralGo acumulada: `pumuki@6.3.206`, `PRE_PUSH gate_exit_code=0`, `blocking_findings_count=0`, `findings_count=2`, `snapshot_outcome=PASS`, `scope.kind=range`, `base_ref=origin/develop`, `range_matching_extensions_count=75`.
+- Evidencia RuralGo replay split desde `origin/develop`: `PRE_PUSH gate_exit_code=0`, `blocking_findings_count=0`, `findings_count=1`, `snapshot_outcome=PASS`, `scope.kind=range`, `range_matching_extensions_count=0`, finding residual `AUDIT_RANGE_NO_SUPPORTED_CODE_ADVISORY` no bloqueante.
 
 Snapshot PARITY-IOS-SWIFTDATA-001 (2026-05-12):
 - Reapertura limpia: PR #890 queda descartado como ruta de merge directa porque estaba basado en `bugfix/pumuki-inc130-ios-helper-critical-quality-final2` y no en `main`, arrastrando historia antigua.
