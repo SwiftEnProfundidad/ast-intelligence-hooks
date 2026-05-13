@@ -115,6 +115,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.assets.loose-resource',
     ['heuristics.ios.assets.loose-resource.ast']
   ),
+  'skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico': heuristicDetector(
+    'ios.accessibility.fixed-font-size',
+    ['heuristics.ios.accessibility.fixed-font-size.ast']
+  ),
+  'skills.ios.guideline.ios.dynamic-type-fuentes-escalables-y-layouts-adaptativos': heuristicDetector(
+    'ios.accessibility.fixed-font-size',
+    ['heuristics.ios.accessibility.fixed-font-size.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),
