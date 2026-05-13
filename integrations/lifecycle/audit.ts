@@ -111,6 +111,22 @@ const toLifecycleAuditFinding = (finding: SnapshotFinding): LifecycleAuditFindin
   blocking: isFindingBlocking(finding),
 });
 
+const toGateAllowedAuditAdvisoryFinding = (
+  finding: LifecycleAuditFinding
+): LifecycleAuditFinding => {
+  if (!finding.blocking) {
+    return finding;
+  }
+  return {
+    ...finding,
+    severity: 'WARN',
+    blocking: false,
+    message:
+      `${finding.message} ` +
+      '(Advisory: current audit gate exited 0, so this finding is not blocking for this run.)',
+  };
+};
+
 const buildBlockedWithoutFindingsFallback = (params: {
   stage: LifecycleAuditStage;
   gateExitCode: number;
@@ -282,10 +298,15 @@ export const runLifecycleAudit = async (params: {
     scope,
     findings,
   });
+  const gateAllowed = originalGateExitCode === 0;
   const effectiveFindings = scopedGlobalEnforcementOnly
     ? findings.map(toScopedAuditAdvisoryFinding)
-    : findings;
+    : gateAllowed
+      ? findings.map(toGateAllowedAuditAdvisoryFinding)
+      : findings;
   const gateExitCode = scopedGlobalEnforcementOnly ? 0 : originalGateExitCode;
+  const effectiveSnapshotOutcome =
+    gateExitCode === 0 && snapshotOutcome === 'BLOCK' ? 'PASS' : snapshotOutcome;
 
   return {
     command: 'pumuki audit',
@@ -299,7 +320,7 @@ export const runLifecycleAudit = async (params: {
     gate_exit_code: gateExitCode,
     files_scanned: filesScanned,
     untracked_matching_extensions_count: untrackedMatchingExtensionsCount,
-    snapshot_outcome: snapshotOutcome,
+    snapshot_outcome: effectiveSnapshotOutcome,
     findings_count: effectiveFindings.length,
     blocking_findings_count: effectiveFindings.filter((finding) => finding.blocking).length,
     rules_coverage: evidence?.snapshot.rules_coverage ?? null,

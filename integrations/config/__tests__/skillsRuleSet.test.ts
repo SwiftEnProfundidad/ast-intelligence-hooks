@@ -526,7 +526,7 @@ test('enriquce mensaje de no-solid-violations con criterios accionables y métri
   );
 });
 
-test('promueve no-solid-violations a ERROR en PRE_PUSH aunque la skill fuente llegue como WARN', async () => {
+test('mantiene no-solid-violations como advisory en PRE_PUSH si no hay policy explicita de promocion', async () => {
   await withCoreSkillsDisabled(async () =>
     withTempDir('pumuki-skills-ruleset-solid-promotion-', async (tempRoot) => {
       mkdirSync(join(tempRoot, 'apps/backend/src/runtime'), { recursive: true });
@@ -545,7 +545,7 @@ test('promueve no-solid-violations a ERROR en PRE_PUSH aunque la skill fuente ll
               {
                 id: 'skills.backend.no-solid-violations',
                 description: 'Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)',
-                severity: 'WARN',
+                severity: 'ERROR',
                 platform: 'backend',
                 confidence: 'MEDIUM',
                 sourceSkill: 'backend-guidelines',
@@ -580,8 +580,8 @@ test('promueve no-solid-violations a ERROR en PRE_PUSH aunque la skill fuente ll
         (rule) => rule.id === 'skills.backend.no-solid-violations'
       );
 
-      assert.equal(preCommitRule?.severity, 'WARN');
-      assert.equal(prePushRule?.severity, 'ERROR');
+      assert.equal(preCommitRule?.severity, 'ERROR');
+      assert.equal(prePushRule?.severity, 'WARN');
     })
   );
 });
