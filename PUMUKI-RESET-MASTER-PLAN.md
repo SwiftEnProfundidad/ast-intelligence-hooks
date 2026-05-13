@@ -931,9 +931,9 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-138` / RuralGo: findings bloqueantes en scope staged deben incluir ubicación accionable o degradarse a advisory si solo pueden atribuirse al archivo completo. |
+| Este plan | `[🚧] - PARITY-IOS-001` / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS tras cerrar la incidencia externa activa. |
 
-- Estado: 🚧 PUMUKI-INC-138 / Bug externo crítico de RuralGo.
+- Estado: 🚧 PARITY-IOS-001 / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS.
 
 Snapshot PUMUKI-INC-136 (2026-05-13):
 - Origen externo: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` commit `4e12f0303 docs: report atomic split baseline blocker`.
@@ -969,8 +969,9 @@ Snapshot PUMUKI-INC-138 (2026-05-13):
 - Reporte consumer: `pumuki@6.3.234` ya acota `PRE_COMMIT` a `scope.kind=staged` y `files_scanned=1`, pero emite 10 blockers iOS solo con `file`, `ruleId`, `message` y `blocking=true`, sin línea, rango, símbolo, nodo, hunk ni snippet. Tras remediar patrones directos en RuralGo, el audit devuelve los mismos 10 blockers.
 - Objetivo: un finding bloqueante en scope acotado debe tener ubicación accionable; si el detector solo puede atribuir el problema al archivo completo, debe quedar visible como advisory y no bloquear el slice.
 - Implementación: `runPlatformGate` degrada a `blocking=false` los findings del motor de reglas en scope `staged` o `range` cuando tienen `filePath` pero no `lines`, `primary_node` ni `related_nodes`. Los bloqueos sintéticos de SDD, policy, cobertura, skills incompletas y degradación del repo no se degradan.
-- Evidencia Pumuki: `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> `44/44 pass`; `npm run -s typecheck` -> OK.
-- Estado: implementado y validado; pendiente de release y repin consumer.
+- Cierre: ✅ FIXED en `pumuki@6.3.235`.
+- Evidencia Pumuki: `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> `44/44 pass`; `npm run -s typecheck` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.235.tgz`; `npm view pumuki version` -> `6.3.235`; `git push origin HEAD:main` -> `97a6a39..eeaa6d6`.
+- Evidencia RuralGo tras repin: `node_modules/pumuki=6.3.235`; `PUMUKI_SYSTEM_NOTIFICATIONS=0 PUMUKI_NOTIFICATIONS=0 npx pumuki audit --stage=PRE_COMMIT --json` -> `gate_exit_code=0`, `snapshot_outcome=WARN`, `scope.kind=staged`, `files_scanned=1`, `findings_count=10`, `blocking_findings_count=0`.
 
 
 Snapshot PARITY-IOS-ATS-001 (2026-05-13):
