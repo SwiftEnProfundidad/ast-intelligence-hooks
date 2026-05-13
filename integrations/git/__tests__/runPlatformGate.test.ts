@@ -241,6 +241,100 @@ test('runPlatformGate silent evita salida humana en stdout para contratos JSON',
   }
 });
 
+test('runPlatformGate degrada findings scoped sin ubicacion accionable a advisory', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'WARN',
+    warnOnOrAbove: 'WARN',
+  };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope: { kind: 'staged' },
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [
+        {
+          source: 'test',
+          kind: 'FileContent' as const,
+          path: 'apps/ios/Presentation/CheckoutView.swift',
+          content: 'struct CheckoutView {}',
+        },
+      ],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: 1,
+          filesScanned: 1,
+          rulesTotal: 1,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 1,
+          projectRules: 0,
+          matchedRules: 1,
+          unmatchedRules: 0,
+          unevaluatedRules: 0,
+          activeRuleIds: ['skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres'],
+          evaluatedRuleIds: ['skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres'],
+          matchedRuleIds: ['skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres'],
+          unmatchedRuleIds: [],
+          unevaluatedRuleIds: [],
+        },
+        findings: [
+          {
+            ruleId: 'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres',
+            severity: 'WARN',
+            code: 'SKILLS_IOS_MAGIC_NUMBERS_USAR_CONSTANTES_CON_NOMBRES',
+            message: 'Magic numbers - Usar constantes con nombres',
+            filePath: 'apps/ios/Presentation/CheckoutView.swift',
+          },
+        ],
+      }),
+      evaluateGate: evaluateGateFromFindings,
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emittedArgs?.gateOutcome, 'WARN');
+  const finding = emittedArgs?.findings.find(
+    (entry) => entry.ruleId === 'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres'
+  );
+  assert.equal(finding?.blocking, false);
+  assert.match(finding?.message ?? '', /no pudo atribuir este hallazgo/);
+});
+
 test('runPlatformGate usa sddDecisionOverride y evita reevaluar SDD cuando llega una decisión ya resuelta', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_PUSH',

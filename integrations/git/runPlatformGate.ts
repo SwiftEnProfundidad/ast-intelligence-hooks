@@ -80,6 +80,61 @@ const defaultServices: GateServices = {
   evidence: new EvidenceService(),
 };
 
+const hasPositiveFindingLine = (lines: Finding['lines']): boolean => {
+  if (typeof lines === 'number') {
+    return Number.isFinite(lines) && lines > 0;
+  }
+  if (typeof lines === 'string') {
+    return lines.trim().length > 0;
+  }
+  if (Array.isArray(lines)) {
+    return lines.some((line) => Number.isFinite(line) && line > 0);
+  }
+  return false;
+};
+
+const hasActionableFindingLocation = (finding: Finding): boolean => {
+  return (
+    hasPositiveFindingLine(finding.lines) ||
+    finding.primary_node !== undefined ||
+    (finding.related_nodes?.length ?? 0) > 0
+  );
+};
+
+const toNonActionableScopedAdvisoryFinding = (finding: Finding): Finding => ({
+  ...finding,
+  blocking: false,
+  message:
+    `${finding.message} ` +
+    '(Advisory: Pumuki no pudo atribuir este hallazgo a una linea, rango o nodo accionable en el scope actual.)',
+  why:
+    finding.why ??
+    'El gate esta limitado a un scope acotado y este finding solo pudo atribuirse al archivo completo.',
+  expected_fix:
+    finding.expected_fix ??
+    'Reintentar cuando el detector aporte lineas, rango, simbolo o nodo; mientras tanto no bloquea el slice acotado.',
+});
+
+const normalizeScopedRuleEngineFindings = (params: {
+  findings: ReadonlyArray<Finding>;
+  scope: GateScope;
+}): ReadonlyArray<Finding> => {
+  if (params.scope.kind !== 'staged' && params.scope.kind !== 'range') {
+    return params.findings;
+  }
+
+  return params.findings.map((finding) => {
+    if (
+      !finding.filePath ||
+      hasActionableFindingLocation(finding) ||
+      (!finding.ruleId.startsWith('skills.') && !finding.ruleId.startsWith('heuristics.'))
+    ) {
+      return finding;
+    }
+    return toNonActionableScopedAdvisoryFinding(finding);
+  });
+};
+
 const buildDefaultMemoryShadowRecommendation = (params: {
   findings: ReadonlyArray<Finding>;
   tddBddSnapshot?: TddBddSnapshot;
@@ -960,7 +1015,11 @@ export async function runPlatformGate(params: {
     evaluationFacts = factsForPlatformEvaluation,
     findings: ruleEngineFindings,
   } = platformEvaluation;
-  const findings = [...aiGateRepoPolicyFindings, ...ruleEngineFindings];
+  const scopedRuleEngineFindings = normalizeScopedRuleEngineFindings({
+    findings: ruleEngineFindings,
+    scope: params.scope,
+  });
+  const findings = [...aiGateRepoPolicyFindings, ...scopedRuleEngineFindings];
   const evaluationMetrics: SnapshotEvaluationMetrics = coverage
     ? {
       facts_total: coverage.factsTotal,
@@ -1270,7 +1329,15 @@ export async function runPlatformGate(params: {
         ? [...brownfieldHotspotFindings, ...findings]
         : findings;
   const hasAstIntelligenceBlockingFinding = shouldBlockFromFinding(astIntelligenceDualFinding);
-  const decision = dependencies.evaluateGate([...effectiveFindings], params.policy);
+  const gateDecisionFindings = effectiveFindings.filter((finding) => finding.blocking !== false);
+  const decision = dependencies.evaluateGate([...gateDecisionFindings], params.policy);
+  const hasNonBlockingAdvisoryFinding = effectiveFindings.some(
+    (finding) =>
+      finding.blocking === false &&
+      (finding.severity === 'WARN' ||
+        finding.severity === 'ERROR' ||
+        finding.severity === 'CRITICAL')
+  );
   const baseGateOutcome =
     sddBlockingFinding ||
     degradedModeBlocks ||
@@ -1286,7 +1353,8 @@ export async function runPlatformGate(params: {
     brownfieldHotspotFindings.some((finding) => shouldBlockFromFinding(finding)) ||
     hasTddBddBlockingFinding
       ? 'BLOCK'
-      : (decision.outcome === 'PASS' && tddBddSnapshot?.status === 'advisory'
+      : (decision.outcome === 'PASS' &&
+          (tddBddSnapshot?.status === 'advisory' || hasNonBlockingAdvisoryFinding)
           ? 'WARN'
           : decision.outcome);
   const gateWaiverStage =

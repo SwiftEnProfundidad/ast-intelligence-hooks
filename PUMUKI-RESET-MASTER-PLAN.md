@@ -931,9 +931,9 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-001` / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS tras cerrar la incidencia externa activa. |
+| Este plan | `[🚧] - PUMUKI-INC-138` / RuralGo: findings bloqueantes en scope staged deben incluir ubicación accionable o degradarse a advisory si solo pueden atribuirse al archivo completo. |
 
-- Estado: 🚧 PARITY-IOS-001 / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS.
+- Estado: 🚧 PUMUKI-INC-138 / Bug externo crítico de RuralGo.
 
 Snapshot PUMUKI-INC-136 (2026-05-13):
 - Origen externo: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` commit `4e12f0303 docs: report atomic split baseline blocker`.
@@ -963,6 +963,14 @@ Snapshot PUMUKI-INC-137 (2026-05-13):
 - Implementación: hooks gestionados encadenan `pumuki-pre-write` antes de `pre-commit`/`pre-push`, el lifecycle evita duplicar `PRE_WRITE`, `audit PRE_COMMIT` usa scope staged cuando hay archivos soportados staged, y el resumen visible prioriza gaps críticos de skills antes que tracking enriquecido.
 - Evidencia Pumuki: suite dirigida `33/33 pass`; `npm run -s typecheck` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.234.tgz`; `npm view pumuki version` -> `6.3.234`; `git push origin HEAD:main` -> `19ab8ed..c60881d`.
 - Evidencia RuralGo tras repin: `node_modules/pumuki=6.3.234`, `npm view pumuki version=6.3.234`; `PUMUKI_SYSTEM_NOTIFICATIONS=0 PUMUKI_NOTIFICATIONS=0 npx pumuki audit --stage=PRE_COMMIT --json` conserva `scope.kind=staged`, `files_scanned=1` y bloquea solo 10 findings reales del archivo staged `apps/ios/Presentation/Features/BuyerCommerce/BuyerCommerceScreens.swift`, sin paths baseline ajenos.
+
+Snapshot PUMUKI-INC-138 (2026-05-13):
+- Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, tablero activo con `🚧=1`.
+- Reporte consumer: `pumuki@6.3.234` ya acota `PRE_COMMIT` a `scope.kind=staged` y `files_scanned=1`, pero emite 10 blockers iOS solo con `file`, `ruleId`, `message` y `blocking=true`, sin línea, rango, símbolo, nodo, hunk ni snippet. Tras remediar patrones directos en RuralGo, el audit devuelve los mismos 10 blockers.
+- Objetivo: un finding bloqueante en scope acotado debe tener ubicación accionable; si el detector solo puede atribuir el problema al archivo completo, debe quedar visible como advisory y no bloquear el slice.
+- Implementación: `runPlatformGate` degrada a `blocking=false` los findings del motor de reglas en scope `staged` o `range` cuando tienen `filePath` pero no `lines`, `primary_node` ni `related_nodes`. Los bloqueos sintéticos de SDD, policy, cobertura, skills incompletas y degradación del repo no se degradan.
+- Evidencia Pumuki: `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> `44/44 pass`; `npm run -s typecheck` -> OK.
+- Estado: implementado y validado; pendiente de release y repin consumer.
 
 
 Snapshot PARITY-IOS-ATS-001 (2026-05-13):
