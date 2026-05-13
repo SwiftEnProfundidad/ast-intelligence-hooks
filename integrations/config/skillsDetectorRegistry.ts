@@ -91,6 +91,18 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.security.insecure-transport',
     ['heuristics.ios.security.insecure-transport.ast']
   ),
+  'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs': heuristicDetector(
+    'ios.localization.localizable-strings',
+    ['heuristics.ios.localization.localizable-strings.ast']
+  ),
+  'skills.ios.guideline.ios.string-catalogs-xcstrings': heuristicDetector(
+    'ios.localization.localizable-strings',
+    ['heuristics.ios.localization.localizable-strings.ast']
+  ),
+  'skills.ios.guideline.ios.string-catalogs-xcstrings-sistema-moderno-de-localizacio-n-xcode-15': heuristicDetector(
+    'ios.localization.localizable-strings',
+    ['heuristics.ios.localization.localizable-strings.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),

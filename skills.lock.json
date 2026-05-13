@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T11:13:04.662Z",
+  "generatedAt": "2026-05-13T11:18:53.521Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5764,7 +5764,7 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "d4504cef8996fd4877a6c89183ee891e33be0164628ec64d0e1d564db60f9a7a",
+      "hash": "30c5afdca8ca553960a3063adf318d314f3d60489bf88465b670e82e6e157d51",
       "rules": [
         {
           "id": "skills.ios.guideline.ios.accessibility-identifiers-para-localizar-elementos",
@@ -5937,18 +5937,6 @@
         {
           "id": "skills.ios.guideline.ios.auto-layout-nslayoutconstraint",
           "description": "Auto Layout - NSLayoutConstraint",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.automatic-plural-handling-en-string-catalogs",
-          "description": "Automatic plural handling - En String Catalogs",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",
@@ -6933,14 +6921,14 @@
         },
         {
           "id": "skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs",
-          "description": "Localizable.strings - Deprecado, usar String Catalogs",
-          "severity": "ERROR",
+          "description": "String Catalogs (.xcstrings)",
+          "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",
           "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "HIGH",
+          "confidence": "MEDIUM",
           "locked": true,
-          "evaluationMode": "DECLARATIVE",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {
@@ -7882,30 +7870,6 @@
         {
           "id": "skills.ios.guideline.ios.strict-concurrency-checking-activar-en-complete",
           "description": "Strict Concurrency Checking - Activar en Complete",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.string-catalogs-xcstrings",
-          "description": "String Catalogs (.xcstrings)",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.string-catalogs-xcstrings-sistema-moderno-de-localizacio-n-xcode-15",
-          "description": "String Catalogs (.xcstrings) - Sistema moderno de localización (Xcode 15+)",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",

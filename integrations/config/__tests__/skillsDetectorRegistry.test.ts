@@ -126,6 +126,16 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ['heuristics.ios.security.insecure-transport.ast']
   );
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs'
+    ),
+    ['heuristics.ios.localization.localizable-strings.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.string-catalogs-xcstrings'),
+    ['heuristics.ios.localization.localizable-strings.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),
     ['heuristics.ios.testing.legacy-expectation-description.ast']
   );
