@@ -60,6 +60,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ),
     ['heuristics.ios.swiftui.closure-based-viewbuilder-content.ast']
   );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.avoid-redundant-state-updates-in-onreceive-onchange-scroll-handlers'
+    ),
+    ['heuristics.ios.swiftui.redundant-reactive-state-assignment.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-preconcurrency'), [
     'heuristics.ios.preconcurrency.ast',
   ]);

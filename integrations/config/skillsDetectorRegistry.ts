@@ -250,6 +250,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.swiftui.closure-based-viewbuilder-content', [
       'heuristics.ios.swiftui.closure-based-viewbuilder-content.ast',
     ]),
+  'skills.ios.guideline.ios-swiftui-expert.avoid-redundant-state-updates-in-onreceive-onchange-scroll-handlers':
+    heuristicDetector('ios.swiftui.redundant-reactive-state-assignment', [
+      'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
+    ]),
   'skills.ios.no-scrollview-shows-indicators': heuristicDetector(
     'ios.scrollview-shows-indicators',
     ['heuristics.ios.scrollview-shows-indicators.ast']

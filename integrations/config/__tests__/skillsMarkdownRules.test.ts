@@ -151,6 +151,18 @@ test('normaliza regla SwiftUI ViewBuilder content a detector canonico de composi
   ]);
 });
 
+test('normaliza regla SwiftUI redundant state updates a detector canonico de performance', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- Avoid redundant state updates in `onReceive`, `onChange`, scroll handlers',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios-swiftui-expert.avoid-redundant-state-updates-in-onreceive-onchange-scroll-handlers',
+  ]);
+});
+
 test('normaliza reglas Core Data a ids canonicos del slice phase8', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-core-data-guidelines',

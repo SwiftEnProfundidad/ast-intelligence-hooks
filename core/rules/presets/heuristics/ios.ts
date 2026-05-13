@@ -894,6 +894,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
+    description: 'Detects onChange/onReceive state assignments without a value-change guard.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected reactive state assignment without a value-change guard; check for value changes before assigning state in hot paths.',
+      code: 'HEURISTICS_IOS_SWIFTUI_REDUNDANT_REACTIVE_STATE_ASSIGNMENT_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.navigation-view.ast',
     description: 'Detects NavigationView usage in iOS production code.',
     severity: 'WARN',

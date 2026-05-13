@@ -877,6 +877,28 @@ export const hasSwiftClosureBasedViewBuilderContentUsage = (source: string): boo
   );
 };
 
+export const hasSwiftRedundantReactiveStateAssignmentUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const reactiveAssignmentPattern =
+    /\.(?:onChange|onReceive)\s*\([^)]*\)\s*\{[\s\S]{0,500}?\b(?:self\s*\.\s*)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?:newValue|value|output|receivedValue)\b/g;
+
+  for (const match of sanitized.matchAll(reactiveAssignmentPattern)) {
+    const target = match[1];
+    const segment = match[0] ?? '';
+    if (!target) {
+      continue;
+    }
+    const guardedAssignmentPattern = new RegExp(
+      `\\b(?:if|guard)\\s+(?:self\\s*\\.\\s*)?${target}\\s*!=\\s*(?:newValue|value|output|receivedValue)\\b`
+    );
+    if (!guardedAssignmentPattern.test(segment)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 export const hasSwiftLegacySwiftUiObservableWrapperUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(source, /@\s*(?:StateObject|ObservedObject)\b/);
 };

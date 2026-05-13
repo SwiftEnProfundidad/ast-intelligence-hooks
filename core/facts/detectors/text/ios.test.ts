@@ -63,6 +63,7 @@ import {
   hasSwiftJSONSerializationUsage,
   hasSwiftExplicitColorStaticMemberUsage,
   hasSwiftClosureBasedViewBuilderContentUsage,
+  hasSwiftRedundantReactiveStateAssignmentUsage,
   hasSwiftInlineForEachTransformUsage,
   hasSwiftStringFormatUsage,
   hasSwiftStrongDelegateReferenceUsage,
@@ -737,6 +738,9 @@ GeometryReader { proxy in
 Text("Headline").fontWeight(.bold)
 Text("State").foregroundStyle(Color.green)
 let content: () -> Content
+.onChange(of: query) { newValue in
+  query = newValue
+}
 let filtered = items.filter { $0.title.contains(searchText) }
 ForEach(items.indices, id: \\.self) { index in
   Text(items[index].title)
@@ -785,6 +789,7 @@ MainActor.assumeIsolated { reload() }
   assert.equal(hasSwiftFontWeightBoldUsage(source), true);
   assert.equal(hasSwiftExplicitColorStaticMemberUsage(source), true);
   assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), true);
+  assert.equal(hasSwiftRedundantReactiveStateAssignmentUsage(source), true);
   assert.equal(hasSwiftObservableObjectUsage(source), true);
   assert.equal(hasSwiftLegacySwiftUiObservableWrapperUsage(source), true);
   assert.equal(hasSwiftNavigationViewUsage(source), true);
@@ -826,6 +831,7 @@ let t = "MainActor.assumeIsolated { reload() }"
 let u = "ForEach(items.filter { $0.isVisible }) { item in }"
 let v = "Color.green"
 let w = "let content: () -> Content"
+let x = ".onChange(of: query) { newValue in query = newValue }"
 `;
   assert.equal(hasSwiftPreconcurrencyUsage(source), false);
   assert.equal(hasSwiftNonisolatedUnsafeUsage(source), false);
@@ -837,6 +843,7 @@ let w = "let content: () -> Content"
   assert.equal(hasSwiftFontWeightBoldUsage(source), false);
   assert.equal(hasSwiftExplicitColorStaticMemberUsage(source), false);
   assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), false);
+  assert.equal(hasSwiftRedundantReactiveStateAssignmentUsage(source), false);
   assert.equal(hasSwiftTaskDetachedUsage(source), false);
   assert.equal(hasSwiftNavigationViewUsage(source), false);
   assert.equal(hasSwiftForegroundColorUsage(source), false);
@@ -891,6 +898,7 @@ ScrollView {
   assert.equal(hasSwiftFontWeightBoldUsage(source), false);
   assert.equal(hasSwiftExplicitColorStaticMemberUsage(source), false);
   assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), false);
+  assert.equal(hasSwiftRedundantReactiveStateAssignmentUsage(source), false);
   assert.equal(hasSwiftForegroundColorUsage(source), false);
   assert.equal(hasSwiftCornerRadiusUsage(source), false);
   assert.equal(hasSwiftTabItemUsage(source), false);
@@ -944,6 +952,47 @@ let ignored = "let content: () -> Content"
 
   assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), true);
   assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(safe), false);
+});
+
+test('hasSwiftRedundantReactiveStateAssignmentUsage detecta asignaciones reactivas redundantes y preserva guard de cambio', () => {
+  const source = `
+struct SearchView: View {
+  @State private var query = ""
+
+  var body: some View {
+    TextField("Search", text: $query)
+      .onChange(of: query) { newValue in
+        query = newValue
+      }
+      .onReceive(model.$value) { value in
+        self.query = value
+      }
+  }
+}
+`;
+  const safe = `
+struct SearchView: View {
+  @State private var query = ""
+
+  var body: some View {
+    TextField("Search", text: $query)
+      .onChange(of: query) { newValue in
+        if query != newValue {
+          query = newValue
+        }
+      }
+      .onReceive(model.$value) { value in
+        guard self.query != value else { return }
+        self.query = value
+      }
+  }
+}
+let ignored = ".onChange(of: query) { newValue in query = newValue }"
+// .onReceive(model.$value) { value in query = value }
+`;
+
+  assert.equal(hasSwiftRedundantReactiveStateAssignmentUsage(source), true);
+  assert.equal(hasSwiftRedundantReactiveStateAssignmentUsage(safe), false);
 });
 
 test('hasSwiftLegacyXCTestImportUsage detecta XCTest unitario y excluye UI/performance', () => {

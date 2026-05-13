@@ -354,6 +354,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios-swiftui-expert.prefer-viewbuilder-let-content-content-over-closure-based-content-prop';
     }
     if (
+      includes('redundant state updates') ||
+      (includes('onreceive') && includes('onchange') && includes('state updates')) ||
+      (includes('check for value changes') && includes('assigning state'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.avoid-redundant-state-updates-in-onreceive-onchange-scroll-handlers';
+    }
+    if (
       includes('scrollindicators hidden') ||
       includes('scroll indicators hidden') ||
       includes('showsindicators false') ||
