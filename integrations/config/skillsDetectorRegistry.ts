@@ -254,6 +254,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.swiftui.redundant-reactive-state-assignment', [
       'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
     ]),
+  'skills.ios.guideline.ios-swiftui-expert.use-lazyvstack-lazyhstack-for-large-lists':
+    heuristicDetector('ios.swiftui.non-lazy-scroll-foreach', [
+      'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast',
+    ]),
   'skills.ios.no-scrollview-shows-indicators': heuristicDetector(
     'ios.scrollview-shows-indicators',
     ['heuristics.ios.scrollview-shows-indicators.ast']

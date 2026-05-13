@@ -35,6 +35,7 @@ import {
   hasSwiftMixedTestingFrameworksUsage,
   hasSwiftLegacyXCTestImportUsage,
   hasSwiftModernizableXCTestSuiteUsage,
+  hasSwiftNonLazyScrollForEachUsage,
   hasSwiftAssumeIsolatedUsage,
   hasSwiftCoreDataLayerLeakUsage,
   hasSwiftSwiftDataLayerLeakUsage,
@@ -121,6 +122,44 @@ func render() -> some View {
 test('hasSwiftAnyViewUsage ignora comentarios, strings y coincidencias parciales', () => {
   const source = `\n// AnyView(Text("debug"))\nlet value = "AnyView(Text(\\"debug\\"))"\nlet customAnyViewBuilder = true\n`;
   assert.equal(hasSwiftAnyViewUsage(source), false);
+});
+
+test('hasSwiftNonLazyScrollForEachUsage detecta ScrollView con stack no lazy y preserva LazyVStack', () => {
+  const source = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ScrollView {
+      VStack(spacing: 12) {
+        ForEach(items) { item in
+          FeedRow(item: item)
+        }
+      }
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ScrollView {
+      LazyVStack(spacing: 12) {
+        ForEach(items) { item in
+          FeedRow(item: item)
+        }
+      }
+    }
+    let sample = "ScrollView { VStack { ForEach(items) } }"
+    // ScrollView { VStack { ForEach(items) } }
+  }
+}
+`;
+
+  assert.equal(hasSwiftNonLazyScrollForEachUsage(source), true);
+  assert.equal(hasSwiftNonLazyScrollForEachUsage(safe), false);
 });
 
 test('hasSwiftForceTryUsage detecta try! y descarta try?', () => {

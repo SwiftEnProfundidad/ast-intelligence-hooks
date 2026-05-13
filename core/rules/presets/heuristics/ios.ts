@@ -912,6 +912,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast',
+    description: 'Detects ScrollView content backed by non-lazy stacks and ForEach.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected ScrollView with a non-lazy stack feeding ForEach; LazyVStack/LazyHStack remain the preferred baseline for large scrollable collections.',
+      code: 'HEURISTICS_IOS_SWIFTUI_NON_LAZY_SCROLL_FOREACH_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.navigation-view.ast',
     description: 'Detects NavigationView usage in iOS production code.',
     severity: 'WARN',

@@ -361,6 +361,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios-swiftui-expert.avoid-redundant-state-updates-in-onreceive-onchange-scroll-handlers';
     }
     if (
+      (includes('lazyvstack') && includes('lazyhstack') && includes('large lists')) ||
+      (includes('lazyvstack') && includes('foreach') && includes('scrollview')) ||
+      (includes('lazyhstack') && includes('foreach') && includes('scrollview'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-lazyvstack-lazyhstack-for-large-lists';
+    }
+    if (
       includes('scrollindicators hidden') ||
       includes('scroll indicators hidden') ||
       includes('showsindicators false') ||

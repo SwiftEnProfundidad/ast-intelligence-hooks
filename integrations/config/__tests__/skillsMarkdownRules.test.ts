@@ -163,6 +163,18 @@ test('normaliza regla SwiftUI redundant state updates a detector canonico de per
   ]);
 });
 
+test('normaliza regla SwiftUI LazyVStack/LazyHStack a detector canonico de listas grandes', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- Use `LazyVStack`/`LazyHStack` for large lists',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios-swiftui-expert.use-lazyvstack-lazyhstack-for-large-lists',
+  ]);
+});
+
 test('normaliza reglas Core Data a ids canonicos del slice phase8', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-core-data-guidelines',

@@ -66,6 +66,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ),
     ['heuristics.ios.swiftui.redundant-reactive-state-assignment.ast']
   );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.use-lazyvstack-lazyhstack-for-large-lists'
+    ),
+    ['heuristics.ios.swiftui.non-lazy-scroll-foreach.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-preconcurrency'), [
     'heuristics.ios.preconcurrency.ast',
   ]);

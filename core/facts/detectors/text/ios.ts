@@ -380,6 +380,14 @@ export const hasSwiftAnyViewUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftNonLazyScrollForEachUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const nonLazyScrollableCollectionPattern =
+    /\bScrollView\s*(?:\([^)]*\))?\s*\{[\s\S]{0,2000}\b(?:VStack|HStack)\s*(?:\([^)]*\))?\s*\{[\s\S]{0,1200}\bForEach\s*\(/;
+
+  return nonLazyScrollableCollectionPattern.test(swiftSource);
+};
+
 export const hasSwiftDispatchQueueUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'D' || !hasIdentifierAt(swiftSource, index, 'DispatchQueue')) {
