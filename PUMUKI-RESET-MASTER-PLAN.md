@@ -1010,6 +1010,11 @@ Snapshot PARITY-IOS-ARCHITECTURE-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.architecture.custom-singleton.ast` como WARN brownfield-aware para declaraciones `static let shared` / `static var shared` en Swift productivo, ignorando strings/comentarios y sin marcar usos como `URLSession.shared`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice detecta singletons propios; no declara todavía cobertura completa de DI, service locators, Environment/Object graphs o factories globales.
 
+Snapshot PARITY-IOS-ARCHITECTURE-002 (2026-05-13):
+- Diagnóstico: `Massive View Controllers` y `MVC (evitar)` seguían como baseline iOS declarativo aunque un caso seguro de detectar es `UIViewController` con acceso directo a datos o infraestructura.
+- Implementación: se añade `heuristics.ios.architecture.massive-view-controller.ast` como WARN brownfield-aware para clases `UIViewController` que contienen acceso directo a `URLSession.shared`, `JSONSerialization`, `UserDefaults.standard`, `NSManagedObjectContext`, `NSPersistentContainer`, `NSFetchRequest` o `FileManager.default`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no usa umbrales de líneas ni tamaño; detecta mezcla de presentación con infraestructura/data access, dejando navegación compleja, estado excesivo y coordinación para slices posteriores.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

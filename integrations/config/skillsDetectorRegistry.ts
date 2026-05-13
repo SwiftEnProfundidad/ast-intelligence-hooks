@@ -66,6 +66,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.architecture.custom-singleton',
     ['heuristics.ios.architecture.custom-singleton.ast']
   ),
+  'skills.ios.guideline.ios.massive-view-controllers-viewcontrollers-que-mezclan-presentacio-n-nav': heuristicDetector(
+    'ios.architecture.massive-view-controller',
+    ['heuristics.ios.architecture.massive-view-controller.ast']
+  ),
+  'skills.ios.guideline.ios.mvc-evitar-massive-view-controller-no-escalable': heuristicDetector(
+    'ios.architecture.massive-view-controller',
+    ['heuristics.ios.architecture.massive-view-controller.ast']
+  ),
   'skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc': heuristicDetector(
     'ios.logging.adhoc-print',
     ['heuristics.ios.logging.adhoc-print.ast']

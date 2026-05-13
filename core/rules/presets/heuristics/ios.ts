@@ -239,6 +239,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.architecture.massive-view-controller.ast',
+    description: 'Detects UIViewController classes with direct infrastructure/data access.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.architecture.massive-view-controller.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a UIViewController with direct infrastructure/data access; move data access behind application/domain boundaries.',
+      code: 'HEURISTICS_IOS_ARCHITECTURE_MASSIVE_VIEW_CONTROLLER_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.logging.adhoc-print.ast',
     description: 'Detects print/debugPrint/dump/NSLog/os_log usage in iOS production code.',
     severity: 'WARN',

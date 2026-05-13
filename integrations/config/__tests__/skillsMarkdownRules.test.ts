@@ -276,6 +276,19 @@ test('normaliza regla iOS no singletons a detector canonico de arquitectura', ()
   ]);
 });
 
+test('normaliza regla iOS massive view controller a detector canonico de arquitectura', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent:
+      '- ❌ Massive View Controllers - ViewControllers que mezclan presentación, navegación, estado, acceso a datos o coordinación de infraestructura',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.massive-view-controllers-viewcontrollers-que-mezclan-presentacio-n-nav',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

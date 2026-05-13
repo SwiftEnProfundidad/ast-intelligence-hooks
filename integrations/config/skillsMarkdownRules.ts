@@ -445,6 +445,15 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios.no-singleton-usar-inyeccio-n-de-dependencias-no-compartir-instancias-g';
     }
     if (
+      includes('massive view controller') ||
+      includes('massive view controllers') ||
+      includes('viewcontrollers que mezclan') ||
+      includes('viewcontroller que mezclan') ||
+      (includes('mvc') && includes('evitar'))
+    ) {
+      return 'skills.ios.guideline.ios.massive-view-controllers-viewcontrollers-que-mezclan-presentacio-n-nav';
+    }
+    if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
       includes('mixed testing frameworks')

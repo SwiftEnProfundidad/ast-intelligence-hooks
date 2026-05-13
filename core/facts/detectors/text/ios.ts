@@ -528,6 +528,22 @@ export const hasSwiftCustomSingletonUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftMassiveViewControllerResponsibilityUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const viewControllerPattern =
+    /\bclass\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*(?:[A-Za-z_][A-Za-z0-9_]*\s*,\s*)*UIViewController\b[\s\S]{0,8000}?\n\}/g;
+  const infrastructurePattern =
+    /\b(?:URLSession\s*\.\s*shared|JSONSerialization|UserDefaults\s*\.\s*standard|NSManagedObjectContext|NSPersistentContainer|NSFetchRequest|FileManager\s*\.\s*default)\b/;
+
+  for (const match of sanitized.matchAll(viewControllerPattern)) {
+    const body = match[0] ?? '';
+    if (infrastructurePattern.test(body)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const hasSwiftAdHocLoggingUsage = (source: string): boolean => {
   return collectSwiftRegexLines(
     source,

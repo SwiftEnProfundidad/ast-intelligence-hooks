@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T12:45:06.608Z",
+  "generatedAt": "2026-05-13T12:51:35.774Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5764,7 +5764,7 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "5c20c168bf6f54010cfac75cce1311a03ed2345ac20eef7b2a4458ad8efd3fc4",
+      "hash": "ad016db5ad38077a418d0bf7c3780b5ae8ff2bfc724691038a65292acc500787",
       "rules": [
         {
           "id": "skills.ios.guideline.ios.accessibility-identifiers-para-localizar-elementos",
@@ -6957,14 +6957,14 @@
         },
         {
           "id": "skills.ios.guideline.ios.massive-view-controllers-viewcontrollers-que-mezclan-presentacio-n-nav",
-          "description": "Massive View Controllers - ViewControllers que mezclan presentación, navegación, estado, acceso a datos o coordinación de infraestructura",
+          "description": "MVC (evitar) - Massive View Controller, no escalable",
           "severity": "ERROR",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",
           "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "HIGH",
+          "confidence": "MEDIUM",
           "locked": true,
-          "evaluationMode": "DECLARATIVE",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {
@@ -6983,18 +6983,6 @@
           "id": "skills.ios.guideline.ios.memoization-cachear-ca-lculos-costosos",
           "description": "Memoization - Cachear cálculos costosos",
           "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.mvc-evitar-massive-view-controller-no-escalable",
-          "description": "MVC (evitar) - Massive View Controller, no escalable",
-          "severity": "ERROR",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",
           "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",

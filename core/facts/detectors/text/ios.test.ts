@@ -29,6 +29,7 @@ import {
   hasSwiftLegacyExpectationDescriptionUsage,
   hasSwiftLegacySwiftUiObservableWrapperUsage,
   hasSwiftMainThreadBlockingSleepUsage,
+  hasSwiftMassiveViewControllerResponsibilityUsage,
   hasSwiftMixedTestingFrameworksUsage,
   hasSwiftLegacyXCTestImportUsage,
   hasSwiftModernizableXCTestSuiteUsage,
@@ -281,6 +282,39 @@ final class APIClient {
 
   assert.equal(hasSwiftCustomSingletonUsage(source), true);
   assert.equal(hasSwiftCustomSingletonUsage(ignored), false);
+});
+
+test('hasSwiftMassiveViewControllerResponsibilityUsage detecta ViewControllers con acceso directo a infraestructura', () => {
+  const source = `
+final class CheckoutViewController: UIViewController {
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    URLSession.shared.dataTask(with: URL(string: "https://example.com")!)
+    UserDefaults.standard.set(true, forKey: "seen")
+  }
+}
+`;
+  const ignored = `
+final class CheckoutViewController: UIViewController {
+  private let viewModel: CheckoutViewModel
+
+  init(viewModel: CheckoutViewModel) {
+    self.viewModel = viewModel
+    super.init(nibName: nil, bundle: nil)
+  }
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    viewModel.load()
+  }
+}
+
+let text = "URLSession.shared.dataTask"
+// UserDefaults.standard.set(true, forKey: "seen")
+`;
+
+  assert.equal(hasSwiftMassiveViewControllerResponsibilityUsage(source), true);
+  assert.equal(hasSwiftMassiveViewControllerResponsibilityUsage(ignored), false);
 });
 
 test('detectores de logging iOS detectan logs ad-hoc y PII en produccion', () => {
