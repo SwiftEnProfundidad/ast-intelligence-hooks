@@ -55,6 +55,18 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.logging.sensitive-data',
     ['heuristics.ios.logging.sensitive-data.ast']
   ),
+  'skills.ios.guideline.ios.alamofire-prohibido-usar-urlsession-nativo': heuristicDetector(
+    'ios.networking.alamofire',
+    ['heuristics.ios.networking.alamofire.ast']
+  ),
+  'skills.ios.guideline.ios.codable-decodificacio-n-automa-tica-de-json-nunca-jsonserialization': heuristicDetector(
+    'ios.json.jsonserialization',
+    ['heuristics.ios.json.jsonserialization.ast']
+  ),
+  'skills.ios.guideline.ios.codable-para-serializacio-n-json-nunca-jsonserialization': heuristicDetector(
+    'ios.json.jsonserialization',
+    ['heuristics.ios.json.jsonserialization.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),

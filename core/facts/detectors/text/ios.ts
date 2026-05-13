@@ -464,6 +464,17 @@ export const hasSwiftSensitiveLoggingUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftAlamofireUsage = (source: string): boolean => {
+  return (
+    collectSwiftRegexLines(source, /^\s*import\s+Alamofire\b/).length > 0 ||
+    collectSwiftRegexLines(source, /\b(?:AF|Alamofire)\s*\.\s*request\b/).length > 0
+  );
+};
+
+export const hasSwiftJSONSerializationUsage = (source: string): boolean => {
+  return collectSwiftRegexLines(source, /\bJSONSerialization\s*\./).length > 0;
+};
+
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@unchecked', index)) {

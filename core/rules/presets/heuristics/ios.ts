@@ -218,6 +218,42 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.networking.alamofire.ast',
+    description: 'Detects Alamofire usage in iOS production code; URLSession is the preferred baseline for new code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.networking.alamofire.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Alamofire usage in iOS production code; URLSession remains the preferred baseline for new code.',
+      code: 'HEURISTICS_IOS_NETWORKING_ALAMOFIRE_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.json.jsonserialization.ast',
+    description: 'Detects JSONSerialization usage in iOS production code; Codable is the preferred baseline for new code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.json.jsonserialization.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected JSONSerialization usage in iOS production code; Codable remains the preferred baseline for new code.',
+      code: 'HEURISTICS_IOS_JSON_JSONSERIALIZATION_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',

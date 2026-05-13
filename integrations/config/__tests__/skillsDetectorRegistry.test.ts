@@ -78,6 +78,24 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ['heuristics.ios.logging.sensitive-data.ast']
   );
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.alamofire-prohibido-usar-urlsession-nativo'
+    ),
+    ['heuristics.ios.networking.alamofire.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.codable-decodificacio-n-automa-tica-de-json-nunca-jsonserialization'
+    ),
+    ['heuristics.ios.json.jsonserialization.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.codable-para-serializacio-n-json-nunca-jsonserialization'
+    ),
+    ['heuristics.ios.json.jsonserialization.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),
     ['heuristics.ios.testing.legacy-expectation-description.ast']
   );

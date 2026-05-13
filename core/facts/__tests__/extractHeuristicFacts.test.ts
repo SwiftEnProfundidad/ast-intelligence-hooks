@@ -462,6 +462,17 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
         'apps/ios/Infrastructure/Bridge/SessionBridge.swift',
         'func fetch(completion: @escaping () -> Void) {}'
       ),
+      fileContentFact(
+        'apps/ios/Infrastructure/API/Client.swift',
+        [
+          'final class APIClient {',
+          '  func load() {',
+          '    AF.request("https://example.com")',
+          '    let object = try? JSONSerialization.jsonObject(with: Data())',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
     ],
     detectedPlatforms: {
       ios: { detected: true },
@@ -485,11 +496,13 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.foreach-indices.ast',
     'heuristics.ios.foreground-color.ast',
     'heuristics.ios.geometryreader.ast',
+    'heuristics.ios.json.jsonserialization.ast',
     'heuristics.ios.legacy-onchange.ast',
     'heuristics.ios.legacy-swiftui-observable-wrapper.ast',
     'heuristics.ios.logging.adhoc-print.ast',
     'heuristics.ios.logging.sensitive-data.ast',
     'heuristics.ios.navigation-view.ast',
+    'heuristics.ios.networking.alamofire.ast',
     'heuristics.ios.nonisolated-unsafe.ast',
     'heuristics.ios.observable-object.ast',
     'heuristics.ios.on-tap-gesture.ast',
