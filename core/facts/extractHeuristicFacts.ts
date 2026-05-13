@@ -97,6 +97,11 @@ const isIOSInfoPlistPath = (path: string): boolean => {
   return normalized.startsWith('apps/ios/') && normalized.endsWith('/Info.plist');
 };
 
+const isIOSLocalizableStringsPath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/');
+  return normalized.startsWith('apps/ios/') && normalized.endsWith('/Localizable.strings');
+};
+
 const isIOSApplicationOrPresentationPath = (path: string): boolean => {
   return (
     isIOSSwiftPath(path) &&
@@ -648,6 +653,7 @@ const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftSensitiveUserDefaultsStorageUsage, ruleId: 'heuristics.ios.security.userdefaults-sensitive-data.ast', code: 'HEURISTICS_IOS_SECURITY_USERDEFAULTS_SENSITIVE_DATA_AST', message: 'AST heuristic detected sensitive data stored in UserDefaults/AppStorage; native Keychain remains the preferred baseline for secrets.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftInsecureTransportUsage, ruleId: 'heuristics.ios.security.insecure-transport.ast', code: 'HEURISTICS_IOS_SECURITY_INSECURE_TRANSPORT_AST', message: 'AST heuristic detected insecure HTTP transport in iOS production code; HTTPS and ATS remain the preferred baseline.' },
   { platform: 'ios', pathCheck: isIOSInfoPlistPath, excludePaths: [], detect: TextIOS.hasSwiftInsecureTransportUsage, ruleId: 'heuristics.ios.security.insecure-transport.ast', code: 'HEURISTICS_IOS_SECURITY_INSECURE_TRANSPORT_AST', message: 'AST heuristic detected permissive App Transport Security configuration; HTTPS and ATS remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSLocalizableStringsPath, excludePaths: [], detect: detectsTrackedFilePresence, ruleId: 'heuristics.ios.localization.localizable-strings.ast', code: 'HEURISTICS_IOS_LOCALIZATION_LOCALIZABLE_STRINGS_AST', message: 'AST heuristic detected Localizable.strings usage; String Catalogs (.xcstrings) remain the preferred baseline for new localization work.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftUncheckedSendableUsage, ruleId: 'heuristics.ios.unchecked-sendable.ast', code: 'HEURISTICS_IOS_UNCHECKED_SENDABLE_AST', message: 'AST heuristic detected @unchecked Sendable usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftPreconcurrencyUsage, ruleId: 'heuristics.ios.preconcurrency.ast', code: 'HEURISTICS_IOS_PRECONCURRENCY_AST', message: 'AST heuristic detected @preconcurrency usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNonisolatedUnsafeUsage, ruleId: 'heuristics.ios.nonisolated-unsafe.ast', code: 'HEURISTICS_IOS_NONISOLATED_UNSAFE_AST', message: 'AST heuristic detected nonisolated(unsafe) usage.' },
