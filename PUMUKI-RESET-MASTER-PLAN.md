@@ -1139,7 +1139,8 @@ Snapshot PUMUKI-GATE-ZERO-VIOLATIONS-001 (2026-05-13):
 - Diagnóstico: un audit consumer podía mostrar `violations (no blockers)` y permitir que RuralGo no quedara bloqueado cuando solo había violaciones no HIGH/CRITICAL, contradiciendo el contrato enterprise de bloquear por cualquier severidad.
 - Implementación: la política efectiva del gate pasa a `blockOnOrAbove=INFO` / `warnOnOrAbove=INFO` tanto en `integrations/policy/policyProfiles.ts` como en `integrations/gate/stagePolicies.ts` para default, hard-mode y `skills.policy.json` explícito, de forma que ningún consumer pueda relajar el contrato zero-violations por configuración accidental; `evaluateRules` y `audit` marcan cualquier finding como `blocking=true`.
 - Notificaciones: `audit.summary` con cualquier `totalViolations > 0` pasa a `AST Audit Blocked` y deja de emitir `violations (no blockers)`.
-- Evidencia local: suite dirigida `151/151 pass`; `npm run -s skills:lock:check` -> `FRESH`; `npm run -s typecheck` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.236.tgz`.
+- Evidencia local: suite dirigida `151/151 pass`; `npm run -s skills:lock:check` -> `FRESH`; `npm run -s typecheck` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.236.tgz`; `npm publish --access public` -> `+ pumuki@6.3.236`; `npm dist-tag ls pumuki` -> `latest: 6.3.236`.
+- Evidencia RuralGo: repin local a `pumuki@6.3.236` en `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO` con Node `20.20.0`; `node -p "require('./node_modules/pumuki/package.json').version"` -> `6.3.236`; `npm view pumuki version` -> `6.3.236`.
 
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
