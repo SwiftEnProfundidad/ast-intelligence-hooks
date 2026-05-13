@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-001` / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS. |
+| Este plan | `[🚧] - PUMUKI-INC-137` / RuralGo: corregir PRE_COMMIT/PRE_WRITE para que un slice staged acotado no quede bloqueado por deuda baseline ajena ni por tracking activo válido; la causa visible debe priorizar el gap real de enforcement `skills.ios.critical-test-quality`. |
 
 - Estado: 🚧 PARITY-IOS-001 / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS.
 
@@ -954,6 +954,13 @@ Snapshot PARITY-IOS-SWIFTDATA-002 (2026-05-13):
 - Diagnóstico: `skills.ios.no-swiftdata-layer-leak` ya tenía detector, extractor, preset y registry, pero las frases reales de `core-data-expert` sobre `ModelContext`, `ModelContainer`, `@Query`, `@Model` y modelos SwiftData seguían compilando como `DECLARATIVE`.
 - Implementación: el normalizador de markdown de skills convierte esas frases a `skills.ios.no-swiftdata-layer-leak`, conservando severidad `WARN`, alcance brownfield y binding `heuristics.ios.swiftdata.layer-leak.ast`.
 - Cierre: PR #951 mergeado en `main`, release PR #952 mergeado, `pumuki@6.3.196` publicada y verificada como `latest`; RuralGo repineado a `6.3.196` en `bugfix/ruralgo-tracking-build-stability` con commit `5130b0bd7`, `runtime=consumerInstalled=lifecycleInstalled=6.3.196` y PRE_PUSH `gate_exit_code=0`, `blocking_findings_count=0`, `outcome=PASS`. Evidencia local: `node --import tsx scripts/compile-skills-lock.ts`; `npm run -s skills:lock:check` -> `FRESH`; `npm run -s typecheck` -> OK; suite dirigida `91/91 pass`; `npm pack --dry-run --silent` -> OK; `git diff --check` limpio.
+
+Snapshot PUMUKI-INC-137 (2026-05-13):
+- Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, tablero activo con `🚧=1`.
+- Reporte consumer: `pumuki@6.3.233` bloquea un slice iOS staged acotado mezclando deuda baseline ajena y tracking activo válido; además el mensaje visible acusa tracking bloqueado aunque `RGO-1900-02` es la tarea activa válida.
+- Objetivo: PRE_COMMIT/PRE_WRITE deben limitar blockers al staged/range accionable o degradar baseline ajena a advisory; el mensaje visible debe priorizar `skills.ios.critical-test-quality` / drift de enforcement antes que tracking válido.
+- Estado: portando fix sobre `origin/main`/`6.3.233` para release consumer útil.
+
 
 Snapshot PARITY-IOS-ATS-001 (2026-05-13):
 - Diagnóstico: `skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto` seguía como regla `DECLARATIVE` aunque ATS/HTTPS es baseline iOS enterprise verificable.
