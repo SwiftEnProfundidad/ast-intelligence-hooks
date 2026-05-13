@@ -82,6 +82,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.architecture.custom-singleton',
     ['heuristics.ios.architecture.custom-singleton.ast']
   ),
+  'skills.ios.guideline.ios.swinject-prohibido-di-manual-o-environment': heuristicDetector(
+    'ios.architecture.swinject',
+    ['heuristics.ios.architecture.swinject.ast']
+  ),
   'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres': heuristicDetector(
     'ios.maintainability.magic-number-layout',
     ['heuristics.ios.maintainability.magic-number-layout.ast']

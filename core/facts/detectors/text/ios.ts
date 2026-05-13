@@ -528,6 +528,13 @@ export const hasSwiftCustomSingletonUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftSwinjectUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bimport\s+Swinject\b|\b(?:Container|Assembler)\s*\(/
+  );
+};
+
 export const hasSwiftMassiveViewControllerResponsibilityUsage = (source: string): boolean => {
   const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
   const viewControllerPattern =

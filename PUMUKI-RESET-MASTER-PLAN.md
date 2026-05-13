@@ -1031,6 +1031,11 @@ Snapshot PARITY-IOS-TESTING-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.testing.quick-nimble.ast` como WARN brownfield-aware para `import Quick`, `import Nimble` o suites `QuickSpec` en rutas de test iOS; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no bloquea XCTest legacy ni convierte la migración completa a Swift Testing en hard gate; solo señala Quick/Nimble como dependencia de testing no nativa.
 
+Snapshot PARITY-IOS-ARCHITECTURE-003 (2026-05-13):
+- Diagnóstico: `Swinject - Prohibido, DI manual o Environment` seguía como baseline iOS declarativo aunque el uso de DI container de terceros es detectable sin bloquear la inyección manual ni `EnvironmentKey`.
+- Implementación: se añade `heuristics.ios.architecture.swinject.ast` como WARN brownfield-aware para `import Swinject`, `Container()` o `Assembler(...)` en Swift productivo; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no prohíbe dependencias ya existentes por política hard; señala uso de Swinject como deuda/remediación hacia DI nativa manual o SwiftUI Environment.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

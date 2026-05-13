@@ -61,6 +61,7 @@ import {
   hasSwiftStringFormatUsage,
   hasSwiftStrongDelegateReferenceUsage,
   hasSwiftStrongSelfEscapingClosureUsage,
+  hasSwiftSwinjectUsage,
   hasSwiftTabItemUsage,
   hasSwiftTaskDetachedUsage,
   hasSwiftWaitForExpectationsUsage,
@@ -285,6 +286,34 @@ final class APIClient {
 
   assert.equal(hasSwiftCustomSingletonUsage(source), true);
   assert.equal(hasSwiftCustomSingletonUsage(ignored), false);
+});
+
+test('hasSwiftSwinjectUsage detecta DI de terceros y preserva DI nativa', () => {
+  const source = `
+import Swinject
+
+final class AppAssembly {
+  private let container = Container()
+  private let assembler = Assembler([])
+}
+`;
+  const native = `
+struct AppDependencies {
+  let apiClient: APIClient
+}
+
+private struct DependenciesKey: EnvironmentKey {
+  static let defaultValue = AppDependencies(apiClient: URLSessionAPIClient())
+}
+`;
+  const ignored = `
+let text = "import Swinject"
+// let container = Container()
+`;
+
+  assert.equal(hasSwiftSwinjectUsage(source), true);
+  assert.equal(hasSwiftSwinjectUsage(native), false);
+  assert.equal(hasSwiftSwinjectUsage(ignored), false);
 });
 
 test('hasSwiftMassiveViewControllerResponsibilityUsage detecta ViewControllers con acceso directo a infraestructura', () => {

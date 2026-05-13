@@ -480,6 +480,9 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres';
     }
+    if (includes('swinject')) {
+      return 'skills.ios.guideline.ios.swinject-prohibido-di-manual-o-environment';
+    }
     if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||

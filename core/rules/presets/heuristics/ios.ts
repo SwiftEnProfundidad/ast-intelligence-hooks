@@ -239,6 +239,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.architecture.swinject.ast',
+    description: 'Detects Swinject usage in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.architecture.swinject.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Swinject usage; manual dependency injection or SwiftUI Environment remain the preferred native baseline.',
+      code: 'HEURISTICS_IOS_ARCHITECTURE_SWINJECT_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.architecture.massive-view-controller.ast',
     description: 'Detects UIViewController classes with direct infrastructure/data access.',
     severity: 'WARN',

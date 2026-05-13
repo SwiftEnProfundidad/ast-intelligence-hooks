@@ -212,6 +212,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.swinject-prohibido-di-manual-o-environment'
+    ),
+    ['heuristics.ios.architecture.swinject.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres'
     ),
     ['heuristics.ios.maintainability.magic-number-layout.ast']

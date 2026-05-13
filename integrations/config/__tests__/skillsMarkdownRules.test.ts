@@ -327,6 +327,18 @@ test('normaliza regla iOS Quick Nimble a detector canonico de testing', () => {
   ]);
 });
 
+test('normaliza regla iOS Swinject a detector canonico de arquitectura', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ Swinject - Prohibido, DI manual o Environment',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.swinject-prohibido-di-manual-o-environment',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',
