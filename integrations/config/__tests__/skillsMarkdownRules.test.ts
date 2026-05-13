@@ -165,6 +165,18 @@ test('normaliza regla iOS Localizable.strings a detector canonico de String Cata
   ]);
 });
 
+test('normaliza regla iOS de strings UI hardcodeadas a detector canonico de localización', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ **Cero strings hardcodeadas en UI**',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

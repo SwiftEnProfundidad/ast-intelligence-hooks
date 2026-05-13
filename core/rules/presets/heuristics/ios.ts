@@ -344,6 +344,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.localization.hardcoded-ui-string.ast',
+    description: 'Detects hardcoded user-facing SwiftUI text where String(localized:) and String Catalogs are preferred.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.localization.hardcoded-ui-string.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected hardcoded user-facing SwiftUI text; String(localized:) and String Catalogs remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_LOCALIZATION_HARDCODED_UI_STRING_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',

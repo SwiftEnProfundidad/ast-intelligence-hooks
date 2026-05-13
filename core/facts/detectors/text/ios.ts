@@ -511,6 +511,38 @@ export const hasSwiftInsecureTransportUsage = (source: string): boolean => {
   );
 };
 
+const swiftUiLiteralTextPatterns = [
+  /\b(?:Text|Button|Label|TextField|SecureField)\s*\(\s*"((?:\\.|[^"\\])*)"/,
+  /\.navigationTitle\s*\(\s*"((?:\\.|[^"\\])*)"/,
+  /\.navigationSubtitle\s*\(\s*"((?:\\.|[^"\\])*)"/,
+  /\.accessibilityLabel\s*\(\s*"((?:\\.|[^"\\])*)"/,
+];
+
+const looksLikeLocalizationKey = (value: string): boolean => {
+  return /^[A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)+$/.test(value);
+};
+
+export const hasSwiftHardcodedUiStringUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  return withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    const withoutInlineComment = line.replace(/\/\/.*$/, '');
+    return swiftUiLiteralTextPatterns.some((pattern) => {
+      const match = withoutInlineComment.match(pattern);
+      if (!match) {
+        return false;
+      }
+      const literal = match[1]?.trim() ?? '';
+      if (literal.length === 0) {
+        return false;
+      }
+      return !looksLikeLocalizationKey(literal);
+    });
+  });
+};
+
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@unchecked', index)) {

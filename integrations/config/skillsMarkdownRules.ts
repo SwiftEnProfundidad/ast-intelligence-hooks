@@ -395,6 +395,9 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs';
     }
+    if (includes('strings hardcodeadas') || includes('string localized')) {
+      return 'skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui';
+    }
     if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||

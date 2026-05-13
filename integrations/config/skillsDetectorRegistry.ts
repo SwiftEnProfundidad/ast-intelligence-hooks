@@ -103,6 +103,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.localization.localizable-strings',
     ['heuristics.ios.localization.localizable-strings.ast']
   ),
+  'skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui': heuristicDetector(
+    'ios.localization.hardcoded-ui-string',
+    ['heuristics.ios.localization.hardcoded-ui-string.ast']
+  ),
+  'skills.ios.guideline.ios.string-localized-api-moderna-para-strings-traducibles': heuristicDetector(
+    'ios.localization.hardcoded-ui-string',
+    ['heuristics.ios.localization.hardcoded-ui-string.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),

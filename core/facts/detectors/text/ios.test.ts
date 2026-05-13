@@ -21,6 +21,7 @@ import {
   hasSwiftForceTryUsage,
   hasSwiftForceUnwrap,
   hasSwiftGeometryReaderUsage,
+  hasSwiftHardcodedUiStringUsage,
   hasSwiftLegacyOnChangeUsage,
   hasSwiftLegacyExpectationDescriptionUsage,
   hasSwiftLegacySwiftUiObservableWrapperUsage,
@@ -266,6 +267,36 @@ let text = "https://example.com/catalog.json"
   assert.equal(hasSwiftInsecureTransportUsage(source), true);
   assert.equal(hasSwiftInsecureTransportUsage(plist), true);
   assert.equal(hasSwiftInsecureTransportUsage(ignored), false);
+});
+
+test('detector iOS de localización detecta strings UI hardcodeadas sin confundir keys ni comentarios', () => {
+  const source = `
+struct PaywallView: View {
+  var body: some View {
+    VStack {
+      Text("Start premium trial")
+      Button("Continue") {}
+      Label("Your orders", systemImage: "cart")
+      TextField("Search products", text: $query)
+      EmptyView().navigationTitle("Account details")
+    }
+  }
+}
+`;
+  const ignored = `
+struct OrdersView: View {
+  var body: some View {
+    Text(String(localized: "orders.title"))
+    Text("orders.title")
+    Button(String(localized: "orders.checkout")) {}
+    let sample = "Text(\\"Start premium trial\\")"
+    // Text("Debug")
+  }
+}
+`;
+
+  assert.equal(hasSwiftHardcodedUiStringUsage(source), true);
+  assert.equal(hasSwiftHardcodedUiStringUsage(ignored), false);
 });
 
 test('hasSwiftUncheckedSendableUsage detecta @unchecked Sendable', () => {
