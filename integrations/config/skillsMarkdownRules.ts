@@ -404,6 +404,15 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-nsmanagedobject-async-boundary';
     }
     if (
+      includes('keep swiftdata orchestration') ||
+      includes('swiftdata contexts containers queries or persistence models') ||
+      includes('modelcontext') ||
+      includes('modelcontainer') ||
+      includes('query model')
+    ) {
+      return 'skills.ios.no-swiftdata-layer-leak';
+    }
+    if (
       includes('core data orchestration inside infrastructure') ||
       includes('instead of presentation code') ||
       includes('core data apis in application or presentation code') ||

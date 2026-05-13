@@ -933,13 +933,18 @@ git checkout -b refactor/s1-governance-console
 |-----------|-----------------|
 | Este plan | `[🚧] - PARITY-IOS-001` / Continuación iOS - reglas pendientes de baseline Swift/iOS. |
 
-- Estado: 🚧 PARITY-IOS-001 / Continuación iOS - reglas pendientes de baseline Swift/iOS.
+- Estado: 🚧 PARITY-IOS-001 / SwiftData layer-leak AUTO mapping desde `core-data-expert`.
 
 Snapshot PARITY-IOS-SWIFTDATA-001 (2026-05-12):
 - Reapertura limpia: PR #890 queda descartado como ruta de merge directa porque estaba basado en `bugfix/pumuki-inc130-ios-helper-critical-quality-final2` y no en `main`, arrastrando historia antigua.
 - Implementación objetivo: rehacer la slice en `feature/parity-ios-swiftdata-clean` desde `origin/main`, aplicando solo el patch SwiftData/Core Data.
 - Alcance explícito: no se declara cobertura total de SwiftData; esta slice cierra la frontera de capas enterprise para APIs de persistencia SwiftData y mantiene intactas las reglas brownfield Core Data existentes.
 - Cierre: PR #899 mergeado en `main`, release `pumuki@6.3.176` publicada y RuralGo repineado a `6.3.176` con `status` sin drift y policy válida en `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` y `CI`.
+
+Snapshot PARITY-IOS-SWIFTDATA-002 (2026-05-13):
+- Diagnóstico: `skills.ios.no-swiftdata-layer-leak` ya tenía detector, extractor, preset y registry, pero las frases reales de `core-data-expert` sobre `ModelContext`, `ModelContainer`, `@Query`, `@Model` y modelos SwiftData seguían compilando como `DECLARATIVE`.
+- Implementación: el normalizador de markdown de skills convierte esas frases a `skills.ios.no-swiftdata-layer-leak`, conservando severidad `WARN`, alcance brownfield y binding `heuristics.ios.swiftdata.layer-leak.ast`.
+- Evidencia local: `node --import tsx scripts/compile-skills-lock.ts`; `npm run -s skills:lock:check` -> `FRESH`; `npm run -s typecheck` -> OK; suite dirigida `91/91 pass`; `git diff --check` limpio.
 
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
