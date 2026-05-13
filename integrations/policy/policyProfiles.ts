@@ -85,26 +85,37 @@ const toGatePolicyRecordFromEnterpriseThresholds = (
   };
 };
 
+const ZERO_VIOLATION_BLOCK_ON_OR_ABOVE: GatePolicy['blockOnOrAbove'] = 'INFO';
+const ZERO_VIOLATION_WARN_ON_OR_ABOVE: GatePolicy['warnOnOrAbove'] = 'INFO';
+
+const enforceZeroViolationPolicy = (policy: GatePolicy): GatePolicy => {
+  return {
+    ...policy,
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
+  };
+};
+
 const defaultPolicyByStage: Record<SkillsStage, GatePolicy> = {
   PRE_WRITE: {
     stage: 'PRE_WRITE',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
   PRE_COMMIT: {
     stage: 'PRE_COMMIT',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
   PRE_PUSH: {
     stage: 'PRE_PUSH',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
   CI: {
     stage: 'CI',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
 };
 
@@ -374,7 +385,7 @@ export const resolveExplicitPolicyProfileForStage = (
     const profilePolicy = profileName
       ? hardModePolicyProfileByStage[profileName][stage]
       : null;
-    const hardModePolicy = profilePolicy ?? hardModePolicyByStage[stage];
+    const hardModePolicy = enforceZeroViolationPolicy(profilePolicy ?? hardModePolicyByStage[stage]);
     return {
       policy: hardModePolicy,
       source: 'hard-mode',
@@ -394,8 +405,8 @@ export const resolveExplicitPolicyProfileForStage = (
   return {
     policy: {
       stage: defaults.stage,
-      blockOnOrAbove: stageOverride.blockOnOrAbove,
-      warnOnOrAbove: stageOverride.warnOnOrAbove,
+      blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+      warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
     },
     source: 'skills.policy',
     layer: 'policy-pack',

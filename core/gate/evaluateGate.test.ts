@@ -75,3 +75,33 @@ test('evaluateGate devuelve BLOCK cuando existe al menos un finding bloqueante',
   assert.equal(result.warnings.length, 1);
   assert.equal(result.warnings[0]?.ruleId, 'rule.warn');
 });
+
+test('evaluateGate bloquea cualquier severidad cuando la policy zero-violations usa INFO', () => {
+  const findings: Finding[] = [
+    {
+      ruleId: 'rule.info',
+      severity: 'INFO',
+      code: 'RULE_INFO',
+      message: 'Info finding',
+    },
+    {
+      ruleId: 'rule.warn',
+      severity: 'WARN',
+      code: 'RULE_WARN',
+      message: 'Warn finding',
+    },
+  ];
+
+  const result = evaluateGate(findings, {
+    stage: 'PRE_PUSH',
+    blockOnOrAbove: 'INFO',
+    warnOnOrAbove: 'INFO',
+  });
+
+  assert.equal(result.outcome, 'BLOCK');
+  assert.deepEqual(
+    result.blocking.map((finding) => finding.ruleId),
+    ['rule.info', 'rule.warn']
+  );
+  assert.deepEqual(result.warnings, []);
+});

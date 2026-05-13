@@ -8,20 +8,20 @@ export const buildAuditSummaryPayload = (
 ): SystemNotificationPayload => {
   if (event.criticalViolations > 0) {
     return {
-      title: 'AST Audit Complete',
+      title: 'AST Audit Blocked',
       message: `🔴 ${event.criticalViolations} CRITICAL, ${event.highViolations} HIGH violations`,
     };
   }
   if (event.highViolations > 0) {
     return {
-      title: 'AST Audit Complete',
+      title: 'AST Audit Blocked',
       message: `🟡 ${event.highViolations} HIGH violations found`,
     };
   }
   if (event.totalViolations > 0) {
     return {
-      title: 'AST Audit Complete',
-      message: `🔵 ${event.totalViolations} violations (no blockers)`,
+      title: 'AST Audit Blocked',
+      message: `🔴 ${event.totalViolations} violations block the gate`,
     };
   }
   return {

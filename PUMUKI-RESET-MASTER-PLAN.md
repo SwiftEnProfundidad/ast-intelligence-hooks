@@ -1111,6 +1111,12 @@ Snapshot PARITY-IOS-SWIFTUI-DEBUG-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.swiftui.self-print-changes.ast` como WARN brownfield-aware para `Self._printChanges()` en `apps/ios/**/Presentation/**`, ignorando tests, strings y comentarios; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no prohíbe diagnóstico local durante desarrollo ni cambia política de logging; solo evita dejar instrumentación de render debug en vistas productivas.
 
+Snapshot PUMUKI-GATE-ZERO-VIOLATIONS-001 (2026-05-13):
+- Diagnóstico: un audit consumer podía mostrar `violations (no blockers)` y permitir que RuralGo no quedara bloqueado cuando solo había violaciones no HIGH/CRITICAL, contradiciendo el contrato enterprise de bloquear por cualquier severidad.
+- Implementación: la política efectiva del gate pasa a `blockOnOrAbove=INFO` / `warnOnOrAbove=INFO` para default, hard-mode y `skills.policy.json` explícito, de forma que ningún consumer pueda relajar el contrato zero-violations por configuración accidental; `evaluateRules` marca cualquier finding como `blocking=true`.
+- Notificaciones: `audit.summary` con cualquier `totalViolations > 0` pasa a `AST Audit Blocked` y deja de emitir `violations (no blockers)`.
+- Evidencia local: tests enfocados `27/27 pass`, `npm run -s typecheck` OK y `git diff --check` limpio.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

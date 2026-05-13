@@ -32,15 +32,46 @@ test('evaluateRules genera finding cuando la condicion coincide y usa code expli
   const findings = evaluateRules(rules, facts);
 
   assert.equal(findings.length, 1);
-  assert.deepEqual(findings[0], {
-    ruleId: 'rule.explicit.code',
-    severity: 'WARN',
-    code: 'BACKEND_FILE_MODIFIED',
-    message: 'Backend file modified.',
-    filePath: 'apps/backend/src/main.ts',
-    matchedBy: 'FileChange',
-    source: 'git',
-  });
+  assert.equal(findings[0]?.ruleId, 'rule.explicit.code');
+  assert.equal(findings[0]?.severity, 'WARN');
+  assert.equal(findings[0]?.code, 'BACKEND_FILE_MODIFIED');
+  assert.equal(findings[0]?.message, 'Backend file modified.');
+  assert.equal(findings[0]?.filePath, 'apps/backend/src/main.ts');
+  assert.equal(findings[0]?.matchedBy, 'FileChange');
+  assert.equal(findings[0]?.source, 'git');
+  assert.equal(findings[0]?.blocking, true);
+});
+
+test('evaluateRules marca cualquier severity como bloqueante bajo contrato zero-violations', () => {
+  const rules: RuleSet = [
+    {
+      id: 'rule.info.blocking',
+      description: 'Info still blocks in enterprise zero-violations mode.',
+      severity: 'INFO',
+      when: {
+        kind: 'FileChange',
+        where: { pathPrefix: 'apps/frontend/', changeType: 'modified' },
+      },
+      then: {
+        kind: 'Finding',
+        message: 'Any finding blocks.',
+      },
+    },
+  ];
+  const facts = [
+    {
+      kind: 'FileChange',
+      path: 'apps/frontend/src/App.tsx',
+      changeType: 'modified',
+      source: 'git',
+    },
+  ] as const;
+
+  const findings = evaluateRules(rules, facts);
+
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0]?.severity, 'INFO');
+  assert.equal(findings[0]?.blocking, true);
 });
 
 test('evaluateRules usa id de la regla como code cuando no se define en consecuencia', () => {
