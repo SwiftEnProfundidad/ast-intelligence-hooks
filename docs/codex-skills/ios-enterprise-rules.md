@@ -607,6 +607,13 @@ struct APIEndpoint: Sendable {
 - `skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto` se mapea a `heuristics.ios.security.insecure-transport.ast`.
 - En `PROJECT MODE: brownfield`, este hallazgo detecta `http://` en Swift production y `NSAllowsArbitraryLoads=true` en `Info.plist` como señal de baseline/adopción sin bloquear deuda histórica salvo promoción explícita de policy. HTTPS y ATS permanecen como baseline preferente.
 
+### Enforcement AST inicial de localización iOS
+
+- `skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs` se mapea a `heuristics.ios.localization.localizable-strings.ast`.
+- `skills.ios.guideline.ios.string-catalogs-xcstrings` se mapea a `heuristics.ios.localization.localizable-strings.ast`.
+- `skills.ios.guideline.ios.string-catalogs-xcstrings-sistema-moderno-de-localizacio-n-xcode-15` se mapea a `heuristics.ios.localization.localizable-strings.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta `Localizable.strings` bajo `apps/ios/**` como señal de baseline/adopción sin bloquear deuda histórica salvo promoción explícita de policy. String Catalogs (`.xcstrings`) permanece como baseline preferente.
+
 ### Combine (Reactive):
 ✅ **Publishers** - AsyncSequence para async, Combine para streams complejos
 ✅ **@Published** - En ViewModels para binding con Views
