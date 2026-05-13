@@ -229,6 +229,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-foreach-indices': heuristicDetector('ios.foreach-indices', [
     'heuristics.ios.foreach-indices.ast',
   ]),
+  'skills.ios.guideline.ios-swiftui-expert.avoid-inline-filtering-in-foreach-prefilter-and-cache':
+    heuristicDetector('ios.swiftui.inline-foreach-transform', [
+      'heuristics.ios.swiftui.inline-foreach-transform.ast',
+    ]),
   'skills.ios.no-contains-user-filter': heuristicDetector('ios.contains-user-filter', [
     'heuristics.ios.contains-user-filter.ast',
   ]),

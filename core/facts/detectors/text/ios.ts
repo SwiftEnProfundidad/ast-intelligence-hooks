@@ -810,6 +810,13 @@ export const hasSwiftForEachIndicesUsage = (source: string): boolean => {
   );
 };
 
+export const hasSwiftInlineForEachTransformUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  return /\bForEach\s*\(\s*(?:Array\s*\(\s*)?[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*\s*\.\s*(?:filter|map|compactMap|sorted)\s*(?:\{|\()/g.test(
+    sanitized
+  );
+};
+
 const isUserSearchIdentifier = (value: string): boolean => {
   return /^(?:query|search(?:Text|Term|Query|Value)?|filter(?:Text|Value)?|text|term|input)$/i.test(
     value

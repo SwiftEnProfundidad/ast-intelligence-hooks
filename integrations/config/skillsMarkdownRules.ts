@@ -310,6 +310,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-foreach-indices';
     }
     if (
+      (includes('inline filtering') && includes('foreach')) ||
+      (includes('no inline filtering') && includes('foreach')) ||
+      (includes('prefilter') && includes('cache') && includes('foreach'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.avoid-inline-filtering-in-foreach-prefilter-and-cache';
+    }
+    if (
       includes('localizedstandardcontains') ||
       includes('localized standard contains') ||
       (includes('user input filtering') && includes('contains')) ||

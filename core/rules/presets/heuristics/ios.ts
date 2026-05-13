@@ -786,6 +786,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.inline-foreach-transform.ast',
+    description: 'Detects inline filter/map/sort transformations inside SwiftUI ForEach calls.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.inline-foreach-transform.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected inline filter/map/sort work inside ForEach; prefiltered or cached collections remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_SWIFTUI_INLINE_FOREACH_TRANSFORM_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.contains-user-filter.ast',
     description: 'Detects contains() usage in user-facing filter flows where localizedStandardContains() may be preferred.',
     severity: 'WARN',

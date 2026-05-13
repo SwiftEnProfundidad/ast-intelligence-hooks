@@ -61,6 +61,7 @@ import {
   hasSwiftSensitiveUserDefaultsStorageUsage,
   hasSwiftInsecureTransportUsage,
   hasSwiftJSONSerializationUsage,
+  hasSwiftInlineForEachTransformUsage,
   hasSwiftStringFormatUsage,
   hasSwiftStrongDelegateReferenceUsage,
   hasSwiftStrongSelfEscapingClosureUsage,
@@ -736,6 +737,9 @@ let filtered = items.filter { $0.title.contains(searchText) }
 ForEach(items.indices, id: \\.self) { index in
   Text(items[index].title)
 }
+ForEach(items.filter { $0.isVisible }) { item in
+  Text(item.title)
+}
 Text("Primary").foregroundColor(.blue)
 Image("hero").cornerRadius(12)
 TabView {
@@ -771,6 +775,7 @@ MainActor.assumeIsolated { reload() }
   assert.equal(hasSwiftNonisolatedUnsafeUsage(source), true);
   assert.equal(hasSwiftAssumeIsolatedUsage(source), true);
   assert.equal(hasSwiftForEachIndicesUsage(source), true);
+  assert.equal(hasSwiftInlineForEachTransformUsage(source), true);
   assert.equal(hasSwiftContainsUserFilterUsage(source), true);
   assert.equal(hasSwiftGeometryReaderUsage(source), true);
   assert.equal(hasSwiftFontWeightBoldUsage(source), true);
@@ -812,11 +817,13 @@ let q = ".fontWeight(.bold)"
 let r = "@preconcurrency import LegacyFramework"
 let s = "nonisolated(unsafe) static var sharedBridge: Model?"
 let t = "MainActor.assumeIsolated { reload() }"
+let u = "ForEach(items.filter { $0.isVisible }) { item in }"
 `;
   assert.equal(hasSwiftPreconcurrencyUsage(source), false);
   assert.equal(hasSwiftNonisolatedUnsafeUsage(source), false);
   assert.equal(hasSwiftAssumeIsolatedUsage(source), false);
   assert.equal(hasSwiftForEachIndicesUsage(source), false);
+  assert.equal(hasSwiftInlineForEachTransformUsage(source), false);
   assert.equal(hasSwiftContainsUserFilterUsage(source), false);
   assert.equal(hasSwiftGeometryReaderUsage(source), false);
   assert.equal(hasSwiftFontWeightBoldUsage(source), false);
@@ -947,6 +954,45 @@ struct DashboardView: View {
 
   assert.equal(hasSwiftNonPrivateStateOwnershipUsage(source), true);
   assert.equal(hasSwiftNonPrivateStateOwnershipUsage(safe), false);
+});
+
+test('hasSwiftInlineForEachTransformUsage detecta transformaciones inline y preserva colecciones precomputadas', () => {
+  const source = `
+struct FeedView: View {
+  var body: some View {
+    List {
+      ForEach(items.filter { $0.isVisible }) { item in
+        Text(item.title)
+      }
+      ForEach(Array(sections.sorted(by: { $0.title < $1.title }))) { section in
+        Text(section.title)
+      }
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  let filteredItems: [Item]
+  let sortedSections: [Section]
+
+  var body: some View {
+    List {
+      ForEach(filteredItems) { item in
+        Text(item.title)
+      }
+      ForEach(sortedSections) { section in
+        Text(section.title)
+      }
+    }
+  }
+}
+let ignored = "ForEach(items.filter { $0.isVisible }) { item in }"
+// ForEach(items.filter { $0.isVisible }) { item in }
+`;
+
+  assert.equal(hasSwiftInlineForEachTransformUsage(source), true);
+  assert.equal(hasSwiftInlineForEachTransformUsage(safe), false);
 });
 
 test('hasSwiftPassedValueStateWrapperUsage detecta valores inyectados guardados como @State o @StateObject', () => {

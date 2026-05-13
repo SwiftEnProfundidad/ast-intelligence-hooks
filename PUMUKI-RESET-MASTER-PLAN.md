@@ -1051,6 +1051,11 @@ Snapshot PARITY-IOS-SWIFTUI-STATE-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.swiftui.non-private-state-ownership.ast` como WARN brownfield-aware para declaraciones `@State` / `@StateObject` sin `private`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no cambia la política de `@ObservedObject` ni la migración a `@Observable`; solo marca estado owned que no está encapsulado.
 
+Snapshot PARITY-IOS-SWIFTUI-LIST-001 (2026-05-13):
+- Diagnóstico: `Avoid inline filtering in ForEach (prefilter and cache)` seguía como baseline SwiftUI declarativo aunque el trabajo inline dentro de `ForEach(...)` es detectable en Presentation.
+- Implementación: se añade `heuristics.ios.swiftui.inline-foreach-transform.ast` como WARN brownfield-aware para `ForEach(items.filter/map/compactMap/sorted...)`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no bloquea colecciones ya precomputadas ni fuerza caching global; solo marca trabajo inline en el render path SwiftUI.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.
