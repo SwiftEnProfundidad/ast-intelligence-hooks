@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 47);
+  assert.equal(iosRules.length, 49);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -21,6 +21,8 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.logging.sensitive-data.ast',
     'heuristics.ios.networking.alamofire.ast',
     'heuristics.ios.json.jsonserialization.ast',
+    'heuristics.ios.dependencies.cocoapods.ast',
+    'heuristics.ios.dependencies.carthage.ast',
     'heuristics.ios.unchecked-sendable.ast',
     'heuristics.ios.preconcurrency.ast',
     'heuristics.ios.nonisolated-unsafe.ast',
@@ -80,6 +82,14 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.json.jsonserialization.ast')?.then.code,
     'HEURISTICS_IOS_JSON_JSONSERIALIZATION_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.dependencies.cocoapods.ast')?.then.code,
+    'HEURISTICS_IOS_DEPENDENCIES_COCOAPODS_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.dependencies.carthage.ast')?.then.code,
+    'HEURISTICS_IOS_DEPENDENCIES_CARTHAGE_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.preconcurrency.ast')?.then.code,

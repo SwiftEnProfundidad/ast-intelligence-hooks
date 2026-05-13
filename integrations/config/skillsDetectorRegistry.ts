@@ -67,6 +67,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.json.jsonserialization',
     ['heuristics.ios.json.jsonserialization.ast']
   ),
+  'skills.ios.guideline.ios.cocoapods-prohibido': heuristicDetector(
+    'ios.dependencies.cocoapods',
+    ['heuristics.ios.dependencies.cocoapods.ast']
+  ),
+  'skills.ios.guideline.ios.carthage-prohibido': heuristicDetector(
+    'ios.dependencies.carthage',
+    ['heuristics.ios.dependencies.carthage.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),

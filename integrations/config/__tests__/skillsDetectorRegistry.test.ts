@@ -96,6 +96,14 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ['heuristics.ios.json.jsonserialization.ast']
   );
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.cocoapods-prohibido'),
+    ['heuristics.ios.dependencies.cocoapods.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.carthage-prohibido'),
+    ['heuristics.ios.dependencies.carthage.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),
     ['heuristics.ios.testing.legacy-expectation-description.ast']
   );
