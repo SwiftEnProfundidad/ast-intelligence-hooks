@@ -189,6 +189,18 @@ test('normaliza regla iOS de Asset Catalogs a detector canonico de assets', () =
   ]);
 });
 
+test('normaliza regla iOS Dynamic Type a detector canonico de accesibilidad', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ **Dynamic Type** - Font scaling automático',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

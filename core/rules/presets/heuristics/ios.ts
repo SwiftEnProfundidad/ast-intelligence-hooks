@@ -380,6 +380,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.accessibility.fixed-font-size.ast',
+    description: 'Detects fixed font sizes where Dynamic Type semantic styles are the preferred iOS baseline.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.accessibility.fixed-font-size.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fixed font sizing in iOS production code; Dynamic Type semantic text styles remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_ACCESSIBILITY_FIXED_FONT_SIZE_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',

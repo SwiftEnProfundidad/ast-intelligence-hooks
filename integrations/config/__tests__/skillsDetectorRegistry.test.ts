@@ -146,6 +146,10 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ['heuristics.ios.assets.loose-resource.ast']
   );
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico'),
+    ['heuristics.ios.accessibility.fixed-font-size.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),
     ['heuristics.ios.testing.legacy-expectation-description.ast']
   );

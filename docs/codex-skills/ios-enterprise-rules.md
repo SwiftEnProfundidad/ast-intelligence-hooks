@@ -622,6 +622,12 @@ struct APIEndpoint: Sendable {
 - `skills.ios.guideline.ios.assets-en-asset-catalogs-con-soporte-para-todos-los-taman-os` se mapea a `heuristics.ios.assets.loose-resource.ast`.
 - En `PROJECT MODE: brownfield`, este hallazgo detecta carga de imágenes sueltas desde bundle/filesystem (`UIImage(contentsOfFile:)`, `NSImage(contentsOfFile:)`, `Bundle.main.path/url(...png|jpg|jpeg|pdf|svg|webp)`) como señal de adopción hacia Asset Catalogs. No marca `Image("asset")` ni `UIImage(named:)`.
 
+### Enforcement AST inicial de accesibilidad iOS
+
+- `skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico` se mapea a `heuristics.ios.accessibility.fixed-font-size.ast`.
+- `skills.ios.guideline.ios.dynamic-type-fuentes-escalables-y-layouts-adaptativos` se mapea a `heuristics.ios.accessibility.fixed-font-size.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta tamaños de fuente fijos (`.font(.system(size:))`, `Font.system(size:)`, `UIFont.systemFont(ofSize:)`) como señal de adopción hacia Dynamic Type y estilos semánticos. No marca `.font(.headline)`, `.font(.body)` ni otros estilos semánticos.
+
 ### Combine (Reactive):
 ✅ **Publishers** - AsyncSequence para async, Combine para streams complejos
 ✅ **@Published** - En ViewModels para binding con Views

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T11:35:11.674Z",
+  "generatedAt": "2026-05-13T11:41:29.067Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5764,7 +5764,7 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "b364080b578fc2de919d0d7d16c4075167415c3449f2d42a1cd2c6fabec18233",
+      "hash": "d38a68e751fd699460fb183c20c6d950e6e3d728e66d6d9e9de06a2f564cd574",
       "rules": [
         {
           "id": "skills.ios.guideline.ios.accessibility-identifiers-para-localizar-elementos",
@@ -6380,18 +6380,6 @@
         },
         {
           "id": "skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico",
-          "description": "Dynamic Type - Font scaling automático",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.dynamic-type-fuentes-escalables-y-layouts-adaptativos",
           "description": "Dynamic Type - fuentes escalables y layouts adaptativos",
           "severity": "WARN",
           "platform": "ios",
@@ -6399,7 +6387,7 @@
           "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
           "confidence": "MEDIUM",
           "locked": true,
-          "evaluationMode": "DECLARATIVE",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {

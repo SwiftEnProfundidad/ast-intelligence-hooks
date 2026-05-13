@@ -17,6 +17,7 @@ import {
   hasSwiftForEachIndicesUsage,
   hasSwiftForceCastUsage,
   hasSwiftFontWeightBoldUsage,
+  hasSwiftFixedFontSizeUsage,
   hasSwiftForegroundColorUsage,
   hasSwiftForceTryUsage,
   hasSwiftForceUnwrap,
@@ -315,6 +316,23 @@ let text = "UIImage(contentsOfFile: path)"
 
   assert.equal(hasSwiftLooseAssetResourceUsage(source), true);
   assert.equal(hasSwiftLooseAssetResourceUsage(ignored), false);
+});
+
+test('detector iOS de accesibilidad detecta tamaños de fuente fijos sin confundir estilos semánticos', () => {
+  const source = `
+Text("Total").font(.system(size: 18))
+let title = Font.system(size: 24, weight: .bold)
+label.font = UIFont.systemFont(ofSize: 16)
+`;
+  const ignored = `
+Text("Total").font(.headline)
+Text("Body").font(.body)
+let text = "UIFont.systemFont(ofSize: 16)"
+// Text("Total").font(.system(size: 18))
+`;
+
+  assert.equal(hasSwiftFixedFontSizeUsage(source), true);
+  assert.equal(hasSwiftFixedFontSizeUsage(ignored), false);
 });
 
 test('hasSwiftUncheckedSendableUsage detecta @unchecked Sendable', () => {

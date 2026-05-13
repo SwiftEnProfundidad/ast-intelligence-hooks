@@ -401,6 +401,9 @@ const normalizeKnownRuleTarget = (
     if (includes('assets en asset catalogs') || includes('asset catalogs')) {
       return 'skills.ios.guideline.ios.assets-en-asset-catalogs-con-soporte-para-todos-los-taman-os';
     }
+    if (includes('dynamic type')) {
+      return 'skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico';
+    }
     if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||

@@ -560,6 +560,23 @@ export const hasSwiftLooseAssetResourceUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftFixedFontSizeUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  return withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    return (
+      /\.\s*font\s*\(\s*\.\s*system\s*\(\s*size\s*:/.test(sanitized) ||
+      /\bFont\s*\.\s*system\s*\(\s*size\s*:/.test(sanitized) ||
+      /\bUIFont\s*\.\s*(?:systemFont|boldSystemFont|italicSystemFont)\s*\(\s*ofSize\s*:/.test(
+        sanitized
+      )
+    );
+  });
+};
+
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@unchecked', index)) {
