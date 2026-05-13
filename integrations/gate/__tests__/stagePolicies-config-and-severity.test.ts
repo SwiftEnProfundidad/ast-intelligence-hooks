@@ -17,18 +17,18 @@ import {
 test('returns expected gate policy thresholds per stage', () => {
   assert.deepEqual(policyForPreCommit(), {
     stage: 'PRE_COMMIT',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: 'INFO',
+    warnOnOrAbove: 'INFO',
   });
   assert.deepEqual(policyForPrePush(), {
     stage: 'PRE_PUSH',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: 'INFO',
+    warnOnOrAbove: 'INFO',
   });
   assert.deepEqual(policyForCI(), {
     stage: 'CI',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: 'INFO',
+    warnOnOrAbove: 'INFO',
   });
 });
 
@@ -65,8 +65,8 @@ test('resolves stage policy overrides from skills.policy.json', async () => {
     const resolved = resolvePolicyForStage('PRE_COMMIT', tempRoot);
     assert.deepEqual(resolved.policy, {
       stage: 'PRE_COMMIT',
-      blockOnOrAbove: 'ERROR',
-      warnOnOrAbove: 'WARN',
+      blockOnOrAbove: 'INFO',
+      warnOnOrAbove: 'INFO',
     });
     assert.equal(resolved.trace.source, 'skills.policy');
     assert.equal(resolved.trace.bundle, 'gate-policy.skills.policy.PRE_COMMIT');

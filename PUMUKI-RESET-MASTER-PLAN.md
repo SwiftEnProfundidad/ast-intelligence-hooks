@@ -1113,9 +1113,9 @@ Snapshot PARITY-IOS-SWIFTUI-DEBUG-001 (2026-05-13):
 
 Snapshot PUMUKI-GATE-ZERO-VIOLATIONS-001 (2026-05-13):
 - Diagnóstico: un audit consumer podía mostrar `violations (no blockers)` y permitir que RuralGo no quedara bloqueado cuando solo había violaciones no HIGH/CRITICAL, contradiciendo el contrato enterprise de bloquear por cualquier severidad.
-- Implementación: la política efectiva del gate pasa a `blockOnOrAbove=INFO` / `warnOnOrAbove=INFO` para default, hard-mode y `skills.policy.json` explícito, de forma que ningún consumer pueda relajar el contrato zero-violations por configuración accidental; `evaluateRules` marca cualquier finding como `blocking=true`.
+- Implementación: la política efectiva del gate pasa a `blockOnOrAbove=INFO` / `warnOnOrAbove=INFO` tanto en `integrations/policy/policyProfiles.ts` como en `integrations/gate/stagePolicies.ts` para default, hard-mode y `skills.policy.json` explícito, de forma que ningún consumer pueda relajar el contrato zero-violations por configuración accidental; `evaluateRules` y `audit` marcan cualquier finding como `blocking=true`.
 - Notificaciones: `audit.summary` con cualquier `totalViolations > 0` pasa a `AST Audit Blocked` y deja de emitir `violations (no blockers)`.
-- Evidencia local: tests enfocados `27/27 pass`, `npm run -s typecheck` OK y `git diff --check` limpio.
+- Evidencia local: tests enfocados `43/43 pass`, `npm run -s typecheck` OK y `git diff --check` limpio.
 
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.

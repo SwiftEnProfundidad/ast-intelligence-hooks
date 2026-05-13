@@ -124,26 +124,35 @@ const toGatePolicyRecordFromEnterpriseThresholds = (
   };
 };
 
+const ZERO_VIOLATION_BLOCK_ON_OR_ABOVE: GatePolicy['blockOnOrAbove'] = 'INFO';
+const ZERO_VIOLATION_WARN_ON_OR_ABOVE: GatePolicy['warnOnOrAbove'] = 'INFO';
+
+const enforceZeroViolationPolicy = (policy: GatePolicy): GatePolicy => ({
+  ...policy,
+  blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+  warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
+});
+
 const defaultPolicyByStage: Record<SkillsStage, GatePolicy> = {
   PRE_WRITE: {
     stage: 'PRE_WRITE',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
   PRE_COMMIT: {
     stage: 'PRE_COMMIT',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
   PRE_PUSH: {
     stage: 'PRE_PUSH',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
   CI: {
     stage: 'CI',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
 };
 
@@ -624,7 +633,7 @@ export const resolvePolicyForStage = (
     const profilePolicy = profileName
       ? hardModePolicyProfileByStage[profileName][stage]
       : null;
-    const hardModePolicy = profilePolicy ?? hardModePolicyByStage[stage];
+    const hardModePolicy = enforceZeroViolationPolicy(profilePolicy ?? hardModePolicyByStage[stage]);
     const bundle = profileName
       ? `gate-policy.hard-mode.${profileName}.${stage}`
       : `gate-policy.hard-mode.${stage}`;
@@ -693,8 +702,8 @@ export const resolvePolicyForStage = (
 
   const resolvedPolicy: GatePolicy = {
     stage: defaults.stage,
-    blockOnOrAbove: stageOverride.blockOnOrAbove,
-    warnOnOrAbove: stageOverride.warnOnOrAbove,
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   };
 
   const bundle = `gate-policy.skills.policy.${stage}`;

@@ -256,10 +256,7 @@ const toResultScope = (params: {
 };
 
 const isFindingBlocking = (finding: SnapshotFinding): boolean => {
-  if (typeof finding.blocking === 'boolean') {
-    return finding.blocking;
-  }
-  return finding.severity === 'CRITICAL' || finding.severity === 'ERROR';
+  return Boolean(finding.ruleId);
 };
 
 const toLifecycleAuditFinding = (finding: SnapshotFinding): LifecycleAuditFinding => ({
