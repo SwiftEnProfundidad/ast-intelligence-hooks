@@ -23,6 +23,7 @@ import {
   hasSwiftForceUnwrap,
   hasSwiftGeometryReaderUsage,
   hasSwiftHardcodedUiStringUsage,
+  hasSwiftHardcodedSensitiveStringUsage,
   hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage,
   hasSwiftLooseAssetResourceUsage,
   hasSwiftLegacyOnChangeUsage,
@@ -424,6 +425,25 @@ logger.error("Refresh failed \\(refreshToken)")
   assert.equal(hasSwiftAdHocLoggingUsage(structuredSafe), false);
   assert.equal(hasSwiftSensitiveLoggingUsage(sensitive), true);
   assert.equal(hasSwiftSensitiveLoggingUsage(structuredSafe), false);
+});
+
+test('hasSwiftHardcodedSensitiveStringUsage detecta secretos hardcodeados en Swift productivo', () => {
+  const source = `
+final class Credentials {
+  let apiKey = "sk_live_123456789"
+  private var refreshToken: String = "refresh-token-123456"
+}
+`;
+  const safe = `
+final class Credentials {
+  let apiKey = keychain.read("api_key")
+  let label = "public title"
+  // let apiKey = "sk_live_123456789"
+}
+`;
+
+  assert.equal(hasSwiftHardcodedSensitiveStringUsage(source), true);
+  assert.equal(hasSwiftHardcodedSensitiveStringUsage(safe), false);
 });
 
 test('detectores iOS de networking y JSON detectan Alamofire y JSONSerialization sin leer comentarios ni strings', () => {

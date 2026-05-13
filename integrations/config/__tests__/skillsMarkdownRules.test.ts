@@ -327,6 +327,18 @@ test('normaliza regla iOS Quick Nimble a detector canonico de testing', () => {
   ]);
 });
 
+test('normaliza regla iOS obfuscation strings sensibles a detector canonico de seguridad', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ Obfuscation - Strings sensibles en código',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.obfuscation-strings-sensibles-en-co-digo',
+  ]);
+});
+
 test('normaliza regla iOS Swinject a detector canonico de arquitectura', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-guidelines',

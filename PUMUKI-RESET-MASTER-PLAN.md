@@ -1036,6 +1036,11 @@ Snapshot PARITY-IOS-ARCHITECTURE-003 (2026-05-13):
 - Implementación: se añade `heuristics.ios.architecture.swinject.ast` como WARN brownfield-aware para `import Swinject`, `Container()` o `Assembler(...)` en Swift productivo; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no prohíbe dependencias ya existentes por política hard; señala uso de Swinject como deuda/remediación hacia DI nativa manual o SwiftUI Environment.
 
+Snapshot PARITY-IOS-SECURITY-002 (2026-05-13):
+- Diagnóstico: `Obfuscation - Strings sensibles en código` seguía como baseline iOS declarativo aunque las asignaciones Swift de secretos/tokens/API keys hardcodeadas son detectables sin inspeccionar valores ni imprimir secretos.
+- Implementación: se añade `heuristics.ios.security.hardcoded-sensitive-string.ast` como WARN brownfield-aware para variables Swift productivas con nombres sensibles (`token`, `secret`, `password`, `apiKey`, `clientSecret`, `privateKey`, `sessionId`) asignadas a literales string; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no muestra ni exfiltra valores; solo emite evidencia de ruta/regla para migrar a Keychain, configuración segura o secretos por entorno.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

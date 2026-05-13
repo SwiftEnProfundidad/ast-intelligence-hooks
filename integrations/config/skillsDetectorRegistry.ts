@@ -98,6 +98,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.logging.sensitive-data',
     ['heuristics.ios.logging.sensitive-data.ast']
   ),
+  'skills.ios.guideline.ios.obfuscation-strings-sensibles-en-co-digo': heuristicDetector(
+    'ios.security.hardcoded-sensitive-string',
+    ['heuristics.ios.security.hardcoded-sensitive-string.ast']
+  ),
   'skills.ios.guideline.ios.alamofire-prohibido-usar-urlsession-nativo': heuristicDetector(
     'ios.networking.alamofire',
     ['heuristics.ios.networking.alamofire.ast']

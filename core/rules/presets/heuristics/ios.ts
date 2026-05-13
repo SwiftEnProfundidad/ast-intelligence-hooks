@@ -351,6 +351,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.security.hardcoded-sensitive-string.ast',
+    description: 'Detects hardcoded sensitive Swift string values in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.security.hardcoded-sensitive-string.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected hardcoded sensitive Swift string; Keychain, secure config or environment-specific secrets remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_SECURITY_HARDCODED_SENSITIVE_STRING_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.networking.alamofire.ast',
     description: 'Detects Alamofire usage in iOS production code; URLSession is the preferred baseline for new code.',
     severity: 'WARN',

@@ -484,6 +484,14 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios.swinject-prohibido-di-manual-o-environment';
     }
     if (
+      includes('obfuscation') ||
+      includes('strings sensibles en codigo') ||
+      includes('strings sensibles en co digo') ||
+      includes('sensitive strings')
+    ) {
+      return 'skills.ios.guideline.ios.obfuscation-strings-sensibles-en-co-digo';
+    }
+    if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
       includes('mixed testing frameworks')

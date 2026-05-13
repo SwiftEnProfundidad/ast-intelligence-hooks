@@ -600,6 +600,13 @@ export const hasSwiftSensitiveLoggingUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftHardcodedSensitiveStringUsage = (source: string): boolean => {
+  return collectSwiftRegexLines(
+    source,
+    /\b(?:(?:private|fileprivate|internal|public|open|static|class|final|lazy)\s+)*(?:let|var)\s+(?=[A-Za-z_])[A-Za-z0-9_]*(?:token|secret|password|apikey|clientsecret|privatekey|sessionid)[A-Za-z0-9_]*\s*(?::\s*String\s*)?=\s*""/i
+  ).length > 0;
+};
+
 export const hasSwiftAlamofireUsage = (source: string): boolean => {
   return (
     collectSwiftRegexLines(source, /^\s*import\s+Alamofire\b/).length > 0 ||
