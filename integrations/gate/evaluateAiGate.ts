@@ -204,6 +204,9 @@ const toSkillsViolation = (
     : toWarnViolation(code, message)
 );
 
+const toCriticalSkillsViolation = (code: string, message: string): AiGateViolation =>
+  toErrorViolation(code, message);
+
 const normalizeRepoStateLifecycleVersions = (repoState: RepoState): RepoState => {
   const packageVersion = repoState.lifecycle.package_version;
   const lifecycleVersion = repoState.lifecycle.lifecycle_version;
@@ -641,8 +644,7 @@ const collectPreWritePlatformSkillsViolations = (params: {
 
   if (missingCriticalRulesByPlatform.length > 0) {
     violations.push(
-      toSkillsViolation(
-        params.skillsEnforcement,
+      toCriticalSkillsViolation(
         'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
         `Detected platforms missing critical skill-rule enforcement in PRE_WRITE: ${missingCriticalRulesByPlatform.join(' | ')}.`
       )
@@ -936,8 +938,7 @@ const toSkillsContractAssessment = (params: {
     }
     if (missingCriticalRuleIds.length > 0) {
       violations.push(
-        toSkillsViolation(
-          params.skillsEnforcement,
+        toCriticalSkillsViolation(
           'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
           `Skills contract missing critical rule coverage for ${platform}: [${missingCriticalRuleIds.join(', ')}].`
         )

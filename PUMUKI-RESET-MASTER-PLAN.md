@@ -931,17 +931,18 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-001` / Continuar reglas iOS enterprise restantes tras cierre de bugs externos abiertos. |
+| Este plan | `[🚧] - PUMUKI-INC-140` / RuralGo: `skills.ios.critical-test-quality` no puede degradarse a advisory permisivo en PRE_WRITE. |
 
-- Estado: 🚧 PARITY-IOS-001 / Continuar reglas iOS enterprise restantes tras cierre de bugs externos abiertos.
+- Estado: 🚧 PUMUKI-INC-140 / bug externo Critical de RuralGo con prioridad sobre `PARITY-IOS-001`.
 
 Snapshot PUMUKI-INC-140 (2026-05-13):
-- Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-GAP - PRE_WRITE bloquea commit Governance por deuda global ajena al staged`.
-- Reproducción actual: en `stack-my-architecture` con un único markdown staged bajo `stack-my-architecture-governance/`, `pumuki@6.3.237 audit --stage=PRE_COMMIT --json` cae a `scope.kind=repo`, escanea `366` archivos y bloquea por deuda global iOS/SDD ajena (`ios.no-print`, `ios.no-jsonserialization`, `OPENSPEC_MISSING`, `TDD_BDD_EVIDENCE_MISSING`).
-- Objetivo: si `PRE_WRITE`/`PRE_COMMIT` tienen staged files, aunque no sean extensiones de código soportadas, el audit debe permanecer en `scope.kind=staged`; si no hay código soportado staged, cualquier deuda baseline repo-wide se conserva como advisory para no bloquear un slice documental/config-only.
-- Implementación: `runLifecycleAudit` distingue staged files totales de staged files con extensiones soportadas; `PRE_WRITE`/`PRE_COMMIT` permanecen en scope `staged` cuando hay cualquier staged file, y si `staged_matching_extensions_count=0` degradan findings baseline a `AUDIT_STAGED_NO_SUPPORTED_CODE_ADVISORY`.
-- Evidencia Pumuki: `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/audit.test.ts` -> `10/10 pass`; `npm run -s typecheck` -> OK; `git diff --check` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.238.tgz`.
-- Cierre: ✅ publicado `pumuki@6.3.238` como `latest`; validación real en `stack-my-architecture` con markdown staged bajo `stack-my-architecture-governance/`: `gate_exit_code=0`, `blocking_findings_count=0`, `findings_count=1`, `snapshot_outcome=PASS`, `scope.kind=staged`, `staged_matching_extensions_count=0`, `files_scanned=0`, `code=AUDIT_STAGED_NO_SUPPORTED_CODE_ADVISORY`.
+- Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, fila `PUMUKI-INC-140`.
+- Reporte consumer: `pumuki-pre-commit --quiet` y el hook real permiten commits iOS con `blocking=0`, pero el panel PRE_WRITE muestra advisory `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` por `ios{missing_critical_rule_ids=[skills.ios.critical-test-quality]}` y `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE`.
+- Objetivo: si una regla marcada como crítica de plataforma falta en PRE_WRITE, no puede degradarse por el modo advisory general de skills; debe bloquear como `ERROR` o no emitirse si el slice no aplica.
+- Implementación: `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` pasa a severidad `ERROR` siempre mediante `toCriticalSkillsViolation`; scope y bundles siguen respetando advisory para mantener el cambio acotado.
+- Regresión: `evaluateAiGate` cubre que PRE_WRITE bloquea aunque `skills enforcement` esté en advisory cuando iOS detectado no incluye `skills.ios.critical-test-quality`.
+- Evidencia Pumuki: `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> `44/44 pass`; `npm run -s typecheck` -> OK; `git diff --check` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.239.tgz`.
+- Estado: pendiente de publicación npm y repin RuralGo.
 
 Snapshot PUMUKI-INC-139 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, recurrencia PRE_WRITE vs PRE_COMMIT en slice checkout pixel-perfect con `pumuki@6.3.235`.
