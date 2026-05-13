@@ -65,6 +65,7 @@ import {
   hasSwiftSheetIsPresentedUsage,
   hasSwiftScrollViewShowsIndicatorsUsage,
   hasSwiftSensitiveLoggingUsage,
+  hasSwiftSelfPrintChangesUsage,
   hasSwiftSensitiveUserDefaultsStorageUsage,
   hasSwiftInsecureTransportUsage,
   hasSwiftJSONSerializationUsage,
@@ -321,6 +322,29 @@ struct FeedView: View {
 
   assert.equal(hasSwiftForEachSelfIdentityUsage(source), true);
   assert.equal(hasSwiftForEachSelfIdentityUsage(safe), false);
+});
+
+test('hasSwiftSelfPrintChangesUsage detecta Self._printChanges y preserva strings y comentarios', () => {
+  const source = `
+struct FeedView: View {
+  var body: some View {
+    Self._printChanges()
+    Text("Feed")
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  var body: some View {
+    Text("Feed")
+    let sample = "Self._printChanges()"
+    // Self._printChanges()
+  }
+}
+`;
+
+  assert.equal(hasSwiftSelfPrintChangesUsage(source), true);
+  assert.equal(hasSwiftSelfPrintChangesUsage(safe), false);
 });
 
 test('hasSwiftUntypedNavigationLinkDestinationUsage detecta NavigationLink no tipado y preserva value navigation', () => {

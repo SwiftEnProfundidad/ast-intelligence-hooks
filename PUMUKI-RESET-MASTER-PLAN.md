@@ -1106,6 +1106,11 @@ Snapshot PARITY-IOS-SWIFTUI-FOREACH-IDENTITY-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.swiftui.foreach-self-identity.ast` como WARN brownfield-aware para `id: \.self`, preservando `id: \.id` e identificación estable por dominio; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no sustituye análisis de identidad semántica real ni repite `ForEach(indices)`; solo marca el caso concreto de identidad por valor completo.
 
+Snapshot PARITY-IOS-SWIFTUI-DEBUG-001 (2026-05-13):
+- Diagnóstico: `Use Self._printChanges() to debug unexpected view updates` seguía como baseline SwiftUI declarativo aunque `Self._printChanges()` es una ayuda de debugging detectable y no debe quedar en Presentation productivo.
+- Implementación: se añade `heuristics.ios.swiftui.self-print-changes.ast` como WARN brownfield-aware para `Self._printChanges()` en `apps/ios/**/Presentation/**`, ignorando tests, strings y comentarios; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no prohíbe diagnóstico local durante desarrollo ni cambia política de logging; solo evita dejar instrumentación de render debug en vistas productivas.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

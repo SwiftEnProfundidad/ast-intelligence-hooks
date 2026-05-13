@@ -823,6 +823,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.self-print-changes.ast',
+    description: 'Detects SwiftUI Self._printChanges() debugging helpers in production views.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.self-print-changes.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Self._printChanges() in SwiftUI presentation code; remove debug-only render diagnostics from production views.',
+      code: 'HEURISTICS_IOS_SWIFTUI_SELF_PRINT_CHANGES_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.swiftui.foreach-conditional-view-count.ast',
     description: 'Detects conditional view counts inside SwiftUI ForEach rows.',
     severity: 'WARN',

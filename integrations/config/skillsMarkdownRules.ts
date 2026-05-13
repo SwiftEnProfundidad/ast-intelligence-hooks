@@ -325,6 +325,9 @@ const normalizeKnownRuleTarget = (
       }
       return 'skills.ios.guideline.ios-swiftui-expert.ensure-foreach-uses-stable-identity-see-references-list-patterns-md';
     }
+    if (includes('self.printchanges') || includes('unexpected view updates')) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-self-printchanges-to-debug-unexpected-view-updates';
+    }
     if (
       (includes('inline filtering') && includes('foreach')) ||
       (includes('no inline filtering') && includes('foreach')) ||

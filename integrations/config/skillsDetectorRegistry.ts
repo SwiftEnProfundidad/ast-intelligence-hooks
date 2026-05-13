@@ -241,6 +241,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.swiftui.foreach-self-identity', [
       'heuristics.ios.swiftui.foreach-self-identity.ast',
     ]),
+  'skills.ios.guideline.ios-swiftui-expert.use-self-printchanges-to-debug-unexpected-view-updates':
+    heuristicDetector('ios.swiftui.self-print-changes', [
+      'heuristics.ios.swiftui.self-print-changes.ast',
+    ]),
   'skills.ios.guideline.ios-swiftui-expert.avoid-inline-filtering-in-foreach-prefilter-and-cache':
     heuristicDetector('ios.swiftui.inline-foreach-transform', [
       'heuristics.ios.swiftui.inline-foreach-transform.ast',

@@ -140,6 +140,7 @@ test('normaliza reglas SwiftUI list/search/layout a ids canonicos del slice phas
       '- Avoid layout thrash (deep hierarchies, excessive `GeometryReader`)',
       '- Use `bold()` instead of `fontWeight(.bold)` for straightforward text emphasis.',
       '- Prefer static member lookup (`.blue` vs `Color.blue`)',
+      '- Use `Self._printChanges()` to debug unexpected view updates',
     ].join('\n'),
   });
 
@@ -149,6 +150,7 @@ test('normaliza reglas SwiftUI list/search/layout a ids canonicos del slice phas
     'skills.ios.guideline.ios-swiftui-expert.ensure-constant-number-of-views-per-foreach-element',
     'skills.ios.guideline.ios-swiftui-expert.ensure-foreach-uses-stable-identity-see-references-list-patterns-md',
     'skills.ios.guideline.ios-swiftui-expert.prefer-static-member-lookup-blue-vs-color-blue',
+    'skills.ios.guideline.ios-swiftui-expert.use-self-printchanges-to-debug-unexpected-view-updates',
     'skills.ios.no-contains-user-filter',
     'skills.ios.no-font-weight-bold',
     'skills.ios.no-foreach-indices',
