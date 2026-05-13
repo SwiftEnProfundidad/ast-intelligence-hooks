@@ -860,6 +860,17 @@ export const hasSwiftLegacySwiftUiObservableWrapperUsage = (source: string): boo
   return hasSwiftSanitizedRegexMatch(source, /@\s*(?:StateObject|ObservedObject)\b/);
 };
 
+export const hasSwiftNonPrivateStateOwnershipUsage = (source: string): boolean => {
+  return source.split(/\r?\n/).some((line) => {
+    const sanitizedLine = stripSwiftLineForSemanticScan(line);
+    return (
+      /@\s*(?:State|StateObject)\b/.test(sanitizedLine) &&
+      /\bvar\b/.test(sanitizedLine) &&
+      !/\bprivate\b/.test(sanitizedLine)
+    );
+  });
+};
+
 const hasSwiftPassedValueWrapperInitialization = (
   source: string,
   options: {

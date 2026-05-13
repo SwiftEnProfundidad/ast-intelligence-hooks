@@ -101,6 +101,19 @@ test('normaliza reglas SwiftUI state ownership a ids canonicos del slice phase6'
   ]);
 });
 
+test('normaliza regla SwiftUI state privado a detector canonico de ownership', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent:
+      '- ✅ Always mark @State and @StateObject as private (makes dependencies clear)',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear',
+  ]);
+});
+
 test('normaliza reglas SwiftUI list/search/layout a ids canonicos del slice phase7', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-swiftui-expert-guidelines',

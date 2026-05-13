@@ -43,6 +43,7 @@ import {
   hasSwiftNSManagedObjectBoundaryUsage,
   hasSwiftNSManagedObjectStateLeakUsage,
   hasSwiftNavigationViewUsage,
+  hasSwiftNonPrivateStateOwnershipUsage,
   hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage,
   hasSwiftObservableObjectUsage,
   hasSwiftOnAppearTaskUsage,
@@ -926,6 +927,26 @@ struct ContentView: View {
 
   assert.equal(hasSwiftLegacySwiftUiObservableWrapperUsage(legacyWrapper), true);
   assert.equal(hasSwiftLegacySwiftUiObservableWrapperUsage(modernWrapper), false);
+});
+
+test('hasSwiftNonPrivateStateOwnershipUsage detecta @State y @StateObject no privados', () => {
+  const source = `
+struct DashboardView: View {
+  @State var query = ""
+  @StateObject var viewModel = DashboardViewModel()
+}
+`;
+  const safe = `
+struct DashboardView: View {
+  @State private var query = ""
+  @StateObject private var viewModel = DashboardViewModel()
+  let text = "@State var query = \\"\\""
+  // @State var query = ""
+}
+`;
+
+  assert.equal(hasSwiftNonPrivateStateOwnershipUsage(source), true);
+  assert.equal(hasSwiftNonPrivateStateOwnershipUsage(safe), false);
 });
 
 test('hasSwiftPassedValueStateWrapperUsage detecta valores inyectados guardados como @State o @StateObject', () => {

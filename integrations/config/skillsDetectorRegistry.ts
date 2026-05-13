@@ -201,6 +201,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.legacy-swiftui-observable-wrapper',
     ['heuristics.ios.legacy-swiftui-observable-wrapper.ast']
   ),
+  'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear': heuristicDetector(
+    'ios.swiftui.non-private-state-ownership',
+    ['heuristics.ios.swiftui.non-private-state-ownership.ast']
+  ),
   'skills.ios.no-passed-value-state-wrapper': heuristicDetector('ios.passed-value-state-wrapper', [
     'heuristics.ios.passed-value-state-wrapper.ast',
   ]),

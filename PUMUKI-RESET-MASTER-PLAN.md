@@ -1046,6 +1046,11 @@ Snapshot PARITY-IOS-SWIFTUI-ASYNC-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.swiftui.onappear-task.ast` como WARN brownfield-aware para `Task` lanzado desde `.onAppear` en Presentation, preservando `.task { ... }` / `.task(id:)` como baseline lifecycle-aware; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no intenta probar cancelación real ni bloquear deuda brownfield; señala trabajo async ligado al ciclo de vida de vista que debería vivir en `.task`.
 
+Snapshot PARITY-IOS-SWIFTUI-STATE-001 (2026-05-13):
+- Diagnóstico: `Always mark @State and @StateObject as private` seguía como baseline SwiftUI declarativo aunque el ownership visible de estado local es detectable en Presentation.
+- Implementación: se añade `heuristics.ios.swiftui.non-private-state-ownership.ast` como WARN brownfield-aware para declaraciones `@State` / `@StateObject` sin `private`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no cambia la política de `@ObservedObject` ni la migración a `@Observable`; solo marca estado owned que no está encapsulado.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

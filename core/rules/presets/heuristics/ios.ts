@@ -731,6 +731,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.non-private-state-ownership.ast',
+    description: 'Detects @State/@StateObject declarations without private visibility in SwiftUI presentation code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.non-private-state-ownership.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected @State/@StateObject without private visibility; SwiftUI owned state should be private.',
+      code: 'HEURISTICS_IOS_SWIFTUI_NON_PRIVATE_STATE_OWNERSHIP_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.passed-value-state-wrapper.ast',
     description: 'Detects passed values stored as @State or @StateObject through init ownership in SwiftUI production code.',
     severity: 'WARN',

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T13:40:06.121Z",
+  "generatedAt": "2026-05-13T15:50:45.972Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -8632,7 +8632,7 @@
       "name": "ios-swiftui-expert-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/swiftui-expert-skill/SKILL.md",
-      "hash": "05e71c648612ed794d4e8122105fc3f508e09b7f92db94a24bd3daa45335d6b7",
+      "hash": "b936508c5fea766c83bca01087374a8c0281ba86c4ee022d43db316b89c07cd6",
       "rules": [
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear",
@@ -8643,7 +8643,7 @@
           "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
           "confidence": "MEDIUM",
           "locked": true,
-          "evaluationMode": "DECLARATIVE",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {

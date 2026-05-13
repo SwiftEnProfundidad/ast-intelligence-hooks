@@ -261,6 +261,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-legacy-swiftui-observable-wrapper';
     }
     if (
+      includes('state and stateobject as private') ||
+      includes('stateobject as private') ||
+      (includes('mark state') && includes('private'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear';
+    }
+    if (
       includes('passed values as state') ||
       includes('passed values as state or stateobject') ||
       includes('passed values as stateobject')

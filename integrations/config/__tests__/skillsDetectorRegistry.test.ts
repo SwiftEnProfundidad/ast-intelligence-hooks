@@ -69,6 +69,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   ]);
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear'
+    ),
+    ['heuristics.ios.swiftui.non-private-state-ownership.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios-swiftui-expert.use-task-modifier-for-automatic-cancellation-of-async-work'
     ),
     ['heuristics.ios.swiftui.onappear-task.ast']
