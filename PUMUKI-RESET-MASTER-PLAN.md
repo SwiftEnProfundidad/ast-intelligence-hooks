@@ -931,9 +931,16 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-001` / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS tras cerrar la incidencia externa activa. |
+| Este plan | `[🚧] - PUMUKI-INC-139` / RuralGo PRE_WRITE vs PRE_COMMIT panel semánticamente inconsistente. |
 
-- Estado: 🚧 PARITY-IOS-001 / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS.
+- Estado: 🚧 PUMUKI-INC-139 / RuralGo PRE_WRITE vs PRE_COMMIT panel semánticamente inconsistente.
+
+Snapshot PUMUKI-INC-139 (2026-05-13):
+- Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, recurrencia PRE_WRITE vs PRE_COMMIT en slice checkout pixel-perfect con `pumuki@6.3.235`.
+- Reporte consumer: `pumuki audit --stage=PRE_COMMIT --json` devuelve `gate_exit_code=0`, `blocking_findings_count=0` y `npx pumuki-pre-commit --quiet` sale 0, pero el panel PRE_WRITE imprime `Skills contract: status=FAIL` y sección `Blocking causes` para `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` / `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE`.
+- Objetivo: la salida visible del hook debe coincidir con la decisión efectiva; si el AI gate permite y las violaciones son `WARN`, el panel debe mostrar estado advisory/no bloqueante, no `FAIL` ni `Blocking causes`.
+- Implementación: `buildPreWriteValidationPanel` separa violaciones `ERROR` de avisos, muestra `Skills contract: status=ADVISORY` cuando el contrato raw falla pero `aiGate.allowed=true`, y renombra los avisos a `Advisory findings` sin sección `Blocking causes`.
+- Evidencia Pumuki: `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `27/27 pass`; `npm run -s typecheck` -> OK; `git diff --check` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.237.tgz`.
 
 Snapshot PUMUKI-INC-136 (2026-05-13):
 - Origen externo: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` commit `4e12f0303 docs: report atomic split baseline blocker`.

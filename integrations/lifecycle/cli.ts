@@ -1989,6 +1989,11 @@ export const buildPreWriteValidationPanel = (params: {
 }): string => {
   const git = params.aiGate.repo_state.git;
   const receipt = params.aiGate.mcp_receipt;
+  const blockingViolations = params.aiGate.violations.filter((violation) => violation.severity === 'ERROR');
+  const nonBlockingViolations = params.aiGate.violations.filter((violation) => violation.severity !== 'ERROR');
+  const rawSkillsContractStatus = params.aiGate.skills_contract?.status ?? 'n/a';
+  const visibleSkillsContractStatus =
+    rawSkillsContractStatus === 'FAIL' && params.aiGate.allowed ? 'ADVISORY' : rawSkillsContractStatus;
   const lines: string[] = [
     'PRE-FLIGHT CHECK',
     `Stage: ${params.sdd.stage} · SDD: ${params.sdd.decision.code} · AI Gate: ${params.aiGate.status}`,
@@ -1997,9 +2002,9 @@ export const buildPreWriteValidationPanel = (params: {
     `Evidence: kind=${params.aiGate.evidence.kind} age=${params.aiGate.evidence.age_seconds ?? 'n/a'}s max=${params.aiGate.evidence.max_age_seconds}s`,
     `Evidence source: source=${params.aiGate.evidence.source.source} path=${params.aiGate.evidence.source.path} digest=${params.aiGate.evidence.source.digest ?? 'null'} generated_at=${params.aiGate.evidence.source.generated_at ?? 'null'}`,
     `MCP receipt: required=${receipt.required ? 'yes' : 'no'} kind=${receipt.kind} age=${receipt.age_seconds ?? 'n/a'}s max=${receipt.max_age_seconds ?? 'n/a'}s`,
-    `Skills contract: enforced=${params.aiGate.skills_contract?.enforced ? 'yes' : 'no'} status=${params.aiGate.skills_contract?.status ?? 'n/a'} platforms=${params.aiGate.skills_contract?.detected_platforms.join(',') ?? 'none'}`,
+    `Skills contract: enforced=${params.aiGate.skills_contract?.enforced ? 'yes' : 'no'} status=${visibleSkillsContractStatus} platforms=${params.aiGate.skills_contract?.detected_platforms.join(',') ?? 'none'}`,
     `Auto-heal: attempted=${params.automation.attempted ? 'yes' : 'no'} actions=${params.automation.actions.length}`,
-    `Violations: ${params.aiGate.violations.length}`,
+    `Violations: blocking=${blockingViolations.length} advisory=${nonBlockingViolations.length}`,
   ];
 
   if (params.automation.actions.length > 0) {
@@ -2010,20 +2015,28 @@ export const buildPreWriteValidationPanel = (params: {
     }
   }
 
-  if (params.aiGate.violations.length > 0) {
+  if (blockingViolations.length > 0) {
     lines.push('');
     lines.push('Blocking causes:');
-    for (const violation of params.aiGate.violations) {
+    for (const violation of blockingViolations) {
       lines.push(`- ${violation.code}: ${violation.message}`);
     }
     lines.push('');
     lines.push('Operational hints:');
-    for (const violation of params.aiGate.violations) {
+    for (const violation of blockingViolations) {
       const hint = PRE_WRITE_HINTS_BY_CODE[violation.code];
       if (!hint) {
         continue;
       }
       lines.push(`- ${violation.code}: ${hint}`);
+    }
+  }
+
+  if (nonBlockingViolations.length > 0) {
+    lines.push('');
+    lines.push('Advisory findings:');
+    for (const violation of nonBlockingViolations) {
+      lines.push(`- ${violation.code}: ${violation.message}`);
     }
   }
 
