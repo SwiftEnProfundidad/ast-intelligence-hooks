@@ -254,6 +254,42 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.dependencies.cocoapods.ast',
+    description: 'Detects CocoaPods dependency files in iOS projects; Swift Package Manager is the preferred baseline for new code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.dependencies.cocoapods.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected CocoaPods dependency files in an iOS project; Swift Package Manager remains the preferred baseline for new code.',
+      code: 'HEURISTICS_IOS_DEPENDENCIES_COCOAPODS_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.dependencies.carthage.ast',
+    description: 'Detects Carthage dependency files in iOS projects; Swift Package Manager is the preferred baseline for new code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.dependencies.carthage.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Carthage dependency files in an iOS project; Swift Package Manager remains the preferred baseline for new code.',
+      code: 'HEURISTICS_IOS_DEPENDENCIES_CARTHAGE_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',

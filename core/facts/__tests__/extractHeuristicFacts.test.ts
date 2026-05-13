@@ -473,6 +473,8 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
           '}',
         ].join('\n')
       ),
+      fileContentFact('apps/ios/Podfile', 'pod "LegacyDependency"'),
+      fileContentFact('apps/ios/Cartfile', 'github "Legacy/Dependency"'),
     ],
     detectedPlatforms: {
       ios: { detected: true },
@@ -486,6 +488,8 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.callback-style.ast',
     'heuristics.ios.contains-user-filter.ast',
     'heuristics.ios.corner-radius.ast',
+    'heuristics.ios.dependencies.carthage.ast',
+    'heuristics.ios.dependencies.cocoapods.ast',
     'heuristics.ios.dispatchgroup.ast',
     'heuristics.ios.dispatchqueue.ast',
     'heuristics.ios.dispatchsemaphore.ast',

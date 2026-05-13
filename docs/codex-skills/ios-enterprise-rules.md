@@ -509,6 +509,12 @@ struct UseCaseFactory {
 - `skills.ios.guideline.ios.codable-para-serializacio-n-json-nunca-jsonserialization` se mapea a `heuristics.ios.json.jsonserialization.ast`.
 - En `PROJECT MODE: brownfield`, estos hallazgos son señal de baseline/adopción y deben evitar drift nuevo sin bloquear deuda histórica salvo promoción explícita de policy.
 
+### Enforcement AST inicial de dependencias iOS
+
+- `skills.ios.guideline.ios.cocoapods-prohibido` se mapea a `heuristics.ios.dependencies.cocoapods.ast`.
+- `skills.ios.guideline.ios.carthage-prohibido` se mapea a `heuristics.ios.dependencies.carthage.ast`.
+- En `PROJECT MODE: brownfield`, estos hallazgos son señal de baseline/adopción y deben evitar drift nuevo sin bloquear deuda histórica salvo promoción explícita de policy. Swift Package Manager permanece como baseline preferente para código nuevo.
+
 ```swift
 // ✅ Ejemplo: APIClient con URLSession y async/await
 protocol APIClientProtocol: Sendable {

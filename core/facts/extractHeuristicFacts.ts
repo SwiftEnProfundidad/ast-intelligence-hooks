@@ -76,6 +76,22 @@ const isIOSSwiftPath = (path: string): boolean => {
   return path.endsWith('.swift') && path.startsWith('apps/ios/');
 };
 
+const isIOSPodfilePath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/');
+  return (
+    normalized.startsWith('apps/ios/') &&
+    (normalized.endsWith('/Podfile') || normalized.endsWith('/Podfile.lock'))
+  );
+};
+
+const isIOSCartfilePath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/');
+  return (
+    normalized.startsWith('apps/ios/') &&
+    (normalized.endsWith('/Cartfile') || normalized.endsWith('/Cartfile.resolved'))
+  );
+};
+
 const isIOSApplicationOrPresentationPath = (path: string): boolean => {
   return (
     isIOSSwiftPath(path) &&
@@ -608,6 +624,8 @@ type TextDetectorRegistryEntry = {
 
 const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   // iOS
+  { platform: 'ios', pathCheck: isIOSPodfilePath, excludePaths: [], detect: detectsTrackedFilePresence, ruleId: 'heuristics.ios.dependencies.cocoapods.ast', code: 'HEURISTICS_IOS_DEPENDENCIES_COCOAPODS_AST', message: 'AST heuristic detected CocoaPods dependency files in an iOS project; Swift Package Manager remains the preferred baseline for new code.' },
+  { platform: 'ios', pathCheck: isIOSCartfilePath, excludePaths: [], detect: detectsTrackedFilePresence, ruleId: 'heuristics.ios.dependencies.carthage.ast', code: 'HEURISTICS_IOS_DEPENDENCIES_CARTHAGE_AST', message: 'AST heuristic detected Carthage dependency files in an iOS project; Swift Package Manager remains the preferred baseline for new code.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftForceUnwrap, ruleId: 'heuristics.ios.force-unwrap.ast', code: 'HEURISTICS_IOS_FORCE_UNWRAP_AST', message: 'AST heuristic detected force unwrap usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftAnyViewUsage, ruleId: 'heuristics.ios.anyview.ast', code: 'HEURISTICS_IOS_ANYVIEW_AST', message: 'AST heuristic detected AnyView usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftForceTryUsage, ruleId: 'heuristics.ios.force-try.ast', code: 'HEURISTICS_IOS_FORCE_TRY_AST', message: 'AST heuristic detected force try usage.' },
