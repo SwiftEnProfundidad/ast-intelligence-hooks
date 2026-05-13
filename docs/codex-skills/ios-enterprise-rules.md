@@ -595,6 +595,13 @@ struct APIEndpoint: Sendable {
 ✅ **FileManager** - Archivos, imágenes, documents
 ✅ **iCloud** - Sync entre dispositivos (NSUbiquitousKeyValueStore, CloudKit)
 
+### Enforcement AST inicial de secretos en preferencias iOS
+
+- `skills.ios.guideline.ios.keychain-passwords-tokens-no-userdefaults` se mapea a `heuristics.ios.security.userdefaults-sensitive-data.ast`.
+- `skills.ios.guideline.ios.keychainservices-nativo-passwords-tokens-datos-sensibles-no-wrappers-d` se mapea a `heuristics.ios.security.userdefaults-sensitive-data.ast`.
+- `skills.ios.guideline.ios.userdefaults-settings-simples-no-datos-sensibles` se mapea a `heuristics.ios.security.userdefaults-sensitive-data.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo es señal de baseline/adopción y debe evitar drift nuevo sin bloquear deuda histórica salvo promoción explícita de policy. Keychain nativo permanece como baseline preferente para secretos.
+
 ### Combine (Reactive):
 ✅ **Publishers** - AsyncSequence para async, Combine para streams complejos
 ✅ **@Published** - En ViewModels para binding con Views

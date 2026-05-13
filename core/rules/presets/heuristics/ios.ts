@@ -290,6 +290,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.security.userdefaults-sensitive-data.ast',
+    description: 'Detects sensitive data stored in UserDefaults/AppStorage; Keychain is the preferred baseline for secrets.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.security.userdefaults-sensitive-data.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected sensitive data stored in UserDefaults/AppStorage; native Keychain remains the preferred baseline for secrets.',
+      code: 'HEURISTICS_IOS_SECURITY_USERDEFAULTS_SENSITIVE_DATA_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',

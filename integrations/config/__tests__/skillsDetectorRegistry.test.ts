@@ -104,6 +104,22 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ['heuristics.ios.dependencies.carthage.ast']
   );
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.keychain-passwords-tokens-no-userdefaults'),
+    ['heuristics.ios.security.userdefaults-sensitive-data.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.keychainservices-nativo-passwords-tokens-datos-sensibles-no-wrappers-d'
+    ),
+    ['heuristics.ios.security.userdefaults-sensitive-data.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.userdefaults-settings-simples-no-datos-sensibles'
+    ),
+    ['heuristics.ios.security.userdefaults-sensitive-data.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),
     ['heuristics.ios.testing.legacy-expectation-description.ast']
   );

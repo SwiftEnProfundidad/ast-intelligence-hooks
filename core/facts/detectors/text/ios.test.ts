@@ -44,6 +44,7 @@ import {
   hasSwiftSheetIsPresentedUsage,
   hasSwiftScrollViewShowsIndicatorsUsage,
   hasSwiftSensitiveLoggingUsage,
+  hasSwiftSensitiveUserDefaultsStorageUsage,
   hasSwiftJSONSerializationUsage,
   hasSwiftStringFormatUsage,
   hasSwiftTabItemUsage,
@@ -221,6 +222,22 @@ final class APIClient {
   assert.equal(hasSwiftJSONSerializationUsage(source), true);
   assert.equal(hasSwiftAlamofireUsage(ignored), false);
   assert.equal(hasSwiftJSONSerializationUsage(ignored), false);
+});
+
+test('detector iOS de seguridad detecta secretos en UserDefaults y AppStorage', () => {
+  const source = `
+UserDefaults.standard.set(accessToken, forKey: "accessToken")
+@AppStorage("refreshToken") private var refreshToken = ""
+`;
+  const ignored = `
+UserDefaults.standard.set(theme, forKey: "selectedTheme")
+@AppStorage("preferredTab") private var preferredTab = "home"
+let text = "UserDefaults.standard.set(accessToken, forKey: \\"accessToken\\")"
+// UserDefaults.standard.set(accessToken, forKey: "accessToken")
+`;
+
+  assert.equal(hasSwiftSensitiveUserDefaultsStorageUsage(source), true);
+  assert.equal(hasSwiftSensitiveUserDefaultsStorageUsage(ignored), false);
 });
 
 test('hasSwiftUncheckedSendableUsage detecta @unchecked Sendable', () => {

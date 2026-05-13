@@ -75,6 +75,18 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.dependencies.carthage',
     ['heuristics.ios.dependencies.carthage.ast']
   ),
+  'skills.ios.guideline.ios.keychain-passwords-tokens-no-userdefaults': heuristicDetector(
+    'ios.security.userdefaults-sensitive-data',
+    ['heuristics.ios.security.userdefaults-sensitive-data.ast']
+  ),
+  'skills.ios.guideline.ios.keychainservices-nativo-passwords-tokens-datos-sensibles-no-wrappers-d': heuristicDetector(
+    'ios.security.userdefaults-sensitive-data',
+    ['heuristics.ios.security.userdefaults-sensitive-data.ast']
+  ),
+  'skills.ios.guideline.ios.userdefaults-settings-simples-no-datos-sensibles': heuristicDetector(
+    'ios.security.userdefaults-sensitive-data',
+    ['heuristics.ios.security.userdefaults-sensitive-data.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),
