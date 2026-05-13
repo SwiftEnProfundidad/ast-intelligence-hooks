@@ -326,6 +326,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.localization.localizable-strings.ast',
+    description: 'Detects legacy Localizable.strings files where String Catalogs are the preferred iOS baseline.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.localization.localizable-strings.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Localizable.strings usage; String Catalogs (.xcstrings) remain the preferred baseline for new localization work.',
+      code: 'HEURISTICS_IOS_LOCALIZATION_LOCALIZABLE_STRINGS_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',

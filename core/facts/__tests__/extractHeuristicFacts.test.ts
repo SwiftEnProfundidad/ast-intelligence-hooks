@@ -476,6 +476,7 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
       ),
       fileContentFact('apps/ios/Podfile', 'pod "LegacyDependency"'),
       fileContentFact('apps/ios/Cartfile', 'github "Legacy/Dependency"'),
+      fileContentFact('apps/ios/App/es.lproj/Localizable.strings', '"title" = "Catalog";'),
       fileContentFact(
         'apps/ios/App/Info.plist',
         [
@@ -516,6 +517,7 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.json.jsonserialization.ast',
     'heuristics.ios.legacy-onchange.ast',
     'heuristics.ios.legacy-swiftui-observable-wrapper.ast',
+    'heuristics.ios.localization.localizable-strings.ast',
     'heuristics.ios.logging.adhoc-print.ast',
     'heuristics.ios.logging.sensitive-data.ast',
     'heuristics.ios.navigation-view.ast',
