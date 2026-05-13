@@ -100,6 +100,16 @@ const collectStagedMatchingExtensions = (
     .filter((path) => hasAllowedExtension(path, extensions));
 };
 
+const collectStagedFiles = (
+  git: Pick<IGitService, 'resolveRepoRoot' | 'runGit'>
+): string[] => {
+  const repoRoot = git.resolveRepoRoot();
+  return git.runGit(['diff', '--cached', '--name-only'], repoRoot)
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+};
+
 const runGitOrNull = (
   git: Pick<IGitService, 'runGit'>,
   args: ReadonlyArray<string>,
@@ -205,11 +215,12 @@ const resolveLifecycleAuditScope = (params: {
   git: Pick<IGitService, 'runGit'>;
   repoRoot: string;
   extensions: ReadonlyArray<string>;
+  stagedFiles: ReadonlyArray<string>;
   stagedMatchingExtensions: ReadonlyArray<string>;
 }): LifecycleAuditScope => {
   if (
     (params.stage === 'PRE_WRITE' || params.stage === 'PRE_COMMIT') &&
-    params.stagedMatchingExtensions.length > 0
+    params.stagedFiles.length > 0
   ) {
     return { kind: 'staged' };
   }
@@ -407,6 +418,29 @@ const toRangeNoSupportedCodeAuditAdvisoryFinding = (
   blocking: false,
 });
 
+const isStagedWithoutSupportedCode = (params: {
+  stage: LifecycleAuditStage;
+  scope: LifecycleAuditScope;
+  stagedMatchingExtensions: ReadonlyArray<string>;
+  findings: ReadonlyArray<LifecycleAuditFinding>;
+}): boolean =>
+  (params.stage === 'PRE_WRITE' || params.stage === 'PRE_COMMIT') &&
+  params.scope.kind === 'staged' &&
+  params.stagedMatchingExtensions.length === 0 &&
+  params.findings.length > 0;
+
+const toStagedNoSupportedCodeAuditAdvisoryFinding = (
+  finding: LifecycleAuditFinding
+): LifecycleAuditFinding => ({
+  ...finding,
+  severity: 'INFO',
+  code: 'AUDIT_STAGED_NO_SUPPORTED_CODE_ADVISORY',
+  message:
+    'Staged audit found no supported code files; baseline repository debt is retained as advisory for this documentation/config-only slice. ' +
+    finding.message,
+  blocking: false,
+});
+
 export const runLifecycleAudit = async (params: {
   stage: LifecycleAuditStage;
   auditMode: 'gate' | 'engine';
@@ -427,12 +461,14 @@ export const runLifecycleAudit = async (params: {
   );
   const extensions = DEFAULT_FACT_FILE_EXTENSIONS;
   const untrackedMatchingExtensionsCount = countUntrackedMatchingExtensions(git, extensions);
+  const stagedFiles = collectStagedFiles(git);
   const stagedMatchingExtensions = collectStagedMatchingExtensions(git, extensions);
   const scope = resolveLifecycleAuditScope({
     stage: params.stage,
     git,
     repoRoot,
     extensions,
+    stagedFiles,
     stagedMatchingExtensions,
   });
   const gateScope = toGateScope(scope);
@@ -491,16 +527,24 @@ export const runLifecycleAudit = async (params: {
     scope,
     findings,
   });
+  const stagedWithoutSupportedCode = isStagedWithoutSupportedCode({
+    stage: params.stage,
+    scope,
+    stagedMatchingExtensions,
+    findings,
+  });
   const gateAllowed = originalGateExitCode === 0;
   const effectiveFindings = scopedGlobalEnforcementOnly
     ? findings.map(toScopedAuditAdvisoryFinding)
     : rangePrePushWithoutSupportedCodeSddOnly
       ? findings.map(toRangeNoSupportedCodeAuditAdvisoryFinding)
+    : stagedWithoutSupportedCode
+      ? findings.map(toStagedNoSupportedCodeAuditAdvisoryFinding)
     : gateAllowed
       ? findings.map(toGateAllowedAuditAdvisoryFinding)
       : findings;
   const gateExitCode =
-    scopedGlobalEnforcementOnly || rangePrePushWithoutSupportedCodeSddOnly
+    scopedGlobalEnforcementOnly || rangePrePushWithoutSupportedCodeSddOnly || stagedWithoutSupportedCode
       ? 0
       : originalGateExitCode;
   const effectiveSnapshotOutcome =

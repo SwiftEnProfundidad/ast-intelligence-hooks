@@ -232,6 +232,73 @@ test('runLifecycleAudit usa scope staged en PRE_COMMIT cuando hay staged files',
   assert.equal(result.scope.kind, 'staged');
 });
 
+test('runLifecycleAudit no cae a repo ni bloquea deuda global cuando PRE_COMMIT solo tiene markdown staged', async () => {
+  let capturedScope: Parameters<typeof runPlatformGate>[0]['scope'] | undefined;
+  const result = await runLifecycleAudit({
+    stage: 'PRE_COMMIT',
+    auditMode: 'gate',
+    dependencies: {
+      git: {
+        ...buildGitStub('/repo'),
+        runGit: (args) => {
+          if (args.join(' ') === 'ls-files --others --exclude-standard') {
+            return '';
+          }
+          if (args.join(' ') === 'diff --cached --name-only') {
+            return 'stack-my-architecture-governance/00-informe/REFACTOR_PEDAGOGICO_GOVERNANCE.md\n';
+          }
+          return '';
+        },
+      },
+      resolvePolicyForStage: (stage) =>
+        ({
+          policy: { stage, blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          trace: { stage },
+        }) as never,
+      runPlatformGate: async (params) => {
+        capturedScope = params.scope;
+        return 1;
+      },
+      readEvidence: () =>
+        buildEvidence({
+          stage: 'PRE_COMMIT',
+          outcome: 'BLOCK',
+          files_scanned: 366,
+          findings: [
+            {
+              ruleId: 'ios.no-print',
+              severity: 'ERROR',
+              code: 'IOS_NO_PRINT',
+              message: 'print() usage is not allowed in iOS code.',
+              file: 'stack-my-architecture-SDD/project/HelpdeskSDD/Sources/HelpdeskDemo/main.swift',
+              blocking: true,
+            },
+            {
+              ruleId: 'sdd.policy.blocked',
+              severity: 'ERROR',
+              code: 'OPENSPEC_MISSING',
+              message: 'OpenSpec is required but was not detected.',
+              file: 'openspec/changes',
+              blocking: true,
+            },
+          ],
+        }),
+    },
+  });
+
+  assert.equal(capturedScope?.kind, 'staged');
+  assert.equal(result.scope.kind, 'staged');
+  assert.equal(result.scope.staged_matching_extensions_count, 0);
+  assert.equal(result.gate_exit_code, 0);
+  assert.equal(result.snapshot_outcome, 'PASS');
+  assert.equal(result.blocking_findings_count, 0);
+  assert.equal(result.findings.every((finding) => finding.blocking === false), true);
+  assert.equal(
+    result.findings.every((finding) => finding.code === 'AUDIT_STAGED_NO_SUPPORTED_CODE_ADVISORY'),
+    true
+  );
+});
+
 test('runLifecycleAudit mantiene JSON accionable si el gate bloquea sin findings', async () => {
   const result = await runLifecycleAudit({
     stage: 'PRE_WRITE',
