@@ -588,6 +588,9 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.ios.guideline.ios.obfuscation-strings-sensibles-en-co-digo';
     }
+    if (includes('dateformatter') && includes('localiz')) {
+      return 'skills.ios.guideline.ios.dateformatter-fechas-localizadas';
+    }
     if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||

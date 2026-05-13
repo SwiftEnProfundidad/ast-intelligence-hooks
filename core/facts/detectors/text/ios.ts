@@ -651,6 +651,37 @@ export const hasSwiftHardcodedSensitiveStringUsage = (source: string): boolean =
   ).length > 0;
 };
 
+export const hasSwiftUnlocalizedDateFormatterUsage = (source: string): boolean => {
+  const sanitizedSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const formatterDeclarations = sanitizedSource.matchAll(
+    /\b(?:let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*DateFormatter\s*\(\s*\)/g
+  );
+
+  for (const match of formatterDeclarations) {
+    const formatterName = match[1];
+    if (!formatterName) {
+      continue;
+    }
+
+    const formatterPattern = escapeRegex(formatterName);
+    const hasFixedDateFormat = new RegExp(`\\b${formatterPattern}\\s*\\.\\s*dateFormat\\s*=`).test(
+      sanitizedSource
+    );
+    if (!hasFixedDateFormat) {
+      continue;
+    }
+
+    const hasExplicitLocale = new RegExp(`\\b${formatterPattern}\\s*\\.\\s*locale\\s*=`).test(
+      sanitizedSource
+    );
+    if (!hasExplicitLocale) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 export const hasSwiftAlamofireUsage = (source: string): boolean => {
   return (
     collectSwiftRegexLines(source, /^\s*import\s+Alamofire\b/).length > 0 ||

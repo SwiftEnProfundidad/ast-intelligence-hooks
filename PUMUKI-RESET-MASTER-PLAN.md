@@ -1130,11 +1130,16 @@ Snapshot PARITY-IOS-SWIFTUI-DEBUG-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.swiftui.self-print-changes.ast` como WARN brownfield-aware para `Self._printChanges()` en `apps/ios/**/Presentation/**`, ignorando tests, strings y comentarios; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no prohíbe diagnóstico local durante desarrollo ni cambia política de logging; solo evita dejar instrumentación de render debug en vistas productivas.
 
+Snapshot PARITY-IOS-LOCALIZATION-003 (2026-05-13):
+- Diagnóstico: `DateFormatter - Fechas localizadas` seguía como baseline iOS declarativo aunque un caso seguro y remediable es `DateFormatter().dateFormat = ...` sin `locale` explícito.
+- Implementación: se añade `heuristics.ios.localization.unlocalized-dateformatter.ast` como WARN brownfield-aware para `DateFormatter` con `dateFormat` fijo sin `locale`, preservando `Locale.current`/`autoupdatingCurrent` y formatters basados en `dateStyle`.
+- Alcance explícito: esta slice no bloquea todos los formateos legacy ni infiere el locale efectivo global; solo marca el caso accionable donde un formato fijo puede quedar no localizado si no declara locale.
+
 Snapshot PUMUKI-GATE-ZERO-VIOLATIONS-001 (2026-05-13):
 - Diagnóstico: un audit consumer podía mostrar `violations (no blockers)` y permitir que RuralGo no quedara bloqueado cuando solo había violaciones no HIGH/CRITICAL, contradiciendo el contrato enterprise de bloquear por cualquier severidad.
 - Implementación: la política efectiva del gate pasa a `blockOnOrAbove=INFO` / `warnOnOrAbove=INFO` tanto en `integrations/policy/policyProfiles.ts` como en `integrations/gate/stagePolicies.ts` para default, hard-mode y `skills.policy.json` explícito, de forma que ningún consumer pueda relajar el contrato zero-violations por configuración accidental; `evaluateRules` y `audit` marcan cualquier finding como `blocking=true`.
 - Notificaciones: `audit.summary` con cualquier `totalViolations > 0` pasa a `AST Audit Blocked` y deja de emitir `violations (no blockers)`.
-- Evidencia local: tests enfocados `43/43 pass`, `npm run -s typecheck` OK y `git diff --check` limpio.
+- Evidencia local: suite dirigida `151/151 pass`; `npm run -s skills:lock:check` -> `FRESH`; `npm run -s typecheck` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.236.tgz`.
 
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.

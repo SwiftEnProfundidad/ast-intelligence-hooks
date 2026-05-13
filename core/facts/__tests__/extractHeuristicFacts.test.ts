@@ -545,6 +545,7 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.security.userdefaults-sensitive-data.ast',
     'heuristics.ios.sheet-is-presented.ast',
     'heuristics.ios.string-format.ast',
+    'heuristics.ios.swiftui.foreach-self-identity.ast',
     'heuristics.ios.tab-item.ast',
     'heuristics.ios.task-detached.ast',
     'heuristics.ios.uiscreen-main-bounds.ast',
