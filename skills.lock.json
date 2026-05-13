@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T11:18:53.521Z",
+  "generatedAt": "2026-05-13T11:29:26.365Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5764,7 +5764,7 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "30c5afdca8ca553960a3063adf318d314f3d60489bf88465b670e82e6e157d51",
+      "hash": "6b68665f29f3894ce007abafdd6a766e63ec02f576fc7299e9d7cf17430786d4",
       "rules": [
         {
           "id": "skills.ios.guideline.ios.accessibility-identifiers-para-localizar-elementos",
@@ -6092,14 +6092,14 @@
         },
         {
           "id": "skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui",
-          "description": "Cero strings hardcodeadas en UI",
+          "description": "String(localized:) y formateadores (Date/Number)",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",
           "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
           "confidence": "MEDIUM",
           "locked": true,
-          "evaluationMode": "DECLARATIVE",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {
@@ -7870,30 +7870,6 @@
         {
           "id": "skills.ios.guideline.ios.strict-concurrency-checking-activar-en-complete",
           "description": "Strict Concurrency Checking - Activar en Complete",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.string-localized-api-moderna-para-strings-traducibles",
-          "description": "String(localized:) - API moderna para strings traducibles",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.string-localized-y-formateadores-date-number",
-          "description": "String(localized:) y formateadores (Date/Number)",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-guidelines",

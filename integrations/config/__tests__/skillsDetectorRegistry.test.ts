@@ -136,6 +136,10 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ['heuristics.ios.localization.localizable-strings.ast']
   );
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui'),
+    ['heuristics.ios.localization.hardcoded-ui-string.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),
     ['heuristics.ios.testing.legacy-expectation-description.ast']
   );

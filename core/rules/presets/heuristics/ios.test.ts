@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 52);
+  assert.equal(iosRules.length, 53);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -26,6 +26,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.security.userdefaults-sensitive-data.ast',
     'heuristics.ios.security.insecure-transport.ast',
     'heuristics.ios.localization.localizable-strings.ast',
+    'heuristics.ios.localization.hardcoded-ui-string.ast',
     'heuristics.ios.unchecked-sendable.ast',
     'heuristics.ios.preconcurrency.ast',
     'heuristics.ios.nonisolated-unsafe.ast',
@@ -105,6 +106,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.localization.localizable-strings.ast')?.then.code,
     'HEURISTICS_IOS_LOCALIZATION_LOCALIZABLE_STRINGS_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.localization.hardcoded-ui-string.ast')?.then.code,
+    'HEURISTICS_IOS_LOCALIZATION_HARDCODED_UI_STRING_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.preconcurrency.ast')?.then.code,

@@ -612,7 +612,10 @@ struct APIEndpoint: Sendable {
 - `skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs` se mapea a `heuristics.ios.localization.localizable-strings.ast`.
 - `skills.ios.guideline.ios.string-catalogs-xcstrings` se mapea a `heuristics.ios.localization.localizable-strings.ast`.
 - `skills.ios.guideline.ios.string-catalogs-xcstrings-sistema-moderno-de-localizacio-n-xcode-15` se mapea a `heuristics.ios.localization.localizable-strings.ast`.
+- `skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui` se mapea a `heuristics.ios.localization.hardcoded-ui-string.ast`.
+- `skills.ios.guideline.ios.string-localized-api-moderna-para-strings-traducibles` se mapea a `heuristics.ios.localization.hardcoded-ui-string.ast`.
 - En `PROJECT MODE: brownfield`, este hallazgo detecta `Localizable.strings` bajo `apps/ios/**` como señal de baseline/adopción sin bloquear deuda histórica salvo promoción explícita de policy. String Catalogs (`.xcstrings`) permanece como baseline preferente.
+- También detecta literales de texto visibles en SwiftUI (`Text`, `Button`, `Label`, `TextField`, `SecureField`, `navigationTitle`, `accessibilityLabel`) como señal de adopción hacia `String(localized:)` y String Catalogs, ignorando keys como `orders.title`.
 
 ### Combine (Reactive):
 ✅ **Publishers** - AsyncSequence para async, Combine para streams complejos
