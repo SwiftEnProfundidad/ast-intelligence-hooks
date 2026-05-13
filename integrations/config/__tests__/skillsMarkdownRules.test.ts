@@ -312,6 +312,7 @@ test('normaliza regla iOS magic numbers a detector canonico de mantenibilidad', 
   assert.deepEqual(rules.map((rule) => rule.id), [
     'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres',
   ]);
+  assert.equal(rules[0]?.severity, 'WARN');
 });
 
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {

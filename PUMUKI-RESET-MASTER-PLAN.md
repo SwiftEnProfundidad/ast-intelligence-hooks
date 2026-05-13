@@ -1023,6 +1023,7 @@ Snapshot PARITY-IOS-SAFETY-001 (2026-05-13):
 Snapshot PARITY-IOS-MAINTAINABILITY-001 (2026-05-13):
 - Diagnóstico: `Magic numbers - Usar constantes con nombres` seguía como baseline iOS declarativo pese a que los literales numéricos de layout SwiftUI son detectables sin bloquear lógica de dominio ni tests legacy.
 - Implementación: se añade `heuristics.ios.maintainability.magic-number-layout.ast` como WARN brownfield-aware para `Presentation` SwiftUI cuando aparecen literales numéricos en `VStack/HStack/ZStack/Lazy*Stack(spacing:)`, `.padding(...)`, `.frame(width:/height:)`, `.offset(...)`, `.position(...)`, `.shadow(radius:)` o `.blur(...)`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Ajuste consumer: la severidad compilada de esta regla se fija en `WARN` para preservar la política brownfield de RuralGo y evitar que una regla de mantenibilidad de layout bloquee `PRE_PUSH` por baseline heredado.
 - Alcance explícito: esta slice no detecta todos los números de negocio ni constantes de dominio; prioriza layout visible y remediación clara mediante tokens o constantes nombradas.
 
 Snapshot PARITY-ANDROID-001 (2026-05-12):

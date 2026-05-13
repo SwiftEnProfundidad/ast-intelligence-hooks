@@ -108,6 +108,17 @@ const resolveDefaultStageForKnownRule = (
   return KNOWN_RULE_DEFAULT_STAGE[ruleId];
 };
 
+const KNOWN_RULE_DEFAULT_SEVERITY: Readonly<Record<string, Severity>> = {
+  'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres': 'WARN',
+};
+
+const resolveDefaultSeverityForKnownRule = (
+  ruleId: string,
+  inferredSeverity: Severity
+): Severity => {
+  return KNOWN_RULE_DEFAULT_SEVERITY[ruleId] ?? inferredSeverity;
+};
+
 const isRuleCandidateLine = (line: string): boolean => {
   if (CHECK_RULE_PREFIX.test(line)) {
     return true;
@@ -644,7 +655,9 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
     rules.push({
       id: nextId,
       description,
-      severity: inferRuleSeverity(rawLine),
+      severity: knownRuleId
+        ? resolveDefaultSeverityForKnownRule(knownRuleId, inferRuleSeverity(rawLine))
+        : inferRuleSeverity(rawLine),
       platform,
       sourceSkill: params.sourceSkill,
       sourcePath: params.sourcePath,
