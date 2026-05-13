@@ -487,6 +487,9 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.ios.no-mixed-testing-frameworks';
     }
+    if (includes('quick nimble') || includes('quick/nimble')) {
+      return 'skills.ios.guideline.ios.quick-nimble-prohibido-usar-swift-testing-nativo';
+    }
     if (
       includes('nsmanagedobject across boundaries') ||
       includes('passing nsmanagedobject') ||

@@ -1026,6 +1026,11 @@ Snapshot PARITY-IOS-MAINTAINABILITY-001 (2026-05-13):
 - Ajuste consumer: la severidad compilada de esta regla se fija en `WARN` para preservar la política brownfield de RuralGo y evitar que una regla de mantenibilidad de layout bloquee `PRE_PUSH` por baseline heredado.
 - Alcance explícito: esta slice no detecta todos los números de negocio ni constantes de dominio; prioriza layout visible y remediación clara mediante tokens o constantes nombradas.
 
+Snapshot PARITY-IOS-TESTING-001 (2026-05-13):
+- Diagnóstico: `Quick/Nimble - Prohibido, usar Swift Testing nativo` seguía como baseline iOS declarativo aunque la dependencia a frameworks BDD legacy es detectable en tests Swift sin exigir migración global de XCTest.
+- Implementación: se añade `heuristics.ios.testing.quick-nimble.ast` como WARN brownfield-aware para `import Quick`, `import Nimble` o suites `QuickSpec` en rutas de test iOS; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no bloquea XCTest legacy ni convierte la migración completa a Swift Testing en hard gate; solo señala Quick/Nimble como dependencia de testing no nativa.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

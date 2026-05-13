@@ -1050,6 +1050,13 @@ export const hasSwiftMixedTestingFrameworksUsage = (source: string): boolean => 
   return hasSwiftTestingImportUsage(source) || hasSwiftTestingSuiteAttributeUsage(source);
 };
 
+export const hasSwiftQuickNimbleUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bimport\s+(?:Quick|Nimble)\b|\bclass\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*QuickSpec\b/
+  );
+};
+
 export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
   return (
     collectSwiftRegexLines(source, /\bXCTAssert[A-Za-z0-9_]*\s*\(/).length > 0 ||

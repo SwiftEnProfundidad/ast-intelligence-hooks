@@ -1074,6 +1074,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.testing.quick-nimble.ast',
+    description: 'Detects Quick/Nimble usage in iOS Swift tests.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.testing.quick-nimble.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Quick/Nimble usage where native Swift Testing remains the preferred baseline.',
+      code: 'HEURISTICS_IOS_TESTING_QUICK_NIMBLE_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.core-data.nsmanagedobject-boundary.ast',
     description: 'Detects NSManagedObject usage in shared iOS boundaries.',
     severity: 'WARN',

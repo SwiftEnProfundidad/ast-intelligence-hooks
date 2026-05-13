@@ -315,6 +315,18 @@ test('normaliza regla iOS magic numbers a detector canonico de mantenibilidad', 
   assert.equal(rules[0]?.severity, 'WARN');
 });
 
+test('normaliza regla iOS Quick Nimble a detector canonico de testing', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ❌ Quick/Nimble - Prohibido, usar Swift Testing nativo',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.quick-nimble-prohibido-usar-swift-testing-nativo',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

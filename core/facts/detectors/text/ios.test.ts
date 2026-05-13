@@ -51,6 +51,7 @@ import {
   hasSwiftPassedValueStateWrapperUsage,
   hasSwiftPhysicalTextAlignmentUsage,
   hasSwiftPreconcurrencyUsage,
+  hasSwiftQuickNimbleUsage,
   hasSwiftSheetIsPresentedUsage,
   hasSwiftScrollViewShowsIndicatorsUsage,
   hasSwiftSensitiveLoggingUsage,
@@ -938,6 +939,41 @@ struct LoginModernTests {
   assert.equal(hasSwiftMixedTestingFrameworksUsage(mixedSuite), true);
   assert.equal(hasSwiftMixedTestingFrameworksUsage(legacyOnly), false);
   assert.equal(hasSwiftMixedTestingFrameworksUsage(modernOnly), false);
+});
+
+test('hasSwiftQuickNimbleUsage detecta Quick y Nimble en tests Swift', () => {
+  const quickSpec = `
+import Quick
+import Nimble
+
+final class CheckoutSpec: QuickSpec {
+  override class func spec() {
+    describe("checkout") {
+      it("loads") {
+        expect(true).to(beTrue())
+      }
+    }
+  }
+}
+`;
+  const nativeSwiftTesting = `
+import Testing
+
+@Suite
+struct CheckoutTests {
+  @Test func loads() {
+    #expect(true)
+  }
+}
+`;
+  const ignored = `
+let text = "import Quick"
+// import Nimble
+`;
+
+  assert.equal(hasSwiftQuickNimbleUsage(quickSpec), true);
+  assert.equal(hasSwiftQuickNimbleUsage(nativeSwiftTesting), false);
+  assert.equal(hasSwiftQuickNimbleUsage(ignored), false);
 });
 
 test('hasSwiftXCTestAssertionUsage detecta XCTAssert y XCTFail reales', () => {

@@ -259,6 +259,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-mixed-testing-frameworks': heuristicDetector('ios.testing.mixed-frameworks', [
     'heuristics.ios.testing.mixed-frameworks.ast',
   ]),
+  'skills.ios.guideline.ios.quick-nimble-prohibido-usar-swift-testing-nativo': heuristicDetector(
+    'ios.testing.quick-nimble',
+    ['heuristics.ios.testing.quick-nimble.ast']
+  ),
   'skills.ios.no-nsmanagedobject-boundary': heuristicDetector(
     'ios.core-data.nsmanagedobject-boundary',
     ['heuristics.ios.core-data.nsmanagedobject-boundary.ast']

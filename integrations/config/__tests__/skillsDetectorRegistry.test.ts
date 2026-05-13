@@ -223,6 +223,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-mixed-testing-frameworks'), [
     'heuristics.ios.testing.mixed-frameworks.ast',
   ]);
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.quick-nimble-prohibido-usar-swift-testing-nativo'
+    ),
+    ['heuristics.ios.testing.quick-nimble.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-nsmanagedobject-async-boundary'), [
     'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
   ]);
