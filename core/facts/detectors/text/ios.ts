@@ -492,6 +492,25 @@ export const hasSwiftSensitiveUserDefaultsStorageUsage = (source: string): boole
   });
 };
 
+export const hasSwiftInsecureTransportUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  const hasHttpUrlLiteral = withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    return /["']http:\/\/[^"']*["']/.test(line);
+  });
+
+  if (hasHttpUrlLiteral) {
+    return true;
+  }
+
+  return (
+    /<key>\s*NSAllowsArbitraryLoads\s*<\/key>\s*<true\s*\/>/i.test(source) ||
+    /\bNSAllowsArbitraryLoads\b\s*=\s*(?:true|YES|1)\b/i.test(source)
+  );
+};
+
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@unchecked', index)) {

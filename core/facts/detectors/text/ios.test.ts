@@ -45,6 +45,7 @@ import {
   hasSwiftScrollViewShowsIndicatorsUsage,
   hasSwiftSensitiveLoggingUsage,
   hasSwiftSensitiveUserDefaultsStorageUsage,
+  hasSwiftInsecureTransportUsage,
   hasSwiftJSONSerializationUsage,
   hasSwiftStringFormatUsage,
   hasSwiftTabItemUsage,
@@ -238,6 +239,33 @@ let text = "UserDefaults.standard.set(accessToken, forKey: \\"accessToken\\")"
 
   assert.equal(hasSwiftSensitiveUserDefaultsStorageUsage(source), true);
   assert.equal(hasSwiftSensitiveUserDefaultsStorageUsage(ignored), false);
+});
+
+test('detector iOS de seguridad detecta transporte inseguro HTTP y ATS permisivo', () => {
+  const source = `
+final class CatalogClient {
+  func load() {
+    _ = URL(string: "http://example.com/catalog.json")
+  }
+}
+`;
+  const plist = `
+<dict>
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+  </dict>
+</dict>
+`;
+  const ignored = `
+// _ = URL(string: "http://example.com/catalog.json")
+let text = "https://example.com/catalog.json"
+`;
+
+  assert.equal(hasSwiftInsecureTransportUsage(source), true);
+  assert.equal(hasSwiftInsecureTransportUsage(plist), true);
+  assert.equal(hasSwiftInsecureTransportUsage(ignored), false);
 });
 
 test('hasSwiftUncheckedSendableUsage detecta @unchecked Sendable', () => {

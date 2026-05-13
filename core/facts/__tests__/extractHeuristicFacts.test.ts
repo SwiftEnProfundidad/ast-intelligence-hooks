@@ -476,6 +476,18 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
       ),
       fileContentFact('apps/ios/Podfile', 'pod "LegacyDependency"'),
       fileContentFact('apps/ios/Cartfile', 'github "Legacy/Dependency"'),
+      fileContentFact(
+        'apps/ios/App/Info.plist',
+        [
+          '<dict>',
+          '  <key>NSAppTransportSecurity</key>',
+          '  <dict>',
+          '    <key>NSAllowsArbitraryLoads</key>',
+          '    <true/>',
+          '  </dict>',
+          '</dict>',
+        ].join('\n')
+      ),
     ],
     detectedPlatforms: {
       ios: { detected: true },
@@ -515,6 +527,7 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.passed-value-state-wrapper.ast',
     'heuristics.ios.preconcurrency.ast',
     'heuristics.ios.scrollview-shows-indicators.ast',
+    'heuristics.ios.security.insecure-transport.ast',
     'heuristics.ios.security.userdefaults-sensitive-data.ast',
     'heuristics.ios.sheet-is-presented.ast',
     'heuristics.ios.string-format.ast',
