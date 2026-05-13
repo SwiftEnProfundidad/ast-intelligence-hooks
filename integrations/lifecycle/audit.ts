@@ -372,6 +372,17 @@ const isScopedPreWriteGlobalEnforcementOnly = (params: {
     (finding) => finding.code === 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL'
   );
 
+const isRangePrePushWithoutSupportedCodeSddOnly = (params: {
+  stage: LifecycleAuditStage;
+  scope: LifecycleAuditScope;
+  findings: ReadonlyArray<LifecycleAuditFinding>;
+}): boolean =>
+  params.stage === 'PRE_PUSH' &&
+  params.scope.kind === 'range' &&
+  params.scope.matchingExtensions.length === 0 &&
+  params.findings.length > 0 &&
+  params.findings.every((finding) => finding.code === 'SDD_CHANGE_MISSING');
+
 const toScopedAuditAdvisoryFinding = (
   finding: LifecycleAuditFinding
 ): LifecycleAuditFinding => ({
@@ -380,6 +391,18 @@ const toScopedAuditAdvisoryFinding = (
   code: 'AUDIT_SCOPED_GLOBAL_ENFORCEMENT_ADVISORY',
   message:
     'Scoped PRE_WRITE audit evaluated only the staged supported files; global skills enforcement debt is retained as advisory for repo-wide work. ' +
+    finding.message,
+  blocking: false,
+});
+
+const toRangeNoSupportedCodeAuditAdvisoryFinding = (
+  finding: LifecycleAuditFinding
+): LifecycleAuditFinding => ({
+  ...finding,
+  severity: 'INFO',
+  code: 'AUDIT_RANGE_NO_SUPPORTED_CODE_ADVISORY',
+  message:
+    'Range PRE_PUSH audit found no supported code files in the branch delta; SDD baseline debt is retained as advisory for this atomic split slice. ' +
     finding.message,
   blocking: false,
 });
@@ -463,13 +486,23 @@ export const runLifecycleAudit = async (params: {
     scope,
     findings,
   });
+  const rangePrePushWithoutSupportedCodeSddOnly = isRangePrePushWithoutSupportedCodeSddOnly({
+    stage: params.stage,
+    scope,
+    findings,
+  });
   const gateAllowed = originalGateExitCode === 0;
   const effectiveFindings = scopedGlobalEnforcementOnly
     ? findings.map(toScopedAuditAdvisoryFinding)
+    : rangePrePushWithoutSupportedCodeSddOnly
+      ? findings.map(toRangeNoSupportedCodeAuditAdvisoryFinding)
     : gateAllowed
       ? findings.map(toGateAllowedAuditAdvisoryFinding)
       : findings;
-  const gateExitCode = scopedGlobalEnforcementOnly ? 0 : originalGateExitCode;
+  const gateExitCode =
+    scopedGlobalEnforcementOnly || rangePrePushWithoutSupportedCodeSddOnly
+      ? 0
+      : originalGateExitCode;
   const effectiveSnapshotOutcome =
     gateExitCode === 0 && snapshotOutcome === 'BLOCK' ? 'PASS' : snapshotOutcome;
 

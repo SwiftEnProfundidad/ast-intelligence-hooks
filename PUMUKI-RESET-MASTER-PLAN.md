@@ -936,7 +936,7 @@ git checkout -b refactor/s1-governance-console
 - Estado: 🚧 PUMUKI-INC-136 / RuralGo atomic split baseline blocker.
 - Origen externo: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` commit `4e12f0303 docs: report atomic split baseline blocker`.
 - Diagnóstico: `pumuki audit --stage=PRE_PUSH --json` evaluaba `scope=repo` en CLI y reactivaba deuda baseline de `origin/develop` al intentar partir una rama acumulada en slices atómicos, aunque el slice solo tocara `package*.json` y MDs de seguimiento.
-- Implementación objetivo: `audit PRE_PUSH` debe resolver un rango GitFlow (`merge-base(base, HEAD)..HEAD`) y pasar `scope=range` al gate cuando exista base resoluble, con `PUMUKI_AUDIT_PRE_PUSH_BASE_REF` como override explícito; si no hay base resoluble, se conserva fallback `repo`.
+- Implementación objetivo: `audit PRE_PUSH` debe resolver un rango GitFlow (`merge-base(base, HEAD)..HEAD`) y pasar `scope=range` al gate cuando exista base resoluble, con `PUMUKI_AUDIT_PRE_PUSH_BASE_REF` como override explícito; si no hay base resoluble, se conserva fallback `repo`. Si el rango no contiene archivos de código soportados, deuda SDD baseline como `SDD_CHANGE_MISSING` no debe bloquear el slice atómico documental/repin y debe quedar como advisory.
 
 Snapshot PARITY-IOS-SWIFTDATA-001 (2026-05-12):
 - Reapertura limpia: PR #890 queda descartado como ruta de merge directa porque estaba basado en `bugfix/pumuki-inc130-ios-helper-critical-quality-final2` y no en `main`, arrastrando historia antigua.

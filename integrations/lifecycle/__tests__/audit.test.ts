@@ -480,3 +480,74 @@ test('runLifecycleAudit permite base explicita para audit PRE_PUSH', async () =>
     assert.equal(result.scope.range_matching_extensions_count, 1);
   });
 });
+
+test('runLifecycleAudit no bloquea PRE_PUSH range sin codigo soportado por SDD baseline', async () => {
+  await withEnv('PUMUKI_AUDIT_PRE_PUSH_BASE_REF', undefined, async () => {
+    const git: IGitService = {
+      ...buildGitStub('/repo'),
+      runGit: (args) => {
+        const command = args.join(' ');
+        if (command === 'ls-files --others --exclude-standard') {
+          return '';
+        }
+        if (command === 'diff --cached --name-only') {
+          return '';
+        }
+        if (command === 'rev-parse --abbrev-ref HEAD') {
+          return 'chore/ruralgo-pumuki-6-3-205-rollout';
+        }
+        if (command === 'rev-parse --abbrev-ref --symbolic-full-name @{upstream}') {
+          return 'origin/develop';
+        }
+        if (command === 'rev-parse --verify origin/develop') {
+          return 'developsha';
+        }
+        if (command === 'merge-base origin/develop HEAD') {
+          return 'basesha';
+        }
+        if (command === 'diff --name-only basesha..HEAD') {
+          return 'package.json\npackage-lock.json\ndocs/RURALGO_SEGUIMIENTO.md';
+        }
+        return '';
+      },
+    };
+
+    const result = await runLifecycleAudit({
+      stage: 'PRE_PUSH',
+      auditMode: 'gate',
+      dependencies: {
+        git,
+        resolvePolicyForStage: (stage) =>
+          ({
+            policy: { stage, blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            trace: { stage },
+          }) as never,
+        runPlatformGate: async () => 1,
+        readEvidence: () =>
+          buildEvidence({
+            stage: 'PRE_PUSH',
+            outcome: 'BLOCK',
+            files_scanned: 0,
+            findings: [
+              {
+                ruleId: 'sdd.policy.blocked',
+                severity: 'ERROR',
+                code: 'SDD_CHANGE_MISSING',
+                message: 'No active SDD change found.',
+                file: 'openspec/changes',
+                blocking: true,
+              },
+            ],
+          }),
+      },
+    });
+
+    assert.equal(result.scope.kind, 'range');
+    assert.equal(result.scope.range_matching_extensions_count, 0);
+    assert.equal(result.gate_exit_code, 0);
+    assert.equal(result.snapshot_outcome, 'PASS');
+    assert.equal(result.blocking_findings_count, 0);
+    assert.equal(result.findings[0]?.code, 'AUDIT_RANGE_NO_SUPPORTED_CODE_ADVISORY');
+    assert.equal(result.findings[0]?.blocking, false);
+  });
+});
