@@ -577,6 +577,22 @@ export const hasSwiftFixedFontSizeUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftPhysicalTextAlignmentUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  return withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    return (
+      /\.\s*multilineTextAlignment\s*\(\s*\.\s*(?:left|right)\s*\)/.test(sanitized) ||
+      /\.\s*frame\s*\([^)]*alignment\s*:\s*\.\s*(?:left|right)\b/.test(sanitized) ||
+      /\bTextAlignment\s*\.\s*(?:left|right)\b/.test(sanitized) ||
+      /\bNSTextAlignment\s*\.\s*(?:left|right)\b/.test(sanitized)
+    );
+  });
+};
+
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@unchecked', index)) {

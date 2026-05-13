@@ -201,6 +201,18 @@ test('normaliza regla iOS Dynamic Type a detector canonico de accesibilidad', ()
   ]);
 });
 
+test('normaliza regla iOS RTL a detector canonico de alineación física', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ **RTL support** - Right-to-left para árabe, hebreo',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.rtl-support-right-to-left-para-a-rabe-hebreo',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

@@ -404,6 +404,9 @@ const normalizeKnownRuleTarget = (
     if (includes('dynamic type')) {
       return 'skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico';
     }
+    if (includes('rtl support') || includes('right to left')) {
+      return 'skills.ios.guideline.ios.rtl-support-right-to-left-para-a-rabe-hebreo';
+    }
     if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
