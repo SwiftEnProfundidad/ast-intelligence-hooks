@@ -931,9 +931,16 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-001` / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS tras cerrar la incidencia externa activa. |
+| Este plan | `[🚧] - PUMUKI-INC-140` / Stack Governance markdown staged no debe caer a repo-scope ni bloquear por deuda global ajena. |
 
-- Estado: 🚧 PARITY-IOS-001 / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS.
+- Estado: 🚧 PUMUKI-INC-140 / Stack Governance markdown staged no debe caer a repo-scope ni bloquear por deuda global ajena.
+
+Snapshot PUMUKI-INC-140 (2026-05-13):
+- Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-GAP - PRE_WRITE bloquea commit Governance por deuda global ajena al staged`.
+- Reproducción actual: en `stack-my-architecture` con un único markdown staged bajo `stack-my-architecture-governance/`, `pumuki@6.3.237 audit --stage=PRE_COMMIT --json` cae a `scope.kind=repo`, escanea `366` archivos y bloquea por deuda global iOS/SDD ajena (`ios.no-print`, `ios.no-jsonserialization`, `OPENSPEC_MISSING`, `TDD_BDD_EVIDENCE_MISSING`).
+- Objetivo: si `PRE_WRITE`/`PRE_COMMIT` tienen staged files, aunque no sean extensiones de código soportadas, el audit debe permanecer en `scope.kind=staged`; si no hay código soportado staged, cualquier deuda baseline repo-wide se conserva como advisory para no bloquear un slice documental/config-only.
+- Implementación: `runLifecycleAudit` distingue staged files totales de staged files con extensiones soportadas; `PRE_WRITE`/`PRE_COMMIT` permanecen en scope `staged` cuando hay cualquier staged file, y si `staged_matching_extensions_count=0` degradan findings baseline a `AUDIT_STAGED_NO_SUPPORTED_CODE_ADVISORY`.
+- Evidencia Pumuki: `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/audit.test.ts` -> `10/10 pass`; `npm run -s typecheck` -> OK; `git diff --check` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.238.tgz`.
 
 Snapshot PUMUKI-INC-139 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, recurrencia PRE_WRITE vs PRE_COMMIT en slice checkout pixel-perfect con `pumuki@6.3.235`.
