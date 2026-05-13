@@ -223,6 +223,11 @@ apps/ios/Presentation/
 ✅ **Prohibido print()** y logs ad-hoc
 ✅ **No loggear PII** (tokens, emails, IDs sensibles)
 
+### Enforcement AST inicial de logging iOS:
+✅ `skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc` se mapea a `heuristics.ios.logging.adhoc-print.ast` para detectar `print`, `debugPrint`, `dump`, `NSLog` y `os_log` en Swift production.
+✅ `skills.ios.guideline.ios.no-loggear-pii-tokens-emails-ids-sensibles` se mapea a `heuristics.ios.logging.sensitive-data.ast` para detectar tokens, credenciales, emails e IDs sensibles en llamadas de logging.
+✅ `os.Logger` sigue siendo la API preferida; esta slice detecta el riesgo prohibido, no fuerza todavía una arquitectura completa de observabilidad.
+
 ```swift
 // ✅ Ejemplo: ViewModel con @Observable (iOS 17+)
 @Observable

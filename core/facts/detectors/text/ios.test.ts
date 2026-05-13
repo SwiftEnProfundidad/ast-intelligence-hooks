@@ -12,6 +12,7 @@ import {
   hasSwiftDispatchGroupUsage,
   hasSwiftDispatchQueueUsage,
   hasSwiftDispatchSemaphoreUsage,
+  hasSwiftAdHocLoggingUsage,
   hasSwiftForEachIndicesUsage,
   hasSwiftForceCastUsage,
   hasSwiftFontWeightBoldUsage,
@@ -41,6 +42,7 @@ import {
   hasSwiftPreconcurrencyUsage,
   hasSwiftSheetIsPresentedUsage,
   hasSwiftScrollViewShowsIndicatorsUsage,
+  hasSwiftSensitiveLoggingUsage,
   hasSwiftStringFormatUsage,
   hasSwiftTabItemUsage,
   hasSwiftTaskDetachedUsage,
@@ -163,6 +165,30 @@ Task {
 `;
   assert.equal(hasSwiftTaskDetachedUsage(positive), true);
   assert.equal(hasSwiftTaskDetachedUsage(negative), false);
+});
+
+test('detectores de logging iOS detectan logs ad-hoc y PII en produccion', () => {
+  const adHoc = `
+print(user.id)
+debugPrint(response)
+dump(model)
+NSLog("legacy")
+os_log("legacy")
+`;
+  const structuredSafe = `
+logger.info("Screen loaded")
+let text = "print(accessToken)"
+// print(accessToken)
+`;
+  const sensitive = `
+print(accessToken)
+logger.error("Refresh failed \\(refreshToken)")
+`;
+
+  assert.equal(hasSwiftAdHocLoggingUsage(adHoc), true);
+  assert.equal(hasSwiftAdHocLoggingUsage(structuredSafe), false);
+  assert.equal(hasSwiftSensitiveLoggingUsage(sensitive), true);
+  assert.equal(hasSwiftSensitiveLoggingUsage(structuredSafe), false);
 });
 
 test('hasSwiftUncheckedSendableUsage detecta @unchecked Sendable', () => {

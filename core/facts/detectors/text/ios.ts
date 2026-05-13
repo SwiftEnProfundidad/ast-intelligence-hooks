@@ -437,6 +437,33 @@ export const hasSwiftTaskDetachedUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftAdHocLoggingUsage = (source: string): boolean => {
+  return collectSwiftRegexLines(
+    source,
+    /\b(?:print|debugPrint|dump|NSLog|os_log)\s*\(/
+  ).length > 0;
+};
+
+export const hasSwiftSensitiveLoggingUsage = (source: string): boolean => {
+  return source.split(/\r?\n/).some((line) => {
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    const lineWithoutComments = line.replace(/\/\/.*$/, '');
+    const hasLoggingCall =
+      /\b(?:print|debugPrint|dump|NSLog|os_log)\s*\(/.test(sanitized) ||
+      /\b(?:logger|log)\s*\.\s*(?:debug|info|notice|warning|error|critical|log)\s*\(/i.test(
+        sanitized
+      );
+
+    if (!hasLoggingCall) {
+      return false;
+    }
+
+    return /\b(?:accessToken|refreshToken|authToken|token|password|secret|credential|authorization|email|userId)\b/i.test(
+      lineWithoutComments
+    );
+  });
+};
+
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@unchecked', index)) {
