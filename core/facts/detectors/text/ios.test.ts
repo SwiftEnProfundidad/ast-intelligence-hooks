@@ -38,6 +38,7 @@ import {
   hasSwiftNonLazyScrollForEachUsage,
   hasSwiftViewBodyObjectCreationUsage,
   hasSwiftUiImageDataDecodingUsage,
+  hasSwiftUiInlineActionLogicUsage,
   hasSwiftAssumeIsolatedUsage,
   hasSwiftCoreDataLayerLeakUsage,
   hasSwiftSwiftDataLayerLeakUsage,
@@ -218,6 +219,41 @@ struct AvatarView: View {
 
   assert.equal(hasSwiftUiImageDataDecodingUsage(source), true);
   assert.equal(hasSwiftUiImageDataDecodingUsage(safe), false);
+});
+
+test('hasSwiftUiInlineActionLogicUsage detecta lógica inline en Button y preserva método referenciado', () => {
+  const source = `
+struct CheckoutView: View {
+  @State private var isLoading = false
+
+  var body: some View {
+    Button {
+      if isLoading {
+        return
+      }
+      Task {
+        await submit()
+      }
+    } label: {
+      Text("Pay")
+    }
+  }
+}
+`;
+  const safe = `
+struct CheckoutView: View {
+  var body: some View {
+    Button(action: submit) {
+      Text("Pay")
+    }
+    let sample = "Button { if loading { return } } label:"
+    // Button { if loading { return } } label:
+  }
+}
+`;
+
+  assert.equal(hasSwiftUiInlineActionLogicUsage(source), true);
+  assert.equal(hasSwiftUiInlineActionLogicUsage(safe), false);
 });
 
 test('hasSwiftForceTryUsage detecta try! y descarta try?', () => {

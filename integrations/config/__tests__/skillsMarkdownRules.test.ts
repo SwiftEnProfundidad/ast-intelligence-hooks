@@ -199,6 +199,18 @@ test('normaliza regla SwiftUI UIImage data downsampling a detector canonico de i
   ]);
 });
 
+test('normaliza regla SwiftUI action handlers a detector canonico de action logic', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- Action handlers should reference methods, not contain inline logic',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios-swiftui-expert.action-handlers-should-reference-methods-not-contain-inline-logic',
+  ]);
+});
+
 test('normaliza reglas Core Data a ids canonicos del slice phase8', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-core-data-guidelines',

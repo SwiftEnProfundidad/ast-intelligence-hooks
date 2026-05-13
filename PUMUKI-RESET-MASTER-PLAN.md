@@ -1086,6 +1086,11 @@ Snapshot PARITY-IOS-SWIFTUI-IMAGE-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.swiftui.image-data-decoding.ast` como WARN brownfield-aware para `UIImage(data:)` en `Presentation`, preservando imágenes ya precomputadas o inyectadas; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no bloquea UIKit ni carga de imágenes existente; solo recomienda downsampling previo cuando se detecta decodificación directa desde `Data` en el camino SwiftUI.
 
+Snapshot PARITY-IOS-SWIFTUI-ACTION-001 (2026-05-13):
+- Diagnóstico: `Action handlers should reference methods, not contain inline logic` seguía como baseline SwiftUI declarativo aunque los `Button` con control flow inline son detectables en Presentation.
+- Implementación: se añade `heuristics.ios.swiftui.inline-action-logic.ast` como WARN brownfield-aware para `Button { if/guard/switch/for/while/Task ... } label:` y `Button(action: { ... })`, preservando `Button(action: method)`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no bloquea acciones simples; solo marca control flow inline en handlers, como señal remediable para mover la lógica a métodos o view models.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

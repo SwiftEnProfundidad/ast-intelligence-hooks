@@ -266,6 +266,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.swiftui.image-data-decoding', [
       'heuristics.ios.swiftui.image-data-decoding.ast',
     ]),
+  'skills.ios.guideline.ios-swiftui-expert.action-handlers-should-reference-methods-not-contain-inline-logic':
+    heuristicDetector('ios.swiftui.inline-action-logic', [
+      'heuristics.ios.swiftui.inline-action-logic.ast',
+    ]),
   'skills.ios.no-scrollview-shows-indicators': heuristicDetector(
     'ios.scrollview-shows-indicators',
     ['heuristics.ios.scrollview-shows-indicators.ast']

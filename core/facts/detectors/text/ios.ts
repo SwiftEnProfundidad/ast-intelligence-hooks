@@ -401,6 +401,16 @@ export const hasSwiftUiImageDataDecodingUsage = (source: string): boolean => {
   return /\bUIImage\s*\(\s*data\s*:/.test(swiftSource);
 };
 
+export const hasSwiftUiInlineActionLogicUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const inlineButtonActionPattern =
+    /\bButton\s*\{[\s\S]{0,900}\b(?:if|guard|switch|for|while|Task)\b[\s\S]{0,900}\}\s*label\s*:/;
+  const inlineActionParameterPattern =
+    /\bButton\s*\([^)]*\baction\s*:\s*\{[\s\S]{0,900}\b(?:if|guard|switch|for|while|Task)\b[\s\S]{0,900}\}/;
+
+  return inlineButtonActionPattern.test(swiftSource) || inlineActionParameterPattern.test(swiftSource);
+};
+
 export const hasSwiftDispatchQueueUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'D' || !hasIdentifierAt(swiftSource, index, 'DispatchQueue')) {

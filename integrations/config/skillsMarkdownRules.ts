@@ -16,7 +16,7 @@ const MARKDOWN_BOLD_PATTERN = /[*_]{1,3}/g;
 const MULTISPACE_PATTERN = /\s+/g;
 const AST_NODE_ID_PATTERN = /\bheuristics\.[a-z0-9._-]+\.ast\b/gi;
 const RULE_KEYWORDS =
-  /\b(always|siempre|prefer|use|usar|avoid|evitar|never|nunca|must|obligatorio|required|disallow|do not|no|suggest)\b/i;
+  /\b(always|siempre|prefer|use|usar|avoid|evitar|never|nunca|must|obligatorio|required|disallow|do not|no|suggest|should)\b/i;
 
 const normalizeForLookup = (value: string): string => {
   return value
@@ -380,6 +380,13 @@ const normalizeKnownRuleTarget = (
       (includes('uiimage data') && includes('encountered'))
     ) {
       return 'skills.ios.guideline.ios-swiftui-expert.suggest-image-downsampling-when-uiimage-data-is-encountered';
+    }
+    if (
+      (includes('action handlers') && includes('reference methods')) ||
+      (includes('action handlers') && includes('inline logic')) ||
+      (includes('handlers should reference methods') && includes('inline logic'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.action-handlers-should-reference-methods-not-contain-inline-logic';
     }
     if (
       includes('scrollindicators hidden') ||

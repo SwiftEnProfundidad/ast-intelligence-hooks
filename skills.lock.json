@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T16:23:26.589Z",
+  "generatedAt": "2026-05-13T16:27:11.446Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -8632,8 +8632,20 @@
       "name": "ios-swiftui-expert-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/swiftui-expert-skill/SKILL.md",
-      "hash": "10b8966d8204f1abb91af3254cfb809bf0a3822b8d09347c28639d23e6dfc1c7",
+      "hash": "a69126588892428f136f55666d721346015d4684ded6dfa07509045db95f7f48",
       "rules": [
+        {
+          "id": "skills.ios.guideline.ios-swiftui-expert.action-handlers-should-reference-methods-not-contain-inline-logic",
+          "description": "Action handlers should reference methods, not contain inline logic",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear",
           "description": "Always mark @State and @StateObject as private (makes dependencies clear)",
@@ -8733,6 +8745,18 @@
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.references-state-management-md-property-wrappers-and-data-flow-prefer-",
           "description": "references/state-management.md - Property wrappers and data flow (prefer @Observable)",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.guideline.ios-swiftui-expert.sheets-should-own-their-actions-and-call-dismiss-internally",
+          "description": "Sheets should own their actions and call dismiss() internally",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-swiftui-expert-guidelines",
@@ -8937,6 +8961,18 @@
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.verify-list-patterns-use-stable-identity-see-references-list-patterns-",
           "description": "Verify list patterns use stable identity (see references/list-patterns.md)",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "DECLARATIVE",
+          "origin": "core"
+        },
+        {
+          "id": "skills.ios.guideline.ios-swiftui-expert.views-should-work-in-any-context-don-t-assume-screen-size-or-presentat",
+          "description": "Views should work in any context (don't assume screen size or presentation style)",
           "severity": "WARN",
           "platform": "ios",
           "sourceSkill": "ios-swiftui-expert-guidelines",
