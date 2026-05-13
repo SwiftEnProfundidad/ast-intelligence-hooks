@@ -863,6 +863,13 @@ export const hasSwiftFontWeightBoldUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(source, /\.\s*fontWeight\s*\(\s*\.bold\s*\)/g);
 };
 
+export const hasSwiftExplicitColorStaticMemberUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bColor\s*\.\s*(?:accentColor|black|blue|brown|clear|cyan|gray|green|indigo|mint|orange|pink|primary|purple|red|secondary|teal|white|yellow)\b/g
+  );
+};
+
 export const hasSwiftLegacySwiftUiObservableWrapperUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(source, /@\s*(?:StateObject|ObservedObject)\b/);
 };

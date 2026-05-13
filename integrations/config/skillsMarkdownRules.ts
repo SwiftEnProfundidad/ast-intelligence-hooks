@@ -340,6 +340,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-font-weight-bold';
     }
     if (
+      includes('static member lookup') ||
+      includes('color.blue') ||
+      (includes('.blue') && includes('color'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.prefer-static-member-lookup-blue-vs-color-blue';
+    }
+    if (
       includes('scrollindicators hidden') ||
       includes('scroll indicators hidden') ||
       includes('showsindicators false') ||

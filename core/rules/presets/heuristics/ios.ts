@@ -858,6 +858,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.explicit-color-static-member.ast',
+    description: 'Detects Color.* static member usage where SwiftUI static member lookup is available.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.explicit-color-static-member.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Color.* static member usage where SwiftUI static member lookup may be preferred.',
+      code: 'HEURISTICS_IOS_SWIFTUI_EXPLICIT_COLOR_STATIC_MEMBER_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.navigation-view.ast',
     description: 'Detects NavigationView usage in iOS production code.',
     severity: 'WARN',

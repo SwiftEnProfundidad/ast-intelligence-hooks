@@ -48,6 +48,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-font-weight-bold'), [
     'heuristics.ios.font-weight-bold.ast',
   ]);
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.prefer-static-member-lookup-blue-vs-color-blue'
+    ),
+    ['heuristics.ios.swiftui.explicit-color-static-member.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-preconcurrency'), [
     'heuristics.ios.preconcurrency.ast',
   ]);

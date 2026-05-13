@@ -242,6 +242,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-font-weight-bold': heuristicDetector('ios.font-weight-bold', [
     'heuristics.ios.font-weight-bold.ast',
   ]),
+  'skills.ios.guideline.ios-swiftui-expert.prefer-static-member-lookup-blue-vs-color-blue':
+    heuristicDetector('ios.swiftui.explicit-color-static-member', [
+      'heuristics.ios.swiftui.explicit-color-static-member.ast',
+    ]),
   'skills.ios.no-scrollview-shows-indicators': heuristicDetector(
     'ios.scrollview-shows-indicators',
     ['heuristics.ios.scrollview-shows-indicators.ast']
