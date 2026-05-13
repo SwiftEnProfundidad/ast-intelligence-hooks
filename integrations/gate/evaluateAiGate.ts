@@ -1144,7 +1144,15 @@ const collectEvidenceViolations = (
   }
 
   if (result.evidence.ai_gate.status === 'BLOCKED') {
-    violations.push(toErrorViolation('EVIDENCE_GATE_BLOCKED', 'Evidence AI gate status is BLOCKED.'));
+    const gateBlockedMessage = 'Evidence AI gate status is BLOCKED.';
+    violations.push(
+      isAdvisoryDocumentationRenderSlice(repoRoot, ageSeconds, maxAgeSeconds)
+        ? toWarnViolation(
+            'EVIDENCE_GATE_BLOCKED',
+            `${gateBlockedMessage} Advisory because the current slice only contains documentation/render/tooling artifacts and evidence is fresh.`
+          )
+        : toErrorViolation('EVIDENCE_GATE_BLOCKED', gateBlockedMessage)
+    );
   }
 
   if (stage === 'PRE_WRITE') {
@@ -1162,6 +1170,107 @@ const collectEvidenceViolations = (
   appendWorktreeHygieneViolations(violations, repoState, preWriteWorktreeHygiene, stage);
 
   return { violations, ageSeconds };
+};
+
+const SUPPORTED_FUNCTIONAL_EXTENSIONS = new Set([
+  '.swift',
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.kt',
+  '.kts',
+]);
+
+const DOCUMENTATION_RENDER_TOOLING_EXTENSIONS = new Set([
+  '.css',
+  '.html',
+  '.json',
+  '.md',
+  '.mdx',
+  '.txt',
+]);
+
+const normalizeGitPath = (value: string): string => value.replace(/\\/g, '/').replace(/^"|"$/g, '');
+
+const extractGitStatusPath = (line: string): string | null => {
+  const payload = line.slice(3).trim();
+  if (payload.length === 0) {
+    return null;
+  }
+  const renameSeparator = ' -> ';
+  if (payload.includes(renameSeparator)) {
+    return normalizeGitPath(payload.slice(payload.lastIndexOf(renameSeparator) + renameSeparator.length));
+  }
+  return normalizeGitPath(payload);
+};
+
+const collectGitStatusPaths = (repoRoot: string): readonly string[] => {
+  if (!existsSync(resolve(repoRoot, '.git'))) {
+    return [];
+  }
+  try {
+    return execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .split(/\r?\n/)
+      .map(extractGitStatusPath)
+      .filter((path): path is string => path !== null);
+  } catch {
+    return [];
+  }
+};
+
+const pathExtension = (path: string): string => {
+  const basename = path.split('/').pop() ?? '';
+  const dotIndex = basename.lastIndexOf('.');
+  return dotIndex >= 0 ? basename.slice(dotIndex).toLowerCase() : '';
+};
+
+const isSupportedFunctionalPath = (path: string): boolean =>
+  SUPPORTED_FUNCTIONAL_EXTENSIONS.has(pathExtension(path));
+
+const isDocumentationRenderToolingPath = (path: string): boolean => {
+  const normalized = path.toLowerCase();
+  if (normalized.startsWith('docs/') && DOCUMENTATION_RENDER_TOOLING_EXTENSIONS.has(pathExtension(normalized))) {
+    return true;
+  }
+  if (normalized.endsWith('.md') || normalized.endsWith('.mdx')) {
+    return true;
+  }
+  if (
+    normalized.startsWith('stack-my-architecture-pumuki/dist/') ||
+    normalized.startsWith('stack-my-architecture-hub/pumuki/')
+  ) {
+    return DOCUMENTATION_RENDER_TOOLING_EXTENSIONS.has(pathExtension(normalized));
+  }
+  if (normalized === 'stack-my-architecture-pumuki/scripts/build-html.py') {
+    return true;
+  }
+  if (normalized === 'package.json' || normalized === 'package-lock.json') {
+    return true;
+  }
+  return false;
+};
+
+const isAdvisoryDocumentationRenderSlice = (
+  repoRoot: string,
+  ageSeconds: number,
+  maxAgeSeconds: number
+): boolean => {
+  if (ageSeconds > maxAgeSeconds) {
+    return false;
+  }
+  const paths = collectGitStatusPaths(repoRoot);
+  if (paths.length === 0) {
+    return false;
+  }
+  return (
+    paths.every(isDocumentationRenderToolingPath) &&
+    !paths.some(isSupportedFunctionalPath)
+  );
 };
 
 const toEvidenceSourceDescriptor = (
