@@ -30,6 +30,7 @@ import {
   hasSwiftLegacySwiftUiObservableWrapperUsage,
   hasSwiftMainThreadBlockingSleepUsage,
   hasSwiftMassiveViewControllerResponsibilityUsage,
+  hasSwiftMagicNumberLayoutUsage,
   hasSwiftMixedTestingFrameworksUsage,
   hasSwiftLegacyXCTestImportUsage,
   hasSwiftModernizableXCTestSuiteUsage,
@@ -337,6 +338,38 @@ final class CheckoutViewController: UIViewController {
 
   assert.equal(hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage(source), true);
   assert.equal(hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage(ignored), false);
+});
+
+test('hasSwiftMagicNumberLayoutUsage detecta numeros magicos de layout SwiftUI', () => {
+  const source = `
+struct ProfileView: View {
+  var body: some View {
+    VStack(spacing: 12) {
+      Text("Profile")
+        .padding(16)
+        .frame(width: 320, height: 44)
+    }
+  }
+}
+`;
+  const constants = `
+struct ProfileView: View {
+  private enum Metrics {
+    static let spacing: CGFloat = 12
+    static let cardPadding: CGFloat = 16
+  }
+
+  var body: some View {
+    VStack(spacing: Metrics.spacing) {
+      Text("Profile")
+        .padding(Metrics.cardPadding)
+    }
+  }
+}
+`;
+
+  assert.equal(hasSwiftMagicNumberLayoutUsage(source), true);
+  assert.equal(hasSwiftMagicNumberLayoutUsage(constants), false);
 });
 
 test('detectores de logging iOS detectan logs ad-hoc y PII en produccion', () => {

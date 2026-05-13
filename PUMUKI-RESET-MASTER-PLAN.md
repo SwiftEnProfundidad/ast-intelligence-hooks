@@ -1020,6 +1020,11 @@ Snapshot PARITY-IOS-SAFETY-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.safety.non-iboutlet-iuo.ast` como WARN brownfield-aware para propiedades Swift `var/let name: Type!` fuera de `@IBOutlet`, ignorando strings/comentarios y preservando `@IBOutlet weak var label: UILabel!`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no modifica `force unwrap` ni fuerza migración de IBOutlets legacy; solo señala IUO app-owned que deberían ser opcionales explícitos o inicialización garantizada.
 
+Snapshot PARITY-IOS-MAINTAINABILITY-001 (2026-05-13):
+- Diagnóstico: `Magic numbers - Usar constantes con nombres` seguía como baseline iOS declarativo pese a que los literales numéricos de layout SwiftUI son detectables sin bloquear lógica de dominio ni tests legacy.
+- Implementación: se añade `heuristics.ios.maintainability.magic-number-layout.ast` como WARN brownfield-aware para `Presentation` SwiftUI cuando aparecen literales numéricos en `VStack/HStack/ZStack/Lazy*Stack(spacing:)`, `.padding(...)`, `.frame(width:/height:)`, `.offset(...)`, `.position(...)`, `.shadow(radius:)` o `.blur(...)`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no detecta todos los números de negocio ni constantes de dominio; prioriza layout visible y remediación clara mediante tokens o constantes nombradas.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

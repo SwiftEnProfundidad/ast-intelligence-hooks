@@ -462,6 +462,14 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios.implicitly-unwrapped-solo-para-iboutlets-y-casos-muy-especi-ficos';
     }
     if (
+      includes('magic numbers') ||
+      includes('magic number') ||
+      includes('constantes con nombres') ||
+      includes('named constants')
+    ) {
+      return 'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres';
+    }
+    if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
       includes('mixed testing frameworks')

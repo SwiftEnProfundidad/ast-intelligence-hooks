@@ -559,6 +559,13 @@ export const hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage = (source: stri
   });
 };
 
+export const hasSwiftMagicNumberLayoutUsage = (source: string): boolean => {
+  const swiftUiLayoutNumberPattern =
+    /(?:\b(?:VStack|HStack|ZStack|LazyVStack|LazyHStack)\s*\([^)]*\bspacing\s*:\s*|\.(?:padding|frame|offset|position|shadow|blur)\s*\([^)]*(?:\b(?:width|height|spacing|radius|x|y)\s*:\s*)?)\b(?:[3-9]|[1-9][0-9]+)(?:\.[0-9]+)?\b/;
+
+  return collectSwiftRegexLines(source, swiftUiLayoutNumberPattern).length > 0;
+};
+
 export const hasSwiftAdHocLoggingUsage = (source: string): boolean => {
   return collectSwiftRegexLines(
     source,

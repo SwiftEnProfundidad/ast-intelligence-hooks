@@ -258,6 +258,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.maintainability.magic-number-layout.ast',
+    description: 'Detects SwiftUI layout magic numbers in presentation code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.maintainability.magic-number-layout.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected SwiftUI layout magic numbers; named constants or design tokens remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_MAINTAINABILITY_MAGIC_NUMBER_LAYOUT_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.safety.non-iboutlet-iuo.ast',
     description: 'Detects implicitly unwrapped optionals outside IBOutlet wiring.',
     severity: 'WARN',

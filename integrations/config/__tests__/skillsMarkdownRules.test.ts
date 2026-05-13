@@ -302,6 +302,18 @@ test('normaliza regla iOS implicitly unwrapped a detector canonico de seguridad'
   ]);
 });
 
+test('normaliza regla iOS magic numbers a detector canonico de mantenibilidad', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ Magic numbers - Usar constantes con nombres',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',
