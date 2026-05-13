@@ -47,6 +47,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-task-detached': heuristicDetector('ios.task-detached', [
     'heuristics.ios.task-detached.ast',
   ]),
+  'skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles': heuristicDetector(
+    'ios.memory.strong-delegate',
+    ['heuristics.ios.memory.strong-delegate.ast']
+  ),
+  'skills.ios.guideline.ios.evitar-retain-cycles-especialmente-en-closures-delegates': heuristicDetector(
+    'ios.memory.strong-delegate',
+    ['heuristics.ios.memory.strong-delegate.ast']
+  ),
   'skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc': heuristicDetector(
     'ios.logging.adhoc-print',
     ['heuristics.ios.logging.adhoc-print.ast']

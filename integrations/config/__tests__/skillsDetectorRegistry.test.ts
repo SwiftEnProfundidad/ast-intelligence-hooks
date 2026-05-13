@@ -162,6 +162,18 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ['heuristics.ios.accessibility.icon-only-control-label.ast']
   );
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles'
+    ),
+    ['heuristics.ios.memory.strong-delegate.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.evitar-retain-cycles-especialmente-en-closures-delegates'
+    ),
+    ['heuristics.ios.memory.strong-delegate.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),
     ['heuristics.ios.testing.legacy-expectation-description.ast']
   );

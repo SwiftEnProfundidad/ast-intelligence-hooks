@@ -182,6 +182,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.memory.strong-delegate.ast',
+    description: 'Detects strong delegate/dataSource references in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.memory.strong-delegate.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a strong delegate/dataSource reference; weak delegates remain the preferred baseline to avoid retain cycles.',
+      code: 'HEURISTICS_IOS_MEMORY_STRONG_DELEGATE_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.logging.adhoc-print.ast',
     description: 'Detects print/debugPrint/dump/NSLog/os_log usage in iOS production code.',
     severity: 'WARN',

@@ -995,6 +995,11 @@ Snapshot PARITY-IOS-ACCESSIBILITY-002 (2026-05-13):
 - Implementación: se añade `heuristics.ios.accessibility.icon-only-control-label.ast` como WARN brownfield-aware para `Button` con `Image(systemName:)` sin `.accessibilityLabel` cercano, ignorando strings/comentarios y sin marcar botones con texto visible.
 - Cierre: PR #977 mergeado para detector/preset/mapping/lock, release PR #978 mergeado, `pumuki@6.3.204` publicada y verificada como `latest`; RuralGo repineado a `6.3.204` en `bugfix/ruralgo-tracking-build-stability` con commit `64b543b2903f38848080508dfb9e6817ac98dd15`, `runtime=consumerInstalled=lifecycleInstalled=6.3.204` y PRE_PUSH `gate_exit_code=0`, `blocking_findings_count=0`. Evidencia local: `npm run -s skills:lock:check` -> `FRESH`; `npm run -s typecheck` -> OK; suite dirigida `106/106 pass`; `npm pack --dry-run --silent` -> OK; `git diff --check` limpio.
 
+Snapshot PARITY-IOS-MEMORY-001 (2026-05-13):
+- Diagnóstico: `skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles` y la regla relacionada de retain cycles en delegates seguían como baseline iOS declarativo aunque los delegates fuertes son verificables en Swift production.
+- Implementación: se añade `heuristics.ios.memory.strong-delegate.ast` como WARN brownfield-aware para propiedades `delegate`/`dataSource` o tipos `*Delegate`/`*DataSource` declaradas sin `weak var`, ignorando strings/comentarios y sin marcar `weak var`.
+- Alcance explícito: esta slice cubre delegates fuertes; no declara todavía cobertura completa de `[weak self]` en closures/tasks, `Timer`, `NotificationCenter` o ciclos de Combine.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

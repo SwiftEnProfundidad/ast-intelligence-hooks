@@ -54,6 +54,7 @@ import {
   hasSwiftInsecureTransportUsage,
   hasSwiftJSONSerializationUsage,
   hasSwiftStringFormatUsage,
+  hasSwiftStrongDelegateReferenceUsage,
   hasSwiftTabItemUsage,
   hasSwiftTaskDetachedUsage,
   hasSwiftWaitForExpectationsUsage,
@@ -175,6 +176,37 @@ Task {
 `;
   assert.equal(hasSwiftTaskDetachedUsage(positive), true);
   assert.equal(hasSwiftTaskDetachedUsage(negative), false);
+});
+
+test('hasSwiftStrongDelegateReferenceUsage detecta delegates fuertes y preserva weak delegates', () => {
+  const positive = `
+final class CheckoutCoordinator {
+  var delegate: CheckoutCoordinatorDelegate?
+  let tableDataSource: OrdersTableDataSource
+}
+`;
+  const negative = `
+final class CheckoutCoordinator {
+  weak var delegate: CheckoutCoordinatorDelegate?
+  private weak var dataSource: OrdersTableDataSource?
+  let text = "var delegate: CheckoutCoordinatorDelegate?"
+  // var delegate: CheckoutCoordinatorDelegate?
+}
+`;
+
+  assert.equal(hasSwiftStrongDelegateReferenceUsage(positive), true);
+  assert.equal(hasSwiftStrongDelegateReferenceUsage(negative), false);
+});
+
+test('hasSwiftStrongDelegateReferenceUsage no marca propiedades no delegate', () => {
+  const source = `
+final class CheckoutCoordinator {
+  var repository: OrdersRepository
+  let presenter: CheckoutPresenter
+}
+`;
+
+  assert.equal(hasSwiftStrongDelegateReferenceUsage(source), false);
 });
 
 test('detectores de logging iOS detectan logs ad-hoc y PII en produccion', () => {

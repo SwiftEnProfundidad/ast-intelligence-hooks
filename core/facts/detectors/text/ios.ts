@@ -437,6 +437,19 @@ export const hasSwiftTaskDetachedUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftStrongDelegateReferenceUsage = (source: string): boolean => {
+  const delegatePropertyPattern =
+    /\b(?:var|let)\s+(?:[A-Za-z_][A-Za-z0-9_]*(?:Delegate|DataSource)|delegate|dataSource)\s*:\s*(?:any\s+)?[A-Za-z_][A-Za-z0-9_]*(?:Delegate|DataSource)\b/;
+
+  return source.split(/\r?\n/).some((line) => {
+    const sanitizedLine = stripSwiftLineForSemanticScan(line);
+    if (!delegatePropertyPattern.test(sanitizedLine)) {
+      return false;
+    }
+    return !/\bweak\s+var\b/.test(sanitizedLine);
+  });
+};
+
 export const hasSwiftAdHocLoggingUsage = (source: string): boolean => {
   return collectSwiftRegexLines(
     source,

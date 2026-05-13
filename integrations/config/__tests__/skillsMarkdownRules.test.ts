@@ -237,6 +237,19 @@ test('normaliza regla iOS de accessibility labels a detector canonico de control
   ]);
 });
 
+test('normaliza regla iOS weak delegates a detector canonico de memoria', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent:
+      '- ✅ **Delegation pattern** - Weak delegates para evitar retain cycles',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',
