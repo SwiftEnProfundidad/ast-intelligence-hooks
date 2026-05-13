@@ -177,6 +177,18 @@ test('normaliza regla iOS de strings UI hardcodeadas a detector canonico de loca
   ]);
 });
 
+test('normaliza regla iOS de Asset Catalogs a detector canonico de assets', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ **Assets en Asset Catalogs** - Con soporte para todos los tamaños',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.assets-en-asset-catalogs-con-soporte-para-todos-los-taman-os',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

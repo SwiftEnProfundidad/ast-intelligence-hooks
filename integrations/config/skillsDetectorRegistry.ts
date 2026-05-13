@@ -111,6 +111,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.localization.hardcoded-ui-string',
     ['heuristics.ios.localization.hardcoded-ui-string.ast']
   ),
+  'skills.ios.guideline.ios.assets-en-asset-catalogs-con-soporte-para-todos-los-taman-os': heuristicDetector(
+    'ios.assets.loose-resource',
+    ['heuristics.ios.assets.loose-resource.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),

@@ -362,6 +362,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.assets.loose-resource.ast',
+    description: 'Detects loose image resource loading where Asset Catalogs are the preferred iOS baseline.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.assets.loose-resource.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected loose image resource loading in iOS production code; Asset Catalogs remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_ASSETS_LOOSE_RESOURCE_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',

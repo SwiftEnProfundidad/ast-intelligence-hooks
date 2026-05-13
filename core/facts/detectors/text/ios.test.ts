@@ -22,6 +22,7 @@ import {
   hasSwiftForceUnwrap,
   hasSwiftGeometryReaderUsage,
   hasSwiftHardcodedUiStringUsage,
+  hasSwiftLooseAssetResourceUsage,
   hasSwiftLegacyOnChangeUsage,
   hasSwiftLegacyExpectationDescriptionUsage,
   hasSwiftLegacySwiftUiObservableWrapperUsage,
@@ -297,6 +298,23 @@ struct OrdersView: View {
 
   assert.equal(hasSwiftHardcodedUiStringUsage(source), true);
   assert.equal(hasSwiftHardcodedUiStringUsage(ignored), false);
+});
+
+test('detector iOS de assets detecta recursos sueltos sin confundir asset catalogs', () => {
+  const source = `
+let path = Bundle.main.path(forResource: "hero", withExtension: "png")
+let url = Bundle.main.url(forResource: "logo", withExtension: "pdf")
+let image = UIImage(contentsOfFile: path)
+`;
+  const ignored = `
+Image("hero")
+UIImage(named: "hero")
+let text = "UIImage(contentsOfFile: path)"
+// Bundle.main.path(forResource: "hero", withExtension: "png")
+`;
+
+  assert.equal(hasSwiftLooseAssetResourceUsage(source), true);
+  assert.equal(hasSwiftLooseAssetResourceUsage(ignored), false);
 });
 
 test('hasSwiftUncheckedSendableUsage detecta @unchecked Sendable', () => {

@@ -398,6 +398,9 @@ const normalizeKnownRuleTarget = (
     if (includes('strings hardcodeadas') || includes('string localized')) {
       return 'skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui';
     }
+    if (includes('assets en asset catalogs') || includes('asset catalogs')) {
+      return 'skills.ios.guideline.ios.assets-en-asset-catalogs-con-soporte-para-todos-los-taman-os';
+    }
     if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
