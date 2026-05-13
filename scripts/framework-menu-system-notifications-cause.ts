@@ -30,6 +30,10 @@ const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
     'Hay conflicto entre fuentes de tracking canónico.',
   ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
     'No hay reglas activas para cambios de código.',
+  EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING:
+    'Falta enforcement crítico de skills para la plataforma detectada.',
+  EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
+    'El contrato de skills está incompleto para este stage.',
 };
 
 const ENGLISH_CAUSE_HINTS = [
@@ -52,6 +56,19 @@ const ENGLISH_CAUSE_HINTS = [
   'callback usage',
   'usage.',
 ];
+
+const PRIORITY_CODES_FROM_MESSAGE = [
+  'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+  'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE',
+  'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH',
+];
+
+const resolvePriorityCauseFromMessage = (message?: string): string | null => {
+  if (!message) {
+    return null;
+  }
+  return PRIORITY_CODES_FROM_MESSAGE.find((code) => message.includes(code)) ?? null;
+};
 
 const buildGenericSpanishBlockedCauseSummary = (
   event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>,
@@ -97,6 +114,10 @@ export const resolveBlockedCauseSummary = (
   causeCode: string
 ): string => {
   const trackingContext = extractNotificationTrackingContext(event.causeMessage);
+  const priorityCode = resolvePriorityCauseFromMessage(event.causeMessage);
+  if (priorityCode) {
+    return BLOCKED_CAUSE_SUMMARY_BY_CODE[priorityCode];
+  }
   if (trackingContext) {
     return buildNotificationTrackingCauseSummary(trackingContext);
   }

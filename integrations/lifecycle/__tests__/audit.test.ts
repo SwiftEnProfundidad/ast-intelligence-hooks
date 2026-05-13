@@ -180,6 +180,7 @@ test('runLifecycleAudit expone findings canónicos en JSON', async () => {
   });
 
   assert.equal(result.stage, 'PRE_COMMIT');
+  assert.equal(result.scope.kind, 'repo');
   assert.equal(result.gate_exit_code, 1);
   assert.equal(result.files_scanned, 3);
   assert.equal(result.findings_count, 1);
@@ -189,6 +190,46 @@ test('runLifecycleAudit expone findings canónicos en JSON', async () => {
   assert.equal(result.rules_coverage?.contract, 'AUTO_RUNTIME_RULES_FOR_STAGE');
   assert.equal(result.rules_coverage?.registry_totals?.declarative, 8);
   assert.equal(result.rule_id_normalization.entries[0]?.status, 'registry_1_to_1');
+});
+
+test('runLifecycleAudit usa scope staged en PRE_COMMIT cuando hay staged files', async () => {
+  let capturedScope: string | undefined;
+  const result = await runLifecycleAudit({
+    stage: 'PRE_COMMIT',
+    auditMode: 'gate',
+    dependencies: {
+      git: {
+        ...buildGitStub('/repo'),
+        runGit: (args) => {
+          if (args.join(' ') === 'ls-files --others --exclude-standard') {
+            return '';
+          }
+          if (args.join(' ') === 'diff --cached --name-only') {
+            return 'apps/ios/BuyerCommerceScreens.swift\ndocs/RURALGO_SEGUIMIENTO.md\n';
+          }
+          return '';
+        },
+      },
+      resolvePolicyForStage: (stage) =>
+        ({
+          policy: { stage, blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          trace: { stage },
+        }) as never,
+      runPlatformGate: async (params) => {
+        capturedScope = params.scope.kind;
+        return 0;
+      },
+      readEvidence: () =>
+        buildEvidence({
+          stage: 'PRE_COMMIT',
+          outcome: 'PASS',
+          findings: [],
+        }),
+    },
+  });
+
+  assert.equal(capturedScope, 'staged');
+  assert.equal(result.scope.kind, 'staged');
 });
 
 test('runLifecycleAudit mantiene JSON accionable si el gate bloquea sin findings', async () => {

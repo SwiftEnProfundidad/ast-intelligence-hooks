@@ -207,7 +207,10 @@ const resolveLifecycleAuditScope = (params: {
   extensions: ReadonlyArray<string>;
   stagedMatchingExtensions: ReadonlyArray<string>;
 }): LifecycleAuditScope => {
-  if (params.stage === 'PRE_WRITE' && params.stagedMatchingExtensions.length > 0) {
+  if (
+    (params.stage === 'PRE_WRITE' || params.stage === 'PRE_COMMIT') &&
+    params.stagedMatchingExtensions.length > 0
+  ) {
     return { kind: 'staged' };
   }
   if (params.stage === 'PRE_PUSH') {
