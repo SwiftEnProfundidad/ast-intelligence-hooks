@@ -14,7 +14,7 @@ import {
   resolveHotspotsSaasIngestionPayloadPath,
 } from '../saasIngestionContract';
 import { resolveHotspotsSaasIngestionMetricsPath } from '../saasIngestionMetrics';
-import { parseLifecycleCliArgs, runLifecycleCli } from '../cli';
+import { buildPreWriteValidationPanel, parseLifecycleCliArgs, runLifecycleCli } from '../cli';
 import { createPolicyAsCodeSignature } from '../../policy/policyAsCode';
 import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
 import { openSddSession } from '../../sdd/sessionStore';
@@ -38,6 +38,108 @@ test.afterEach(() => {
 
 test.after(() => {
   process.exitCode = undefined;
+});
+
+test('buildPreWriteValidationPanel no presenta warnings de contrato skills como bloqueo cuando AI Gate permite', () => {
+  const panel = buildPreWriteValidationPanel({
+    sdd: {
+      stage: 'PRE_WRITE',
+      decision: {
+        allowed: true,
+        code: 'ALLOWED',
+        reason: 'ok',
+      },
+    },
+    aiGate: {
+      stage: 'PRE_WRITE',
+      status: 'ALLOWED',
+      allowed: true,
+      policy: {
+        stage: 'PRE_WRITE',
+        resolved_stage: 'PRE_WRITE',
+        block_on_or_above: 'ERROR',
+        warn_on_or_above: 'WARN',
+        trace: {
+          source: 'default',
+          bundle: 'gate-policy.default.PRE_WRITE',
+          hash: 'hash',
+        },
+      },
+      evidence: {
+        kind: 'valid',
+        max_age_seconds: 300,
+        age_seconds: 0,
+        source: {
+          source: 'local-file',
+          path: '.ai_evidence.json',
+          digest: 'digest',
+          generated_at: '2026-05-13T00:00:00.000Z',
+        },
+      },
+      mcp_receipt: {
+        required: false,
+        kind: 'not-required',
+        path: null,
+        max_age_seconds: null,
+        age_seconds: null,
+      },
+      skills_contract: {
+        enforced: true,
+        status: 'FAIL',
+        detected_platforms: ['ios'],
+        violations: [
+          {
+            code: 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+            message: 'missing critical iOS rule',
+          },
+        ],
+      },
+      repo_state: {
+        repo_root: '/repo',
+        git: {
+          available: true,
+          branch: 'feature/rgo-1900-02-checkout-pixel-perfect',
+          upstream: null,
+          ahead: 0,
+          behind: 0,
+          dirty: true,
+          staged: 4,
+          unstaged: 0,
+        },
+        lifecycle: {
+          installed: true,
+          package_version: '6.3.236',
+          lifecycle_version: '6.3.236',
+          hooks: {
+            pre_commit: 'managed',
+            pre_push: 'managed',
+          },
+        },
+      },
+      violations: [
+        {
+          code: 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+          severity: 'WARN',
+          message: 'Skills contract missing critical rule coverage for ios: [skills.ios.critical-test-quality].',
+        },
+        {
+          code: 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE',
+          severity: 'WARN',
+          message: 'Skills contract incomplete for PRE_WRITE.',
+        },
+      ],
+    },
+    automation: {
+      attempted: false,
+      actions: [],
+    },
+  } as Parameters<typeof buildPreWriteValidationPanel>[0]);
+
+  assert.match(panel, /Skills contract: enforced=yes status=ADVISORY platforms=ios/);
+  assert.match(panel, /Violations: blocking=0 advisory=2/);
+  assert.match(panel, /Advisory findings:/);
+  assert.doesNotMatch(panel, /Skills contract: enforced=yes status=FAIL/);
+  assert.doesNotMatch(panel, /Blocking causes:/);
 });
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
