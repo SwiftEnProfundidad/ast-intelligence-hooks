@@ -225,6 +225,18 @@ test('normaliza regla iOS de no bloquear main thread a detector canonico de slee
   ]);
 });
 
+test('normaliza regla iOS de accessibility labels a detector canonico de controles icon-only', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ **Accessibility labels** - .accessibilityLabel()',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.accessibility-labels-accessibilitylabel',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

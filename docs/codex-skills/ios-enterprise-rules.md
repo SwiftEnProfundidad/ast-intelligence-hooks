@@ -626,7 +626,9 @@ struct APIEndpoint: Sendable {
 
 - `skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico` se mapea a `heuristics.ios.accessibility.fixed-font-size.ast`.
 - `skills.ios.guideline.ios.dynamic-type-fuentes-escalables-y-layouts-adaptativos` se mapea a `heuristics.ios.accessibility.fixed-font-size.ast`.
+- `skills.ios.guideline.ios.accessibility-labels-accessibilitylabel` se mapea a `heuristics.ios.accessibility.icon-only-control-label.ast`.
 - En `PROJECT MODE: brownfield`, este hallazgo detecta tamaños de fuente fijos (`.font(.system(size:))`, `Font.system(size:)`, `UIFont.systemFont(ofSize:)`) como señal de adopción hacia Dynamic Type y estilos semánticos. No marca `.font(.headline)`, `.font(.body)` ni otros estilos semánticos.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta controles SwiftUI icon-only con `Button` + `Image(systemName:)` sin `.accessibilityLabel` cercano como señal de adopción hacia labels accesibles explícitas. No intenta inferir todos los casos de accesibilidad ni marca botones con texto visible.
 
 ### Enforcement AST inicial de RTL iOS
 

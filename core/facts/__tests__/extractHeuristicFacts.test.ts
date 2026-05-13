@@ -441,6 +441,7 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
           'Text("Price").font(.system(size: 18))',
           'Text("Price").multilineTextAlignment(.right)',
           'Thread.sleep(forTimeInterval: 0.25)',
+          'Button { delete() } label: { Image(systemName: "trash") }',
           'let filtered = items.filter { $0.title.contains(searchText) }',
           'ForEach(items.indices, id: \\.self) { index in Text(items[index].title) }',
           'NavigationView { Text("hello") }',
@@ -503,6 +504,7 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   assert.deepEqual(toRuleIds(findings), [
     'heuristics.ios.accessibility.fixed-font-size.ast',
+    'heuristics.ios.accessibility.icon-only-control-label.ast',
     'heuristics.ios.anyview.ast',
     'heuristics.ios.assets.loose-resource.ast',
     'heuristics.ios.assume-isolated.ast',

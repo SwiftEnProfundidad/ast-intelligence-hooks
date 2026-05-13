@@ -131,6 +131,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.performance.blocking-sleep',
     ['heuristics.ios.performance.blocking-sleep.ast']
   ),
+  'skills.ios.guideline.ios.accessibility-labels-accessibilitylabel': heuristicDetector(
+    'ios.accessibility.icon-only-control-label',
+    ['heuristics.ios.accessibility.icon-only-control-label.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),
