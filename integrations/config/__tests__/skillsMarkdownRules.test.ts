@@ -289,6 +289,19 @@ test('normaliza regla iOS massive view controller a detector canonico de arquite
   ]);
 });
 
+test('normaliza regla iOS implicitly unwrapped a detector canonico de seguridad', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent:
+      '- ✅ Implicitly unwrapped (!) - Solo para IBOutlets y casos muy específicos',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.implicitly-unwrapped-solo-para-iboutlets-y-casos-muy-especi-ficos',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

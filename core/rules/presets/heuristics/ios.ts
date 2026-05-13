@@ -258,6 +258,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.safety.non-iboutlet-iuo.ast',
+    description: 'Detects implicitly unwrapped optionals outside IBOutlet wiring.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.safety.non-iboutlet-iuo.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected an implicitly unwrapped optional outside IBOutlet wiring; explicit optionals or initialization guarantees remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_SAFETY_NON_IBOUTLET_IUO_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.logging.adhoc-print.ast',
     description: 'Detects print/debugPrint/dump/NSLog/os_log usage in iOS production code.',
     severity: 'WARN',

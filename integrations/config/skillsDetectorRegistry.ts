@@ -74,6 +74,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.architecture.massive-view-controller',
     ['heuristics.ios.architecture.massive-view-controller.ast']
   ),
+  'skills.ios.guideline.ios.implicitly-unwrapped-solo-para-iboutlets-y-casos-muy-especi-ficos': heuristicDetector(
+    'ios.safety.non-iboutlet-iuo',
+    ['heuristics.ios.safety.non-iboutlet-iuo.ast']
+  ),
+  'skills.ios.guideline.ios.singletons-dificultan-testing': heuristicDetector(
+    'ios.architecture.custom-singleton',
+    ['heuristics.ios.architecture.custom-singleton.ast']
+  ),
   'skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc': heuristicDetector(
     'ios.logging.adhoc-print',
     ['heuristics.ios.logging.adhoc-print.ast']

@@ -454,6 +454,14 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios.massive-view-controllers-viewcontrollers-que-mezclan-presentacio-n-nav';
     }
     if (
+      includes('implicitly unwrapped') ||
+      includes('implicit unwrapped') ||
+      includes('iboutlet') ||
+      includes('iboutlets')
+    ) {
+      return 'skills.ios.guideline.ios.implicitly-unwrapped-solo-para-iboutlets-y-casos-muy-especi-ficos';
+    }
+    if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
       includes('mixed testing frameworks')

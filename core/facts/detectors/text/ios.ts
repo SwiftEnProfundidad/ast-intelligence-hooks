@@ -544,6 +544,21 @@ export const hasSwiftMassiveViewControllerResponsibilityUsage = (source: string)
   return false;
 };
 
+export const hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage = (source: string): boolean => {
+  const lines = source.split(/\r?\n/);
+  const implicitlyUnwrappedPropertyPattern =
+    /\b(?:var|let)\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*(?:[A-Za-z_][A-Za-z0-9_.<>?]*\s*)!\s*(?:[=,{]|$)/;
+
+  return lines.some((line, index) => {
+    const sanitizedLine = stripSwiftLineForSemanticScan(line);
+    if (!implicitlyUnwrappedPropertyPattern.test(sanitizedLine)) {
+      return false;
+    }
+    const previousLine = index > 0 ? stripSwiftLineForSemanticScan(lines[index - 1] ?? '') : '';
+    return !/\B@IBOutlet\b/.test(`${previousLine} ${sanitizedLine}`);
+  });
+};
+
 export const hasSwiftAdHocLoggingUsage = (source: string): boolean => {
   return collectSwiftRegexLines(
     source,

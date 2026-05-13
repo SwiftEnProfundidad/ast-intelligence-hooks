@@ -201,6 +201,16 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ['heuristics.ios.architecture.massive-view-controller.ast']
   );
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.implicitly-unwrapped-solo-para-iboutlets-y-casos-muy-especi-ficos'
+    ),
+    ['heuristics.ios.safety.non-iboutlet-iuo.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.singletons-dificultan-testing'),
+    ['heuristics.ios.architecture.custom-singleton.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),
     ['heuristics.ios.testing.legacy-expectation-description.ast']
   );

@@ -1015,6 +1015,11 @@ Snapshot PARITY-IOS-ARCHITECTURE-002 (2026-05-13):
 - Implementación: se añade `heuristics.ios.architecture.massive-view-controller.ast` como WARN brownfield-aware para clases `UIViewController` que contienen acceso directo a `URLSession.shared`, `JSONSerialization`, `UserDefaults.standard`, `NSManagedObjectContext`, `NSPersistentContainer`, `NSFetchRequest` o `FileManager.default`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no usa umbrales de líneas ni tamaño; detecta mezcla de presentación con infraestructura/data access, dejando navegación compleja, estado excesivo y coordinación para slices posteriores.
 
+Snapshot PARITY-IOS-SAFETY-001 (2026-05-13):
+- Diagnóstico: `Implicitly unwrapped (!) - Solo para IBOutlets y casos muy específicos` seguía como baseline iOS declarativo aunque las IUO fuera de `@IBOutlet` son detectables sin bloquear wiring UIKit legacy.
+- Implementación: se añade `heuristics.ios.safety.non-iboutlet-iuo.ast` como WARN brownfield-aware para propiedades Swift `var/let name: Type!` fuera de `@IBOutlet`, ignorando strings/comentarios y preservando `@IBOutlet weak var label: UILabel!`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no modifica `force unwrap` ni fuerza migración de IBOutlets legacy; solo señala IUO app-owned que deberían ser opcionales explícitos o inicialización garantizada.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

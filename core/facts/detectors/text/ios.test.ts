@@ -41,6 +41,7 @@ import {
   hasSwiftNSManagedObjectBoundaryUsage,
   hasSwiftNSManagedObjectStateLeakUsage,
   hasSwiftNavigationViewUsage,
+  hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage,
   hasSwiftObservableObjectUsage,
   hasSwiftOnTapGestureUsage,
   hasSwiftOperationQueueUsage,
@@ -315,6 +316,27 @@ let text = "URLSession.shared.dataTask"
 
   assert.equal(hasSwiftMassiveViewControllerResponsibilityUsage(source), true);
   assert.equal(hasSwiftMassiveViewControllerResponsibilityUsage(ignored), false);
+});
+
+test('hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage detecta IUO fuera de IBOutlet', () => {
+  const source = `
+final class CheckoutViewModel {
+  var selectedOrder: Order!
+  private let formatter: DateFormatter!
+}
+`;
+  const ignored = `
+final class CheckoutViewController: UIViewController {
+  @IBOutlet weak var titleLabel: UILabel!
+  @IBOutlet
+  private weak var tableView: UITableView!
+  let text = "var selectedOrder: Order!"
+  // var selectedOrder: Order!
+}
+`;
+
+  assert.equal(hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage(source), true);
+  assert.equal(hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage(ignored), false);
 });
 
 test('detectores de logging iOS detectan logs ad-hoc y PII en produccion', () => {
