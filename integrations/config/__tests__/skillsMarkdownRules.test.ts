@@ -141,6 +141,18 @@ test('normaliza reglas Core Data a ids canonicos del slice phase8', () => {
   ]);
 });
 
+test('normaliza regla iOS ATS a detector canonico de transporte seguro', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ **App Transport Security (ATS)** - HTTPS por defecto',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

@@ -382,6 +382,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-legacy-expectation-description';
     }
     if (
+      includes('app transport security') ||
+      includes('ats https') ||
+      includes('https por defecto')
+    ) {
+      return 'skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto';
+    }
+    if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
       includes('mixed testing frameworks')
