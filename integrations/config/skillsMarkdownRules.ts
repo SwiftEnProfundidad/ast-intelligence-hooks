@@ -16,7 +16,7 @@ const MARKDOWN_BOLD_PATTERN = /[*_]{1,3}/g;
 const MULTISPACE_PATTERN = /\s+/g;
 const AST_NODE_ID_PATTERN = /\bheuristics\.[a-z0-9._-]+\.ast\b/gi;
 const RULE_KEYWORDS =
-  /\b(always|siempre|prefer|use|usar|avoid|evitar|never|nunca|must|obligatorio|required|disallow|do not|no)\b/i;
+  /\b(always|siempre|prefer|use|usar|avoid|evitar|never|nunca|must|obligatorio|required|disallow|do not|no|suggest)\b/i;
 
 const normalizeForLookup = (value: string): string => {
   return value
@@ -373,6 +373,13 @@ const normalizeKnownRuleTarget = (
       (includes('body kept simple') && includes('pure'))
     ) {
       return 'skills.ios.guideline.ios-swiftui-expert.no-object-creation-in-body';
+    }
+    if (
+      includes('image downsampling') ||
+      (includes('uiimage data') && includes('downsampling')) ||
+      (includes('uiimage data') && includes('encountered'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.suggest-image-downsampling-when-uiimage-data-is-encountered';
     }
     if (
       includes('scrollindicators hidden') ||

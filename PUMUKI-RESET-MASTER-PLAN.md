@@ -1081,6 +1081,11 @@ Snapshot PARITY-IOS-SWIFTUI-BODY-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.swiftui.body-object-creation.ast` como WARN brownfield-aware para creación de `DateFormatter`, `NumberFormatter`, `RelativeDateTimeFormatter`, `ISO8601DateFormatter`, `ByteCountFormatter`, `MeasurementFormatter` o `DateComponentsFormatter` dentro de `body`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no prohíbe toda inicialización dentro de `body`; solo marca formatters conocidos como objetos costosos y remediables movibles fuera del render path.
 
+Snapshot PARITY-IOS-SWIFTUI-IMAGE-001 (2026-05-13):
+- Diagnóstico: `Suggest image downsampling when UIImage(data:) is encountered` seguía como baseline SwiftUI declarativo aunque decodificar datos de imagen directamente en Presentation es detectable y remediable.
+- Implementación: se añade `heuristics.ios.swiftui.image-data-decoding.ast` como WARN brownfield-aware para `UIImage(data:)` en `Presentation`, preservando imágenes ya precomputadas o inyectadas; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no bloquea UIKit ni carga de imágenes existente; solo recomienda downsampling previo cuando se detecta decodificación directa desde `Data` en el camino SwiftUI.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

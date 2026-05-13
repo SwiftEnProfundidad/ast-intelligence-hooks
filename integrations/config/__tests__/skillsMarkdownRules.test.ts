@@ -187,6 +187,18 @@ test('normaliza regla SwiftUI object creation in body a detector canonico de ren
   ]);
 });
 
+test('normaliza regla SwiftUI UIImage data downsampling a detector canonico de imagenes', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- Suggest image downsampling when `UIImage(data:)` is encountered',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios-swiftui-expert.suggest-image-downsampling-when-uiimage-data-is-encountered',
+  ]);
+});
+
 test('normaliza reglas Core Data a ids canonicos del slice phase8', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-core-data-guidelines',

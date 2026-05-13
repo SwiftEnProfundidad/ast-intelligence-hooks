@@ -78,6 +78,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ),
     ['heuristics.ios.swiftui.body-object-creation.ast']
   );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.suggest-image-downsampling-when-uiimage-data-is-encountered'
+    ),
+    ['heuristics.ios.swiftui.image-data-decoding.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-preconcurrency'), [
     'heuristics.ios.preconcurrency.ast',
   ]);

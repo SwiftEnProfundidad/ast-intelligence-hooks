@@ -950,6 +950,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.image-data-decoding.ast',
+    description: 'Detects UIImage(data:) decoding in SwiftUI presentation paths.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.image-data-decoding.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected UIImage(data:) in SwiftUI presentation; downsample image data before rendering large images.',
+      code: 'HEURISTICS_IOS_SWIFTUI_IMAGE_DATA_DECODING_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.navigation-view.ast',
     description: 'Detects NavigationView usage in iOS production code.',
     severity: 'WARN',

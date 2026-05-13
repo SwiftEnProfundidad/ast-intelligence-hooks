@@ -396,6 +396,11 @@ export const hasSwiftViewBodyObjectCreationUsage = (source: string): boolean => 
   return viewBodyObjectCreationPattern.test(swiftSource);
 };
 
+export const hasSwiftUiImageDataDecodingUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  return /\bUIImage\s*\(\s*data\s*:/.test(swiftSource);
+};
+
 export const hasSwiftDispatchQueueUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'D' || !hasIdentifierAt(swiftSource, index, 'DispatchQueue')) {

@@ -37,6 +37,7 @@ import {
   hasSwiftModernizableXCTestSuiteUsage,
   hasSwiftNonLazyScrollForEachUsage,
   hasSwiftViewBodyObjectCreationUsage,
+  hasSwiftUiImageDataDecodingUsage,
   hasSwiftAssumeIsolatedUsage,
   hasSwiftCoreDataLayerLeakUsage,
   hasSwiftSwiftDataLayerLeakUsage,
@@ -189,6 +190,34 @@ struct PriceView: View {
 
   assert.equal(hasSwiftViewBodyObjectCreationUsage(source), true);
   assert.equal(hasSwiftViewBodyObjectCreationUsage(safe), false);
+});
+
+test('hasSwiftUiImageDataDecodingUsage detecta UIImage(data:) y preserva strings y comentarios', () => {
+  const source = `
+struct AvatarView: View {
+  let imageData: Data
+
+  var body: some View {
+    if let image = UIImage(data: imageData) {
+      Image(uiImage: image)
+    }
+  }
+}
+`;
+  const safe = `
+struct AvatarView: View {
+  let image: UIImage
+
+  var body: some View {
+    Image(uiImage: image)
+    let sample = "UIImage(data: imageData)"
+    // UIImage(data: imageData)
+  }
+}
+`;
+
+  assert.equal(hasSwiftUiImageDataDecodingUsage(source), true);
+  assert.equal(hasSwiftUiImageDataDecodingUsage(safe), false);
 });
 
 test('hasSwiftForceTryUsage detecta try! y descarta try?', () => {
