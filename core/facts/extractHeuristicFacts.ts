@@ -92,6 +92,11 @@ const isIOSCartfilePath = (path: string): boolean => {
   );
 };
 
+const isIOSInfoPlistPath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/');
+  return normalized.startsWith('apps/ios/') && normalized.endsWith('/Info.plist');
+};
+
 const isIOSApplicationOrPresentationPath = (path: string): boolean => {
   return (
     isIOSSwiftPath(path) &&
@@ -641,6 +646,8 @@ const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftAlamofireUsage, ruleId: 'heuristics.ios.networking.alamofire.ast', code: 'HEURISTICS_IOS_NETWORKING_ALAMOFIRE_AST', message: 'AST heuristic detected Alamofire usage in iOS production code; URLSession remains the preferred baseline for new code.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftJSONSerializationUsage, ruleId: 'heuristics.ios.json.jsonserialization.ast', code: 'HEURISTICS_IOS_JSON_JSONSERIALIZATION_AST', message: 'AST heuristic detected JSONSerialization usage in iOS production code; Codable remains the preferred baseline for new code.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftSensitiveUserDefaultsStorageUsage, ruleId: 'heuristics.ios.security.userdefaults-sensitive-data.ast', code: 'HEURISTICS_IOS_SECURITY_USERDEFAULTS_SENSITIVE_DATA_AST', message: 'AST heuristic detected sensitive data stored in UserDefaults/AppStorage; native Keychain remains the preferred baseline for secrets.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftInsecureTransportUsage, ruleId: 'heuristics.ios.security.insecure-transport.ast', code: 'HEURISTICS_IOS_SECURITY_INSECURE_TRANSPORT_AST', message: 'AST heuristic detected insecure HTTP transport in iOS production code; HTTPS and ATS remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSInfoPlistPath, excludePaths: [], detect: TextIOS.hasSwiftInsecureTransportUsage, ruleId: 'heuristics.ios.security.insecure-transport.ast', code: 'HEURISTICS_IOS_SECURITY_INSECURE_TRANSPORT_AST', message: 'AST heuristic detected permissive App Transport Security configuration; HTTPS and ATS remain the preferred baseline.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftUncheckedSendableUsage, ruleId: 'heuristics.ios.unchecked-sendable.ast', code: 'HEURISTICS_IOS_UNCHECKED_SENDABLE_AST', message: 'AST heuristic detected @unchecked Sendable usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftPreconcurrencyUsage, ruleId: 'heuristics.ios.preconcurrency.ast', code: 'HEURISTICS_IOS_PRECONCURRENCY_AST', message: 'AST heuristic detected @preconcurrency usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNonisolatedUnsafeUsage, ruleId: 'heuristics.ios.nonisolated-unsafe.ast', code: 'HEURISTICS_IOS_NONISOLATED_UNSAFE_AST', message: 'AST heuristic detected nonisolated(unsafe) usage.' },

@@ -308,6 +308,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.security.insecure-transport.ast',
+    description: 'Detects insecure HTTP transport or permissive ATS configuration in iOS projects.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.security.insecure-transport.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected insecure iOS transport configuration; HTTPS and ATS remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_SECURITY_INSECURE_TRANSPORT_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',
