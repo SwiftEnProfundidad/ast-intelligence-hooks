@@ -16,7 +16,7 @@ const MARKDOWN_BOLD_PATTERN = /[*_]{1,3}/g;
 const MULTISPACE_PATTERN = /\s+/g;
 const AST_NODE_ID_PATTERN = /\bheuristics\.[a-z0-9._-]+\.ast\b/gi;
 const RULE_KEYWORDS =
-  /\b(always|siempre|prefer|use|usar|avoid|evitar|never|nunca|must|obligatorio|required|disallow|do not|no|suggest|should)\b/i;
+  /\b(always|siempre|prefer|use|usar|avoid|evitar|ensure|never|nunca|must|obligatorio|required|disallow|do not|no|suggest|should)\b/i;
 
 const normalizeForLookup = (value: string): string => {
   return value
@@ -315,6 +315,12 @@ const normalizeKnownRuleTarget = (
       (includes('prefilter') && includes('cache') && includes('foreach'))
     ) {
       return 'skills.ios.guideline.ios-swiftui-expert.avoid-inline-filtering-in-foreach-prefilter-and-cache';
+    }
+    if (
+      includes('constant number of views per foreach element') ||
+      (includes('foreach') && includes('constant number of views'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.ensure-constant-number-of-views-per-foreach-element';
     }
     if (
       includes('localizedstandardcontains') ||

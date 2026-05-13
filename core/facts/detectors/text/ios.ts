@@ -388,6 +388,14 @@ export const hasSwiftNonLazyScrollForEachUsage = (source: string): boolean => {
   return nonLazyScrollableCollectionPattern.test(swiftSource);
 };
 
+export const hasSwiftUiForEachConditionalViewCountUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const conditionalForEachPattern =
+    /\bForEach\s*\([^)]*\)\s*\{[\s\S]{0,1600}\b(?:if|switch)\b[\s\S]{0,1600}\}/;
+
+  return conditionalForEachPattern.test(swiftSource);
+};
+
 export const hasSwiftViewBodyObjectCreationUsage = (source: string): boolean => {
   const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
   const viewBodyObjectCreationPattern =

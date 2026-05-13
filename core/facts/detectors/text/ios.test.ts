@@ -36,6 +36,7 @@ import {
   hasSwiftLegacyXCTestImportUsage,
   hasSwiftModernizableXCTestSuiteUsage,
   hasSwiftNonLazyScrollForEachUsage,
+  hasSwiftUiForEachConditionalViewCountUsage,
   hasSwiftViewBodyObjectCreationUsage,
   hasSwiftUiImageDataDecodingUsage,
   hasSwiftUiInlineActionLogicUsage,
@@ -163,6 +164,40 @@ struct FeedView: View {
 
   assert.equal(hasSwiftNonLazyScrollForEachUsage(source), true);
   assert.equal(hasSwiftNonLazyScrollForEachUsage(safe), false);
+});
+
+test('hasSwiftUiForEachConditionalViewCountUsage detecta branching condicional dentro de ForEach', () => {
+  const source = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ForEach(items) { item in
+      if item.isPromoted {
+        PromotedRow(item: item)
+      } else {
+        RegularRow(item: item)
+      }
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ForEach(items) { item in
+      FeedRow(item: item)
+    }
+    let sample = "ForEach(items) { item in if item.isPromoted { PromotedRow(item: item) } }"
+    // ForEach(items) { item in if item.isPromoted { PromotedRow(item: item) } }
+  }
+}
+`;
+
+  assert.equal(hasSwiftUiForEachConditionalViewCountUsage(source), true);
+  assert.equal(hasSwiftUiForEachConditionalViewCountUsage(safe), false);
 });
 
 test('hasSwiftViewBodyObjectCreationUsage detecta formatter creado en body y preserva dependencia externa', () => {

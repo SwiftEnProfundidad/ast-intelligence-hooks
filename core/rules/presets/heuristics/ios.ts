@@ -804,6 +804,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.foreach-conditional-view-count.ast',
+    description: 'Detects conditional view counts inside SwiftUI ForEach rows.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.foreach-conditional-view-count.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected conditional view count inside ForEach; keep a constant number of views per element by moving branching into row views or modifiers.',
+      code: 'HEURISTICS_IOS_SWIFTUI_FOREACH_CONDITIONAL_VIEW_COUNT_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.contains-user-filter.ast',
     description: 'Detects contains() usage in user-facing filter flows where localizedStandardContains() may be preferred.',
     severity: 'WARN',

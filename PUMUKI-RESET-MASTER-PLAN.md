@@ -1091,6 +1091,11 @@ Snapshot PARITY-IOS-SWIFTUI-ACTION-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.swiftui.inline-action-logic.ast` como WARN brownfield-aware para `Button { if/guard/switch/for/while/Task ... } label:` y `Button(action: { ... })`, preservando `Button(action: method)`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no bloquea acciones simples; solo marca control flow inline en handlers, como señal remediable para mover la lógica a métodos o view models.
 
+Snapshot PARITY-IOS-SWIFTUI-FOREACH-CONSTANT-001 (2026-05-13):
+- Diagnóstico: `Constant number of views per ForEach element` seguía como baseline SwiftUI declarativo aunque el branching condicional dentro del closure de `ForEach` es detectable en Presentation y puede producir estructuras de row inestables.
+- Implementación: se añade `heuristics.ios.swiftui.foreach-conditional-view-count.ast` como WARN brownfield-aware para `ForEach(...) { ... if/switch ... }`, preservando rows simples que delegan la decisión a una subview o modificador; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no bloquea todos los condicionales SwiftUI ni infiere identidad runtime; marca solo el caso remediable de branching dentro del closure de `ForEach`.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

@@ -39,6 +39,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ),
     ['heuristics.ios.swiftui.inline-foreach-transform.ast']
   );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.ensure-constant-number-of-views-per-foreach-element'
+    ),
+    ['heuristics.ios.swiftui.foreach-conditional-view-count.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-contains-user-filter'), [
     'heuristics.ios.contains-user-filter.ast',
   ]);

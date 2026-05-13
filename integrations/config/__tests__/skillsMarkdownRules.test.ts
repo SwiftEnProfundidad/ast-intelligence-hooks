@@ -121,6 +121,7 @@ test('normaliza reglas SwiftUI list/search/layout a ids canonicos del slice phas
     sourceContent: [
       '- Use stable identity for `ForEach` (never `.indices` for dynamic content)',
       '- Avoid inline filtering in `ForEach` (prefilter and cache)',
+      '- Ensure constant number of views per ForEach element',
       '- Use `localizedStandardContains()` for user-input filtering (not `contains()`)',
       '- Avoid layout thrash (deep hierarchies, excessive `GeometryReader`)',
       '- Use `bold()` instead of `fontWeight(.bold)` for straightforward text emphasis.',
@@ -131,6 +132,7 @@ test('normaliza reglas SwiftUI list/search/layout a ids canonicos del slice phas
   const ids = rules.map((rule) => rule.id).sort();
   assert.deepEqual(ids, [
     'skills.ios.guideline.ios-swiftui-expert.avoid-inline-filtering-in-foreach-prefilter-and-cache',
+    'skills.ios.guideline.ios-swiftui-expert.ensure-constant-number-of-views-per-foreach-element',
     'skills.ios.guideline.ios-swiftui-expert.prefer-static-member-lookup-blue-vs-color-blue',
     'skills.ios.no-contains-user-filter',
     'skills.ios.no-font-weight-bold',
