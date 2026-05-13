@@ -389,6 +389,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.localization.unlocalized-dateformatter.ast',
+    description: 'Detects DateFormatter fixed date formats without an explicit locale in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.localization.unlocalized-dateformatter.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected DateFormatter dateFormat usage without an explicit locale; localized date formatting remains the preferred baseline.',
+      code: 'HEURISTICS_IOS_LOCALIZATION_UNLOCALIZED_DATEFORMATTER_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.networking.alamofire.ast',
     description: 'Detects Alamofire usage in iOS production code; URLSession is the preferred baseline for new code.',
     severity: 'WARN',

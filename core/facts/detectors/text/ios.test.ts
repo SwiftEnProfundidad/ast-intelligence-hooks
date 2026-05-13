@@ -25,6 +25,7 @@ import {
   hasSwiftGeometryReaderUsage,
   hasSwiftHardcodedUiStringUsage,
   hasSwiftHardcodedSensitiveStringUsage,
+  hasSwiftUnlocalizedDateFormatterUsage,
   hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage,
   hasSwiftLooseAssetResourceUsage,
   hasSwiftLegacyOnChangeUsage,
@@ -764,6 +765,40 @@ final class Credentials {
 
   assert.equal(hasSwiftHardcodedSensitiveStringUsage(source), true);
   assert.equal(hasSwiftHardcodedSensitiveStringUsage(safe), false);
+});
+
+test('hasSwiftUnlocalizedDateFormatterUsage detecta dateFormat fijo sin locale explicito', () => {
+  const source = `
+final class DatePresenter {
+  func render(date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: date)
+  }
+}
+`;
+  const safe = `
+final class DatePresenter {
+  func localized(date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = .autoupdatingCurrent
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: date)
+  }
+
+  func styled(date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    return formatter.string(from: date)
+  }
+}
+let sample = "formatter.dateFormat = yyyy"
+// let formatter = DateFormatter()
+// formatter.dateFormat = "yyyy"
+`;
+
+  assert.equal(hasSwiftUnlocalizedDateFormatterUsage(source), true);
+  assert.equal(hasSwiftUnlocalizedDateFormatterUsage(safe), false);
 });
 
 test('detectores iOS de networking y JSON detectan Alamofire y JSONSerialization sin leer comentarios ni strings', () => {

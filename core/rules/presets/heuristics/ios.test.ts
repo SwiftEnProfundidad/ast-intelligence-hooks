@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 58);
+  assert.equal(iosRules.length, 82);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -17,8 +17,18 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.dispatchsemaphore.ast',
     'heuristics.ios.operation-queue.ast',
     'heuristics.ios.task-detached.ast',
+    'heuristics.ios.swiftui.onappear-task.ast',
+    'heuristics.ios.memory.strong-delegate.ast',
+    'heuristics.ios.memory.strong-self-escaping-closure.ast',
+    'heuristics.ios.architecture.custom-singleton.ast',
+    'heuristics.ios.architecture.swinject.ast',
+    'heuristics.ios.architecture.massive-view-controller.ast',
+    'heuristics.ios.maintainability.magic-number-layout.ast',
+    'heuristics.ios.safety.non-iboutlet-iuo.ast',
     'heuristics.ios.logging.adhoc-print.ast',
     'heuristics.ios.logging.sensitive-data.ast',
+    'heuristics.ios.security.hardcoded-sensitive-string.ast',
+    'heuristics.ios.localization.unlocalized-dateformatter.ast',
     'heuristics.ios.networking.alamofire.ast',
     'heuristics.ios.json.jsonserialization.ast',
     'heuristics.ios.dependencies.cocoapods.ast',
@@ -38,12 +48,25 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.assume-isolated.ast',
     'heuristics.ios.observable-object.ast',
     'heuristics.ios.legacy-swiftui-observable-wrapper.ast',
+    'heuristics.ios.swiftui.non-private-state-ownership.ast',
     'heuristics.ios.passed-value-state-wrapper.ast',
     'heuristics.ios.foreach-indices.ast',
+    'heuristics.ios.swiftui.foreach-self-identity.ast',
+    'heuristics.ios.swiftui.inline-foreach-transform.ast',
+    'heuristics.ios.swiftui.self-print-changes.ast',
+    'heuristics.ios.swiftui.foreach-conditional-view-count.ast',
     'heuristics.ios.contains-user-filter.ast',
     'heuristics.ios.geometryreader.ast',
     'heuristics.ios.font-weight-bold.ast',
+    'heuristics.ios.swiftui.explicit-color-static-member.ast',
+    'heuristics.ios.swiftui.closure-based-viewbuilder-content.ast',
+    'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
+    'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast',
+    'heuristics.ios.swiftui.body-object-creation.ast',
+    'heuristics.ios.swiftui.image-data-decoding.ast',
+    'heuristics.ios.swiftui.inline-action-logic.ast',
     'heuristics.ios.navigation-view.ast',
+    'heuristics.ios.swiftui.untyped-navigation-link-destination.ast',
     'heuristics.ios.foreground-color.ast',
     'heuristics.ios.corner-radius.ast',
     'heuristics.ios.tab-item.ast',
@@ -60,6 +83,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.testing.wait-for-expectations.ast',
     'heuristics.ios.testing.legacy-expectation-description.ast',
     'heuristics.ios.testing.mixed-frameworks.ast',
+    'heuristics.ios.testing.quick-nimble.ast',
     'heuristics.ios.core-data.nsmanagedobject-boundary.ast',
     'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
     'heuristics.ios.core-data.layer-leak.ast',
@@ -115,6 +139,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.localization.hardcoded-ui-string.ast')?.then.code,
     'HEURISTICS_IOS_LOCALIZATION_HARDCODED_UI_STRING_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.localization.unlocalized-dateformatter.ast')?.then.code,
+    'HEURISTICS_IOS_LOCALIZATION_UNLOCALIZED_DATEFORMATTER_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.assets.loose-resource.ast')?.then.code,

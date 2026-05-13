@@ -102,6 +102,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.security.hardcoded-sensitive-string',
     ['heuristics.ios.security.hardcoded-sensitive-string.ast']
   ),
+  'skills.ios.guideline.ios.dateformatter-fechas-localizadas': heuristicDetector(
+    'ios.localization.unlocalized-dateformatter',
+    ['heuristics.ios.localization.unlocalized-dateformatter.ast']
+  ),
   'skills.ios.guideline.ios.alamofire-prohibido-usar-urlsession-nativo': heuristicDetector(
     'ios.networking.alamofire',
     ['heuristics.ios.networking.alamofire.ast']

@@ -540,7 +540,7 @@ test('reglas no canonicas extraidas desde markdown se degradan a DECLARATIVE par
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'backend-guidelines',
     sourcePath: 'docs/codex-skills/backend-enterprise-rules.md',
-    sourceContent: '- Must avoid long transaction scripts across three bounded contexts.',
+    sourceContent: '- Must avoid confusing lunar release ceremonies in engineering notes.',
   });
 
   assert.equal(rules.length, 1);
