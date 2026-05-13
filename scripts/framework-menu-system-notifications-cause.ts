@@ -7,16 +7,9 @@ import {
   buildNotificationTrackingCauseSummary,
   extractNotificationTrackingContext,
 } from './framework-menu-system-notifications-tracking';
-import { isTddBddBlockingCause } from '../integrations/gate/blockingCause';
 
 const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_GATE_BLOCKED: 'El gate de evidencia/gobernanza está bloqueado.',
-  TDD_BDD_EVIDENCE_INVALID: 'La evidencia TDD/BDD actual es inválida.',
-  TDD_BDD_SCENARIO_FILE_MISSING:
-    'Falta el fichero de escenario TDD/BDD referenciado por la evidencia.',
-  TDD_BDD_EVIDENCE_STALE: 'La evidencia TDD/BDD está caducada.',
-  TDD_BDD_EVIDENCE_MISSING: 'Falta evidencia TDD/BDD para el cambio actual.',
-  TDD_BDD_BASELINE_BLOCKED: 'La baseline TDD/BDD está bloqueada.',
   EVIDENCE_MISSING: 'Falta evidencia para validar este paso.',
   EVIDENCE_INVALID: 'La evidencia actual es inválida.',
   EVIDENCE_CHAIN_INVALID: 'La cadena de evidencia no es válida.',
@@ -37,14 +30,11 @@ const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
     'Hay conflicto entre fuentes de tracking canónico.',
   ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
     'No hay reglas activas para cambios de código.',
+  EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING:
+    'Falta enforcement crítico de skills para la plataforma detectada.',
+  EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
+    'El contrato de skills está incompleto para este stage.',
 };
-
-const TRACKING_COMPATIBLE_UMBRELLA_CODES = new Set([
-  'EVIDENCE_GATE_BLOCKED',
-  'AI_GATE_BLOCKED',
-  'AI_GATE_BLOCK',
-  'GATE_BLOCKED',
-]);
 
 const ENGLISH_CAUSE_HINTS = [
   'detected',
@@ -66,6 +56,19 @@ const ENGLISH_CAUSE_HINTS = [
   'callback usage',
   'usage.',
 ];
+
+const PRIORITY_CODES_FROM_MESSAGE = [
+  'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+  'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE',
+  'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH',
+];
+
+const resolvePriorityCauseFromMessage = (message?: string): string | null => {
+  if (!message) {
+    return null;
+  }
+  return PRIORITY_CODES_FROM_MESSAGE.find((code) => message.includes(code)) ?? null;
+};
 
 const buildGenericSpanishBlockedCauseSummary = (
   event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>,
@@ -111,21 +114,16 @@ export const resolveBlockedCauseSummary = (
   causeCode: string
 ): string => {
   const trackingContext = extractNotificationTrackingContext(event.causeMessage);
-  if (isTddBddBlockingCause({ code: causeCode, message: event.causeMessage })) {
-    return (
-      BLOCKED_CAUSE_SUMMARY_BY_CODE[causeCode] ??
-      'La evidencia TDD/BDD bloquea el gate; revisa el escenario y el artefacto de evidencia.'
-    );
+  const priorityCode = resolvePriorityCauseFromMessage(event.causeMessage);
+  if (priorityCode) {
+    return BLOCKED_CAUSE_SUMMARY_BY_CODE[priorityCode];
   }
-  if (trackingContext && TRACKING_COMPATIBLE_UMBRELLA_CODES.has(causeCode)) {
+  if (trackingContext) {
     return buildNotificationTrackingCauseSummary(trackingContext);
   }
   const mapped = BLOCKED_CAUSE_SUMMARY_BY_CODE[causeCode];
   if (mapped) {
     return mapped;
-  }
-  if (trackingContext) {
-    return buildNotificationTrackingCauseSummary(trackingContext);
   }
   if (event.causeMessage && event.causeMessage.trim().length > 0) {
     const rawMessage = normalizeNotificationText(event.causeMessage).replace(/^[A-Z0-9_]+:\s*/, '');

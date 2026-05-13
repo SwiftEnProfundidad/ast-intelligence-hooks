@@ -117,6 +117,43 @@ app/
   di/                      # Hilt modules
 ```
 
+### Enforcement AST inicial de arquitectura Android
+✅ `skills.android.no-solid-violations` debe mapear a detectores AST semánticos, no a conteos de líneas ni umbrales arbitrarios.
+✅ El baseline Android debe cubrir al menos SRP en presentation, OCP por branching de discriminadores, DIP por dependencias concretas de framework, ISP por interfaces demasiado anchas y LSP por precondiciones estrechadas.
+✅ Estos detectores son paridad parcial Android: no sustituyen una auditoría completa de arquitectura, pero sí evitan que reglas SOLID críticas queden como doctrina declarativa sin señal ejecutable.
+
+### Enforcement AST inicial de coroutines Android
+✅ `skills.android.guideline.android.coroutines-async-await-no-callbacks` debe mapear a señales ejecutables existentes de uso inseguro de coroutines, empezando por `GlobalScope` y `runBlocking`.
+✅ `skills.android.guideline.android.viewmodelscope-scope-de-viewmodel-cancelado-automa-ticamente` debe mapear a señales ejecutables de scopes manuales dentro de `ViewModel`, empezando por `CoroutineScope(...)` construido en presentation.
+✅ `skills.android.guideline.android.dispatchers-main-ui-io-network-disk-default-cpu` debe mapear a señales ejecutables de dispatchers mal ubicados: `Dispatchers.Main` fuera de `presentation` y `Dispatchers.IO` / `Dispatchers.Default` hardcodeados en `domain` o `application` en lugar de entrar por frontera inyectable.
+✅ `skills.android.guideline.android.withcontext-cambiar-dispatcher` debe mapear a señal ejecutable de `withContext` en `domain` o `application`.
+✅ `skills.android.guideline.android.lifecyclescope-scope-de-activity-fragment` debe mapear a señal ejecutable de `lifecycleScope` fuera de la capa UI, empezando por `domain` o `application`.
+✅ `skills.android.guideline.android.supervisorscope-errores-no-cancelan-otros-jobs` debe mapear a señal ejecutable de `supervisorScope` en `domain` o `application`.
+✅ `skills.android.guideline.android.try-catch-manejo-de-errores-en-coroutines` debe mapear a señal ejecutable de `try/catch` dentro de código coroutine en `domain` o `application`.
+✅ El baseline inicial de coroutines es parcial: cubre APIs bloqueantes, scopes no estructurados, scopes manuales en `ViewModel`, filtraciones de `Dispatchers.Main`, hardcode de dispatchers de background en dominio/aplicación, `withContext`, fuga de `lifecycleScope`, `supervisorScope` y `try/catch` en coroutines, pero no declara todavía cobertura completa de `Flow`, dispatchers ni cancelación cooperativa.
+✅ Si se amplía esta cobertura, cada nueva regla debe aterrizar como detector AST/textual semántico con test dirigido antes de declararse cubierta en el registry.
+
+### Enforcement AST inicial de seguridad Android
+✅ `skills.android.guideline.android.local-properties-api-keys-no-subir-a-git` debe mapear a señal ejecutable de `local.properties` versionado bajo `apps/android/`.
+✅ Este baseline no imprime ni analiza valores secretos; solo reporta la presencia del archivo versionado y exige retirarlo del control de versiones.
+
+### Enforcement AST inicial de persistencia Android
+✅ `skills.android.guideline.android.datastore-androidx-datastore-datastore-preferences-reemplazo-de-shared` debe mapear a señal ejecutable de uso legacy de `SharedPreferences` en Kotlin Android production.
+✅ Este baseline no prohíbe `EncryptedSharedPreferences` todavía ni declara cobertura completa de migración a DataStore; solo detecta el uso legacy explícito de `SharedPreferences` / `getSharedPreferences(...)`.
+
+### Enforcement AST inicial de Flow/StateFlow Android
+✅ Las reglas de `StateFlow` / `StateFlow-SharedFlow` deben mapear a señales ejecutables de estado observable legacy, empezando por exposición de `LiveData` / `MutableLiveData` en presentation.
+✅ Este baseline no obliga a que todo ViewModel use Flow; solo detecta una alternativa legacy concreta cuando aparece en código de presentación Android.
+✅ `Flow`, `collectAsState`, `stateIn`, Room observable queries y SharedFlow events quedan fuera hasta que tengan detectores propios y regresiones dirigidas.
+
+### Enforcement AST inicial de testing Android
+✅ `skills.android.guideline.android.junit5-framework-de-testing-preferido-sobre-junit4` debe mapear a señal ejecutable de uso JUnit4 en tests Kotlin Android.
+✅ Este baseline detecta imports/anotaciones JUnit4 (`org.junit.Test`, `org.junit.Assert`, `@RunWith`, reglas JUnit4) bajo `apps/android/**/test/**` y `apps/android/**/androidTest/**`.
+✅ JUnit5/Jupiter queda preservado como caso limpio; migración completa de runner, Gradle y APIs de assertions queda fuera hasta tener detectores propios.
+✅ `skills.android.guideline.android.en-produccio-n-ni-un-mocks-ni-un-spies-todo-real-de-apis-y-persistenci` debe mapear a señal ejecutable de mocks/spies en Kotlin Android production.
+✅ Este baseline detecta usos explícitos de MockK/Mockito y anotaciones `@Mock`/`@Spy` fuera de `test` y `androidTest`; los dobles en tests siguen permitidos.
+✅ La regla no prohíbe clases fake de test doubles en suites de test ni analiza wiring Gradle todavía.
+
 ### Dependency Injection (Hilt):
 ✅ **Hilt** - DI framework (NO manual factories)
 ✅ **@HiltAndroidApp** - Application class

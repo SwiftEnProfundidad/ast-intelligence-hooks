@@ -3,7 +3,6 @@ import type { Fact } from '../../core/facts/Fact';
 import type { Finding } from '../../core/gate/Finding';
 import type { GateOutcome } from '../../core/gate/GateOutcome';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
-import type { GateStage } from '../../core/gate/GateStage';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import type { SkillsRuleSetLoadResult } from '../config/skillsRuleSet';
 import type { ResolvedStagePolicy } from '../gate/stagePolicies';
@@ -28,34 +27,18 @@ import { evaluateBrownfieldHotspotFindings } from './brownfieldHotspots';
 import { emitPlatformGateEvidence } from './runPlatformGateEvidence';
 import { printGateFindings } from './runPlatformGateOutput';
 import { evaluateSddPolicy, type SddDecision } from '../sdd';
-import type { SnapshotEvaluationMetrics, SnapshotRulesCoverage } from '../evidence/schema';
+import type { SnapshotEvaluationMetrics } from '../evidence/schema';
 import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { createEmptySnapshotRulesCoverage } from '../evidence/rulesCoverage';
 import { enforceTddBddPolicy } from '../tdd/enforcement';
 import type { TddBddSnapshot } from '../tdd/types';
+import { resolveSkillsEnforcement } from '../policy/skillsEnforcement';
 import { applyTddBddEnforcement } from '../policy/tddBddEnforcement';
 import { collectAiGateRepoPolicyFindings } from './aiGateRepoPolicyFindings';
 import {
   filterFactsByPathPrefixes,
   resolveGateScopePathPrefixesFromEnv,
 } from './filterFactsByPathPrefixes';
-import {
-  DEFAULT_MEMORY_SHADOW_DISPLAY_PRECISION,
-  DEGRADED_MODE_ACTION_ALLOW,
-  DEGRADED_MODE_ACTION_BLOCK,
-  DEFAULT_GATE_AUDIT_MODE,
-  DEFAULT_RULES_COVERAGE_RATIO_DECIMALS,
-  LIFECYCLE_GATE_STAGES,
-  MAX_IOS_TEST_QUALITY_SAMPLE_FILES,
-  MAX_OBSERVED_CODE_PATHS_SAMPLE,
-  MAX_SCOPE_SAMPLE_PATHS,
-  LIST_SEPARATOR,
-  MEMORY_SHADOW_CONFIDENCE_ALLOW,
-  MEMORY_SHADOW_CONFIDENCE_BLOCK,
-  MEMORY_SHADOW_CONFIDENCE_WARN,
-  MEMORY_SHADOW_CONFIDENCE_WARN_ADVISORY,
-} from '../gate/runPlatformGateConfig';
-import type { Severity } from '../../core/rules/Severity';
 
 export type OperationalMemoryShadowRecommendation = {
   recommendedOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
@@ -97,18 +80,68 @@ const defaultServices: GateServices = {
   evidence: new EvidenceService(),
 };
 
-const SEVERITY_CRITICAL: Severity = 'CRITICAL';
-const SEVERITY_ERROR: Severity = 'ERROR';
-const SEVERITY_WARN: Severity = 'WARN';
+const hasPositiveFindingLine = (lines: Finding['lines']): boolean => {
+  if (typeof lines === 'number') {
+    return Number.isFinite(lines) && lines > 0;
+  }
+  if (typeof lines === 'string') {
+    return lines.trim().length > 0;
+  }
+  if (Array.isArray(lines)) {
+    return lines.some((line) => Number.isFinite(line) && line > 0);
+  }
+  return false;
+};
+
+const hasActionableFindingLocation = (finding: Finding): boolean => {
+  return (
+    hasPositiveFindingLine(finding.lines) ||
+    finding.primary_node !== undefined ||
+    (finding.related_nodes?.length ?? 0) > 0
+  );
+};
+
+const toNonActionableScopedAdvisoryFinding = (finding: Finding): Finding => ({
+  ...finding,
+  blocking: false,
+  message:
+    `${finding.message} ` +
+    '(Advisory: Pumuki no pudo atribuir este hallazgo a una linea, rango o nodo accionable en el scope actual.)',
+  why:
+    finding.why ??
+    'El gate esta limitado a un scope acotado y este finding solo pudo atribuirse al archivo completo.',
+  expected_fix:
+    finding.expected_fix ??
+    'Reintentar cuando el detector aporte lineas, rango, simbolo o nodo; mientras tanto no bloquea el slice acotado.',
+});
+
+const normalizeScopedRuleEngineFindings = (params: {
+  findings: ReadonlyArray<Finding>;
+  scope: GateScope;
+}): ReadonlyArray<Finding> => {
+  if (params.scope.kind !== 'staged' && params.scope.kind !== 'range') {
+    return params.findings;
+  }
+
+  return params.findings.map((finding) => {
+    if (
+      !finding.filePath ||
+      hasActionableFindingLocation(finding) ||
+      (!finding.ruleId.startsWith('skills.') && !finding.ruleId.startsWith('heuristics.'))
+    ) {
+      return finding;
+    }
+    return toNonActionableScopedAdvisoryFinding(finding);
+  });
+};
+
 const buildDefaultMemoryShadowRecommendation = (params: {
   findings: ReadonlyArray<Finding>;
   tddBddSnapshot?: TddBddSnapshot;
 }): OperationalMemoryShadowRecommendation | undefined => {
-  const hasCritical = params.findings.some(
-    (finding) => finding.severity === SEVERITY_CRITICAL
-  );
-  const hasError = params.findings.some((finding) => finding.severity === SEVERITY_ERROR);
-  const hasWarn = params.findings.some((finding) => finding.severity === SEVERITY_WARN);
+  const hasCritical = params.findings.some((finding) => finding.severity === 'CRITICAL');
+  const hasError = params.findings.some((finding) => finding.severity === 'ERROR');
+  const hasWarn = params.findings.some((finding) => finding.severity === 'WARN');
   const reasonCodes: string[] = [];
 
   if (hasCritical || hasError) {
@@ -130,27 +163,27 @@ const buildDefaultMemoryShadowRecommendation = (params: {
   if (hasCritical || hasError || params.tddBddSnapshot?.status === 'blocked') {
     return {
       recommendedOutcome: 'BLOCK',
-      confidence: MEMORY_SHADOW_CONFIDENCE_BLOCK,
+      confidence: 0.9,
       reasonCodes,
     };
   }
   if (hasWarn) {
     return {
       recommendedOutcome: 'WARN',
-      confidence: MEMORY_SHADOW_CONFIDENCE_WARN,
+      confidence: 0.75,
       reasonCodes,
     };
   }
   if (params.tddBddSnapshot?.status === 'advisory') {
     return {
       recommendedOutcome: 'WARN',
-      confidence: MEMORY_SHADOW_CONFIDENCE_WARN_ADVISORY,
+      confidence: 0.7,
       reasonCodes,
     };
   }
   return {
     recommendedOutcome: 'ALLOW',
-    confidence: MEMORY_SHADOW_CONFIDENCE_ALLOW,
+    confidence: 0.65,
     reasonCodes,
   };
 };
@@ -213,24 +246,8 @@ const toSddBlockingFinding = (decision: Pick<SddDecision, 'code' | 'message'>): 
   source: 'sdd-policy',
 });
 
-const STRICT_ENFORCEMENT_STAGES = new Set<GateStage>([
-  'PRE_WRITE',
-  'PRE_COMMIT',
-  'PRE_PUSH',
-  'CI',
-]);
-
-const isStrictEnforcementStage = (
-  stage: GateStage
-): stage is Exclude<GateStage, 'STAGED'> => STRICT_ENFORCEMENT_STAGES.has(stage);
-
-const isLifecycleGateStage = (
-  stage: GateStage
-): stage is 'PRE_COMMIT' | 'PRE_PUSH' | 'CI' =>
-  stage === 'PRE_COMMIT' || stage === 'PRE_PUSH' || stage === 'CI';
-
 const toRulesCoverageBlockingFinding = (params: {
-  stage: Exclude<GateStage, 'STAGED'>;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   activeRuleIds: ReadonlyArray<string>;
   evaluatedRuleIds: ReadonlyArray<string>;
   unevaluatedRuleIds: ReadonlyArray<string>;
@@ -240,10 +257,7 @@ const toRulesCoverageBlockingFinding = (params: {
   }
   const active = params.activeRuleIds.length;
   const evaluated = params.evaluatedRuleIds.length;
-  const coverageRatio =
-    active === 0
-      ? 1
-      : Number((evaluated / active).toFixed(DEFAULT_RULES_COVERAGE_RATIO_DECIMALS));
+  const coverageRatio = active === 0 ? 1 : Number((evaluated / active).toFixed(6));
   const unevaluatedRuleIds = [...params.unevaluatedRuleIds].sort().join(', ');
 
   return {
@@ -260,21 +274,14 @@ const toRulesCoverageBlockingFinding = (params: {
 };
 
 const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
-  stage: Exclude<GateStage, 'STAGED'>;
-  filesScanned: number;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   unsupportedAutoRuleIds: ReadonlyArray<string>;
-  unsupportedDetectorRuleIds?: ReadonlyArray<string>;
 }): Finding | undefined => {
-  if (params.filesScanned === 0) {
+  if (params.unsupportedAutoRuleIds.length === 0) {
     return undefined;
   }
 
-  const unsupportedRuleIds = [...new Set(params.unsupportedAutoRuleIds)].sort();
-  if (unsupportedRuleIds.length === 0) {
-    return undefined;
-  }
-
-  const unsupportedRuleIdsToken = unsupportedRuleIds.join(LIST_SEPARATOR);
+  const unsupportedAutoRuleIds = [...params.unsupportedAutoRuleIds].sort().join(', ');
 
   return {
     ruleId: 'governance.skills.detector-mapping.incomplete',
@@ -282,49 +289,11 @@ const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
     code: 'SKILLS_DETECTOR_MAPPING_INCOMPLETE_HIGH',
     message:
       `Skills detector mapping incomplete at ${params.stage}: ` +
-      `unsupported_auto_rule_ids=[${unsupportedRuleIdsToken}]. ` +
-      'Map every stage-applicable AUTO skill rule to an intelligent AST detector before proceeding.',
+      `unsupported_auto_rule_ids=[${unsupportedAutoRuleIds}]. ` +
+      'Map every AUTO skill rule to an AST detector before proceeding.',
     filePath: '.ai_evidence.json',
     matchedBy: 'SkillsDetectorMappingGuard',
     source: 'skills-detector-mapping',
-  };
-};
-
-const toSkillsUnsupportedDetectorRulesBlockingFinding = (params: {
-  stage: Exclude<GateStage, 'STAGED'>;
-  filesScanned: number;
-  unsupportedDetectorRuleIds: ReadonlyArray<string>;
-  registryTotal?: number;
-  registryDeclarative?: number;
-}): Finding | undefined => {
-  if (params.filesScanned === 0) {
-    return undefined;
-  }
-
-  const unsupportedRuleIds = [...new Set(params.unsupportedDetectorRuleIds)].sort();
-  if (unsupportedRuleIds.length === 0) {
-    return undefined;
-  }
-
-  const unsupportedRuleIdsSample = unsupportedRuleIds
-    .slice(0, MAX_SCOPE_SAMPLE_PATHS)
-    .join(LIST_SEPARATOR);
-  const remainingRuleIds = Math.max(0, unsupportedRuleIds.length - MAX_SCOPE_SAMPLE_PATHS);
-  return {
-    ruleId: 'governance.skills.global-enforcement.incomplete',
-    severity: 'ERROR',
-    code: 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL',
-    message:
-      `Global skills enforcement incomplete at ${params.stage}: ` +
-      `registry_total=${params.registryTotal ?? 'n/a'} ` +
-      `registry_declarative=${params.registryDeclarative ?? 'n/a'} ` +
-      `unsupported_detector=${unsupportedRuleIds.length} ` +
-      `unsupported_detector_rule_ids_sample=[${unsupportedRuleIdsSample}] ` +
-      `unsupported_detector_rule_ids_remaining=${remainingRuleIds}. ` +
-      'Every hard skill rule must be enforced by AST detector or fail closed before this stage can proceed.',
-    filePath: '.ai_evidence.json',
-    matchedBy: 'SkillsGlobalEnforcementGuard',
-    source: 'skills-global-enforcement',
   };
 };
 
@@ -436,51 +405,6 @@ const isSkillsContractCarrierPath = (path: string): boolean => {
   );
 };
 
-const isSkillsEnforcementImplementationPath = (path: string): boolean => {
-  const normalized = toNormalizedPath(path).toLowerCase();
-  return (
-    normalized.endsWith('.feature') ||
-    normalized.startsWith('core/facts/') ||
-    normalized.startsWith('core/rules/presets/heuristics/') ||
-    normalized.startsWith('integrations/config/') ||
-    normalized === 'integrations/git/runplatformgate.ts' ||
-    normalized === 'integrations/git/__tests__/runplatformgate.test.ts' ||
-    normalized === 'integrations/git/gitatomicity.ts' ||
-    normalized === 'integrations/git/__tests__/gitatomicity.test.ts' ||
-    normalized === 'pumuki-reset-master-plan.md' ||
-    normalized === 'package.json' ||
-    normalized === 'package-lock.json' ||
-    isSkillsContractCarrierPath(normalized)
-  );
-};
-
-const isSkillsEnforcementRemediationDiff = (
-  paths: ReadonlyArray<string>
-): boolean => {
-  if (paths.length === 0) {
-    return false;
-  }
-
-  const normalizedPaths = paths.map((path) => toNormalizedPath(path).toLowerCase());
-  const touchesDetectorSurface = normalizedPaths.some((path) =>
-    path.startsWith('core/facts/') ||
-    path.startsWith('core/rules/presets/heuristics/') ||
-    path.startsWith('integrations/config/') ||
-    path === 'integrations/git/runplatformgate.ts' ||
-    path === 'integrations/git/__tests__/runplatformgate.test.ts' ||
-    path === 'integrations/git/gitatomicity.ts' ||
-    path === 'integrations/git/__tests__/gitatomicity.test.ts'
-  );
-  const touchesLockOrScenario = normalizedPaths.some((path) =>
-    path === 'skills.lock.json' || path.endsWith('.feature')
-  );
-  return (
-    touchesDetectorSurface &&
-    touchesLockOrScenario &&
-    normalizedPaths.every((path) => isSkillsEnforcementImplementationPath(path))
-  );
-};
-
 const collectStagedPaths = (git: IGitService, repoRoot: string): ReadonlyArray<string> => {
   try {
     return git.runGit(['diff', '--cached', '--name-only'], repoRoot)
@@ -491,119 +415,6 @@ const collectStagedPaths = (git: IGitService, repoRoot: string): ReadonlyArray<s
     return [];
   }
 };
-
-const BASELINE_BRANCH_REFS = [
-  'origin/develop',
-  'origin/main',
-  'upstream/develop',
-  'upstream/main',
-  'develop',
-  'main',
-];
-
-const collectPrePushChangedPaths = (
-  git: IGitService,
-  repoRoot: string
-): ReadonlyArray<string> => {
-  for (const baselineRef of BASELINE_BRANCH_REFS) {
-    try {
-      git.runGit(['rev-parse', '--verify', baselineRef], repoRoot);
-      const mergeBase = git.runGit(['merge-base', baselineRef, 'HEAD'], repoRoot).trim();
-      if (mergeBase.length === 0) {
-        continue;
-      }
-      return git.runGit(['diff', '--name-only', `${mergeBase}..HEAD`], repoRoot)
-        .split('\n')
-        .map((line) => toNormalizedPath(line).toLowerCase())
-        .filter((line) => line.length > 0);
-    } catch {
-      continue;
-    }
-  }
-  return [];
-};
-
-const toBlockingFindingsForPaths = (
-  findings: ReadonlyArray<Finding>,
-  paths: ReadonlySet<string>
-): ReadonlyArray<Finding> => {
-  return findings.filter((finding) => {
-    if (finding.severity !== 'ERROR' && finding.severity !== 'CRITICAL') {
-      return false;
-    }
-    const path = finding.filePath ? toNormalizedPath(finding.filePath) : '';
-    return path.length > 0 && paths.has(path);
-  });
-};
-
-const buildHeadFactsForPaths = (params: {
-  git: IGitService;
-  repoRoot: string;
-  paths: ReadonlyArray<string>;
-}): ReadonlyArray<Fact> => {
-  const facts: Fact[] = [];
-  for (const path of params.paths) {
-    try {
-      const content = params.git.runGit(['show', `HEAD:${path}`], params.repoRoot);
-      facts.push({
-        kind: 'FileChange',
-        path,
-        changeType: 'modified',
-        source: 'git:staged:HEAD',
-      });
-      facts.push({
-        kind: 'FileContent',
-        path,
-        content,
-        source: 'git:staged:HEAD',
-      });
-    } catch {
-      continue;
-    }
-  }
-  return facts;
-};
-
-const toRemediationProgressAllowedFinding = (params: {
-  stage: Exclude<GateStage, 'STAGED'>;
-  currentBlockingCount: number;
-  previousBlockingCount: number;
-  paths: ReadonlyArray<string>;
-  ruleIds: ReadonlyArray<string>;
-}): Finding => {
-  const samplePaths = params.paths.slice(0, MAX_SCOPE_SAMPLE_PATHS).join(LIST_SEPARATOR);
-  const sampleRuleIds = params.ruleIds.slice(0, MAX_SCOPE_SAMPLE_PATHS).join(LIST_SEPARATOR);
-  return {
-    ruleId: 'governance.remediation.progress.allowed',
-    severity: 'INFO',
-    code: 'REMEDIATION_PROGRESS_ALLOWED',
-    message:
-      `Remediation progress allowed at ${params.stage}: ` +
-      `previous_blocking_findings=${params.previousBlockingCount} ` +
-      `current_blocking_findings=${params.currentBlockingCount} ` +
-      `paths=[${samplePaths}] remediated_rule_ids=[${sampleRuleIds}]. ` +
-      'Feature work remains blocked until global skills enforcement is complete.',
-    filePath: '.ai_evidence.json',
-    matchedBy: 'RemediationProgressGuard',
-    source: 'remediation-progress',
-    blocking: false,
-  };
-};
-
-const toRemediationProgressAdvisoryFinding = (finding: Finding): Finding => ({
-  ...finding,
-  severity: 'INFO',
-  code:
-    finding.code === 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL'
-      ? 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_REMEDIATION_ADVISORY'
-      : finding.code === 'TDD_BDD_EVIDENCE_STALE'
-        ? 'TDD_BDD_EVIDENCE_STALE_REMEDIATION_ADVISORY'
-        : finding.code,
-  message:
-    `${finding.message} Remediation progress mode converted this blocker to advisory ` +
-    'because the staged diff reduces existing supported-detector findings and introduces none.',
-  blocking: false,
-});
 
 const shouldAugmentStagedSkillsContractFactsWithRepoFacts = (params: {
   scope: GateScope;
@@ -655,24 +466,13 @@ const isXCTestSource = (content: string): boolean => {
   return /\bimport\s+XCTest\b/.test(content) || /\bXCTestCase\b/.test(content);
 };
 
-const isXCTestSuiteSource = (content: string): boolean => {
-  return (
-    /\bclass\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*XCTestCase\b/.test(content) &&
-    /^\s*(?:override\s+)?func\s+test[A-Za-z0-9_]*\s*\(/m.test(content)
-  );
-};
-
-const isXCTestUiOrPerformanceCompatibilitySource = (content: string): boolean => {
-  return /\bXCUIApplication\b|\bXCTMetric\b|\bmeasure\s*(?:\(|\{)/.test(content);
-};
-
 const hasMakeSUTPattern = (content: string): boolean => /\bmakeSUT\s*\(/.test(content);
 
 const hasTrackForMemoryLeaksPattern = (content: string): boolean =>
   /\btrackForMemoryLeaks\s*\(/.test(content);
 
 const toIosTestsQualityBlockingFinding = (params: {
-  stage: Exclude<GateStage, 'STAGED'>;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   facts: ReadonlyArray<Fact>;
 }): Finding | undefined => {
   const testFiles = collectIosTestFileContents(params.facts);
@@ -683,12 +483,6 @@ const toIosTestsQualityBlockingFinding = (params: {
   const invalidFiles: string[] = [];
   for (const testFile of testFiles) {
     if (!isXCTestSource(testFile.content)) {
-      continue;
-    }
-    if (!isXCTestSuiteSource(testFile.content)) {
-      continue;
-    }
-    if (isXCTestUiOrPerformanceCompatibilitySource(testFile.content)) {
       continue;
     }
     const missingMarkers: string[] = [];
@@ -708,9 +502,7 @@ const toIosTestsQualityBlockingFinding = (params: {
     return undefined;
   }
 
-  const sampleFiles = invalidFiles
-    .slice(0, MAX_IOS_TEST_QUALITY_SAMPLE_FILES)
-    .join(' | ');
+  const sampleFiles = invalidFiles.slice(0, 3).join(' | ');
   return {
     ruleId: 'governance.skills.ios-test-quality.incomplete',
     severity: 'ERROR',
@@ -725,7 +517,7 @@ const toIosTestsQualityBlockingFinding = (params: {
 };
 
 const toActiveRulesEmptyForCodeChangesBlockingFinding = (params: {
-  stage: Exclude<GateStage, 'STAGED'>;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   facts: ReadonlyArray<Fact>;
   activeRuleIds: ReadonlyArray<string>;
 }): Finding | undefined => {
@@ -736,7 +528,7 @@ const toActiveRulesEmptyForCodeChangesBlockingFinding = (params: {
   if (codePaths.length === 0) {
     return undefined;
   }
-  const samplePaths = codePaths.slice(0, MAX_OBSERVED_CODE_PATHS_SAMPLE).join(', ');
+  const samplePaths = codePaths.slice(0, 5).join(', ');
   return {
     ruleId: 'governance.rules.active-rule-coverage.empty',
     severity: 'ERROR',
@@ -793,7 +585,7 @@ const detectRequiredSkillsScopesFromPaths = (
 };
 
 const toSkillsScopeComplianceBlockingFinding = (params: {
-  stage: Exclude<GateStage, 'STAGED'>;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   facts: ReadonlyArray<Fact>;
   activeRuleIds: ReadonlyArray<string>;
   evaluatedRuleIds: ReadonlyArray<string>;
@@ -820,7 +612,7 @@ const toSkillsScopeComplianceBlockingFinding = (params: {
     if (!hasEvaluatedRules) {
       reasons.push(`evaluated_rules_prefix=${prefix} missing`);
     }
-    const samplePaths = scopePaths.slice(0, MAX_SCOPE_SAMPLE_PATHS).join(', ');
+    const samplePaths = scopePaths.slice(0, 3).join(', ');
     missingScopes.push(`${scope}{${reasons.join('; ')} sample_paths=[${samplePaths}]}`);
   }
 
@@ -842,7 +634,7 @@ const toSkillsScopeComplianceBlockingFinding = (params: {
 };
 
 const toPolicyAsCodeBlockingFinding = (params: {
-  stage: Exclude<GateStage, 'STAGED'>;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   policyTrace?: ResolvedStagePolicy['trace'];
 }): Finding | undefined => {
   const validation = params.policyTrace?.validation;
@@ -865,20 +657,20 @@ const toPolicyAsCodeBlockingFinding = (params: {
 };
 
 const toDegradedModeFinding = (params: {
-  stage: Exclude<GateStage, 'STAGED'>;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   policyTrace?: ResolvedStagePolicy['trace'];
 }): Finding | undefined => {
   const degraded = params.policyTrace?.degraded;
   if (!degraded?.enabled) {
     return undefined;
   }
-  if (degraded.action === DEGRADED_MODE_ACTION_BLOCK) {
+  if (degraded.action === 'block') {
     return {
       ruleId: 'governance.degraded-mode.blocked',
       severity: 'ERROR',
       code: degraded.code,
       message:
-        `Degraded mode is active at ${params.stage} with fail-closed action=${DEGRADED_MODE_ACTION_BLOCK}. ` +
+        `Degraded mode is active at ${params.stage} with fail-closed action=block. ` +
         `reason=${degraded.reason} source=${degraded.source}.`,
       filePath: '.pumuki/degraded-mode.json',
       matchedBy: 'DegradedModeGuard',
@@ -890,7 +682,7 @@ const toDegradedModeFinding = (params: {
     severity: 'INFO',
     code: degraded.code,
     message:
-      `Degraded mode is active at ${params.stage} with fail-open action=${DEGRADED_MODE_ACTION_ALLOW}. ` +
+      `Degraded mode is active at ${params.stage} with fail-open action=allow. ` +
       `reason=${degraded.reason} source=${degraded.source}.`,
     filePath: '.pumuki/degraded-mode.json',
     matchedBy: 'DegradedModeGuard',
@@ -944,7 +736,7 @@ const toGateWaiverInvalidFinding = (params: {
 });
 
 const toPlatformSkillsCoverageBlockingFinding = (params: {
-  stage: Exclude<GateStage, 'STAGED'>;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   detectedPlatforms: DetectedPlatforms;
   activeBundles: ReadonlyArray<SkillsRuleSetLoadResult['activeBundles'][number]>;
   activeRuleIds: ReadonlyArray<string>;
@@ -1003,7 +795,7 @@ const toPlatformSkillsCoverageBlockingFinding = (params: {
 };
 
 const toCrossPlatformCriticalEnforcementBlockingFinding = (params: {
-  stage: Exclude<GateStage, 'STAGED'>;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   detectedPlatforms: DetectedPlatforms;
   skillsRules: SkillsRuleSetLoadResult['rules'];
   evaluatedRuleIds: ReadonlyArray<string>;
@@ -1031,6 +823,7 @@ const toCrossPlatformCriticalEnforcementBlockingFinding = (params: {
       .sort();
 
     if (criticalSkillRules.length === 0) {
+      gaps.push(`${platform}{critical_profile_rules=missing}`);
       continue;
     }
 
@@ -1074,9 +867,35 @@ const applySkillsFindingEnforcement = (
   if (!finding) {
     return undefined;
   }
+  const skillsEnforcement = resolveSkillsEnforcement();
+  if (skillsEnforcement.blocking) {
+    return finding;
+  }
   return {
     ...finding,
-    severity: 'ERROR',
+    severity: 'WARN',
+  };
+};
+
+const toSoftPreCommitSkillsFinding = (params: {
+  finding: Finding | undefined;
+  enabled: boolean;
+  observedCodePaths: ReadonlyArray<string>;
+}): Finding | undefined => {
+  if (!params.finding) {
+    return undefined;
+  }
+  if (!params.enabled || !shouldBlockFromFinding(params.finding)) {
+    return params.finding;
+  }
+  return {
+    ...params.finding,
+    severity: 'WARN',
+    code: `${params.finding.code}_SOFT_PRECOMMIT`,
+    message:
+      `${params.finding.message} ` +
+      `Soft-enforced at PRE_COMMIT for low-risk scope (observed_code_paths=${params.observedCodePaths.length}). ` +
+      'Strict enforcement remains active at PRE_PUSH/CI.',
   };
 };
 
@@ -1098,7 +917,7 @@ export async function runPlatformGate(params: {
     ...params.dependencies,
   };
   const repoRoot = git.resolveRepoRoot();
-  const auditMode = params.auditMode ?? DEFAULT_GATE_AUDIT_MODE;
+  const auditMode = params.auditMode ?? 'gate';
   const shouldShortCircuitSdd = params.sddShortCircuit ?? false;
   let sddDecision:
     | Pick<SddDecision, 'allowed' | 'code' | 'message'>
@@ -1196,7 +1015,11 @@ export async function runPlatformGate(params: {
     evaluationFacts = factsForPlatformEvaluation,
     findings: ruleEngineFindings,
   } = platformEvaluation;
-  const findings = [...aiGateRepoPolicyFindings, ...ruleEngineFindings];
+  const scopedRuleEngineFindings = normalizeScopedRuleEngineFindings({
+    findings: ruleEngineFindings,
+    scope: params.scope,
+  });
+  const findings = [...aiGateRepoPolicyFindings, ...scopedRuleEngineFindings];
   const evaluationMetrics: SnapshotEvaluationMetrics = coverage
     ? {
       facts_total: coverage.factsTotal,
@@ -1213,7 +1036,9 @@ export async function runPlatformGate(params: {
     }
     : createEmptyEvaluationMetrics();
   const coverageBlockingFinding =
-    isStrictEnforcementStage(params.policy.stage)
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
       ? toRulesCoverageBlockingFinding({
         stage: params.policy.stage,
         activeRuleIds: coverage?.activeRuleIds ?? [],
@@ -1222,32 +1047,21 @@ export async function runPlatformGate(params: {
       })
       : undefined;
   const unsupportedSkillsMappingFinding =
-    isStrictEnforcementStage(params.policy.stage)
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
       ? toSkillsUnsupportedAutoRulesBlockingFinding({
         stage: params.policy.stage,
-        filesScanned,
         unsupportedAutoRuleIds: skillsRuleSet.unsupportedAutoRuleIds ?? [],
-        unsupportedDetectorRuleIds: skillsRuleSet.unsupportedDetectorRuleIds ?? [],
       })
       : undefined;
-  const effectiveUnsupportedSkillsMappingFinding = applySkillsFindingEnforcement(
+  const effectiveUnsupportedSkillsMappingInput = applySkillsFindingEnforcement(
     unsupportedSkillsMappingFinding
   );
-  const unsupportedDetectorSkillsFinding =
-    isStrictEnforcementStage(params.policy.stage)
-      ? toSkillsUnsupportedDetectorRulesBlockingFinding({
-          stage: params.policy.stage,
-          filesScanned,
-          unsupportedDetectorRuleIds: skillsRuleSet.unsupportedDetectorRuleIds ?? [],
-          registryTotal: skillsRuleSet.registryCoverage?.registryTotals.total,
-          registryDeclarative: skillsRuleSet.registryCoverage?.registryTotals.declarative,
-        })
-      : undefined;
-  const effectiveUnsupportedDetectorSkillsFinding = applySkillsFindingEnforcement(
-    unsupportedDetectorSkillsFinding
-  );
   const platformSkillsCoverageFinding =
-    isStrictEnforcementStage(params.policy.stage)
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
       ? toPlatformSkillsCoverageBlockingFinding({
           stage: params.policy.stage,
           detectedPlatforms,
@@ -1260,7 +1074,9 @@ export async function runPlatformGate(params: {
     platformSkillsCoverageFinding
   );
   const crossPlatformCriticalFinding =
-    isStrictEnforcementStage(params.policy.stage)
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
       ? toCrossPlatformCriticalEnforcementBlockingFinding({
           stage: params.policy.stage,
           detectedPlatforms,
@@ -1272,7 +1088,9 @@ export async function runPlatformGate(params: {
     crossPlatformCriticalFinding
   );
   const skillsScopeComplianceFinding =
-    isStrictEnforcementStage(params.policy.stage)
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
       ? toSkillsScopeComplianceBlockingFinding({
           stage: params.policy.stage,
           facts,
@@ -1284,7 +1102,9 @@ export async function runPlatformGate(params: {
     skillsScopeComplianceFinding
   );
   const activeRulesEmptyForCodeChangesFinding =
-    isStrictEnforcementStage(params.policy.stage)
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
       ? toActiveRulesEmptyForCodeChangesBlockingFinding({
         stage: params.policy.stage,
         facts,
@@ -1292,7 +1112,9 @@ export async function runPlatformGate(params: {
       })
       : undefined;
   const iosTestsQualityFinding =
-    isStrictEnforcementStage(params.policy.stage)
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
       ? toIosTestsQualityBlockingFinding({
           stage: params.policy.stage,
           facts,
@@ -1302,23 +1124,29 @@ export async function runPlatformGate(params: {
     iosTestsQualityFinding
   );
   const policyAsCodeBlockingFinding =
-    isStrictEnforcementStage(params.policy.stage)
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
       ? toPolicyAsCodeBlockingFinding({
           stage: params.policy.stage,
           policyTrace: params.policyTrace,
         })
       : undefined;
-  const degradedModeFinding = isLifecycleGateStage(params.policy.stage)
-    && LIFECYCLE_GATE_STAGES.includes(params.policy.stage)
-    ? toDegradedModeFinding({
-        stage: params.policy.stage,
-        policyTrace: params.policyTrace,
-      })
-    : undefined;
+  const degradedModeFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toDegradedModeFinding({
+          stage: params.policy.stage,
+          policyTrace: params.policyTrace,
+        })
+      : undefined;
   const astIntelligenceDualValidation:
     | AstIntelligenceDualValidationResult
     | undefined =
-    isStrictEnforcementStage(params.policy.stage)
+    params.policy.stage === 'PRE_COMMIT'
+      || params.policy.stage === 'PRE_PUSH'
+      || params.policy.stage === 'CI'
       ? dependencies.evaluateAstIntelligenceDualValidation({
           stage: params.policy.stage,
           skillsRules: skillsRuleSet.rules,
@@ -1342,9 +1170,8 @@ export async function runPlatformGate(params: {
       );
     }
   }
-  const degradedModeBlocks =
-    params.policyTrace?.degraded?.action === DEGRADED_MODE_ACTION_BLOCK;
-  const rulesCoverage: SnapshotRulesCoverage = coverage
+  const degradedModeBlocks = params.policyTrace?.degraded?.action === 'block';
+  const rulesCoverage = coverage
     ? {
       stage: params.policy.stage,
       contract: skillsRuleSet.registryCoverage?.contract ?? 'AUTO_RUNTIME_RULES_FOR_STAGE',
@@ -1370,13 +1197,6 @@ export async function runPlatformGate(params: {
           unsupported_auto_rule_ids: [...(skillsRuleSet.unsupportedAutoRuleIds ?? [])],
         }
         : {}),
-      ...((skillsRuleSet.unsupportedDetectorRuleIds?.length ?? 0) > 0
-        ? {
-          unsupported_detector_rule_ids: [
-            ...(skillsRuleSet.unsupportedDetectorRuleIds ?? []),
-          ],
-        }
-        : {}),
       counts: {
         active: coverage.activeRuleIds.length,
         evaluated: coverage.evaluatedRuleIds.length,
@@ -1397,58 +1217,11 @@ export async function runPlatformGate(params: {
             unsupported_auto: (skillsRuleSet.unsupportedAutoRuleIds ?? []).length,
           }
           : {}),
-        ...((skillsRuleSet.unsupportedDetectorRuleIds?.length ?? 0) > 0
-          ? {
-            unsupported_detector:
-              (skillsRuleSet.unsupportedDetectorRuleIds ?? []).length,
-          }
-          : {}),
       },
       coverage_ratio:
         coverage.activeRuleIds.length === 0
           ? 1
-          : Number(
-              (
-                coverage.evaluatedRuleIds.length / coverage.activeRuleIds.length
-              ).toFixed(DEFAULT_RULES_COVERAGE_RATIO_DECIMALS)
-            ),
-      auto_runtime_coverage_ratio:
-        coverage.activeRuleIds.length === 0
-          ? 1
-          : Number(
-              (
-                coverage.evaluatedRuleIds.length / coverage.activeRuleIds.length
-              ).toFixed(DEFAULT_RULES_COVERAGE_RATIO_DECIMALS)
-            ),
-      semantic_enforcement_ratio: skillsRuleSet.registryCoverage
-        ? Number(
-            (
-              Math.max(
-                0,
-                skillsRuleSet.registryCoverage.registryTotals.total -
-                  (skillsRuleSet.unsupportedDetectorRuleIds ?? []).length
-              ) / Math.max(1, skillsRuleSet.registryCoverage.registryTotals.total)
-            ).toFixed(DEFAULT_RULES_COVERAGE_RATIO_DECIMALS)
-          )
-        : 1,
-      global_skills_enforcement: {
-        status:
-          (skillsRuleSet.unsupportedDetectorRuleIds?.length ?? 0) === 0
-            ? 'enforced'
-            : coverage.activeRuleIds.length > 0
-              ? 'partially_enforced'
-              : 'unsupported',
-        registry_total: skillsRuleSet.registryCoverage?.registryTotals.total ?? 0,
-        detector_supported: Math.max(
-          0,
-          (skillsRuleSet.registryCoverage?.registryTotals.total ?? 0) -
-            (skillsRuleSet.unsupportedDetectorRuleIds ?? []).length
-        ),
-        declarative_only:
-          skillsRuleSet.registryCoverage?.registryTotals.declarative ?? 0,
-        unsupported_detector:
-          (skillsRuleSet.unsupportedDetectorRuleIds ?? []).length,
-      },
+          : Number((coverage.evaluatedRuleIds.length / coverage.activeRuleIds.length).toFixed(6)),
     }
     : createEmptySnapshotRulesCoverage(params.policy.stage);
   const brownfieldHotspotFindings = dependencies.evaluateBrownfieldHotspotFindings({
@@ -1473,115 +1246,47 @@ export async function runPlatformGate(params: {
   const hasNativeBlockingFinding = findings.some(
     (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
   );
-  const stagedCodePaths = stagedPaths.filter((path) => isObservedCodePath(path));
-  const stagedCodePathSet = new Set(stagedCodePaths);
-  const currentBlockingFindingsForStagedPaths = toBlockingFindingsForPaths(
-    findings,
-    stagedCodePathSet
-  );
-  const previousFactsForStagedPaths =
-    isStrictEnforcementStage(params.policy.stage) &&
-    params.scope.kind === 'staged' &&
-    stagedCodePaths.length > 0 &&
-    currentBlockingFindingsForStagedPaths.length === 0
-      ? buildHeadFactsForPaths({
-          git,
-          repoRoot,
-          paths: stagedCodePaths,
-        })
-      : [];
-  const previousEvaluationForStagedPaths =
-    previousFactsForStagedPaths.length > 0
-      ? dependencies.evaluatePlatformGateFindings({
-          facts: previousFactsForStagedPaths,
-          stage: params.policy.stage,
-          repoRoot,
-        })
-      : undefined;
-  const previousBlockingFindingsForStagedPaths = previousEvaluationForStagedPaths
-    ? toBlockingFindingsForPaths(
-        previousEvaluationForStagedPaths.findings,
-        stagedCodePathSet
-      )
-    : [];
-  const previousIosTestsQualityFinding =
-    previousFactsForStagedPaths.length > 0 &&
-    iosTestsQualityFinding === undefined &&
-    isStrictEnforcementStage(params.policy.stage)
-      ? toIosTestsQualityBlockingFinding({
-          stage: params.policy.stage,
-          facts: previousFactsForStagedPaths,
-        })
-      : undefined;
-  const previousRemediationBlockingFindings = [
-    ...previousBlockingFindingsForStagedPaths,
-    ...(previousIosTestsQualityFinding ? [previousIosTestsQualityFinding] : []),
-  ];
-  const remediationProgressFinding =
-    previousRemediationBlockingFindings.length > currentBlockingFindingsForStagedPaths.length &&
-    currentBlockingFindingsForStagedPaths.length === 0
-      ? toRemediationProgressAllowedFinding({
-          stage: params.policy.stage as Exclude<GateStage, 'STAGED'>,
-          currentBlockingCount: currentBlockingFindingsForStagedPaths.length,
-          previousBlockingCount: previousRemediationBlockingFindings.length,
-          paths: stagedCodePaths,
-          ruleIds: [
-            ...new Set(
-              previousRemediationBlockingFindings.map((finding) => finding.ruleId)
-            ),
-          ].sort(),
-        })
-      : undefined;
-  const skillsEnforcementRemediationDiff = isSkillsEnforcementRemediationDiff(
-    stagedPaths.length > 0
-      ? stagedPaths
-      : params.policy.stage === 'PRE_PUSH'
-        ? collectPrePushChangedPaths(git, repoRoot)
-        : []
-  );
-  const remediationProgressAllowsGlobalGap =
-    remediationProgressFinding !== undefined ||
-    (skillsEnforcementRemediationDiff &&
-      !hasNativeBlockingFinding &&
-      !hasTddBddBlockingFinding);
-  const effectiveTddBddFindings = remediationProgressAllowsGlobalGap
-    ? tddBddEvaluation.findings.map((finding) =>
-        finding.code === 'TDD_BDD_EVIDENCE_STALE'
-          ? toRemediationProgressAdvisoryFinding(finding)
-          : finding
-      )
-    : tddBddEvaluation.findings;
-  const effectiveTddBddSnapshot =
-    remediationProgressAllowsGlobalGap &&
-    tddBddSnapshot?.status === 'blocked' &&
-    tddBddEvaluation.findings.length > 0 &&
-    tddBddEvaluation.findings.every((finding) => finding.code === 'TDD_BDD_EVIDENCE_STALE')
-      ? {
-          ...tddBddSnapshot,
-          status: 'advisory' as const,
-          evidence: {
-            ...tddBddSnapshot.evidence,
-            errors: ['TDD_BDD_EVIDENCE_STALE_REMEDIATION_ADVISORY'],
-          },
-        }
-      : tddBddSnapshot;
-  const effectiveHasTddBddBlockingFinding = effectiveTddBddFindings.some(
-    (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
-  );
-  const effectivePlatformSkillsCoverageFinding = effectivePlatformSkillsCoverageInput;
-  const effectiveCrossPlatformCriticalFinding = effectiveCrossPlatformCriticalInput;
-  const effectiveSkillsScopeComplianceFinding = effectiveSkillsScopeComplianceInput;
-  const effectiveUnsupportedDetectorSkillsFindingForOutcome =
-    remediationProgressAllowsGlobalGap && effectiveUnsupportedDetectorSkillsFinding
-      ? toRemediationProgressAdvisoryFinding(effectiveUnsupportedDetectorSkillsFinding)
-      : effectiveUnsupportedDetectorSkillsFinding;
+  const preCommitSoftSkillsEnabled = process.env.PUMUKI_PRE_COMMIT_SOFT_SKILLS !== '0';
+  const lowRiskPreCommitWindow = observedCodePaths.length > 0 && observedCodePaths.length <= 3;
+  const shouldSoftEnforceSkillsFindings =
+    params.policy.stage === 'PRE_COMMIT'
+    && preCommitSoftSkillsEnabled
+    && lowRiskPreCommitWindow
+    && !sddBlockingFinding
+    && !degradedModeBlocks
+    && !shouldBlockFromFinding(policyAsCodeBlockingFinding)
+    && !shouldBlockFromFinding(coverageBlockingFinding)
+    && !shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding)
+    && !shouldBlockFromFinding(effectiveIosTestsQualityFinding)
+    && !shouldBlockFromFinding(astIntelligenceDualFinding)
+    && !hasTddBddBlockingFinding
+    && !hasNativeBlockingFinding;
+  const effectiveUnsupportedSkillsMappingFinding = toSoftPreCommitSkillsFinding({
+    finding: effectiveUnsupportedSkillsMappingInput,
+    enabled: shouldSoftEnforceSkillsFindings,
+    observedCodePaths,
+  });
+  const effectivePlatformSkillsCoverageFinding = toSoftPreCommitSkillsFinding({
+    finding: effectivePlatformSkillsCoverageInput,
+    enabled: shouldSoftEnforceSkillsFindings,
+    observedCodePaths,
+  });
+  const effectiveCrossPlatformCriticalFinding = toSoftPreCommitSkillsFinding({
+    finding: effectiveCrossPlatformCriticalInput,
+    enabled: shouldSoftEnforceSkillsFindings,
+    observedCodePaths,
+  });
+  const effectiveSkillsScopeComplianceFinding = toSoftPreCommitSkillsFinding({
+    finding: effectiveSkillsScopeComplianceInput,
+    enabled: shouldSoftEnforceSkillsFindings,
+    observedCodePaths,
+  });
   const effectiveFindings = sddBlockingFinding
     ? [
       sddBlockingFinding,
       ...(degradedModeFinding ? [degradedModeFinding] : []),
       ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
       ...(effectiveUnsupportedSkillsMappingFinding ? [effectiveUnsupportedSkillsMappingFinding] : []),
-      ...(effectiveUnsupportedDetectorSkillsFindingForOutcome ? [effectiveUnsupportedDetectorSkillsFindingForOutcome] : []),
       ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
       ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
       ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
@@ -1590,12 +1295,10 @@ export async function runPlatformGate(params: {
       ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
       ...brownfieldHotspotFindings,
-      ...effectiveTddBddFindings,
-      ...(remediationProgressFinding ? [remediationProgressFinding] : []),
+      ...tddBddEvaluation.findings,
       ...findings,
     ]
     : effectiveUnsupportedSkillsMappingFinding
-      || effectiveUnsupportedDetectorSkillsFindingForOutcome
       || effectivePlatformSkillsCoverageFinding
       || effectiveCrossPlatformCriticalFinding
       || effectiveSkillsScopeComplianceFinding
@@ -1606,13 +1309,11 @@ export async function runPlatformGate(params: {
       || brownfieldHotspotFindings.length > 0
       || policyAsCodeBlockingFinding
       || degradedModeFinding
-      || effectiveTddBddFindings.length > 0
-      || remediationProgressFinding
+      || tddBddEvaluation.findings.length > 0
       ? [
         ...(degradedModeFinding ? [degradedModeFinding] : []),
         ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
         ...(effectiveUnsupportedSkillsMappingFinding ? [effectiveUnsupportedSkillsMappingFinding] : []),
-        ...(effectiveUnsupportedDetectorSkillsFindingForOutcome ? [effectiveUnsupportedDetectorSkillsFindingForOutcome] : []),
         ...(effectivePlatformSkillsCoverageFinding ? [effectivePlatformSkillsCoverageFinding] : []),
         ...(effectiveCrossPlatformCriticalFinding ? [effectiveCrossPlatformCriticalFinding] : []),
         ...(effectiveSkillsScopeComplianceFinding ? [effectiveSkillsScopeComplianceFinding] : []),
@@ -1621,8 +1322,7 @@ export async function runPlatformGate(params: {
         ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
         ...brownfieldHotspotFindings,
-        ...effectiveTddBddFindings,
-        ...(remediationProgressFinding ? [remediationProgressFinding] : []),
+        ...tddBddEvaluation.findings,
         ...findings,
       ]
       : brownfieldHotspotFindings.length > 0
@@ -1631,12 +1331,18 @@ export async function runPlatformGate(params: {
   const hasAstIntelligenceBlockingFinding = shouldBlockFromFinding(astIntelligenceDualFinding);
   const gateDecisionFindings = effectiveFindings.filter((finding) => finding.blocking !== false);
   const decision = dependencies.evaluateGate([...gateDecisionFindings], params.policy);
+  const hasNonBlockingAdvisoryFinding = effectiveFindings.some(
+    (finding) =>
+      finding.blocking === false &&
+      (finding.severity === 'WARN' ||
+        finding.severity === 'ERROR' ||
+        finding.severity === 'CRITICAL')
+  );
   const baseGateOutcome =
     sddBlockingFinding ||
     degradedModeBlocks ||
     shouldBlockFromFinding(policyAsCodeBlockingFinding) ||
     shouldBlockFromFinding(effectiveUnsupportedSkillsMappingFinding) ||
-    shouldBlockFromFinding(effectiveUnsupportedDetectorSkillsFindingForOutcome) ||
     shouldBlockFromFinding(effectivePlatformSkillsCoverageFinding) ||
     shouldBlockFromFinding(effectiveCrossPlatformCriticalFinding) ||
     shouldBlockFromFinding(effectiveSkillsScopeComplianceFinding) ||
@@ -1645,9 +1351,10 @@ export async function runPlatformGate(params: {
     hasAstIntelligenceBlockingFinding ||
     shouldBlockFromFinding(coverageBlockingFinding) ||
     brownfieldHotspotFindings.some((finding) => shouldBlockFromFinding(finding)) ||
-    effectiveHasTddBddBlockingFinding
+    hasTddBddBlockingFinding
       ? 'BLOCK'
-      : (decision.outcome === 'PASS' && effectiveTddBddSnapshot?.status === 'advisory'
+      : (decision.outcome === 'PASS' &&
+          (tddBddSnapshot?.status === 'advisory' || hasNonBlockingAdvisoryFinding)
           ? 'WARN'
           : decision.outcome);
   const gateWaiverStage =
@@ -1697,7 +1404,7 @@ export async function runPlatformGate(params: {
     try {
       memoryShadowRecommendation = dependencies.buildMemoryShadowRecommendation({
         findings: findingsWithWaiver,
-        ...(effectiveTddBddSnapshot ? { tddBddSnapshot: effectiveTddBddSnapshot } : {}),
+        ...(tddBddSnapshot ? { tddBddSnapshot } : {}),
       });
     } catch (error) {
       const rawReason = error instanceof Error ? error.message : String(error);
@@ -1733,7 +1440,7 @@ export async function runPlatformGate(params: {
     if (params.silent !== true) {
       process.stdout.write(
         `[pumuki][memory-shadow] recommended=${memoryShadowRecommendation.recommendedOutcome}` +
-        ` confidence=${memoryShadowRecommendation.confidence.toFixed(DEFAULT_MEMORY_SHADOW_DISPLAY_PRECISION)}` +
+        ` confidence=${memoryShadowRecommendation.confidence.toFixed(2)}` +
         ` reasons=${memoryShadowRecommendation.reasonCodes.join(',')}\n`
       );
     }
@@ -1748,7 +1455,7 @@ export async function runPlatformGate(params: {
     filesScanned,
     evaluationMetrics,
     rulesCoverage,
-    ...(effectiveTddBddSnapshot ? { tddBdd: effectiveTddBddSnapshot } : {}),
+    ...(tddBddSnapshot ? { tddBdd: tddBddSnapshot } : {}),
     ...(memoryShadow ? { memoryShadow } : {}),
     repoRoot,
     detectedPlatforms,
@@ -1761,15 +1468,7 @@ export async function runPlatformGate(params: {
 
   if (gateOutcome === 'BLOCK') {
     if (params.silent !== true) {
-      const renderStage =
-        params.policy.stage === 'PRE_PUSH'
-          ? 'PRE_PUSH'
-          : params.policy.stage === 'CI'
-            ? 'CI'
-            : 'PRE_COMMIT';
-      dependencies.printGateFindings(findingsWithWaiver, {
-        stage: renderStage,
-      });
+    dependencies.printGateFindings(findingsWithWaiver);
     }
     return 1;
   }

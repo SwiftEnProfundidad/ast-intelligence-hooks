@@ -60,13 +60,6 @@ const isTypeScriptHeuristicTargetPath = (
   );
 };
 
-const isTypeScriptFrontendPath = (path: string): boolean => {
-  if (!isTypeScriptHeuristicTargetPath(path)) {
-    return false;
-  }
-  return path.startsWith('apps/frontend/') || path.startsWith('apps/web/');
-};
-
 const isTypeScriptDomainOrApplicationPath = (path: string): boolean => {
   if (!isTypeScriptHeuristicTargetPath(path)) {
     return false;
@@ -81,6 +74,32 @@ const isTypeScriptDomainOrApplicationPath = (path: string): boolean => {
 
 const isIOSSwiftPath = (path: string): boolean => {
   return path.endsWith('.swift') && path.startsWith('apps/ios/');
+};
+
+const isIOSPodfilePath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/');
+  return (
+    normalized.startsWith('apps/ios/') &&
+    (normalized.endsWith('/Podfile') || normalized.endsWith('/Podfile.lock'))
+  );
+};
+
+const isIOSCartfilePath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/');
+  return (
+    normalized.startsWith('apps/ios/') &&
+    (normalized.endsWith('/Cartfile') || normalized.endsWith('/Cartfile.resolved'))
+  );
+};
+
+const isIOSInfoPlistPath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/');
+  return normalized.startsWith('apps/ios/') && normalized.endsWith('/Info.plist');
+};
+
+const isIOSLocalizableStringsPath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/');
+  return normalized.startsWith('apps/ios/') && normalized.endsWith('/Localizable.strings');
 };
 
 const isIOSApplicationOrPresentationPath = (path: string): boolean => {
@@ -98,62 +117,12 @@ const isAndroidKotlinPath = (path: string): boolean => {
   return (path.endsWith('.kt') || path.endsWith('.kts')) && path.startsWith('apps/android/');
 };
 
-const isAndroidJavaPath = (path: string): boolean => {
-  return path.endsWith('.java') && path.startsWith('apps/android/');
-};
-
-const isAndroidSourcePath = (path: string): boolean => {
-  return isAndroidKotlinPath(path) || isAndroidJavaPath(path);
-};
-
-const isAndroidGradlePath = (path: string): boolean => {
+const isAndroidLocalPropertiesPath = (path: string): boolean => {
   const normalized = path.replace(/\\/g, '/').toLowerCase();
-  if (!normalized.startsWith('apps/android/')) {
-    return false;
-  }
-
-  return (
-    normalized.endsWith('/build.gradle') ||
-    normalized.endsWith('/build.gradle.kts') ||
-    normalized.endsWith('.gradle') ||
-    normalized.endsWith('.gradle.kts')
-  );
+  return normalized.startsWith('apps/android/') && normalized.endsWith('/local.properties');
 };
 
-const isAndroidVersionCatalogPath = (path: string): boolean => {
-  const normalized = path.replace(/\\/g, '/').toLowerCase();
-  return normalized.startsWith('apps/android/') && normalized.endsWith('libs.versions.toml');
-};
-
-const isAndroidLocalizedStringsXmlPath = (path: string): boolean => {
-  const normalized = path.replace(/\\/g, '/').toLowerCase();
-  return (
-    normalized.startsWith('apps/android/') &&
-    /\/res\/values-[^/]+\/strings\.xml$/.test(normalized)
-  );
-};
-
-const isAndroidLocalizedPluralsXmlPath = (path: string): boolean => {
-  const normalized = path.replace(/\\/g, '/').toLowerCase();
-  return (
-    normalized.startsWith('apps/android/') &&
-    /\/res\/values-[^/]+\/plurals\.xml$/.test(normalized)
-  );
-};
-
-const isAndroidInstrumentedTestPath = (path: string): boolean => {
-  const normalized = path.replace(/\\/g, '/').toLowerCase();
-  return normalized.startsWith('apps/android/') && normalized.includes('/androidtest/');
-};
-
-const isAndroidJvmTestPath = (path: string): boolean => {
-  const normalized = path.replace(/\\/g, '/').toLowerCase();
-  return (
-    normalized.startsWith('apps/android/') &&
-    normalized.includes('/test/') &&
-    !normalized.includes('/androidtest/')
-  );
-};
+const detectsTrackedFilePresence = (_source: string): boolean => true;
 
 const isAndroidPresentationPath = (path: string): boolean => {
   return isAndroidKotlinPath(path) && path.includes('/presentation/');
@@ -161,6 +130,14 @@ const isAndroidPresentationPath = (path: string): boolean => {
 
 const isAndroidApplicationOrPresentationPath = (path: string): boolean => {
   return isAndroidKotlinPath(path) && (path.includes('/application/') || path.includes('/presentation/'));
+};
+
+const isAndroidDomainOrApplicationPath = (path: string): boolean => {
+  return isAndroidKotlinPath(path) && (path.includes('/domain/') || path.includes('/application/'));
+};
+
+const isAndroidNonPresentationKotlinPath = (path: string): boolean => {
+  return isAndroidKotlinPath(path) && !path.includes('/presentation/');
 };
 
 const isApprovedIOSBridgePath = (path: string): boolean => {
@@ -210,14 +187,8 @@ const isKotlinTestPath = (path: string): boolean => {
   );
 };
 
-const isJavaTestPath = (path: string): boolean => {
-  const normalized = path.toLowerCase();
-  return (
-    normalized.includes('/test/') ||
-    normalized.includes('/androidtest/') ||
-    normalized.endsWith('test.java') ||
-    normalized.endsWith('tests.java')
-  );
+const isAndroidKotlinTestPath = (path: string): boolean => {
+  return isAndroidKotlinPath(path) && isKotlinTestPath(path);
 };
 
 const isExcludedProjectScanPath = (path: string): boolean => {
@@ -475,10 +446,6 @@ const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
   { detect: TS.hasSetTimeoutStringCallback, ruleId: 'heuristics.ts.set-timeout-string.ast', code: 'HEURISTICS_SET_TIMEOUT_STRING_AST', message: 'AST heuristic detected setTimeout with a string callback.' },
   { detect: TS.hasSetIntervalStringCallback, ruleId: 'heuristics.ts.set-interval-string.ast', code: 'HEURISTICS_SET_INTERVAL_STRING_AST', message: 'AST heuristic detected setInterval with a string callback.' },
   { detect: TS.hasAsyncPromiseExecutor, ruleId: 'heuristics.ts.new-promise-async.ast', code: 'HEURISTICS_NEW_PROMISE_ASYNC_AST', message: 'AST heuristic detected async Promise executor usage.' },
-  { detect: TS.hasCallbackHellPattern, ruleId: 'heuristics.ts.callback-hell.ast', code: 'HEURISTICS_CALLBACK_HELL_AST', message: 'AST heuristic detected callback hell / nested promise callback usage.' },
-  { detect: TS.hasMagicNumberPattern, ruleId: 'heuristics.ts.magic-numbers.ast', code: 'HEURISTICS_MAGIC_NUMBERS_AST', message: 'AST heuristic detected magic number usage.' },
-  { detect: TS.hasHardcodedValuePattern, ruleId: 'heuristics.ts.hardcoded-values.ast', code: 'HEURISTICS_HARDCODED_VALUES_AST', message: 'AST heuristic detected hardcoded config value usage.' },
-  { detect: TS.hasEnvDefaultFallbackPattern, ruleId: 'heuristics.ts.env-default-fallback.ast', code: 'HEURISTICS_ENV_DEFAULT_FALLBACK_AST', message: 'AST heuristic detected environment default fallback usage.' },
   { detect: TS.hasWithStatement, ruleId: 'heuristics.ts.with-statement.ast', code: 'HEURISTICS_WITH_STATEMENT_AST', message: 'AST heuristic detected with-statement usage.' },
   { detect: TS.hasDeleteOperator, ruleId: 'heuristics.ts.delete-operator.ast', code: 'HEURISTICS_DELETE_OPERATOR_AST', message: 'AST heuristic detected delete-operator usage.' },
   { detect: TS.hasDebuggerStatement, ruleId: 'heuristics.ts.debugger.ast', code: 'HEURISTICS_DEBUGGER_AST', message: 'AST heuristic detected debugger statement usage.' },
@@ -488,34 +455,7 @@ const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
   { detect: TS.hasOverrideMethodThrowingNotImplemented, ruleId: 'heuristics.ts.solid.lsp.override-not-implemented.ast', code: 'HEURISTICS_SOLID_LSP_OVERRIDE_NOT_IMPLEMENTED_AST', message: 'AST heuristic detected LSP risk: override throws not-implemented/unsupported.' },
   { detect: TS.hasFrameworkDependencyImport, ruleId: 'heuristics.ts.solid.dip.framework-import.ast', code: 'HEURISTICS_SOLID_DIP_FRAMEWORK_IMPORT_AST', message: 'AST heuristic detected DIP risk: framework dependency imported in domain/application code.', pathCheck: isTypeScriptDomainOrApplicationPath },
   { detect: TS.hasConcreteDependencyInstantiation, ruleId: 'heuristics.ts.solid.dip.concrete-instantiation.ast', code: 'HEURISTICS_SOLID_DIP_CONCRETE_INSTANTIATION_AST', message: 'AST heuristic detected DIP risk: direct instantiation of concrete framework dependency.', pathCheck: isTypeScriptDomainOrApplicationPath },
-  { detect: (ast) => TS.findCleanArchitectureMatch(ast) !== undefined, ruleId: 'heuristics.ts.clean-architecture.ast', code: 'HEURISTICS_CLEAN_ARCHITECTURE_AST', message: 'AST heuristic detected clean architecture dependency direction risk in domain/application code.', pathCheck: isTypeScriptDomainOrApplicationPath },
-  { detect: TS.hasProductionMockCall, ruleId: 'heuristics.ts.production-mock.ast', code: 'HEURISTICS_PRODUCTION_MOCK_AST', message: 'AST heuristic detected production mock usage in backend runtime code.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasExceptionFilterClass, ruleId: 'heuristics.ts.exception-filter.ast', code: 'HEURISTICS_EXCEPTION_FILTER_AST', message: 'AST heuristic detected global exception filter usage in backend runtime code.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasGuardUseGuardsJwtAuthGuard, ruleId: 'heuristics.ts.guards-useguards-jwtauthguard.ast', code: 'HEURISTICS_GUARDS_USEGUARDS_JWTAUTHGUARD_AST', message: 'AST heuristic detected @UseGuards(JwtAuthGuard) usage in backend runtime code.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasUseInterceptorsLoggingTransform, ruleId: 'heuristics.ts.interceptors-useinterceptors-logging-transform.ast', code: 'HEURISTICS_INTERCEPTORS_USEINTERCEPTORS_LOGGING_TRANSFORM_AST', message: 'AST heuristic detected @UseInterceptors logging/transform usage in backend runtime code.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasSensitiveLogCall, ruleId: 'heuristics.ts.no-sensitive-log.ast', code: 'HEURISTICS_NO_SENSITIVE_LOG_AST', message: 'AST heuristic detected sensitive data emitted to backend logs.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasCorrelationIdsPattern, ruleId: 'heuristics.ts.correlation-ids.ast', code: 'HEURISTICS_CORRELATION_IDS_AST', message: 'AST heuristic detected correlation IDs propagation in backend runtime code.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasCorsConfiguredPattern, ruleId: 'heuristics.ts.cors-configured.ast', code: 'HEURISTICS_CORS_CONFIGURED_AST', message: 'AST heuristic detected backend CORS configuration with allowed origins.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasValidationPipeGlobalPattern, ruleId: 'heuristics.ts.validationpipe-global.ast', code: 'HEURISTICS_VALIDATIONPIPE_GLOBAL_AST', message: 'AST heuristic detected global ValidationPipe configuration with whitelist enabled.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasApiVersioningPattern, ruleId: 'heuristics.ts.versionado-api-v1-api-v2.ast', code: 'HEURISTICS_VERSIONADO_API_V1_API_V2_AST', message: 'AST heuristic detected backend API versioning through versioned NestJS controllers.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasValidationConfigPattern, ruleId: 'heuristics.ts.validation-config.ast', code: 'HEURISTICS_VALIDATION_CONFIG_AST', message: 'AST heuristic detected backend config validation in ConfigModule.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasClassValidatorDecoratorsPattern, ruleId: 'heuristics.ts.class-validator-decorators.ast', code: 'HEURISTICS_CLASS_VALIDATOR_DECORATORS_AST', message: 'AST heuristic detected class-validator decorator usage in backend DTOs.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasClassTransformerDecoratorsPattern, ruleId: 'heuristics.ts.class-transformer-decorators.ast', code: 'HEURISTICS_CLASS_TRANSFORMER_DECORATORS_AST', message: 'AST heuristic detected class-transformer decorator usage in backend DTOs.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasInputValidationPattern, ruleId: 'heuristics.ts.input-validation-siempre-validar-con-dtos.ast', code: 'HEURISTICS_INPUT_VALIDATION_SIEMPRE_VALIDAR_CON_DTOS_AST', message: 'AST heuristic detected backend controller input DTO validation through typed NestJS route parameters.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasNestedValidationPattern, ruleId: 'heuristics.ts.nested-validation-validatenested-type.ast', code: 'HEURISTICS_NESTED_VALIDATION_VALIDATENESTED_TYPE_AST', message: 'AST heuristic detected backend nested DTO validation through @ValidateNested() and @Type().', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasDtoBoundaryPattern, ruleId: 'heuristics.ts.dtos-en-boundaries-validacio-n-en-entrada-salida.ast', code: 'HEURISTICS_DTOS_EN_BOUNDARIES_VALIDACIO_N_EN_ENTRADA_SALIDA_AST', message: 'AST heuristic detected backend DTO boundary classes with explicit contract boundaries.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasSeparatedDtoPattern, ruleId: 'heuristics.ts.dtos-separados-createorderdto-updateorderdto-orderresponsedto.ast', code: 'HEURISTICS_DTOS_SEPARADOS_CREATEORDERDTO_UPDATEORDERDTO_ORDERRESPONSEDTO_AST', message: 'AST heuristic detected backend DTO classes split into create, update and response contracts.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasBackendReturnDtosExposureUsage, locateLines: TS.findBackendReturnDtosExposureLines, ruleId: 'heuristics.ts.return-dtos-no-exponer-entidades-directamente.ast', code: 'HEURISTICS_TS_RETURN_DTOS_NO_EXPONER_ENTIDADES_DIRECTAMENTE_AST', message: 'AST heuristic detected backend code returning entities directly instead of DTOs.', pathCheck: (path) => path.startsWith('apps/backend/'), excludePaths: [isTestPath] },
-  { detect: TS.hasBackendCriticalTransactionsUsage, locateLines: TS.findBackendCriticalTransactionsLines, ruleId: 'heuristics.ts.transacciones-para-operaciones-cri-ticas.ast', code: 'HEURISTICS_TS_TRANSACCIONES_PARA_OPERACIONES_CRI_TICAS_AST', message: 'AST heuristic detected backend transaction usage for critical operations.', pathCheck: (path) => path.startsWith('apps/backend/'), excludePaths: [isTestPath] },
-  { detect: TS.hasBackendMultiTableTransactionsUsage, locateLines: TS.findBackendMultiTableTransactionsLines, ruleId: 'heuristics.ts.transacciones-para-operaciones-multi-tabla.ast', code: 'HEURISTICS_TS_TRANSACCIONES_PARA_OPERACIONES_MULTI_TABLA_AST', message: 'AST heuristic detected backend transaction usage for multi-table operations.', pathCheck: (path) => path.startsWith('apps/backend/'), excludePaths: [isTestPath] },
-  { detect: TS.hasPrometheusMetricsPattern, ruleId: 'heuristics.ts.prometheus-prom-client.ast', code: 'HEURISTICS_PROMETHEUS_PROM_CLIENT_AST', message: 'AST heuristic detected Prometheus metrics instrumentation via prom-client.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasPasswordHashingPattern, ruleId: 'heuristics.ts.password-hashing-bcrypt-salt-rounds-10.ast', code: 'HEURISTICS_PASSWORD_HASHING_BCRYPT_SALT_ROUNDS_10_AST', message: 'AST heuristic detected weak bcrypt salt rounds.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasRateLimitingThrottlerPattern, ruleId: 'heuristics.ts.rate-limiting-throttler.ast', code: 'HEURISTICS_RATE_LIMITING_THROTTLER_AST', message: 'AST heuristic detected NestJS throttler rate limiting.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasWinstonStructuredLoggerPattern, ruleId: 'heuristics.ts.winston-structured-json-logger.ast', code: 'HEURISTICS_WINSTON_STRUCTURED_JSON_LOGGER_AST', message: 'AST heuristic detected Winston structured JSON logger usage.', pathCheck: (path) => path.startsWith('apps/backend/') },
-  { detect: TS.hasErrorLoggingFullContextPattern, ruleId: 'heuristics.ts.error-logging-full-context.ast', code: 'HEURISTICS_ERROR_LOGGING_FULL_CONTEXT_AST', message: 'AST heuristic detected backend error logging without full context.', pathCheck: (path) => path.startsWith('apps/backend/') },
   { detect: TS.hasLargeClassDeclaration, ruleId: 'heuristics.ts.god-class-large-class.ast', code: 'HEURISTICS_GOD_CLASS_LARGE_CLASS_AST', message: 'AST heuristic detected God Class candidate by mixed responsibility nodes in a single class declaration.' },
-  { detect: TS.hasReactClassComponentUsage, locateLines: TS.findReactClassComponentLines, ruleId: 'heuristics.ts.react-class-component.ast', code: 'HEURISTICS_TS_REACT_CLASS_COMPONENT_AST', message: 'AST heuristic detected React class component usage in frontend production code where functional components are required.', pathCheck: isTypeScriptFrontendPath },
-  { detect: TS.hasSingletonPattern, ruleId: 'heuristics.ts.singleton-pattern.ast', code: 'HEURISTICS_SINGLETON_PATTERN_AST', message: 'AST heuristic detected singleton pattern usage in a class declaration.' },
   { detect: TS.hasRecordStringUnknownType, locateLines: TS.findRecordStringUnknownTypeLines, ruleId: 'common.types.record_unknown_requires_type', code: 'COMMON_TYPES_RECORD_UNKNOWN_REQUIRES_TYPE_AST', message: 'AST heuristic detected Record<string, unknown> without explicit value union.' },
   { detect: TS.hasUnknownWithoutGuard, locateLines: TS.findUnknownWithoutGuardLines, ruleId: 'common.types.unknown_without_guard', code: 'COMMON_TYPES_UNKNOWN_WITHOUT_GUARD_AST', message: 'AST heuristic detected unknown usage without explicit guard evidence.', pathCheck: isTypeScriptDomainOrApplicationPath },
   { detect: TS.hasUndefinedInBaseTypeUnion, locateLines: TS.findUndefinedInBaseTypeUnionLines, ruleId: 'common.types.undefined_in_base_type', code: 'COMMON_TYPES_UNDEFINED_IN_BASE_TYPE_AST', message: 'AST heuristic detected undefined inside base-type unions.' },
@@ -694,6 +634,8 @@ type TextDetectorRegistryEntry = {
 
 const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   // iOS
+  { platform: 'ios', pathCheck: isIOSPodfilePath, excludePaths: [], detect: detectsTrackedFilePresence, ruleId: 'heuristics.ios.dependencies.cocoapods.ast', code: 'HEURISTICS_IOS_DEPENDENCIES_COCOAPODS_AST', message: 'AST heuristic detected CocoaPods dependency files in an iOS project; Swift Package Manager remains the preferred baseline for new code.' },
+  { platform: 'ios', pathCheck: isIOSCartfilePath, excludePaths: [], detect: detectsTrackedFilePresence, ruleId: 'heuristics.ios.dependencies.carthage.ast', code: 'HEURISTICS_IOS_DEPENDENCIES_CARTHAGE_AST', message: 'AST heuristic detected Carthage dependency files in an iOS project; Swift Package Manager remains the preferred baseline for new code.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftForceUnwrap, ruleId: 'heuristics.ios.force-unwrap.ast', code: 'HEURISTICS_IOS_FORCE_UNWRAP_AST', message: 'AST heuristic detected force unwrap usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftAnyViewUsage, ruleId: 'heuristics.ios.anyview.ast', code: 'HEURISTICS_IOS_ANYVIEW_AST', message: 'AST heuristic detected AnyView usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftForceTryUsage, ruleId: 'heuristics.ios.force-try.ast', code: 'HEURISTICS_IOS_FORCE_TRY_AST', message: 'AST heuristic detected force try usage.' },
@@ -704,21 +646,54 @@ const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftDispatchSemaphoreUsage, ruleId: 'heuristics.ios.dispatchsemaphore.ast', code: 'HEURISTICS_IOS_DISPATCHSEMAPHORE_AST', message: 'AST heuristic detected DispatchSemaphore usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftOperationQueueUsage, ruleId: 'heuristics.ios.operation-queue.ast', code: 'HEURISTICS_IOS_OPERATION_QUEUE_AST', message: 'AST heuristic detected OperationQueue usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftTaskDetachedUsage, ruleId: 'heuristics.ios.task-detached.ast', code: 'HEURISTICS_IOS_TASK_DETACHED_AST', message: 'AST heuristic detected Task.detached usage.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftOnAppearTaskUsage, ruleId: 'heuristics.ios.swiftui.onappear-task.ast', code: 'HEURISTICS_IOS_SWIFTUI_ONAPPEAR_TASK_AST', message: 'AST heuristic detected Task launched from SwiftUI onAppear; .task/.task(id:) provides lifecycle-aware cancellation.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftStrongDelegateReferenceUsage, ruleId: 'heuristics.ios.memory.strong-delegate.ast', code: 'HEURISTICS_IOS_MEMORY_STRONG_DELEGATE_AST', message: 'AST heuristic detected a strong delegate/dataSource reference; weak delegates remain the preferred baseline to avoid retain cycles.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftStrongSelfEscapingClosureUsage, ruleId: 'heuristics.ios.memory.strong-self-escaping-closure.ast', code: 'HEURISTICS_IOS_MEMORY_STRONG_SELF_ESCAPING_CLOSURE_AST', message: 'AST heuristic detected strong self capture in an escaping iOS closure; weak or unowned captures remain the preferred baseline when ownership is not explicit.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftCustomSingletonUsage, ruleId: 'heuristics.ios.architecture.custom-singleton.ast', code: 'HEURISTICS_IOS_ARCHITECTURE_CUSTOM_SINGLETON_AST', message: 'AST heuristic detected a custom static shared singleton in iOS production code; dependency injection remains the preferred baseline for app-owned services.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftSwinjectUsage, ruleId: 'heuristics.ios.architecture.swinject.ast', code: 'HEURISTICS_IOS_ARCHITECTURE_SWINJECT_AST', message: 'AST heuristic detected Swinject usage; manual dependency injection or SwiftUI Environment remain the preferred native baseline.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftMassiveViewControllerResponsibilityUsage, ruleId: 'heuristics.ios.architecture.massive-view-controller.ast', code: 'HEURISTICS_IOS_ARCHITECTURE_MASSIVE_VIEW_CONTROLLER_AST', message: 'AST heuristic detected a UIViewController with direct infrastructure/data access; move data access behind application/domain boundaries.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage, ruleId: 'heuristics.ios.safety.non-iboutlet-iuo.ast', code: 'HEURISTICS_IOS_SAFETY_NON_IBOUTLET_IUO_AST', message: 'AST heuristic detected an implicitly unwrapped optional outside IBOutlet wiring; explicit optionals or initialization guarantees remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftMagicNumberLayoutUsage, ruleId: 'heuristics.ios.maintainability.magic-number-layout.ast', code: 'HEURISTICS_IOS_MAINTAINABILITY_MAGIC_NUMBER_LAYOUT_AST', message: 'AST heuristic detected SwiftUI layout magic numbers; named constants or design tokens remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftAdHocLoggingUsage, ruleId: 'heuristics.ios.logging.adhoc-print.ast', code: 'HEURISTICS_IOS_LOGGING_ADHOC_PRINT_AST', message: 'AST heuristic detected print/debugPrint/dump/NSLog/os_log usage in iOS production code.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftSensitiveLoggingUsage, ruleId: 'heuristics.ios.logging.sensitive-data.ast', code: 'HEURISTICS_IOS_LOGGING_SENSITIVE_DATA_AST', message: 'AST heuristic detected sensitive data in an iOS logging call.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftHardcodedSensitiveStringUsage, ruleId: 'heuristics.ios.security.hardcoded-sensitive-string.ast', code: 'HEURISTICS_IOS_SECURITY_HARDCODED_SENSITIVE_STRING_AST', message: 'AST heuristic detected hardcoded sensitive Swift string; Keychain, secure config or environment-specific secrets remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftAlamofireUsage, ruleId: 'heuristics.ios.networking.alamofire.ast', code: 'HEURISTICS_IOS_NETWORKING_ALAMOFIRE_AST', message: 'AST heuristic detected Alamofire usage in iOS production code; URLSession remains the preferred baseline for new code.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftJSONSerializationUsage, ruleId: 'heuristics.ios.json.jsonserialization.ast', code: 'HEURISTICS_IOS_JSON_JSONSERIALIZATION_AST', message: 'AST heuristic detected JSONSerialization usage in iOS production code; Codable remains the preferred baseline for new code.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftSensitiveUserDefaultsStorageUsage, ruleId: 'heuristics.ios.security.userdefaults-sensitive-data.ast', code: 'HEURISTICS_IOS_SECURITY_USERDEFAULTS_SENSITIVE_DATA_AST', message: 'AST heuristic detected sensitive data stored in UserDefaults/AppStorage; native Keychain remains the preferred baseline for secrets.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftInsecureTransportUsage, ruleId: 'heuristics.ios.security.insecure-transport.ast', code: 'HEURISTICS_IOS_SECURITY_INSECURE_TRANSPORT_AST', message: 'AST heuristic detected insecure HTTP transport in iOS production code; HTTPS and ATS remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSInfoPlistPath, excludePaths: [], detect: TextIOS.hasSwiftInsecureTransportUsage, ruleId: 'heuristics.ios.security.insecure-transport.ast', code: 'HEURISTICS_IOS_SECURITY_INSECURE_TRANSPORT_AST', message: 'AST heuristic detected permissive App Transport Security configuration; HTTPS and ATS remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSLocalizableStringsPath, excludePaths: [], detect: detectsTrackedFilePresence, ruleId: 'heuristics.ios.localization.localizable-strings.ast', code: 'HEURISTICS_IOS_LOCALIZATION_LOCALIZABLE_STRINGS_AST', message: 'AST heuristic detected Localizable.strings usage; String Catalogs (.xcstrings) remain the preferred baseline for new localization work.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftHardcodedUiStringUsage, ruleId: 'heuristics.ios.localization.hardcoded-ui-string.ast', code: 'HEURISTICS_IOS_LOCALIZATION_HARDCODED_UI_STRING_AST', message: 'AST heuristic detected hardcoded user-facing SwiftUI text; String(localized:) and String Catalogs remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftLooseAssetResourceUsage, ruleId: 'heuristics.ios.assets.loose-resource.ast', code: 'HEURISTICS_IOS_ASSETS_LOOSE_RESOURCE_AST', message: 'AST heuristic detected loose image resource loading in iOS production code; Asset Catalogs remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftFixedFontSizeUsage, ruleId: 'heuristics.ios.accessibility.fixed-font-size.ast', code: 'HEURISTICS_IOS_ACCESSIBILITY_FIXED_FONT_SIZE_AST', message: 'AST heuristic detected fixed font sizing in iOS production code; Dynamic Type semantic text styles remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftPhysicalTextAlignmentUsage, ruleId: 'heuristics.ios.localization.physical-text-alignment.ast', code: 'HEURISTICS_IOS_LOCALIZATION_PHYSICAL_TEXT_ALIGNMENT_AST', message: 'AST heuristic detected physical left/right text alignment in iOS production code; leading/trailing remain the preferred RTL-safe baseline.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftMainThreadBlockingSleepUsage, ruleId: 'heuristics.ios.performance.blocking-sleep.ast', code: 'HEURISTICS_IOS_PERFORMANCE_BLOCKING_SLEEP_AST', message: 'AST heuristic detected blocking sleep usage in iOS production code; async clocks, suspension or cancellable scheduling remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage, ruleId: 'heuristics.ios.accessibility.icon-only-control-label.ast', code: 'HEURISTICS_IOS_ACCESSIBILITY_ICON_ONLY_CONTROL_LABEL_AST', message: 'AST heuristic detected an icon-only SwiftUI control without accessibilityLabel; explicit accessible labels remain the preferred baseline.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftUncheckedSendableUsage, ruleId: 'heuristics.ios.unchecked-sendable.ast', code: 'HEURISTICS_IOS_UNCHECKED_SENDABLE_AST', message: 'AST heuristic detected @unchecked Sendable usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftPreconcurrencyUsage, ruleId: 'heuristics.ios.preconcurrency.ast', code: 'HEURISTICS_IOS_PRECONCURRENCY_AST', message: 'AST heuristic detected @preconcurrency usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNonisolatedUnsafeUsage, ruleId: 'heuristics.ios.nonisolated-unsafe.ast', code: 'HEURISTICS_IOS_NONISOLATED_UNSAFE_AST', message: 'AST heuristic detected nonisolated(unsafe) usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftAssumeIsolatedUsage, ruleId: 'heuristics.ios.assume-isolated.ast', code: 'HEURISTICS_IOS_ASSUME_ISOLATED_AST', message: 'AST heuristic detected assumeIsolated usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftObservableObjectUsage, ruleId: 'heuristics.ios.observable-object.ast', code: 'HEURISTICS_IOS_OBSERVABLE_OBJECT_AST', message: 'AST heuristic detected ObservableObject usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftLegacySwiftUiObservableWrapperUsage, ruleId: 'heuristics.ios.legacy-swiftui-observable-wrapper.ast', code: 'HEURISTICS_IOS_LEGACY_SWIFTUI_OBSERVABLE_WRAPPER_AST', message: 'AST heuristic detected @StateObject/@ObservedObject usage in a modern SwiftUI path.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNonPrivateStateOwnershipUsage, ruleId: 'heuristics.ios.swiftui.non-private-state-ownership.ast', code: 'HEURISTICS_IOS_SWIFTUI_NON_PRIVATE_STATE_OWNERSHIP_AST', message: 'AST heuristic detected @State/@StateObject without private visibility; SwiftUI owned state should be private.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftPassedValueStateWrapperUsage, ruleId: 'heuristics.ios.passed-value-state-wrapper.ast', code: 'HEURISTICS_IOS_PASSED_VALUE_STATE_WRAPPER_AST', message: 'AST heuristic detected a passed value stored as @State/@StateObject via init wrapper ownership.' },
-  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftStateWrapperWithoutPrivateUsage, ruleId: 'heuristics.ios.swiftui.state-wrapper-private.ast', code: 'HEURISTICS_IOS_SWIFTUI_STATE_WRAPPER_PRIVATE_AST', message: 'AST heuristic detected @State/@StateObject usage in a SwiftUI View without private visibility.' },
   { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftForEachIndicesUsage, ruleId: 'heuristics.ios.foreach-indices.ast', code: 'HEURISTICS_IOS_FOREACH_INDICES_AST', message: 'AST heuristic detected ForEach(...indices...) usage where stable element identity may be preferred.' },
-  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftInlineFilteringInForEachUsage, ruleId: 'heuristics.ios.swiftui.inline-filtering-in-foreach.ast', code: 'HEURISTICS_IOS_SWIFTUI_INLINE_FILTERING_IN_FOREACH_AST', message: 'AST heuristic detected inline filtering inside ForEach; prefilter and cache before rendering.' },
-  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftExplicitColorStaticMemberUsage, ruleId: 'heuristics.ios.swiftui.explicit-color-static-member.ast', code: 'HEURISTICS_IOS_SWIFTUI_EXPLICIT_COLOR_STATIC_MEMBER_AST', message: 'AST heuristic detected explicit Color static member lookup where contextual .color style is preferred.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftForEachSelfIdentityUsage, ruleId: 'heuristics.ios.swiftui.foreach-self-identity.ast', code: 'HEURISTICS_IOS_SWIFTUI_FOREACH_SELF_IDENTITY_AST', message: 'AST heuristic detected ForEach(..., id: \.self) usage; prefer a stable domain identity such as id: \.id or Identifiable models.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftSelfPrintChangesUsage, ruleId: 'heuristics.ios.swiftui.self-print-changes.ast', code: 'HEURISTICS_IOS_SWIFTUI_SELF_PRINT_CHANGES_AST', message: 'AST heuristic detected Self._printChanges() in SwiftUI presentation; keep this debugging helper out of production view code.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftInlineForEachTransformUsage, ruleId: 'heuristics.ios.swiftui.inline-foreach-transform.ast', code: 'HEURISTICS_IOS_SWIFTUI_INLINE_FOREACH_TRANSFORM_AST', message: 'AST heuristic detected inline filter/map/sort work inside ForEach; prefiltered or cached collections remain the preferred baseline.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftUiForEachConditionalViewCountUsage, ruleId: 'heuristics.ios.swiftui.foreach-conditional-view-count.ast', code: 'HEURISTICS_IOS_SWIFTUI_FOREACH_CONDITIONAL_VIEW_COUNT_AST', message: 'AST heuristic detected conditional view count inside ForEach; keep a constant number of views per element by moving branching into row views or modifiers.' },
   { platform: 'ios', pathCheck: isIOSApplicationOrPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftContainsUserFilterUsage, ruleId: 'heuristics.ios.contains-user-filter.ast', code: 'HEURISTICS_IOS_CONTAINS_USER_FILTER_AST', message: 'AST heuristic detected contains() in a user-facing filter where localizedStandardContains() may be preferred.' },
   { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftGeometryReaderUsage, ruleId: 'heuristics.ios.geometryreader.ast', code: 'HEURISTICS_IOS_GEOMETRYREADER_AST', message: 'AST heuristic detected GeometryReader usage that may be replaceable with modern layout APIs.' },
   { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftFontWeightBoldUsage, ruleId: 'heuristics.ios.font-weight-bold.ast', code: 'HEURISTICS_IOS_FONT_WEIGHT_BOLD_AST', message: 'AST heuristic detected fontWeight(.bold) usage where bold() may be preferred.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftExplicitColorStaticMemberUsage, ruleId: 'heuristics.ios.swiftui.explicit-color-static-member.ast', code: 'HEURISTICS_IOS_SWIFTUI_EXPLICIT_COLOR_STATIC_MEMBER_AST', message: 'AST heuristic detected Color.* static member usage where SwiftUI static member lookup may be preferred.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftClosureBasedViewBuilderContentUsage, ruleId: 'heuristics.ios.swiftui.closure-based-viewbuilder-content.ast', code: 'HEURISTICS_IOS_SWIFTUI_CLOSURE_BASED_VIEWBUILDER_CONTENT_AST', message: 'AST heuristic detected closure-based content storage; @ViewBuilder let content: Content remains the preferred SwiftUI container baseline.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftRedundantReactiveStateAssignmentUsage, ruleId: 'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast', code: 'HEURISTICS_IOS_SWIFTUI_REDUNDANT_REACTIVE_STATE_ASSIGNMENT_AST', message: 'AST heuristic detected reactive state assignment without a value-change guard; check for value changes before assigning state in hot paths.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNonLazyScrollForEachUsage, ruleId: 'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast', code: 'HEURISTICS_IOS_SWIFTUI_NON_LAZY_SCROLL_FOREACH_AST', message: 'AST heuristic detected ScrollView with a non-lazy stack feeding ForEach; LazyVStack/LazyHStack remain the preferred baseline for large scrollable collections.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftViewBodyObjectCreationUsage, ruleId: 'heuristics.ios.swiftui.body-object-creation.ast', code: 'HEURISTICS_IOS_SWIFTUI_BODY_OBJECT_CREATION_AST', message: 'AST heuristic detected formatter object creation inside SwiftUI body; keep body simple and move expensive objects out of render paths.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftUiImageDataDecodingUsage, ruleId: 'heuristics.ios.swiftui.image-data-decoding.ast', code: 'HEURISTICS_IOS_SWIFTUI_IMAGE_DATA_DECODING_AST', message: 'AST heuristic detected UIImage(data:) in SwiftUI presentation; downsample image data before rendering large images.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftUiInlineActionLogicUsage, ruleId: 'heuristics.ios.swiftui.inline-action-logic.ast', code: 'HEURISTICS_IOS_SWIFTUI_INLINE_ACTION_LOGIC_AST', message: 'AST heuristic detected inline logic inside a SwiftUI action handler; action handlers should reference methods and keep view declarations focused.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNavigationViewUsage, ruleId: 'heuristics.ios.navigation-view.ast', code: 'HEURISTICS_IOS_NAVIGATION_VIEW_AST', message: 'AST heuristic detected NavigationView usage.' },
+  { platform: 'ios', pathCheck: isIOSPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftUntypedNavigationLinkDestinationUsage, ruleId: 'heuristics.ios.swiftui.untyped-navigation-link-destination.ast', code: 'HEURISTICS_IOS_SWIFTUI_UNTYPED_NAVIGATION_LINK_DESTINATION_AST', message: 'AST heuristic detected untyped NavigationLink destination usage; prefer NavigationLink(value:) with navigationDestination(for:) for type-safe navigation.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftForegroundColorUsage, ruleId: 'heuristics.ios.foreground-color.ast', code: 'HEURISTICS_IOS_FOREGROUND_COLOR_AST', message: 'AST heuristic detected foregroundColor usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftCornerRadiusUsage, ruleId: 'heuristics.ios.corner-radius.ast', code: 'HEURISTICS_IOS_CORNER_RADIUS_AST', message: 'AST heuristic detected cornerRadius usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftTabItemUsage, ruleId: 'heuristics.ios.tab-item.ast', code: 'HEURISTICS_IOS_TAB_ITEM_AST', message: 'AST heuristic detected tabItem usage.' },
@@ -735,91 +710,29 @@ const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftWaitForExpectationsUsage, ruleId: 'heuristics.ios.testing.wait-for-expectations.ast', code: 'HEURISTICS_IOS_TESTING_WAIT_FOR_EXPECTATIONS_AST', message: 'AST heuristic detected wait(for:)/waitForExpectations usage where await fulfillment(of:) may be preferred.' },
   { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftLegacyExpectationDescriptionUsage, ruleId: 'heuristics.ios.testing.legacy-expectation-description.ast', code: 'HEURISTICS_IOS_TESTING_LEGACY_EXPECTATION_DESCRIPTION_AST', message: 'AST heuristic detected expectation(description:) usage without modern fulfillment/confirmation flow.' },
   { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftMixedTestingFrameworksUsage, ruleId: 'heuristics.ios.testing.mixed-frameworks.ast', code: 'HEURISTICS_IOS_TESTING_MIXED_FRAMEWORKS_AST', message: 'AST heuristic detected XCTestCase and Swift Testing markers mixed in the same test file without explicit compatibility reason.' },
+  { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftQuickNimbleUsage, ruleId: 'heuristics.ios.testing.quick-nimble.ast', code: 'HEURISTICS_IOS_TESTING_QUICK_NIMBLE_AST', message: 'AST heuristic detected Quick/Nimble usage where native Swift Testing remains the preferred baseline.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNSManagedObjectBoundaryUsage, ruleId: 'heuristics.ios.core-data.nsmanagedobject-boundary.ast', code: 'HEURISTICS_IOS_CORE_DATA_NSMANAGEDOBJECT_BOUNDARY_AST', message: 'AST heuristic detected NSManagedObject in a shared boundary.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNSManagedObjectAsyncBoundaryUsage, ruleId: 'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast', code: 'HEURISTICS_IOS_CORE_DATA_NSMANAGEDOBJECT_ASYNC_BOUNDARY_AST', message: 'AST heuristic detected NSManagedObject in an async boundary.' },
   { platform: 'ios', pathCheck: isIOSApplicationOrPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftCoreDataLayerLeakUsage, ruleId: 'heuristics.ios.core-data.layer-leak.ast', code: 'HEURISTICS_IOS_CORE_DATA_LAYER_LEAK_AST', message: 'AST heuristic detected Core Data APIs leaking into application/presentation code.' },
+  { platform: 'ios', pathCheck: isIOSApplicationOrPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftSwiftDataLayerLeakUsage, ruleId: 'heuristics.ios.swiftdata.layer-leak.ast', code: 'HEURISTICS_IOS_SWIFTDATA_LAYER_LEAK_AST', message: 'AST heuristic detected SwiftData APIs leaking into application/presentation code.' },
   { platform: 'ios', pathCheck: isIOSApplicationOrPresentationPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNSManagedObjectStateLeakUsage, ruleId: 'heuristics.ios.core-data.nsmanagedobject-state-leak.ast', code: 'HEURISTICS_IOS_CORE_DATA_NSMANAGEDOBJECT_STATE_LEAK_AST', message: 'AST heuristic detected NSManagedObject leaking into SwiftUI state or a ViewModel.' },
 
   // Android
   { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinThreadSleepCall, ruleId: 'heuristics.android.thread-sleep.ast', code: 'HEURISTICS_ANDROID_THREAD_SLEEP_AST', message: 'AST heuristic detected Thread.sleep usage in production Kotlin code.' },
   { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinGlobalScopeUsage, ruleId: 'heuristics.android.globalscope.ast', code: 'HEURISTICS_ANDROID_GLOBAL_SCOPE_AST', message: 'AST heuristic detected GlobalScope coroutine usage in production Kotlin code.' },
   { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinRunBlockingUsage, ruleId: 'heuristics.android.run-blocking.ast', code: 'HEURISTICS_ANDROID_RUN_BLOCKING_AST', message: 'AST heuristic detected runBlocking usage in production Kotlin code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidCoroutineCallbackUsage, ruleId: 'heuristics.android.coroutines-async-await-no-callbacks.ast', code: 'HEURISTICS_ANDROID_COROUTINES_ASYNC_AWAIT_NO_CALLBACKS_AST', message: 'AST heuristic detected callback-based asynchronous work in Android production code where coroutines or Flow should be used.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidAsyncAwaitParallelismUsage, ruleId: 'heuristics.android.async-await-paralelismo.ast', code: 'HEURISTICS_ANDROID_ASYNC_AWAIT_PARALELISMO_AST', message: 'AST heuristic detected async/await parallelism in Android production code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidSuspendFunctionsApiServiceUsage, ruleId: 'heuristics.android.suspend-functions-en-api-service.ast', code: 'HEURISTICS_ANDROID_SUSPEND_FUNCTIONS_EN_API_SERVICE_AST', message: 'AST heuristic detected suspend functions in Android API service production code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidSuspendFunctionsAsyncUsage, ruleId: 'heuristics.android.suspend-functions-para-operaciones-async.ast', code: 'HEURISTICS_ANDROID_SUSPEND_FUNCTIONS_PARA_OPERACIONES_ASYNC_AST', message: 'AST heuristic detected suspend functions in Android production code where async operations should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidDaoSuspendFunctionsUsage, ruleId: 'heuristics.android.dao-data-access-objects-con-suspend-functions.ast', code: 'HEURISTICS_ANDROID_DAO_DATA_ACCESS_OBJECTS_CON_SUSPEND_FUNCTIONS_AST', message: 'AST heuristic detected suspend functions in Android DAO production code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidTransactionUsage, ruleId: 'heuristics.android.transaction-para-operaciones-multi-query.ast', code: 'HEURISTICS_ANDROID_TRANSACTION_PARA_OPERACIONES_MULTI_QUERY_AST', message: 'AST heuristic detected @Transaction usage in Android DAO production code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidStateFlowUsage, ruleId: 'heuristics.android.stateflow-estado-mutable-observable.ast', code: 'HEURISTICS_ANDROID_STATEFLOW_ESTADO_MUTABLE_OBSERVABLE_AST', message: 'AST heuristic detected StateFlow usage in Android ViewModel production code where observable state should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidSingleSourceOfTruthUsage, ruleId: 'heuristics.android.single-source-of-truth-viewmodel-es-la-fuente.ast', code: 'HEURISTICS_ANDROID_SINGLE_SOURCE_OF_TRUTH_VIEWMODEL_ES_LA_FUENTE_AST', message: 'AST heuristic detected single source of truth state exposure in Android ViewModel production code where observable state should remain explicit and owned by one ViewModel.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidSharedFlowUsage, ruleId: 'heuristics.android.sharedflow-hot-stream-puede-no-tener-valor-para-eventos.ast', code: 'HEURISTICS_ANDROID_SHAREDFLOW_HOT_STREAM_PUEDE_NO_TENER_VALOR_PARA_EVENTOS_AST', message: 'AST heuristic detected SharedFlow usage in Android production code where events should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidFlowBuilderUsage, ruleId: 'heuristics.android.flow-builders-flow-emit-flowof-asflow.ast', code: 'HEURISTICS_ANDROID_FLOW_BUILDERS_FLOW_EMIT_FLOWOF_ASFLOW_AST', message: 'AST heuristic detected Flow builder usage in Android production code where reactive streams should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidFlowCollectUsage, ruleId: 'heuristics.android.collect-terminal-operator-para-consumir-flow.ast', code: 'HEURISTICS_ANDROID_COLLECT_TERMINAL_OPERATOR_PARA_CONSUMIR_FLOW_AST', message: 'AST heuristic detected Flow terminal operator usage in Android production code where streams should be consumed explicitly.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidCollectAsStateUsage, ruleId: 'heuristics.android.collect-as-state-consumir-flow-en-compose.ast', code: 'HEURISTICS_ANDROID_COLLECT_AS_STATE_CONSUMIR_FLOW_EN_COMPOSE_AST', message: 'AST heuristic detected collectAsState usage in Android Compose production code where Flow should be observed as UI state.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidRememberUsage, ruleId: 'heuristics.android.remember-evitar-recrear-objetos.ast', code: 'HEURISTICS_ANDROID_REMEMBER_EVITAR_RECREAR_OBJETOS_AST', message: 'AST heuristic detected remember usage in Android Compose production code where objects or values should not be recreated on every recomposition.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidRememberUsage, ruleId: 'heuristics.android.remember-para-mantener-estado-entre-recomposiciones.ast', code: 'HEURISTICS_ANDROID_REMEMBER_PARA_MANTENER_ESTADO_ENTRE_RECOMPOSICIONES_AST', message: 'AST heuristic detected remember usage in Android Compose production code where state should remain stable across recompositions.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidRepositoryPatternUsage, ruleId: 'heuristics.android.repository-pattern-abstraer-acceso-a-datos.ast', code: 'HEURISTICS_ANDROID_REPOSITORY_PATTERN_ABSTRAER_ACCESO_A_DATOS_AST', message: 'AST heuristic detected repository abstraction in Android production code where data access should remain behind a stable boundary.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidDerivedStateOfUsage, ruleId: 'heuristics.android.derivedstateof-ca-lculos-caros-solo-cuando-cambia-input.ast', code: 'HEURISTICS_ANDROID_DERIVEDSTATEOF_CALCULOS_CAROS_SOLO_CUANDO_CAMBIA_INPUT_AST', message: 'AST heuristic detected derivedStateOf usage in Android Compose production code where expensive derived values should only recompute when input changes.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidDerivedStateOfUsage, ruleId: 'heuristics.android.derivedstateof-ca-lculos-derivados-de-state.ast', code: 'HEURISTICS_ANDROID_DERIVEDSTATEOF_CALCULOS_DERIVADOS_DE_STATE_AST', message: 'AST heuristic detected derivedStateOf usage in Android Compose production code where state-derived values should stay explicit and local to Compose.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidLaunchedEffectUsage, ruleId: 'heuristics.android.launchedeffect-side-effects-con-lifecycle.ast', code: 'HEURISTICS_ANDROID_LAUNCHEDEFFECT_SIDE_EFFECTS_CON_LIFECYCLE_AST', message: 'AST heuristic detected LaunchedEffect usage in Android Compose production code where lifecycle-bound side effects should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidLaunchedEffectKeysUsage, ruleId: 'heuristics.android.launchedeffect-keys-controlar-cuando-se-relanza-effect.ast', code: 'HEURISTICS_ANDROID_LAUNCHEDEFFECT_KEYS_CONTROLAR_CUANDO_SE_RELANZA_EFFECT_AST', message: 'AST heuristic detected LaunchedEffect keys usage in Android Compose production code where relaunch keys should remain explicit and stable.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidDisposableEffectUsage, ruleId: 'heuristics.android.disposableeffect-cleanup-cuando-composable-sale-de-composicio-n.ast', code: 'HEURISTICS_ANDROID_DISPOSABLE_EFFECT_CLEANUP_CUANDO_COMPOSABLE_SALE_DE_COMPOSICIO_N_AST', message: 'AST heuristic detected DisposableEffect usage in Android Compose production code where cleanup should run when the composable leaves composition.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidPreviewUsage, ruleId: 'heuristics.android.preview-preview-para-ver-ui-sin-correr-app.ast', code: 'HEURISTICS_ANDROID_PREVIEW_PREVIEW_PARA_VER_UI_SIN_CORRER_APP_AST', message: 'AST heuristic detected @Preview usage in Android Compose production code where UI should be inspectable without running the app.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidAdaptiveLayoutsUsage, ruleId: 'heuristics.android.adaptive-layouts-responsive-design-windowsizeclass.ast', code: 'HEURISTICS_ANDROID_ADAPTIVE_LAYOUTS_RESPONSIVE_DESIGN_WINDOW_SIZE_CLASS_AST', message: 'AST heuristic detected WindowSizeClass usage in Android Compose production code where the layout should adapt to the available window size.' },
-  { platform: 'android', pathCheck: isAndroidSourcePath, excludePaths: [isKotlinTestPath, isJavaTestPath], detect: TextAndroid.hasAndroidExistingStructureUsage, ruleId: 'heuristics.android.analizar-estructura-existente-mo-dulos-interfaces-dependencias-gradle.ast', code: 'HEURISTICS_ANDROID_ANALIZAR_ESTRUCTURA_EXISTENTE_MO_DULOS_INTERFACES_DEPENDENCIAS_GRADLE_AST', message: 'AST heuristic detected Android structure usage where existing modules, interfaces and dependencies should be reviewed before introducing changes.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidThemeUsage, ruleId: 'heuristics.android.theme-color-scheme-typography-shapes.ast', code: 'HEURISTICS_ANDROID_THEME_COLOR_SCHEME_TYPOGRAPHY_SHAPES_AST', message: 'AST heuristic detected MaterialTheme usage in Android Compose production code where theme configuration should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidDarkThemeUsage, ruleId: 'heuristics.android.dark-theme-soportar-desde-di-a-1-issystemindarktheme.ast', code: 'HEURISTICS_ANDROID_DARK_THEME_SOPORTAR_DESDE_DI_A_1_ISSYSTEMINDARKTHEME_AST', message: 'AST heuristic detected explicit dark theme support in Android Compose production code where the UI should respect the system color scheme from day one.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidTextScalingUsage, ruleId: 'heuristics.android.text-scaling-soportar-font-scaling-del-sistema.ast', code: 'HEURISTICS_ANDROID_TEXT_SCALING_SOPORTAR_FONT_SCALING_DEL_SISTEMA_AST', message: 'AST heuristic detected text scaling support in Android Compose production code where the UI should respect the system font scale and remain readable with accessibility settings.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidAccessibilityUsage, ruleId: 'heuristics.android.accessibility-semantics-contentdescription.ast', code: 'HEURISTICS_ANDROID_ACCESSIBILITY_SEMANTICS_CONTENTDESCRIPTION_AST', message: 'AST heuristic detected accessibility semantics/contentDescription usage in Android Compose production code where the UI should remain accessible to screen readers and assistive technologies.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidContentDescriptionUsage, ruleId: 'heuristics.android.contentdescription-para-ima-genes-y-botones.ast', code: 'HEURISTICS_ANDROID_CONTENTDESCRIPTION_PARA_IMAGENES_Y_BOTONES_AST', message: 'AST heuristic detected contentDescription usage in Android Compose production code where images and buttons should remain accessible to screen readers and assistive technologies.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidTalkBackUsage, ruleId: 'heuristics.android.talkback-screen-reader-de-android.ast', code: 'HEURISTICS_ANDROID_TALKBACK_SCREEN_READER_DE_ANDROID_AST', message: 'AST heuristic detected TalkBack-related accessibility usage in Android Compose production code where the UI should remain accessible to screen readers.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidRecompositionUsage, ruleId: 'heuristics.android.recomposition-composables-deben-ser-idempotentes.ast', code: 'HEURISTICS_ANDROID_RECOMPOSITION_COMPOSABLES_DEBEN_SER_IDEMPOTENTES_AST', message: 'AST heuristic detected non-idempotent Compose recomposition behavior in Android production code where composables should remain pure during recomposition.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidUiStateUsage, ruleId: 'heuristics.android.uistate-sealed-class-loading-success-error-states.ast', code: 'HEURISTICS_ANDROID_UISTATE_SEALED_CLASS_LOADING_SUCCESS_ERROR_STATES_AST', message: 'AST heuristic detected UiState sealed class usage in Android production code where loading, success, and error states should stay explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidUseCaseUsage, ruleId: 'heuristics.android.use-cases-lo-gica-de-negocio-encapsulada.ast', code: 'HEURISTICS_ANDROID_USE_CASES_LOGICA_DE_NEGOCIO_ENCAPSULADA_AST', message: 'AST heuristic detected Android UseCase usage in production code where business logic should stay encapsulated.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidStateHoistingUsage, ruleId: 'heuristics.android.state-hoisting-elevar-estado-al-nivel-apropiado.ast', code: 'HEURISTICS_ANDROID_STATE_HOISTING_ELEVAR_ESTADO_AL_NIVEL_APROPIADO_AST', message: 'AST heuristic detected state hoisting issues in Android Compose production code where UI state should be elevated to the appropriate owner.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidViewModelUsage, ruleId: 'heuristics.android.viewmodel-androidx-lifecycle-viewmodel.ast', code: 'HEURISTICS_ANDROID_VIEWMODEL_ANDROIDX_LIFECYCLE_VIEWMODEL_AST', message: 'AST heuristic detected AndroidX ViewModel usage in Android production code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidViewModelUsage, ruleId: 'heuristics.android.viewmodel-sobrevive-configuration-changes.ast', code: 'HEURISTICS_ANDROID_VIEWMODEL_SOBREVIVE_CONFIGURATION_CHANGES_AST', message: 'AST heuristic detected AndroidX ViewModel usage in Android production code that should survive configuration changes.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinForceUnwrapUsage, ruleId: 'heuristics.android.force-unwrap.ast', code: 'HEURISTICS_ANDROID_FORCE_UNWRAP_AST', message: 'AST heuristic detected Kotlin force unwrap (!!) usage in production code.' },
-  { platform: 'android', pathCheck: isAndroidJavaPath, excludePaths: [isJavaTestPath], detect: TextAndroid.hasAndroidJavaSourceCode, ruleId: 'heuristics.android.java-source.ast', code: 'HEURISTICS_ANDROID_JAVA_SOURCE_AST', message: 'AST heuristic detected Java source in Android production code where Kotlin is required for new code.' },
-  { platform: 'android', pathCheck: isAndroidSourcePath, excludePaths: [isKotlinTestPath, isJavaTestPath], detect: TextAndroid.hasAndroidAsyncTaskUsage, ruleId: 'heuristics.android.asynctask-deprecated.ast', code: 'HEURISTICS_ANDROID_ASYNCTASK_DEPRECATED_AST', message: 'AST heuristic detected AsyncTask usage in Android production code where Coroutines are required.' },
-  { platform: 'android', pathCheck: isAndroidSourcePath, excludePaths: [isKotlinTestPath, isJavaTestPath], detect: TextAndroid.hasAndroidFindViewByIdUsage, ruleId: 'heuristics.android.findviewbyid.ast', code: 'HEURISTICS_ANDROID_FINDVIEWBYID_AST', message: 'AST heuristic detected findViewById usage in Android production code where View Binding or Compose is required.' },
-  { platform: 'android', pathCheck: isAndroidSourcePath, excludePaths: [isKotlinTestPath, isJavaTestPath], detect: TextAndroid.hasAndroidRxJavaUsage, ruleId: 'heuristics.android.rxjava-new-code.ast', code: 'HEURISTICS_ANDROID_RXJAVA_NEW_CODE_AST', message: 'AST heuristic detected RxJava usage in Android production code where Flow is required for new code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidDispatcherUsage, ruleId: 'heuristics.android.dispatchers-main-ui-io-network-disk-default-cpu.ast', code: 'HEURISTICS_ANDROID_DISPATCHERS_MAIN_UI_IO_NETWORK_DISK_DEFAULT_CPU_AST', message: 'AST heuristic detected explicit Dispatchers.Main/IO/Default usage in Android production code where dispatcher selection must remain intentional.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidWithContextUsage, ruleId: 'heuristics.android.withcontext-change-dispatcher.ast', code: 'HEURISTICS_ANDROID_WITHCONTEXT_CHANGE_DISPATCHER_AST', message: 'AST heuristic detected withContext usage in Android production code where dispatcher switching is intentional.' },
-  { platform: 'android', pathCheck: isAndroidSourcePath, excludePaths: [isKotlinTestPath, isJavaTestPath], detect: TextAndroid.hasAndroidNoConsoleLogUsage, ruleId: 'heuristics.android.no-console-log.ast', code: 'HEURISTICS_ANDROID_NO_CONSOLE_LOG_AST', message: 'AST heuristic detected Android logging usage in production code without a debug-only guard.' },
-  { platform: 'android', pathCheck: isAndroidSourcePath, excludePaths: [isKotlinTestPath, isJavaTestPath], detect: TextAndroid.hasAndroidTimberUsage, ruleId: 'heuristics.android.timber-logging-library.ast', code: 'HEURISTICS_ANDROID_TIMBER_LOGGING_LIBRARY_AST', message: 'AST heuristic detected Timber logging usage in Android production code.' },
-  { platform: 'android', pathCheck: isAndroidSourcePath, excludePaths: [isKotlinTestPath, isJavaTestPath], detect: TextAndroid.hasAndroidTouchTargetsUsage, ruleId: 'heuristics.android.touch-targets-mi-nimo-48dp.ast', code: 'HEURISTICS_ANDROID_TOUCH_TARGETS_MI_NIMO_48DP_AST', message: 'AST heuristic detected minimum touch target usage in Android production Compose code.' },
-  { platform: 'android', pathCheck: isAndroidSourcePath, excludePaths: [isKotlinTestPath, isJavaTestPath], detect: TextAndroid.hasAndroidBuildConfigConstantUsage, ruleId: 'heuristics.android.buildconfig-constantes-en-tiempo-de-compilacio-n.ast', code: 'HEURISTICS_ANDROID_BUILDCONFIG_CONSTANTES_EN_TIEMPO_DE_COMPILACION_AST', message: 'AST heuristic detected Android BuildConfig constant usage in production code.' },
-  { platform: 'android', pathCheck: isAndroidSourcePath, excludePaths: [isKotlinTestPath, isJavaTestPath], detect: TextAndroid.hasAndroidHardcodedStringUsage, ruleId: 'heuristics.android.hardcoded-strings.ast', code: 'HEURISTICS_ANDROID_HARDCODED_STRINGS_AST', message: 'AST heuristic detected hardcoded string literal usage in Android production code where strings.xml should be used.' },
-  { platform: 'android', pathCheck: isAndroidLocalizedStringsXmlPath, excludePaths: [], detect: TextAndroid.hasAndroidStringsXmlUsage, ruleId: 'heuristics.android.localization-strings-xml-por-idioma-values-es-values-en.ast', code: 'HEURISTICS_ANDROID_LOCALIZATION_STRINGS_XML_POR_IDIOMA_VALUES_ES_VALUES_EN_AST', message: 'AST heuristic detected localized strings.xml resources in Android production code where language-specific text should remain in values-*/strings.xml.' },
-  { platform: 'android', pathCheck: isAndroidLocalizedStringsXmlPath, excludePaths: [], detect: TextAndroid.hasAndroidStringFormattingUsage, ruleId: 'heuristics.android.string-formatting-1-s-2-d-para-argumentos.ast', code: 'HEURISTICS_ANDROID_STRING_FORMATTING_1_S_2_D_PARA_ARGUMENTOS_AST', message: 'AST heuristic detected positional string formatting placeholders in Android strings.xml resources where argument order should remain explicit and translation-safe.' },
-  { platform: 'android', pathCheck: isAndroidLocalizedPluralsXmlPath, excludePaths: [], detect: TextAndroid.hasAndroidPluralsXmlUsage, ruleId: 'heuristics.android.plurals-values-plurals-xml.ast', code: 'HEURISTICS_ANDROID_PLURALS_VALUES_PLURALS_XML_AST', message: 'AST heuristic detected plurals.xml resources in Android production code where quantity strings should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidSingletonUsage, ruleId: 'heuristics.android.no-singleton.ast', code: 'HEURISTICS_ANDROID_NO_SINGLETON_AST', message: 'AST heuristic detected Kotlin singleton object or companion singleton holder usage in Android production code where Hilt or Dagger DI should be used.' },
-  { platform: 'android', pathCheck: isAndroidGradlePath, excludePaths: [], detect: TextAndroid.hasAndroidHiltDependencyUsage, ruleId: 'heuristics.android.hilt-com-google-dagger-hilt-android.ast', code: 'HEURISTICS_ANDROID_HILT_COM_GOOGLE_DAGGER_HILT_ANDROID_AST', message: 'AST heuristic detected Hilt Gradle dependency usage in Android build files.' },
-  { platform: 'android', pathCheck: isAndroidInstrumentedTestPath, excludePaths: [], detect: TextAndroid.hasAndroidInstrumentedTestUsage, ruleId: 'heuristics.android.androidtest-instrumented-tests-device-emulator.ast', code: 'HEURISTICS_ANDROID_ANDROIDTEST_INSTRUMENTED_TESTS_DEVICE_EMULATOR_AST', message: 'AST heuristic detected Android instrumented tests in androidTest/ where device/emulator coverage should remain explicit.' },
-  { platform: 'android', pathCheck: isKotlinTestPath, excludePaths: [], detect: TextAndroid.hasAndroidAaaPatternUsage, ruleId: 'heuristics.android.aaa-pattern-arrange-act-assert.ast', code: 'HEURISTICS_ANDROID_AAA_PATTERN_ARRANGE_ACT_ASSERT_AST', message: 'AST heuristic detected AAA test structure in Android tests where Arrange, Act, and Assert should remain explicit.' },
-  { platform: 'android', pathCheck: isKotlinTestPath, excludePaths: [], detect: TextAndroid.hasAndroidGivenWhenThenUsage, ruleId: 'heuristics.android.given-when-then-bdd-style.ast', code: 'HEURISTICS_ANDROID_GIVEN_WHEN_THEN_BDD_STYLE_AST', message: 'AST heuristic detected Given-When-Then test structure in Android tests where behavior should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidJvmTestPath, excludePaths: [], detect: TextAndroid.hasAndroidJvmUnitTestUsage, ruleId: 'heuristics.android.test-unit-tests-jvm.ast', code: 'HEURISTICS_ANDROID_TEST_UNIT_TESTS_JVM_AST', message: 'AST heuristic detected JVM unit tests in Android test/ source set where local unit tests should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidHiltFrameworkUsage, ruleId: 'heuristics.android.hilt-di-framework-no-manual-factories.ast', code: 'HEURISTICS_ANDROID_HILT_DI_FRAMEWORK_NO_MANUAL_FACTORIES_AST', message: 'AST heuristic detected Hilt DI framework usage instead of manual factories in Android production code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidHiltAndroidAppUsage, ruleId: 'heuristics.android.hiltandroidapp-application-class.ast', code: 'HEURISTICS_ANDROID_HILTANDROIDAPP_APPLICATION_CLASS_AST', message: 'AST heuristic detected @HiltAndroidApp usage in Android production code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidAndroidEntryPointUsage, ruleId: 'heuristics.android.androidentrypoint-activity-fragment-viewmodel.ast', code: 'HEURISTICS_ANDROID_ANDROIDENTRYPOINT_ACTIVITY_FRAGMENT_VIEWMODEL_AST', message: 'AST heuristic detected @AndroidEntryPoint usage in Android production code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidInjectConstructorUsage, ruleId: 'heuristics.android.inject-constructor-constructor-injection.ast', code: 'HEURISTICS_ANDROID_INJECT_CONSTRUCTOR_CONSTRUCTOR_INJECTION_AST', message: 'AST heuristic detected @Inject constructor usage in Android production code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidModuleInstallInUsage, ruleId: 'heuristics.android.module-installin-provide-dependencies.ast', code: 'HEURISTICS_ANDROID_MODULE_INSTALLIN_PROVIDE_DEPENDENCIES_AST', message: 'AST heuristic detected @Module + @InstallIn usage in Android production code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidBindsUsage, ruleId: 'heuristics.android.binds-para-implementaciones-de-interfaces-ma-s-eficiente.ast', code: 'HEURISTICS_ANDROID_BINDS_PARA_IMPLEMENTACIONES_DE_INTERFACES_MA_S_EFICIENTE_AST', message: 'AST heuristic detected @Binds usage in Android production code where interface bindings should remain explicit and efficient.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidProvidesUsage, ruleId: 'heuristics.android.provides-para-interfaces-o-third-party.ast', code: 'HEURISTICS_ANDROID_PROVIDES_PARA_INTERFACES_O_THIRD_PARTY_AST', message: 'AST heuristic detected @Provides usage in Android production code where interfaces or third-party bindings should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidViewModelScopeUsage, ruleId: 'heuristics.android.viewmodelscope-scope-de-viewmodel-cancelado-automa-ticamente.ast', code: 'HEURISTICS_ANDROID_VIEWMODELSCOPE_SCOPE_DE_VIEWMODEL_CANCELADO_AUTOMATICAMENTE_AST', message: 'AST heuristic detected viewModelScope usage in Android production code where coroutine work should remain tied to the ViewModel lifecycle.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidAnalyticsUsage, ruleId: 'heuristics.android.analytics-firebase-analytics-o-custom.ast', code: 'HEURISTICS_ANDROID_ANALYTICS_FIREBASE_ANALYTICS_O_CUSTOM_AST', message: 'AST heuristic detected analytics tracking usage in Android production code where app instrumentation should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidProfilerUsage, ruleId: 'heuristics.android.android-profiler-cpu-memory-network-profiling.ast', code: 'HEURISTICS_ANDROID_ANDROID_PROFILER_CPU_MEMORY_NETWORK_PROFILING_AST', message: 'AST heuristic detected Android profiling instrumentation in production code where CPU, memory, and trace capture should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidAppStartupUsage, ruleId: 'heuristics.android.app-startup-androidx-startup-para-lazy-init.ast', code: 'HEURISTICS_ANDROID_APP_STARTUP_ANDROIDX_STARTUP_PARA_LAZY_INIT_AST', message: 'AST heuristic detected androidx.startup Initializer usage in Android production code where app initialization should remain lazy and explicit.' },
-  { platform: 'android', pathCheck: isAndroidInstrumentedTestPath, excludePaths: [], detect: TextAndroid.hasAndroidBaselineProfilesUsage, ruleId: 'heuristics.android.baseline-profiles-optimizacio-n-de-startup.ast', code: 'HEURISTICS_ANDROID_BASELINE_PROFILES_OPTIMIZACION_DE_STARTUP_AST', message: 'AST heuristic detected BaselineProfileRule usage in Android benchmark or instrumented test code where startup optimization should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidSkipRecompositionUsage, ruleId: 'heuristics.android.skip-recomposition-para-metros-inmutables-o-estables.ast', code: 'HEURISTICS_ANDROID_SKIP_RECOMPOSITION_PARA_METROS_INMUTABLES_O_ESTABLES_AST', message: 'AST heuristic detected stable or immutable Compose parameters in Android production code where recomposition should be skippable.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidStabilityUsage, ruleId: 'heuristics.android.stability-composables-estables-recomponen-menos.ast', code: 'HEURISTICS_ANDROID_STABILITY_COMPOSABLES_ESTABLES_RECOMPONEN_MENOS_AST', message: 'AST heuristic detected stable or immutable Compose model usage in Android production code where Compose recomposition should remain predictable.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidViewModelScopedUsage, ruleId: 'heuristics.android.viewmodelscoped-para-dependencias-de-viewmodel.ast', code: 'HEURISTICS_ANDROID_VIEWMODELSCOPED_PARA_DEPENDENCIAS_DE_VIEWMODEL_AST', message: 'AST heuristic detected @ViewModelScoped usage in Android production code.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidCoroutineTryCatchUsage, ruleId: 'heuristics.android.try-catch-manejo-de-errores-en-coroutines.ast', code: 'HEURISTICS_ANDROID_TRY_CATCH_MANEJO_DE_ERRORES_EN_COROUTINES_AST', message: 'AST heuristic detected try/catch usage in Android coroutine code where error handling must remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidSupervisorScopeUsage, ruleId: 'heuristics.android.supervisorscope-errores-no-cancelan-otros-jobs.ast', code: 'HEURISTICS_ANDROID_SUPERVISORSCOPE_ERRORES_NO_CANCELAN_OTROS_JOBS_AST', message: 'AST heuristic detected supervisorScope usage in Android coroutine code where sibling jobs should remain isolated.' },
-  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasAndroidWorkManagerBackgroundTaskUsage, ruleId: 'heuristics.android.workmanager-background-tasks.ast', code: 'HEURISTICS_ANDROID_WORKMANAGER_BACKGROUND_TASKS_AST', message: 'AST heuristic detected WorkManager worker usage in Android production code where background tasks should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidVersionCatalogPath, excludePaths: [], detect: TextAndroid.hasAndroidVersionCatalogUsage, ruleId: 'heuristics.android.version-catalogs-libs-versions-toml-para-dependencias.ast', code: 'HEURISTICS_ANDROID_VERSION_CATALOGS_LIBS_VERSIONS_TOML_PARA_DEPENDENCIAS_AST', message: 'AST heuristic detected Android libs.versions.toml usage in dependency management files where version catalogs should remain explicit.' },
-  { platform: 'android', pathCheck: isAndroidGradlePath, excludePaths: [], detect: TextAndroid.hasAndroidWorkManagerDependencyUsage, ruleId: 'heuristics.android.workmanager-androidx-work-work-runtime-ktx.ast', code: 'HEURISTICS_ANDROID_WORKMANAGER_ANDROIDX_WORK_WORK_RUNTIME_KTX_AST', message: 'AST heuristic detected WorkManager Gradle dependency usage in Android build files.' },
+  { platform: 'android', pathCheck: isAndroidLocalPropertiesPath, excludePaths: [], detect: detectsTrackedFilePresence, ruleId: 'heuristics.android.security.local-properties-tracked.ast', code: 'HEURISTICS_ANDROID_SECURITY_LOCAL_PROPERTIES_TRACKED_AST', message: 'AST heuristic detected tracked Android local.properties file.' },
+  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinSharedPreferencesUsage, ruleId: 'heuristics.android.persistence.shared-preferences-usage.ast', code: 'HEURISTICS_ANDROID_PERSISTENCE_SHARED_PREFERENCES_USAGE_AST', message: 'AST heuristic detected SharedPreferences usage in Android production Kotlin code.' },
+  { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinProductionMockUsage, ruleId: 'heuristics.android.testing.production-mock-usage.ast', code: 'HEURISTICS_ANDROID_TESTING_PRODUCTION_MOCK_USAGE_AST', message: 'AST heuristic detected mock or spy usage in Android production Kotlin code.' },
+  { platform: 'android', pathCheck: isAndroidKotlinTestPath, excludePaths: [], detect: TextAndroid.hasKotlinJUnit4Usage, ruleId: 'heuristics.android.testing.junit4-usage.ast', code: 'HEURISTICS_ANDROID_TESTING_JUNIT4_USAGE_AST', message: 'AST heuristic detected JUnit4 usage in Android Kotlin tests where JUnit5 is preferred.' },
+  { platform: 'android', pathCheck: isAndroidPresentationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinLiveDataStateExposureUsage, ruleId: 'heuristics.android.flow.livedata-state-exposure.ast', code: 'HEURISTICS_ANDROID_FLOW_LIVEDATA_STATE_EXPOSURE_AST', message: 'AST heuristic detected LiveData state exposure in Android presentation code where StateFlow or SharedFlow should be preferred.' },
+  { platform: 'android', pathCheck: isAndroidPresentationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinManualCoroutineScopeInViewModelUsage, ruleId: 'heuristics.android.coroutines.manual-scope-in-viewmodel.ast', code: 'HEURISTICS_ANDROID_COROUTINES_MANUAL_SCOPE_IN_VIEWMODEL_AST', message: 'AST heuristic detected manual CoroutineScope inside an Android ViewModel where viewModelScope should be preferred.' },
+  { platform: 'android', pathCheck: isAndroidNonPresentationKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinDispatcherMainBoundaryLeakUsage, ruleId: 'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast', code: 'HEURISTICS_ANDROID_COROUTINES_DISPATCHERS_MAIN_BOUNDARY_LEAK_AST', message: 'AST heuristic detected Dispatchers.Main outside Android presentation code.' },
+  { platform: 'android', pathCheck: isAndroidDomainOrApplicationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinHardcodedBackgroundDispatcherUsage, ruleId: 'heuristics.android.coroutines.hardcoded-background-dispatcher.ast', code: 'HEURISTICS_ANDROID_COROUTINES_HARDCODED_BACKGROUND_DISPATCHER_AST', message: 'AST heuristic detected hard-coded Dispatchers.IO or Dispatchers.Default in Android domain/application code.' },
+  { platform: 'android', pathCheck: isAndroidDomainOrApplicationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinWithContextUsage, ruleId: 'heuristics.android.coroutines.with-context.ast', code: 'HEURISTICS_ANDROID_COROUTINES_WITH_CONTEXT_AST', message: 'AST heuristic detected withContext usage in Android domain/application code.' },
+  { platform: 'android', pathCheck: isAndroidDomainOrApplicationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinLifecycleScopeUsage, ruleId: 'heuristics.android.coroutines.lifecycle-scope-boundary-leak.ast', code: 'HEURISTICS_ANDROID_COROUTINES_LIFECYCLE_SCOPE_BOUNDARY_LEAK_AST', message: 'AST heuristic detected lifecycleScope usage in Android domain/application code.' },
+  { platform: 'android', pathCheck: isAndroidDomainOrApplicationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinSupervisorScopeUsage, ruleId: 'heuristics.android.coroutines.supervisor-scope.ast', code: 'HEURISTICS_ANDROID_COROUTINES_SUPERVISOR_SCOPE_AST', message: 'AST heuristic detected supervisorScope usage in Android domain/application code.' },
+  { platform: 'android', pathCheck: isAndroidDomainOrApplicationPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinCoroutineTryCatchUsage, ruleId: 'heuristics.android.coroutines.try-catch.ast', code: 'HEURISTICS_ANDROID_COROUTINES_TRY_CATCH_AST', message: 'AST heuristic detected try-catch handling in Android coroutine code.' },
 ];
 
 const extractWorkflowHeuristicFacts = (
@@ -903,30 +816,11 @@ export const extractHeuristicFacts = (
       }
     }
 
-    if (params.detectedPlatforms.ios?.detected && isIOSSwiftPath(fileFact.path)) {
-      if (isSwiftTestPath(fileFact.path)) {
-        const semanticTestSrpMatch = TextIOS.findSwiftXCTestSrpMatch(fileFact.content);
-        if (semanticTestSrpMatch) {
-          heuristicFacts.push(
-            createHeuristicFact({
-              ruleId: 'heuristics.ios.solid.srp.presentation-mixed-responsibilities.ast',
-              code: 'HEURISTICS_IOS_SOLID_SRP_XCTEST_MIXED_RESPONSIBILITIES_AST',
-              message:
-                'Semantic iOS SRP heuristic detected an XCTestCase suite mixing multiple responsibilities.',
-              filePath: fileFact.path,
-              lines: semanticTestSrpMatch.lines,
-              severity: 'CRITICAL',
-              primary_node: semanticTestSrpMatch.primary_node,
-              related_nodes: semanticTestSrpMatch.related_nodes,
-              why: semanticTestSrpMatch.why,
-              impact: semanticTestSrpMatch.impact,
-              expected_fix: semanticTestSrpMatch.expected_fix,
-            })
-          );
-        }
-      }
-
-      if (!isSwiftTestPath(fileFact.path)) {
+    if (
+      params.detectedPlatforms.ios?.detected &&
+      isIOSSwiftPath(fileFact.path) &&
+      !isSwiftTestPath(fileFact.path)
+    ) {
       if (isIOSApplicationOrPresentationPath(fileFact.path)) {
         const semanticOcpMatch = TextIOS.findSwiftOpenClosedSwitchMatch(fileFact.content);
         if (semanticOcpMatch) {
@@ -1048,7 +942,6 @@ export const extractHeuristicFacts = (
           })
         );
       }
-      }
     }
 
     if (
@@ -1079,7 +972,7 @@ export const extractHeuristicFacts = (
 
     if (
       params.detectedPlatforms.android?.detected &&
-      isAndroidKotlinPath(fileFact.path) &&
+      isAndroidApplicationOrPresentationPath(fileFact.path) &&
       !isKotlinTestPath(fileFact.path)
     ) {
       const semanticOcpMatch = TextAndroid.findKotlinOpenClosedWhenMatch(fileFact.content);
@@ -1161,88 +1054,6 @@ export const extractHeuristicFacts = (
           })
         );
       }
-
-      const semanticComposableMatch = TextAndroid.findAndroidComposableFunctionMatch(fileFact.content);
-      if (semanticComposableMatch) {
-        heuristicFacts.push(
-          createHeuristicFact({
-            ruleId: 'heuristics.android.composable-functions-composable-para-ui.ast',
-            code: 'HEURISTICS_ANDROID_COMPOSABLE_FUNCTIONS_COMPOSABLE_PARA_UI_AST',
-            message:
-              'Semantic Android Compose heuristic detected @Composable UI functions in production code.',
-            filePath: fileFact.path,
-            lines: semanticComposableMatch.lines,
-            severity: 'WARN',
-            primary_node: semanticComposableMatch.primary_node,
-            related_nodes: semanticComposableMatch.related_nodes,
-            why: semanticComposableMatch.why,
-            impact: semanticComposableMatch.impact,
-            expected_fix: semanticComposableMatch.expected_fix,
-          })
-        );
-      }
-
-      const semanticArgumentsMatch = TextAndroid.findAndroidArgumentsMatch(fileFact.content);
-      if (semanticArgumentsMatch) {
-        heuristicFacts.push(
-          createHeuristicFact({
-            ruleId: 'heuristics.android.arguments-pasar-datos-entre-pantallas.ast',
-            code: 'HEURISTICS_ANDROID_ARGUMENTS_PASAR_DATOS_ENTRE_PANTALLAS_AST',
-            message:
-              'Semantic Android navigation heuristic detected explicit arguments passed between screens.',
-            filePath: fileFact.path,
-            lines: semanticArgumentsMatch.lines,
-            severity: 'WARN',
-            primary_node: semanticArgumentsMatch.primary_node,
-            related_nodes: semanticArgumentsMatch.related_nodes,
-            why: semanticArgumentsMatch.why,
-            impact: semanticArgumentsMatch.impact,
-            expected_fix: semanticArgumentsMatch.expected_fix,
-          })
-        );
-      }
-
-      const semanticSingleActivityMatch = TextAndroid.findAndroidSingleActivityComposeShellMatch(
-        fileFact.content
-      );
-      if (semanticSingleActivityMatch) {
-        heuristicFacts.push(
-          createHeuristicFact({
-            ruleId: 'heuristics.android.single-activity-multiples-composables-fragments-no-activities.ast',
-            code: 'HEURISTICS_ANDROID_SINGLE_ACTIVITY_MULTIPLES_COMPOSABLES_FRAGMENTS_NO_ACTIVITIES_AST',
-            message:
-              'Semantic Android Compose heuristic detected a single Activity compose shell in production code.',
-            filePath: fileFact.path,
-            lines: semanticSingleActivityMatch.lines,
-            severity: 'WARN',
-            primary_node: semanticSingleActivityMatch.primary_node,
-            related_nodes: semanticSingleActivityMatch.related_nodes,
-            why: semanticSingleActivityMatch.why,
-            impact: semanticSingleActivityMatch.impact,
-            expected_fix: semanticSingleActivityMatch.expected_fix,
-          })
-        );
-      }
-
-      const semanticGodActivityMatch = TextAndroid.findAndroidGodActivityMatch(fileFact.content);
-      if (semanticGodActivityMatch) {
-        heuristicFacts.push(
-          createHeuristicFact({
-            ruleId: 'heuristics.android.god-activities-single-activity-composables.ast',
-            code: 'HEURISTICS_ANDROID_GOD_ACTIVITIES_SINGLE_ACTIVITY_COMPOSABLES_AST',
-            message:
-              'Semantic Android Compose heuristic detected an Activity that concentrates Compose shell and composables in the same file.',
-            filePath: fileFact.path,
-            lines: semanticGodActivityMatch.lines,
-            severity: 'ERROR',
-            primary_node: semanticGodActivityMatch.primary_node,
-            related_nodes: semanticGodActivityMatch.related_nodes,
-            why: semanticGodActivityMatch.why,
-            impact: semanticGodActivityMatch.impact,
-            expected_fix: semanticGodActivityMatch.expected_fix,
-          })
-        );
-      }
     }
 
     // AST-based heuristics
@@ -1258,7 +1069,7 @@ export const extractHeuristicFacts = (
     try {
       const ast = parse(fileFact.content, {
         sourceType: 'unambiguous',
-        plugins: ['typescript', 'jsx', 'decorators-legacy'],
+        plugins: ['typescript', 'jsx'],
       });
 
       for (const entry of astDetectorRegistry) {
@@ -1270,26 +1081,7 @@ export const extractHeuristicFacts = (
         }
         if (entry.detect(ast)) {
           const semanticMatch =
-            entry.ruleId === 'heuristics.ts.console-log.ast'
-              ? TS.findConsoleLogCallMatch(ast)
-              : entry.ruleId === 'heuristics.ts.explicit-any.ast'
-                ? TS.findExplicitAnyTypeMatch(ast)
-              : entry.ruleId === 'heuristics.ts.clean-architecture.ast'
-                ? TS.findCleanArchitectureMatch(ast)
-              : entry.ruleId === 'heuristics.ts.production-mock.ast'
-                ? TS.findProductionMockCallMatch(ast)
-              : entry.ruleId === 'heuristics.ts.exception-filter.ast'
-                ? TS.findExceptionFilterClassMatch(ast)
-              : entry.ruleId === 'heuristics.ts.guards-useguards-jwtauthguard.ast'
-                ? TS.findGuardUseGuardsJwtAuthGuardMatch(ast)
-              : entry.ruleId === 'heuristics.ts.interceptors-useinterceptors-logging-transform.ast'
-                ? TS.findUseInterceptorsLoggingTransformMatch(ast)
-              : entry.ruleId === 'heuristics.ts.no-sensitive-log.ast'
-                ? TS.findSensitiveLogCallMatch(ast)
-              : entry.ruleId === 'heuristics.ts.empty-catch.ast' ||
-                  entry.ruleId === 'common.error.empty_catch'
-                ? TS.findEmptyCatchClauseMatch(ast)
-              : entry.ruleId === 'heuristics.ts.solid.srp.class-command-query-mix.ast'
+            entry.ruleId === 'heuristics.ts.solid.srp.class-command-query-mix.ast'
               ? TS.findMixedCommandQueryClassMatch(ast)
               : entry.ruleId === 'heuristics.ts.solid.isp.interface-command-query-mix.ast'
                 ? TS.findMixedCommandQueryInterfaceMatch(ast)
@@ -1299,21 +1091,9 @@ export const extractHeuristicFacts = (
                 ? TS.findOverrideMethodThrowingNotImplementedMatch(ast)
               : entry.ruleId === 'heuristics.ts.solid.dip.framework-import.ast'
                 ? TS.findFrameworkDependencyImportMatch(ast)
-              : entry.ruleId === 'heuristics.ts.solid.dip.concrete-instantiation.ast'
-                ? TS.findConcreteDependencyInstantiationMatch(ast)
-              : entry.ruleId === 'heuristics.ts.singleton-pattern.ast'
-                ? TS.findSingletonPatternMatch(ast)
-              : entry.ruleId === 'heuristics.ts.callback-hell.ast'
-                ? TS.findCallbackHellPatternMatch(ast)
-              : entry.ruleId === 'heuristics.ts.magic-numbers.ast'
-                ? TS.findMagicNumberPatternMatch(ast)
-              : entry.ruleId === 'heuristics.ts.hardcoded-values.ast'
-                ? TS.findHardcodedValuePatternMatch(ast)
-              : entry.ruleId === 'heuristics.ts.env-default-fallback.ast'
-                ? TS.findEnvDefaultFallbackPatternMatch(ast)
-              : entry.ruleId === 'heuristics.ts.god-class-large-class.ast'
-                ? TS.findLargeClassDeclarationMatch(ast)
-              : undefined;
+                : entry.ruleId === 'heuristics.ts.solid.dip.concrete-instantiation.ast'
+                  ? TS.findConcreteDependencyInstantiationMatch(ast)
+                  : undefined;
           const lineLocator = entry.locateLines ?? astDetectorLineLocatorRegistry.get(entry.detect);
           const lines = semanticMatch?.lines ?? lineLocator?.(ast);
           heuristicFacts.push(

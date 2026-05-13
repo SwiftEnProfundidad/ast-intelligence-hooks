@@ -223,6 +223,11 @@ apps/ios/Presentation/
 ✅ **Prohibido print()** y logs ad-hoc
 ✅ **No loggear PII** (tokens, emails, IDs sensibles)
 
+### Enforcement AST inicial de logging iOS:
+✅ `skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc` se mapea a `heuristics.ios.logging.adhoc-print.ast` para detectar `print`, `debugPrint`, `dump`, `NSLog` y `os_log` en Swift production.
+✅ `skills.ios.guideline.ios.no-loggear-pii-tokens-emails-ids-sensibles` se mapea a `heuristics.ios.logging.sensitive-data.ast` para detectar tokens, credenciales, emails e IDs sensibles en llamadas de logging.
+✅ `os.Logger` sigue siendo la API preferida; esta slice detecta el riesgo prohibido, no fuerza todavía una arquitectura completa de observabilidad.
+
 ```swift
 // ✅ Ejemplo: ViewModel con @Observable (iOS 17+)
 @Observable
@@ -494,8 +499,21 @@ struct UseCaseFactory {
 ✅ **Request/Response interceptors** - Logging, auth tokens
 ✅ **SSL pinning** - Para apps con alta seguridad
 ✅ **Network reachability** - Detectar conectividad
-❌ **Alamofire** - Prohibido, usar URLSession nativo
-❌ **JSONSerialization** - Prohibido, usar Codable
+⚠️ **Alamofire** - No introducir en código nuevo; en brownfield existente se trata como señal de migración gradual. URLSession nativo es la línea base preferente.
+⚠️ **JSONSerialization** - No introducir en código nuevo; en brownfield existente se trata como señal de migración gradual. Codable es la línea base preferente.
+
+### Enforcement AST inicial de networking y JSON iOS
+
+- `skills.ios.guideline.ios.alamofire-prohibido-usar-urlsession-nativo` se mapea a `heuristics.ios.networking.alamofire.ast`.
+- `skills.ios.guideline.ios.codable-decodificacio-n-automa-tica-de-json-nunca-jsonserialization` se mapea a `heuristics.ios.json.jsonserialization.ast`.
+- `skills.ios.guideline.ios.codable-para-serializacio-n-json-nunca-jsonserialization` se mapea a `heuristics.ios.json.jsonserialization.ast`.
+- En `PROJECT MODE: brownfield`, estos hallazgos son señal de baseline/adopción y deben evitar drift nuevo sin bloquear deuda histórica salvo promoción explícita de policy.
+
+### Enforcement AST inicial de dependencias iOS
+
+- `skills.ios.guideline.ios.cocoapods-prohibido` se mapea a `heuristics.ios.dependencies.cocoapods.ast`.
+- `skills.ios.guideline.ios.carthage-prohibido` se mapea a `heuristics.ios.dependencies.carthage.ast`.
+- En `PROJECT MODE: brownfield`, estos hallazgos son señal de baseline/adopción y deben evitar drift nuevo sin bloquear deuda histórica salvo promoción explícita de policy. Swift Package Manager permanece como baseline preferente para código nuevo.
 
 ```swift
 // ✅ Ejemplo: APIClient con URLSession y async/await
@@ -576,6 +594,51 @@ struct APIEndpoint: Sendable {
 ✅ **Core Data** - Solo para proyectos legacy
 ✅ **FileManager** - Archivos, imágenes, documents
 ✅ **iCloud** - Sync entre dispositivos (NSUbiquitousKeyValueStore, CloudKit)
+
+### Enforcement AST inicial de secretos en preferencias iOS
+
+- `skills.ios.guideline.ios.keychain-passwords-tokens-no-userdefaults` se mapea a `heuristics.ios.security.userdefaults-sensitive-data.ast`.
+- `skills.ios.guideline.ios.keychainservices-nativo-passwords-tokens-datos-sensibles-no-wrappers-d` se mapea a `heuristics.ios.security.userdefaults-sensitive-data.ast`.
+- `skills.ios.guideline.ios.userdefaults-settings-simples-no-datos-sensibles` se mapea a `heuristics.ios.security.userdefaults-sensitive-data.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo es señal de baseline/adopción y debe evitar drift nuevo sin bloquear deuda histórica salvo promoción explícita de policy. Keychain nativo permanece como baseline preferente para secretos.
+
+### Enforcement AST inicial de transporte seguro iOS
+
+- `skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto` se mapea a `heuristics.ios.security.insecure-transport.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta `http://` en Swift production y `NSAllowsArbitraryLoads=true` en `Info.plist` como señal de baseline/adopción sin bloquear deuda histórica salvo promoción explícita de policy. HTTPS y ATS permanecen como baseline preferente.
+
+### Enforcement AST inicial de localización iOS
+
+- `skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs` se mapea a `heuristics.ios.localization.localizable-strings.ast`.
+- `skills.ios.guideline.ios.string-catalogs-xcstrings` se mapea a `heuristics.ios.localization.localizable-strings.ast`.
+- `skills.ios.guideline.ios.string-catalogs-xcstrings-sistema-moderno-de-localizacio-n-xcode-15` se mapea a `heuristics.ios.localization.localizable-strings.ast`.
+- `skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui` se mapea a `heuristics.ios.localization.hardcoded-ui-string.ast`.
+- `skills.ios.guideline.ios.string-localized-api-moderna-para-strings-traducibles` se mapea a `heuristics.ios.localization.hardcoded-ui-string.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta `Localizable.strings` bajo `apps/ios/**` como señal de baseline/adopción sin bloquear deuda histórica salvo promoción explícita de policy. String Catalogs (`.xcstrings`) permanece como baseline preferente.
+- También detecta literales de texto visibles en SwiftUI (`Text`, `Button`, `Label`, `TextField`, `SecureField`, `navigationTitle`, `accessibilityLabel`) como señal de adopción hacia `String(localized:)` y String Catalogs, ignorando keys como `orders.title`.
+
+### Enforcement AST inicial de assets iOS
+
+- `skills.ios.guideline.ios.assets-en-asset-catalogs-con-soporte-para-todos-los-taman-os` se mapea a `heuristics.ios.assets.loose-resource.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta carga de imágenes sueltas desde bundle/filesystem (`UIImage(contentsOfFile:)`, `NSImage(contentsOfFile:)`, `Bundle.main.path/url(...png|jpg|jpeg|pdf|svg|webp)`) como señal de adopción hacia Asset Catalogs. No marca `Image("asset")` ni `UIImage(named:)`.
+
+### Enforcement AST inicial de accesibilidad iOS
+
+- `skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico` se mapea a `heuristics.ios.accessibility.fixed-font-size.ast`.
+- `skills.ios.guideline.ios.dynamic-type-fuentes-escalables-y-layouts-adaptativos` se mapea a `heuristics.ios.accessibility.fixed-font-size.ast`.
+- `skills.ios.guideline.ios.accessibility-labels-accessibilitylabel` se mapea a `heuristics.ios.accessibility.icon-only-control-label.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta tamaños de fuente fijos (`.font(.system(size:))`, `Font.system(size:)`, `UIFont.systemFont(ofSize:)`) como señal de adopción hacia Dynamic Type y estilos semánticos. No marca `.font(.headline)`, `.font(.body)` ni otros estilos semánticos.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta controles SwiftUI icon-only con `Button` + `Image(systemName:)` sin `.accessibilityLabel` cercano como señal de adopción hacia labels accesibles explícitas. No intenta inferir todos los casos de accesibilidad ni marca botones con texto visible.
+
+### Enforcement AST inicial de RTL iOS
+
+- `skills.ios.guideline.ios.rtl-support-right-to-left-para-a-rabe-hebreo` se mapea a `heuristics.ios.localization.physical-text-alignment.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta alineaciones físicas `.left`/`.right` en texto y frames (`multilineTextAlignment`, `frame(alignment:)`, `TextAlignment`, `NSTextAlignment`) como señal de adopción hacia `.leading`/`.trailing`. No marca `.leading` ni `.trailing`.
+
+### Enforcement AST inicial de bloqueo de thread iOS
+
+- `skills.ios.guideline.ios.background-threads-no-bloquear-main-thread` se mapea a `heuristics.ios.performance.blocking-sleep.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta sleeps bloqueantes (`Thread.sleep`, `sleep`, `usleep`) en Swift production como señal de adopción hacia scheduling cancellable, clocks o suspensión asíncrona. No marca `Task.sleep`.
 
 ### Combine (Reactive):
 ✅ **Publishers** - AsyncSequence para async, Combine para streams complejos

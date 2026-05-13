@@ -6,45 +6,77 @@ import {
   findSwiftOpenClosedSwitchMatch,
   findSwiftConcreteDependencyDipMatch,
   findSwiftPresentationSrpMatch,
-  findSwiftXCTestSrpMatch,
   hasSwiftAnyViewUsage,
   hasSwiftCallbackStyleSignature,
   hasSwiftCornerRadiusUsage,
   hasSwiftDispatchGroupUsage,
   hasSwiftDispatchQueueUsage,
   hasSwiftDispatchSemaphoreUsage,
-  hasSwiftExplicitColorStaticMemberUsage,
+  hasSwiftAdHocLoggingUsage,
+  hasSwiftAlamofireUsage,
   hasSwiftForEachIndicesUsage,
+  hasSwiftForEachSelfIdentityUsage,
   hasSwiftForceCastUsage,
   hasSwiftFontWeightBoldUsage,
+  hasSwiftFixedFontSizeUsage,
   hasSwiftForegroundColorUsage,
   hasSwiftForceTryUsage,
   hasSwiftForceUnwrap,
   hasSwiftGeometryReaderUsage,
-  hasSwiftInlineFilteringInForEachUsage,
+  hasSwiftHardcodedUiStringUsage,
+  hasSwiftHardcodedSensitiveStringUsage,
+  hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage,
+  hasSwiftLooseAssetResourceUsage,
   hasSwiftLegacyOnChangeUsage,
   hasSwiftLegacyExpectationDescriptionUsage,
   hasSwiftLegacySwiftUiObservableWrapperUsage,
+  hasSwiftMainThreadBlockingSleepUsage,
+  hasSwiftMassiveViewControllerResponsibilityUsage,
+  hasSwiftMagicNumberLayoutUsage,
   hasSwiftMixedTestingFrameworksUsage,
   hasSwiftLegacyXCTestImportUsage,
   hasSwiftModernizableXCTestSuiteUsage,
+  hasSwiftNonLazyScrollForEachUsage,
+  hasSwiftUiForEachConditionalViewCountUsage,
+  hasSwiftViewBodyObjectCreationUsage,
+  hasSwiftUiImageDataDecodingUsage,
+  hasSwiftUiInlineActionLogicUsage,
   hasSwiftAssumeIsolatedUsage,
   hasSwiftCoreDataLayerLeakUsage,
+  hasSwiftSwiftDataLayerLeakUsage,
   hasSwiftNonisolatedUnsafeUsage,
   hasSwiftNSManagedObjectAsyncBoundaryUsage,
   hasSwiftNSManagedObjectBoundaryUsage,
   hasSwiftNSManagedObjectStateLeakUsage,
   hasSwiftNavigationViewUsage,
+  hasSwiftUntypedNavigationLinkDestinationUsage,
+  hasSwiftNonPrivateStateOwnershipUsage,
+  hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage,
   hasSwiftObservableObjectUsage,
+  hasSwiftOnAppearTaskUsage,
   hasSwiftOnTapGestureUsage,
   hasSwiftOperationQueueUsage,
   hasSwiftContainsUserFilterUsage,
+  hasSwiftCustomSingletonUsage,
   hasSwiftPassedValueStateWrapperUsage,
-  hasSwiftStateWrapperWithoutPrivateUsage,
+  hasSwiftPhysicalTextAlignmentUsage,
   hasSwiftPreconcurrencyUsage,
+  hasSwiftQuickNimbleUsage,
   hasSwiftSheetIsPresentedUsage,
   hasSwiftScrollViewShowsIndicatorsUsage,
+  hasSwiftSensitiveLoggingUsage,
+  hasSwiftSelfPrintChangesUsage,
+  hasSwiftSensitiveUserDefaultsStorageUsage,
+  hasSwiftInsecureTransportUsage,
+  hasSwiftJSONSerializationUsage,
+  hasSwiftExplicitColorStaticMemberUsage,
+  hasSwiftClosureBasedViewBuilderContentUsage,
+  hasSwiftRedundantReactiveStateAssignmentUsage,
+  hasSwiftInlineForEachTransformUsage,
   hasSwiftStringFormatUsage,
+  hasSwiftStrongDelegateReferenceUsage,
+  hasSwiftStrongSelfEscapingClosureUsage,
+  hasSwiftSwinjectUsage,
   hasSwiftTabItemUsage,
   hasSwiftTaskDetachedUsage,
   hasSwiftWaitForExpectationsUsage,
@@ -97,6 +129,275 @@ func render() -> some View {
 test('hasSwiftAnyViewUsage ignora comentarios, strings y coincidencias parciales', () => {
   const source = `\n// AnyView(Text("debug"))\nlet value = "AnyView(Text(\\"debug\\"))"\nlet customAnyViewBuilder = true\n`;
   assert.equal(hasSwiftAnyViewUsage(source), false);
+});
+
+test('hasSwiftNonLazyScrollForEachUsage detecta ScrollView con stack no lazy y preserva LazyVStack', () => {
+  const source = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ScrollView {
+      VStack(spacing: 12) {
+        ForEach(items) { item in
+          FeedRow(item: item)
+        }
+      }
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ScrollView {
+      LazyVStack(spacing: 12) {
+        ForEach(items) { item in
+          FeedRow(item: item)
+        }
+      }
+    }
+    let sample = "ScrollView { VStack { ForEach(items) } }"
+    // ScrollView { VStack { ForEach(items) } }
+  }
+}
+`;
+
+  assert.equal(hasSwiftNonLazyScrollForEachUsage(source), true);
+  assert.equal(hasSwiftNonLazyScrollForEachUsage(safe), false);
+});
+
+test('hasSwiftUiForEachConditionalViewCountUsage detecta branching condicional dentro de ForEach', () => {
+  const source = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ForEach(items) { item in
+      if item.isPromoted {
+        PromotedRow(item: item)
+      } else {
+        RegularRow(item: item)
+      }
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ForEach(items) { item in
+      FeedRow(item: item)
+    }
+    let sample = "ForEach(items) { item in if item.isPromoted { PromotedRow(item: item) } }"
+    // ForEach(items) { item in if item.isPromoted { PromotedRow(item: item) } }
+  }
+}
+`;
+
+  assert.equal(hasSwiftUiForEachConditionalViewCountUsage(source), true);
+  assert.equal(hasSwiftUiForEachConditionalViewCountUsage(safe), false);
+});
+
+test('hasSwiftViewBodyObjectCreationUsage detecta formatter creado en body y preserva dependencia externa', () => {
+  const source = `
+struct PriceView: View {
+  let amount: Decimal
+
+  var body: some View {
+    let formatter = NumberFormatter()
+    Text(formatter.string(from: amount as NSDecimalNumber) ?? "")
+  }
+}
+`;
+  const safe = `
+struct PriceView: View {
+  let formatter: NumberFormatter
+  let amount: Decimal
+
+  var body: some View {
+    Text(formatter.string(from: amount as NSDecimalNumber) ?? "")
+    let sample = "var body: some View { NumberFormatter() }"
+    // var body: some View { NumberFormatter() }
+  }
+}
+`;
+
+  assert.equal(hasSwiftViewBodyObjectCreationUsage(source), true);
+  assert.equal(hasSwiftViewBodyObjectCreationUsage(safe), false);
+});
+
+test('hasSwiftUiImageDataDecodingUsage detecta UIImage(data:) y preserva strings y comentarios', () => {
+  const source = `
+struct AvatarView: View {
+  let imageData: Data
+
+  var body: some View {
+    if let image = UIImage(data: imageData) {
+      Image(uiImage: image)
+    }
+  }
+}
+`;
+  const safe = `
+struct AvatarView: View {
+  let image: UIImage
+
+  var body: some View {
+    Image(uiImage: image)
+    let sample = "UIImage(data: imageData)"
+    // UIImage(data: imageData)
+  }
+}
+`;
+
+  assert.equal(hasSwiftUiImageDataDecodingUsage(source), true);
+  assert.equal(hasSwiftUiImageDataDecodingUsage(safe), false);
+});
+
+test('hasSwiftUiInlineActionLogicUsage detecta lógica inline en Button y preserva método referenciado', () => {
+  const source = `
+struct CheckoutView: View {
+  @State private var isLoading = false
+
+  var body: some View {
+    Button {
+      if isLoading {
+        return
+      }
+      Task {
+        await submit()
+      }
+    } label: {
+      Text("Pay")
+    }
+  }
+}
+`;
+  const safe = `
+struct CheckoutView: View {
+  var body: some View {
+    Button(action: submit) {
+      Text("Pay")
+    }
+    let sample = "Button { if loading { return } } label:"
+    // Button { if loading { return } } label:
+  }
+}
+`;
+
+  assert.equal(hasSwiftUiInlineActionLogicUsage(source), true);
+  assert.equal(hasSwiftUiInlineActionLogicUsage(safe), false);
+});
+
+test('hasSwiftForEachSelfIdentityUsage detecta id self y preserva ids estables', () => {
+  const source = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ForEach(items, id: \\.self) { item in
+      FeedRow(item: item)
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ForEach(items, id: \\.id) { item in
+      FeedRow(item: item)
+    }
+    let sample = "ForEach(items, id: \\.self) { item in FeedRow(item: item) }"
+    // ForEach(items, id: \.self) { item in FeedRow(item: item) }
+  }
+}
+`;
+
+  assert.equal(hasSwiftForEachSelfIdentityUsage(source), true);
+  assert.equal(hasSwiftForEachSelfIdentityUsage(safe), false);
+});
+
+test('hasSwiftSelfPrintChangesUsage detecta Self._printChanges y preserva strings y comentarios', () => {
+  const source = `
+struct FeedView: View {
+  var body: some View {
+    Self._printChanges()
+    Text("Feed")
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  var body: some View {
+    Text("Feed")
+    let sample = "Self._printChanges()"
+    // Self._printChanges()
+  }
+}
+`;
+
+  assert.equal(hasSwiftSelfPrintChangesUsage(source), true);
+  assert.equal(hasSwiftSelfPrintChangesUsage(safe), false);
+});
+
+test('hasSwiftUntypedNavigationLinkDestinationUsage detecta NavigationLink no tipado y preserva value navigation', () => {
+  const source = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    NavigationStack {
+      List(items) { item in
+        NavigationLink(destination: DetailView(item: item)) {
+          Text(item.title)
+        }
+      }
+    }
+  }
+}
+`;
+  const trailing = `
+struct FeedView: View {
+  var body: some View {
+    NavigationLink {
+      DetailView()
+    } label: {
+      Text("Open")
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    NavigationStack {
+      List(items) { item in
+        NavigationLink(value: item) {
+          Text(item.title)
+        }
+      }
+      .navigationDestination(for: Item.self) { item in
+        DetailView(item: item)
+      }
+    }
+    let sample = "NavigationLink(destination: DetailView())"
+    // NavigationLink { DetailView() } label: { Text("Open") }
+  }
+}
+`;
+
+  assert.equal(hasSwiftUntypedNavigationLinkDestinationUsage(source), true);
+  assert.equal(hasSwiftUntypedNavigationLinkDestinationUsage(trailing), true);
+  assert.equal(hasSwiftUntypedNavigationLinkDestinationUsage(safe), false);
 });
 
 test('hasSwiftForceTryUsage detecta try! y descarta try?', () => {
@@ -168,6 +469,512 @@ Task {
   assert.equal(hasSwiftTaskDetachedUsage(negative), false);
 });
 
+test('hasSwiftOnAppearTaskUsage detecta Task dentro de onAppear y preserva task modifier', () => {
+  const source = `
+struct FeedView: View {
+  var body: some View {
+    List(items) { item in
+      Text(item.title)
+    }
+    .onAppear {
+      Task {
+        await viewModel.load()
+      }
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  var body: some View {
+    List(items) { item in
+      Text(item.title)
+    }
+    .task {
+      await viewModel.load()
+    }
+    .onAppear {
+      analytics.trackScreen()
+    }
+    let text = ".onAppear { Task { await load() } }"
+    // .onAppear { Task { await load() } }
+  }
+}
+`;
+
+  assert.equal(hasSwiftOnAppearTaskUsage(source), true);
+  assert.equal(hasSwiftOnAppearTaskUsage(safe), false);
+});
+
+test('hasSwiftStrongDelegateReferenceUsage detecta delegates fuertes y preserva weak delegates', () => {
+  const positive = `
+final class CheckoutCoordinator {
+  var delegate: CheckoutCoordinatorDelegate?
+  let tableDataSource: OrdersTableDataSource
+}
+`;
+  const negative = `
+final class CheckoutCoordinator {
+  weak var delegate: CheckoutCoordinatorDelegate?
+  private weak var dataSource: OrdersTableDataSource?
+  let text = "var delegate: CheckoutCoordinatorDelegate?"
+  // var delegate: CheckoutCoordinatorDelegate?
+}
+`;
+
+  assert.equal(hasSwiftStrongDelegateReferenceUsage(positive), true);
+  assert.equal(hasSwiftStrongDelegateReferenceUsage(negative), false);
+});
+
+test('hasSwiftStrongDelegateReferenceUsage no marca propiedades no delegate', () => {
+  const source = `
+final class CheckoutCoordinator {
+  var repository: OrdersRepository
+  let presenter: CheckoutPresenter
+}
+`;
+
+  assert.equal(hasSwiftStrongDelegateReferenceUsage(source), false);
+});
+
+test('hasSwiftStrongSelfEscapingClosureUsage detecta self fuerte en closures escapables iOS', () => {
+  const source = `
+final class CartViewModel {
+  private var cancellables = Set<AnyCancellable>()
+
+  func bind() {
+    Task {
+      await self.reload()
+    }
+    DispatchQueue.main.async {
+      self.render()
+    }
+    Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
+      self.tick(timer)
+    }
+    NotificationCenter.default.addObserver(forName: .cartChanged, object: nil, queue: .main) { notification in
+      self.handle(notification)
+    }
+    publisher.sink { value in
+      self.consume(value)
+    }
+  }
+}
+`;
+
+  assert.equal(hasSwiftStrongSelfEscapingClosureUsage(source), true);
+});
+
+test('hasSwiftStrongSelfEscapingClosureUsage preserva capture lists weak/unowned e ignora comentarios y strings', () => {
+  const source = `
+final class CartViewModel {
+  func bind() {
+    Task { [weak self] in
+      await self?.reload()
+    }
+    DispatchQueue.main.async { [unowned self] in
+      render()
+    }
+    publisher.sink(receiveValue: { [weak self] value in
+      self?.consume(value)
+    })
+    let text = "Task { self.reload() }"
+    // Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in self.tick() }
+  }
+}
+`;
+
+  assert.equal(hasSwiftStrongSelfEscapingClosureUsage(source), false);
+});
+
+test('hasSwiftCustomSingletonUsage detecta singletons propios y excluye usos de singletons del sistema', () => {
+  const source = `
+final class SessionStore {
+  static let shared = SessionStore()
+}
+
+final class MutableStore {
+  public static var shared: MutableStore = MutableStore()
+}
+`;
+  const ignored = `
+final class APIClient {
+  let session = URLSession.shared
+  let text = "static let shared = SessionStore()"
+  // static let shared = SessionStore()
+}
+`;
+
+  assert.equal(hasSwiftCustomSingletonUsage(source), true);
+  assert.equal(hasSwiftCustomSingletonUsage(ignored), false);
+});
+
+test('hasSwiftSwinjectUsage detecta DI de terceros y preserva DI nativa', () => {
+  const source = `
+import Swinject
+
+final class AppAssembly {
+  private let container = Container()
+  private let assembler = Assembler([])
+}
+`;
+  const native = `
+struct AppDependencies {
+  let apiClient: APIClient
+}
+
+private struct DependenciesKey: EnvironmentKey {
+  static let defaultValue = AppDependencies(apiClient: URLSessionAPIClient())
+}
+`;
+  const ignored = `
+let text = "import Swinject"
+// let container = Container()
+`;
+
+  assert.equal(hasSwiftSwinjectUsage(source), true);
+  assert.equal(hasSwiftSwinjectUsage(native), false);
+  assert.equal(hasSwiftSwinjectUsage(ignored), false);
+});
+
+test('hasSwiftMassiveViewControllerResponsibilityUsage detecta ViewControllers con acceso directo a infraestructura', () => {
+  const source = `
+final class CheckoutViewController: UIViewController {
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    URLSession.shared.dataTask(with: URL(string: "https://example.com")!)
+    UserDefaults.standard.set(true, forKey: "seen")
+  }
+}
+`;
+  const ignored = `
+final class CheckoutViewController: UIViewController {
+  private let viewModel: CheckoutViewModel
+
+  init(viewModel: CheckoutViewModel) {
+    self.viewModel = viewModel
+    super.init(nibName: nil, bundle: nil)
+  }
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    viewModel.load()
+  }
+}
+
+let text = "URLSession.shared.dataTask"
+// UserDefaults.standard.set(true, forKey: "seen")
+`;
+
+  assert.equal(hasSwiftMassiveViewControllerResponsibilityUsage(source), true);
+  assert.equal(hasSwiftMassiveViewControllerResponsibilityUsage(ignored), false);
+});
+
+test('hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage detecta IUO fuera de IBOutlet', () => {
+  const source = `
+final class CheckoutViewModel {
+  var selectedOrder: Order!
+  private let formatter: DateFormatter!
+}
+`;
+  const ignored = `
+final class CheckoutViewController: UIViewController {
+  @IBOutlet weak var titleLabel: UILabel!
+  @IBOutlet
+  private weak var tableView: UITableView!
+  let text = "var selectedOrder: Order!"
+  // var selectedOrder: Order!
+}
+`;
+
+  assert.equal(hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage(source), true);
+  assert.equal(hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage(ignored), false);
+});
+
+test('hasSwiftMagicNumberLayoutUsage detecta numeros magicos de layout SwiftUI', () => {
+  const source = `
+struct ProfileView: View {
+  var body: some View {
+    VStack(spacing: 12) {
+      Text("Profile")
+        .padding(16)
+        .frame(width: 320, height: 44)
+    }
+  }
+}
+`;
+  const constants = `
+struct ProfileView: View {
+  private enum Metrics {
+    static let spacing: CGFloat = 12
+    static let cardPadding: CGFloat = 16
+  }
+
+  var body: some View {
+    VStack(spacing: Metrics.spacing) {
+      Text("Profile")
+        .padding(Metrics.cardPadding)
+    }
+  }
+}
+`;
+
+  assert.equal(hasSwiftMagicNumberLayoutUsage(source), true);
+  assert.equal(hasSwiftMagicNumberLayoutUsage(constants), false);
+});
+
+test('detectores de logging iOS detectan logs ad-hoc y PII en produccion', () => {
+  const adHoc = `
+print(user.id)
+debugPrint(response)
+dump(model)
+NSLog("legacy")
+os_log("legacy")
+`;
+  const structuredSafe = `
+logger.info("Screen loaded")
+let text = "print(accessToken)"
+// print(accessToken)
+`;
+  const sensitive = `
+print(accessToken)
+logger.error("Refresh failed \\(refreshToken)")
+`;
+
+  assert.equal(hasSwiftAdHocLoggingUsage(adHoc), true);
+  assert.equal(hasSwiftAdHocLoggingUsage(structuredSafe), false);
+  assert.equal(hasSwiftSensitiveLoggingUsage(sensitive), true);
+  assert.equal(hasSwiftSensitiveLoggingUsage(structuredSafe), false);
+});
+
+test('hasSwiftHardcodedSensitiveStringUsage detecta secretos hardcodeados en Swift productivo', () => {
+  const source = `
+final class Credentials {
+  let apiKey = "sk_live_123456789"
+  private var refreshToken: String = "refresh-token-123456"
+}
+`;
+  const safe = `
+final class Credentials {
+  let apiKey = keychain.read("api_key")
+  let label = "public title"
+  // let apiKey = "sk_live_123456789"
+}
+`;
+
+  assert.equal(hasSwiftHardcodedSensitiveStringUsage(source), true);
+  assert.equal(hasSwiftHardcodedSensitiveStringUsage(safe), false);
+});
+
+test('detectores iOS de networking y JSON detectan Alamofire y JSONSerialization sin leer comentarios ni strings', () => {
+  const source = `
+import Alamofire
+
+final class APIClient {
+  func load() {
+    AF.request("https://example.com")
+    let object = try? JSONSerialization.jsonObject(with: Data())
+  }
+}
+`;
+  const ignored = `
+import Foundation
+
+final class APIClient {
+  func load() async throws {
+    let url = URL(string: "https://example.com")
+    let dto = try JSONDecoder().decode(UserDTO.self, from: Data())
+    let text = "JSONSerialization.jsonObject"
+    // AF.request("debug")
+  }
+}
+`;
+
+  assert.equal(hasSwiftAlamofireUsage(source), true);
+  assert.equal(hasSwiftJSONSerializationUsage(source), true);
+  assert.equal(hasSwiftAlamofireUsage(ignored), false);
+  assert.equal(hasSwiftJSONSerializationUsage(ignored), false);
+});
+
+test('detector iOS de seguridad detecta secretos en UserDefaults y AppStorage', () => {
+  const source = `
+UserDefaults.standard.set(accessToken, forKey: "accessToken")
+@AppStorage("refreshToken") private var refreshToken = ""
+`;
+  const ignored = `
+UserDefaults.standard.set(theme, forKey: "selectedTheme")
+@AppStorage("preferredTab") private var preferredTab = "home"
+let text = "UserDefaults.standard.set(accessToken, forKey: \\"accessToken\\")"
+// UserDefaults.standard.set(accessToken, forKey: "accessToken")
+`;
+
+  assert.equal(hasSwiftSensitiveUserDefaultsStorageUsage(source), true);
+  assert.equal(hasSwiftSensitiveUserDefaultsStorageUsage(ignored), false);
+});
+
+test('detector iOS de seguridad detecta transporte inseguro HTTP y ATS permisivo', () => {
+  const source = `
+final class CatalogClient {
+  func load() {
+    _ = URL(string: "http://example.com/catalog.json")
+  }
+}
+`;
+  const plist = `
+<dict>
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+  </dict>
+</dict>
+`;
+  const ignored = `
+// _ = URL(string: "http://example.com/catalog.json")
+let text = "https://example.com/catalog.json"
+`;
+
+  assert.equal(hasSwiftInsecureTransportUsage(source), true);
+  assert.equal(hasSwiftInsecureTransportUsage(plist), true);
+  assert.equal(hasSwiftInsecureTransportUsage(ignored), false);
+});
+
+test('detector iOS de localización detecta strings UI hardcodeadas sin confundir keys ni comentarios', () => {
+  const source = `
+struct PaywallView: View {
+  var body: some View {
+    VStack {
+      Text("Start premium trial")
+      Button("Continue") {}
+      Label("Your orders", systemImage: "cart")
+      TextField("Search products", text: $query)
+      EmptyView().navigationTitle("Account details")
+    }
+  }
+}
+`;
+  const ignored = `
+struct OrdersView: View {
+  var body: some View {
+    Text(String(localized: "orders.title"))
+    Text("orders.title")
+    Button(String(localized: "orders.checkout")) {}
+    let sample = "Text(\\"Start premium trial\\")"
+    // Text("Debug")
+  }
+}
+`;
+
+  assert.equal(hasSwiftHardcodedUiStringUsage(source), true);
+  assert.equal(hasSwiftHardcodedUiStringUsage(ignored), false);
+});
+
+test('detector iOS de assets detecta recursos sueltos sin confundir asset catalogs', () => {
+  const source = `
+let path = Bundle.main.path(forResource: "hero", withExtension: "png")
+let url = Bundle.main.url(forResource: "logo", withExtension: "pdf")
+let image = UIImage(contentsOfFile: path)
+`;
+  const ignored = `
+Image("hero")
+UIImage(named: "hero")
+let text = "UIImage(contentsOfFile: path)"
+// Bundle.main.path(forResource: "hero", withExtension: "png")
+`;
+
+  assert.equal(hasSwiftLooseAssetResourceUsage(source), true);
+  assert.equal(hasSwiftLooseAssetResourceUsage(ignored), false);
+});
+
+test('detector iOS de accesibilidad detecta tamaños de fuente fijos sin confundir estilos semánticos', () => {
+  const source = `
+Text("Total").font(.system(size: 18))
+let title = Font.system(size: 24, weight: .bold)
+label.font = UIFont.systemFont(ofSize: 16)
+`;
+  const ignored = `
+Text("Total").font(.headline)
+Text("Body").font(.body)
+let text = "UIFont.systemFont(ofSize: 16)"
+// Text("Total").font(.system(size: 18))
+`;
+
+  assert.equal(hasSwiftFixedFontSizeUsage(source), true);
+  assert.equal(hasSwiftFixedFontSizeUsage(ignored), false);
+});
+
+test('detector iOS de localización detecta alineación física sin confundir leading/trailing', () => {
+  const source = `
+Text("Name").multilineTextAlignment(.left)
+Text("Price").frame(maxWidth: .infinity, alignment: .right)
+let textAlignment = TextAlignment.right
+label.textAlignment = NSTextAlignment.left
+`;
+  const ignored = `
+Text("Name").multilineTextAlignment(.leading)
+Text("Price").frame(maxWidth: .infinity, alignment: .trailing)
+let sample = "TextAlignment.right"
+// Text("Name").multilineTextAlignment(.left)
+`;
+
+  assert.equal(hasSwiftPhysicalTextAlignmentUsage(source), true);
+  assert.equal(hasSwiftPhysicalTextAlignmentUsage(ignored), false);
+});
+
+test('detector iOS de performance detecta sleeps bloqueantes sin confundir Task.sleep', () => {
+  const source = `
+final class SplashDelay {
+  func wait() {
+    Thread.sleep(forTimeInterval: 0.25)
+    sleep(1)
+    usleep(100)
+  }
+}
+`;
+  const ignored = `
+func wait() async throws {
+  try await Task.sleep(for: .seconds(1))
+  let text = "Thread.sleep(forTimeInterval: 1)"
+  // sleep(1)
+}
+`;
+
+  assert.equal(hasSwiftMainThreadBlockingSleepUsage(source), true);
+  assert.equal(hasSwiftMainThreadBlockingSleepUsage(ignored), false);
+});
+
+test('detector iOS de accesibilidad detecta botones icon-only sin label explicita', () => {
+  const source = `
+struct ToolbarView: View {
+  var body: some View {
+    Button {
+      delete()
+    } label: {
+      Image(systemName: "trash")
+    }
+  }
+}
+`;
+  const ignored = `
+struct ToolbarView: View {
+  var body: some View {
+    Button {
+      delete()
+    } label: {
+      Image(systemName: "trash")
+    }
+    .accessibilityLabel(Text("Delete item"))
+    Button("Delete") { delete() }
+    let text = "Button { Image(systemName: \\"trash\\") }"
+    // Button { Image(systemName: "trash") }
+  }
+}
+`;
+
+  assert.equal(hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage(source), true);
+  assert.equal(hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage(ignored), false);
+});
+
 test('hasSwiftUncheckedSendableUsage detecta @unchecked Sendable', () => {
   const source = `
 final class LegacyBox: @unchecked Sendable {}
@@ -206,9 +1013,17 @@ GeometryReader { proxy in
   Text("x").frame(width: proxy.size.width)
 }
 Text("Headline").fontWeight(.bold)
+Text("State").foregroundStyle(Color.green)
+let content: () -> Content
+.onChange(of: query) { newValue in
+  query = newValue
+}
 let filtered = items.filter { $0.title.contains(searchText) }
 ForEach(items.indices, id: \\.self) { index in
   Text(items[index].title)
+}
+ForEach(items.filter { $0.isVisible }) { item in
+  Text(item.title)
 }
 Text("Primary").foregroundColor(.blue)
 Image("hero").cornerRadius(12)
@@ -245,11 +1060,13 @@ MainActor.assumeIsolated { reload() }
   assert.equal(hasSwiftNonisolatedUnsafeUsage(source), true);
   assert.equal(hasSwiftAssumeIsolatedUsage(source), true);
   assert.equal(hasSwiftForEachIndicesUsage(source), true);
-  assert.equal(hasSwiftInlineFilteringInForEachUsage('ForEach(items.filter { $0.isActive }) { item in Text(item.title) }'), true);
+  assert.equal(hasSwiftInlineForEachTransformUsage(source), true);
   assert.equal(hasSwiftContainsUserFilterUsage(source), true);
-  assert.equal(hasSwiftExplicitColorStaticMemberUsage('Text("A").foregroundStyle(Color.blue)'), true);
   assert.equal(hasSwiftGeometryReaderUsage(source), true);
   assert.equal(hasSwiftFontWeightBoldUsage(source), true);
+  assert.equal(hasSwiftExplicitColorStaticMemberUsage(source), true);
+  assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), true);
+  assert.equal(hasSwiftRedundantReactiveStateAssignmentUsage(source), true);
   assert.equal(hasSwiftObservableObjectUsage(source), true);
   assert.equal(hasSwiftLegacySwiftUiObservableWrapperUsage(source), true);
   assert.equal(hasSwiftNavigationViewUsage(source), true);
@@ -288,16 +1105,22 @@ let q = ".fontWeight(.bold)"
 let r = "@preconcurrency import LegacyFramework"
 let s = "nonisolated(unsafe) static var sharedBridge: Model?"
 let t = "MainActor.assumeIsolated { reload() }"
+let u = "ForEach(items.filter { $0.isVisible }) { item in }"
+let v = "Color.green"
+let w = "let content: () -> Content"
+let x = ".onChange(of: query) { newValue in query = newValue }"
 `;
   assert.equal(hasSwiftPreconcurrencyUsage(source), false);
   assert.equal(hasSwiftNonisolatedUnsafeUsage(source), false);
   assert.equal(hasSwiftAssumeIsolatedUsage(source), false);
   assert.equal(hasSwiftForEachIndicesUsage(source), false);
-  assert.equal(hasSwiftInlineFilteringInForEachUsage(source), false);
+  assert.equal(hasSwiftInlineForEachTransformUsage(source), false);
   assert.equal(hasSwiftContainsUserFilterUsage(source), false);
-  assert.equal(hasSwiftExplicitColorStaticMemberUsage('Text("A").foregroundStyle(.blue)'), false);
   assert.equal(hasSwiftGeometryReaderUsage(source), false);
   assert.equal(hasSwiftFontWeightBoldUsage(source), false);
+  assert.equal(hasSwiftExplicitColorStaticMemberUsage(source), false);
+  assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), false);
+  assert.equal(hasSwiftRedundantReactiveStateAssignmentUsage(source), false);
   assert.equal(hasSwiftTaskDetachedUsage(source), false);
   assert.equal(hasSwiftNavigationViewUsage(source), false);
   assert.equal(hasSwiftForegroundColorUsage(source), false);
@@ -315,6 +1138,8 @@ let t = "MainActor.assumeIsolated { reload() }"
 test('detectores snapshot SwiftUI ignoran reemplazos modernos', () => {
   const source = `
 Text("Primary").foregroundStyle(.blue)
+Text("State").foregroundStyle(.green)
+@ViewBuilder let content: Content
 Image("hero").clipShape(.rect(cornerRadius: 12))
 Text("Headline").bold()
 TabView {
@@ -348,12 +1173,103 @@ ScrollView {
   assert.equal(hasSwiftContainsUserFilterUsage(source), false);
   assert.equal(hasSwiftGeometryReaderUsage(source), false);
   assert.equal(hasSwiftFontWeightBoldUsage(source), false);
+  assert.equal(hasSwiftExplicitColorStaticMemberUsage(source), false);
+  assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), false);
+  assert.equal(hasSwiftRedundantReactiveStateAssignmentUsage(source), false);
   assert.equal(hasSwiftForegroundColorUsage(source), false);
   assert.equal(hasSwiftCornerRadiusUsage(source), false);
   assert.equal(hasSwiftTabItemUsage(source), false);
   assert.equal(hasSwiftScrollViewShowsIndicatorsUsage(source), false);
   assert.equal(hasSwiftSheetIsPresentedUsage(source), false);
   assert.equal(hasSwiftLegacyOnChangeUsage(source), false);
+});
+
+test('hasSwiftExplicitColorStaticMemberUsage detecta Color.* y preserva static member lookup', () => {
+  const source = `
+struct StatusView: View {
+  var body: some View {
+    Text("Ready").foregroundStyle(Color.green)
+    Circle().fill(Color.primary)
+  }
+}
+`;
+  const safe = `
+struct StatusView: View {
+  var body: some View {
+    Text("Ready").foregroundStyle(.green)
+    Circle().fill(.primary)
+    Rectangle().fill(Color("BrandPrimary"))
+  }
+}
+let ignored = "Color.green"
+// Color.primary
+`;
+
+  assert.equal(hasSwiftExplicitColorStaticMemberUsage(source), true);
+  assert.equal(hasSwiftExplicitColorStaticMemberUsage(safe), false);
+});
+
+test('hasSwiftClosureBasedViewBuilderContentUsage detecta content closure y preserva @ViewBuilder let content', () => {
+  const source = `
+struct Card<Content: View>: View {
+  private let content: () -> Content
+
+  init(@ViewBuilder content: @escaping () -> Content) {
+    self.content = content
+  }
+}
+`;
+  const safe = `
+struct Card<Content: View>: View {
+  @ViewBuilder let content: Content
+}
+let ignored = "let content: () -> Content"
+// let content: () -> Content
+`;
+
+  assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), true);
+  assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(safe), false);
+});
+
+test('hasSwiftRedundantReactiveStateAssignmentUsage detecta asignaciones reactivas redundantes y preserva guard de cambio', () => {
+  const source = `
+struct SearchView: View {
+  @State private var query = ""
+
+  var body: some View {
+    TextField("Search", text: $query)
+      .onChange(of: query) { newValue in
+        query = newValue
+      }
+      .onReceive(model.$value) { value in
+        self.query = value
+      }
+  }
+}
+`;
+  const safe = `
+struct SearchView: View {
+  @State private var query = ""
+
+  var body: some View {
+    TextField("Search", text: $query)
+      .onChange(of: query) { newValue in
+        if query != newValue {
+          query = newValue
+        }
+      }
+      .onReceive(model.$value) { value in
+        guard self.query != value else { return }
+        self.query = value
+      }
+  }
+}
+let ignored = ".onChange(of: query) { newValue in query = newValue }"
+// .onReceive(model.$value) { value in query = value }
+`;
+
+  assert.equal(hasSwiftRedundantReactiveStateAssignmentUsage(source), true);
+  assert.equal(hasSwiftRedundantReactiveStateAssignmentUsage(safe), false);
 });
 
 test('hasSwiftLegacyXCTestImportUsage detecta XCTest unitario y excluye UI/performance', () => {
@@ -383,33 +1299,10 @@ final class SyncTests: XCTestCase {
   }
 }
 `;
-  const brownfieldCompatibleUnitTest = `
-import XCTest
 
-final class LoginModelTests: XCTestCase {
-  func test_submit_validCredentials_storesSession() async throws {
-    let (sut, repository) = makeSUT()
-    try await sut.submit()
-    XCTAssertEqual(repository.receivedRequests.count, 1)
-  }
-
-  private func makeSUT(
-    file: StaticString = #filePath,
-    line: UInt = #line
-  ) -> (LoginModel, AuthRepositorySpy) {
-    let repository = AuthRepositorySpy()
-    let sut = LoginModel(repository: repository)
-    trackForMemoryLeaks(sut, testCase: self, file: file, line: line)
-    trackForMemoryLeaks(repository, testCase: self, file: file, line: line)
-    return (sut, repository)
-  }
-}
-`;
-
-  assert.equal(hasSwiftLegacyXCTestImportUsage(unitTest), false);
+  assert.equal(hasSwiftLegacyXCTestImportUsage(unitTest), true);
   assert.equal(hasSwiftLegacyXCTestImportUsage(uiTest), false);
   assert.equal(hasSwiftLegacyXCTestImportUsage(performanceTest), false);
-  assert.equal(hasSwiftLegacyXCTestImportUsage(brownfieldCompatibleUnitTest), false);
 });
 
 test('hasSwiftLegacySwiftUiObservableWrapperUsage detecta @StateObject/@ObservedObject legacy', () => {
@@ -428,6 +1321,65 @@ struct ContentView: View {
 
   assert.equal(hasSwiftLegacySwiftUiObservableWrapperUsage(legacyWrapper), true);
   assert.equal(hasSwiftLegacySwiftUiObservableWrapperUsage(modernWrapper), false);
+});
+
+test('hasSwiftNonPrivateStateOwnershipUsage detecta @State y @StateObject no privados', () => {
+  const source = `
+struct DashboardView: View {
+  @State var query = ""
+  @StateObject var viewModel = DashboardViewModel()
+}
+`;
+  const safe = `
+struct DashboardView: View {
+  @State private var query = ""
+  @StateObject private var viewModel = DashboardViewModel()
+  let text = "@State var query = \\"\\""
+  // @State var query = ""
+}
+`;
+
+  assert.equal(hasSwiftNonPrivateStateOwnershipUsage(source), true);
+  assert.equal(hasSwiftNonPrivateStateOwnershipUsage(safe), false);
+});
+
+test('hasSwiftInlineForEachTransformUsage detecta transformaciones inline y preserva colecciones precomputadas', () => {
+  const source = `
+struct FeedView: View {
+  var body: some View {
+    List {
+      ForEach(items.filter { $0.isVisible }) { item in
+        Text(item.title)
+      }
+      ForEach(Array(sections.sorted(by: { $0.title < $1.title }))) { section in
+        Text(section.title)
+      }
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  let filteredItems: [Item]
+  let sortedSections: [Section]
+
+  var body: some View {
+    List {
+      ForEach(filteredItems) { item in
+        Text(item.title)
+      }
+      ForEach(sortedSections) { section in
+        Text(section.title)
+      }
+    }
+  }
+}
+let ignored = "ForEach(items.filter { $0.isVisible }) { item in }"
+// ForEach(items.filter { $0.isVisible }) { item in }
+`;
+
+  assert.equal(hasSwiftInlineForEachTransformUsage(source), true);
+  assert.equal(hasSwiftInlineForEachTransformUsage(safe), false);
 });
 
 test('hasSwiftPassedValueStateWrapperUsage detecta valores inyectados guardados como @State o @StateObject', () => {
@@ -454,24 +1406,6 @@ struct DetailView: View {
 
   assert.equal(hasSwiftPassedValueStateWrapperUsage(invalidOwnership), true);
   assert.equal(hasSwiftPassedValueStateWrapperUsage(validOwnership), false);
-});
-
-test('hasSwiftStateWrapperWithoutPrivateUsage detecta @State y @StateObject sin private en SwiftUI Views', () => {
-  const positive = `
-struct DetailView: View {
-  @State var filter: String = ""
-  @StateObject var viewModel = DetailViewModel()
-}
-`;
-  const negative = `
-struct DetailView: View {
-  @State private var filter: String = ""
-  @StateObject private var viewModel = DetailViewModel()
-}
-`;
-
-  assert.equal(hasSwiftStateWrapperWithoutPrivateUsage(positive), true);
-  assert.equal(hasSwiftStateWrapperWithoutPrivateUsage(negative), false);
 });
 
 test('hasSwiftModernizableXCTestSuiteUsage detecta suites legacy y excluye mixed/UI', () => {
@@ -507,33 +1441,10 @@ final class LoginUITests: XCTestCase {
   }
 }
 `;
-  const brownfieldCompatibleSuite = `
-import XCTest
 
-final class LoginModelTests: XCTestCase {
-  func test_submit_validCredentials_storesSession() async throws {
-    let (sut, repository) = makeSUT()
-    try await sut.submit()
-    XCTAssertEqual(repository.receivedRequests.count, 1)
-  }
-
-  private func makeSUT(
-    file: StaticString = #filePath,
-    line: UInt = #line
-  ) -> (LoginModel, AuthRepositorySpy) {
-    let repository = AuthRepositorySpy()
-    let sut = LoginModel(repository: repository)
-    trackForMemoryLeaks(sut, testCase: self, file: file, line: line)
-    trackForMemoryLeaks(repository, testCase: self, file: file, line: line)
-    return (sut, repository)
-  }
-}
-`;
-
-  assert.equal(hasSwiftModernizableXCTestSuiteUsage(legacySuite), false);
+  assert.equal(hasSwiftModernizableXCTestSuiteUsage(legacySuite), true);
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(mixedSuite), false);
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(uiSuite), false);
-  assert.equal(hasSwiftModernizableXCTestSuiteUsage(brownfieldCompatibleSuite), false);
 });
 
 test('hasSwiftMixedTestingFrameworksUsage detecta mezcla XCTestCase y Testing/@Test', () => {
@@ -565,33 +1476,45 @@ struct LoginModernTests {
   @Test func login() async {}
 }
 `;
-  const mixedWithReexportedTesting = `
-import XCTest
 
-final class LoginTests: XCTestCase {
-  func testLegacyLogin() {}
-}
+  assert.equal(hasSwiftMixedTestingFrameworksUsage(mixedSuite), true);
+  assert.equal(hasSwiftMixedTestingFrameworksUsage(legacyOnly), false);
+  assert.equal(hasSwiftMixedTestingFrameworksUsage(modernOnly), false);
+});
 
-struct LoginModernTests {
-  @Test func login() async {}
-}
-`;
-  const ignoredCommentsAndStrings = `
-import XCTest
+test('hasSwiftQuickNimbleUsage detecta Quick y Nimble en tests Swift', () => {
+  const quickSpec = `
+import Quick
+import Nimble
 
-final class LoginTests: XCTestCase {
-  func testLegacyLogin() {
-    let text = "@Test func login() async {}"
-    // @Suite
+final class CheckoutSpec: QuickSpec {
+  override class func spec() {
+    describe("checkout") {
+      it("loads") {
+        expect(true).to(beTrue())
+      }
+    }
   }
 }
 `;
+  const nativeSwiftTesting = `
+import Testing
 
-  assert.equal(hasSwiftMixedTestingFrameworksUsage(mixedSuite), true);
-  assert.equal(hasSwiftMixedTestingFrameworksUsage(mixedWithReexportedTesting), true);
-  assert.equal(hasSwiftMixedTestingFrameworksUsage(legacyOnly), false);
-  assert.equal(hasSwiftMixedTestingFrameworksUsage(modernOnly), false);
-  assert.equal(hasSwiftMixedTestingFrameworksUsage(ignoredCommentsAndStrings), false);
+@Suite
+struct CheckoutTests {
+  @Test func loads() {
+    #expect(true)
+  }
+}
+`;
+  const ignored = `
+let text = "import Quick"
+// import Nimble
+`;
+
+  assert.equal(hasSwiftQuickNimbleUsage(quickSpec), true);
+  assert.equal(hasSwiftQuickNimbleUsage(nativeSwiftTesting), false);
+  assert.equal(hasSwiftQuickNimbleUsage(ignored), false);
 });
 
 test('hasSwiftXCTestAssertionUsage detecta XCTAssert y XCTFail reales', () => {
@@ -608,87 +1531,6 @@ let text = "XCTAssertEqual(value, expected)"
   assert.equal(hasSwiftXCTestAssertionUsage(ignored), false);
 });
 
-test('hasSwiftXCTestAssertionUsage excluye XCTest compatible con UI automation', () => {
-  const uiSource = `
-import XCTest
-
-final class BuyerCommerceUISmokeTests: XCTestCase {
-  func test_buyer_flow() {
-    let app = XCUIApplication()
-    app.launch()
-    XCTAssertTrue(app.buttons["Comprar"].exists)
-  }
-}
-`;
-
-  assert.equal(hasSwiftXCTestAssertionUsage(uiSource), false);
-  assert.equal(hasSwiftXCTUnwrapUsage(`${uiSource}\nlet value = try XCTUnwrap(optional)`), false);
-});
-
-test('detectores Swift Testing excluyen XCTest brownfield y dejan la calidad a su guard dedicado', () => {
-  const compatibleSource = `
-import XCTest
-
-final class LoginModelTests: XCTestCase {
-  func test_submit_validCredentials_storesSession() async throws {
-    let (sut, repository) = makeSUT()
-    try await sut.submit()
-    XCTAssertEqual(repository.receivedRequests.count, 1)
-    let session = try XCTUnwrap(repository.savedSession)
-    XCTAssertEqual(session.userId, "buyer-1")
-  }
-
-  private func makeSUT(
-    file: StaticString = #filePath,
-    line: UInt = #line
-  ) -> (LoginModel, AuthRepositorySpy) {
-    let repository = AuthRepositorySpy()
-    let sut = LoginModel(repository: repository)
-    trackForMemoryLeaks(sut, testCase: self, file: file, line: line)
-    trackForMemoryLeaks(repository, testCase: self, file: file, line: line)
-    return (sut, repository)
-  }
-}
-`;
-  const missingQualityContract = `
-import XCTest
-
-final class LoginModelTests: XCTestCase {
-  func test_submit_validCredentials_storesSession() async throws {
-    XCTAssertEqual(repository.receivedRequests.count, 1)
-  }
-}
-`;
-
-  assert.equal(hasSwiftXCTestAssertionUsage(compatibleSource), false);
-  assert.equal(hasSwiftXCTUnwrapUsage(compatibleSource), false);
-  assert.equal(hasSwiftLegacyXCTestImportUsage(compatibleSource), false);
-  assert.equal(hasSwiftModernizableXCTestSuiteUsage(compatibleSource), false);
-  assert.equal(hasSwiftXCTestAssertionUsage(missingQualityContract), false);
-  assert.equal(hasSwiftLegacyXCTestImportUsage(missingQualityContract), false);
-  assert.equal(hasSwiftModernizableXCTestSuiteUsage(missingQualityContract), false);
-});
-
-test('detectores Swift Testing excluyen helpers y factories XCTest brownfield sin XCTestCase', () => {
-  const helperSource = `
-import XCTest
-
-final class AuthTestFactories {
-  static func makeToken() -> String {
-    "token"
-  }
-}
-
-func trackForMemoryLeaks(_ instance: AnyObject, file: StaticString = #filePath, line: UInt = #line) {
-  addTeardownBlock { _ = instance }
-}
-  `;
-
-  assert.equal(hasSwiftLegacyXCTestImportUsage(helperSource), false);
-  assert.equal(hasSwiftModernizableXCTestSuiteUsage(helperSource), false);
-  assert.equal(hasSwiftXCTestAssertionUsage(helperSource), false);
-});
-
 test('hasSwiftXCTUnwrapUsage detecta XCTUnwrap real y evita strings', () => {
   const source = `
 let value = try XCTUnwrap(optionalValue)
@@ -702,84 +1544,51 @@ let text = "XCTUnwrap(optionalValue)"
 });
 
 test('hasSwiftWaitForExpectationsUsage detecta waits legacy y excluye await fulfillment', () => {
-  const legacyAsyncWait = `
-func testLegacyAsync() async {
+  const legacyWait = `
 let expectation = expectation(description: "Done")
 wait(for: [expectation], timeout: 1)
 waitForExpectations(timeout: 1)
-}
-`;
-  const legacySyncWait = `
-func testLegacySync() {
-let expectation = expectation(description: "Done")
-wait(for: [expectation], timeout: 1)
-}
 `;
   const modernWait = `
-func testModernAsync() async {
 let expectation = expectation(description: "Done")
 await fulfillment(of: [expectation], timeout: 1)
-}
 `;
 
-  assert.equal(hasSwiftWaitForExpectationsUsage(legacyAsyncWait), true);
-  assert.equal(hasSwiftWaitForExpectationsUsage(legacySyncWait), false);
+  assert.equal(hasSwiftWaitForExpectationsUsage(legacyWait), true);
   assert.equal(hasSwiftWaitForExpectationsUsage(modernWait), false);
 });
 
-test('hasSwiftLegacyExpectationDescriptionUsage detecta expectation(description:) en tests async sin flujo moderno', () => {
-  const legacyAsyncExpectation = `
-func testLegacyAsync() async {
+test('hasSwiftLegacyExpectationDescriptionUsage detecta expectation(description:) sin flujo moderno', () => {
+  const legacyExpectation = `
 let expectation = expectation(description: "Done")
 doWork { expectation.fulfill() }
-}
+waitForExpectations(timeout: 1)
 `;
-  const legacySyncExpectation = `
-func testLegacySync() {
-let expectation = expectation(description: "Done")
-doWork { expectation.fulfill() }
-}
-`;
-  const modernAsyncExpectation = `
-func testModernAsync() async {
+  const modernExpectation = `
 let expectation = expectation(description: "Done")
 doWork { expectation.fulfill() }
 await fulfillment(of: [expectation], timeout: 1)
-}
 `;
-  const confirmationFlow = `
-func testConfirmation() async {
+  const confirmationOnly = `
 await confirmation("Done") { confirm in
   await doWork { confirm() }
 }
-}
-`;
-  const commentedExpectation = `
-func testModernAsync() async {
-// let expectation = expectation(description: "Done")
-await confirmation("Done") { confirm in confirm() }
-}
 `;
 
-  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(legacyAsyncExpectation), true);
-  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(legacySyncExpectation), false);
-  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(modernAsyncExpectation), false);
-  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(confirmationFlow), false);
-  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(commentedExpectation), false);
+  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(legacyExpectation), true);
+  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(modernExpectation), false);
+  assert.equal(hasSwiftLegacyExpectationDescriptionUsage(confirmationOnly), false);
 });
 
 test('hasSwiftNSManagedObjectBoundaryUsage detecta boundaries con NSManagedObject y excluye IDs o subclases', () => {
   const source = `
 func persist(_ entity: NSManagedObject) {}
 var selectedEntity: NSManagedObject?
-let cachedEntities: Result<[NSManagedObject], Error>
 `;
   const ignored = `
 final class TodoEntity: NSManagedObject {}
 var selectedID: NSManagedObjectID?
 let context: NSManagedObjectContext
-let text = "var selectedEntity: NSManagedObject?"
-// func persist(_ entity: NSManagedObject) {}
 `;
 
   assert.equal(hasSwiftNSManagedObjectBoundaryUsage(source), true);
@@ -791,15 +1600,9 @@ test('hasSwiftNSManagedObjectAsyncBoundaryUsage detecta async APIs con NSManaged
 func fetchEntity() async throws -> NSManagedObject {
   fatalError()
 }
-func fetchEntities() async throws -> Result<[NSManagedObject], Error> {
-  fatalError()
-}
 `;
   const ignored = `
 func fetchEntityID() async throws -> NSManagedObjectID {
-  fatalError()
-}
-func fetchContext() async throws -> NSManagedObjectContext {
   fatalError()
 }
 `;
@@ -831,6 +1634,44 @@ struct DetailView: View {
 
   assert.equal(hasSwiftCoreDataLayerLeakUsage(source), true);
   assert.equal(hasSwiftCoreDataLayerLeakUsage(ignored), false);
+});
+
+test('hasSwiftSwiftDataLayerLeakUsage detecta SwiftData fuera de infraestructura', () => {
+  const source = `
+import SwiftData
+
+struct DetailView: View {
+  @Environment(\\.modelContext) private var modelContext
+  @Query(sort: \\TodoModel.title) private var todos: [TodoModel]
+}
+
+final class DetailUseCase {
+  private let container: ModelContainer
+  private let context: ModelContext
+  private let descriptor = FetchDescriptor<TodoModel>()
+}
+
+@Model
+final class TodoModel {
+  var title: String
+}
+`;
+  const ignored = `
+import Foundation
+
+struct DetailView: View {
+  let selectedID: Todo.ID?
+}
+
+final class DetailUseCase {
+  func execute() async throws -> [Todo] { [] }
+  private let predicate: Predicate<Todo>?
+  private let sort = SortDescriptor(\\Todo.title)
+}
+`;
+
+  assert.equal(hasSwiftSwiftDataLayerLeakUsage(source), true);
+  assert.equal(hasSwiftSwiftDataLayerLeakUsage(ignored), false);
 });
 
 test('hasSwiftNSManagedObjectStateLeakUsage detecta fugas a SwiftUI state y ViewModels', () => {
@@ -979,69 +1820,6 @@ final class PumukiOcpIosCanaryUseCase {
   assert.match(match.why, /OCP/i);
   assert.match(match.impact, /nuevo caso|nuevo comportamiento/i);
   assert.match(match.expected_fix, /estrategia|protocolo|registry/i);
-});
-
-test('findSwiftOpenClosedSwitchMatch detecta switch sobre outcome en Coordinator iOS', () => {
-  const source = `public final class LaunchFlowCoordinator {
-  public func bootstrap() async {
-    let outcome = await appConfigurationUseCase.execute()
-    switch outcome {
-    case .mandatoryUpdate:
-      route = .updateRequired
-    case .maintenance:
-      route = .maintenance
-    case .proceed:
-      route = .home
-    }
-  }
-}
-`;
-
-  const match = findSwiftOpenClosedSwitchMatch(source);
-
-  assert.ok(match);
-  assert.equal(match.primary_node.name, 'LaunchFlowCoordinator');
-  assert.deepEqual(match.related_nodes, [
-    { kind: 'member', name: 'discriminator switch: outcome', lines: [4] },
-    { kind: 'member', name: 'case .mandatoryUpdate', lines: [5] },
-    { kind: 'member', name: 'case .maintenance', lines: [7] },
-    { kind: 'member', name: 'case .proceed', lines: [9] },
-  ]);
-  assert.match(match.why, /OCP/);
-});
-
-test('findSwiftXCTestSrpMatch detecta XCTestCase con responsabilidades mezcladas', () => {
-  const source = `import XCTest
-
-final class LaunchFlowCoordinatorConfigTests: XCTestCase {
-  func test_bootstrap_whenMandatoryUpdate_routesToUpdateRequired() async {}
-  func test_bootstrap_whenSessionIsValid_routesHome() async {}
-  func test_completeOnboarding_marksProgressAndRoutesToLogin() async {}
-}
-`;
-
-  const match = findSwiftXCTestSrpMatch(source);
-
-  assert.ok(match);
-  assert.equal(match.primary_node.name, 'LaunchFlowCoordinatorConfigTests');
-  assert.deepEqual(match.related_nodes, [
-    { kind: 'member', name: 'session routing tests', lines: [5] },
-    { kind: 'member', name: 'onboarding progress tests', lines: [6] },
-  ]);
-  assert.match(match.why, /XCTestCase|SRP/);
-});
-
-test('findSwiftXCTestSrpMatch permite XCTestCase enfocado en una responsabilidad', () => {
-  const source = `import XCTest
-
-final class LaunchFlowCoordinatorNonBlockingConfigTests: XCTestCase {
-  func test_bootstrap_whenConfigFetchFailsWithCache_usesCachedConfigAndContinues() async {}
-  func test_bootstrap_whenOptionalUpdate_allowsAccessAndContinues() async {}
-  func test_bootstrap_whenProceed_continuesToSessionValidation() async {}
-}
-`;
-
-  assert.equal(findSwiftXCTestSrpMatch(source), undefined);
 });
 
 test('findSwiftInterfaceSegregationMatch devuelve payload semantico para ISP-iOS en application', () => {

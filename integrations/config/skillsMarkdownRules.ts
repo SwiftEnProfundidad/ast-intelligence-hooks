@@ -16,7 +16,7 @@ const MARKDOWN_BOLD_PATTERN = /[*_]{1,3}/g;
 const MULTISPACE_PATTERN = /\s+/g;
 const AST_NODE_ID_PATTERN = /\bheuristics\.[a-z0-9._-]+\.ast\b/gi;
 const RULE_KEYWORDS =
-  /\b(always|siempre|prefer|use|usar|avoid|evitar|never|nunca|must|obligatorio|required|disallow|do not|no)\b/i;
+  /\b(always|siempre|prefer|use|usar|avoid|evitar|ensure|never|nunca|must|obligatorio|required|disallow|do not|no|suggest|should)\b/i;
 
 const normalizeForLookup = (value: string): string => {
   return value
@@ -195,6 +195,17 @@ const resolveDefaultStageForKnownRule = (
   return KNOWN_RULE_DEFAULT_STAGE[ruleId];
 };
 
+const KNOWN_RULE_DEFAULT_SEVERITY: Readonly<Record<string, Severity>> = {
+  'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres': 'WARN',
+};
+
+const resolveDefaultSeverityForKnownRule = (
+  ruleId: string,
+  inferredSeverity: Severity
+): Severity => {
+  return KNOWN_RULE_DEFAULT_SEVERITY[ruleId] ?? inferredSeverity;
+};
+
 const isRuleCandidateLine = (line: string): boolean => {
   if (CHECK_RULE_PREFIX.test(line)) {
     return true;
@@ -361,6 +372,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-legacy-swiftui-observable-wrapper';
     }
     if (
+      includes('state and stateobject as private') ||
+      includes('stateobject as private') ||
+      (includes('mark state') && includes('private'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear';
+    }
+    if (
       includes('passed values as state') ||
       includes('passed values as state or stateobject') ||
       includes('passed values as stateobject')
@@ -376,6 +394,13 @@ const normalizeKnownRuleTarget = (
     }
     if (includes('navigationview') || includes('navigation view')) {
       return 'skills.ios.no-navigation-view';
+    }
+    if (
+      includes('navigationdestination for') ||
+      (includes('navigationdestination') && includes('type safe navigation')) ||
+      (includes('navigationlink') && includes('value') && includes('navigationdestination'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-navigationdestination-for-for-type-safe-navigation';
     }
     if (
       includes('foregroundstyle instead of foregroundcolor') ||
@@ -410,6 +435,31 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-foreach-indices';
     }
     if (
+      (includes('foreach') && includes('stable identity')) ||
+      (includes('list patterns') && includes('stable identity'))
+    ) {
+      if (includes('verify list patterns')) {
+        return 'skills.ios.guideline.ios-swiftui-expert.verify-list-patterns-use-stable-identity-see-references-list-patterns-';
+      }
+      return 'skills.ios.guideline.ios-swiftui-expert.ensure-foreach-uses-stable-identity-see-references-list-patterns-md';
+    }
+    if (includes('self.printchanges') || includes('unexpected view updates')) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-self-printchanges-to-debug-unexpected-view-updates';
+    }
+    if (
+      (includes('inline filtering') && includes('foreach')) ||
+      (includes('no inline filtering') && includes('foreach')) ||
+      (includes('prefilter') && includes('cache') && includes('foreach'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.avoid-inline-filtering-in-foreach-prefilter-and-cache';
+    }
+    if (
+      includes('constant number of views per foreach element') ||
+      (includes('foreach') && includes('constant number of views'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.ensure-constant-number-of-views-per-foreach-element';
+    }
+    if (
       includes('localizedstandardcontains') ||
       includes('localized standard contains') ||
       (includes('user input filtering') && includes('contains')) ||
@@ -431,6 +481,55 @@ const normalizeKnownRuleTarget = (
       (includes('bold()') && includes('fontweight'))
     ) {
       return 'skills.ios.no-font-weight-bold';
+    }
+    if (
+      includes('static member lookup') ||
+      includes('color.blue') ||
+      (includes('.blue') && includes('color'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.prefer-static-member-lookup-blue-vs-color-blue';
+    }
+    if (
+      includes('viewbuilder let content') ||
+      (includes('closure-based content') && includes('content')) ||
+      (includes('content: content') && includes('viewbuilder'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.prefer-viewbuilder-let-content-content-over-closure-based-content-prop';
+    }
+    if (
+      includes('redundant state updates') ||
+      (includes('onreceive') && includes('onchange') && includes('state updates')) ||
+      (includes('check for value changes') && includes('assigning state'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.avoid-redundant-state-updates-in-onreceive-onchange-scroll-handlers';
+    }
+    if (
+      (includes('lazyvstack') && includes('lazyhstack') && includes('large lists')) ||
+      (includes('lazyvstack') && includes('foreach') && includes('scrollview')) ||
+      (includes('lazyhstack') && includes('foreach') && includes('scrollview'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-lazyvstack-lazyhstack-for-large-lists';
+    }
+    if (
+      includes('no object creation in body') ||
+      (includes('object creation') && includes('body')) ||
+      (includes('body kept simple') && includes('pure'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.no-object-creation-in-body';
+    }
+    if (
+      includes('image downsampling') ||
+      (includes('uiimage data') && includes('downsampling')) ||
+      (includes('uiimage data') && includes('encountered'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.suggest-image-downsampling-when-uiimage-data-is-encountered';
+    }
+    if (
+      (includes('action handlers') && includes('reference methods')) ||
+      (includes('action handlers') && includes('inline logic')) ||
+      (includes('handlers should reference methods') && includes('inline logic'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.action-handlers-should-reference-methods-not-contain-inline-logic';
     }
     if (
       includes('scrollindicators hidden') ||
@@ -468,6 +567,15 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-uiscreen-main-bounds';
     }
     if (
+      includes('task/.task(id') ||
+      includes('trabajos async con cancelacion automatica') ||
+      includes('trabajos async con cancelacio n automa tica') ||
+      includes('task modifier for automatic cancellation') ||
+      includes('automatic cancellation of async work')
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-task-modifier-for-automatic-cancellation-of-async-work';
+    }
+    if (
       includes('swift testing over xctest') ||
       includes('prefer import testing') ||
       includes('prefer test functions over test methods') ||
@@ -502,11 +610,113 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-legacy-expectation-description';
     }
     if (
+      includes('app transport security') ||
+      includes('ats https') ||
+      includes('https por defecto')
+    ) {
+      return 'skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto';
+    }
+    if (
+      includes('localizable strings') ||
+      includes('string catalogs') ||
+      includes('xcstrings')
+    ) {
+      return 'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs';
+    }
+    if (includes('strings hardcodeadas') || includes('string localized')) {
+      return 'skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui';
+    }
+    if (includes('assets en asset catalogs') || includes('asset catalogs')) {
+      return 'skills.ios.guideline.ios.assets-en-asset-catalogs-con-soporte-para-todos-los-taman-os';
+    }
+    if (includes('dynamic type')) {
+      return 'skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico';
+    }
+    if (includes('rtl support') || includes('right to left')) {
+      return 'skills.ios.guideline.ios.rtl-support-right-to-left-para-a-rabe-hebreo';
+    }
+    if (
+      includes('background threads') ||
+      includes('bloquear main thread') ||
+      includes('no bloquear main thread') ||
+      includes('thread.sleep') ||
+      includes('blocking sleep')
+    ) {
+      return 'skills.ios.guideline.ios.background-threads-no-bloquear-main-thread';
+    }
+    if (
+      includes('accessibility labels') ||
+      includes('accessibilitylabel') ||
+      includes('accessibility label')
+    ) {
+      return 'skills.ios.guideline.ios.accessibility-labels-accessibilitylabel';
+    }
+    if (includes('weak delegates') || includes('delegation pattern')) {
+      return 'skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles';
+    }
+    if (
+      includes('closures delegates') ||
+      includes('weak self') ||
+      includes('capture list') ||
+      includes('avoid retain cycles') ||
+      includes('evitar retain cycles')
+    ) {
+      return 'skills.ios.guideline.ios.evitar-retain-cycles-especialmente-en-closures-delegates';
+    }
+    if (
+      includes('no singleton') ||
+      includes('no singletons') ||
+      includes('static shared') ||
+      includes('static let shared') ||
+      includes('static var shared')
+    ) {
+      return 'skills.ios.guideline.ios.no-singleton-usar-inyeccio-n-de-dependencias-no-compartir-instancias-g';
+    }
+    if (
+      includes('massive view controller') ||
+      includes('massive view controllers') ||
+      includes('viewcontrollers que mezclan') ||
+      includes('viewcontroller que mezclan') ||
+      (includes('mvc') && includes('evitar'))
+    ) {
+      return 'skills.ios.guideline.ios.massive-view-controllers-viewcontrollers-que-mezclan-presentacio-n-nav';
+    }
+    if (
+      includes('implicitly unwrapped') ||
+      includes('implicit unwrapped') ||
+      includes('iboutlet') ||
+      includes('iboutlets')
+    ) {
+      return 'skills.ios.guideline.ios.implicitly-unwrapped-solo-para-iboutlets-y-casos-muy-especi-ficos';
+    }
+    if (
+      includes('magic numbers') ||
+      includes('magic number') ||
+      includes('constantes con nombres') ||
+      includes('named constants')
+    ) {
+      return 'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres';
+    }
+    if (includes('swinject')) {
+      return 'skills.ios.guideline.ios.swinject-prohibido-di-manual-o-environment';
+    }
+    if (
+      includes('obfuscation') ||
+      includes('strings sensibles en codigo') ||
+      includes('strings sensibles en co digo') ||
+      includes('sensitive strings')
+    ) {
+      return 'skills.ios.guideline.ios.obfuscation-strings-sensibles-en-co-digo';
+    }
+    if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
       includes('mixed testing frameworks')
     ) {
       return 'skills.ios.no-mixed-testing-frameworks';
+    }
+    if (includes('quick nimble') || includes('quick/nimble')) {
+      return 'skills.ios.guideline.ios.quick-nimble-prohibido-usar-swift-testing-nativo';
     }
     if (
       includes('nsmanagedobject across boundaries') ||
@@ -522,6 +732,15 @@ const normalizeKnownRuleTarget = (
       includes('avoid returning or accepting nsmanagedobject in async apis')
     ) {
       return 'skills.ios.no-nsmanagedobject-async-boundary';
+    }
+    if (
+      includes('keep swiftdata orchestration') ||
+      includes('swiftdata contexts containers queries or persistence models') ||
+      includes('modelcontext') ||
+      includes('modelcontainer') ||
+      includes('query model')
+    ) {
+      return 'skills.ios.no-swiftdata-layer-leak';
     }
     if (
       includes('core data orchestration inside infrastructure') ||
@@ -1627,7 +1846,9 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
     rules.push({
       id: nextId,
       description,
-      severity: inferRuleSeverity(rawLine),
+      severity: knownRuleId
+        ? resolveDefaultSeverityForKnownRule(knownRuleId, inferRuleSeverity(rawLine))
+        : inferRuleSeverity(rawLine),
       platform,
       sourceSkill: params.sourceSkill,
       sourcePath: params.sourcePath,

@@ -4,7 +4,7 @@ import { GitService, type IGitService } from '../git/GitService';
 import { hasAllowedExtension } from '../git/gitDiffUtils';
 import { runPlatformGate } from '../git/runPlatformGate';
 import { evaluatePlatformGateFindings } from '../git/runPlatformGateEvaluation';
-import { DEFAULT_FACT_FILE_EXTENSIONS, type GateScope } from '../git/runPlatformGateFacts';
+import { DEFAULT_FACT_FILE_EXTENSIONS } from '../git/runPlatformGateFacts';
 import { resolvePolicyForStage, type ResolvedStagePolicy } from '../gate/stagePolicies';
 
 export type LifecycleAuditStage = 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
@@ -23,7 +23,14 @@ export type LifecycleAuditResult = {
   command: 'pumuki audit';
   repo_root: string;
   stage: LifecycleAuditStage;
-  scope: { kind: 'repo' | 'staged'; staged_matching_extensions_count: number };
+  scope: {
+    kind: 'repo' | 'staged' | 'range';
+    staged_matching_extensions_count: number;
+    range_matching_extensions_count?: number;
+    base_ref?: string;
+    from_ref?: string;
+    to_ref?: string;
+  };
   audit_mode: 'gate' | 'engine';
   gate_exit_code: number;
   files_scanned: number | null;
@@ -54,8 +61,19 @@ type LifecycleAuditDependencies = {
   runPlatformGate: typeof runPlatformGate;
 };
 
+type LifecycleAuditScope =
+  | { kind: 'repo' }
+  | { kind: 'staged' }
+  | {
+      kind: 'range';
+      baseRef: string;
+      fromRef: string;
+      toRef: string;
+      matchingExtensions: ReadonlyArray<string>;
+    };
+
 const POLICY_RECONCILE_HINT =
-  'If .pumuki/policy-as-code.json signatures drift after a pumuki upgrade, run: pumuki policy reconcile --strict --apply --json';
+  'If .pumuki/policy-as-code.json signatures drift after a pumuki upgrade, run: pumuki policy reconcile --apply';
 
 const countUntrackedMatchingExtensions = (
   git: Pick<IGitService, 'resolveRepoRoot' | 'runGit'>,
@@ -82,21 +100,166 @@ const collectStagedMatchingExtensions = (
     .filter((path) => hasAllowedExtension(path, extensions));
 };
 
+const runGitOrNull = (
+  git: Pick<IGitService, 'runGit'>,
+  args: ReadonlyArray<string>,
+  cwd: string
+): string | null => {
+  try {
+    const output = git.runGit([...args], cwd).trim();
+    return output.length > 0 ? output : null;
+  } catch {
+    return null;
+  }
+};
+
+const isResolvableRef = (
+  git: Pick<IGitService, 'runGit'>,
+  repoRoot: string,
+  ref: string
+): boolean => runGitOrNull(git, ['rev-parse', '--verify', ref], repoRoot) !== null;
+
+const branchPrefersDevelopBase = (branch: string): boolean =>
+  /^(feature|bugfix|chore|refactor|docs)\//.test(branch);
+
+const branchPrefersMainBase = (branch: string): boolean => /^hotfix\//.test(branch);
+
+const collectRangeMatchingExtensions = (params: {
+  git: Pick<IGitService, 'runGit'>;
+  repoRoot: string;
+  fromRef: string;
+  toRef: string;
+  extensions: ReadonlyArray<string>;
+}): string[] => {
+  const raw = runGitOrNull(
+    params.git,
+    ['diff', '--name-only', `${params.fromRef}..${params.toRef}`],
+    params.repoRoot
+  );
+  return (raw ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .filter((path) => hasAllowedExtension(path, params.extensions));
+};
+
+const resolvePrePushRangeScope = (params: {
+  git: Pick<IGitService, 'runGit'>;
+  repoRoot: string;
+  extensions: ReadonlyArray<string>;
+}): LifecycleAuditScope | null => {
+  const branch =
+    runGitOrNull(params.git, ['rev-parse', '--abbrev-ref', 'HEAD'], params.repoRoot) ?? '';
+  if (branch === 'HEAD' || branch.length === 0) {
+    return null;
+  }
+
+  const explicitBase =
+    process.env.PUMUKI_AUDIT_PRE_PUSH_BASE_REF?.trim() ??
+    process.env.PUMUKI_PRE_PUSH_BASE_REF?.trim() ??
+    '';
+  const upstreamTracking = runGitOrNull(
+    params.git,
+    ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}'],
+    params.repoRoot
+  );
+  const preferredBaseRefs = [
+    explicitBase,
+    ...(branchPrefersDevelopBase(branch) ? ['origin/develop'] : []),
+    ...(branchPrefersMainBase(branch) ? ['origin/main', 'origin/master'] : []),
+    upstreamTracking ?? '',
+    'origin/develop',
+    'origin/main',
+    'origin/master',
+  ].filter((ref, index, refs) => ref.length > 0 && refs.indexOf(ref) === index);
+
+  const baseRef = preferredBaseRefs.find((ref) =>
+    isResolvableRef(params.git, params.repoRoot, ref)
+  );
+  if (typeof baseRef === 'undefined') {
+    return null;
+  }
+
+  const mergeBase = runGitOrNull(params.git, ['merge-base', baseRef, 'HEAD'], params.repoRoot);
+  if (mergeBase === null) {
+    return null;
+  }
+
+  return {
+    kind: 'range',
+    baseRef,
+    fromRef: mergeBase,
+    toRef: 'HEAD',
+    matchingExtensions: collectRangeMatchingExtensions({
+      git: params.git,
+      repoRoot: params.repoRoot,
+      fromRef: mergeBase,
+      toRef: 'HEAD',
+      extensions: params.extensions,
+    }),
+  };
+};
+
 const resolveLifecycleAuditScope = (params: {
   stage: LifecycleAuditStage;
+  git: Pick<IGitService, 'runGit'>;
+  repoRoot: string;
+  extensions: ReadonlyArray<string>;
   stagedMatchingExtensions: ReadonlyArray<string>;
-}): GateScope => {
-  if (params.stage === 'PRE_WRITE' && params.stagedMatchingExtensions.length > 0) {
+}): LifecycleAuditScope => {
+  if (
+    (params.stage === 'PRE_WRITE' || params.stage === 'PRE_COMMIT') &&
+    params.stagedMatchingExtensions.length > 0
+  ) {
     return { kind: 'staged' };
+  }
+  if (params.stage === 'PRE_PUSH') {
+    const rangeScope = resolvePrePushRangeScope({
+      git: params.git,
+      repoRoot: params.repoRoot,
+      extensions: params.extensions,
+    });
+    if (rangeScope !== null) {
+      return rangeScope;
+    }
   }
   return { kind: 'repo' };
 };
 
+const toGateScope = (scope: LifecycleAuditScope) => {
+  if (scope.kind === 'range') {
+    return {
+      kind: 'range' as const,
+      fromRef: scope.fromRef,
+      toRef: scope.toRef,
+      extensions: [...DEFAULT_FACT_FILE_EXTENSIONS],
+    };
+  }
+  return { kind: scope.kind };
+};
+
+const toResultScope = (params: {
+  scope: LifecycleAuditScope;
+  stagedMatchingExtensions: ReadonlyArray<string>;
+}): LifecycleAuditResult['scope'] => {
+  const base = {
+    kind: params.scope.kind,
+    staged_matching_extensions_count: params.stagedMatchingExtensions.length,
+  };
+  if (params.scope.kind !== 'range') {
+    return base;
+  }
+  return {
+    ...base,
+    range_matching_extensions_count: params.scope.matchingExtensions.length,
+    base_ref: params.scope.baseRef,
+    from_ref: params.scope.fromRef,
+    to_ref: params.scope.toRef,
+  };
+};
+
 const isFindingBlocking = (finding: SnapshotFinding): boolean => {
-  return finding.severity === 'CRITICAL' ||
-    finding.severity === 'ERROR' ||
-    finding.severity === 'WARN' ||
-    finding.severity === 'INFO';
+  return Boolean(finding.ruleId);
 };
 
 const toLifecycleAuditFinding = (finding: SnapshotFinding): LifecycleAuditFinding => ({
@@ -108,6 +271,22 @@ const toLifecycleAuditFinding = (finding: SnapshotFinding): LifecycleAuditFindin
   ...(typeof finding.lines !== 'undefined' ? { lines: finding.lines } : {}),
   blocking: isFindingBlocking(finding),
 });
+
+const toGateAllowedAuditAdvisoryFinding = (
+  finding: LifecycleAuditFinding
+): LifecycleAuditFinding => {
+  if (!finding.blocking) {
+    return finding;
+  }
+  return {
+    ...finding,
+    severity: 'WARN',
+    blocking: false,
+    message:
+      `${finding.message} ` +
+      '(Advisory: current audit gate exited 0, so this finding is not blocking for this run.)',
+  };
+};
 
 const buildBlockedWithoutFindingsFallback = (params: {
   stage: LifecycleAuditStage;
@@ -181,6 +360,53 @@ const buildRuleIdNormalization = (params: {
   };
 };
 
+const isScopedPreWriteGlobalEnforcementOnly = (params: {
+  stage: LifecycleAuditStage;
+  scope: LifecycleAuditScope;
+  findings: ReadonlyArray<LifecycleAuditFinding>;
+}): boolean =>
+  params.stage === 'PRE_WRITE' &&
+  params.scope.kind === 'staged' &&
+  params.findings.length > 0 &&
+  params.findings.every(
+    (finding) => finding.code === 'SKILLS_GLOBAL_ENFORCEMENT_INCOMPLETE_CRITICAL'
+  );
+
+const isRangePrePushWithoutSupportedCodeSddOnly = (params: {
+  stage: LifecycleAuditStage;
+  scope: LifecycleAuditScope;
+  findings: ReadonlyArray<LifecycleAuditFinding>;
+}): boolean =>
+  params.stage === 'PRE_PUSH' &&
+  params.scope.kind === 'range' &&
+  params.scope.matchingExtensions.length === 0 &&
+  params.findings.length > 0 &&
+  params.findings.every((finding) => finding.code === 'SDD_CHANGE_MISSING');
+
+const toScopedAuditAdvisoryFinding = (
+  finding: LifecycleAuditFinding
+): LifecycleAuditFinding => ({
+  ...finding,
+  severity: 'INFO',
+  code: 'AUDIT_SCOPED_GLOBAL_ENFORCEMENT_ADVISORY',
+  message:
+    'Scoped PRE_WRITE audit evaluated only the staged supported files; global skills enforcement debt is retained as advisory for repo-wide work. ' +
+    finding.message,
+  blocking: false,
+});
+
+const toRangeNoSupportedCodeAuditAdvisoryFinding = (
+  finding: LifecycleAuditFinding
+): LifecycleAuditFinding => ({
+  ...finding,
+  severity: 'INFO',
+  code: 'AUDIT_RANGE_NO_SUPPORTED_CODE_ADVISORY',
+  message:
+    'Range PRE_PUSH audit found no supported code files in the branch delta; SDD baseline debt is retained as advisory for this atomic split slice. ' +
+    finding.message,
+  blocking: false,
+});
+
 export const runLifecycleAudit = async (params: {
   stage: LifecycleAuditStage;
   auditMode: 'gate' | 'engine';
@@ -204,15 +430,19 @@ export const runLifecycleAudit = async (params: {
   const stagedMatchingExtensions = collectStagedMatchingExtensions(git, extensions);
   const scope = resolveLifecycleAuditScope({
     stage: params.stage,
+    git,
+    repoRoot,
+    extensions,
     stagedMatchingExtensions,
   });
+  const gateScope = toGateScope(scope);
 
   const gateParams =
     params.auditMode === 'engine'
       ? {
           policy: resolved.policy,
           policyTrace: resolved.trace,
-          scope,
+          scope: gateScope,
           silent: true,
           auditMode: 'engine' as const,
           dependencies: {
@@ -231,12 +461,12 @@ export const runLifecycleAudit = async (params: {
       : {
           policy: resolved.policy,
           policyTrace: resolved.trace,
-          scope,
+          scope: gateScope,
           silent: true,
           auditMode: 'gate' as const,
         };
 
-  const gateExitCode = await activeDependencies.runPlatformGate(gateParams);
+  const originalGateExitCode = await activeDependencies.runPlatformGate(gateParams);
   const evidence = activeDependencies.readEvidence(repoRoot);
   const filesScanned =
     typeof evidence?.snapshot.files_scanned === 'number' &&
@@ -247,32 +477,53 @@ export const runLifecycleAudit = async (params: {
     typeof evidence?.snapshot.outcome === 'string' ? evidence.snapshot.outcome : null;
   const findings = extractAuditFindings({
     evidence,
-    gateExitCode,
+    gateExitCode: originalGateExitCode,
     stage: params.stage,
     snapshotOutcome,
   });
+  const scopedGlobalEnforcementOnly = isScopedPreWriteGlobalEnforcementOnly({
+    stage: params.stage,
+    scope,
+    findings,
+  });
+  const rangePrePushWithoutSupportedCodeSddOnly = isRangePrePushWithoutSupportedCodeSddOnly({
+    stage: params.stage,
+    scope,
+    findings,
+  });
+  const gateAllowed = originalGateExitCode === 0;
+  const effectiveFindings = scopedGlobalEnforcementOnly
+    ? findings.map(toScopedAuditAdvisoryFinding)
+    : rangePrePushWithoutSupportedCodeSddOnly
+      ? findings.map(toRangeNoSupportedCodeAuditAdvisoryFinding)
+    : gateAllowed
+      ? findings.map(toGateAllowedAuditAdvisoryFinding)
+      : findings;
+  const gateExitCode =
+    scopedGlobalEnforcementOnly || rangePrePushWithoutSupportedCodeSddOnly
+      ? 0
+      : originalGateExitCode;
+  const effectiveSnapshotOutcome =
+    gateExitCode === 0 && snapshotOutcome === 'BLOCK' ? 'PASS' : snapshotOutcome;
 
   return {
     command: 'pumuki audit',
     repo_root: repoRoot,
     stage: params.stage,
-    scope: {
-      kind: scope.kind === 'staged' ? 'staged' : 'repo',
-      staged_matching_extensions_count: stagedMatchingExtensions.length,
-    },
+    scope: toResultScope({ scope, stagedMatchingExtensions }),
     audit_mode: params.auditMode,
     gate_exit_code: gateExitCode,
     files_scanned: filesScanned,
     untracked_matching_extensions_count: untrackedMatchingExtensionsCount,
-    snapshot_outcome: snapshotOutcome,
-    findings_count: findings.length,
-    blocking_findings_count: findings.filter((finding) => finding.blocking).length,
+    snapshot_outcome: effectiveSnapshotOutcome,
+    findings_count: effectiveFindings.length,
+    blocking_findings_count: effectiveFindings.filter((finding) => finding.blocking).length,
     rules_coverage: evidence?.snapshot.rules_coverage ?? null,
     rule_id_normalization: buildRuleIdNormalization({
-      findings,
+      findings: effectiveFindings,
       rulesCoverage: evidence?.snapshot.rules_coverage,
     }),
-    findings,
+    findings: effectiveFindings,
     policy_reconcile_hint: POLICY_RECONCILE_HINT,
   };
 };

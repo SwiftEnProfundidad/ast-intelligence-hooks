@@ -93,21 +93,15 @@ type EnterpriseStageThresholds = {
   warnOnOrAbove: EnterpriseSeverity;
 };
 
-const enforceAllSeverityBlockingPolicy = (policy: GatePolicy): GatePolicy => ({
-  ...policy,
-  blockOnOrAbove: 'INFO',
-  warnOnOrAbove: 'INFO',
-});
-
 const toGatePolicyFromEnterpriseThresholds = (
   stage: SkillsStage,
   thresholds: EnterpriseStageThresholds
 ): GatePolicy => {
-  return enforceAllSeverityBlockingPolicy({
+  return {
     stage,
     blockOnOrAbove: mapEnterpriseSeverityToGateSeverity(thresholds.blockOnOrAbove),
     warnOnOrAbove: mapEnterpriseSeverityToGateSeverity(thresholds.warnOnOrAbove),
-  });
+  };
 };
 
 const toGatePolicyRecordFromEnterpriseThresholds = (
@@ -130,44 +124,53 @@ const toGatePolicyRecordFromEnterpriseThresholds = (
   };
 };
 
+const ZERO_VIOLATION_BLOCK_ON_OR_ABOVE: GatePolicy['blockOnOrAbove'] = 'INFO';
+const ZERO_VIOLATION_WARN_ON_OR_ABOVE: GatePolicy['warnOnOrAbove'] = 'INFO';
+
+const enforceZeroViolationPolicy = (policy: GatePolicy): GatePolicy => ({
+  ...policy,
+  blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+  warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
+});
+
 const defaultPolicyByStage: Record<SkillsStage, GatePolicy> = {
   PRE_WRITE: {
     stage: 'PRE_WRITE',
-    blockOnOrAbove: 'INFO',
-    warnOnOrAbove: 'INFO',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
   PRE_COMMIT: {
     stage: 'PRE_COMMIT',
-    blockOnOrAbove: 'INFO',
-    warnOnOrAbove: 'INFO',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
   PRE_PUSH: {
     stage: 'PRE_PUSH',
-    blockOnOrAbove: 'INFO',
-    warnOnOrAbove: 'INFO',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
   CI: {
     stage: 'CI',
-    blockOnOrAbove: 'INFO',
-    warnOnOrAbove: 'INFO',
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
   },
 };
 
 const hardModeEnterpriseThresholdsByStage: Record<SkillsStage, EnterpriseStageThresholds> = {
   PRE_WRITE: {
-    blockOnOrAbove: 'LOW',
+    blockOnOrAbove: 'MEDIUM',
     warnOnOrAbove: 'LOW',
   },
   PRE_COMMIT: {
-    blockOnOrAbove: 'LOW',
+    blockOnOrAbove: 'MEDIUM',
     warnOnOrAbove: 'LOW',
   },
   PRE_PUSH: {
-    blockOnOrAbove: 'LOW',
+    blockOnOrAbove: 'MEDIUM',
     warnOnOrAbove: 'LOW',
   },
   CI: {
-    blockOnOrAbove: 'LOW',
+    blockOnOrAbove: 'MEDIUM',
     warnOnOrAbove: 'LOW',
   },
 };
@@ -630,7 +633,7 @@ export const resolvePolicyForStage = (
     const profilePolicy = profileName
       ? hardModePolicyProfileByStage[profileName][stage]
       : null;
-    const hardModePolicy = enforceAllSeverityBlockingPolicy(profilePolicy ?? hardModePolicyByStage[stage]);
+    const hardModePolicy = enforceZeroViolationPolicy(profilePolicy ?? hardModePolicyByStage[stage]);
     const bundle = profileName
       ? `gate-policy.hard-mode.${profileName}.${stage}`
       : `gate-policy.hard-mode.${stage}`;
@@ -663,7 +666,7 @@ export const resolvePolicyForStage = (
     };
   }
 
-  const defaults = enforceAllSeverityBlockingPolicy(defaultPolicyByStage[stage]);
+  const defaults = defaultPolicyByStage[stage];
   const loadedPolicy = loadSkillsPolicy(repoRoot);
   const stageOverride = loadedPolicy?.stages[stage];
 
@@ -697,11 +700,11 @@ export const resolvePolicyForStage = (
     };
   }
 
-  const resolvedPolicy: GatePolicy = enforceAllSeverityBlockingPolicy({
+  const resolvedPolicy: GatePolicy = {
     stage: defaults.stage,
-    blockOnOrAbove: stageOverride.blockOnOrAbove,
-    warnOnOrAbove: stageOverride.warnOnOrAbove,
-  });
+    blockOnOrAbove: ZERO_VIOLATION_BLOCK_ON_OR_ABOVE,
+    warnOnOrAbove: ZERO_VIOLATION_WARN_ON_OR_ABOVE,
+  };
 
   const bundle = `gate-policy.skills.policy.${stage}`;
   const hash = createPolicyTraceHash({

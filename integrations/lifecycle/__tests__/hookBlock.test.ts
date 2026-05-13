@@ -14,12 +14,13 @@ test('buildPumukiManagedHookBlock genera comando correcto por hook', () => {
   assert.match(preCommit, /PUMUKI_SKIP_CHAINED_PRE_WRITE/);
   assert.match(preCommit, /\.\/node_modules\/\.bin\/pumuki-pre-write/);
   assert.match(preCommit, /npx --yes --package pumuki@latest pumuki-pre-write/);
+  assert.match(preCommit, /PUMUKI_CHAINED_PRE_WRITE_DONE=1 \.\/node_modules\/\.bin\/pumuki-pre-commit/);
   assert.match(preCommit, /\.\/node_modules\/\.bin\/pumuki-pre-commit/);
   assert.match(preCommit, /npx --yes --package pumuki@latest pumuki-pre-commit/);
   assert.match(prePush, /\.\/node_modules\/\.bin\/pumuki-pre-write/);
   assert.match(prePush, /PUMUKI_PRE_PUSH_STDIN="\$\(cat\)"/);
-  assert.match(prePush, /PUMUKI_PRE_PUSH_STDIN="\$PUMUKI_PRE_PUSH_STDIN" \.\/node_modules\/\.bin\/pumuki-pre-push "\$@"/);
-  assert.match(prePush, /PUMUKI_PRE_PUSH_STDIN="\$PUMUKI_PRE_PUSH_STDIN" npx --yes --package pumuki@latest pumuki-pre-push "\$@"/);
+  assert.match(prePush, /PUMUKI_CHAINED_PRE_WRITE_DONE=1 PUMUKI_PRE_PUSH_STDIN="\$PUMUKI_PRE_PUSH_STDIN" \.\/node_modules\/\.bin\/pumuki-pre-push "\$@"/);
+  assert.match(prePush, /PUMUKI_CHAINED_PRE_WRITE_DONE=1 PUMUKI_PRE_PUSH_STDIN="\$PUMUKI_PRE_PUSH_STDIN" npx --yes --package pumuki@latest pumuki-pre-push "\$@"/);
   assert.match(preCommit, /PUMUKI MANAGED START/);
   assert.match(preCommit, /PUMUKI MANAGED END/);
 });

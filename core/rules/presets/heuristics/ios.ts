@@ -182,6 +182,447 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.onappear-task.ast',
+    description: 'Detects Task launches from SwiftUI onAppear where .task can provide lifecycle cancellation.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.onappear-task.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Task launched from SwiftUI onAppear; .task/.task(id:) provides lifecycle-aware cancellation.',
+      code: 'HEURISTICS_IOS_SWIFTUI_ONAPPEAR_TASK_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.memory.strong-delegate.ast',
+    description: 'Detects strong delegate/dataSource references in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.memory.strong-delegate.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a strong delegate/dataSource reference; weak delegates remain the preferred baseline to avoid retain cycles.',
+      code: 'HEURISTICS_IOS_MEMORY_STRONG_DELEGATE_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.memory.strong-self-escaping-closure.ast',
+    description: 'Detects strong self captures in escaping iOS closures.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.memory.strong-self-escaping-closure.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected strong self capture in an escaping iOS closure; weak or unowned captures remain the preferred baseline when ownership is not explicit.',
+      code: 'HEURISTICS_IOS_MEMORY_STRONG_SELF_ESCAPING_CLOSURE_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.architecture.custom-singleton.ast',
+    description: 'Detects custom static shared singletons in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.architecture.custom-singleton.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a custom static shared singleton in iOS production code; dependency injection remains the preferred baseline for app-owned services.',
+      code: 'HEURISTICS_IOS_ARCHITECTURE_CUSTOM_SINGLETON_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.architecture.swinject.ast',
+    description: 'Detects Swinject usage in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.architecture.swinject.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Swinject usage; manual dependency injection or SwiftUI Environment remain the preferred native baseline.',
+      code: 'HEURISTICS_IOS_ARCHITECTURE_SWINJECT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.architecture.massive-view-controller.ast',
+    description: 'Detects UIViewController classes with direct infrastructure/data access.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.architecture.massive-view-controller.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a UIViewController with direct infrastructure/data access; move data access behind application/domain boundaries.',
+      code: 'HEURISTICS_IOS_ARCHITECTURE_MASSIVE_VIEW_CONTROLLER_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.maintainability.magic-number-layout.ast',
+    description: 'Detects SwiftUI layout magic numbers in presentation code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.maintainability.magic-number-layout.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected SwiftUI layout magic numbers; named constants or design tokens remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_MAINTAINABILITY_MAGIC_NUMBER_LAYOUT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.safety.non-iboutlet-iuo.ast',
+    description: 'Detects implicitly unwrapped optionals outside IBOutlet wiring.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.safety.non-iboutlet-iuo.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected an implicitly unwrapped optional outside IBOutlet wiring; explicit optionals or initialization guarantees remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_SAFETY_NON_IBOUTLET_IUO_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.logging.adhoc-print.ast',
+    description: 'Detects print/debugPrint/dump/NSLog/os_log usage in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.logging.adhoc-print.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected print/debugPrint/dump/NSLog/os_log usage in iOS production code.',
+      code: 'HEURISTICS_IOS_LOGGING_ADHOC_PRINT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.logging.sensitive-data.ast',
+    description: 'Detects sensitive data in iOS logging calls.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.logging.sensitive-data.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected sensitive data in an iOS logging call.',
+      code: 'HEURISTICS_IOS_LOGGING_SENSITIVE_DATA_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.security.hardcoded-sensitive-string.ast',
+    description: 'Detects hardcoded sensitive Swift string values in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.security.hardcoded-sensitive-string.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected hardcoded sensitive Swift string; Keychain, secure config or environment-specific secrets remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_SECURITY_HARDCODED_SENSITIVE_STRING_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.networking.alamofire.ast',
+    description: 'Detects Alamofire usage in iOS production code; URLSession is the preferred baseline for new code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.networking.alamofire.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Alamofire usage in iOS production code; URLSession remains the preferred baseline for new code.',
+      code: 'HEURISTICS_IOS_NETWORKING_ALAMOFIRE_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.json.jsonserialization.ast',
+    description: 'Detects JSONSerialization usage in iOS production code; Codable is the preferred baseline for new code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.json.jsonserialization.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected JSONSerialization usage in iOS production code; Codable remains the preferred baseline for new code.',
+      code: 'HEURISTICS_IOS_JSON_JSONSERIALIZATION_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.dependencies.cocoapods.ast',
+    description: 'Detects CocoaPods dependency files in iOS projects; Swift Package Manager is the preferred baseline for new code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.dependencies.cocoapods.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected CocoaPods dependency files in an iOS project; Swift Package Manager remains the preferred baseline for new code.',
+      code: 'HEURISTICS_IOS_DEPENDENCIES_COCOAPODS_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.dependencies.carthage.ast',
+    description: 'Detects Carthage dependency files in iOS projects; Swift Package Manager is the preferred baseline for new code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.dependencies.carthage.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Carthage dependency files in an iOS project; Swift Package Manager remains the preferred baseline for new code.',
+      code: 'HEURISTICS_IOS_DEPENDENCIES_CARTHAGE_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.security.userdefaults-sensitive-data.ast',
+    description: 'Detects sensitive data stored in UserDefaults/AppStorage; Keychain is the preferred baseline for secrets.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.security.userdefaults-sensitive-data.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected sensitive data stored in UserDefaults/AppStorage; native Keychain remains the preferred baseline for secrets.',
+      code: 'HEURISTICS_IOS_SECURITY_USERDEFAULTS_SENSITIVE_DATA_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.security.insecure-transport.ast',
+    description: 'Detects insecure HTTP transport or permissive ATS configuration in iOS projects.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.security.insecure-transport.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected insecure iOS transport configuration; HTTPS and ATS remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_SECURITY_INSECURE_TRANSPORT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.localization.localizable-strings.ast',
+    description: 'Detects legacy Localizable.strings files where String Catalogs are the preferred iOS baseline.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.localization.localizable-strings.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Localizable.strings usage; String Catalogs (.xcstrings) remain the preferred baseline for new localization work.',
+      code: 'HEURISTICS_IOS_LOCALIZATION_LOCALIZABLE_STRINGS_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.localization.hardcoded-ui-string.ast',
+    description: 'Detects hardcoded user-facing SwiftUI text where String(localized:) and String Catalogs are preferred.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.localization.hardcoded-ui-string.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected hardcoded user-facing SwiftUI text; String(localized:) and String Catalogs remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_LOCALIZATION_HARDCODED_UI_STRING_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.assets.loose-resource.ast',
+    description: 'Detects loose image resource loading where Asset Catalogs are the preferred iOS baseline.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.assets.loose-resource.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected loose image resource loading in iOS production code; Asset Catalogs remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_ASSETS_LOOSE_RESOURCE_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.accessibility.fixed-font-size.ast',
+    description: 'Detects fixed font sizes where Dynamic Type semantic styles are the preferred iOS baseline.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.accessibility.fixed-font-size.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fixed font sizing in iOS production code; Dynamic Type semantic text styles remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_ACCESSIBILITY_FIXED_FONT_SIZE_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.localization.physical-text-alignment.ast',
+    description: 'Detects physical left/right text alignment where leading/trailing are the preferred RTL-safe iOS baseline.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.localization.physical-text-alignment.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected physical left/right text alignment in iOS production code; leading/trailing remain the preferred RTL-safe baseline.',
+      code: 'HEURISTICS_IOS_LOCALIZATION_PHYSICAL_TEXT_ALIGNMENT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.performance.blocking-sleep.ast',
+    description: 'Detects blocking sleep calls where cancellable async scheduling is the preferred iOS baseline.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.performance.blocking-sleep.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected blocking sleep usage in iOS production code; async clocks, suspension or cancellable scheduling remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_PERFORMANCE_BLOCKING_SLEEP_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.accessibility.icon-only-control-label.ast',
+    description: 'Detects icon-only SwiftUI controls without explicit accessibility labels.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.accessibility.icon-only-control-label.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected an icon-only SwiftUI control without accessibilityLabel; explicit accessible labels remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_ACCESSIBILITY_ICON_ONLY_CONTROL_LABEL_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',
@@ -290,6 +731,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.non-private-state-ownership.ast',
+    description: 'Detects @State/@StateObject declarations without private visibility in SwiftUI presentation code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.non-private-state-ownership.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected @State/@StateObject without private visibility; SwiftUI owned state should be private.',
+      code: 'HEURISTICS_IOS_SWIFTUI_NON_PRIVATE_STATE_OWNERSHIP_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.passed-value-state-wrapper.ast',
     description: 'Detects passed values stored as @State or @StateObject through init ownership in SwiftUI production code.',
     severity: 'WARN',
@@ -326,39 +786,78 @@ export const iosRules: RuleSet = [
     },
   },
   {
-    id: 'heuristics.ios.swiftui.inline-filtering-in-foreach.ast',
-    description: 'Detects inline filter chains inside SwiftUI ForEach rendering paths.',
+    id: 'heuristics.ios.swiftui.foreach-self-identity.ast',
+    description: 'Detects SwiftUI ForEach usage with id: \.self instead of stable domain identity.',
     severity: 'WARN',
     platform: 'ios',
     locked: true,
     when: {
       kind: 'Heuristic',
       where: {
-        ruleId: 'heuristics.ios.swiftui.inline-filtering-in-foreach.ast',
+        ruleId: 'heuristics.ios.swiftui.foreach-self-identity.ast',
       },
     },
     then: {
       kind: 'Finding',
-      message: 'AST heuristic detected inline filtering inside ForEach; prefilter and cache before rendering.',
-      code: 'HEURISTICS_IOS_SWIFTUI_INLINE_FILTERING_IN_FOREACH_AST',
+      message:
+        'AST heuristic detected ForEach(..., id: \.self) usage; prefer a stable domain identity such as id: \.id or Identifiable models.',
+      code: 'HEURISTICS_IOS_SWIFTUI_FOREACH_SELF_IDENTITY_AST',
     },
   },
   {
-    id: 'heuristics.ios.swiftui.explicit-color-static-member.ast',
-    description: 'Detects explicit Color.* static member lookup in SwiftUI presentation code.',
+    id: 'heuristics.ios.swiftui.inline-foreach-transform.ast',
+    description: 'Detects inline filter/map/sort transformations inside SwiftUI ForEach calls.',
     severity: 'WARN',
     platform: 'ios',
     locked: true,
     when: {
       kind: 'Heuristic',
       where: {
-        ruleId: 'heuristics.ios.swiftui.explicit-color-static-member.ast',
+        ruleId: 'heuristics.ios.swiftui.inline-foreach-transform.ast',
       },
     },
     then: {
       kind: 'Finding',
-      message: 'AST heuristic detected explicit Color static member lookup where contextual .color style is preferred.',
-      code: 'HEURISTICS_IOS_SWIFTUI_EXPLICIT_COLOR_STATIC_MEMBER_AST',
+      message: 'AST heuristic detected inline filter/map/sort work inside ForEach; prefiltered or cached collections remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_SWIFTUI_INLINE_FOREACH_TRANSFORM_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.swiftui.self-print-changes.ast',
+    description: 'Detects SwiftUI Self._printChanges() debugging helpers in production views.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.self-print-changes.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Self._printChanges() in SwiftUI presentation code; remove debug-only render diagnostics from production views.',
+      code: 'HEURISTICS_IOS_SWIFTUI_SELF_PRINT_CHANGES_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.swiftui.foreach-conditional-view-count.ast',
+    description: 'Detects conditional view counts inside SwiftUI ForEach rows.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.foreach-conditional-view-count.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected conditional view count inside ForEach; keep a constant number of views per element by moving branching into row views or modifiers.',
+      code: 'HEURISTICS_IOS_SWIFTUI_FOREACH_CONDITIONAL_VIEW_COUNT_AST',
     },
   },
   {
@@ -416,6 +915,136 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.explicit-color-static-member.ast',
+    description: 'Detects Color.* static member usage where SwiftUI static member lookup is available.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.explicit-color-static-member.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Color.* static member usage where SwiftUI static member lookup may be preferred.',
+      code: 'HEURISTICS_IOS_SWIFTUI_EXPLICIT_COLOR_STATIC_MEMBER_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.swiftui.closure-based-viewbuilder-content.ast',
+    description: 'Detects closure-based SwiftUI content properties where @ViewBuilder let content: Content is preferred.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.closure-based-viewbuilder-content.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected closure-based content storage; @ViewBuilder let content: Content remains the preferred SwiftUI container baseline.',
+      code: 'HEURISTICS_IOS_SWIFTUI_CLOSURE_BASED_VIEWBUILDER_CONTENT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
+    description: 'Detects onChange/onReceive state assignments without a value-change guard.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected reactive state assignment without a value-change guard; check for value changes before assigning state in hot paths.',
+      code: 'HEURISTICS_IOS_SWIFTUI_REDUNDANT_REACTIVE_STATE_ASSIGNMENT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast',
+    description: 'Detects ScrollView content backed by non-lazy stacks and ForEach.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected ScrollView with a non-lazy stack feeding ForEach; LazyVStack/LazyHStack remain the preferred baseline for large scrollable collections.',
+      code: 'HEURISTICS_IOS_SWIFTUI_NON_LAZY_SCROLL_FOREACH_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.swiftui.body-object-creation.ast',
+    description: 'Detects expensive formatter object creation inside SwiftUI body.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.body-object-creation.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected formatter object creation inside SwiftUI body; keep body simple and move expensive objects out of render paths.',
+      code: 'HEURISTICS_IOS_SWIFTUI_BODY_OBJECT_CREATION_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.swiftui.image-data-decoding.ast',
+    description: 'Detects UIImage(data:) decoding in SwiftUI presentation paths.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.image-data-decoding.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected UIImage(data:) in SwiftUI presentation; downsample image data before rendering large images.',
+      code: 'HEURISTICS_IOS_SWIFTUI_IMAGE_DATA_DECODING_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.swiftui.inline-action-logic.ast',
+    description: 'Detects inline control-flow logic inside SwiftUI action handlers.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.inline-action-logic.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected inline logic inside a SwiftUI action handler; action handlers should reference methods and keep view declarations focused.',
+      code: 'HEURISTICS_IOS_SWIFTUI_INLINE_ACTION_LOGIC_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.navigation-view.ast',
     description: 'Detects NavigationView usage in iOS production code.',
     severity: 'WARN',
@@ -431,6 +1060,25 @@ export const iosRules: RuleSet = [
       kind: 'Finding',
       message: 'AST heuristic detected NavigationView usage.',
       code: 'HEURISTICS_IOS_NAVIGATION_VIEW_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.swiftui.untyped-navigation-link-destination.ast',
+    description: 'Detects untyped SwiftUI NavigationLink destination usage.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.untyped-navigation-link-destination.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected untyped NavigationLink destination usage; prefer NavigationLink(value:) with navigationDestination(for:) for type-safe navigation.',
+      code: 'HEURISTICS_IOS_SWIFTUI_UNTYPED_NAVIGATION_LINK_DESTINATION_AST',
     },
   },
   {
@@ -726,6 +1374,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.testing.quick-nimble.ast',
+    description: 'Detects Quick/Nimble usage in iOS Swift tests.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.testing.quick-nimble.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Quick/Nimble usage where native Swift Testing remains the preferred baseline.',
+      code: 'HEURISTICS_IOS_TESTING_QUICK_NIMBLE_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.core-data.nsmanagedobject-boundary.ast',
     description: 'Detects NSManagedObject usage in shared iOS boundaries.',
     severity: 'WARN',
@@ -777,6 +1444,24 @@ export const iosRules: RuleSet = [
       kind: 'Finding',
       message: 'AST heuristic detected Core Data APIs leaking into application/presentation code.',
       code: 'HEURISTICS_IOS_CORE_DATA_LAYER_LEAK_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.swiftdata.layer-leak.ast',
+    description: 'Detects SwiftData APIs leaking into iOS application or presentation layers.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftdata.layer-leak.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected SwiftData APIs leaking into application/presentation code.',
+      code: 'HEURISTICS_IOS_SWIFTDATA_LAYER_LEAK_AST',
     },
   },
   {

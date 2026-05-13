@@ -32,8 +32,6 @@ export type SwiftPresentationSrpMatch = {
   lines: readonly number[];
 };
 
-export type SwiftXCTestSrpMatch = SwiftPresentationSrpMatch;
-
 export type SwiftConcreteDependencyDipMatch = {
   primary_node: SwiftSemanticNodeMatch;
   related_nodes: readonly SwiftSemanticNodeMatch[];
@@ -98,63 +96,6 @@ const sanitizeSwiftSourceForMultilineRegex = (source: string): string => {
 const hasSwiftSanitizedRegexMatch = (source: string, regex: RegExp): boolean => {
   regex.lastIndex = 0;
   return regex.test(sanitizeSwiftSourceForMultilineRegex(source));
-};
-
-type SwiftFunctionDeclaration = {
-  signature: string;
-  body: string;
-};
-
-const collectSwiftFunctionDeclarations = (source: string): readonly SwiftFunctionDeclaration[] => {
-  const lines = source.split(/\r?\n/);
-  const functions: SwiftFunctionDeclaration[] = [];
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const firstLine = stripSwiftLineForSemanticScan(lines[index] ?? '');
-    if (!/\bfunc\b/.test(firstLine)) {
-      continue;
-    }
-
-    const signatureLines: string[] = [];
-    let cursor = index;
-    let openingLineIndex = -1;
-    for (; cursor < lines.length && cursor < index + 24; cursor += 1) {
-      const line = stripSwiftLineForSemanticScan(lines[cursor] ?? '');
-      signatureLines.push(line);
-      if (line.includes('{')) {
-        openingLineIndex = cursor;
-        break;
-      }
-      if (line.includes('}')) {
-        break;
-      }
-    }
-
-    if (openingLineIndex < 0) {
-      continue;
-    }
-
-    const bodyLines: string[] = [];
-    let braceDepth = 0;
-    for (let bodyCursor = openingLineIndex; bodyCursor < lines.length; bodyCursor += 1) {
-      const line = stripSwiftLineForSemanticScan(lines[bodyCursor] ?? '');
-      braceDepth += countTokenOccurrences(line, '{');
-      braceDepth -= countTokenOccurrences(line, '}');
-      bodyLines.push(line);
-      if (bodyCursor > openingLineIndex && braceDepth <= 0) {
-        cursor = bodyCursor;
-        break;
-      }
-    }
-
-    functions.push({
-      signature: signatureLines.join('\n'),
-      body: bodyLines.join('\n'),
-    });
-    index = cursor;
-  }
-
-  return functions;
 };
 
 const hasSwiftUiModernizationSnapshotMatch = (source: string, entryId: string): boolean => {
@@ -439,6 +380,45 @@ export const hasSwiftAnyViewUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftNonLazyScrollForEachUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const nonLazyScrollableCollectionPattern =
+    /\bScrollView\s*(?:\([^)]*\))?\s*\{[\s\S]{0,2000}\b(?:VStack|HStack)\s*(?:\([^)]*\))?\s*\{[\s\S]{0,1200}\bForEach\s*\(/;
+
+  return nonLazyScrollableCollectionPattern.test(swiftSource);
+};
+
+export const hasSwiftUiForEachConditionalViewCountUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const conditionalForEachPattern =
+    /\bForEach\s*\([^)]*\)\s*\{[\s\S]{0,1600}\b(?:if|switch)\b[\s\S]{0,1600}\}/;
+
+  return conditionalForEachPattern.test(swiftSource);
+};
+
+export const hasSwiftViewBodyObjectCreationUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const viewBodyObjectCreationPattern =
+    /\bvar\s+body\s*:\s*some\s+View\s*\{[\s\S]{0,2400}\b(?:DateFormatter|NumberFormatter|RelativeDateTimeFormatter|ISO8601DateFormatter|ByteCountFormatter|MeasurementFormatter|DateComponentsFormatter)\s*\(/;
+
+  return viewBodyObjectCreationPattern.test(swiftSource);
+};
+
+export const hasSwiftUiImageDataDecodingUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  return /\bUIImage\s*\(\s*data\s*:/.test(swiftSource);
+};
+
+export const hasSwiftUiInlineActionLogicUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const inlineButtonActionPattern =
+    /\bButton\s*\{[\s\S]{0,900}\b(?:if|guard|switch|for|while|Task)\b[\s\S]{0,900}\}\s*label\s*:/;
+  const inlineActionParameterPattern =
+    /\bButton\s*\([^)]*\baction\s*:\s*\{[\s\S]{0,900}\b(?:if|guard|switch|for|while|Task)\b[\s\S]{0,900}\}/;
+
+  return inlineButtonActionPattern.test(swiftSource) || inlineActionParameterPattern.test(swiftSource);
+};
+
 export const hasSwiftDispatchQueueUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'D' || !hasIdentifierAt(swiftSource, index, 'DispatchQueue')) {
@@ -496,6 +476,339 @@ export const hasSwiftTaskDetachedUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftOnAppearTaskUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  return /\.onAppear\s*\{[\s\S]{0,500}?\bTask\s*(?:\([^)]*\))?\s*\{/.test(sanitized);
+};
+
+export const hasSwiftStrongDelegateReferenceUsage = (source: string): boolean => {
+  const delegatePropertyPattern =
+    /\b(?:var|let)\s+(?:[A-Za-z_][A-Za-z0-9_]*(?:Delegate|DataSource)|delegate|dataSource)\s*:\s*(?:any\s+)?[A-Za-z_][A-Za-z0-9_]*(?:Delegate|DataSource)\b/;
+
+  return source.split(/\r?\n/).some((line) => {
+    const sanitizedLine = stripSwiftLineForSemanticScan(line);
+    if (!delegatePropertyPattern.test(sanitizedLine)) {
+      return false;
+    }
+    return !/\bweak\s+var\b/.test(sanitizedLine);
+  });
+};
+
+const swiftStrongSelfEscapingClosurePatterns = [
+  /\bTask\s*(?:\([^)]*\))?\s*\{/g,
+  /\bDispatchQueue\s*\.\s*[A-Za-z0-9_.]+\s*\.\s*async(?:After)?\s*(?:\([^)]*\))?\s*\{/g,
+  /\bTimer\s*\.\s*scheduledTimer\s*\([\s\S]{0,320}?\)\s*\{/g,
+  /\bNotificationCenter\s*\.\s*default\s*\.\s*addObserver\s*\([\s\S]{0,420}?\busing\s*:\s*\{/g,
+  /\.\s*sink\s*\([\s\S]{0,420}?\b(?:receiveValue|receiveCompletion)\s*:\s*\{/g,
+  /\.\s*sink\s*\{/g,
+  /\.\s*handleEvents\s*\([\s\S]{0,420}?\b(?:receiveOutput|receiveCompletion|receiveCancel)\s*:\s*\{/g,
+];
+
+const findMatchingSwiftBraceIndex = (source: string, openingBraceIndex: number): number => {
+  let depth = 0;
+  for (let index = openingBraceIndex; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === '{') {
+      depth += 1;
+      continue;
+    }
+    if (char !== '}') {
+      continue;
+    }
+    depth -= 1;
+    if (depth === 0) {
+      return index;
+    }
+  }
+  return -1;
+};
+
+const hasWeakOrUnownedSelfCaptureList = (closureBody: string): boolean => {
+  const trimmedStart = closureBody.trimStart();
+  if (!trimmedStart.startsWith('[')) {
+    return false;
+  }
+  const captureListEndIndex = trimmedStart.indexOf(']');
+  if (captureListEndIndex < 0) {
+    return false;
+  }
+  const captureList = trimmedStart.slice(1, captureListEndIndex);
+  return /\b(?:weak|unowned)\s+self\b/.test(captureList);
+};
+
+export const hasSwiftStrongSelfEscapingClosureUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  for (const pattern of swiftStrongSelfEscapingClosurePatterns) {
+    pattern.lastIndex = 0;
+    for (const match of sanitized.matchAll(pattern)) {
+      const matchedSource = match[0] ?? '';
+      const openingBraceOffset = matchedSource.lastIndexOf('{');
+      if (openingBraceOffset < 0 || match.index === undefined) {
+        continue;
+      }
+      const openingBraceIndex = match.index + openingBraceOffset;
+      const closingBraceIndex = findMatchingSwiftBraceIndex(sanitized, openingBraceIndex);
+      if (closingBraceIndex < 0) {
+        continue;
+      }
+      const closureBody = sanitized.slice(openingBraceIndex + 1, closingBraceIndex);
+      if (hasWeakOrUnownedSelfCaptureList(closureBody)) {
+        continue;
+      }
+      if (/\bself\s*\./.test(closureBody)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+export const hasSwiftCustomSingletonUsage = (source: string): boolean => {
+  const singletonDeclarationPattern =
+    /^\s*(?:(?:private|fileprivate|internal|public|open)\s+)?static\s+(?:let|var)\s+shared\b(?:\s*:\s*[A-Za-z_][A-Za-z0-9_.<>]*)?\s*=/;
+  return source.split(/\r?\n/).some((line) => {
+    const sanitizedLine = stripSwiftLineForSemanticScan(line);
+    return singletonDeclarationPattern.test(sanitizedLine);
+  });
+};
+
+export const hasSwiftSwinjectUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bimport\s+Swinject\b|\b(?:Container|Assembler)\s*\(/
+  );
+};
+
+export const hasSwiftMassiveViewControllerResponsibilityUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const viewControllerPattern =
+    /\bclass\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*(?:[A-Za-z_][A-Za-z0-9_]*\s*,\s*)*UIViewController\b[\s\S]{0,8000}?\n\}/g;
+  const infrastructurePattern =
+    /\b(?:URLSession\s*\.\s*shared|JSONSerialization|UserDefaults\s*\.\s*standard|NSManagedObjectContext|NSPersistentContainer|NSFetchRequest|FileManager\s*\.\s*default)\b/;
+
+  for (const match of sanitized.matchAll(viewControllerPattern)) {
+    const body = match[0] ?? '';
+    if (infrastructurePattern.test(body)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+export const hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage = (source: string): boolean => {
+  const lines = source.split(/\r?\n/);
+  const implicitlyUnwrappedPropertyPattern =
+    /\b(?:var|let)\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*(?:[A-Za-z_][A-Za-z0-9_.<>?]*\s*)!\s*(?:[=,{]|$)/;
+
+  return lines.some((line, index) => {
+    const sanitizedLine = stripSwiftLineForSemanticScan(line);
+    if (!implicitlyUnwrappedPropertyPattern.test(sanitizedLine)) {
+      return false;
+    }
+    const previousLine = index > 0 ? stripSwiftLineForSemanticScan(lines[index - 1] ?? '') : '';
+    return !/\B@IBOutlet\b/.test(`${previousLine} ${sanitizedLine}`);
+  });
+};
+
+export const hasSwiftMagicNumberLayoutUsage = (source: string): boolean => {
+  const swiftUiLayoutNumberPattern =
+    /(?:\b(?:VStack|HStack|ZStack|LazyVStack|LazyHStack)\s*\([^)]*\bspacing\s*:\s*|\.(?:padding|frame|offset|position|shadow|blur)\s*\([^)]*(?:\b(?:width|height|spacing|radius|x|y)\s*:\s*)?)\b(?:[3-9]|[1-9][0-9]+)(?:\.[0-9]+)?\b/;
+
+  return collectSwiftRegexLines(source, swiftUiLayoutNumberPattern).length > 0;
+};
+
+export const hasSwiftAdHocLoggingUsage = (source: string): boolean => {
+  return collectSwiftRegexLines(
+    source,
+    /\b(?:print|debugPrint|dump|NSLog|os_log)\s*\(/
+  ).length > 0;
+};
+
+export const hasSwiftSensitiveLoggingUsage = (source: string): boolean => {
+  return source.split(/\r?\n/).some((line) => {
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    const lineWithoutComments = line.replace(/\/\/.*$/, '');
+    const hasLoggingCall =
+      /\b(?:print|debugPrint|dump|NSLog|os_log)\s*\(/.test(sanitized) ||
+      /\b(?:logger|log)\s*\.\s*(?:debug|info|notice|warning|error|critical|log)\s*\(/i.test(
+        sanitized
+      );
+
+    if (!hasLoggingCall) {
+      return false;
+    }
+
+    return /\b(?:accessToken|refreshToken|authToken|token|password|secret|credential|authorization|email|userId)\b/i.test(
+      lineWithoutComments
+    );
+  });
+};
+
+export const hasSwiftHardcodedSensitiveStringUsage = (source: string): boolean => {
+  return collectSwiftRegexLines(
+    source,
+    /\b(?:(?:private|fileprivate|internal|public|open|static|class|final|lazy)\s+)*(?:let|var)\s+(?=[A-Za-z_])[A-Za-z0-9_]*(?:token|secret|password|apikey|clientsecret|privatekey|sessionid)[A-Za-z0-9_]*\s*(?::\s*String\s*)?=\s*""/i
+  ).length > 0;
+};
+
+export const hasSwiftAlamofireUsage = (source: string): boolean => {
+  return (
+    collectSwiftRegexLines(source, /^\s*import\s+Alamofire\b/).length > 0 ||
+    collectSwiftRegexLines(source, /\b(?:AF|Alamofire)\s*\.\s*request\b/).length > 0
+  );
+};
+
+export const hasSwiftJSONSerializationUsage = (source: string): boolean => {
+  return collectSwiftRegexLines(source, /\bJSONSerialization\s*\./).length > 0;
+};
+
+export const hasSwiftSensitiveUserDefaultsStorageUsage = (source: string): boolean => {
+  return source.split(/\r?\n/).some((line) => {
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    const lineWithoutComments = line.replace(/\/\/.*$/, '');
+    const hasUserDefaultsWrite = /\bUserDefaults\s*\.\s*standard\s*\.\s*set\s*\(/.test(sanitized);
+    const hasAppStorage = /@\s*AppStorage\s*\(/.test(sanitized);
+
+    if (!hasUserDefaultsWrite && !hasAppStorage) {
+      return false;
+    }
+
+    return /\b(?:accessToken|refreshToken|authToken|token|password|secret|credential|authorization|bearer|apiKey|sessionId)\b/i.test(
+      lineWithoutComments
+    );
+  });
+};
+
+export const hasSwiftInsecureTransportUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  const hasHttpUrlLiteral = withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    return /["']http:\/\/[^"']*["']/.test(line);
+  });
+
+  if (hasHttpUrlLiteral) {
+    return true;
+  }
+
+  return (
+    /<key>\s*NSAllowsArbitraryLoads\s*<\/key>\s*<true\s*\/>/i.test(source) ||
+    /\bNSAllowsArbitraryLoads\b\s*=\s*(?:true|YES|1)\b/i.test(source)
+  );
+};
+
+const swiftUiLiteralTextPatterns = [
+  /\b(?:Text|Button|Label|TextField|SecureField)\s*\(\s*"((?:\\.|[^"\\])*)"/,
+  /\.navigationTitle\s*\(\s*"((?:\\.|[^"\\])*)"/,
+  /\.navigationSubtitle\s*\(\s*"((?:\\.|[^"\\])*)"/,
+  /\.accessibilityLabel\s*\(\s*"((?:\\.|[^"\\])*)"/,
+];
+
+const looksLikeLocalizationKey = (value: string): boolean => {
+  return /^[A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)+$/.test(value);
+};
+
+export const hasSwiftHardcodedUiStringUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  return withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    const withoutInlineComment = line.replace(/\/\/.*$/, '');
+    return swiftUiLiteralTextPatterns.some((pattern) => {
+      const match = withoutInlineComment.match(pattern);
+      if (!match) {
+        return false;
+      }
+      const literal = match[1]?.trim() ?? '';
+      if (literal.length === 0) {
+        return false;
+      }
+      return !looksLikeLocalizationKey(literal);
+    });
+  });
+};
+
+export const hasSwiftLooseAssetResourceUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  return withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    return (
+      /\bUIImage\s*\(\s*contentsOfFile\s*:/.test(sanitized) ||
+      /\bNSImage\s*\(\s*contentsOfFile\s*:/.test(sanitized) ||
+      /\bBundle\s*\.\s*main\s*\.\s*(?:path|url)\s*\(\s*forResource\s*:\s*""\s*,\s*withExtension\s*:\s*""/.test(
+        sanitized
+      )
+    );
+  });
+};
+
+export const hasSwiftFixedFontSizeUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  return withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    return (
+      /\.\s*font\s*\(\s*\.\s*system\s*\(\s*size\s*:/.test(sanitized) ||
+      /\bFont\s*\.\s*system\s*\(\s*size\s*:/.test(sanitized) ||
+      /\bUIFont\s*\.\s*(?:systemFont|boldSystemFont|italicSystemFont)\s*\(\s*ofSize\s*:/.test(
+        sanitized
+      )
+    );
+  });
+};
+
+export const hasSwiftPhysicalTextAlignmentUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  return withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    return (
+      /\.\s*multilineTextAlignment\s*\(\s*\.\s*(?:left|right)\s*\)/.test(sanitized) ||
+      /\.\s*frame\s*\([^)]*alignment\s*:\s*\.\s*(?:left|right)\b/.test(sanitized) ||
+      /\bTextAlignment\s*\.\s*(?:left|right)\b/.test(sanitized) ||
+      /\bNSTextAlignment\s*\.\s*(?:left|right)\b/.test(sanitized)
+    );
+  });
+};
+
+export const hasSwiftMainThreadBlockingSleepUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  return withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    return (
+      /\bThread\s*\.\s*sleep\s*\(/.test(sanitized) ||
+      /(^|[^\w.])sleep\s*\(/.test(sanitized) ||
+      /(^|[^\w.])usleep\s*\(/.test(sanitized)
+    );
+  });
+};
+
+export const hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const iconOnlyButtonPattern =
+    /\bButton\s*(?:\([^)]*\))?\s*\{[\s\S]{0,240}?\bImage\s*\(\s*systemName\s*:\s*""\s*\)[\s\S]{0,240}?\}/g;
+  for (const match of sanitized.matchAll(iconOnlyButtonPattern)) {
+    const segment = match[0] ?? '';
+    const following = sanitized.slice(match.index ?? 0, (match.index ?? 0) + segment.length + 160);
+    if (!/\.\s*accessibilityLabel\s*\(/.test(following)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@unchecked', index)) {
@@ -536,15 +849,19 @@ export const hasSwiftForEachIndicesUsage = (source: string): boolean => {
   );
 };
 
-export const hasSwiftInlineFilteringInForEachUsage = (source: string): boolean => {
-  return hasSwiftSanitizedRegexMatch(
-    source,
-    /\bForEach\s*\(\s*[A-Za-z_][A-Za-z0-9_.]*\s*\.\s*filter\s*\{/g
-  );
+export const hasSwiftForEachSelfIdentityUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\bForEach\s*\([^)]*\bid\s*:\s*\\\.self\b/g);
 };
 
-export const hasSwiftExplicitColorStaticMemberUsage = (source: string): boolean => {
-  return hasSwiftSanitizedRegexMatch(source, /\bColor\s*\.\s*[a-z][A-Za-z0-9_]*\b/g);
+export const hasSwiftSelfPrintChangesUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\bSelf\s*\.\s*_printChanges\s*\(/g);
+};
+
+export const hasSwiftInlineForEachTransformUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  return /\bForEach\s*\(\s*(?:Array\s*\(\s*)?[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*\s*\.\s*(?:filter|map|compactMap|sorted)\s*(?:\{|\()/g.test(
+    sanitized
+  );
 };
 
 const isUserSearchIdentifier = (value: string): boolean => {
@@ -593,38 +910,55 @@ export const hasSwiftFontWeightBoldUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(source, /\.\s*fontWeight\s*\(\s*\.bold\s*\)/g);
 };
 
-export const hasSwiftLegacySwiftUiObservableWrapperUsage = (source: string): boolean => {
-  return hasSwiftSanitizedRegexMatch(source, /@\s*(?:StateObject|ObservedObject)\b/);
+export const hasSwiftExplicitColorStaticMemberUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bColor\s*\.\s*(?:accentColor|black|blue|brown|clear|cyan|gray|green|indigo|mint|orange|pink|primary|purple|red|secondary|teal|white|yellow)\b/g
+  );
 };
 
-export const hasSwiftStateWrapperWithoutPrivateUsage = (source: string): boolean => {
-  const typeDeclarations = parseSwiftTypeDeclarations(source);
-  if (typeDeclarations.length === 0) {
-    return false;
-  }
+export const hasSwiftClosureBasedViewBuilderContentUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\b(?:let|var)\s+content\s*:\s*(?:\(\s*\)\s*->|@\s*escaping\s*\(\s*\)\s*->)\s*(?:some\s+View|Content)\b/g
+  );
+};
 
-  const sourceLines = source.split(/\r?\n/);
-  const stateWrapperPattern = /@\s*(?:State|StateObject)\b/;
+export const hasSwiftRedundantReactiveStateAssignmentUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const reactiveAssignmentPattern =
+    /\.(?:onChange|onReceive)\s*\([^)]*\)\s*\{[\s\S]{0,500}?\b(?:self\s*\.\s*)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?:newValue|value|output|receivedValue)\b/g;
 
-  for (const typeDeclaration of typeDeclarations) {
-    if (!typeDeclaration.conformances.includes('View')) {
+  for (const match of sanitized.matchAll(reactiveAssignmentPattern)) {
+    const target = match[1];
+    const segment = match[0] ?? '';
+    if (!target) {
       continue;
     }
-
-    const hasViolation = visitSwiftTopLevelTypeBodyLines(sourceLines, typeDeclaration, ({ line }) => {
-      if (!stateWrapperPattern.test(line)) {
-        return false;
-      }
-
-      return !/\bprivate\b/.test(line);
-    });
-
-    if (hasViolation) {
+    const guardedAssignmentPattern = new RegExp(
+      `\\b(?:if|guard)\\s+(?:self\\s*\\.\\s*)?${target}\\s*!=\\s*(?:newValue|value|output|receivedValue)\\b`
+    );
+    if (!guardedAssignmentPattern.test(segment)) {
       return true;
     }
   }
 
   return false;
+};
+
+export const hasSwiftLegacySwiftUiObservableWrapperUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /@\s*(?:StateObject|ObservedObject)\b/);
+};
+
+export const hasSwiftNonPrivateStateOwnershipUsage = (source: string): boolean => {
+  return source.split(/\r?\n/).some((line) => {
+    const sanitizedLine = stripSwiftLineForSemanticScan(line);
+    return (
+      /@\s*(?:State|StateObject)\b/.test(sanitizedLine) &&
+      /\bvar\b/.test(sanitizedLine) &&
+      !/\bprivate\b/.test(sanitizedLine)
+    );
+  });
 };
 
 const hasSwiftPassedValueWrapperInitialization = (
@@ -689,6 +1023,15 @@ export const hasSwiftNavigationViewUsage = (source: string): boolean => {
 
     return hasIdentifierAt(swiftSource, index, 'NavigationView');
   });
+};
+
+export const hasSwiftUntypedNavigationLinkDestinationUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const destinationParameterPattern = /\bNavigationLink\s*\([^)]*\bdestination\s*:/;
+  const trailingDestinationPattern =
+    /\bNavigationLink\s*\{[\s\S]{0,900}\b[A-Z][A-Za-z0-9_]*View\s*\([^}]*\)[\s\S]{0,900}\}\s*label\s*:/;
+
+  return destinationParameterPattern.test(swiftSource) || trailingDestinationPattern.test(swiftSource);
 };
 
 export const hasSwiftForegroundColorUsage = (source: string): boolean => {
@@ -788,10 +1131,6 @@ const hasSwiftTestingSuiteAttributeUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(source, /\B@(?:Test|Suite)\b/);
 };
 
-const hasSwiftTestingFrameworkMarkerUsage = (source: string): boolean => {
-  return hasSwiftTestingImportUsage(source) || hasSwiftTestingSuiteAttributeUsage(source);
-};
-
 const hasSwiftXCTestCaseSubclassUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(
     source,
@@ -804,56 +1143,12 @@ const hasSwiftLegacyXCTestMethodUsage = (source: string): boolean => {
     .length > 0;
 };
 
-const hasSwiftMakeSutUsage = (source: string): boolean => {
-  return hasSwiftSanitizedRegexMatch(source, /\bmakeSUT\s*\(/);
-};
-
-const hasSwiftMemoryLeakTrackingUsage = (source: string): boolean => {
-  return hasSwiftSanitizedRegexMatch(source, /\btrackForMemoryLeaks\s*\(/);
-};
-
-const hasSwiftBrownfieldCompatibleXCTestUsage = (source: string): boolean => {
-  if (!hasSwiftXCTestImportUsage(source) || !hasSwiftXCTestCaseSubclassUsage(source)) {
-    return false;
-  }
-
-  if (!hasSwiftLegacyXCTestMethodUsage(source)) {
-    return false;
-  }
-
-  if (hasSwiftTestingImportUsage(source) || hasSwiftTestingSuiteAttributeUsage(source)) {
-    return false;
-  }
-
-  return hasSwiftMakeSutUsage(source) && hasSwiftMemoryLeakTrackingUsage(source);
-};
-
-const hasSwiftXCTestOnlyBrownfieldSuiteUsage = (source: string): boolean => {
-  if (!hasSwiftXCTestImportUsage(source) || !hasSwiftXCTestCaseSubclassUsage(source)) {
-    return false;
-  }
-
-  if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
-    return false;
-  }
-
-  return !hasSwiftTestingImportUsage(source) && !hasSwiftTestingSuiteAttributeUsage(source);
-};
-
 export const hasSwiftLegacyXCTestImportUsage = (source: string): boolean => {
   if (!hasSwiftXCTestImportUsage(source)) {
     return false;
   }
 
-  if (!hasSwiftXCTestCaseSubclassUsage(source) || !hasSwiftLegacyXCTestMethodUsage(source)) {
-    return false;
-  }
-
   if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
-    return false;
-  }
-
-  if (hasSwiftXCTestOnlyBrownfieldSuiteUsage(source)) {
     return false;
   }
 
@@ -877,18 +1172,21 @@ export const hasSwiftModernizableXCTestSuiteUsage = (source: string): boolean =>
 };
 
 export const hasSwiftMixedTestingFrameworksUsage = (source: string): boolean => {
-  return hasSwiftXCTestCaseSubclassUsage(source) && hasSwiftTestingFrameworkMarkerUsage(source);
+  if (!hasSwiftXCTestImportUsage(source) || !hasSwiftXCTestCaseSubclassUsage(source)) {
+    return false;
+  }
+
+  return hasSwiftTestingImportUsage(source) || hasSwiftTestingSuiteAttributeUsage(source);
+};
+
+export const hasSwiftQuickNimbleUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bimport\s+(?:Quick|Nimble)\b|\bclass\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*QuickSpec\b/
+  );
 };
 
 export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
-  if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
-    return false;
-  }
-
-  if (hasSwiftXCTestOnlyBrownfieldSuiteUsage(source)) {
-    return false;
-  }
-
   return (
     collectSwiftRegexLines(source, /\bXCTAssert[A-Za-z0-9_]*\s*\(/).length > 0 ||
     collectSwiftRegexLines(source, /\bXCTFail\s*\(/).length > 0
@@ -896,14 +1194,6 @@ export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
 };
 
 export const hasSwiftXCTUnwrapUsage = (source: string): boolean => {
-  if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
-    return false;
-  }
-
-  if (hasSwiftXCTestOnlyBrownfieldSuiteUsage(source)) {
-    return false;
-  }
-
   return collectSwiftRegexLines(source, /\bXCTUnwrap\s*\(/).length > 0;
 };
 
@@ -916,59 +1206,40 @@ const hasSwiftConfirmationUsage = (source: string): boolean => {
 };
 
 export const hasSwiftWaitForExpectationsUsage = (source: string): boolean => {
-  const legacyWaitPattern = /\bwait\s*\(\s*for\s*:|\bwaitForExpectations\s*\(/;
-  return collectSwiftFunctionDeclarations(source).some((declaration) => {
-    if (!/\basync\b/.test(declaration.signature)) {
-      return false;
-    }
-    legacyWaitPattern.lastIndex = 0;
-    return legacyWaitPattern.test(declaration.body);
-  });
-};
-
-export const hasSwiftLegacyExpectationDescriptionUsage = (source: string): boolean => {
-  return collectSwiftFunctionDeclarations(source).some((declaration) => {
-    if (!/\basync\b/.test(declaration.signature)) {
-      return false;
-    }
-    if (!hasSwiftSanitizedRegexMatch(declaration.body, /\bexpectation\s*\(\s*description\s*:/)) {
-      return false;
-    }
-    return !hasSwiftAwaitFulfillmentUsage(declaration.body) && !hasSwiftConfirmationUsage(declaration.body);
-  });
-};
-
-const swiftManagedObjectBoundaryTypePattern = /\bNSManagedObject\b(?!ID\b|Context\b)/;
-const swiftStoredPropertyBoundaryPattern =
-  /\b(?:var|let)\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*[^=\n]*\bNSManagedObject\b(?!ID\b|Context\b)/;
-const swiftManagedObjectSubclassPattern =
-  /\b(?:final\s+)?class\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*NSManagedObject\b/;
-
-const hasSwiftManagedObjectBoundaryTypeUsage = (source: string): boolean => {
-  return collectSwiftFunctionDeclarations(source).some((declaration) =>
-    swiftManagedObjectBoundaryTypePattern.test(declaration.signature)
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bwait\s*\(\s*for\s*:|\bwaitForExpectations\s*\(/
   );
 };
 
-export const hasSwiftNSManagedObjectBoundaryUsage = (source: string): boolean => {
-  if (hasSwiftManagedObjectBoundaryTypeUsage(source)) {
-    return true;
+export const hasSwiftLegacyExpectationDescriptionUsage = (source: string): boolean => {
+  const hasLegacyExpectation = collectSwiftRegexLines(
+    source,
+    /\bexpectation\s*\(\s*description\s*:/
+  ).length > 0;
+
+  if (!hasLegacyExpectation) {
+    return false;
   }
 
-  return source.split(/\r?\n/).some((line) => {
-    const sanitized = stripSwiftLineForSemanticScan(line);
-    return (
-      swiftStoredPropertyBoundaryPattern.test(sanitized) &&
-      !swiftManagedObjectSubclassPattern.test(sanitized)
-    );
-  });
+  if (hasSwiftAwaitFulfillmentUsage(source) || hasSwiftConfirmationUsage(source)) {
+    return false;
+  }
+
+  return true;
+};
+
+export const hasSwiftNSManagedObjectBoundaryUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bfunc\b[\s\S]{0,240}\([^)]*\bNSManagedObject\b(?!ID\b|Context\b)[^)]*\)|\b(?:var|let)\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*(?:\[[^\]]*NSManagedObject\b(?!ID\b|Context\b)[^\]]*\]|NSManagedObject\b(?!ID\b|Context\b))/g
+  );
 };
 
 export const hasSwiftNSManagedObjectAsyncBoundaryUsage = (source: string): boolean => {
-  return collectSwiftFunctionDeclarations(source).some(
-    (declaration) =>
-      /\basync\b/.test(declaration.signature) &&
-      swiftManagedObjectBoundaryTypePattern.test(declaration.signature)
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bfunc\b[\s\S]{0,240}\basync\b[\s\S]{0,200}(?:\([^)]*\bNSManagedObject\b(?!ID\b|Context\b)[^)]*\)|->\s*(?:\[[^\]]*NSManagedObject\b(?!ID\b|Context\b)[^\]]*\]|NSManagedObject\b(?!ID\b|Context\b)))/g
   );
 };
 
@@ -976,6 +1247,13 @@ export const hasSwiftCoreDataLayerLeakUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(
     source,
     /\bimport\s+CoreData\b|@\s*FetchRequest\b|\b(?:FetchRequest|FetchedResults|NSPersistentContainer|NSManagedObjectContext|NSFetchRequest|NSFetchedResultsController|NSEntityDescription)\b|\.managedObjectContext\b/g
+  );
+};
+
+export const hasSwiftSwiftDataLayerLeakUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bimport\s+SwiftData\b|@\s*Query\b|@\s*Model\b|\b(?:ModelContext|ModelContainer|FetchDescriptor)\b|\.modelContext\b/g
   );
 };
 
@@ -1290,100 +1568,6 @@ export const findSwiftPresentationSrpMatch = (
   };
 };
 
-export const findSwiftXCTestSrpMatch = (source: string): SwiftXCTestSrpMatch | undefined => {
-  if (!hasSwiftXCTestCaseSubclassUsage(source)) {
-    return undefined;
-  }
-
-  const classPattern = /\b(?:final\s+)?class\s+([A-Za-z0-9_]*Tests?)\s*:\s*XCTestCase\b/;
-  const classLines = collectSwiftRegexLines(source, classPattern);
-  if (classLines.length === 0) {
-    return undefined;
-  }
-
-  const classLine = source.split(/\r?\n/)[classLines[0] - 1] ?? '';
-  const className = classLine.match(classPattern)?.[1];
-  if (!className) {
-    return undefined;
-  }
-
-  const sourceLines = source.split(/\r?\n/);
-  const familyPatterns: ReadonlyArray<{
-    key: string;
-    name: string;
-    tokens: readonly string[];
-  }> = [
-    { key: 'configuration', name: 'configuration outcome tests', tokens: ['config', 'configuration', 'update', 'cache'] },
-    { key: 'session', name: 'session routing tests', tokens: ['session', 'login', 'auth', 'valid', 'invalid'] },
-    { key: 'onboarding', name: 'onboarding progress tests', tokens: ['onboarding', 'progress', 'completeonboarding'] },
-    { key: 'permissions', name: 'permissions routing tests', tokens: ['permission', 'camera', 'location', 'notification'] },
-    { key: 'tutorial', name: 'tutorial or feature discovery tests', tokens: ['tutorial', 'featurediscovery'] },
-    { key: 'splash', name: 'splash delay tests', tokens: ['splash', 'delay', 'start'] },
-  ];
-  const matchesFamily = (value: string, tokens: readonly string[]): boolean => {
-    const normalizedValue = value.toLowerCase();
-    return tokens.some((token) => normalizedValue.includes(token));
-  };
-
-  const classFamilyKeys = new Set(
-    familyPatterns
-      .filter((entry) => matchesFamily(className, entry.tokens))
-      .map((entry) => entry.key)
-  );
-  const matchedFamilies = new Map<string, SwiftSemanticNodeMatch>();
-
-  sourceLines.forEach((line, index) => {
-    const sanitizedLine = stripSwiftLineForSemanticScan(line);
-    const methodMatch = sanitizedLine.match(/\bfunc\s+(test[A-Za-z0-9_]+)\s*\(/);
-    const methodName = methodMatch?.[1];
-    if (!methodName) {
-      return;
-    }
-
-    for (const family of familyPatterns) {
-      if (!matchesFamily(methodName, family.tokens)) {
-        continue;
-      }
-      if (classFamilyKeys.has(family.key)) {
-        continue;
-      }
-      if (!matchedFamilies.has(family.key)) {
-        matchedFamilies.set(family.key, {
-          kind: 'member',
-          name: family.name,
-          lines: [index + 1],
-        });
-      }
-    }
-  });
-
-  const relatedNodes = [...matchedFamilies.values()];
-  if (relatedNodes.length < 2) {
-    return undefined;
-  }
-
-  const relatedNodeNames = relatedNodes.map((node) => node.name).join(', ');
-  const allLines = sortedUniqueLines([
-    ...classLines,
-    ...relatedNodes.flatMap((node) => [...node.lines]),
-  ]);
-
-  return {
-    primary_node: {
-      kind: 'class',
-      name: className,
-      lines: classLines,
-    },
-    related_nodes: relatedNodes,
-    why: `${className} mezcla ${relatedNodeNames} dentro del mismo XCTestCase, rompiendo SRP en la suite de tests.`,
-    impact:
-      'La suite acumula múltiples razones de cambio, oculta regresiones por responsabilidad y hace más difícil aislar el baseline afectado antes de PRE_WRITE.',
-    expected_fix:
-      'Divide la suite por responsabilidad observable: configuración, sesión, onboarding, permisos, tutorial o splash deben vivir en XCTestCase separados.',
-    lines: allLines,
-  };
-};
-
 export const findSwiftConcreteDependencyDipMatch = (
   source: string
 ): SwiftConcreteDependencyDipMatch | undefined => {
@@ -1474,7 +1658,7 @@ export const findSwiftOpenClosedSwitchMatch = (
   }
 
   const lines = source.split(/\r?\n/);
-  const discriminatorPattern = /\b(?:kind|type|mode|channel|variant|provider|route|flow|source|experience|outcome|state|status|configuration|config)\b/i;
+  const discriminatorPattern = /\b(?:kind|type|mode|channel|variant|provider|route|flow|source|experience)\b/i;
   const switchPattern = /\bswitch\s+([A-Za-z_][A-Za-z0-9_\.]*)\s*\{/;
 
   for (let index = 0; index < lines.length; index += 1) {

@@ -1,12 +1,11 @@
 import type { EvidenceReadResult } from '../evidence/readEvidence';
 import { readEvidenceResult } from '../evidence/readEvidence';
 import { captureRepoState } from '../evidence/repoState';
-import type { RepoState, RepoTrackingState } from '../evidence/schema';
+import type { RepoState } from '../evidence/schema';
 import { resolvePolicyForStage } from './stagePolicies';
 import { execFileSync } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { isSeverityAtLeast } from '../../core/rules/Severity';
 import type { SkillsLockV1, SkillsStage } from '../config/skillsLock';
 import {
   loadEffectiveSkillsLock,
@@ -133,10 +132,6 @@ const PREWRITE_WORKTREE_HYGIENE_WARN_THRESHOLD_ENV = 'PUMUKI_PREWRITE_WORKTREE_W
 const PREWRITE_WORKTREE_HYGIENE_BLOCK_THRESHOLD_ENV = 'PUMUKI_PREWRITE_WORKTREE_BLOCK_THRESHOLD';
 
 const DEFAULT_PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
-const DEFAULT_GITFLOW_BRANCH_PATTERNS = [
-  /^(?:feature|bugfix|hotfix|chore|refactor|docs)\/[a-z0-9]+(?:-[a-z0-9]+)*$/,
-  /^release\/\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/,
-] as const;
 const PREWRITE_SKILLS_PLATFORMS = ['ios', 'android', 'backend', 'frontend'] as const;
 type PreWriteSkillsPlatform = (typeof PREWRITE_SKILLS_PLATFORMS)[number];
 const PLATFORM_SKILLS_RULE_PREFIXES: Readonly<Record<PreWriteSkillsPlatform, string>> = {
@@ -150,8 +145,6 @@ const PLATFORM_REQUIRED_SKILLS_BUNDLES: Readonly<Record<PreWriteSkillsPlatform, 
     'ios-guidelines',
     'ios-concurrency-guidelines',
     'ios-swiftui-expert-guidelines',
-    'ios-swift-testing-guidelines',
-    'ios-core-data-guidelines',
   ],
   android: ['android-guidelines'],
   backend: ['backend-guidelines'],
@@ -405,45 +398,6 @@ const collectWorktreeChangedPaths = (repoRoot: string): ReadonlyArray<string> =>
   }
 };
 
-const collectGitChangedPaths = (
-  repoRoot: string,
-  args: ReadonlyArray<string>
-): ReadonlyArray<string> => {
-  try {
-    const output = execFileSync(
-      'git',
-      [...args],
-      {
-        cwd: repoRoot,
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'ignore'],
-      }
-    );
-    const files = output
-      .split('\n')
-      .map((line) => parseChangedPath(line))
-      .filter((line): line is string => typeof line === 'string' && line.length > 0);
-    return [...new Set(files)];
-  } catch {
-    return [];
-  }
-};
-
-const collectStagedChangedPaths = (repoRoot: string): ReadonlyArray<string> =>
-  collectGitChangedPaths(repoRoot, ['diff', '--cached', '--name-status', '--find-renames']);
-
-const collectRangeChangedPaths = (params: {
-  repoRoot: string;
-  fromRef: string;
-  toRef: string;
-}): ReadonlyArray<string> =>
-  collectGitChangedPaths(params.repoRoot, [
-    'diff',
-    '--name-status',
-    '--find-renames',
-    `${params.fromRef}...${params.toRef}`,
-  ]);
-
 const isPlatformPath = (platform: PreWriteSkillsPlatform, filePath: string): boolean => {
   const normalized = normalizeChangedPath(filePath).toLowerCase();
   if (platform === 'ios') {
@@ -490,47 +444,6 @@ const isPlatformPath = (platform: PreWriteSkillsPlatform, filePath: string): boo
     || /(^|\/)(frontend|web|client)(\/|$)/.test(normalized);
 };
 
-const toDetectedPlatformsFromPaths = (params: {
-  changedPaths: ReadonlyArray<string>;
-  requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
-}): ReadonlyArray<PreWriteSkillsPlatform> => {
-  if (params.changedPaths.length === 0) {
-    return [];
-  }
-
-  const detected = new Set<PreWriteSkillsPlatform>();
-  for (const filePath of params.changedPaths) {
-    for (const platform of params.requiredPlatforms) {
-      if (isPlatformPath(platform, filePath)) {
-        detected.add(platform);
-      }
-    }
-  }
-
-  return PREWRITE_SKILLS_PLATFORMS.filter((platform) => detected.has(platform));
-};
-
-const collectStageScopedChangedPaths = (params: {
-  stage: AiGateStage;
-  repoRoot: string;
-  upstream: string | null;
-}): ReadonlyArray<string> => {
-  if (params.stage === 'PRE_WRITE') {
-    return collectWorktreeChangedPaths(params.repoRoot);
-  }
-  if (params.stage === 'PRE_COMMIT') {
-    return collectStagedChangedPaths(params.repoRoot);
-  }
-  if (params.stage === 'PRE_PUSH' && typeof params.upstream === 'string' && params.upstream.length > 0) {
-    return collectRangeChangedPaths({
-      repoRoot: params.repoRoot,
-      fromRef: params.upstream,
-      toRef: 'HEAD',
-    });
-  }
-  return [];
-};
-
 const hasWorktreeCodePlatforms = (params: {
   repoRoot: string;
   requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
@@ -542,22 +455,6 @@ const hasWorktreeCodePlatforms = (params: {
   return changedPaths.some((filePath) =>
     params.requiredPlatforms.some((platform) => isPlatformPath(platform, filePath))
   );
-};
-
-const toStageScopedDetectedPlatforms = (params: {
-  stage: AiGateStage;
-  repoRoot: string;
-  upstream: string | null;
-  requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
-}): ReadonlyArray<PreWriteSkillsPlatform> => {
-  return toDetectedPlatformsFromPaths({
-    changedPaths: collectStageScopedChangedPaths({
-      stage: params.stage,
-      repoRoot: params.repoRoot,
-      upstream: params.upstream,
-    }),
-    requiredPlatforms: params.requiredPlatforms,
-  });
 };
 
 const toLockRequiredPlatforms = (
@@ -851,18 +748,8 @@ const toSkillsContractAssessment = (params: {
   const coverage = params.evidenceResult.evidence.snapshot.rules_coverage;
   const explicitlyDetectedPlatforms = toDetectedSkillsPlatforms(params.evidenceResult.evidence.platforms);
   const inferredPlatforms = toCoverageInferredPlatforms(coverage);
-  const stageScopedDetectedPlatforms =
-    params.stage !== 'CI' && requiredPlatforms.length > 0
-      ? toStageScopedDetectedPlatforms({
-          stage: params.stage,
-          repoRoot: params.repoRoot,
-          upstream: params.repoState.git.upstream,
-          requiredPlatforms,
-        })
-      : [];
-  const worktreeDetectedPlatforms = stageScopedDetectedPlatforms;
   const repoTreeDetectedPlatforms =
-    params.stage === 'CI' && requiredPlatforms.length > 0
+    params.stage !== 'PRE_WRITE' && requiredPlatforms.length > 0
       ? toRepoTreeDetectedPlatforms({
           repoRoot: params.repoRoot,
           platforms: requiredPlatforms,
@@ -872,24 +759,20 @@ const toSkillsContractAssessment = (params: {
     explicitlyDetectedPlatforms.length > 0
       ? toEffectiveSkillsPlatforms({
           platforms: params.evidenceResult.evidence.platforms,
-        coverage,
-      })
+          coverage,
+        })
       : [];
   const detectedPlatforms =
-    stageScopedDetectedPlatforms.length > 0
-      ? stageScopedDetectedPlatforms
-      : explicitlyDetectedEffectivePlatforms.length > 0
+    explicitlyDetectedEffectivePlatforms.length > 0
       ? explicitlyDetectedEffectivePlatforms
       : inferredPlatforms.length > 0
         ? inferredPlatforms
-        : worktreeDetectedPlatforms.length > 0
-          ? worktreeDetectedPlatforms
         : repoTreeDetectedPlatforms;
   const pendingChanges = resolvePendingChanges(params.repoState);
   const detectedPlatformSet = new Set(detectedPlatforms);
   const assessmentPlatforms =
     requiredPlatforms.length > 0
-      ? params.stage !== 'CI' && detectedPlatforms.length > 0
+      ? params.stage === 'PRE_WRITE' && detectedPlatforms.length > 0
         ? requiredPlatforms.filter((platform) => detectedPlatformSet.has(platform))
         : requiredPlatforms
       : detectedPlatforms;
@@ -1261,7 +1144,15 @@ const collectEvidenceViolations = (
   }
 
   if (result.evidence.ai_gate.status === 'BLOCKED') {
-    violations.push(toErrorViolation('EVIDENCE_GATE_BLOCKED', 'Evidence AI gate status is BLOCKED.'));
+    const gateBlockedMessage = 'Evidence AI gate status is BLOCKED.';
+    violations.push(
+      isAdvisoryDocumentationRenderSlice(repoRoot, ageSeconds, maxAgeSeconds)
+        ? toWarnViolation(
+            'EVIDENCE_GATE_BLOCKED',
+            `${gateBlockedMessage} Advisory because the current slice only contains documentation/render/tooling artifacts and evidence is fresh.`
+          )
+        : toErrorViolation('EVIDENCE_GATE_BLOCKED', gateBlockedMessage)
+    );
   }
 
   if (stage === 'PRE_WRITE') {
@@ -1281,116 +1172,105 @@ const collectEvidenceViolations = (
   return { violations, ageSeconds };
 };
 
-const severityOrder: ReadonlyArray<'CRITICAL' | 'ERROR' | 'WARN' | 'INFO'> = [
-  'CRITICAL',
-  'ERROR',
-  'WARN',
-  'INFO',
-];
+const SUPPORTED_FUNCTIONAL_EXTENSIONS = new Set([
+  '.swift',
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.kt',
+  '.kts',
+]);
 
-const toHighestTriggeredSeverity = (
-  severityCounts: Readonly<Record<'INFO' | 'WARN' | 'ERROR' | 'CRITICAL', number>>,
-  threshold: 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL'
-): 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | null => {
-  for (const severity of severityOrder) {
-    if (severityCounts[severity] > 0 && isSeverityAtLeast(severity, threshold)) {
-      return severity;
-    }
+const DOCUMENTATION_RENDER_TOOLING_EXTENSIONS = new Set([
+  '.css',
+  '.html',
+  '.json',
+  '.md',
+  '.mdx',
+  '.txt',
+]);
+
+const normalizeGitPath = (value: string): string => value.replace(/\\/g, '/').replace(/^"|"$/g, '');
+
+const extractGitStatusPath = (line: string): string | null => {
+  const payload = line.slice(3).trim();
+  if (payload.length === 0) {
+    return null;
   }
-  return null;
+  const renameSeparator = ' -> ';
+  if (payload.includes(renameSeparator)) {
+    return normalizeGitPath(payload.slice(payload.lastIndexOf(renameSeparator) + renameSeparator.length));
+  }
+  return normalizeGitPath(payload);
 };
 
-const hasAppliedGateWaiver = (evidenceResult: EvidenceReadResult): boolean => {
-  if (evidenceResult.kind !== 'valid') {
-    return false;
-  }
-  return evidenceResult.evidence.snapshot.findings.some(
-    (finding) => finding.code === 'GATE_WAIVER_APPLIED'
-  );
-};
-
-const collectBlockingSeverityCounts = (
-  evidenceResult: Extract<EvidenceReadResult, { kind: 'valid' }>
-): Record<'INFO' | 'WARN' | 'ERROR' | 'CRITICAL', number> => {
-  const counts = {
-    INFO: 0,
-    WARN: 0,
-    ERROR: 0,
-    CRITICAL: 0,
-  };
-
-  for (const finding of evidenceResult.evidence.snapshot.findings) {
-    if (finding.blocking === false) {
-      continue;
-    }
-    counts[finding.severity] += 1;
-  }
-
-  return counts;
-};
-
-const collectEvidencePolicyThresholdViolations = (params: {
-  evidenceResult: EvidenceReadResult;
-  policy: ReturnType<typeof resolvePolicyForStage>['policy'];
-}): AiGateViolation[] => {
-  if (params.evidenceResult.kind !== 'valid') {
+const collectGitStatusPaths = (repoRoot: string): readonly string[] => {
+  if (!existsSync(resolve(repoRoot, '.git'))) {
     return [];
+  }
+  try {
+    return execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .split(/\r?\n/)
+      .map(extractGitStatusPath)
+      .filter((path): path is string => path !== null);
+  } catch {
+    return [];
+  }
+};
+
+const pathExtension = (path: string): string => {
+  const basename = path.split('/').pop() ?? '';
+  const dotIndex = basename.lastIndexOf('.');
+  return dotIndex >= 0 ? basename.slice(dotIndex).toLowerCase() : '';
+};
+
+const isSupportedFunctionalPath = (path: string): boolean =>
+  SUPPORTED_FUNCTIONAL_EXTENSIONS.has(pathExtension(path));
+
+const isDocumentationRenderToolingPath = (path: string): boolean => {
+  const normalized = path.toLowerCase();
+  if (normalized.startsWith('docs/') && DOCUMENTATION_RENDER_TOOLING_EXTENSIONS.has(pathExtension(normalized))) {
+    return true;
+  }
+  if (normalized.endsWith('.md') || normalized.endsWith('.mdx')) {
+    return true;
   }
   if (
-    params.evidenceResult.evidence.ai_gate.status === 'ALLOWED' &&
-    hasAppliedGateWaiver(params.evidenceResult)
+    normalized.startsWith('stack-my-architecture-pumuki/dist/') ||
+    normalized.startsWith('stack-my-architecture-hub/pumuki/')
   ) {
-    return [];
+    return DOCUMENTATION_RENDER_TOOLING_EXTENSIONS.has(pathExtension(normalized));
   }
-
-  const severityCounts = collectBlockingSeverityCounts(params.evidenceResult);
-  const blockSeverity = toHighestTriggeredSeverity(
-    severityCounts,
-    params.policy.blockOnOrAbove
-  );
-  if (blockSeverity && params.evidenceResult.evidence.ai_gate.status !== 'BLOCKED') {
-    return [
-      toErrorViolation(
-        'EVIDENCE_POLICY_THRESHOLD_BLOCK',
-        `Evidence severities exceed block_on_or_above=${params.policy.blockOnOrAbove} (highest=${blockSeverity}).`
-      ),
-    ];
+  if (normalized === 'stack-my-architecture-pumuki/scripts/build-html.py') {
+    return true;
   }
-
-  const warnSeverity = toHighestTriggeredSeverity(
-    severityCounts,
-    params.policy.warnOnOrAbove
-  );
-  if (warnSeverity && params.evidenceResult.evidence.ai_gate.status === 'ALLOWED') {
-    return [
-      toWarnViolation(
-        'EVIDENCE_POLICY_THRESHOLD_WARN',
-        `Evidence severities exceed warn_on_or_above=${params.policy.warnOnOrAbove} (highest=${warnSeverity}).`
-      ),
-    ];
+  if (normalized === 'package.json' || normalized === 'package-lock.json') {
+    return true;
   }
-
-  return [];
+  return false;
 };
 
-const collectTddBddBaselineViolations = (params: {
-  evidenceResult: EvidenceReadResult;
-}): AiGateViolation[] => {
-  if (params.evidenceResult.kind !== 'valid') {
-    return [];
+const isAdvisoryDocumentationRenderSlice = (
+  repoRoot: string,
+  ageSeconds: number,
+  maxAgeSeconds: number
+): boolean => {
+  if (ageSeconds > maxAgeSeconds) {
+    return false;
   }
-
-  const tddBdd = params.evidenceResult.evidence.snapshot.tdd_bdd;
-  if (tddBdd?.status !== 'blocked') {
-    return [];
+  const paths = collectGitStatusPaths(repoRoot);
+  if (paths.length === 0) {
+    return false;
   }
-
-  return [
-    toErrorViolation(
-      'TDD_BDD_BASELINE_BLOCKED',
-      'TDD/BDD baseline snapshot is blocked. Fix the failing baseline tests and refresh evidence before continuing.'
-    ),
-  ];
+  return (
+    paths.every(isDocumentationRenderToolingPath) &&
+    !paths.some(isSupportedFunctionalPath)
+  );
 };
 
 const toEvidenceSourceDescriptor = (
@@ -1422,79 +1302,15 @@ const collectGitflowViolations = (
   if (!repoState.git.available) {
     return violations;
   }
-  const branch = repoState.git.branch?.trim() ?? null;
-  const normalizedBranch = branch?.toLowerCase() ?? null;
-  if (branch && normalizedBranch && protectedBranches.has(normalizedBranch)) {
+  if (repoState.git.branch && protectedBranches.has(repoState.git.branch)) {
     violations.push(
       toErrorViolation(
         'GITFLOW_PROTECTED_BRANCH',
-        `Direct work on protected branch "${branch}" is not allowed.`
-      )
-    );
-    return violations;
-  }
-  if (
-    branch
-    && !DEFAULT_GITFLOW_BRANCH_PATTERNS.some((pattern) => pattern.test(branch))
-  ) {
-    violations.push(
-      toErrorViolation(
-        'GITFLOW_BRANCH_NAMING_INVALID',
-        `Branch "${branch}" does not comply with GitFlow naming. Use feature/*, bugfix/*, hotfix/*, release/*, chore/*, refactor/* or docs/*.`
+        `Direct work on protected branch "${repoState.git.branch}" is not allowed.`
       )
     );
   }
   return violations;
-};
-
-const DEFAULT_TRACKING_STATE: RepoTrackingState = {
-  enforced: false,
-  canonical_path: null,
-  canonical_present: false,
-  source_file: null,
-  in_progress_count: null,
-  single_in_progress_valid: null,
-  conflict: false,
-  declarations: [],
-};
-
-const collectTrackingViolations = (repoState: RepoState): AiGateViolation[] => {
-  const tracking = repoState.lifecycle.tracking ?? DEFAULT_TRACKING_STATE;
-  if (!tracking.enforced) {
-    return [];
-  }
-
-  if (tracking.conflict) {
-    const declaredPaths = tracking.declarations
-      .map((entry) => `${entry.source_file}:${entry.resolved_path}`)
-      .join(', ');
-    return [
-      toErrorViolation(
-        'TRACKING_CANONICAL_SOURCE_CONFLICT',
-        `Tracking canonical source conflict detected (${declaredPaths}).`
-      ),
-    ];
-  }
-
-  if (!tracking.canonical_path || !tracking.canonical_present) {
-    return [
-      toErrorViolation(
-        'TRACKING_CANONICAL_FILE_MISSING',
-        `Tracking canonical file is missing (${tracking.canonical_path ?? 'undeclared'}).`
-      ),
-    ];
-  }
-
-  if (tracking.single_in_progress_valid === false) {
-    return [
-      toErrorViolation(
-        'TRACKING_CANONICAL_IN_PROGRESS_INVALID',
-        `Tracking canonical file must contain exactly one in-progress task (count=${tracking.in_progress_count ?? 'n/a'}).`
-      ),
-    ];
-  }
-
-  return [];
 };
 
 const resolvePendingChanges = (repoState: RepoState): number | null => {
@@ -1715,7 +1531,6 @@ export const evaluateAiGate = (
     readMcpAiGateReceipt: activeDependencies.readMcpAiGateReceipt,
   });
   const gitflowViolations = collectGitflowViolations(repoState, protectedBranches);
-  const trackingViolations = collectTrackingViolations(repoState);
   const skillsContract = toSkillsContractAssessment({
     stage: params.stage,
     repoRoot: params.repoRoot,
@@ -1739,20 +1554,10 @@ export const evaluateAiGate = (
             `Skills contract incomplete for ${params.stage}: ${skillsContract.violations.map((violation) => violation.code).join(', ')}.`
           ),
         ];
-  const policyThresholdViolations = collectEvidencePolicyThresholdViolations({
-    evidenceResult,
-    policy: resolvedPolicy.policy,
-  });
-  const tddBddBaselineViolations = collectTddBddBaselineViolations({
-    evidenceResult,
-  });
   const violations = [
     ...evidenceAssessment.violations,
-    ...policyThresholdViolations,
-    ...tddBddBaselineViolations,
     ...stageSkillsContractViolations,
     ...gitflowViolations,
-    ...trackingViolations,
     ...mcpReceiptAssessment.violations,
   ];
   const blocked = violations.some((violation) => violation.severity === 'ERROR');

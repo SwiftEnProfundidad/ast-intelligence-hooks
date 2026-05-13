@@ -3,95 +3,43 @@ import test from 'node:test';
 import { androidRules } from './android';
 
 test('androidRules define reglas heurísticas locked para plataforma android', () => {
-  assert.equal(androidRules.length, 82);
+  assert.equal(androidRules.length, 20);
 
   const ids = androidRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
     'heuristics.android.thread-sleep.ast',
     'heuristics.android.globalscope.ast',
     'heuristics.android.run-blocking.ast',
-    'heuristics.android.coroutines-async-await-no-callbacks.ast',
-    'heuristics.android.async-await-paralelismo.ast',
-    'heuristics.android.supervisorscope-errores-no-cancelan-otros-jobs.ast',
-    'heuristics.android.suspend-functions-en-api-service.ast',
-    'heuristics.android.suspend-functions-para-operaciones-async.ast',
-    'heuristics.android.dao-data-access-objects-con-suspend-functions.ast',
-    'heuristics.android.transaction-para-operaciones-multi-query.ast',
-    'heuristics.android.stateflow-estado-mutable-observable.ast',
-    'heuristics.android.sharedflow-hot-stream-puede-no-tener-valor-para-eventos.ast',
-    'heuristics.android.flow-builders-flow-emit-flowof-asflow.ast',
-    'heuristics.android.collect-terminal-operator-para-consumir-flow.ast',
-    'heuristics.android.collect-as-state-consumir-flow-en-compose.ast',
-    'heuristics.android.remember-evitar-recrear-objetos.ast',
-    'heuristics.android.remember-para-mantener-estado-entre-recomposiciones.ast',
-    'heuristics.android.derivedstateof-ca-lculos-caros-solo-cuando-cambia-input.ast',
-    'heuristics.android.derivedstateof-ca-lculos-derivados-de-state.ast',
-    'heuristics.android.launchedeffect-side-effects-con-lifecycle.ast',
-    'heuristics.android.launchedeffect-keys-controlar-cuando-se-relanza-effect.ast',
-    'heuristics.android.disposableeffect-cleanup-cuando-composable-sale-de-composicio-n.ast',
-    'heuristics.android.preview-preview-para-ver-ui-sin-correr-app.ast',
-    'heuristics.android.recomposition-composables-deben-ser-idempotentes.ast',
-    'heuristics.android.uistate-sealed-class-loading-success-error-states.ast',
-    'heuristics.android.use-cases-lo-gica-de-negocio-encapsulada.ast',
-    'heuristics.android.repository-pattern-abstraer-acceso-a-datos.ast',
-    'heuristics.android.app-startup-androidx-startup-para-lazy-init.ast',
-    'heuristics.android.baseline-profiles-optimizacio-n-de-startup.ast',
-    'heuristics.android.single-source-of-truth-viewmodel-es-la-fuente.ast',
-  'heuristics.android.skip-recomposition-para-metros-inmutables-o-estables.ast',
-  'heuristics.android.stability-composables-estables-recomponen-menos.ast',
-    'heuristics.android.string-formatting-1-s-2-d-para-argumentos.ast',
-    'heuristics.android.binds-para-implementaciones-de-interfaces-ma-s-eficiente.ast',
-    'heuristics.android.provides-para-interfaces-o-third-party.ast',
-    'heuristics.android.hilt-di-framework-no-manual-factories.ast',
-    'heuristics.android.hiltandroidapp-application-class.ast',
-    'heuristics.android.androidentrypoint-activity-fragment-viewmodel.ast',
-    'heuristics.android.inject-constructor-constructor-injection.ast',
-    'heuristics.android.module-installin-provide-dependencies.ast',
-    'heuristics.android.viewmodelscoped-para-dependencias-de-viewmodel.ast',
-    'heuristics.android.workmanager-androidx-work-work-runtime-ktx.ast',
-    'heuristics.android.version-catalogs-libs-versions-toml-para-dependencias.ast',
-    'heuristics.android.workmanager-background-tasks.ast',
-    'heuristics.android.androidtest-instrumented-tests-device-emulator.ast',
-    'heuristics.android.aaa-pattern-arrange-act-assert.ast',
-    'heuristics.android.given-when-then-bdd-style.ast',
-    'heuristics.android.test-unit-tests-jvm.ast',
-    'heuristics.android.state-hoisting-elevar-estado-al-nivel-apropiado.ast',
-    'heuristics.android.viewmodel-androidx-lifecycle-viewmodel.ast',
-    'heuristics.android.viewmodel-sobrevive-configuration-changes.ast',
-    'heuristics.android.viewmodelscope-scope-de-viewmodel-cancelado-automa-ticamente.ast',
-    'heuristics.android.force-unwrap.ast',
-    'heuristics.android.java-source.ast',
-    'heuristics.android.asynctask-deprecated.ast',
-    'heuristics.android.findviewbyid.ast',
-    'heuristics.android.rxjava-new-code.ast',
-    'heuristics.android.dispatchers-main-ui-io-network-disk-default-cpu.ast',
-    'heuristics.android.withcontext-change-dispatcher.ast',
-    'heuristics.android.no-console-log.ast',
-    'heuristics.android.buildconfig-constantes-en-tiempo-de-compilacio-n.ast',
-    'heuristics.android.hardcoded-strings.ast',
-    'heuristics.android.localization-strings-xml-por-idioma-values-es-values-en.ast',
-    'heuristics.android.plurals-values-plurals-xml.ast',
-    'heuristics.android.no-singleton.ast',
-  'heuristics.android.composable-functions-composable-para-ui.ast',
-  'heuristics.android.arguments-pasar-datos-entre-pantallas.ast',
-  'heuristics.android.adaptive-layouts-responsive-design-windowsizeclass.ast',
-  'heuristics.android.analizar-estructura-existente-mo-dulos-interfaces-dependencias-gradle.ast',
-  'heuristics.android.theme-color-scheme-typography-shapes.ast',
-  'heuristics.android.dark-theme-soportar-desde-di-a-1-issystemindarktheme.ast',
-  'heuristics.android.timber-logging-library.ast',
-  'heuristics.android.analytics-firebase-analytics-o-custom.ast',
-  'heuristics.android.android-profiler-cpu-memory-network-profiling.ast',
-  'heuristics.android.touch-targets-mi-nimo-48dp.ast',
-  'heuristics.android.text-scaling-soportar-font-scaling-del-sistema.ast',
-  'heuristics.android.accessibility-semantics-contentdescription.ast',
-  'heuristics.android.contentdescription-para-ima-genes-y-botones.ast',
-  'heuristics.android.talkback-screen-reader-de-android.ast',
-    'heuristics.android.god-activities-single-activity-composables.ast',
-    'heuristics.android.single-activity-multiples-composables-fragments-no-activities.ast',
-    'heuristics.android.try-catch-manejo-de-errores-en-coroutines.ast',
+    'heuristics.android.flow.livedata-state-exposure.ast',
+    'heuristics.android.security.local-properties-tracked.ast',
+    'heuristics.android.persistence.shared-preferences-usage.ast',
+    'heuristics.android.testing.junit4-usage.ast',
+    'heuristics.android.testing.production-mock-usage.ast',
+    'heuristics.android.coroutines.manual-scope-in-viewmodel.ast',
+    'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast',
+    'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
+    'heuristics.android.coroutines.with-context.ast',
+    'heuristics.android.coroutines.lifecycle-scope-boundary-leak.ast',
+    'heuristics.android.coroutines.supervisor-scope.ast',
+    'heuristics.android.coroutines.try-catch.ast',
+    'heuristics.android.solid.srp.presentation-mixed-responsibilities.ast',
+    'heuristics.android.solid.ocp.discriminator-branching.ast',
+    'heuristics.android.solid.dip.concrete-framework-dependency.ast',
+    'heuristics.android.solid.isp.fat-interface-dependency.ast',
+    'heuristics.android.solid.lsp.narrowed-precondition.ast',
   ]);
 
   const byId = new Map(androidRules.map((rule) => [rule.id, rule]));
+  const coroutineRuleIds = [
+    'heuristics.android.globalscope.ast',
+    'heuristics.android.run-blocking.ast',
+  ];
+
+  for (const ruleId of coroutineRuleIds) {
+    assert.equal(byId.get(ruleId)?.platform, 'android');
+    assert.equal(byId.get(ruleId)?.locked, true);
+  }
+
   assert.equal(
     byId.get('heuristics.android.thread-sleep.ast')?.then.code,
     'HEURISTICS_ANDROID_THREAD_SLEEP_AST'
@@ -105,327 +53,76 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
     'HEURISTICS_ANDROID_RUN_BLOCKING_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.coroutines-async-await-no-callbacks.ast')?.then.code,
-    'HEURISTICS_ANDROID_COROUTINES_ASYNC_AWAIT_NO_CALLBACKS_AST'
+    byId.get('heuristics.android.flow.livedata-state-exposure.ast')?.then.code,
+    'HEURISTICS_ANDROID_FLOW_LIVEDATA_STATE_EXPOSURE_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.async-await-paralelismo.ast')?.then.code,
-    'HEURISTICS_ANDROID_ASYNC_AWAIT_PARALELISMO_AST'
+    byId.get('heuristics.android.security.local-properties-tracked.ast')?.then.code,
+    'HEURISTICS_ANDROID_SECURITY_LOCAL_PROPERTIES_TRACKED_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.supervisorscope-errores-no-cancelan-otros-jobs.ast')?.then.code,
-    'HEURISTICS_ANDROID_SUPERVISORSCOPE_ERRORES_NO_CANCELAN_OTROS_JOBS_AST'
+    byId.get('heuristics.android.persistence.shared-preferences-usage.ast')?.then.code,
+    'HEURISTICS_ANDROID_PERSISTENCE_SHARED_PREFERENCES_USAGE_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.suspend-functions-en-api-service.ast')?.then.code,
-    'HEURISTICS_ANDROID_SUSPEND_FUNCTIONS_EN_API_SERVICE_AST'
+    byId.get('heuristics.android.testing.junit4-usage.ast')?.then.code,
+    'HEURISTICS_ANDROID_TESTING_JUNIT4_USAGE_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.suspend-functions-para-operaciones-async.ast')?.then.code,
-    'HEURISTICS_ANDROID_SUSPEND_FUNCTIONS_PARA_OPERACIONES_ASYNC_AST'
+    byId.get('heuristics.android.testing.production-mock-usage.ast')?.then.code,
+    'HEURISTICS_ANDROID_TESTING_PRODUCTION_MOCK_USAGE_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.dao-data-access-objects-con-suspend-functions.ast')?.then.code,
-    'HEURISTICS_ANDROID_DAO_DATA_ACCESS_OBJECTS_CON_SUSPEND_FUNCTIONS_AST'
+    byId.get('heuristics.android.coroutines.manual-scope-in-viewmodel.ast')?.then.code,
+    'HEURISTICS_ANDROID_COROUTINES_MANUAL_SCOPE_IN_VIEWMODEL_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.transaction-para-operaciones-multi-query.ast')?.then.code,
-    'HEURISTICS_ANDROID_TRANSACTION_PARA_OPERACIONES_MULTI_QUERY_AST'
+    byId.get('heuristics.android.coroutines.dispatchers-main-boundary-leak.ast')?.then.code,
+    'HEURISTICS_ANDROID_COROUTINES_DISPATCHERS_MAIN_BOUNDARY_LEAK_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.stateflow-estado-mutable-observable.ast')?.then.code,
-    'HEURISTICS_ANDROID_STATEFLOW_ESTADO_MUTABLE_OBSERVABLE_AST'
+    byId.get('heuristics.android.coroutines.hardcoded-background-dispatcher.ast')?.then.code,
+    'HEURISTICS_ANDROID_COROUTINES_HARDCODED_BACKGROUND_DISPATCHER_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.sharedflow-hot-stream-puede-no-tener-valor-para-eventos.ast')?.then.code,
-    'HEURISTICS_ANDROID_SHAREDFLOW_HOT_STREAM_PUEDE_NO_TENER_VALOR_PARA_EVENTOS_AST'
+    byId.get('heuristics.android.coroutines.with-context.ast')?.then.code,
+    'HEURISTICS_ANDROID_COROUTINES_WITH_CONTEXT_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.uistate-sealed-class-loading-success-error-states.ast')?.then.code,
-    'HEURISTICS_ANDROID_UISTATE_SEALED_CLASS_LOADING_SUCCESS_ERROR_STATES_AST'
+    byId.get('heuristics.android.coroutines.lifecycle-scope-boundary-leak.ast')?.then.code,
+    'HEURISTICS_ANDROID_COROUTINES_LIFECYCLE_SCOPE_BOUNDARY_LEAK_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.use-cases-lo-gica-de-negocio-encapsulada.ast')?.then.code,
-    'HEURISTICS_ANDROID_USE_CASES_LOGICA_DE_NEGOCIO_ENCAPSULADA_AST'
+    byId.get('heuristics.android.coroutines.supervisor-scope.ast')?.then.code,
+    'HEURISTICS_ANDROID_COROUTINES_SUPERVISOR_SCOPE_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.repository-pattern-abstraer-acceso-a-datos.ast')?.then.code,
-    'HEURISTICS_ANDROID_REPOSITORY_PATTERN_ABSTRAER_ACCESO_A_DATOS_AST'
+    byId.get('heuristics.android.coroutines.try-catch.ast')?.then.code,
+    'HEURISTICS_ANDROID_COROUTINES_TRY_CATCH_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.app-startup-androidx-startup-para-lazy-init.ast')?.then.code,
-    'HEURISTICS_ANDROID_APP_STARTUP_ANDROIDX_STARTUP_PARA_LAZY_INIT_AST'
+    byId.get('heuristics.android.solid.srp.presentation-mixed-responsibilities.ast')?.then.code,
+    'HEURISTICS_ANDROID_SOLID_SRP_PRESENTATION_MIXED_RESPONSIBILITIES_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.baseline-profiles-optimizacio-n-de-startup.ast')?.then.code,
-    'HEURISTICS_ANDROID_BASELINE_PROFILES_OPTIMIZACION_DE_STARTUP_AST'
+    byId.get('heuristics.android.solid.ocp.discriminator-branching.ast')?.then.code,
+    'HEURISTICS_ANDROID_SOLID_OCP_DISCRIMINATOR_BRANCHING_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.single-source-of-truth-viewmodel-es-la-fuente.ast')?.then.code,
-    'HEURISTICS_ANDROID_SINGLE_SOURCE_OF_TRUTH_VIEWMODEL_ES_LA_FUENTE_AST'
+    byId.get('heuristics.android.solid.dip.concrete-framework-dependency.ast')?.then.code,
+    'HEURISTICS_ANDROID_SOLID_DIP_CONCRETE_FRAMEWORK_DEPENDENCY_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.skip-recomposition-para-metros-inmutables-o-estables.ast')
-      ?.then.code,
-    'HEURISTICS_ANDROID_SKIP_RECOMPOSITION_PARA_METROS_INMUTABLES_O_ESTABLES_AST'
+    byId.get('heuristics.android.solid.isp.fat-interface-dependency.ast')?.then.code,
+    'HEURISTICS_ANDROID_SOLID_ISP_FAT_INTERFACE_DEPENDENCY_AST'
   );
   assert.equal(
-    byId.get('heuristics.android.stability-composables-estables-recomponen-menos.ast')?.then.code,
-    'HEURISTICS_ANDROID_STABILITY_COMPOSABLES_ESTABLES_RECOMPONEN_MENOS_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.string-formatting-1-s-2-d-para-argumentos.ast')?.then.code,
-    'HEURISTICS_ANDROID_STRING_FORMATTING_1_S_2_D_PARA_ARGUMENTOS_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.binds-para-implementaciones-de-interfaces-ma-s-eficiente.ast')?.then.code,
-    'HEURISTICS_ANDROID_BINDS_PARA_IMPLEMENTACIONES_DE_INTERFACES_MA_S_EFICIENTE_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.provides-para-interfaces-o-third-party.ast')?.then.code,
-    'HEURISTICS_ANDROID_PROVIDES_PARA_INTERFACES_O_THIRD_PARTY_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.hilt-di-framework-no-manual-factories.ast')?.then.code,
-    'HEURISTICS_ANDROID_HILT_DI_FRAMEWORK_NO_MANUAL_FACTORIES_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.hiltandroidapp-application-class.ast')?.then.code,
-    'HEURISTICS_ANDROID_HILTANDROIDAPP_APPLICATION_CLASS_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.androidentrypoint-activity-fragment-viewmodel.ast')?.then.code,
-    'HEURISTICS_ANDROID_ANDROIDENTRYPOINT_ACTIVITY_FRAGMENT_VIEWMODEL_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.inject-constructor-constructor-injection.ast')?.then.code,
-    'HEURISTICS_ANDROID_INJECT_CONSTRUCTOR_CONSTRUCTOR_INJECTION_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.module-installin-provide-dependencies.ast')?.then.code,
-    'HEURISTICS_ANDROID_MODULE_INSTALLIN_PROVIDE_DEPENDENCIES_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.viewmodelscoped-para-dependencias-de-viewmodel.ast')?.then.code,
-    'HEURISTICS_ANDROID_VIEWMODELSCOPED_PARA_DEPENDENCIAS_DE_VIEWMODEL_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.workmanager-androidx-work-work-runtime-ktx.ast')?.then.code,
-    'HEURISTICS_ANDROID_WORKMANAGER_ANDROIDX_WORK_WORK_RUNTIME_KTX_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.version-catalogs-libs-versions-toml-para-dependencias.ast')?.then.code,
-    'HEURISTICS_ANDROID_VERSION_CATALOGS_LIBS_VERSIONS_TOML_PARA_DEPENDENCIAS_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.workmanager-background-tasks.ast')?.then.code,
-    'HEURISTICS_ANDROID_WORKMANAGER_BACKGROUND_TASKS_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.androidtest-instrumented-tests-device-emulator.ast')?.then.code,
-    'HEURISTICS_ANDROID_ANDROIDTEST_INSTRUMENTED_TESTS_DEVICE_EMULATOR_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.aaa-pattern-arrange-act-assert.ast')?.then.code,
-    'HEURISTICS_ANDROID_AAA_PATTERN_ARRANGE_ACT_ASSERT_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.given-when-then-bdd-style.ast')?.then.code,
-    'HEURISTICS_ANDROID_GIVEN_WHEN_THEN_BDD_STYLE_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.test-unit-tests-jvm.ast')?.then.code,
-    'HEURISTICS_ANDROID_TEST_UNIT_TESTS_JVM_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.state-hoisting-elevar-estado-al-nivel-apropiado.ast')?.then.code,
-    'HEURISTICS_ANDROID_STATE_HOISTING_ELEVAR_ESTADO_AL_NIVEL_APROPIADO_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.viewmodel-androidx-lifecycle-viewmodel.ast')?.then.code,
-    'HEURISTICS_ANDROID_VIEWMODEL_ANDROIDX_LIFECYCLE_VIEWMODEL_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.viewmodel-sobrevive-configuration-changes.ast')?.then.code,
-    'HEURISTICS_ANDROID_VIEWMODEL_SOBREVIVE_CONFIGURATION_CHANGES_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.viewmodelscope-scope-de-viewmodel-cancelado-automa-ticamente.ast')
-      ?.then.code,
-    'HEURISTICS_ANDROID_VIEWMODELSCOPE_SCOPE_DE_VIEWMODEL_CANCELADO_AUTOMATICAMENTE_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.force-unwrap.ast')?.then.code,
-    'HEURISTICS_ANDROID_FORCE_UNWRAP_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.java-source.ast')?.then.code,
-    'HEURISTICS_ANDROID_JAVA_SOURCE_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.asynctask-deprecated.ast')?.then.code,
-    'HEURISTICS_ANDROID_ASYNCTASK_DEPRECATED_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.findviewbyid.ast')?.then.code,
-    'HEURISTICS_ANDROID_FINDVIEWBYID_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.rxjava-new-code.ast')?.then.code,
-    'HEURISTICS_ANDROID_RXJAVA_NEW_CODE_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.collect-terminal-operator-para-consumir-flow.ast')?.then.code,
-    'HEURISTICS_ANDROID_COLLECT_TERMINAL_OPERATOR_PARA_CONSUMIR_FLOW_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.collect-as-state-consumir-flow-en-compose.ast')?.then.code,
-    'HEURISTICS_ANDROID_COLLECT_AS_STATE_CONSUMIR_FLOW_EN_COMPOSE_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.remember-evitar-recrear-objetos.ast')?.then.code,
-    'HEURISTICS_ANDROID_REMEMBER_EVITAR_RECREAR_OBJETOS_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.remember-para-mantener-estado-entre-recomposiciones.ast')?.then.code,
-    'HEURISTICS_ANDROID_REMEMBER_PARA_MANTENER_ESTADO_ENTRE_RECOMPOSICIONES_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.derivedstateof-ca-lculos-caros-solo-cuando-cambia-input.ast')
-      ?.then.code,
-    'HEURISTICS_ANDROID_DERIVEDSTATEOF_CALCULOS_CAROS_SOLO_CUANDO_CAMBIA_INPUT_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.derivedstateof-ca-lculos-derivados-de-state.ast')?.then.code,
-    'HEURISTICS_ANDROID_DERIVEDSTATEOF_CALCULOS_DERIVADOS_DE_STATE_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.launchedeffect-side-effects-con-lifecycle.ast')?.then.code,
-    'HEURISTICS_ANDROID_LAUNCHEDEFFECT_SIDE_EFFECTS_CON_LIFECYCLE_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.launchedeffect-keys-controlar-cuando-se-relanza-effect.ast')?.then.code,
-    'HEURISTICS_ANDROID_LAUNCHEDEFFECT_KEYS_CONTROLAR_CUANDO_SE_RELANZA_EFFECT_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.disposableeffect-cleanup-cuando-composable-sale-de-composicio-n.ast')
-      ?.then.code,
-    'HEURISTICS_ANDROID_DISPOSABLE_EFFECT_CLEANUP_CUANDO_COMPOSABLE_SALE_DE_COMPOSICIO_N_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.preview-preview-para-ver-ui-sin-correr-app.ast')?.then.code,
-    'HEURISTICS_ANDROID_PREVIEW_PREVIEW_PARA_VER_UI_SIN_CORRER_APP_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.recomposition-composables-deben-ser-idempotentes.ast')?.then.code,
-    'HEURISTICS_ANDROID_RECOMPOSITION_COMPOSABLES_DEBEN_SER_IDEMPOTENTES_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.dispatchers-main-ui-io-network-disk-default-cpu.ast')?.then.code,
-    'HEURISTICS_ANDROID_DISPATCHERS_MAIN_UI_IO_NETWORK_DISK_DEFAULT_CPU_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.withcontext-change-dispatcher.ast')?.then.code,
-    'HEURISTICS_ANDROID_WITHCONTEXT_CHANGE_DISPATCHER_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.no-console-log.ast')?.then.code,
-    'HEURISTICS_ANDROID_NO_CONSOLE_LOG_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.hardcoded-strings.ast')?.then.code,
-    'HEURISTICS_ANDROID_HARDCODED_STRINGS_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.localization-strings-xml-por-idioma-values-es-values-en.ast')?.then.code,
-    'HEURISTICS_ANDROID_LOCALIZATION_STRINGS_XML_POR_IDIOMA_VALUES_ES_VALUES_EN_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.plurals-values-plurals-xml.ast')?.then.code,
-    'HEURISTICS_ANDROID_PLURALS_VALUES_PLURALS_XML_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.no-singleton.ast')?.then.code,
-    'HEURISTICS_ANDROID_NO_SINGLETON_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.composable-functions-composable-para-ui.ast')?.then.code,
-    'HEURISTICS_ANDROID_COMPOSABLE_FUNCTIONS_COMPOSABLE_PARA_UI_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.arguments-pasar-datos-entre-pantallas.ast')?.then.code,
-    'HEURISTICS_ANDROID_ARGUMENTS_PASAR_DATOS_ENTRE_PANTALLAS_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.adaptive-layouts-responsive-design-windowsizeclass.ast')?.then.code,
-    'HEURISTICS_ANDROID_ADAPTIVE_LAYOUTS_RESPONSIVE_DESIGN_WINDOW_SIZE_CLASS_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.analizar-estructura-existente-mo-dulos-interfaces-dependencias-gradle.ast')
-      ?.then.code,
-    'HEURISTICS_ANDROID_ANALIZAR_ESTRUCTURA_EXISTENTE_MO_DULOS_INTERFACES_DEPENDENCIAS_GRADLE_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.theme-color-scheme-typography-shapes.ast')?.then.code,
-    'HEURISTICS_ANDROID_THEME_COLOR_SCHEME_TYPOGRAPHY_SHAPES_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.dark-theme-soportar-desde-di-a-1-issystemindarktheme.ast')?.then.code,
-    'HEURISTICS_ANDROID_DARK_THEME_SOPORTAR_DESDE_DI_A_1_ISSYSTEMINDARKTHEME_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.timber-logging-library.ast')?.then.code,
-    'HEURISTICS_ANDROID_TIMBER_LOGGING_LIBRARY_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.analytics-firebase-analytics-o-custom.ast')?.then.code,
-    'HEURISTICS_ANDROID_ANALYTICS_FIREBASE_ANALYTICS_O_CUSTOM_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.android-profiler-cpu-memory-network-profiling.ast')?.then.code,
-    'HEURISTICS_ANDROID_ANDROID_PROFILER_CPU_MEMORY_NETWORK_PROFILING_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.touch-targets-mi-nimo-48dp.ast')?.then.code,
-    'HEURISTICS_ANDROID_TOUCH_TARGETS_MI_NIMO_48DP_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.text-scaling-soportar-font-scaling-del-sistema.ast')?.then.code,
-    'HEURISTICS_ANDROID_TEXT_SCALING_SOPORTAR_FONT_SCALING_DEL_SISTEMA_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.accessibility-semantics-contentdescription.ast')?.then.code,
-    'HEURISTICS_ANDROID_ACCESSIBILITY_SEMANTICS_CONTENTDESCRIPTION_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.contentdescription-para-ima-genes-y-botones.ast')?.then.code,
-    'HEURISTICS_ANDROID_CONTENTDESCRIPTION_PARA_IMAGENES_Y_BOTONES_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.god-activities-single-activity-composables.ast')?.then.code,
-    'HEURISTICS_ANDROID_GOD_ACTIVITIES_SINGLE_ACTIVITY_COMPOSABLES_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.talkback-screen-reader-de-android.ast')?.then.code,
-    'HEURISTICS_ANDROID_TALKBACK_SCREEN_READER_DE_ANDROID_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.single-activity-multiples-composables-fragments-no-activities.ast')?.then.code,
-    'HEURISTICS_ANDROID_SINGLE_ACTIVITY_MULTIPLES_COMPOSABLES_FRAGMENTS_NO_ACTIVITIES_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.android.try-catch-manejo-de-errores-en-coroutines.ast')?.then.code,
-    'HEURISTICS_ANDROID_TRY_CATCH_MANEJO_DE_ERRORES_EN_COROUTINES_AST'
+    byId.get('heuristics.android.solid.lsp.narrowed-precondition.ast')?.then.code,
+    'HEURISTICS_ANDROID_SOLID_LSP_NARROWED_PRECONDITION_AST'
   );
 
   for (const rule of androidRules) {
     assert.equal(rule.platform, 'android');
-    if (
-      rule.id === 'heuristics.android.god-activities-single-activity-composables.ast'
-    ) {
-      assert.equal(rule.severity, 'ERROR');
-      continue;
-    }
     assert.equal(rule.severity, 'WARN');
     assert.equal(rule.locked, true);
     assert.equal(rule.when.kind, 'Heuristic');

@@ -35,7 +35,6 @@ import {
   DEFAULT_GATE_REMEDIATION as DEFAULT_BLOCKED_REMEDIATION,
   REMEDIATION_HINT_BY_CODE as BLOCKED_REMEDIATION_BY_CODE,
 } from '../gate/remediationCatalog';
-import { resolvePrimaryBlockingCause } from '../gate/blockingCause';
 
 const PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE =
   'pumuki pre-push blocked: branch has no upstream tracking reference. Configure upstream first (for example: git push --set-upstream origin <branch>) and retry.';
@@ -61,18 +60,25 @@ const isDocumentationOnlyStagedPath = (relativePath: string): boolean => {
   return /\.(md|mdx)$/i.test(normalized);
 };
 
-const shouldSkipRestagingTrackedEvidenceForDocumentationOnlyScope = (params: {
+const shouldSkipRestagingTrackedEvidence = (params: {
   listStagedIndexPaths: (repoRoot: string) => ReadonlyArray<string>;
   repoRoot: string;
 }): boolean => {
   if (isTruthyEnvFlag(process.env.PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE)) {
     return false;
   }
-  const paths = params.listStagedIndexPaths(params.repoRoot).filter(
+  const stagedPaths = params.listStagedIndexPaths(params.repoRoot);
+  if (
+    !stagedPaths.includes('.ai_evidence.json') &&
+    !stagedPaths.includes('.AI_EVIDENCE.json')
+  ) {
+    return true;
+  }
+  const paths = stagedPaths.filter(
     (p) => p !== '.ai_evidence.json' && p !== '.AI_EVIDENCE.json'
   );
   if (paths.length === 0) {
-    return true;
+    return false;
   }
   return paths.every(isDocumentationOnlyStagedPath);
 };
@@ -224,7 +230,7 @@ const defaultDependencies: StageRunnerDependencies = {
     new GitService().runGit(['add', '--', relativePath], repoRoot);
   },
   restorePathFromHead: (repoRoot, relativePath) => {
-    new GitService().runGit(['checkout', '--', relativePath], repoRoot);
+    new GitService().runGit(['restore', '--worktree', '--source=HEAD', '--', relativePath], repoRoot);
   },
   resolveHeadOid: (repoRoot) => {
     try {
@@ -274,16 +280,10 @@ const notifyGateBlockedForStage = (params: {
     evidence?.snapshot.stage === params.stage
       ? evidence.snapshot.findings
       : [];
-  const blockingStageFindings = stageFindings.filter((finding) =>
-    isSeverityAtLeast(finding.severity, 'ERROR')
-  );
-  const primaryCause = resolvePrimaryBlockingCause([
-    ...blockingStageFindings,
-    ...(evidence?.ai_gate.violations ?? []),
-  ]);
-  const primaryStageFinding = primaryCause ?? resolvePrimaryBlockedStageFinding(stageFindings);
-  const causeCode = primaryStageFinding?.code ?? params.fallbackCauseCode;
-  const causeMessage = primaryStageFinding?.message ?? params.fallbackCauseMessage;
+  const primaryStageFinding = resolvePrimaryBlockedStageFinding(stageFindings);
+  const firstViolation = evidence?.ai_gate.violations[0];
+  const causeCode = primaryStageFinding?.code ?? firstViolation?.code ?? params.fallbackCauseCode;
+  const causeMessage = primaryStageFinding?.message ?? firstViolation?.message ?? params.fallbackCauseMessage;
   const remediation =
     BLOCKED_REMEDIATION_BY_CODE[causeCode]
     ?? params.fallbackRemediation
@@ -519,7 +519,6 @@ const runHookGateWithPolicyRetry = async (params: {
 const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
   dependencies: StageRunnerDependencies;
   repoRoot: string;
-  gateBlocked: boolean;
 }): boolean => {
   const evidenceAbsolutePath = join(params.repoRoot, EVIDENCE_FILE_PATH);
   if (!existsSync(evidenceAbsolutePath)) {
@@ -529,18 +528,38 @@ const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
     return false;
   }
   if (
-    shouldSkipRestagingTrackedEvidenceForDocumentationOnlyScope({
+    shouldSkipRestagingTrackedEvidence({
       repoRoot: params.repoRoot,
       listStagedIndexPaths: params.dependencies.listStagedIndexPaths,
     })
   ) {
-    if (!params.dependencies.isQuietMode()) {
+    try {
+      params.dependencies.restorePathFromHead(params.repoRoot, EVIDENCE_FILE_PATH);
+      if (!params.dependencies.isQuietMode()) {
+        process.stderr.write(
+          `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} was refreshed but restored because it was not part of the staged set. ` +
+            `Stage it before committing if this commit must update evidence: git add -- ${EVIDENCE_FILE_PATH}. ` +
+            `Force previous behavior: PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1\n`
+        );
+      }
+    } catch (error) {
+      const details = error instanceof Error ? error.message : String(error);
       process.stderr.write(
-        `[pumuki][evidence-sync] tracked ${EVIDENCE_FILE_PATH} left unchanged for documentation-only staged paths (*.md / *.mdx). ` +
-          `Force previous behavior: PUMUKI_PRE_COMMIT_ALWAYS_RESTAGE_TRACKED_EVIDENCE=1\n`
+        `[pumuki][evidence-sync] unable to restore unstaged tracked ${EVIDENCE_FILE_PATH}: ${details}\n`
       );
+      params.dependencies.notifyGateBlocked({
+        repoRoot: params.repoRoot,
+        stage: 'PRE_COMMIT',
+        totalViolations: 1,
+        causeCode: 'EVIDENCE_STAGE_SYNC_FAILED',
+        causeMessage:
+          `Unable to restore unstaged tracked ${EVIDENCE_FILE_PATH} after successful PRE_COMMIT gate.`,
+        remediation: BLOCKED_REMEDIATION_BY_CODE.EVIDENCE_STAGE_SYNC_FAILED
+          ?? DEFAULT_BLOCKED_REMEDIATION,
+      });
+      notifyAuditSummaryForStage(params.dependencies, 'PRE_COMMIT');
+      return true;
     }
-    params.dependencies.restorePathFromHead(params.repoRoot, EVIDENCE_FILE_PATH);
     return false;
   }
   try {
@@ -551,9 +570,6 @@ const syncTrackedEvidenceAfterSuccessfulPreCommit = (params: {
     process.stderr.write(
       `[pumuki][evidence-sync] unable to restage tracked ${EVIDENCE_FILE_PATH}: ${details}\n`
     );
-    if (params.gateBlocked) {
-      return false;
-    }
     params.dependencies.notifyGateBlocked({
       repoRoot: params.repoRoot,
       stage: 'PRE_COMMIT',
@@ -816,10 +832,10 @@ export async function runPreCommitStage(
     return 1;
   }
   if (
+    result.exitCode === 0 &&
     syncTrackedEvidenceAfterSuccessfulPreCommit({
       dependencies: activeDependencies,
       repoRoot,
-      gateBlocked: result.exitCode !== 0,
     })
   ) {
     return 1;

@@ -16,8 +16,8 @@ import {
 test('resolveCorePolicyForStage returns the base core policy without policy-pack activation', () => {
   assert.deepEqual(resolveCorePolicyForStage('PRE_PUSH'), {
     stage: 'PRE_PUSH',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: 'INFO',
+    warnOnOrAbove: 'INFO',
   });
 });
 
@@ -31,8 +31,8 @@ test('resolveDefaultAdvisoryPolicyProfileForStage returns the advisory fallback 
   assert.equal(resolved.bundle, 'gate-policy.default.PRE_PUSH');
   assert.deepEqual(resolved.policy, {
     stage: 'PRE_PUSH',
-    blockOnOrAbove: 'ERROR',
-    warnOnOrAbove: 'WARN',
+    blockOnOrAbove: 'INFO',
+    warnOnOrAbove: 'INFO',
   });
 });
 
@@ -106,6 +106,7 @@ test('resolveExplicitPolicyPackSelection returns skills policy when no hard mode
           version: '1.0',
           defaultBundleEnabled: true,
           stages: {
+            PRE_WRITE: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_PUSH: { blockOnOrAbove: 'CRITICAL', warnOnOrAbove: 'ERROR' },
             CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
@@ -135,6 +136,7 @@ test('resolveExplicitPolicyPackSelection prioritizes hard mode over skills polic
           version: '1.0',
           defaultBundleEnabled: true,
           stages: {
+            PRE_WRITE: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_PUSH: { blockOnOrAbove: 'CRITICAL', warnOnOrAbove: 'ERROR' },
             CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
@@ -174,8 +176,8 @@ test('resolvePolicyProfileForStage returns default policy profile when no overri
     assert.equal(resolved.bundle, 'gate-policy.default.PRE_PUSH');
     assert.deepEqual(resolved.policy, {
       stage: 'PRE_PUSH',
-      blockOnOrAbove: 'ERROR',
-      warnOnOrAbove: 'WARN',
+      blockOnOrAbove: 'INFO',
+      warnOnOrAbove: 'INFO',
     });
     assert.equal(resolved.sourcePolicyHash, undefined);
   });
@@ -190,6 +192,7 @@ test('resolvePolicyProfileForStage returns skills policy profile when skills.pol
           version: '1.0',
           defaultBundleEnabled: true,
           stages: {
+            PRE_WRITE: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
             PRE_PUSH: { blockOnOrAbove: 'CRITICAL', warnOnOrAbove: 'ERROR' },
             CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
@@ -211,8 +214,8 @@ test('resolvePolicyProfileForStage returns skills policy profile when skills.pol
       assert.equal(resolved.bundle, 'gate-policy.skills.policy.PRE_PUSH');
     assert.deepEqual(resolved.policy, {
       stage: 'PRE_PUSH',
-      blockOnOrAbove: 'CRITICAL',
-      warnOnOrAbove: 'ERROR',
+      blockOnOrAbove: 'INFO',
+      warnOnOrAbove: 'INFO',
     });
     assert.match(resolved.sourcePolicyHash ?? '', /^[a-f0-9]{64}$/i);
   });
@@ -238,8 +241,8 @@ test('resolvePolicyProfileForStage returns hard mode profile from environment', 
       );
       assert.deepEqual(resolved.policy, {
         stage: 'PRE_COMMIT',
-        blockOnOrAbove: 'ERROR',
-        warnOnOrAbove: 'WARN',
+        blockOnOrAbove: 'INFO',
+        warnOnOrAbove: 'INFO',
       });
       assert.equal(resolved.sourcePolicyHash, 'critical-high');
     } finally {
@@ -344,8 +347,8 @@ test('resolvePolicyProfileForStage lets environment profile override persisted h
       );
       assert.deepEqual(resolved.policy, {
         stage: 'PRE_PUSH',
-        blockOnOrAbove: 'ERROR',
-        warnOnOrAbove: 'WARN',
+        blockOnOrAbove: 'INFO',
+        warnOnOrAbove: 'INFO',
       });
       assert.equal(resolved.sourcePolicyHash, 'critical-high');
     } finally {

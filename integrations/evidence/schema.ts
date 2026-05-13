@@ -54,7 +54,6 @@ export type SnapshotRulesCoverage = {
   matched_rule_ids: string[];
   unevaluated_rule_ids: string[];
   unsupported_auto_rule_ids?: string[];
-  unsupported_detector_rule_ids?: string[];
   registry_totals?: {
     total: number;
     auto: number;
@@ -73,18 +72,8 @@ export type SnapshotRulesCoverage = {
     registry_declarative?: number;
     stage_applicable_auto?: number;
     unsupported_auto?: number;
-    unsupported_detector?: number;
   };
   coverage_ratio: number;
-  auto_runtime_coverage_ratio?: number;
-  semantic_enforcement_ratio?: number;
-  global_skills_enforcement?: {
-    status: 'enforced' | 'partially_enforced' | 'unsupported';
-    registry_total: number;
-    detector_supported: number;
-    declarative_only: number;
-    unsupported_detector: number;
-  };
 };
 
 export type Snapshot = {
@@ -196,23 +185,6 @@ export type RepoHardModeState = {
   config_path: string;
 };
 
-export type RepoTrackingDeclaration = {
-  source_file: string;
-  declared_path: string;
-  resolved_path: string;
-};
-
-export type RepoTrackingState = {
-  enforced: boolean;
-  canonical_path: string | null;
-  canonical_present: boolean;
-  source_file: string | null;
-  in_progress_count: number | null;
-  single_in_progress_valid: boolean | null;
-  conflict: boolean;
-  declarations: ReadonlyArray<RepoTrackingDeclaration>;
-};
-
 export type RepoState = {
   repo_root: string;
   git: {
@@ -238,7 +210,6 @@ export type RepoState = {
       pre_push: RepoHookState;
     };
     hard_mode?: RepoHardModeState;
-    tracking: RepoTrackingState;
   };
 };
 

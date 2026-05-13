@@ -51,23 +51,22 @@ test('resolveBlockedCauseSummary explica bloqueos de tracking enriquecidos', () 
   assert.doesNotMatch(result, /Evidence AI gate status/i);
 });
 
-test('resolveBlockedCauseSummary prioriza TDD/BDD sobre tracking enriquecido', () => {
+test('resolveBlockedCauseSummary prioriza gaps críticos de skills sobre tracking enriquecido', () => {
   const result = resolveBlockedCauseSummary(
     {
       kind: 'gate.blocked',
       stage: 'PRE_WRITE',
       totalViolations: 2,
-      causeCode: 'TDD_BDD_SCENARIO_FILE_MISSING',
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
       causeMessage:
-        'TDD/BDD evidence scenario file is missing. code=TDD_BDD_SCENARIO_FILE_MISSING active_entries=RGO-1900-01@L53 tracking_source=docs/RURALGO_SEGUIMIENTO.md',
+        'Evidence AI gate status is BLOCKED. EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING active_entries=RGO-1900-02@L35 tracking_source=docs/RURALGO_SEGUIMIENTO.md',
     },
-    'TDD_BDD_SCENARIO_FILE_MISSING'
+    'EVIDENCE_GATE_BLOCKED'
   );
 
-  assert.match(result, /escenario/i);
-  assert.match(result, /TDD\/BDD/i);
+  assert.match(result, /skills/i);
+  assert.match(result, /crítico/i);
   assert.doesNotMatch(result, /tracking bloqueado/i);
-  assert.doesNotMatch(result, /RGO-1900-01/);
 });
 
 test('resolveBlockedCauseSummary traduce el bloqueo umbrella de evidencia', () => {

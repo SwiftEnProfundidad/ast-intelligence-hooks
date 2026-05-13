@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 44);
+  assert.equal(iosRules.length, 58);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -17,6 +17,21 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.dispatchsemaphore.ast',
     'heuristics.ios.operation-queue.ast',
     'heuristics.ios.task-detached.ast',
+    'heuristics.ios.logging.adhoc-print.ast',
+    'heuristics.ios.logging.sensitive-data.ast',
+    'heuristics.ios.networking.alamofire.ast',
+    'heuristics.ios.json.jsonserialization.ast',
+    'heuristics.ios.dependencies.cocoapods.ast',
+    'heuristics.ios.dependencies.carthage.ast',
+    'heuristics.ios.security.userdefaults-sensitive-data.ast',
+    'heuristics.ios.security.insecure-transport.ast',
+    'heuristics.ios.localization.localizable-strings.ast',
+    'heuristics.ios.localization.hardcoded-ui-string.ast',
+    'heuristics.ios.assets.loose-resource.ast',
+    'heuristics.ios.accessibility.fixed-font-size.ast',
+    'heuristics.ios.localization.physical-text-alignment.ast',
+    'heuristics.ios.performance.blocking-sleep.ast',
+    'heuristics.ios.accessibility.icon-only-control-label.ast',
     'heuristics.ios.unchecked-sendable.ast',
     'heuristics.ios.preconcurrency.ast',
     'heuristics.ios.nonisolated-unsafe.ast',
@@ -25,8 +40,6 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.legacy-swiftui-observable-wrapper.ast',
     'heuristics.ios.passed-value-state-wrapper.ast',
     'heuristics.ios.foreach-indices.ast',
-    'heuristics.ios.swiftui.inline-filtering-in-foreach.ast',
-    'heuristics.ios.swiftui.explicit-color-static-member.ast',
     'heuristics.ios.contains-user-filter.ast',
     'heuristics.ios.geometryreader.ast',
     'heuristics.ios.font-weight-bold.ast',
@@ -50,6 +63,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.core-data.nsmanagedobject-boundary.ast',
     'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
     'heuristics.ios.core-data.layer-leak.ast',
+    'heuristics.ios.swiftdata.layer-leak.ast',
     'heuristics.ios.core-data.nsmanagedobject-state-leak.ast',
   ]);
 
@@ -61,6 +75,66 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.task-detached.ast')?.then.code,
     'HEURISTICS_IOS_TASK_DETACHED_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.logging.adhoc-print.ast')?.then.code,
+    'HEURISTICS_IOS_LOGGING_ADHOC_PRINT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.logging.sensitive-data.ast')?.then.code,
+    'HEURISTICS_IOS_LOGGING_SENSITIVE_DATA_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.networking.alamofire.ast')?.then.code,
+    'HEURISTICS_IOS_NETWORKING_ALAMOFIRE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.json.jsonserialization.ast')?.then.code,
+    'HEURISTICS_IOS_JSON_JSONSERIALIZATION_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.dependencies.cocoapods.ast')?.then.code,
+    'HEURISTICS_IOS_DEPENDENCIES_COCOAPODS_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.dependencies.carthage.ast')?.then.code,
+    'HEURISTICS_IOS_DEPENDENCIES_CARTHAGE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.security.userdefaults-sensitive-data.ast')?.then.code,
+    'HEURISTICS_IOS_SECURITY_USERDEFAULTS_SENSITIVE_DATA_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.security.insecure-transport.ast')?.then.code,
+    'HEURISTICS_IOS_SECURITY_INSECURE_TRANSPORT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.localization.localizable-strings.ast')?.then.code,
+    'HEURISTICS_IOS_LOCALIZATION_LOCALIZABLE_STRINGS_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.localization.hardcoded-ui-string.ast')?.then.code,
+    'HEURISTICS_IOS_LOCALIZATION_HARDCODED_UI_STRING_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.assets.loose-resource.ast')?.then.code,
+    'HEURISTICS_IOS_ASSETS_LOOSE_RESOURCE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.accessibility.fixed-font-size.ast')?.then.code,
+    'HEURISTICS_IOS_ACCESSIBILITY_FIXED_FONT_SIZE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.localization.physical-text-alignment.ast')?.then.code,
+    'HEURISTICS_IOS_LOCALIZATION_PHYSICAL_TEXT_ALIGNMENT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.performance.blocking-sleep.ast')?.then.code,
+    'HEURISTICS_IOS_PERFORMANCE_BLOCKING_SLEEP_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.accessibility.icon-only-control-label.ast')?.then.code,
+    'HEURISTICS_IOS_ACCESSIBILITY_ICON_ONLY_CONTROL_LABEL_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.preconcurrency.ast')?.then.code,
@@ -85,14 +159,6 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.foreach-indices.ast')?.then.code,
     'HEURISTICS_IOS_FOREACH_INDICES_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.ios.swiftui.inline-filtering-in-foreach.ast')?.then.code,
-    'HEURISTICS_IOS_SWIFTUI_INLINE_FILTERING_IN_FOREACH_AST'
-  );
-  assert.equal(
-    byId.get('heuristics.ios.swiftui.explicit-color-static-member.ast')?.then.code,
-    'HEURISTICS_IOS_SWIFTUI_EXPLICIT_COLOR_STATIC_MEMBER_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.contains-user-filter.ast')?.then.code,
@@ -146,6 +212,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.core-data.layer-leak.ast')?.then.code,
     'HEURISTICS_IOS_CORE_DATA_LAYER_LEAK_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftdata.layer-leak.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTDATA_LAYER_LEAK_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.core-data.nsmanagedobject-state-leak.ast')?.then.code,

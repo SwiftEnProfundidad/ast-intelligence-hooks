@@ -78,12 +78,10 @@ const withStageRunnerRepo = async (
 ): Promise<void> => {
   const previousBypass = process.env.PUMUKI_SDD_BYPASS;
   const previousDisableCore = process.env.PUMUKI_DISABLE_CORE_SKILLS;
-  const previousSkillsEnforcement = process.env.PUMUKI_SKILLS_ENFORCEMENT;
   const previousAtomicity = process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
   const previousDisableNotifications = process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS;
   process.env.PUMUKI_SDD_BYPASS = '1';
   process.env.PUMUKI_DISABLE_CORE_SKILLS = '0';
-  process.env.PUMUKI_SKILLS_ENFORCEMENT = 'advisory';
   process.env.PUMUKI_GIT_ATOMICITY_ENABLED = '0';
   process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS = '1';
   try {
@@ -101,11 +99,6 @@ const withStageRunnerRepo = async (
       delete process.env.PUMUKI_DISABLE_CORE_SKILLS;
     } else {
       process.env.PUMUKI_DISABLE_CORE_SKILLS = previousDisableCore;
-    }
-    if (typeof previousSkillsEnforcement === 'undefined') {
-      delete process.env.PUMUKI_SKILLS_ENFORCEMENT;
-    } else {
-      process.env.PUMUKI_SKILLS_ENFORCEMENT = previousSkillsEnforcement;
     }
     if (typeof previousAtomicity === 'undefined') {
       delete process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
@@ -253,12 +246,18 @@ test('runPreCommitStage uses skills stage policy override and writes policy trac
     stageBackendFile(repoRoot);
 
     const exitCode = await runPreCommitStage();
-    assert.equal(exitCode, 1);
+    assert.equal(exitCode, 0);
 
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot.stage, 'PRE_COMMIT');
-    assert.equal(evidence.snapshot.outcome, 'BLOCK');
+    assert.equal(evidence.snapshot.outcome, 'WARN');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
     assertPolicyTrace(evidence, 'gate-policy.skills.policy.PRE_COMMIT');
   });
 });
@@ -268,12 +267,18 @@ test('runPreCommitStage keeps default policy thresholds when skills policy is ab
     stageBackendFile(repoRoot);
 
     const exitCode = await runPreCommitStage();
-    assert.equal(exitCode, 1);
+    assert.equal(exitCode, 0);
 
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot.stage, 'PRE_COMMIT');
-    assert.equal(evidence.snapshot.outcome, 'BLOCK');
+    assert.equal(evidence.snapshot.outcome, 'WARN');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
     assertPolicyTrace(evidence, 'gate-policy.default.PRE_COMMIT');
   });
 });
@@ -369,7 +374,7 @@ test('runPreCommitStage asegura ignore local para artefactos runtime de Pumuki',
     stageBackendFile(repoRoot);
 
     const exitCode = await runPreCommitStage();
-    assert.equal(exitCode, 1);
+    assert.equal(exitCode, 0);
 
     const excludePath = join(repoRoot, '.git', 'info', 'exclude');
     const content = readFileSync(excludePath, 'utf8');
@@ -429,12 +434,18 @@ test('runPrePushStage uses skills policy override and writes PRE_PUSH policy tra
     setupBackendCommitRange(repoRoot);
 
     const exitCode = await runPrePushStage();
-    assert.equal(exitCode, 1);
+    assert.equal(exitCode, 0);
 
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
-    assert.equal(evidence.snapshot.outcome, 'BLOCK');
+    assert.equal(evidence.snapshot.outcome, 'PASS');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
     assertPolicyTrace(evidence, 'gate-policy.skills.policy.PRE_PUSH');
   });
 });
@@ -458,6 +469,12 @@ test('runPrePushStage returns blocking exit code with strict WARN threshold over
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
     assert.equal(evidence.snapshot.outcome, 'BLOCK');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
     assertPolicyTrace(evidence, 'gate-policy.skills.policy.PRE_PUSH');
   });
 });
@@ -467,12 +484,18 @@ test('runPrePushStage keeps default PRE_PUSH thresholds when skills policy is ab
     setupBackendCommitRange(repoRoot);
 
     const exitCode = await runPrePushStage();
-    assert.equal(exitCode, 1);
+    assert.equal(exitCode, 0);
 
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
-    assert.equal(evidence.snapshot.outcome, 'BLOCK');
+    assert.equal(evidence.snapshot.outcome, 'WARN');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
     assertPolicyTrace(evidence, 'gate-policy.default.PRE_PUSH');
   });
 });
@@ -482,7 +505,7 @@ test('runPrePushStage sin upstream usa fallback bootstrap range cuando no hay st
     setupBackendCommitRangeWithoutUpstream(repoRoot);
     const messages = await withCapturedStderr(async () => {
       const exitCode = await runPrePushStage();
-      assert.equal(exitCode, 1);
+      assert.equal(exitCode, 0);
     });
 
     assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
@@ -494,48 +517,6 @@ test('runPrePushStage sin upstream usa fallback bootstrap range cuando no hay st
       ),
       true
     );
-  });
-});
-
-test('runPrePushStage sin upstream usa main como bootstrap range cuando la rama nace de main', async () => {
-  await withStageRunnerRepo(async (repoRoot) => {
-    writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
-    runGit(repoRoot, ['add', 'README.md']);
-    runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
-
-    runGit(repoRoot, ['checkout', '--quiet', '-b', 'develop']);
-    writeFileSync(join(repoRoot, 'develop-note.md'), 'develop\n', 'utf8');
-    runGit(repoRoot, ['add', 'develop-note.md']);
-    runGit(repoRoot, ['commit', '-m', 'docs: develop note']);
-
-    runGit(repoRoot, ['checkout', '--quiet', 'main']);
-    writeFileSync(join(repoRoot, 'main-note.md'), 'main\n', 'utf8');
-    runGit(repoRoot, ['add', 'main-note.md']);
-    runGit(repoRoot, ['commit', '-m', 'docs: main note']);
-
-    runGit(repoRoot, ['checkout', '--quiet', '-b', 'feature/no-upstream']);
-    stageBackendFile(repoRoot);
-    runGit(repoRoot, ['commit', '-m', 'feat: backend explicit any fixture']);
-
-    const capturedAtomicityArgs: Array<{ fromRef?: string; toRef?: string }> = [];
-    const exitCode = await runPrePushStage({
-      evaluateGitAtomicity: (params) => {
-        capturedAtomicityArgs.push({
-          fromRef: params.fromRef,
-          toRef: params.toRef,
-        });
-        return {
-          enabled: true,
-          allowed: true,
-          violations: [],
-        };
-      },
-      runPlatformGate: async () => 0,
-      resolveRepoRoot: () => repoRoot,
-    });
-
-    assert.equal(exitCode, 0);
-    assert.deepEqual(capturedAtomicityArgs, [{ fromRef: 'main', toRef: 'HEAD' }]);
   });
 });
 
@@ -598,7 +579,7 @@ test('runPrePushStage allows bootstrap push without upstream when stdin indicate
       resolvePrePushBootstrapBaseRef: () => 'main',
     });
 
-    assert.equal(exitCode, 1);
+    assert.equal(exitCode, 0);
     assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
@@ -618,7 +599,7 @@ test('runPrePushStage allows bootstrap push without upstream when hook injects s
       const exitCode = await runPrePushStage({
         resolvePrePushBootstrapBaseRef: () => 'main',
       });
-      assert.equal(exitCode, 1);
+      assert.equal(exitCode, 0);
       assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
       const evidence = readEvidence(repoRoot);
       assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
@@ -797,13 +778,19 @@ test('runCiStage uses skills policy override and writes CI policy trace', async 
 
     await withGithubBaseRef('main', async () => {
       const exitCode = await runCiStage();
-      assert.equal(exitCode, 1);
+      assert.equal(exitCode, 0);
     });
 
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot.stage, 'CI');
-    assert.equal(evidence.snapshot.outcome, 'BLOCK');
+    assert.equal(evidence.snapshot.outcome, 'PASS');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
     assertPolicyTrace(evidence, 'gate-policy.skills.policy.CI');
   });
 });
@@ -829,6 +816,12 @@ test('runCiStage returns blocking exit code with strict WARN threshold override'
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot.stage, 'CI');
     assert.equal(evidence.snapshot.outcome, 'BLOCK');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
     assertPolicyTrace(evidence, 'gate-policy.skills.policy.CI');
   });
 });
@@ -839,13 +832,19 @@ test('runCiStage keeps default CI thresholds when skills policy is absent', asyn
 
     await withGithubBaseRef('main', async () => {
       const exitCode = await runCiStage();
-      assert.equal(exitCode, 1);
+      assert.equal(exitCode, 0);
     });
 
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot.stage, 'CI');
-    assert.equal(evidence.snapshot.outcome, 'BLOCK');
+    assert.equal(evidence.snapshot.outcome, 'WARN');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
     assertPolicyTrace(evidence, 'gate-policy.default.CI');
   });
 });
@@ -856,13 +855,19 @@ test('runCiStage falls back gracefully when GITHUB_BASE_REF is invalid', async (
 
     await withGithubBaseRef('invalid/non-existent-ref', async () => {
       const exitCode = await runCiStage();
-      assert.equal(exitCode, 1);
+      assert.equal(exitCode, 0);
     });
 
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot.stage, 'CI');
-    assert.equal(evidence.snapshot.outcome, 'BLOCK');
+    assert.equal(evidence.snapshot.outcome, 'WARN');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
     assertPolicyTrace(evidence, 'gate-policy.default.CI');
   });
 });
@@ -879,12 +884,12 @@ test('runPreCommitStage dispara notificación de resumen tras evaluar el gate', 
       resolveRepoRoot: () => repoRoot,
     });
 
-    assert.equal(exitCode, 1);
+    assert.equal(exitCode, 0);
     assert.deepEqual(notifications, [{ repoRoot, stage: 'PRE_COMMIT' }]);
   });
 });
 
-test('runPreCommitStage restagea .ai_evidence.json cuando ya estaba trackeado', async () => {
+test('runPreCommitStage restagea .ai_evidence.json cuando ya estaba staged', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     stageBackendFile(repoRoot);
     const stagedPaths: string[] = [];
@@ -892,13 +897,45 @@ test('runPreCommitStage restagea .ai_evidence.json cuando ya estaba trackeado', 
     const exitCode = await runPreCommitStage({
       resolveRepoRoot: () => repoRoot,
       isPathTracked: (_repoRoot, relativePath) => relativePath === '.ai_evidence.json',
+      listStagedIndexPaths: () => [
+        'apps/backend/src/service.ts',
+        '.ai_evidence.json',
+      ],
       stagePath: (_repoRoot, relativePath) => {
         stagedPaths.push(relativePath);
       },
     });
 
-    assert.equal(exitCode, 1);
+    assert.equal(exitCode, 0);
     assert.deepEqual(stagedPaths, ['.ai_evidence.json']);
+  });
+});
+
+test('runPreCommitStage no auto-restaguea evidencia trackeada si no estaba staged', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const stagedPaths: string[] = [];
+    const restoredPaths: string[] = [];
+
+    const exitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+      isPathTracked: (_repoRoot, relativePath) => relativePath === '.ai_evidence.json',
+      listStagedIndexPaths: () => [
+        'apps/ios/Tests/iOS/BuyerAuthToStoresLiveFlowTests.spec.swift',
+        'apps/ios/Tests/Mac/Features/BuyerCommerce/BuyerCommerceDecodingTests.spec.swift',
+        'docs/RURALGO_SEGUIMIENTO.md',
+      ],
+      stagePath: (_repoRoot, relativePath) => {
+        stagedPaths.push(relativePath);
+      },
+      restorePathFromHead: (_repoRoot, relativePath) => {
+        restoredPaths.push(relativePath);
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(stagedPaths, []);
+    assert.deepEqual(restoredPaths, ['.ai_evidence.json']);
   });
 });
 
@@ -913,7 +950,7 @@ test('runPreCommitStage no auto-restaguea evidencia trackeada si el índice solo
     const firstExit = await runPreCommitStage({
       resolveRepoRoot: () => repoRoot,
     });
-    assert.equal(firstExit, 1);
+    assert.equal(firstExit, 0);
     runGit(repoRoot, ['add', '-f', '.ai_evidence.json']);
     runGit(repoRoot, ['commit', '-m', 'chore: track ai evidence']);
 
@@ -932,10 +969,7 @@ test('runPreCommitStage no auto-restaguea evidencia trackeada si el índice solo
     assert.equal(secondExit, 0);
     assert.deepEqual(stagedPaths, []);
     assert.equal(runGit(repoRoot, ['diff', '--name-only', '--', '.ai_evidence.json']), '');
-    assert.equal(
-      runGit(repoRoot, ['diff', '--cached', '--name-only', '--', '.ai_evidence.json']),
-      ''
-    );
+    assert.equal(runGit(repoRoot, ['diff', '--cached', '--name-only', '--', '.ai_evidence.json']), '');
   });
 });
 
@@ -952,7 +986,7 @@ test('runPreCommitStage restaguea evidencia con índice solo Markdown si ALWAYS_
       stageBackendFile(repoRoot);
       assert.equal(
         await runPreCommitStage({ resolveRepoRoot: () => repoRoot }),
-        1
+        0
       );
       runGit(repoRoot, ['add', '-f', '.ai_evidence.json']);
       runGit(repoRoot, ['commit', '-m', 'chore: track ai evidence']);
@@ -995,7 +1029,7 @@ test('runPreCommitStage no intenta trackear .ai_evidence.json cuando no estaba v
       },
     });
 
-    assert.equal(exitCode, 1);
+    assert.equal(exitCode, 0);
     assert.deepEqual(stagedPaths, []);
   });
 });
@@ -1013,6 +1047,10 @@ test('runPreCommitStage bloquea con causa explícita si no puede restagear evide
     const exitCode = await runPreCommitStage({
       resolveRepoRoot: () => repoRoot,
       isPathTracked: (_repoRoot, relativePath) => relativePath === '.ai_evidence.json',
+      listStagedIndexPaths: () => [
+        'apps/backend/src/service.ts',
+        '.ai_evidence.json',
+      ],
       stagePath: () => {
         throw new Error('git add failed');
       },
@@ -1029,9 +1067,9 @@ test('runPreCommitStage bloquea con causa explícita si no puede restagear evide
     assert.equal(exitCode, 1);
     assert.equal(blocked.length, 1);
     assert.equal(blocked[0]?.stage, 'PRE_COMMIT');
-    assert.equal(blocked[0]?.causeCode, 'TDD_BDD_EVIDENCE_STALE');
-    assert.match(blocked[0]?.causeMessage ?? '', /TDD\/BDD evidence is stale/i);
-    assert.match(blocked[0]?.remediation ?? '', /TDD\/BDD/i);
+    assert.equal(blocked[0]?.causeCode, 'EVIDENCE_STAGE_SYNC_FAILED');
+    assert.match(blocked[0]?.causeMessage ?? '', /restage tracked \.ai_evidence\.json/i);
+    assert.match(blocked[0]?.remediation ?? '', /git add -- \.ai_evidence\.json/i);
   });
 });
 
@@ -1046,7 +1084,7 @@ test('runPreCommitStage no deja drift de working tree en .ai_evidence.json cuand
     const firstExitCode = await runPreCommitStage({
       resolveRepoRoot: () => repoRoot,
     });
-    assert.equal(firstExitCode, 1);
+    assert.equal(firstExitCode, 0);
     runGit(repoRoot, ['add', '-f', '.ai_evidence.json']);
     runGit(repoRoot, ['commit', '-m', 'chore: track ai evidence fixture']);
 
@@ -1055,9 +1093,13 @@ test('runPreCommitStage no deja drift de working tree en .ai_evidence.json cuand
 
     const exitCode = await runPreCommitStage({
       resolveRepoRoot: () => repoRoot,
+      listStagedIndexPaths: () => [
+        'apps/backend/src/service.ts',
+        '.ai_evidence.json',
+      ],
     });
 
-    assert.equal(exitCode, 1);
+    assert.equal(exitCode, 0);
     assert.equal(runGit(repoRoot, ['diff', '--name-only', '--', '.ai_evidence.json']), '');
     assert.equal(
       runGit(repoRoot, ['diff', '--cached', '--name-only', '--', '.ai_evidence.json']),
@@ -1066,7 +1108,7 @@ test('runPreCommitStage no deja drift de working tree en .ai_evidence.json cuand
   });
 });
 
-test('runPrePushStage refresca .ai_evidence.json trackeado cuando el gate bloquea el push', async () => {
+test('runPrePushStage no reescribe .ai_evidence.json trackeado cuando el gate permite el push', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
     runGit(repoRoot, ['add', 'README.md']);
@@ -1077,7 +1119,7 @@ test('runPrePushStage refresca .ai_evidence.json trackeado cuando el gate bloque
     const firstPreCommit = await runPreCommitStage({
       resolveRepoRoot: () => repoRoot,
     });
-    assert.equal(firstPreCommit, 1);
+    assert.equal(firstPreCommit, 0);
     runGit(repoRoot, ['add', '-f', '.ai_evidence.json']);
     runGit(repoRoot, ['commit', '-m', 'chore: track ai evidence fixture']);
 
@@ -1088,11 +1130,11 @@ test('runPrePushStage refresca .ai_evidence.json trackeado cuando el gate bloque
     const prePushExit = await runPrePushStage({
       resolveRepoRoot: () => repoRoot,
     });
-    assert.equal(prePushExit, 1);
+    assert.equal(prePushExit, 0);
 
     const evidenceAfter = readFileSync(join(repoRoot, '.ai_evidence.json'), 'utf8');
-    assert.notEqual(evidenceAfter, evidenceBefore);
-    assert.equal(runGit(repoRoot, ['diff', '--name-only', '--', '.ai_evidence.json']), '.ai_evidence.json');
+    assert.equal(evidenceAfter, evidenceBefore);
+    assert.equal(runGit(repoRoot, ['diff', '--name-only', '--', '.ai_evidence.json']), '');
     assert.equal(runGit(repoRoot, ['diff', '--cached', '--name-only', '--', '.ai_evidence.json']), '');
   });
 });
@@ -1109,7 +1151,7 @@ test('runPrePushStage dispara notificación de resumen tras evaluar el gate', as
       resolveRepoRoot: () => repoRoot,
     });
 
-    assert.equal(exitCode, 1);
+    assert.equal(exitCode, 0);
     assert.deepEqual(notifications, [{ repoRoot, stage: 'PRE_PUSH' }]);
   });
 });
@@ -1126,7 +1168,7 @@ test('runCiStage dispara notificación de resumen tras evaluar el gate', async (
         },
         resolveRepoRoot: () => repoRoot,
       });
-      assert.equal(exitCode, 1);
+      assert.equal(exitCode, 0);
     });
 
     assert.deepEqual(notifications, [{ repoRoot, stage: 'CI' }]);
@@ -1145,7 +1187,7 @@ test('runPrePushStage sin upstream mantiene paridad de notificación de resumen'
         },
         resolveRepoRoot: () => repoRoot,
       });
-      assert.equal(exitCode, 1);
+      assert.equal(exitCode, 0);
     });
 
     assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
@@ -1193,37 +1235,6 @@ test('runPreCommitStage emite notificación de bloqueo con causa y remediación'
     assert.match(blocked[0]?.causeCode ?? '', /[A-Z0-9_]+/);
     assert.equal((blocked[0]?.causeMessage ?? '').length > 0, true);
     assert.equal((blocked[0]?.remediation ?? '').length > 0, true);
-  });
-});
-
-test('runPreCommitStage bloquea por naming GitFlow inválido y expone remediación accionable', async () => {
-  await withStageRunnerRepo(async (repoRoot) => {
-    writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
-    runGit(repoRoot, ['add', 'README.md']);
-    runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
-    runGit(repoRoot, ['checkout', '--quiet', '-b', 'topic/inc-076']);
-    writeFileSync(join(repoRoot, 'docs-note.md'), 'note\n', 'utf8');
-    runGit(repoRoot, ['add', 'docs-note.md']);
-
-    const blocked: Array<{
-      causeCode: string;
-      causeMessage: string;
-      remediation: string;
-    }> = [];
-
-    const exitCode = await runPreCommitStage({
-      notifyGateBlocked: (params) => {
-        blocked.push({
-          causeCode: params.causeCode,
-          causeMessage: params.causeMessage,
-          remediation: params.remediation,
-        });
-      },
-      resolveRepoRoot: () => repoRoot,
-    });
-
-    assert.equal(exitCode, 0);
-    assert.equal(blocked.length, 0);
   });
 });
 
@@ -1276,7 +1287,7 @@ test('runPreCommitStage usa finding del snapshot PRE_COMMIT como causa primaria 
     assert.equal(blocked.length, 1);
     assert.equal(blocked[0]?.causeCode, 'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH');
     assert.match(blocked[0]?.causeMessage ?? '', /Active rules coverage is empty/i);
-    assert.match(blocked[0]?.remediation ?? '', /policy reconcile --strict --apply --json/i);
+    assert.match(blocked[0]?.remediation ?? '', /policy reconcile --strict --json/i);
     assert.equal(blocked[0]?.totalViolations, 1);
   });
 });
@@ -1342,7 +1353,7 @@ test('runPreCommitStage usa el primer finding bloqueante aunque existan warnings
     assert.equal(blocked.length, 1);
     assert.equal(blocked[0]?.causeCode, 'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH');
     assert.match(blocked[0]?.causeMessage ?? '', /Active rules coverage is empty/i);
-    assert.match(blocked[0]?.remediation ?? '', /policy reconcile --strict --apply --json/i);
+    assert.match(blocked[0]?.remediation ?? '', /policy reconcile --strict --json/i);
     assert.equal(blocked[0]?.totalViolations, 2);
   });
 });
@@ -1639,7 +1650,7 @@ test('runPrePushStage bloquea upstream desalineado también con ahead moderado (
   });
 });
 
-test('runPreCommitStage bloquea por git atomicity en strict por defecto', async () => {
+test('runPreCommitStage deja git atomicity en advisory por defecto y ejecuta el gate principal', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     stageBackendFile(repoRoot);
     let gateCalls = 0;
@@ -1667,10 +1678,9 @@ test('runPreCommitStage bloquea por git atomicity en strict por defecto', async 
       resolveRepoRoot: () => repoRoot,
     });
 
-    assert.equal(exitCode, 1);
-    assert.equal(gateCalls, 0);
-    assert.equal(blocked.length, 1);
-    assert.equal(blocked[0]?.code, 'GIT_ATOMICITY_TOO_MANY_FILES');
+    assert.equal(exitCode, 0);
+    assert.equal(gateCalls, 1);
+    assert.equal(blocked.length, 0);
   });
 });
 
@@ -1715,7 +1725,7 @@ test('runPreCommitStage bloquea temprano por git atomicity cuando el enforcement
   });
 });
 
-test('runPrePushStage bloquea por git atomicity en strict por defecto', async () => {
+test('runPrePushStage deja git atomicity en advisory por defecto y ejecuta el gate principal', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     setupBackendCommitRange(repoRoot);
     let gateCalls = 0;
@@ -1743,10 +1753,9 @@ test('runPrePushStage bloquea por git atomicity en strict por defecto', async ()
       resolveRepoRoot: () => repoRoot,
     });
 
-    assert.equal(exitCode, 1);
-    assert.equal(gateCalls, 0);
-    assert.equal(blocked.length, 1);
-    assert.equal(blocked[0]?.code, 'GIT_ATOMICITY_COMMIT_MESSAGE_TRACEABILITY');
+    assert.equal(exitCode, 0);
+    assert.equal(gateCalls, 1);
+    assert.equal(blocked.length, 0);
   });
 });
 

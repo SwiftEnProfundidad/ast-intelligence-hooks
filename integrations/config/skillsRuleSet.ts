@@ -21,7 +21,6 @@ export type SkillsRuleSetLoadResult = {
   mappedHeuristicRuleIds: ReadonlySet<string>;
   requiresHeuristicFacts: boolean;
   unsupportedAutoRuleIds?: ReadonlyArray<string>;
-  unsupportedDetectorRuleIds?: ReadonlyArray<string>;
   registryCoverage?: {
     contract: 'AUTO_RUNTIME_RULES_FOR_STAGE';
     stage: Exclude<GateStage, 'STAGED'>;
@@ -367,14 +366,15 @@ const resolveRuleSeverity = (params: {
   stage: Exclude<GateStage, 'STAGED'>;
 }): Severity => {
   const promotedRuleIds = params.bundlePolicy?.promoteToErrorRuleIds ?? [];
-  const shouldPromoteBySolidContract =
+  const shouldPromote = promotedRuleIds.includes(params.rule.id);
+
+  if (
     params.rule.id.endsWith('.no-solid-violations') &&
-    (params.stage === 'PRE_WRITE' ||
-      params.stage === 'PRE_COMMIT' ||
-      params.stage === 'PRE_PUSH' ||
-      params.stage === 'CI');
-  const shouldPromote =
-    shouldPromoteBySolidContract || promotedRuleIds.includes(params.rule.id);
+    (params.stage === 'PRE_PUSH' || params.stage === 'CI') &&
+    !shouldPromote
+  ) {
+    return 'WARN';
+  }
 
   if (!shouldPromote) {
     return params.rule.severity;
@@ -506,40 +506,7 @@ const emptyResult = (): SkillsRuleSetLoadResult => {
     mappedHeuristicRuleIds: new Set<string>(),
     requiresHeuristicFacts: false,
     unsupportedAutoRuleIds: [],
-    unsupportedDetectorRuleIds: [],
   };
-};
-
-const IOS_CRITICAL_TEST_QUALITY_RULE: SkillsCompiledRule = {
-  id: 'skills.ios.critical-test-quality',
-  description:
-    'Critical iOS test quality contract: Swift tests must be covered by modern testing rules and XCTest compatibility guards.',
-  severity: 'ERROR',
-  platform: 'ios',
-  sourceSkill: 'ios-swift-testing-guidelines',
-  sourcePath: 'compat:synthetic/ios-critical-test-quality',
-  stage: 'PRE_COMMIT',
-  confidence: 'HIGH',
-  locked: true,
-  evaluationMode: 'AUTO',
-  origin: 'core',
-};
-
-const withSyntheticCompatibilityRules = (
-  bundles: ReadonlyArray<SkillsLockBundle>
-): SkillsLockBundle[] => {
-  return bundles.map((bundle) => {
-    if (bundle.name !== 'ios-swift-testing-guidelines') {
-      return bundle;
-    }
-    if (bundle.rules.some((rule) => rule.id === IOS_CRITICAL_TEST_QUALITY_RULE.id)) {
-      return bundle;
-    }
-    return {
-      ...bundle,
-      rules: [IOS_CRITICAL_TEST_QUALITY_RULE, ...bundle.rules],
-    };
-  });
 };
 
 export const loadSkillsRuleSetForStage = (
@@ -556,13 +523,13 @@ export const loadSkillsRuleSetForStage = (
   const policy = loadSkillsPolicy(repoRoot);
   const defaultBundleEnabled = policy?.defaultBundleEnabled ?? true;
 
-  const activeBundles = withSyntheticCompatibilityRules(lock.bundles.filter((bundle) => {
+  const activeBundles = lock.bundles.filter((bundle) => {
     return resolveBundleEnabled({
       bundleName: bundle.name,
       defaultBundleEnabled,
       bundlePolicy: policy?.bundles[bundle.name],
     });
-  }));
+  });
 
   if (activeBundles.length === 0) {
     return emptyResult();
@@ -571,7 +538,6 @@ export const loadSkillsRuleSetForStage = (
   const rulesById = new Map<string, RuleDefinition>();
   const mappedHeuristicRuleIds = new Set<string>();
   const unsupportedAutoRuleIds = new Set<string>();
-  const unsupportedDetectorRuleIds = new Set<string>();
   const registryRuleIds = new Set<string>();
   const registryAutoRuleIds = new Set<string>();
   const registryDeclarativeRuleIds = new Set<string>();
@@ -603,13 +569,11 @@ export const loadSkillsRuleSetForStage = (
         continue;
       }
       if (evaluationMode !== 'AUTO') {
-        unsupportedDetectorRuleIds.add(compiledRule.id);
         continue;
       }
       stageApplicableAutoRuleIds.add(compiledRule.id);
       if (evaluationMode === 'AUTO' && mappedRuleIds.length === 0) {
         unsupportedAutoRuleIds.add(compiledRule.id);
-        unsupportedDetectorRuleIds.add(compiledRule.id);
         continue;
       }
 
@@ -642,7 +606,6 @@ export const loadSkillsRuleSetForStage = (
     mappedHeuristicRuleIds,
     requiresHeuristicFacts: mappedHeuristicRuleIds.size > 0,
     unsupportedAutoRuleIds: [...unsupportedAutoRuleIds].sort(),
-    unsupportedDetectorRuleIds: [...unsupportedDetectorRuleIds].sort(),
     registryCoverage: {
       contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
       stage,

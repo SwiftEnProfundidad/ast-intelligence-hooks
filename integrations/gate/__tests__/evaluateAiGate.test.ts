@@ -2833,6 +2833,166 @@ test('evaluateAiGate trata PRE_WRITE de tooling puro como no-op aunque existan p
   });
 });
 
+test('evaluateAiGate degrada EVIDENCE_GATE_BLOCKED a WARN en slices documentales/render con evidencia fresca', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
+    const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-doc-render-advisory-'));
+
+    try {
+      execFileSync('git', ['init'], { cwd: tmpRoot, stdio: 'ignore' });
+      mkdirSync(join(tmpRoot, 'stack-my-architecture-pumuki/05-bloque-05'), { recursive: true });
+      mkdirSync(join(tmpRoot, 'stack-my-architecture-pumuki/dist'), { recursive: true });
+      mkdirSync(join(tmpRoot, 'stack-my-architecture-hub/pumuki'), { recursive: true });
+      writeFileSync(
+        join(tmpRoot, 'stack-my-architecture-pumuki/05-bloque-05/20-cierre.md'),
+        '# Cierre\n'
+      );
+      writeFileSync(join(tmpRoot, 'stack-my-architecture-pumuki/dist/index.html'), '<main></main>\n');
+      writeFileSync(join(tmpRoot, 'stack-my-architecture-hub/pumuki/index.html'), '<main></main>\n');
+
+      const base = sampleEvidence();
+      const result = evaluateAiGate(
+        {
+          repoRoot: tmpRoot,
+          stage: 'PRE_WRITE',
+        },
+        {
+          now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+          readEvidenceResult: () =>
+            validEvidenceResult({
+              ...base,
+              snapshot: {
+                ...base.snapshot,
+                stage: 'PRE_WRITE',
+                outcome: 'BLOCK',
+                rules_coverage: {
+                  ...base.snapshot.rules_coverage!,
+                  stage: 'PRE_WRITE',
+                  active_rule_ids: ['project.rules.audit'],
+                  evaluated_rule_ids: ['project.rules.audit'],
+                  matched_rule_ids: [],
+                  unevaluated_rule_ids: [],
+                  counts: {
+                    active: 1,
+                    evaluated: 1,
+                    matched: 0,
+                    unevaluated: 0,
+                  },
+                  coverage_ratio: 1,
+                },
+              },
+              ai_gate: {
+                ...base.ai_gate,
+                status: 'BLOCKED',
+                violations: [
+                  {
+                    code: 'EVIDENCE_GATE_BLOCKED',
+                    message: 'Evidence AI gate status is BLOCKED.',
+                    severity: 'ERROR',
+                  },
+                ],
+              },
+              severity_metrics: {
+                ...base.severity_metrics,
+                gate_status: 'BLOCKED',
+                total_violations: 1,
+                by_severity: {
+                  ...base.severity_metrics.by_severity,
+                  ERROR: 1,
+                },
+              },
+              repo_state: {
+                ...base.repo_state!,
+                repo_root: tmpRoot,
+              },
+            }),
+          captureRepoState: () => ({
+            ...sampleEvidence().repo_state!,
+            repo_root: tmpRoot,
+            git: {
+              ...sampleEvidence().repo_state!.git,
+              pending_changes: 3,
+              staged: 0,
+              unstaged: 3,
+            },
+          }),
+          loadRequiredSkillsLock: () => sampleMultiPlatformSkillsLock(),
+        }
+      );
+
+      assert.equal(result.status, 'ALLOWED');
+      assert.equal(result.allowed, true);
+      assert.deepEqual(
+        result.violations.filter((item) => item.code === 'EVIDENCE_GATE_BLOCKED').map((item) => item.severity),
+        ['WARN']
+      );
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+});
+
+test('evaluateAiGate mantiene EVIDENCE_GATE_BLOCKED como ERROR si el slice documental tiene evidencia caducada', async () => {
+  const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-doc-render-stale-'));
+
+  try {
+    execFileSync('git', ['init'], { cwd: tmpRoot, stdio: 'ignore' });
+    writeFileSync(join(tmpRoot, 'docs-change.md'), '# Docs\n');
+
+    const base = sampleEvidence();
+    const result = evaluateAiGate(
+      {
+        repoRoot: tmpRoot,
+        stage: 'PRE_WRITE',
+      },
+      {
+        now: () => Date.parse('2026-02-20T13:00:00.000Z'),
+        readEvidenceResult: () =>
+          validEvidenceResult({
+            ...base,
+            snapshot: {
+              ...base.snapshot,
+              stage: 'PRE_WRITE',
+              outcome: 'BLOCK',
+            },
+            ai_gate: {
+              ...base.ai_gate,
+              status: 'BLOCKED',
+            },
+            severity_metrics: {
+              ...base.severity_metrics,
+              gate_status: 'BLOCKED',
+              total_violations: 1,
+              by_severity: {
+                ...base.severity_metrics.by_severity,
+                ERROR: 1,
+              },
+            },
+          }),
+        captureRepoState: () => ({
+          ...sampleEvidence().repo_state!,
+          repo_root: tmpRoot,
+          git: {
+            ...sampleEvidence().repo_state!.git,
+            pending_changes: 1,
+            staged: 0,
+            unstaged: 1,
+          },
+        }),
+      }
+    );
+
+    assert.equal(result.status, 'BLOCKED');
+    assert.equal(result.allowed, false);
+    assert.deepEqual(
+      result.violations.filter((item) => item.code === 'EVIDENCE_GATE_BLOCKED').map((item) => item.severity),
+      ['ERROR']
+    );
+    assert.equal(result.violations.some((item) => item.code === 'EVIDENCE_STALE'), true);
+  } finally {
+    rmSync(tmpRoot, { recursive: true, force: true });
+  }
+});
+
 test('evaluateAiGate no trata skills core efectivas como contrato obligatorio del consumer', () => {
   const base = sampleEvidence();
   const result = evaluateAiGate(

@@ -61,24 +61,23 @@ test('createConsumerLegacyMenuActions expone shell read-only mínima y diagnóst
 
   assert.deepEqual(
     actions.map((action) => action.id),
-    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14']
+    ['1', '2', '3', '4', '11', '12', '13', '14', '5', '6', '7', '8', '9', '10']
   );
-  assert.equal(actions[0]?.label, 'Full audit (repo analysis)');
-  assert.equal(actions[1]?.label, 'Strict REPO+STAGING (CI/CD)');
-  assert.equal(actions[2]?.label, 'Strict STAGING only (dev)');
-  assert.equal(actions[3]?.label, 'Standard CRITICAL/HIGH');
-  assert.equal(actions[4]?.label, 'Pattern checks');
-  assert.equal(actions[5]?.label, 'ESLint Admin+Web');
-  assert.equal(actions[6]?.label, 'AST Intelligence');
-  assert.equal(actions[7]?.label, 'Export Markdown');
-  assert.equal(actions[8]?.label, 'Exit');
-  assert.equal(actions[9]?.label, 'File diagnostics (top violated files)');
-  assert.match(actions[10]?.label ?? '', /Engine audit · STAGED only/i);
-  assert.match(actions[11]?.label ?? '', /Engine audit · UNSTAGED only/i);
-  assert.match(actions[12]?.label ?? '', /Engine audit · STAGED \+ UNSTAGED/i);
-  assert.match(actions[13]?.label ?? '', /tracked repo files \(AUTO runtime rules/i);
+  assert.match(actions[0]?.label ?? '', /ALL tracked files/i);
+  assert.match(actions[1]?.label ?? '', /REPO\+index contract/i);
+  assert.match(actions[2]?.label ?? '', /STAGED only \(PRE_COMMIT\)/i);
+  assert.match(actions[3]?.label ?? '', /working tree \(PRE_PUSH policy/i);
+  assert.match(actions[4]?.label ?? '', /Engine audit · STAGED only/i);
+  assert.match(actions[5]?.label ?? '', /Engine audit · UNSTAGED only/i);
+  assert.match(actions[6]?.label ?? '', /Engine audit · STAGED \+ UNSTAGED/i);
+  assert.match(actions[7]?.label ?? '', /tracked repo files \(AUTO runtime rules/i);
+  assert.match(actions[8]?.label ?? '', /Legacy read-only pattern checks snapshot/i);
+  assert.match(actions[9]?.label ?? '', /Legacy read-only ESLint evidence snapshot/i);
+  assert.match(actions[10]?.label ?? '', /Legacy read-only AST snapshot/i);
+  assert.match(actions[11]?.label ?? '', /Export legacy read-only evidence snapshot/i);
+  assert.match(actions[12]?.label ?? '', /Legacy read-only file diagnostics snapshot/i);
 
-  for (const action of actions.filter((entry) => entry.id !== '9')) {
+  for (const action of actions.filter((entry) => entry.id !== '10')) {
     await action.execute();
   }
 

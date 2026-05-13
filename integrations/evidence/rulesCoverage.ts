@@ -30,17 +30,6 @@ const createCoverageRatio = (active: number, evaluated: number): number => {
   return normalizeCoverageRatio(evaluated / active);
 };
 
-const createSemanticEnforcementRatio = (params: {
-  registryTotal: number;
-  unsupportedDetector: number;
-}): number => {
-  if (params.registryTotal === 0) {
-    return 1;
-  }
-  const supported = Math.max(0, params.registryTotal - params.unsupportedDetector);
-  return normalizeCoverageRatio(supported / params.registryTotal);
-};
-
 export const createEmptySnapshotRulesCoverage = (
   stage: GateStage
 ): SnapshotRulesCoverage => ({
@@ -59,15 +48,6 @@ export const createEmptySnapshotRulesCoverage = (
     unevaluated: 0,
   },
   coverage_ratio: 1,
-  auto_runtime_coverage_ratio: 1,
-  semantic_enforcement_ratio: 1,
-  global_skills_enforcement: {
-    status: 'enforced',
-    registry_total: 0,
-    detector_supported: 0,
-    declarative_only: 0,
-    unsupported_detector: 0,
-  },
 });
 
 export const normalizeSnapshotRulesCoverage = (
@@ -83,9 +63,6 @@ export const normalizeSnapshotRulesCoverage = (
   const matchedRuleIds = normalizeStringArray(value.matched_rule_ids);
   const unevaluatedRuleIds = normalizeStringArray(value.unevaluated_rule_ids);
   const unsupportedAutoRuleIds = normalizeStringArray(value.unsupported_auto_rule_ids ?? []);
-  const unsupportedDetectorRuleIds = normalizeStringArray(
-    value.unsupported_detector_rule_ids ?? []
-  );
   const stageApplicableAutoRuleIds = normalizeStringArray(
     value.stage_applicable_auto_rule_ids ?? []
   );
@@ -102,10 +79,6 @@ export const normalizeSnapshotRulesCoverage = (
   const unsupportedAutoCount = Math.max(
     unsupportedAutoRuleIds.length,
     normalizeCount(value.counts?.unsupported_auto ?? 0)
-  );
-  const unsupportedDetectorCount = Math.max(
-    unsupportedDetectorRuleIds.length,
-    normalizeCount(value.counts?.unsupported_detector ?? 0)
   );
 
   const counts: SnapshotRulesCoverage['counts'] = {
@@ -130,51 +103,11 @@ export const normalizeSnapshotRulesCoverage = (
   if (unsupportedAutoCount > 0) {
     counts.unsupported_auto = unsupportedAutoCount;
   }
-  if (unsupportedDetectorCount > 0) {
-    counts.unsupported_detector = unsupportedDetectorCount;
-  }
 
   const ratioFromCounts = createCoverageRatio(counts.active, counts.evaluated);
   const coverageRatio = normalizeCoverageRatio(
     Number.isFinite(value.coverage_ratio) ? value.coverage_ratio : ratioFromCounts
   );
-  const registryTotal = normalizeCount(
-    value.global_skills_enforcement?.registry_total
-      ?? value.registry_totals?.total
-      ?? counts.registry_total
-      ?? 0
-  );
-  const declarativeOnly = normalizeCount(
-    value.global_skills_enforcement?.declarative_only
-      ?? value.registry_totals?.declarative
-      ?? counts.registry_declarative
-      ?? 0
-  );
-  const unsupportedDetector = normalizeCount(
-    value.global_skills_enforcement?.unsupported_detector
-      ?? counts.unsupported_detector
-      ?? unsupportedDetectorCount
-  );
-  const detectorSupported = normalizeCount(
-    value.global_skills_enforcement?.detector_supported
-      ?? Math.max(0, registryTotal - unsupportedDetector)
-  );
-  const semanticEnforcementRatio = normalizeCoverageRatio(
-    Number.isFinite(value.semantic_enforcement_ratio)
-      ? value.semantic_enforcement_ratio ?? 1
-      : createSemanticEnforcementRatio({
-        registryTotal,
-        unsupportedDetector,
-      })
-  );
-  const globalSkillsStatus: NonNullable<
-    SnapshotRulesCoverage['global_skills_enforcement']
-  >['status'] =
-    registryTotal === 0 || unsupportedDetector === 0
-      ? 'enforced'
-      : detectorSupported > 0
-        ? 'partially_enforced'
-        : 'unsupported';
 
   const normalized: SnapshotRulesCoverage = {
     stage,
@@ -188,19 +121,6 @@ export const normalizeSnapshotRulesCoverage = (
     unevaluated_rule_ids: unevaluatedRuleIds,
     counts,
     coverage_ratio: coverageRatio,
-    auto_runtime_coverage_ratio: normalizeCoverageRatio(
-      Number.isFinite(value.auto_runtime_coverage_ratio)
-        ? value.auto_runtime_coverage_ratio ?? coverageRatio
-        : coverageRatio
-    ),
-    semantic_enforcement_ratio: semanticEnforcementRatio,
-    global_skills_enforcement: {
-      status: value.global_skills_enforcement?.status ?? globalSkillsStatus,
-      registry_total: registryTotal,
-      detector_supported: detectorSupported,
-      declarative_only: declarativeOnly,
-      unsupported_detector: unsupportedDetector,
-    },
   };
 
   if (registryTotals) {
@@ -225,9 +145,6 @@ export const normalizeSnapshotRulesCoverage = (
 
   if (unsupportedAutoRuleIds.length > 0 || unsupportedAutoCount > 0) {
     normalized.unsupported_auto_rule_ids = unsupportedAutoRuleIds;
-  }
-  if (unsupportedDetectorRuleIds.length > 0 || unsupportedDetectorCount > 0) {
-    normalized.unsupported_detector_rule_ids = unsupportedDetectorRuleIds;
   }
 
   return normalized;
