@@ -87,6 +87,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.security.userdefaults-sensitive-data',
     ['heuristics.ios.security.userdefaults-sensitive-data.ast']
   ),
+  'skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto': heuristicDetector(
+    'ios.security.insecure-transport',
+    ['heuristics.ios.security.insecure-transport.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),
