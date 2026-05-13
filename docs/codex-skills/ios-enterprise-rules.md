@@ -602,6 +602,11 @@ struct APIEndpoint: Sendable {
 - `skills.ios.guideline.ios.userdefaults-settings-simples-no-datos-sensibles` se mapea a `heuristics.ios.security.userdefaults-sensitive-data.ast`.
 - En `PROJECT MODE: brownfield`, este hallazgo es señal de baseline/adopción y debe evitar drift nuevo sin bloquear deuda histórica salvo promoción explícita de policy. Keychain nativo permanece como baseline preferente para secretos.
 
+### Enforcement AST inicial de transporte seguro iOS
+
+- `skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto` se mapea a `heuristics.ios.security.insecure-transport.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta `http://` en Swift production y `NSAllowsArbitraryLoads=true` en `Info.plist` como señal de baseline/adopción sin bloquear deuda histórica salvo promoción explícita de policy. HTTPS y ATS permanecen como baseline preferente.
+
 ### Combine (Reactive):
 ✅ **Publishers** - AsyncSequence para async, Combine para streams complejos
 ✅ **@Published** - En ViewModels para binding con Views
