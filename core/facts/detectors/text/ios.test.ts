@@ -13,6 +13,7 @@ import {
   hasSwiftDispatchQueueUsage,
   hasSwiftDispatchSemaphoreUsage,
   hasSwiftAdHocLoggingUsage,
+  hasSwiftAlamofireUsage,
   hasSwiftForEachIndicesUsage,
   hasSwiftForceCastUsage,
   hasSwiftFontWeightBoldUsage,
@@ -43,6 +44,7 @@ import {
   hasSwiftSheetIsPresentedUsage,
   hasSwiftScrollViewShowsIndicatorsUsage,
   hasSwiftSensitiveLoggingUsage,
+  hasSwiftJSONSerializationUsage,
   hasSwiftStringFormatUsage,
   hasSwiftTabItemUsage,
   hasSwiftTaskDetachedUsage,
@@ -189,6 +191,36 @@ logger.error("Refresh failed \\(refreshToken)")
   assert.equal(hasSwiftAdHocLoggingUsage(structuredSafe), false);
   assert.equal(hasSwiftSensitiveLoggingUsage(sensitive), true);
   assert.equal(hasSwiftSensitiveLoggingUsage(structuredSafe), false);
+});
+
+test('detectores iOS de networking y JSON detectan Alamofire y JSONSerialization sin leer comentarios ni strings', () => {
+  const source = `
+import Alamofire
+
+final class APIClient {
+  func load() {
+    AF.request("https://example.com")
+    let object = try? JSONSerialization.jsonObject(with: Data())
+  }
+}
+`;
+  const ignored = `
+import Foundation
+
+final class APIClient {
+  func load() async throws {
+    let url = URL(string: "https://example.com")
+    let dto = try JSONDecoder().decode(UserDTO.self, from: Data())
+    let text = "JSONSerialization.jsonObject"
+    // AF.request("debug")
+  }
+}
+`;
+
+  assert.equal(hasSwiftAlamofireUsage(source), true);
+  assert.equal(hasSwiftJSONSerializationUsage(source), true);
+  assert.equal(hasSwiftAlamofireUsage(ignored), false);
+  assert.equal(hasSwiftJSONSerializationUsage(ignored), false);
 });
 
 test('hasSwiftUncheckedSendableUsage detecta @unchecked Sendable', () => {

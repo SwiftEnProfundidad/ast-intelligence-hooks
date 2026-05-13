@@ -499,8 +499,15 @@ struct UseCaseFactory {
 ✅ **Request/Response interceptors** - Logging, auth tokens
 ✅ **SSL pinning** - Para apps con alta seguridad
 ✅ **Network reachability** - Detectar conectividad
-❌ **Alamofire** - Prohibido, usar URLSession nativo
-❌ **JSONSerialization** - Prohibido, usar Codable
+⚠️ **Alamofire** - No introducir en código nuevo; en brownfield existente se trata como señal de migración gradual. URLSession nativo es la línea base preferente.
+⚠️ **JSONSerialization** - No introducir en código nuevo; en brownfield existente se trata como señal de migración gradual. Codable es la línea base preferente.
+
+### Enforcement AST inicial de networking y JSON iOS
+
+- `skills.ios.guideline.ios.alamofire-prohibido-usar-urlsession-nativo` se mapea a `heuristics.ios.networking.alamofire.ast`.
+- `skills.ios.guideline.ios.codable-decodificacio-n-automa-tica-de-json-nunca-jsonserialization` se mapea a `heuristics.ios.json.jsonserialization.ast`.
+- `skills.ios.guideline.ios.codable-para-serializacio-n-json-nunca-jsonserialization` se mapea a `heuristics.ios.json.jsonserialization.ast`.
+- En `PROJECT MODE: brownfield`, estos hallazgos son señal de baseline/adopción y deben evitar drift nuevo sin bloquear deuda histórica salvo promoción explícita de policy.
 
 ```swift
 // ✅ Ejemplo: APIClient con URLSession y async/await
