@@ -317,6 +317,15 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-foreach-indices';
     }
     if (
+      (includes('foreach') && includes('stable identity')) ||
+      (includes('list patterns') && includes('stable identity'))
+    ) {
+      if (includes('verify list patterns')) {
+        return 'skills.ios.guideline.ios-swiftui-expert.verify-list-patterns-use-stable-identity-see-references-list-patterns-';
+      }
+      return 'skills.ios.guideline.ios-swiftui-expert.ensure-foreach-uses-stable-identity-see-references-list-patterns-md';
+    }
+    if (
       (includes('inline filtering') && includes('foreach')) ||
       (includes('no inline filtering') && includes('foreach')) ||
       (includes('prefilter') && includes('cache') && includes('foreach'))

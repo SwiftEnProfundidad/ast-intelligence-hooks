@@ -849,6 +849,10 @@ export const hasSwiftForEachIndicesUsage = (source: string): boolean => {
   );
 };
 
+export const hasSwiftForEachSelfIdentityUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(source, /\bForEach\s*\([^)]*\bid\s*:\s*\\\.self\b/g);
+};
+
 export const hasSwiftInlineForEachTransformUsage = (source: string): boolean => {
   const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
   return /\bForEach\s*\(\s*(?:Array\s*\(\s*)?[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*\s*\.\s*(?:filter|map|compactMap|sorted)\s*(?:\{|\()/g.test(

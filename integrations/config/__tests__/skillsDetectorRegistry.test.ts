@@ -41,6 +41,18 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   ]);
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.ensure-foreach-uses-stable-identity-see-references-list-patterns-md'
+    ),
+    ['heuristics.ios.swiftui.foreach-self-identity.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.verify-list-patterns-use-stable-identity-see-references-list-patterns-'
+    ),
+    ['heuristics.ios.swiftui.foreach-self-identity.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios-swiftui-expert.avoid-inline-filtering-in-foreach-prefilter-and-cache'
     ),
     ['heuristics.ios.swiftui.inline-foreach-transform.ast']

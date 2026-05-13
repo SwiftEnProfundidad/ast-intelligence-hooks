@@ -233,6 +233,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-foreach-indices': heuristicDetector('ios.foreach-indices', [
     'heuristics.ios.foreach-indices.ast',
   ]),
+  'skills.ios.guideline.ios-swiftui-expert.ensure-foreach-uses-stable-identity-see-references-list-patterns-md':
+    heuristicDetector('ios.swiftui.foreach-self-identity', [
+      'heuristics.ios.swiftui.foreach-self-identity.ast',
+    ]),
+  'skills.ios.guideline.ios-swiftui-expert.verify-list-patterns-use-stable-identity-see-references-list-patterns-':
+    heuristicDetector('ios.swiftui.foreach-self-identity', [
+      'heuristics.ios.swiftui.foreach-self-identity.ast',
+    ]),
   'skills.ios.guideline.ios-swiftui-expert.avoid-inline-filtering-in-foreach-prefilter-and-cache':
     heuristicDetector('ios.swiftui.inline-foreach-transform', [
       'heuristics.ios.swiftui.inline-foreach-transform.ast',

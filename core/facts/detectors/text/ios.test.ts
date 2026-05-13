@@ -15,6 +15,7 @@ import {
   hasSwiftAdHocLoggingUsage,
   hasSwiftAlamofireUsage,
   hasSwiftForEachIndicesUsage,
+  hasSwiftForEachSelfIdentityUsage,
   hasSwiftForceCastUsage,
   hasSwiftFontWeightBoldUsage,
   hasSwiftFixedFontSizeUsage,
@@ -290,6 +291,36 @@ struct CheckoutView: View {
 
   assert.equal(hasSwiftUiInlineActionLogicUsage(source), true);
   assert.equal(hasSwiftUiInlineActionLogicUsage(safe), false);
+});
+
+test('hasSwiftForEachSelfIdentityUsage detecta id self y preserva ids estables', () => {
+  const source = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ForEach(items, id: \\.self) { item in
+      FeedRow(item: item)
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  let items: [Item]
+
+  var body: some View {
+    ForEach(items, id: \\.id) { item in
+      FeedRow(item: item)
+    }
+    let sample = "ForEach(items, id: \\.self) { item in FeedRow(item: item) }"
+    // ForEach(items, id: \.self) { item in FeedRow(item: item) }
+  }
+}
+`;
+
+  assert.equal(hasSwiftForEachSelfIdentityUsage(source), true);
+  assert.equal(hasSwiftForEachSelfIdentityUsage(safe), false);
 });
 
 test('hasSwiftUntypedNavigationLinkDestinationUsage detecta NavigationLink no tipado y preserva value navigation', () => {

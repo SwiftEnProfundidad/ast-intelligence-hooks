@@ -786,6 +786,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.foreach-self-identity.ast',
+    description: 'Detects SwiftUI ForEach usage with id: \.self instead of stable domain identity.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.foreach-self-identity.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected ForEach(..., id: \.self) usage; prefer a stable domain identity such as id: \.id or Identifiable models.',
+      code: 'HEURISTICS_IOS_SWIFTUI_FOREACH_SELF_IDENTITY_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.swiftui.inline-foreach-transform.ast',
     description: 'Detects inline filter/map/sort transformations inside SwiftUI ForEach calls.',
     severity: 'WARN',

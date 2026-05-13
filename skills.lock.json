@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T16:44:08.385Z",
+  "generatedAt": "2026-05-13T16:49:25.074Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -8620,7 +8620,7 @@
       "name": "ios-swiftui-expert-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/swiftui-expert-skill/SKILL.md",
-      "hash": "92aa9bdb43b5641206e53aaba4647a5c88b88a7aca83dc00eea373d5e70b7080",
+      "hash": "71169779d2e497e74027e271cc9ada00eb269509218964df2a2ff798b9a63f93",
       "rules": [
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.action-handlers-should-reference-methods-not-contain-inline-logic",
@@ -8691,7 +8691,7 @@
           "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
           "confidence": "MEDIUM",
           "locked": true,
-          "evaluationMode": "DECLARATIVE",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {
@@ -8979,7 +8979,7 @@
           "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
           "confidence": "MEDIUM",
           "locked": true,
-          "evaluationMode": "DECLARATIVE",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {
