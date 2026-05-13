@@ -593,6 +593,21 @@ export const hasSwiftPhysicalTextAlignmentUsage = (source: string): boolean => {
   });
 };
 
+export const hasSwiftMainThreadBlockingSleepUsage = (source: string): boolean => {
+  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
+  return withoutBlockComments.split(/\r?\n/).some((line) => {
+    if (/^\s*\/\//.test(line)) {
+      return false;
+    }
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    return (
+      /\bThread\s*\.\s*sleep\s*\(/.test(sanitized) ||
+      /(^|[^\w.])sleep\s*\(/.test(sanitized) ||
+      /(^|[^\w.])usleep\s*\(/.test(sanitized)
+    );
+  });
+};
+
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@unchecked', index)) {

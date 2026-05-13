@@ -213,6 +213,18 @@ test('normaliza regla iOS RTL a detector canonico de alineación física', () =>
   ]);
 });
 
+test('normaliza regla iOS de no bloquear main thread a detector canonico de sleep bloqueante', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ **Background threads** - No bloquear main thread',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.background-threads-no-bloquear-main-thread',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

@@ -408,6 +408,15 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios.rtl-support-right-to-left-para-a-rabe-hebreo';
     }
     if (
+      includes('background threads') ||
+      includes('bloquear main thread') ||
+      includes('no bloquear main thread') ||
+      includes('thread.sleep') ||
+      includes('blocking sleep')
+    ) {
+      return 'skills.ios.guideline.ios.background-threads-no-bloquear-main-thread';
+    }
+    if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
       includes('mixed testing frameworks')

@@ -127,6 +127,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.localization.physical-text-alignment',
     ['heuristics.ios.localization.physical-text-alignment.ast']
   ),
+  'skills.ios.guideline.ios.background-threads-no-bloquear-main-thread': heuristicDetector(
+    'ios.performance.blocking-sleep',
+    ['heuristics.ios.performance.blocking-sleep.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),

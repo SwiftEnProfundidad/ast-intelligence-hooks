@@ -27,6 +27,7 @@ import {
   hasSwiftLegacyOnChangeUsage,
   hasSwiftLegacyExpectationDescriptionUsage,
   hasSwiftLegacySwiftUiObservableWrapperUsage,
+  hasSwiftMainThreadBlockingSleepUsage,
   hasSwiftMixedTestingFrameworksUsage,
   hasSwiftLegacyXCTestImportUsage,
   hasSwiftModernizableXCTestSuiteUsage,
@@ -352,6 +353,28 @@ let sample = "TextAlignment.right"
 
   assert.equal(hasSwiftPhysicalTextAlignmentUsage(source), true);
   assert.equal(hasSwiftPhysicalTextAlignmentUsage(ignored), false);
+});
+
+test('detector iOS de performance detecta sleeps bloqueantes sin confundir Task.sleep', () => {
+  const source = `
+final class SplashDelay {
+  func wait() {
+    Thread.sleep(forTimeInterval: 0.25)
+    sleep(1)
+    usleep(100)
+  }
+}
+`;
+  const ignored = `
+func wait() async throws {
+  try await Task.sleep(for: .seconds(1))
+  let text = "Thread.sleep(forTimeInterval: 1)"
+  // sleep(1)
+}
+`;
+
+  assert.equal(hasSwiftMainThreadBlockingSleepUsage(source), true);
+  assert.equal(hasSwiftMainThreadBlockingSleepUsage(ignored), false);
 });
 
 test('hasSwiftUncheckedSendableUsage detecta @unchecked Sendable', () => {

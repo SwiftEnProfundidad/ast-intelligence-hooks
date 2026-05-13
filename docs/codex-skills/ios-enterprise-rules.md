@@ -633,6 +633,11 @@ struct APIEndpoint: Sendable {
 - `skills.ios.guideline.ios.rtl-support-right-to-left-para-a-rabe-hebreo` se mapea a `heuristics.ios.localization.physical-text-alignment.ast`.
 - En `PROJECT MODE: brownfield`, este hallazgo detecta alineaciones físicas `.left`/`.right` en texto y frames (`multilineTextAlignment`, `frame(alignment:)`, `TextAlignment`, `NSTextAlignment`) como señal de adopción hacia `.leading`/`.trailing`. No marca `.leading` ni `.trailing`.
 
+### Enforcement AST inicial de bloqueo de thread iOS
+
+- `skills.ios.guideline.ios.background-threads-no-bloquear-main-thread` se mapea a `heuristics.ios.performance.blocking-sleep.ast`.
+- En `PROJECT MODE: brownfield`, este hallazgo detecta sleeps bloqueantes (`Thread.sleep`, `sleep`, `usleep`) en Swift production como señal de adopción hacia scheduling cancellable, clocks o suspensión asíncrona. No marca `Task.sleep`.
+
 ### Combine (Reactive):
 ✅ **Publishers** - AsyncSequence para async, Combine para streams complejos
 ✅ **@Published** - En ViewModels para binding con Views
