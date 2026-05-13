@@ -153,6 +153,18 @@ test('normaliza regla iOS ATS a detector canonico de transporte seguro', () => {
   ]);
 });
 
+test('normaliza regla iOS Localizable.strings a detector canonico de String Catalogs', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ **Localizable.strings** - Deprecado, usar String Catalogs',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

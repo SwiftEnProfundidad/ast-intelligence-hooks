@@ -389,6 +389,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto';
     }
     if (
+      includes('localizable strings') ||
+      includes('string catalogs') ||
+      includes('xcstrings')
+    ) {
+      return 'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs';
+    }
+    if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
       includes('mixed testing frameworks')
