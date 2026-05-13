@@ -200,6 +200,45 @@ test('runLifecycleAudit mantiene JSON accionable si el gate bloquea sin findings
   assert.equal(result.findings[0]?.code, 'AUDIT_BLOCKED_WITHOUT_FINDINGS');
 });
 
+test('runLifecycleAudit no conserva bloqueantes stale cuando el gate actual permite', async () => {
+  const result = await runLifecycleAudit({
+    stage: 'PRE_PUSH',
+    auditMode: 'gate',
+    dependencies: {
+      git: buildGitStub('/repo'),
+      resolvePolicyForStage: (stage) =>
+        ({
+          policy: { stage, blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          trace: { stage },
+        }) as never,
+      runPlatformGate: async () => 0,
+      readEvidence: () =>
+        buildEvidence({
+          stage: 'PRE_PUSH',
+          outcome: 'BLOCK',
+          files_scanned: 10,
+          findings: [
+            {
+              ruleId: 'skills.backend.no-solid-violations',
+              severity: 'ERROR',
+              code: 'SKILLS_BACKEND_NO_SOLID_VIOLATIONS',
+              message: 'Aggregated SOLID finding from stale evidence.',
+              file: 'apps/backend/src/domain/entities/CacheEntry.ts',
+              blocking: true,
+            },
+          ],
+        }),
+    },
+  });
+
+  assert.equal(result.gate_exit_code, 0);
+  assert.equal(result.snapshot_outcome, 'PASS');
+  assert.equal(result.blocking_findings_count, 0);
+  assert.equal(result.findings[0]?.severity, 'WARN');
+  assert.equal(result.findings[0]?.blocking, false);
+  assert.match(result.findings[0]?.message ?? '', /current audit gate exited 0/);
+});
+
 test('runLifecycleAudit usa scope staged en PRE_WRITE cuando hay staged soportado', async () => {
   let observedScope: Parameters<typeof runPlatformGate>[0]['scope'] | undefined;
   const result = await runLifecycleAudit({
