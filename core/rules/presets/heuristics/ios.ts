@@ -182,6 +182,42 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.logging.adhoc-print.ast',
+    description: 'Detects print/debugPrint/dump/NSLog/os_log usage in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.logging.adhoc-print.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected print/debugPrint/dump/NSLog/os_log usage in iOS production code.',
+      code: 'HEURISTICS_IOS_LOGGING_ADHOC_PRINT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.logging.sensitive-data.ast',
+    description: 'Detects sensitive data in iOS logging calls.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.logging.sensitive-data.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected sensitive data in an iOS logging call.',
+      code: 'HEURISTICS_IOS_LOGGING_SENSITIVE_DATA_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',

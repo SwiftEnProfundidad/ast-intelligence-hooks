@@ -68,6 +68,16 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     'heuristics.ios.testing.wait-for-expectations.ast',
   ]);
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc'),
+    ['heuristics.ios.logging.adhoc-print.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.no-loggear-pii-tokens-emails-ids-sensibles'
+    ),
+    ['heuristics.ios.logging.sensitive-data.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),
     ['heuristics.ios.testing.legacy-expectation-description.ast']
   );

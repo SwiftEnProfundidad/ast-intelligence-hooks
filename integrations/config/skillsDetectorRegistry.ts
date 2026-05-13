@@ -47,6 +47,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-task-detached': heuristicDetector('ios.task-detached', [
     'heuristics.ios.task-detached.ast',
   ]),
+  'skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc': heuristicDetector(
+    'ios.logging.adhoc-print',
+    ['heuristics.ios.logging.adhoc-print.ast']
+  ),
+  'skills.ios.guideline.ios.no-loggear-pii-tokens-emails-ids-sensibles': heuristicDetector(
+    'ios.logging.sensitive-data',
+    ['heuristics.ios.logging.sensitive-data.ast']
+  ),
   'skills.ios.no-unchecked-sendable': heuristicDetector('ios.unchecked-sendable', [
     'heuristics.ios.unchecked-sendable.ast',
   ]),
