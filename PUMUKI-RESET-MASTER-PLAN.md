@@ -942,7 +942,7 @@ Snapshot PUMUKI-INC-140 (2026-05-13):
 - Implementación: `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` pasa a severidad `ERROR` siempre mediante `toCriticalSkillsViolation`; scope y bundles siguen respetando advisory para mantener el cambio acotado.
 - Regresión: `evaluateAiGate` cubre que PRE_WRITE bloquea aunque `skills enforcement` esté en advisory cuando iOS detectado no incluye `skills.ios.critical-test-quality`.
 - Evidencia Pumuki: `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> `44/44 pass`; `npm run -s typecheck` -> OK; `git diff --check` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.239.tgz`.
-- Estado: pendiente de publicación npm y repin RuralGo.
+- Cierre: ✅ publicado `pumuki@6.3.239` como `latest`; RuralGo repineado a `6.3.239`; `pumuki-pre-commit --quiet` en RuralGo ya no permite advisory silencioso y muestra `AI Gate: BLOCKED`, `Violations: blocking=1 advisory=1`, `Blocking causes` con `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING`.
 
 Snapshot PUMUKI-INC-139 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, recurrencia PRE_WRITE vs PRE_COMMIT en slice checkout pixel-perfect con `pumuki@6.3.235`.
