@@ -931,7 +931,7 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-137` / RuralGo: corregir PRE_COMMIT/PRE_WRITE para que un slice staged acotado no quede bloqueado por deuda baseline ajena ni por tracking activo válido; la causa visible debe priorizar el gap real de enforcement `skills.ios.critical-test-quality`. |
+| Este plan | `[🚧] - PARITY-IOS-001` / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS tras cerrar la incidencia externa activa. |
 
 - Estado: 🚧 PARITY-IOS-001 / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS.
 
@@ -959,7 +959,10 @@ Snapshot PUMUKI-INC-137 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, tablero activo con `🚧=1`.
 - Reporte consumer: `pumuki@6.3.233` bloquea un slice iOS staged acotado mezclando deuda baseline ajena y tracking activo válido; además el mensaje visible acusa tracking bloqueado aunque `RGO-1900-02` es la tarea activa válida.
 - Objetivo: PRE_COMMIT/PRE_WRITE deben limitar blockers al staged/range accionable o degradar baseline ajena a advisory; el mensaje visible debe priorizar `skills.ios.critical-test-quality` / drift de enforcement antes que tracking válido.
-- Estado: portando fix sobre `origin/main`/`6.3.233` para release consumer útil.
+- Cierre: ✅ FIXED en `pumuki@6.3.234`.
+- Implementación: hooks gestionados encadenan `pumuki-pre-write` antes de `pre-commit`/`pre-push`, el lifecycle evita duplicar `PRE_WRITE`, `audit PRE_COMMIT` usa scope staged cuando hay archivos soportados staged, y el resumen visible prioriza gaps críticos de skills antes que tracking enriquecido.
+- Evidencia Pumuki: suite dirigida `33/33 pass`; `npm run -s typecheck` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.234.tgz`; `npm view pumuki version` -> `6.3.234`; `git push origin HEAD:main` -> `19ab8ed..c60881d`.
+- Evidencia RuralGo tras repin: `node_modules/pumuki=6.3.234`, `npm view pumuki version=6.3.234`; `PUMUKI_SYSTEM_NOTIFICATIONS=0 PUMUKI_NOTIFICATIONS=0 npx pumuki audit --stage=PRE_COMMIT --json` conserva `scope.kind=staged`, `files_scanned=1` y bloquea solo 10 findings reales del archivo staged `apps/ios/Presentation/Features/BuyerCommerce/BuyerCommerceScreens.swift`, sin paths baseline ajenos.
 
 
 Snapshot PARITY-IOS-ATS-001 (2026-05-13):
