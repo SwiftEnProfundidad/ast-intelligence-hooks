@@ -33,8 +33,11 @@ const runnerLine = (
   phase: ResolverPhase,
   runner: string
 ): string => {
-  if (parentHook === 'pre-push' && phase === 'main') {
-    return `  PUMUKI_PRE_PUSH_STDIN="$PUMUKI_PRE_PUSH_STDIN" ${runner} "$@"`;
+  if (phase === 'main') {
+    if (parentHook === 'pre-push') {
+      return `  PUMUKI_CHAINED_PRE_WRITE_DONE=1 PUMUKI_PRE_PUSH_STDIN="$PUMUKI_PRE_PUSH_STDIN" ${runner} "$@"`;
+    }
+    return `  PUMUKI_CHAINED_PRE_WRITE_DONE=1 ${runner}`;
   }
   return `  ${runner}`;
 };
