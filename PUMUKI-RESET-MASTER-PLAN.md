@@ -931,9 +931,9 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-001` / Continuación iOS - reglas pendientes de baseline Swift/iOS. |
+| Este plan | `[🚧] - PARITY-IOS-001` / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS. |
 
-- Estado: 🚧 PARITY-IOS-001 / SwiftData layer-leak AUTO mapping desde `core-data-expert`.
+- Estado: 🚧 PARITY-IOS-001 / Continuación iOS - siguiente regla pendiente de baseline Swift/iOS.
 
 Snapshot PARITY-IOS-SWIFTDATA-001 (2026-05-12):
 - Reapertura limpia: PR #890 queda descartado como ruta de merge directa porque estaba basado en `bugfix/pumuki-inc130-ios-helper-critical-quality-final2` y no en `main`, arrastrando historia antigua.
@@ -944,7 +944,7 @@ Snapshot PARITY-IOS-SWIFTDATA-001 (2026-05-12):
 Snapshot PARITY-IOS-SWIFTDATA-002 (2026-05-13):
 - Diagnóstico: `skills.ios.no-swiftdata-layer-leak` ya tenía detector, extractor, preset y registry, pero las frases reales de `core-data-expert` sobre `ModelContext`, `ModelContainer`, `@Query`, `@Model` y modelos SwiftData seguían compilando como `DECLARATIVE`.
 - Implementación: el normalizador de markdown de skills convierte esas frases a `skills.ios.no-swiftdata-layer-leak`, conservando severidad `WARN`, alcance brownfield y binding `heuristics.ios.swiftdata.layer-leak.ast`.
-- Evidencia local: `node --import tsx scripts/compile-skills-lock.ts`; `npm run -s skills:lock:check` -> `FRESH`; `npm run -s typecheck` -> OK; suite dirigida `91/91 pass`; `git diff --check` limpio.
+- Cierre: PR #951 mergeado en `main`, release PR #952 mergeado, `pumuki@6.3.196` publicada y verificada como `latest`; RuralGo repineado a `6.3.196` en `bugfix/ruralgo-tracking-build-stability` con commit `5130b0bd7`, `runtime=consumerInstalled=lifecycleInstalled=6.3.196` y PRE_PUSH `gate_exit_code=0`, `blocking_findings_count=0`, `outcome=PASS`. Evidencia local: `node --import tsx scripts/compile-skills-lock.ts`; `npm run -s skills:lock:check` -> `FRESH`; `npm run -s typecheck` -> OK; suite dirigida `91/91 pass`; `npm pack --dry-run --silent` -> OK; `git diff --check` limpio.
 
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
