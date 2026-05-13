@@ -175,6 +175,18 @@ test('normaliza regla SwiftUI LazyVStack/LazyHStack a detector canonico de lista
   ]);
 });
 
+test('normaliza regla SwiftUI object creation in body a detector canonico de render path', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- No object creation in `body`',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios-swiftui-expert.no-object-creation-in-body',
+  ]);
+});
+
 test('normaliza reglas Core Data a ids canonicos del slice phase8', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-core-data-guidelines',

@@ -36,6 +36,7 @@ import {
   hasSwiftLegacyXCTestImportUsage,
   hasSwiftModernizableXCTestSuiteUsage,
   hasSwiftNonLazyScrollForEachUsage,
+  hasSwiftViewBodyObjectCreationUsage,
   hasSwiftAssumeIsolatedUsage,
   hasSwiftCoreDataLayerLeakUsage,
   hasSwiftSwiftDataLayerLeakUsage,
@@ -160,6 +161,34 @@ struct FeedView: View {
 
   assert.equal(hasSwiftNonLazyScrollForEachUsage(source), true);
   assert.equal(hasSwiftNonLazyScrollForEachUsage(safe), false);
+});
+
+test('hasSwiftViewBodyObjectCreationUsage detecta formatter creado en body y preserva dependencia externa', () => {
+  const source = `
+struct PriceView: View {
+  let amount: Decimal
+
+  var body: some View {
+    let formatter = NumberFormatter()
+    Text(formatter.string(from: amount as NSDecimalNumber) ?? "")
+  }
+}
+`;
+  const safe = `
+struct PriceView: View {
+  let formatter: NumberFormatter
+  let amount: Decimal
+
+  var body: some View {
+    Text(formatter.string(from: amount as NSDecimalNumber) ?? "")
+    let sample = "var body: some View { NumberFormatter() }"
+    // var body: some View { NumberFormatter() }
+  }
+}
+`;
+
+  assert.equal(hasSwiftViewBodyObjectCreationUsage(source), true);
+  assert.equal(hasSwiftViewBodyObjectCreationUsage(safe), false);
 });
 
 test('hasSwiftForceTryUsage detecta try! y descarta try?', () => {

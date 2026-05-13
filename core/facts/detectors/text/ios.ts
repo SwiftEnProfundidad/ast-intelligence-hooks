@@ -388,6 +388,14 @@ export const hasSwiftNonLazyScrollForEachUsage = (source: string): boolean => {
   return nonLazyScrollableCollectionPattern.test(swiftSource);
 };
 
+export const hasSwiftViewBodyObjectCreationUsage = (source: string): boolean => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const viewBodyObjectCreationPattern =
+    /\bvar\s+body\s*:\s*some\s+View\s*\{[\s\S]{0,2400}\b(?:DateFormatter|NumberFormatter|RelativeDateTimeFormatter|ISO8601DateFormatter|ByteCountFormatter|MeasurementFormatter|DateComponentsFormatter)\s*\(/;
+
+  return viewBodyObjectCreationPattern.test(swiftSource);
+};
+
 export const hasSwiftDispatchQueueUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'D' || !hasIdentifierAt(swiftSource, index, 'DispatchQueue')) {

@@ -258,6 +258,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.swiftui.non-lazy-scroll-foreach', [
       'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast',
     ]),
+  'skills.ios.guideline.ios-swiftui-expert.no-object-creation-in-body':
+    heuristicDetector('ios.swiftui.body-object-creation', [
+      'heuristics.ios.swiftui.body-object-creation.ast',
+    ]),
   'skills.ios.no-scrollview-shows-indicators': heuristicDetector(
     'ios.scrollview-shows-indicators',
     ['heuristics.ios.scrollview-shows-indicators.ast']

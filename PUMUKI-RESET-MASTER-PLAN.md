@@ -1076,6 +1076,11 @@ Snapshot PARITY-IOS-SWIFTUI-LAZY-LIST-001 (2026-05-13):
 - Implementación: se añade `heuristics.ios.swiftui.non-lazy-scroll-foreach.ast` como WARN brownfield-aware para `ScrollView { VStack/HStack { ForEach(...) } }`, preservando `LazyVStack`/`LazyHStack`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no intenta calcular tamaño real de colección ni bloquear stacks estáticos; marca el caso remediable de colección scrollable no lazy.
 
+Snapshot PARITY-IOS-SWIFTUI-BODY-001 (2026-05-13):
+- Diagnóstico: `No object creation in body` seguía como baseline SwiftUI declarativo aunque crear formatters dentro de `var body: some View` es un patrón detectable en Presentation y afecta al render path.
+- Implementación: se añade `heuristics.ios.swiftui.body-object-creation.ast` como WARN brownfield-aware para creación de `DateFormatter`, `NumberFormatter`, `RelativeDateTimeFormatter`, `ISO8601DateFormatter`, `ByteCountFormatter`, `MeasurementFormatter` o `DateComponentsFormatter` dentro de `body`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice no prohíbe toda inicialización dentro de `body`; solo marca formatters conocidos como objetos costosos y remediables movibles fuera del render path.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

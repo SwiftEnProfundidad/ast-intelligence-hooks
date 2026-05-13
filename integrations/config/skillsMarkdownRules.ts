@@ -368,6 +368,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios-swiftui-expert.use-lazyvstack-lazyhstack-for-large-lists';
     }
     if (
+      includes('no object creation in body') ||
+      (includes('object creation') && includes('body')) ||
+      (includes('body kept simple') && includes('pure'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.no-object-creation-in-body';
+    }
+    if (
       includes('scrollindicators hidden') ||
       includes('scroll indicators hidden') ||
       includes('showsindicators false') ||

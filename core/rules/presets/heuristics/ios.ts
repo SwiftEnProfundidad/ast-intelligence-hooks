@@ -931,6 +931,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.body-object-creation.ast',
+    description: 'Detects expensive formatter object creation inside SwiftUI body.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.body-object-creation.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected formatter object creation inside SwiftUI body; keep body simple and move expensive objects out of render paths.',
+      code: 'HEURISTICS_IOS_SWIFTUI_BODY_OBJECT_CREATION_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.navigation-view.ast',
     description: 'Detects NavigationView usage in iOS production code.',
     severity: 'WARN',
