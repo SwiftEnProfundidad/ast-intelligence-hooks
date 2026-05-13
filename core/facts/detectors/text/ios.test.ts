@@ -45,6 +45,7 @@ import {
   hasSwiftNavigationViewUsage,
   hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage,
   hasSwiftObservableObjectUsage,
+  hasSwiftOnAppearTaskUsage,
   hasSwiftOnTapGestureUsage,
   hasSwiftOperationQueueUsage,
   hasSwiftContainsUserFilterUsage,
@@ -184,6 +185,43 @@ Task {
 `;
   assert.equal(hasSwiftTaskDetachedUsage(positive), true);
   assert.equal(hasSwiftTaskDetachedUsage(negative), false);
+});
+
+test('hasSwiftOnAppearTaskUsage detecta Task dentro de onAppear y preserva task modifier', () => {
+  const source = `
+struct FeedView: View {
+  var body: some View {
+    List(items) { item in
+      Text(item.title)
+    }
+    .onAppear {
+      Task {
+        await viewModel.load()
+      }
+    }
+  }
+}
+`;
+  const safe = `
+struct FeedView: View {
+  var body: some View {
+    List(items) { item in
+      Text(item.title)
+    }
+    .task {
+      await viewModel.load()
+    }
+    .onAppear {
+      analytics.trackScreen()
+    }
+    let text = ".onAppear { Task { await load() } }"
+    // .onAppear { Task { await load() } }
+  }
+}
+`;
+
+  assert.equal(hasSwiftOnAppearTaskUsage(source), true);
+  assert.equal(hasSwiftOnAppearTaskUsage(safe), false);
 });
 
 test('hasSwiftStrongDelegateReferenceUsage detecta delegates fuertes y preserva weak delegates', () => {

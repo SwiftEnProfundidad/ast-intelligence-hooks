@@ -244,6 +244,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-legacy-onchange': heuristicDetector('ios.legacy-onchange', [
     'heuristics.ios.legacy-onchange.ast',
   ]),
+  'skills.ios.guideline.ios.task-task-id-trabajos-async-con-cancelacio-n-automa-tica': heuristicDetector(
+    'ios.swiftui.onappear-task',
+    ['heuristics.ios.swiftui.onappear-task.ast']
+  ),
+  'skills.ios.guideline.ios-swiftui-expert.use-task-modifier-for-automatic-cancellation-of-async-work': heuristicDetector(
+    'ios.swiftui.onappear-task',
+    ['heuristics.ios.swiftui.onappear-task.ast']
+  ),
   'skills.ios.no-uiscreen-main-bounds': heuristicDetector('ios.uiscreen-main-bounds', [
     'heuristics.ios.uiscreen-main-bounds.ast',
   ]),

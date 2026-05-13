@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T13:30:09.135Z",
+  "generatedAt": "2026-05-13T13:40:06.121Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5764,8 +5764,20 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "c7b96d97cd02175dacf17b64cb8bdd1be7b5978dd2f74c7feb3bf3d462311467",
+      "hash": "2d56094eff6a0b688d9f20ef6970de5945dfa74aaf3a3973dfee2091b9e98542",
       "rules": [
+        {
+          "id": "skills.ios.guideline.ios-swiftui-expert.use-task-modifier-for-automatic-cancellation-of-async-work",
+          "description": ".task/.task(id:) - Trabajos async con cancelación automática",
+          "severity": "WARN",
+          "platform": "ios",
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
+          "confidence": "MEDIUM",
+          "locked": true,
+          "evaluationMode": "AUTO",
+          "origin": "core"
+        },
         {
           "id": "skills.ios.guideline.ios.accessibility-identifiers-para-localizar-elementos",
           "description": "Accessibility identifiers - Para localizar elementos",
@@ -7928,18 +7940,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios.task-task-id-trabajos-async-con-cancelacio-n-automa-tica",
-          "description": ".task/.task(id:) - Trabajos async con cancelación automática",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios.taskgroup-para-operaciones-paralelas",
           "description": "TaskGroup - Para operaciones paralelas",
           "severity": "WARN",
@@ -8632,7 +8632,7 @@
       "name": "ios-swiftui-expert-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/swiftui-expert-skill/SKILL.md",
-      "hash": "33a19bd25ca8546d49f2070956784e4fe3f653a25365c8a9734af5cd46b8ec60",
+      "hash": "05e71c648612ed794d4e8122105fc3f508e09b7f92db94a24bd3daa45335d6b7",
       "rules": [
         {
           "id": "skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear",
@@ -8907,7 +8907,7 @@
           "sourcePath": "vendor/skills/swiftui-expert-skill/SKILL.md",
           "confidence": "MEDIUM",
           "locked": true,
-          "evaluationMode": "DECLARATIVE",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {

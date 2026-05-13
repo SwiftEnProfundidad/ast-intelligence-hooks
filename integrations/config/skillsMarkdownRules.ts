@@ -361,6 +361,15 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-uiscreen-main-bounds';
     }
     if (
+      includes('task/.task(id') ||
+      includes('trabajos async con cancelacion automatica') ||
+      includes('trabajos async con cancelacio n automa tica') ||
+      includes('task modifier for automatic cancellation') ||
+      includes('automatic cancellation of async work')
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-task-modifier-for-automatic-cancellation-of-async-work';
+    }
+    if (
       includes('swift testing over xctest') ||
       includes('prefer import testing') ||
       includes('prefer test functions over test methods') ||

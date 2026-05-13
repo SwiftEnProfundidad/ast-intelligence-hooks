@@ -387,6 +387,30 @@ test('normaliza reglas Swift Testing async a ids canonicos del slice phase4', ()
   ]);
 });
 
+test('normaliza regla SwiftUI task modifier a detector canonico de cancelacion lifecycle-aware', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- ✅ Use .task modifier for automatic cancellation of async work',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios-swiftui-expert.use-task-modifier-for-automatic-cancellation-of-async-work',
+  ]);
+});
+
+test('normaliza regla iOS task task-id a detector canonico de cancelacion lifecycle-aware', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent: '- ✅ .task/.task(id:) - Trabajos async con cancelación automática',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios-swiftui-expert.use-task-modifier-for-automatic-cancellation-of-async-work',
+  ]);
+});
+
 test('normaliza reglas Swift Testing de suites a ids canonicos del slice phase5', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-swift-testing-guidelines',
