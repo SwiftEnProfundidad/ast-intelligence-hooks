@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 56);
+  assert.equal(iosRules.length, 57);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -30,6 +30,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.assets.loose-resource.ast',
     'heuristics.ios.accessibility.fixed-font-size.ast',
     'heuristics.ios.localization.physical-text-alignment.ast',
+    'heuristics.ios.performance.blocking-sleep.ast',
     'heuristics.ios.unchecked-sendable.ast',
     'heuristics.ios.preconcurrency.ast',
     'heuristics.ios.nonisolated-unsafe.ast',
@@ -125,6 +126,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.localization.physical-text-alignment.ast')?.then.code,
     'HEURISTICS_IOS_LOCALIZATION_PHYSICAL_TEXT_ALIGNMENT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.performance.blocking-sleep.ast')?.then.code,
+    'HEURISTICS_IOS_PERFORMANCE_BLOCKING_SLEEP_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.preconcurrency.ast')?.then.code,

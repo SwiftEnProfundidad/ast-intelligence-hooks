@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T11:47:21.054Z",
+  "generatedAt": "2026-05-13T11:57:22.186Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5764,7 +5764,7 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "4689c3cc0d9f813517c298e0cddac9fffa9c029951fbc1c6f58d95994938f2d9",
+      "hash": "54d70e010210d043da474f55a1031af4f0d897b30082dd522be5d85c44ba27ab",
       "rules": [
         {
           "id": "skills.ios.guideline.ios.accessibility-identifiers-para-localizar-elementos",
@@ -5967,7 +5967,7 @@
           "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
           "confidence": "MEDIUM",
           "locked": true,
-          "evaluationMode": "DECLARATIVE",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {

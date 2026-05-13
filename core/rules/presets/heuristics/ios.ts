@@ -416,6 +416,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.performance.blocking-sleep.ast',
+    description: 'Detects blocking sleep calls where cancellable async scheduling is the preferred iOS baseline.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.performance.blocking-sleep.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected blocking sleep usage in iOS production code; async clocks, suspension or cancellable scheduling remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_PERFORMANCE_BLOCKING_SLEEP_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',
