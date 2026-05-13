@@ -19,47 +19,20 @@ import {
   renderActionRow,
   renderBadge,
 } from './framework-menu-ui-components-lib';
-import {
-  buildGovernanceConsoleSummaryLines,
-  type GovernanceConsoleSnapshot,
-} from '../integrations/lifecycle/cliGovernanceConsole';
-import type { ConsumerPreflightResult } from './framework-menu-consumer-preflight-types';
 
 export const formatAdvancedMenuView = (
   actions: ReadonlyArray<MenuAction>,
   options?: {
     evidenceSummary?: FrameworkMenuEvidenceSummary;
-    preflight?: ConsumerPreflightResult | null;
-    governanceConsole?: GovernanceConsoleSnapshot | null;
   }
 ): string => {
   const evidenceSummary = options?.evidenceSummary ?? readEvidenceSummaryForMenu(process.cwd());
   const tokens = buildCliDesignTokens();
   const statusBadge = resolveAdvancedStatusBadge(evidenceSummary, tokens);
   const groupedActions = resolveAdvancedMenuLayout(actions);
-  const governanceConsole = options?.preflight
-    ? {
-      governanceObservation: options.preflight.governanceObservation,
-      governanceNextAction: options.preflight.governanceNextAction,
-      policyValidation: options.preflight.policyValidation,
-      experimentalFeatures: options.preflight.experimentalFeatures,
-    }
-    : (options?.governanceConsole ?? null);
   const lines = [
     'Pumuki Framework Menu (Advanced)',
     `Status: ${statusBadge}`,
-    ...(governanceConsole
-      ? [
-        'Governance Console',
-        ...buildGovernanceConsoleSummaryLines({
-          governanceObservation: governanceConsole.governanceObservation,
-          governanceNextAction: governanceConsole.governanceNextAction,
-          policyValidation: governanceConsole.policyValidation,
-          experimentalFeatures: governanceConsole.experimentalFeatures,
-        }).map((line) => `  ${line}`),
-        '',
-      ]
-      : []),
     'C. Switch to consumer menu',
     '',
     ...groupedActions.flatMap((group, groupIndex) => [
@@ -87,33 +60,11 @@ export const formatAdvancedMenuClassicView = (
   actions: ReadonlyArray<MenuAction>,
   options?: {
     evidenceSummary?: FrameworkMenuEvidenceSummary;
-    preflight?: ConsumerPreflightResult | null;
-    governanceConsole?: GovernanceConsoleSnapshot | null;
   }
 ): string => {
   const evidenceSummary = options?.evidenceSummary ?? readEvidenceSummaryForMenu(process.cwd());
-  const governanceConsole = options?.preflight
-    ? {
-      governanceObservation: options.preflight.governanceObservation,
-      governanceNextAction: options.preflight.governanceNextAction,
-      policyValidation: options.preflight.policyValidation,
-      experimentalFeatures: options.preflight.experimentalFeatures,
-    }
-    : (options?.governanceConsole ?? null);
   const lines = [
     'Pumuki Framework Menu (Advanced)',
-    ...(governanceConsole
-      ? [
-        'Governance Console',
-        ...buildGovernanceConsoleSummaryLines({
-          governanceObservation: governanceConsole.governanceObservation,
-          governanceNextAction: governanceConsole.governanceNextAction,
-          policyValidation: governanceConsole.policyValidation,
-          experimentalFeatures: governanceConsole.experimentalFeatures,
-        }).map((line) => `  ${line}`),
-        '',
-      ]
-      : []),
     'C. Switch to consumer menu',
     ...actions.map((action) => {
       const help = ADVANCED_MENU_HELP[action.id];

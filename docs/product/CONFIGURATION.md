@@ -66,13 +66,6 @@ Current enforcement scope:
 - curated template compilation (`skills.sources.json` -> `skills.lock.json`)
 - stage-aware policy resolution via `resolvePolicyForStage`
 - additive skills-derived rules merged through the shared gate runner
-- strict skills enforcement by default; advisory values are ignored by design
-- strict heuristics, TDD/BDD evidence, SDD completeness, and Git atomicity by
-  default; their `advisory`/`0` env values are explicit legacy overrides, not
-  the product baseline
-- declarative skill rules that represent auditable norms must be mapped to an
-  intelligent AST detector; missing detector bindings are reported as
-  `unsupported_detector_rule_ids` and block strict gate execution
 - evidence traceability for active skills bundles and policy source/hash in `.ai_evidence.json`
 
 Ownership model:

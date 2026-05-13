@@ -184,9 +184,6 @@ test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', asy
       });
       assert.deepEqual(written.snapshot.rules_coverage, {
         stage: 'PRE_PUSH',
-        contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
-        scope_note:
-          'rules_coverage reports AUTO runtime rules applicable to this stage, not total DECLARATIVE registry surface.',
         active_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
         evaluated_rule_ids: ['skills.backend.no-empty-catch'],
         matched_rule_ids: ['skills.backend.no-empty-catch'],
@@ -346,7 +343,6 @@ test('writeEvidence preserva snapshot.tdd_bdd cuando viene en evidencia', async 
           slices_invalid: 0,
           integrity_ok: true,
           errors: [],
-          baseline: { required: true, passed: 0, missing: 0, failed: 0 },
         },
         waiver: {
           applied: true,

@@ -142,21 +142,6 @@ test('buildLifecycleVersionReport expone drift entre runtime, consumer y lifecyc
       JSON.stringify({ name: getCurrentPumukiPackageName(), version: '8.8.8' }, null, 2),
       'utf8'
     );
-    writeFileSync(
-      join(repoRoot, 'package.json'),
-      JSON.stringify(
-        {
-          name: 'consumer-fixture',
-          version: '1.0.0',
-          volta: {
-            node: '18.20.4',
-          },
-        },
-        null,
-        2
-      ),
-      'utf8'
-    );
 
     const report = buildLifecycleVersionReport({
       repoRoot,
@@ -172,40 +157,14 @@ test('buildLifecycleVersionReport expone drift entre runtime, consumer y lifecyc
     assert.equal(report.driftFromLifecycleInstalled, true);
     assert.match(report.driftWarning ?? '', /effective=8\.8\.8/i);
     assert.match(report.driftWarning ?? '', /runtime=/i);
-    assert.match(report.driftWarning ?? '', /node=18\.20\.4/i);
     assert.match(report.driftWarning ?? '', /lifecycle=7\.7\.7/i);
     assert.equal(
       report.alignmentCommand,
-      `volta install node@18.20.4 && volta pin node@18.20.4 && npm install --save-exact pumuki@${getCurrentPumukiVersion()} && npx --yes --package pumuki@${getCurrentPumukiVersion()} pumuki install`
+      `npm install --save-exact pumuki@${getCurrentPumukiVersion()} && npx --yes --package pumuki@${getCurrentPumukiVersion()} pumuki install`
     );
     assert.equal(report.pathExecutionHazard, false);
     assert.equal(report.pathExecutionWarning, null);
     assert.equal(report.pathExecutionWorkaroundCommand, null);
-  });
-});
-
-test('buildLifecycleVersionReport usa .nvmrc cuando el consumer no declara volta', async () => {
-  await withTempDir('pumuki-package-info-report-nvmrc-', async (repoRoot) => {
-    const packageRoot = join(repoRoot, 'node_modules', getCurrentPumukiPackageName());
-    mkdirSync(packageRoot, { recursive: true });
-    writeFileSync(
-      join(packageRoot, 'package.json'),
-      JSON.stringify({ name: getCurrentPumukiPackageName(), version: '8.8.8' }, null, 2),
-      'utf8'
-    );
-    writeFileSync(join(repoRoot, '.nvmrc'), '18.20.4\n', 'utf8');
-
-    const report = buildLifecycleVersionReport({
-      repoRoot,
-      lifecycleVersion: '7.7.7',
-    });
-
-    assert.equal(report.driftFromRuntime, true);
-    assert.match(report.driftWarning ?? '', /node=18\.20\.4/i);
-    assert.equal(
-      report.alignmentCommand,
-      `nvm install 18.20.4 && nvm use 18.20.4 && npm install --save-exact pumuki@${getCurrentPumukiVersion()} && npx --yes --package pumuki@${getCurrentPumukiVersion()} pumuki install`
-    );
   });
 });
 

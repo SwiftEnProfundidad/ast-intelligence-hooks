@@ -3,11 +3,11 @@ import { strict as assert } from 'node:assert';
 import test from 'node:test';
 
 const runFrameworkMenu = (env: NodeJS.ProcessEnv) =>
-  spawnSync(process.execPath, ['--import', 'tsx', 'scripts/framework-menu.cli.ts'], {
+  spawnSync(process.execPath, ['bin/pumuki-framework.js'], {
     cwd: process.cwd(),
     env: { ...process.env, ...env },
     encoding: 'utf8',
-    input: '9\n',
+    input: '10\n',
   });
 
 test('framework menu CLI exits cleanly in classic mode', () => {

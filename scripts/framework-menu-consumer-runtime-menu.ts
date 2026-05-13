@@ -13,10 +13,10 @@ import {
   renderBadge,
 } from './framework-menu-ui-components-lib';
 import { isMenuUiV2Enabled } from './framework-menu-ui-version-lib';
-import { buildGovernanceConsoleSummaryLines } from '../integrations/lifecycle/cliGovernanceConsole';
-import type { GovernanceConsoleSnapshot } from '../integrations/lifecycle/cliGovernanceConsole';
-import type { ConsumerPreflightResult } from './framework-menu-consumer-preflight-types';
-import type { ConsumerAction, ConsumerRuntimeWrite } from './framework-menu-consumer-runtime-types';
+import type {
+  ConsumerAction,
+  ConsumerRuntimeWrite,
+} from './framework-menu-consumer-runtime-types';
 
 const buildConsumerRuntimeMenuStatus = (
   menuSummary: FrameworkMenuEvidenceSummary
@@ -32,35 +32,24 @@ const buildConsumerRuntimeMenuStatus = (
           : { level: 'info', label: (menuSummary.outcome ?? 'UNKNOWN').trim().toUpperCase() };
 
 export const renderConsumerRuntimeClassicMenu = (
-  params: {
-    actions: ReadonlyArray<ConsumerAction>;
-    repoRoot: string;
-    useColor: () => boolean;
-  }
+  actions: ReadonlyArray<ConsumerAction>,
+  useColor: () => boolean
 ): string => {
-  const menuSummary = readEvidenceSummaryForMenu(params.repoRoot);
-  const menuStatus = buildConsumerRuntimeMenuStatus(menuSummary);
-  const tokens = buildCliDesignTokens({
-    width: resolveLegacyPanelOuterWidth(),
-    color: params.useColor(),
-  });
-  const groupedActions = resolveConsumerMenuLayout(params.actions);
+  const groupedActions = resolveConsumerMenuLayout(actions);
   const lines = [
     'PUMUKI — Hook-System (run: npx ast-hooks)',
     'AST Intelligence System Overview',
+    'A. Switch to advanced menu',
     '',
     ...groupedActions.flatMap((group) => [
-      ...(group.title.trim().length > 0 ? [group.title] : []),
-      ...group.items.map((item) => renderActionRow({
-        id: item.id,
-        label: item.action.label,
-      })),
+      group.title,
+      ...group.items.map((item) => `${item.id}) ${item.action.label}`),
       '',
     ]),
   ];
   return renderLegacyPanel(lines, {
     width: resolveLegacyPanelOuterWidth(),
-    color: params.useColor(),
+    color: useColor(),
   });
 };
 
@@ -69,8 +58,6 @@ export const renderConsumerRuntimeModernMenu = (
     actions: ReadonlyArray<ConsumerAction>;
     repoRoot: string;
     useColor: () => boolean;
-    preflight?: ConsumerPreflightResult | null;
-    governanceConsole?: GovernanceConsoleSnapshot | null;
   }
 ): string => {
   const menuSummary = readEvidenceSummaryForMenu(params.repoRoot);
@@ -80,33 +67,14 @@ export const renderConsumerRuntimeModernMenu = (
     color: params.useColor(),
   });
   const groupedActions = resolveConsumerMenuLayout(params.actions);
-  const governanceConsole =
-    params.preflight
-      ? {
-          governanceObservation: params.preflight.governanceObservation,
-          governanceNextAction: params.preflight.governanceNextAction,
-          policyValidation: params.preflight.policyValidation,
-          experimentalFeatures: params.preflight.experimentalFeatures,
-        }
-      : params.governanceConsole;
   const lines = [
     'PUMUKI — Hook-System (run: npx ast-hooks)',
     'AST Intelligence System Overview',
-    ...(governanceConsole
-      ? [
-        '',
-        'Governance Console',
-        ...buildGovernanceConsoleSummaryLines({
-          governanceObservation: governanceConsole.governanceObservation,
-          governanceNextAction: governanceConsole.governanceNextAction,
-          policyValidation: governanceConsole.policyValidation,
-          experimentalFeatures: governanceConsole.experimentalFeatures,
-        }).map((line) => `  ${line}`),
-      ]
-      : []),
+    `Status: ${renderBadge(menuStatus.label, menuStatus.level, tokens)}`,
+    'A. Switch to advanced menu',
     '',
     ...groupedActions.flatMap((group) => [
-      ...(group.title.trim().length > 0 ? [group.title] : []),
+      group.title,
       ...group.items.map((item) => renderActionRow({
         id: item.id,
         label: item.action.label,
@@ -125,14 +93,8 @@ export const printConsumerRuntimeMenu = (params: {
   repoRoot: string;
   useColor: () => boolean;
   write: ConsumerRuntimeWrite;
-  preflight?: ConsumerPreflightResult | null;
-  governanceConsole?: GovernanceConsoleSnapshot | null;
 }): void => {
-  const classicMenu = renderConsumerRuntimeClassicMenu({
-    actions: params.actions,
-    repoRoot: params.repoRoot,
-    useColor: params.useColor,
-  });
+  const classicMenu = renderConsumerRuntimeClassicMenu(params.actions, params.useColor);
   if (!isMenuUiV2Enabled()) {
     params.write(`\n${classicMenu}\n`);
     return;
@@ -143,8 +105,6 @@ export const printConsumerRuntimeMenu = (params: {
       actions: params.actions,
       repoRoot: params.repoRoot,
       useColor: params.useColor,
-      preflight: params.preflight,
-      governanceConsole: params.governanceConsole,
     })}\n`);
   } catch {
     params.write('\n[pumuki][menu-ui-v2] Render failed. Falling back to classic menu.\n');

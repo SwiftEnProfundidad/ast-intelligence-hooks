@@ -2,14 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolveSddCompletenessEnforcement } from '../sddCompletenessEnforcement';
 
-test('resolveSddCompletenessEnforcement defaults to strict', () => {
+test('resolveSddCompletenessEnforcement defaults to advisory', () => {
   const previous = process.env.PUMUKI_SDD_ENFORCE_COMPLETENESS;
   delete process.env.PUMUKI_SDD_ENFORCE_COMPLETENESS;
   try {
     const resolution = resolveSddCompletenessEnforcement();
-    assert.equal(resolution.mode, 'strict');
+    assert.equal(resolution.mode, 'advisory');
     assert.equal(resolution.source, 'default');
-    assert.equal(resolution.blocking, true);
+    assert.equal(resolution.blocking, false);
   } finally {
     if (typeof previous === 'undefined') {
       delete process.env.PUMUKI_SDD_ENFORCE_COMPLETENESS;

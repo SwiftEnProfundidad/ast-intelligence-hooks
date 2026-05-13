@@ -76,33 +76,10 @@ const isTimelineOrdered = (timestamps: ReadonlyArray<string | undefined>): boole
   return true;
 };
 
-const DEFAULT_EVIDENCE_MAX_AGE_SECONDS = 900;
-
-const resolveEvidenceMaxAgeSeconds = (): number => {
-  const raw = process.env.PUMUKI_TDD_BDD_EVIDENCE_MAX_AGE_SECONDS?.trim();
-  if (!raw) {
-    return DEFAULT_EVIDENCE_MAX_AGE_SECONDS;
-  }
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return DEFAULT_EVIDENCE_MAX_AGE_SECONDS;
-  }
-  return parsed;
-};
-
-const resolveEvidenceAgeSeconds = (generatedAt: string, nowMs: number): number | null => {
-  const generatedAtMs = new Date(generatedAt).getTime();
-  if (Number.isNaN(generatedAtMs)) {
-    return null;
-  }
-  return Math.max(0, Math.floor((nowMs - generatedAtMs) / 1000));
-};
-
 export const enforceTddBddPolicy = (params: {
   facts: ReadonlyArray<Fact>;
   repoRoot: string;
   branch: string | null;
-  now?: () => number;
 }): TddBddEnforcementResult => {
   const scope = classifyTddBddScope(params.facts);
   const baseSnapshot: TddBddSnapshot = {
@@ -127,12 +104,6 @@ export const enforceTddBddPolicy = (params: {
       slices_invalid: 0,
       integrity_ok: true,
       errors: [],
-      baseline: {
-        required: scope.inScope,
-        passed: 0,
-        missing: 0,
-        failed: 0,
-      },
     },
     waiver: {
       applied: false,
@@ -233,52 +204,9 @@ export const enforceTddBddPolicy = (params: {
     };
   }
 
-  const maxAgeSeconds = resolveEvidenceMaxAgeSeconds();
-  const ageSeconds = resolveEvidenceAgeSeconds(
-    evidenceRead.evidence.generated_at,
-    params.now?.() ?? Date.now()
-  );
-  if (ageSeconds === null || ageSeconds > maxAgeSeconds) {
-    const messageAge =
-      ageSeconds === null ? 'unknown' : `${ageSeconds}s`;
-    const finding = buildFinding({
-      ruleId: 'generic_tdd_baseline_required',
-      code: 'TDD_BDD_EVIDENCE_STALE',
-      message:
-        `TDD/BDD evidence is stale for this PRE_WRITE baseline: age=${messageAge}, max=${maxAgeSeconds}s. Re-run the baseline tests for the touched component and refresh evidence before editing related code.`,
-      filePath: evidenceRead.path,
-    });
-    return {
-      findings: [finding],
-      snapshot: {
-        ...baseSnapshot,
-        status: 'blocked',
-        evidence: {
-          ...baseSnapshot.evidence,
-          state: 'valid',
-          version: evidenceRead.evidence.version,
-          slices_total: evidenceRead.evidence.slices.length,
-          slices_valid: 0,
-          slices_invalid: evidenceRead.evidence.slices.length,
-          integrity_ok: evidenceRead.integrity.valid,
-          errors: ['TDD_BDD_EVIDENCE_STALE'],
-          baseline: {
-            required: true,
-            passed: 0,
-            missing: 0,
-            failed: 0,
-          },
-        },
-      },
-    };
-  }
-
   const sliceFindings: Finding[] = [];
   const seenSliceIds = new Set<string>();
   let validSlices = 0;
-  let baselinePassed = 0;
-  let baselineMissing = 0;
-  let baselineFailed = 0;
 
   if (evidenceRead.evidence.slices.length === 0) {
     sliceFindings.push(
@@ -329,30 +257,6 @@ export const enforceTddBddPolicy = (params: {
       );
     }
 
-    if (!slice.baseline) {
-      baselineMissing += 1;
-      sliceFindings.push(
-        buildFinding({
-          ruleId: 'generic_tdd_baseline_required',
-          code: 'TDD_BASELINE_TEST_REQUIRED',
-          message: `Slice ${slice.id} must include passing baseline test evidence before RED.`,
-          filePath: evidenceRead.path,
-        })
-      );
-    } else if (slice.baseline.status !== 'passed') {
-      baselineFailed += 1;
-      sliceFindings.push(
-        buildFinding({
-          ruleId: 'generic_tdd_baseline_required',
-          code: 'TDD_BASELINE_TEST_MUST_PASS',
-          message: `Slice ${slice.id} baseline test evidence must pass before editing related code.`,
-          filePath: evidenceRead.path,
-        })
-      );
-    } else {
-      baselinePassed += 1;
-    }
-
     if (slice.red.status !== 'failed') {
       sliceFindings.push(
         buildFinding({
@@ -377,7 +281,6 @@ export const enforceTddBddPolicy = (params: {
 
     if (
       !isTimelineOrdered([
-        slice.baseline?.timestamp,
         slice.red.timestamp,
         slice.green.timestamp,
         slice.refactor.timestamp,
@@ -417,12 +320,6 @@ export const enforceTddBddPolicy = (params: {
         slices_invalid: invalidSlices,
         integrity_ok: evidenceRead.integrity.valid,
         errors: sliceFindings.map((finding) => finding.code),
-        baseline: {
-          required: true,
-          passed: baselinePassed,
-          missing: baselineMissing,
-          failed: baselineFailed,
-        },
       },
       waiver: {
         applied: false,

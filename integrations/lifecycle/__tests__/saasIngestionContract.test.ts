@@ -101,7 +101,6 @@ test('createHotspotsSaasIngestionPayload genera contrato v1 con integridad váli
         slices_invalid: 0,
         integrity_ok: true,
         errors: [],
-        baseline: { required: true, passed: 2, missing: 0, failed: 0 },
       },
       waiver: {
         applied: false,
@@ -155,7 +154,6 @@ test('createHotspotsSaasIngestionPayload acepta compliance TDD/BDD advisory', ()
         slices_invalid: 0,
         integrity_ok: false,
         errors: ['missing_contract'],
-        baseline: { required: true, passed: 0, missing: 0, failed: 0 },
       },
       waiver: {
         applied: false,

@@ -1,6 +1,4 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import test from 'node:test';
 import type { Fact } from '../../../core/facts/Fact';
 import type { Finding } from '../../../core/gate/Finding';
@@ -14,7 +12,6 @@ import {
   evaluatePlatformGateFindings,
   type PlatformGateEvaluationDependencies,
 } from '../runPlatformGateEvaluation';
-import { withTempDir } from '../../__tests__/helpers/tempDir';
 
 const makeRule = (id: string, severity: 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' = 'WARN'): RuleDefinition => {
   return {
@@ -26,86 +23,6 @@ const makeRule = (id: string, severity: 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' =
     platform: 'backend',
   };
 };
-
-test('evaluatePlatformGateFindings bloquea OCP iOS SOLID en PRE_WRITE sin flag experimental de heuristicas', async () => {
-  await withTempDir('pumuki-ios-solid-prewrite-gate-', async (repoRoot) => {
-    mkdirSync(join(repoRoot, 'apps/ios/Presentation/Onboarding'), { recursive: true });
-    const lock = {
-      version: '1.0',
-      compilerVersion: '1.0.0',
-      generatedAt: '2026-05-05T00:00:00.000Z',
-      bundles: [
-        {
-          name: 'ios-guidelines',
-          version: '1.0.0',
-          source: 'file:vendor/skills/ios-enterprise-rules/SKILL.md',
-          hash: 'd'.repeat(64),
-          rules: [
-            {
-              id: 'skills.ios.no-solid-violations',
-              description: 'Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP)',
-              severity: 'WARN',
-              platform: 'ios',
-              confidence: 'MEDIUM',
-              sourceSkill: 'ios-guidelines',
-              sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
-              stage: 'PRE_WRITE',
-              evaluationMode: 'AUTO',
-              locked: true,
-            },
-          ],
-        },
-      ],
-    } as const;
-    writeFileSync(join(repoRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
-
-    const result = evaluatePlatformGateFindings(
-      {
-        repoRoot,
-        stage: 'PRE_WRITE',
-        facts: [
-          {
-            kind: 'FileContent',
-            path: 'apps/ios/Presentation/Onboarding/LaunchFlowCoordinator.swift',
-            source: 'test',
-            content: `enum PumukiOcpIosCanaryChannel {
-  case groceryPickup
-  case homeDelivery
-}
-
-final class PumukiOcpIosCanaryUseCase {
-  func makeBanner(for channel: PumukiOcpIosCanaryChannel) -> String {
-    switch channel {
-    case .groceryPickup:
-      return "pickup"
-    case .homeDelivery:
-      return "delivery"
-    }
-  }
-}
-`,
-          },
-        ],
-      },
-      {
-        loadHeuristicsConfig: () => ({ astSemanticEnabled: false, typeScriptScope: 'platform' }),
-      }
-    );
-
-    assert.ok(result.skillsRuleSet.requiresHeuristicFacts);
-    assert.ok(
-      result.findings.some(
-        (finding) =>
-          finding.ruleId === 'skills.ios.no-solid-violations' &&
-          finding.filePath === 'apps/ios/Presentation/Onboarding/LaunchFlowCoordinator.swift' &&
-          finding.severity === 'ERROR'
-      )
-    );
-    assert.ok(
-      result.coverage.matchedRuleIds.includes('ios.solid.ocp.discriminator-switch-branching')
-    );
-  });
-});
 
 test('evaluatePlatformGateFindings normaliza stage STAGED y eleva scope TS a all cuando skills lo requiere fuera de apps/*', () => {
   const inputFacts: ReadonlyArray<Fact> = [

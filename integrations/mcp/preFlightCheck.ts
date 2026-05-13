@@ -1,27 +1,7 @@
-import {
-  resolveGovernanceCatalogAction,
-  type GovernanceCatalogNextAction,
-} from '../gate/governanceActionCatalog';
 import { evaluateAiGate, type AiGateStage, type AiGateViolation } from '../gate/evaluateAiGate';
-import { readEvidenceResult } from '../evidence/readEvidence';
 import { collectWorktreeAtomicSlices } from '../git/worktreeAtomicSlices';
-import { readLifecyclePolicyValidationSnapshot } from '../lifecycle/policyValidationSnapshot';
 import { resolveLearningContextExperimentalFeature } from '../policy/experimentalFeatures';
-import { resolvePreWriteEnforcement } from '../policy/preWriteEnforcement';
 import { readSddLearningContext, type SddLearningContext } from '../sdd/learningInsights';
-
-const WORKTREE_SLICE_PLAN_COUNT = 3;
-const WORKTREE_SLICE_FILE_COUNT = 4;
-
-const resolveTddStatus = (
-  repoRoot: string
-): 'skipped' | 'passed' | 'advisory' | 'blocked' | 'waived' | null => {
-  const evidenceResult = readEvidenceResult(repoRoot);
-  if (evidenceResult.kind !== 'valid') {
-    return null;
-  }
-  return evidenceResult.evidence.snapshot.tdd_bdd?.status ?? null;
-};
 
 const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_MISSING:
@@ -29,7 +9,7 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_INVALID: 'Regenera .ai_evidence.json desde una opción de auditoría.',
   EVIDENCE_INTEGRITY_MISSING: 'Refresca evidencia para regenerar metadatos de integridad.',
   EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
-    'No hay active_rule_ids para plataforma de código detectada. Ejecuta reconcile --strict --apply y revalida PRE_WRITE.',
+    'No hay active_rule_ids para plataforma de código detectada. Ejecuta reconcile --strict y revalida PRE_WRITE.',
   EVIDENCE_STALE: 'Refresca evidencia antes de continuar con commit/push.',
   EVIDENCE_TIMESTAMP_INVALID: 'Regenera evidencia para obtener un timestamp válido.',
   EVIDENCE_GATE_BLOCKED: 'Corrige primero las violaciones bloqueantes y vuelve a auditar.',
@@ -46,11 +26,9 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING:
     'Carga los bundles de skills requeridos por plataforma detectada y regenera evidencia.',
   EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING:
-    'Ejecuta `pumuki policy reconcile --strict --apply --json`, materializa reglas críticas (p.ej. skills.ios.critical-test-quality) y revalida PRE_WRITE.',
+    'Ejecuta `pumuki policy reconcile --strict --json`, materializa reglas críticas (p.ej. skills.ios.critical-test-quality) y revalida PRE_WRITE.',
   EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE:
-    'Reconcilia policy/skills en modo estricto con apply para enforcement crítico transversal y vuelve a validar PRE_WRITE.',
-  TDD_BDD_BASELINE_BLOCKED:
-    'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
+    'Reconcilia policy/skills en modo estricto para enforcement crítico transversal y vuelve a validar PRE_WRITE.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
     'Completa el contrato skills/policy para el stage solicitado y vuelve a validar.',
   EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
@@ -61,28 +39,6 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
     'Mapea todas las reglas AUTO a detectores AST antes de continuar.',
   EVIDENCE_TIMESTAMP_FUTURE: 'Corrige la hora del sistema y regenera evidencia.',
   GITFLOW_PROTECTED_BRANCH: 'Evita trabajo directo en ramas protegidas (usa feature/*).',
-  GITFLOW_BRANCH_NAMING_INVALID:
-    'La rama actual no cumple GitFlow. Usa feature/*, bugfix/*, hotfix/*, release/*, chore/*, refactor/* o docs/*.',
-  TRACKING_CANONICAL_SOURCE_CONFLICT:
-    'AGENTS.md y los README del repo no apuntan a la misma fuente canónica de tracking.',
-  TRACKING_CANONICAL_FILE_MISSING:
-    'El repo declara un MD de tracking canónico que ahora mismo no existe.',
-  TRACKING_CANONICAL_IN_PROGRESS_INVALID:
-    'El MD canónico de tracking debe dejar exactamente una task o fase en construcción.',
-};
-
-const normalizeGovernanceCatalogCode = (code: string): string => {
-  switch (code) {
-    case 'EVIDENCE_INVALID':
-    case 'EVIDENCE_CHAIN_INVALID':
-      return 'EVIDENCE_INVALID_OR_CHAIN';
-    case 'GITFLOW_PROTECTED_BRANCH':
-      return 'GITFLOW_PROTECTED_BRANCH_CONTEXT';
-    case 'GITFLOW_BRANCH_NAMING_INVALID':
-      return 'GITFLOW_BRANCH_NAMING_INVALID_CONTEXT';
-    default:
-      return code;
-  }
 };
 
 const buildPreFlightHints = (params: {
@@ -117,8 +73,8 @@ const buildPreFlightHints = (params: {
   if (params.stage === 'PRE_WRITE' && hasWorktreeViolation) {
     const plan = collectWorktreeAtomicSlices({
       repoRoot: params.repoRoot,
-      maxSlices: WORKTREE_SLICE_PLAN_COUNT,
-      maxFilesPerSlice: WORKTREE_SLICE_FILE_COUNT,
+      maxSlices: 3,
+      maxFilesPerSlice: 4,
     });
     if (plan.slices.length > 0) {
       hints.push('ATOMIC_SLICES: staging sugerido por scope.');
@@ -159,14 +115,6 @@ export type EnterprisePreFlightCheckResult = {
     phase: 'GREEN' | 'RED';
     message: string;
     instruction: string;
-    reason_code: string;
-    prewrite_effective: {
-      mode: ReturnType<typeof resolvePreWriteEnforcement>['mode'];
-      source: ReturnType<typeof resolvePreWriteEnforcement>['source'];
-      blocking: boolean;
-      strict_policy: boolean;
-    };
-    next_action: GovernanceCatalogNextAction;
     stage: ReturnType<typeof evaluateAiGate>['stage'];
     policy: ReturnType<typeof evaluateAiGate>['policy'];
     violations: ReturnType<typeof evaluateAiGate>['violations'];
@@ -177,7 +125,7 @@ export type EnterprisePreFlightCheckResult = {
     hints: ReadonlyArray<string>;
     learning_context: SddLearningContext | null;
     ast_analysis: null;
-    tdd_status: 'skipped' | 'passed' | 'advisory' | 'blocked' | 'waived' | null;
+    tdd_status: null;
   };
 };
 
@@ -197,8 +145,6 @@ export const runEnterprisePreFlightCheck = (params: {
     : readSddLearningContext({
       repoRoot: params.repoRoot,
     });
-  const preWriteEnforcement = resolvePreWriteEnforcement();
-  const policyValidation = readLifecyclePolicyValidationSnapshot(params.repoRoot);
 
   const hints = buildPreFlightHints({
     repoRoot: params.repoRoot,
@@ -208,30 +154,13 @@ export const runEnterprisePreFlightCheck = (params: {
     upstream: evaluation.repo_state.git.upstream,
     learningContext,
   });
-  const firstViolation = evaluation.violations[0];
-  const reasonCode = firstViolation?.code ?? 'READY';
-  const governanceAction = firstViolation
-    ? resolveGovernanceCatalogAction({
-      code: normalizeGovernanceCatalogCode(firstViolation.code),
-      stage: evaluation.stage,
-    })
-    : resolveGovernanceCatalogAction({
-      code: 'READY',
-      stage: evaluation.stage,
-    });
   const phase: 'GREEN' | 'RED' = evaluation.allowed ? 'GREEN' : 'RED';
   const message = evaluation.allowed
     ? '✅ Pre-flight aprobado: puedes continuar con la implementación.'
-    : `🔴 Pre-flight bloqueado: corrige ${reasonCode} y vuelve a ejecutar.`;
-  const instruction = !firstViolation && evaluation.allowed
+    : `🔴 Pre-flight bloqueado: corrige ${evaluation.violations[0]?.code ?? 'la causa'} y vuelve a ejecutar.`;
+  const instruction = evaluation.allowed
     ? 'Implementa el cambio mínimo para pasar en verde y vuelve a validar.'
-    : governanceAction.instruction;
-  const nextAction: GovernanceCatalogNextAction = evaluation.allowed
-    ? {
-      kind: 'info',
-      message: governanceAction.next_action.message,
-    }
-    : governanceAction.next_action;
+    : hints[0] ?? 'Corrige la causa bloqueante y vuelve a ejecutar el pre-flight.';
 
   return {
     tool: 'pre_flight_check',
@@ -244,14 +173,6 @@ export const runEnterprisePreFlightCheck = (params: {
       phase,
       message,
       instruction,
-      reason_code: reasonCode,
-      prewrite_effective: {
-        mode: preWriteEnforcement.mode,
-        source: preWriteEnforcement.source,
-        blocking: preWriteEnforcement.blocking,
-        strict_policy: policyValidation.stages.PRE_WRITE.strict,
-      },
-      next_action: nextAction,
       stage: evaluation.stage,
       policy: evaluation.policy,
       violations: evaluation.violations,
@@ -262,7 +183,7 @@ export const runEnterprisePreFlightCheck = (params: {
       hints,
       learning_context: learningContext,
       ast_analysis: null,
-      tdd_status: resolveTddStatus(params.repoRoot),
+      tdd_status: null,
     },
   };
 };

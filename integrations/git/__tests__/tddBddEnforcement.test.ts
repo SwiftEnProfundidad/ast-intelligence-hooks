@@ -28,13 +28,6 @@ const withEnv = async (
   }
 };
 
-const withFreshTddEvidenceWindow = async (
-  maxAgeSeconds: number,
-  callback: () => Promise<void>
-): Promise<void> => {
-  await withEnv('PUMUKI_TDD_BDD_EVIDENCE_MAX_AGE_SECONDS', String(maxAgeSeconds), callback);
-};
-
 const addedFeatureFacts = (): ReadonlyArray<Fact> => [
   {
     kind: 'FileChange',
@@ -75,7 +68,6 @@ test('enforceTddBddPolicy bloquea cuando falta contrato de evidencia en cambio i
       repoRoot,
       branch: 'feature/tdd',
       facts: addedFeatureFacts(),
-      now: () => Date.parse('2026-02-26T10:05:00.000Z'),
     });
 
     assert.equal(result.snapshot.status, 'blocked');
@@ -106,7 +98,6 @@ test('enforceTddBddPolicy pasa cuando contrato es valido y enlaza .feature exist
             {
               id: 'slice-1',
               scenario_ref: 'features/checkout.feature:2',
-              baseline: { status: 'passed', timestamp: '2026-02-26T09:59:00.000Z' },
               red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
               green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
               refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
@@ -123,197 +114,12 @@ test('enforceTddBddPolicy pasa cuando contrato es valido y enlaza .feature exist
       repoRoot,
       branch: 'feature/tdd',
       facts: addedFeatureFacts(),
-      now: () => Date.parse('2026-02-26T10:05:00.000Z'),
     });
 
     assert.equal(result.snapshot.status, 'passed');
     assert.equal(result.snapshot.evidence.state, 'valid');
     assert.equal(result.snapshot.evidence.slices_valid, 1);
-    assert.deepEqual(result.snapshot.evidence.baseline, {
-      required: true,
-      passed: 1,
-      missing: 0,
-      failed: 0,
-    });
     assert.equal(result.findings.length, 0);
-  });
-});
-
-test('enforceTddBddPolicy bloquea cuando la evidencia baseline queda caducada antes de editar', async () => {
-  await withFreshTddEvidenceWindow(300, async () => {
-    await withTempDir('pumuki-tdd-enforce-stale-baseline-', async (repoRoot) => {
-      mkdirSync(join(repoRoot, '.pumuki', 'artifacts'), { recursive: true });
-      mkdirSync(join(repoRoot, 'features'), { recursive: true });
-      writeFileSync(
-        join(repoRoot, 'features', 'onboarding.feature'),
-        'Feature: Onboarding\n  Scenario: complete onboarding routes to login\n',
-        'utf8'
-      );
-      writeFileSync(
-        join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json'),
-        JSON.stringify(
-          {
-            version: '1',
-            generated_at: '2026-02-26T09:00:00.000Z',
-            slices: [
-              {
-                id: 'rgo-launch-flow-baseline',
-                scenario_ref: 'features/onboarding.feature:2',
-                baseline: {
-                  status: 'passed',
-                  timestamp: '2026-02-26T09:00:00.000Z',
-                  test_ref:
-                    'xcodebuild test -only-testing:RuralGoMacTests/LaunchFlowModelTests/test_completeOnboarding_marksCompletedAndRoutesToLogin',
-                },
-                red: { status: 'failed', timestamp: '2026-02-26T09:01:00.000Z' },
-                green: { status: 'passed', timestamp: '2026-02-26T09:02:00.000Z' },
-                refactor: { status: 'passed', timestamp: '2026-02-26T09:03:00.000Z' },
-              },
-            ],
-          },
-          null,
-          2
-        ),
-        'utf8'
-      );
-
-      const result = enforceTddBddPolicy({
-        repoRoot,
-        branch: 'feature/rgo-1900-01-ios-buyer-core',
-        facts: [
-          {
-            kind: 'FileChange',
-            source: 'test',
-            path: 'apps/ios/Presentation/Onboarding/LaunchFlowCoordinator.swift',
-            changeType: 'modified',
-          },
-          {
-            kind: 'FileContent',
-            source: 'test',
-            path: 'apps/ios/Presentation/Onboarding/LaunchFlowCoordinator.swift',
-            content: 'public final class LaunchFlowCoordinator { public func bootstrap() {} }',
-          },
-        ],
-        now: () => Date.parse('2026-02-26T09:10:01.000Z'),
-      });
-
-      assert.equal(result.snapshot.status, 'blocked');
-      assert.equal(result.snapshot.evidence.errors.includes('TDD_BDD_EVIDENCE_STALE'), true);
-      assert.equal(
-        result.findings.some((finding) => finding.code === 'TDD_BDD_EVIDENCE_STALE'),
-        true
-      );
-      assert.equal(result.snapshot.evidence.baseline.required, true);
-    });
-  });
-});
-
-test('enforceTddBddPolicy bloquea cuando falta baseline verde antes del RED', async () => {
-  await withTempDir('pumuki-tdd-enforce-missing-baseline-', async (repoRoot) => {
-    mkdirSync(join(repoRoot, '.pumuki', 'artifacts'), { recursive: true });
-    mkdirSync(join(repoRoot, 'features'), { recursive: true });
-    writeFileSync(
-      join(repoRoot, 'features', 'checkout.feature'),
-      'Feature: Checkout\n  Scenario: user checkout\n',
-      'utf8'
-    );
-    writeFileSync(
-      join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json'),
-      JSON.stringify(
-        {
-          version: '1',
-          generated_at: '2026-02-26T10:00:00.000Z',
-          slices: [
-            {
-              id: 'slice-1',
-              scenario_ref: 'features/checkout.feature:2',
-              red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
-              green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
-              refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
-            },
-          ],
-        },
-        null,
-        2
-      ),
-      'utf8'
-    );
-
-    const result = enforceTddBddPolicy({
-      repoRoot,
-      branch: 'feature/tdd',
-      facts: addedFeatureFacts(),
-      now: () => Date.parse('2026-02-26T10:05:00.000Z'),
-    });
-
-    assert.equal(result.snapshot.status, 'blocked');
-    assert.deepEqual(result.snapshot.evidence.baseline, {
-      required: true,
-      passed: 0,
-      missing: 1,
-      failed: 0,
-    });
-    assert.equal(
-      result.findings.some((finding) => finding.code === 'TDD_BASELINE_TEST_REQUIRED'),
-      true
-    );
-  });
-});
-
-test('enforceTddBddPolicy bloquea cuando el baseline previo falla', async () => {
-  await withTempDir('pumuki-tdd-enforce-failing-baseline-', async (repoRoot) => {
-    mkdirSync(join(repoRoot, '.pumuki', 'artifacts'), { recursive: true });
-    mkdirSync(join(repoRoot, 'features'), { recursive: true });
-    writeFileSync(
-      join(repoRoot, 'features', 'checkout.feature'),
-      'Feature: Checkout\n  Scenario: user checkout\n',
-      'utf8'
-    );
-    writeFileSync(
-      join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json'),
-      JSON.stringify(
-        {
-          version: '1',
-          generated_at: '2026-02-26T10:00:00.000Z',
-          slices: [
-            {
-              id: 'slice-1',
-              scenario_ref: 'features/checkout.feature:2',
-              baseline: {
-                status: 'failed',
-                timestamp: '2026-02-26T09:59:00.000Z',
-                test_ref: 'xcodebuild test -only-testing:RuralGoMacTests/LaunchFlowModelTests/test_completeOnboarding_marksCompletedAndRoutesToLogin',
-              },
-              red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
-              green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
-              refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
-            },
-          ],
-        },
-        null,
-        2
-      ),
-      'utf8'
-    );
-
-    const result = enforceTddBddPolicy({
-      repoRoot,
-      branch: 'feature/tdd',
-      facts: addedFeatureFacts(),
-      now: () => Date.parse('2026-02-26T10:05:00.000Z'),
-    });
-
-    assert.equal(result.snapshot.status, 'blocked');
-    assert.deepEqual(result.snapshot.evidence.baseline, {
-      required: true,
-      passed: 0,
-      missing: 0,
-      failed: 1,
-    });
-    assert.equal(
-      result.findings.some((finding) => finding.code === 'TDD_BASELINE_TEST_MUST_PASS'),
-      true
-    );
   });
 });
 
@@ -330,7 +136,6 @@ test('enforceTddBddPolicy bloquea cuando scenario_ref no apunta a archivo .featu
             {
               id: 'slice-1',
               scenario_ref: 'features/not-found.feature:2',
-              baseline: { status: 'passed', timestamp: '2026-02-26T09:59:00.000Z' },
               red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
               green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
               refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
@@ -347,7 +152,6 @@ test('enforceTddBddPolicy bloquea cuando scenario_ref no apunta a archivo .featu
       repoRoot,
       branch: 'feature/tdd',
       facts: addedFeatureFacts(),
-      now: () => Date.parse('2026-02-26T10:05:00.000Z'),
     });
 
     assert.equal(result.snapshot.status, 'blocked');

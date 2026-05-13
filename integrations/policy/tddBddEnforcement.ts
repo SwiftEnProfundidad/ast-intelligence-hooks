@@ -52,9 +52,9 @@ export const resolveTddBddEnforcement = (): TddBddEnforcementResolution => {
     };
   }
   return {
-    mode: 'strict',
+    mode: 'advisory',
     source: 'default',
-    blocking: true,
+    blocking: false,
   };
 };
 

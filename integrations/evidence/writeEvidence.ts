@@ -27,9 +27,6 @@ export type WriteEvidenceResult = {
 
 const EVIDENCE_FILE_NAME = '.ai_evidence.json';
 const TEMP_EVIDENCE_PREFIX = '.ai_evidence.json.tmp-';
-const RANDOM_SUFFIX_RADIX = 16;
-const RANDOM_SUFFIX_START_INDEX = 2;
-const RANDOM_SUFFIX_END_INDEX = 10;
 
 const normalizeLines = (lines?: EvidenceLines): EvidenceLines | undefined => {
   if (typeof lines === 'undefined') {
@@ -191,16 +188,6 @@ const normalizeRepoState = (
   if (!repoState) {
     return undefined;
   }
-  const tracking = repoState.lifecycle.tracking ?? {
-    enforced: false,
-    canonical_path: null,
-    canonical_present: false,
-    source_file: null,
-    in_progress_count: null,
-    single_in_progress_valid: null,
-    conflict: false,
-    declarations: [],
-  };
   return {
     repo_root: toRelativeRepoPath(repoRoot, repoState.repo_root),
     git: {
@@ -230,20 +217,6 @@ const normalizeRepoState = (
           config_path: toRelativeRepoPath(repoRoot, repoState.lifecycle.hard_mode.config_path),
         }
         : undefined,
-      tracking: {
-        enforced: tracking.enforced,
-        canonical_path: tracking.canonical_path,
-        canonical_present: tracking.canonical_present,
-        source_file: tracking.source_file,
-        in_progress_count: tracking.in_progress_count,
-        single_in_progress_valid: tracking.single_in_progress_valid,
-        conflict: tracking.conflict,
-        declarations: tracking.declarations.map((entry) => ({
-          source_file: entry.source_file,
-          declared_path: entry.declared_path,
-          resolved_path: entry.resolved_path,
-        })),
-      },
     },
   };
 };
@@ -275,12 +248,6 @@ const normalizeTddBddSnapshot = (snapshot: TddBddSnapshot | undefined): TddBddSn
       slices_invalid: snapshot.evidence.slices_invalid,
       integrity_ok: snapshot.evidence.integrity_ok,
       errors: [...snapshot.evidence.errors],
-      baseline: {
-        required: snapshot.evidence.baseline.required,
-        passed: snapshot.evidence.baseline.passed,
-        missing: snapshot.evidence.baseline.missing,
-        failed: snapshot.evidence.baseline.failed,
-      },
     },
     waiver: {
       applied: snapshot.waiver.applied,
@@ -396,11 +363,7 @@ const toStableEvidence = (
           ruleId: finding.ruleId,
           severity: finding.severity,
           file: finding.file,
-        })),
-        {
-          activeRuleIds: normalizedRulesCoverage.active_rule_ids,
-          evaluatedRuleIds: normalizedRulesCoverage.evaluated_rule_ids,
-        }
+        }))
       ),
     },
     ledger: normalizedLedger,
@@ -438,9 +401,7 @@ const resolveRepoRoot = (): string => {
 };
 
 const buildTempEvidencePath = (repoRoot: string): string => {
-  const uniqueSuffix = `${process.pid}-${Date.now()}-${Math.random()
-    .toString(RANDOM_SUFFIX_RADIX)
-    .slice(RANDOM_SUFFIX_START_INDEX, RANDOM_SUFFIX_END_INDEX)}`;
+  const uniqueSuffix = `${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
   return join(repoRoot, `${TEMP_EVIDENCE_PREFIX}${uniqueSuffix}`);
 };
 

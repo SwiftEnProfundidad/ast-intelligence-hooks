@@ -42,7 +42,7 @@ Mapa corto y humano de la documentación oficial de Pumuki.
   - Barra local sin Actions: `npm run -s validation:local-merge-bar` (ver `docs/validation/README.md` § GitHub Actions y cuota)
 
 - Quiero saber en qué estamos ahora:
-  - `../PUMUKI-RESET-MASTER-PLAN.md`
+  - `docs/tracking/plan-activo-de-trabajo.md`
 - Quiero el seguimiento del curso Stack My Architecture (Pumuki), iniciativa formativa aparte del espejo operativo:
   - `docs/tracking/plan-curso-pumuki-stack-my-architecture.md`
 
@@ -71,8 +71,8 @@ Mapa corto y humano de la documentación oficial de Pumuki.
   - Skills vendorizadas que el repo usa como contrato local.
 
 - `docs/tracking/`
-  - Material histórico o auxiliar de seguimiento; no actúa como backlog operativo ni fuente canónica del repo.
-  - El seguimiento operativo vivo de producto y consumidores está en `PUMUKI-RESET-MASTER-PLAN.md`.
+  - Seguimiento permitido y solo el imprescindible.
+  - Espejo operativo de producto y consumidores: `docs/tracking/plan-activo-de-trabajo.md` (unica fuente de verdad para ese ambito).
   - Curso Pumuki (Stack My Architecture): diseño pedagógico + seguimiento de entrega en `docs/tracking/plan-curso-pumuki-stack-my-architecture.md` (no sustituye al plan activo).
   - Regla hard: solo puede existir una tarea `🚧` en cada documento de seguimiento que lo use.
 

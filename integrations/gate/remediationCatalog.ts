@@ -10,31 +10,13 @@ export const REMEDIATION_HINT_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_STALE: 'Refresca evidencia antes de continuar.',
   EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera evidencia desde este mismo repositorio.',
   EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual y reintenta.',
-  TDD_BDD_BASELINE_BLOCKED:
-    'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
-  TDD_BDD_EVIDENCE_INVALID:
-    'Regenera la evidencia TDD/BDD válida del escenario afectado y vuelve a ejecutar el gate.',
-  TDD_BDD_SCENARIO_FILE_MISSING:
-    'Crea o corrige el fichero .feature referenciado por la evidencia TDD/BDD y revalida.',
-  TDD_BDD_EVIDENCE_STALE:
-    'Reejecuta los tests baseline del componente tocado, refresca la evidencia TDD/BDD y revalida.',
-  TDD_BDD_EVIDENCE_MISSING:
-    'Genera evidencia TDD/BDD para el cambio actual antes de continuar.',
   EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
   EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura coverage_ratio=1 y unevaluated=0.',
   ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
-    'Reconcilia policy/skills y reintenta PRE_COMMIT: npx --yes --package pumuki@latest pumuki policy reconcile --strict --apply --json && npx --yes --package pumuki@latest pumuki-pre-commit',
+    'Reconcilia policy/skills y reintenta PRE_COMMIT: npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki-pre-commit',
   EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
-    'Reconcilia policy/skills y revalida PRE_WRITE: npx --yes --package pumuki@latest pumuki policy reconcile --strict --apply --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
+    'Reconcilia policy/skills y revalida PRE_WRITE: npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
   GITFLOW_PROTECTED_BRANCH: 'Trabaja en feature/* y evita ramas protegidas.',
-  GITFLOW_BRANCH_NAMING_INVALID:
-    'Renombra o recrea la rama con un prefijo GitFlow válido (feature/*, bugfix/*, hotfix/*, release/*, chore/*, refactor/* o docs/*).',
-  TRACKING_CANONICAL_SOURCE_CONFLICT:
-    'Alinea AGENTS.md y los README canónicos para que todos apunten al mismo MD de seguimiento.',
-  TRACKING_CANONICAL_FILE_MISSING:
-    'Crea o restaura el archivo canónico de tracking declarado por el repo.',
-  TRACKING_CANONICAL_IN_PROGRESS_INVALID:
-    'Deja exactamente una tarea o fase `🚧` en el MD canónico de seguimiento antes de continuar.',
   EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
     'Reduce archivos staged/unstaged por debajo del umbral (o ajusta PUMUKI_PREWRITE_WORKTREE_*); divide el trabajo en commits más pequeños.',
   EVIDENCE_PREWRITE_WORKTREE_WARN:

@@ -12,7 +12,6 @@ import {
   renderConsumerRuntimePatternChecks,
   renderConsumerRuntimeSummary,
 } from './framework-menu-consumer-runtime-audit';
-import type { ConsumerPreflightResult } from './framework-menu-consumer-preflight-types';
 import type { ConsumerAction, ConsumerRuntimeEmitNotification, ConsumerRuntimeWrite } from './framework-menu-consumer-runtime-types';
 
 type ConsumerRuntimeActionDependencies = {
@@ -34,20 +33,17 @@ type ConsumerRuntimeActionDependencies = {
   setSummaryOverride: (
     summary: import('./framework-menu-evidence-summary-lib').FrameworkMenuEvidenceSummary | null
   ) => void;
-  clearLastPreflight: () => void;
-  setLastPreflight: (result: ConsumerPreflightResult | null) => void;
 };
 
 const runConsumerRuntimePreflight = async (
   dependencies: Pick<
     ConsumerRuntimeActionDependencies,
-    'repoRoot' | 'runPreflight' | 'useColor' | 'write' | 'setLastPreflight'
+    'repoRoot' | 'runPreflight' | 'useColor' | 'write'
   >,
   stage: 'PRE_COMMIT' | 'PRE_PUSH'
 ): Promise<void> => {
   if (dependencies.runPreflight) {
     const rendered = await dependencies.runPreflight(stage);
-    dependencies.setLastPreflight(null);
     if (typeof rendered === 'string' && rendered.trim().length > 0) {
       dependencies.write(`\n${rendered}\n`);
     }
@@ -58,7 +54,6 @@ const runConsumerRuntimePreflight = async (
     stage,
     repoRoot: dependencies.repoRoot,
   });
-  dependencies.setLastPreflight(preflight);
   dependencies.write(
     `\n${formatConsumerPreflight(preflight, {
       color: dependencies.useColor(),
@@ -71,6 +66,7 @@ export const createConsumerRuntimeActions = (
 ): ReadonlyArray<ConsumerAction> =>
   createConsumerLegacyMenuActions({
     runFullAudit: async () => {
+      await runConsumerRuntimePreflight(dependencies, 'PRE_COMMIT');
       await dependencies.runRepoGate();
       dependencies.clearSummaryOverride();
       notifyConsumerRuntimeAuditSummary(
@@ -86,6 +82,7 @@ export const createConsumerRuntimeActions = (
       );
     },
     runStrictRepoAndStaged: async () => {
+      await runConsumerRuntimePreflight(dependencies, 'PRE_PUSH');
       const gateResult = await dependencies.runRepoAndStagedGate();
       if (gateResult?.blocked) {
         dependencies.setSummaryOverride(
@@ -115,6 +112,7 @@ export const createConsumerRuntimeActions = (
       }
     },
     runStrictStagedOnly: async () => {
+      await runConsumerRuntimePreflight(dependencies, 'PRE_COMMIT');
       await dependencies.runStagedGate();
       dependencies.clearSummaryOverride();
       const summary = renderConsumerRuntimeSummary({
@@ -132,6 +130,7 @@ export const createConsumerRuntimeActions = (
       printConsumerRuntimeEmptyScopeHint({ write: dependencies.write }, summary, 'staged');
     },
     runStandardCriticalHigh: async () => {
+      await runConsumerRuntimePreflight(dependencies, 'PRE_PUSH');
       await dependencies.runWorkingTreeGate();
       dependencies.clearSummaryOverride();
       const summary = renderConsumerRuntimeSummary({
@@ -219,19 +218,15 @@ export const createConsumerRuntimeActions = (
       );
     },
     runPatternChecks: async () => {
-      dependencies.clearLastPreflight();
       dependencies.write(`\n${renderConsumerRuntimePatternChecks(dependencies.repoRoot)}\n`);
     },
     runEslintAudit: async () => {
-      dependencies.clearLastPreflight();
       dependencies.write(`\n${renderConsumerRuntimeEslintAudit(dependencies.repoRoot)}\n`);
     },
     runAstIntelligence: async () => {
-      dependencies.clearLastPreflight();
       dependencies.write(`\n${renderConsumerRuntimeAstBreakdown(dependencies.repoRoot)}\n`);
     },
     runExportMarkdown: async () => {
-      dependencies.clearLastPreflight();
       const filePath = exportConsumerRuntimeMarkdown(
         dependencies.repoRoot,
         dependencies.getSummaryOverride()
@@ -239,7 +234,6 @@ export const createConsumerRuntimeActions = (
       dependencies.write(`\nLegacy read-only markdown exported: ${filePath}\n`);
     },
     runFileDiagnostics: async () => {
-      dependencies.clearLastPreflight();
       dependencies.write(`\n${renderConsumerRuntimeFileDiagnostics(dependencies.repoRoot)}\n`);
     },
   }) as ReadonlyArray<ConsumerAction>;

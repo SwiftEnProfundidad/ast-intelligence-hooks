@@ -834,7 +834,7 @@ const buildPolicySignatureRemediation = (
   const mismatch = Object.values(policyValidation.stages).some(
     (stage) => stage.validationCode === 'POLICY_AS_CODE_SIGNATURE_MISMATCH'
   );
-  return mismatch ? 'pumuki policy reconcile --strict --apply --json' : undefined;
+  return mismatch ? 'pumuki policy reconcile --apply' : undefined;
 };
 
 export const runLifecycleDoctor = (params?: {

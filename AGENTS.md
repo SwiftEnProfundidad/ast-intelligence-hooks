@@ -18,8 +18,6 @@
 - REQUIRED SKILL: ios-enterprise-rules
 - REQUIRED SKILL: swift-concurrency
 - REQUIRED SKILL: swiftui-expert-skill
-- REQUIRED SKILL: swift-testing-expert
-- REQUIRED SKILL: core-data-expert
 - REQUIRED SKILL: android-enterprise-rules
 - REQUIRED SKILL: backend-enterprise-rules
 - REQUIRED SKILL: frontend-enterprise-rules
@@ -64,12 +62,10 @@ Antes de realizar cualquier accion:
   - Si hay conflicto entre skill vendorizada y skill local, aplicar la regla mas estricta.
   - Documentar en trazabilidad que version se aplico (vendorizada/local) y por que.
 - Reglas hard por ambito:
-  - Cambios iOS/Swift/SwiftUI/Swift Testing/Core Data: aplicar SIEMPRE y en conjunto:
+  - Cambios iOS/Swift/SwiftUI: aplicar SIEMPRE y en conjunto:
     - `ios-enterprise-rules`
     - `swift-concurrency`
     - `swiftui-expert-skill`
-    - `swift-testing-expert`
-    - `core-data-expert`
   - Cambios Frontend web (React/Next/TypeScript/CSS/UI web): aplicar SIEMPRE:
     - `frontend-enterprise-rules`
   - Cambios Backend (NestJS/TypeScript/API/datos/backend services): aplicar SIEMPRE:
@@ -129,8 +125,6 @@ Antes de realizar cualquier accion:
   - BDD/TDD requerido por la skill correspondiente.
   - Concurrencia y aislamiento segun `swift-concurrency` cuando haya codigo Swift.
   - Estado/arquitectura/UI segun `swiftui-expert-skill` e `ios-enterprise-rules` cuando aplique iOS/SwiftUI.
-  - Tests Swift segun `swift-testing-expert` cuando haya tests iOS/Swift o migracion XCTest/Swift Testing.
-  - Persistencia/Core Data segun `core-data-expert` cuando haya modelos, contexts, DAOs, boundaries o concurrencia Core Data.
   - Reglas frontend segun `frontend-enterprise-rules` cuando aplique web.
   - Reglas backend segun `backend-enterprise-rules` cuando aplique backend.
   - Reglas Android segun `android-enterprise-rules` cuando aplique Android.
@@ -281,15 +275,6 @@ Al finalizar cualquier tarea, siempre reportar:
   - `swiftui-expert-skill`
     - Local: `/Users/juancarlosmerlosalbarracin/.agents/skills/swiftui-expert-skill/SKILL.md`
     - Vendorizado: `docs/codex-skills/swiftui-expert-skill.md`
-  - `swift-testing-expert`
-    - Local: `/Users/juancarlosmerlosalbarracin/.agents/skills/swift-testing-expert/SKILL.md`
-    - Vendorizado: `docs/codex-skills/swift-testing-expert.md`
-  - `core-data-expert`
-    - Local: `/Users/juancarlosmerlosalbarracin/.agents/skills/core-data-expert/SKILL.md`
-    - Vendorizado: `docs/codex-skills/core-data-expert.md`
-  - `enterprise-operating-system`
-    - Local: `/Users/juancarlosmerlosalbarracin/.agents/skills/enterprise-operating-system/SKILL.md`
-    - Vendorizado: `vendor/skills/enterprise-operating-system/SKILL.md`
 
 - Comando de sincronizacion: `./scripts/sync-codex-skills.sh`
 <!-- END CODEX SKILLS -->

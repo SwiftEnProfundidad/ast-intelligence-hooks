@@ -26,37 +26,6 @@ const resolveDefaultCiBaseRef = (): string => {
   return 'HEAD';
 };
 
-const resolveDiffFileCount = (fromRef: string): number | null => {
-  try {
-    return runGit(['diff', '--name-only', '--diff-filter=ACMR', `${fromRef}..HEAD`])
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0).length;
-  } catch {
-    return null;
-  }
-};
-
-const resolveBestBootstrapBaseRef = (): string | null => {
-  const candidates = ['origin/main', 'main', 'origin/develop', 'develop'];
-  let best: { ref: string; changedFiles: number } | undefined;
-
-  for (const candidate of candidates) {
-    if (!isResolvableRef(candidate)) {
-      continue;
-    }
-    const changedFiles = resolveDiffFileCount(candidate);
-    if (changedFiles === null) {
-      continue;
-    }
-    if (!best || changedFiles < best.changedFiles) {
-      best = { ref: candidate, changedFiles };
-    }
-  }
-
-  return best?.ref ?? null;
-};
-
 export const resolveUpstreamRef = (): string | null => {
   try {
     return runGit(['rev-parse', '@{u}']);
@@ -119,10 +88,12 @@ export const resolveCiBaseRef = (): string => {
 };
 
 export const resolvePrePushBootstrapBaseRef = (): string => {
-  const best = resolveBestBootstrapBaseRef();
-  if (best) {
-    return best;
+  const candidates = ['origin/develop', 'develop', resolveCiBaseRef()];
+  for (const candidate of candidates) {
+    if (isResolvableRef(candidate)) {
+      return candidate;
+    }
   }
 
-  return resolveDefaultCiBaseRef();
+  return 'HEAD';
 };

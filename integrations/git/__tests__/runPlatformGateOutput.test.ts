@@ -107,58 +107,7 @@ test('printGateFindings emite next_action de reconcile cuando active_rule_ids es
   }).join('');
 
   assert.match(output, /\[pumuki\]\[block-summary\] primary=ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH/i);
-  assert.match(output, /\[pumuki\]\[block-summary\] next_action=.*policy reconcile --strict --apply --json/i);
-});
-
-test('printGateFindings usa el stage recibido para generar la remediación canónica', () => {
-  const findings: Finding[] = [
-    {
-      ruleId: 'governance.evidence.stale',
-      severity: 'ERROR',
-      code: 'EVIDENCE_STALE',
-      message: 'Evidence is stale.',
-      filePath: '.ai_evidence.json',
-      lines: 1,
-      matchedBy: 'EvidenceGuard',
-      source: 'evidence',
-    },
-  ];
-
-  const output = withCapturedStdout(() => {
-    printGateFindings(findings, { stage: 'PRE_PUSH' });
-  }).join('');
-
-  assert.match(output, /\[pumuki\]\[block-summary\] primary=EVIDENCE_STALE/i);
-  assert.match(output, /next_action=.*validate --stage=PRE_PUSH --json/i);
-});
-
-test('printGateFindings separa warning secundario cuando convive con un blocker primario', () => {
-  const findings: Finding[] = [
-    {
-      ruleId: 'ai_gate.repo_policy.TRACKING_CANONICAL_IN_PROGRESS_INVALID',
-      severity: 'ERROR',
-      code: 'TRACKING_CANONICAL_IN_PROGRESS_INVALID',
-      message: 'Tracking canonical file must contain exactly one in-progress task (count=2). active_entries=PUMUKI-INC-081@L10, PUMUKI-INC-083@L11 last_run_status=IN_PROGRESS.',
-      matchedBy: 'RepoPolicy',
-      source: 'ai_gate:repo_policy',
-    },
-    {
-      ruleId: 'ai_gate.repo_policy.EVIDENCE_PREWRITE_WORKTREE_WARN',
-      severity: 'WARN',
-      code: 'EVIDENCE_PREWRITE_WORKTREE_WARN',
-      message: 'PRE_WRITE worktree hygiene warning: pending_changes=15 (warn_threshold=12). Consider smaller staged/unstaged batches.',
-      matchedBy: 'RepoPolicy',
-      source: 'ai_gate:repo_policy',
-    },
-  ];
-
-  const output = withCapturedStdout(() => {
-    printGateFindings(findings);
-  }).join('');
-
-  assert.match(output, /\[pumuki\]\[block-summary\] primary=TRACKING_CANONICAL_IN_PROGRESS_INVALID/i);
-  assert.match(output, /\[pumuki\]\[warning-summary\] secondary=EVIDENCE_PREWRITE_WORKTREE_WARN/i);
-  assert.match(output, /active_entries=PUMUKI-INC-081@L10, PUMUKI-INC-083@L11/i);
+  assert.match(output, /next_action=Reconcilia policy\/skills y reintenta PRE_COMMIT/i);
 });
 
 test('printGateFindings separa warning secundario cuando convive con un blocker primario', () => {

@@ -1,8 +1,6 @@
 import type { PumukiCriticalNotificationEvent } from './framework-menu-system-notifications-types';
 import {
   resolveBlockedCauseSummary,
-  resolveBlockedCommand,
-  resolveBlockedImpactSummary,
   resolveBlockedRemediation,
   resolveProjectLabel,
 } from './framework-menu-system-notifications-payloads';
@@ -19,18 +17,8 @@ export const buildBlockedDialogPayload = (params: {
   env: NodeJS.ProcessEnv;
 }): BlockedDialogPayload => {
   const causeCode = params.event.causeCode ?? 'GATE_BLOCKED';
-  const cause = [
-    `Causa: ${resolveBlockedCauseSummary(params.event, causeCode)}`,
-    `Impacto: ${resolveBlockedImpactSummary(params.event, causeCode)}`,
-  ].join('\n');
-  const remediation = [
-    `Comando: ${resolveBlockedCommand({
-      event: params.event,
-      repoRoot: params.repoRoot,
-      causeCode,
-    })}`,
-    `Siguiente acción: ${resolveBlockedRemediation(params.event, causeCode)}`,
-  ].join('\n');
+  const cause = resolveBlockedCauseSummary(params.event, causeCode);
+  const remediation = resolveBlockedRemediation(params.event, causeCode);
   const projectLabel = resolveProjectLabel({
     repoRoot: params.repoRoot,
     projectLabel: params.env.PUMUKI_PROJECT_LABEL,

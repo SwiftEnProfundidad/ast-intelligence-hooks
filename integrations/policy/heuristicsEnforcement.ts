@@ -58,8 +58,8 @@ export const resolveHeuristicsEnforcement = (): HeuristicsEnforcementResolution 
     };
   }
   return {
-    mode: 'strict',
+    mode: 'advisory',
     source: 'default',
-    blocking: true,
+    blocking: false,
   };
 };

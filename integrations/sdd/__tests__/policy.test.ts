@@ -385,7 +385,7 @@ test('evaluateSddPolicy permite PRE_COMMIT cuando degraded mode fail-open está 
   });
 });
 
-test('evaluateSddPolicy bloquea PRE_PUSH cuando falta contrato mínimo del change por defecto', () => {
+test('evaluateSddPolicy permite PRE_PUSH cuando falta contrato mínimo del change y la completitud sigue en advisory por defecto', () => {
   return withFixtureRepo('pumuki-sdd-change-incomplete-', (repoRoot) => {
     writeOpenSpecBinary(repoRoot, {
       validateExitCode: 0,
@@ -398,11 +398,12 @@ test('evaluateSddPolicy bloquea PRE_PUSH cuando falta contrato mínimo del chang
     openSddSession({ cwd: repoRoot, changeId, ttlMinutes: 30 });
 
     const result = evaluateSddPolicy({ stage: 'PRE_PUSH', repoRoot });
-    assert.equal(result.decision.allowed, false);
-    assert.equal(result.decision.code, 'SDD_CHANGE_INCOMPLETE');
-    assert.equal(result.decision.details?.completenessEnforcementMode, 'strict');
-    assert.equal(result.decision.details?.completenessBlocking, true);
-    assert.deepEqual(result.decision.details?.missingRequirements, [
+    assert.equal(result.decision.allowed, true);
+    assert.equal(result.decision.code, 'ALLOWED');
+    assert.equal(result.decision.details?.completenessEnforcementMode, 'advisory');
+    assert.equal(result.decision.details?.completenessBlocking, false);
+    assert.equal(result.decision.details?.completenessStatus, 'incomplete-advisory');
+    assert.deepEqual(result.decision.details?.missingCompletenessRequirements, [
       'tasks.md',
       'scenario.feature',
     ]);

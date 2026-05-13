@@ -2,7 +2,6 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
-import { writeLifecycleBootstrapManifest } from './bootstrapManifest';
 
 export type AdapterAgent = string;
 
@@ -12,10 +11,6 @@ export type LifecycleAdapterInstallResult = {
   dryRun: boolean;
   written: boolean;
   changedFiles: ReadonlyArray<string>;
-  bootstrapManifest: {
-    path: string;
-    changed: boolean;
-  };
 };
 
 type AdapterTemplate = {
@@ -159,30 +154,11 @@ export const runLifecycleAdapterInstall = (params: {
     writeFileSync(absolutePath, nextContents, 'utf8');
   }
 
-  let bootstrapManifest = {
-    path: join(repoRoot, '.pumuki', 'bootstrap-manifest.json'),
-    changed: false,
-  };
-  if (!dryRun) {
-    const manifestWrite = writeLifecycleBootstrapManifest({
-      git,
-      repoRoot,
-    });
-    bootstrapManifest = {
-      path: manifestWrite.path,
-      changed: manifestWrite.changed,
-    };
-    if (manifestWrite.changed) {
-      changedFiles.push('.pumuki/bootstrap-manifest.json');
-    }
-  }
-
   return {
     repoRoot,
     agent: params.agent,
     dryRun,
     written: !dryRun,
     changedFiles,
-    bootstrapManifest,
   };
 };

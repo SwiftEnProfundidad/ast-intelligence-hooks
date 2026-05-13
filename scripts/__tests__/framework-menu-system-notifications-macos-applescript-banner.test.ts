@@ -17,8 +17,7 @@ test('buildDisplayNotificationScript incluye subtitle y sound cuando existen', (
   const script = buildDisplayNotificationScript({
     title: '🔴 Pumuki bloqueado',
     subtitle: 'Repo · PRE_PUSH',
-    message:
-      'Causa: La rama no tiene upstream configurado.\nImpacto: No puedes continuar el pre-push.\nComando: git push --set-upstream origin <branch>\nSiguiente acción: Configura upstream y repite PRE_PUSH.',
+    message: 'Solución: Configura upstream.',
     soundName: 'Basso',
   });
 

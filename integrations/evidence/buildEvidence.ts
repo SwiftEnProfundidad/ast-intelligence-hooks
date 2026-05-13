@@ -282,10 +282,6 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
     'skills.ios.no-passed-value-state-wrapper',
     'heuristics.ios.passed-value-state-wrapper.ast',
   ],
-  [
-    'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear',
-    'heuristics.ios.swiftui.state-wrapper-private.ast',
-  ],
   ['skills.ios.no-navigation-view', 'heuristics.ios.navigation-view.ast'],
   ['skills.ios.no-foreground-color', 'heuristics.ios.foreground-color.ast'],
   ['skills.ios.no-corner-radius', 'heuristics.ios.corner-radius.ast'],
@@ -585,7 +581,10 @@ const normalizeAndDedupeFindings = (
 };
 
 const toGateOutcome = (findings: ReadonlyArray<SnapshotFinding>): GateOutcome => {
-  return findings.length > 0 ? 'BLOCK' : 'PASS';
+  if (findings.some((finding) => finding.severity === 'CRITICAL')) {
+    return 'BLOCK';
+  }
+  return findings.length > 0 ? 'WARN' : 'PASS';
 };
 
 const bySeverity = (findings: ReadonlyArray<SnapshotFinding>): Record<Severity, number> => {
@@ -688,16 +687,6 @@ const normalizeRepoState = (repoState?: RepoState): RepoState | undefined => {
   if (!repoState) {
     return undefined;
   }
-  const tracking = repoState.lifecycle.tracking ?? {
-    enforced: false,
-    canonical_path: null,
-    canonical_present: false,
-    source_file: null,
-    in_progress_count: null,
-    single_in_progress_valid: null,
-    conflict: false,
-    declarations: [],
-  };
   return {
     repo_root: repoState.repo_root,
     git: {
@@ -727,20 +716,6 @@ const normalizeRepoState = (repoState?: RepoState): RepoState | undefined => {
           config_path: repoState.lifecycle.hard_mode.config_path,
         }
         : undefined,
-      tracking: {
-        enforced: tracking.enforced,
-        canonical_path: tracking.canonical_path,
-        canonical_present: tracking.canonical_present,
-        source_file: tracking.source_file,
-        in_progress_count: tracking.in_progress_count,
-        single_in_progress_valid: tracking.single_in_progress_valid,
-        conflict: tracking.conflict,
-        declarations: tracking.declarations.map((entry) => ({
-          source_file: entry.source_file,
-          declared_path: entry.declared_path,
-          resolved_path: entry.resolved_path,
-        })),
-      },
     },
   };
 };
@@ -825,11 +800,7 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
           ruleId: finding.ruleId,
           severity: finding.severity,
           file: finding.file,
-        })),
-        {
-          activeRuleIds: normalizedRulesCoverage.active_rule_ids,
-          evaluatedRuleIds: normalizedRulesCoverage.evaluated_rule_ids,
-        }
+        }))
       ),
     },
     ledger: updateLedger({

@@ -327,7 +327,7 @@ test('runLifecycleWatch usa el repoRoot solicitado al resolver facts y ejecutar 
   assert.deepEqual(gateRepoRoots, ['/target/repo']);
 });
 
-test('runLifecycleWatch bloquea por atomicidad antes del gate en strict por defecto', async () => {
+test('runLifecycleWatch deja git atomicity en advisory por defecto y ejecuta el gate principal en PRE_PUSH', async () => {
   let gateCalls = 0;
   const blockedNotifications: Array<{ code: string }> = [];
 
@@ -405,13 +405,13 @@ test('runLifecycleWatch bloquea por atomicidad antes del gate en strict por defe
     })
   );
 
-  assert.equal(gateCalls, 0);
+  assert.equal(gateCalls, 1);
   assert.equal(result.lastTick.gateExitCode, 1);
   assert.equal(result.lastTick.gateOutcome, 'BLOCK');
-  assert.deepEqual(result.lastTick.topCodes, ['GIT_ATOMICITY_TOO_MANY_SCOPES']);
-  assert.equal(result.lastTick.totalFindings, 1);
+  assert.deepEqual(result.lastTick.topCodes, ['LEGACY_FALSE_POSITIVE']);
+  assert.equal(result.lastTick.totalFindings, 2);
   assert.equal(result.lastTick.findingsAtOrAboveThreshold, 1);
-  assert.deepEqual(blockedNotifications, [{ code: 'GIT_ATOMICITY_TOO_MANY_SCOPES' }]);
+  assert.deepEqual(blockedNotifications, [{ code: 'LEGACY_FALSE_POSITIVE' }]);
 });
 
 test('runLifecycleWatch bloquea por atomicidad antes del gate en PRE_PUSH cuando el enforcement es strict', async () => {

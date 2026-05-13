@@ -43,13 +43,6 @@ const sumLegacySeverityBand = (row: { by_severity?: unknown }): number => {
   return total;
 };
 
-const optionalNonNegativeInt = (value: unknown): number | undefined => {
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    return undefined;
-  }
-  return Math.max(0, Math.trunc(value));
-};
-
 const parsePlatformAuditRows = (
   snapshot: EvidenceSnapshot
 ): ReadonlyArray<FrameworkMenuEvidencePlatformRow> => {
@@ -64,16 +57,7 @@ const parsePlatformAuditRows = (
     }
     const platform = toStringOrNull((entry as { platform?: unknown }).platform) ?? 'Other';
     const violations = sumLegacySeverityBand(entry as { by_severity?: unknown });
-    const activeRules = optionalNonNegativeInt((entry as { active_rules?: unknown }).active_rules);
-    const evaluatedRules = optionalNonNegativeInt(
-      (entry as { evaluated_rules?: unknown }).evaluated_rules
-    );
-    rows.push({
-      platform,
-      violations,
-      ...(typeof activeRules === 'number' ? { activeRules } : {}),
-      ...(typeof evaluatedRules === 'number' ? { evaluatedRules } : {}),
-    });
+    rows.push({ platform, violations });
   }
   return rows;
 };

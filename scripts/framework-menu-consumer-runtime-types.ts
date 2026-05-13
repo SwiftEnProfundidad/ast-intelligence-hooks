@@ -1,10 +1,8 @@
 import type { FrameworkMenuEvidenceSummary } from './framework-menu-evidence-summary-lib';
-import type { ConsumerPreflightResult } from './framework-menu-consumer-preflight-types';
 import type {
   PumukiCriticalNotificationEvent,
   SystemNotificationEmitResult,
 } from './framework-menu-system-notifications-lib';
-import type { GovernanceConsoleSnapshot } from '../integrations/lifecycle/cliGovernanceConsole';
 
 export type ConsumerAction = {
   id: string;
@@ -42,7 +40,6 @@ export type ConsumerMenuRuntimeParams = {
     stage: 'PRE_COMMIT' | 'PRE_PUSH'
   ) => Promise<string | void> | string | void;
   emitSystemNotification?: ConsumerRuntimeEmitNotification;
-  readGovernanceConsole?: () => GovernanceConsoleSnapshot | null;
   write: ConsumerRuntimeWrite;
 };
 
@@ -50,7 +47,6 @@ export type ConsumerMenuRuntime = {
   actions: ReadonlyArray<ConsumerAction>;
   printMenu: () => void;
   readCurrentSummary: () => FrameworkMenuEvidenceSummary | null;
-  readLastPreflight: () => ConsumerPreflightResult | null;
 };
 
 export type ConsumerRuntimeScope = 'staged' | 'unstaged' | 'workingTree';

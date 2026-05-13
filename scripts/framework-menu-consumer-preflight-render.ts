@@ -1,6 +1,5 @@
 import { renderLegacyPanel, resolveLegacyPanelOuterWidth } from './framework-menu-legacy-audit-lib';
 import { buildConsumerPreflightBlockingCauseLines } from './framework-menu-consumer-preflight-hints';
-import { buildGovernanceConsoleSummaryLines } from '../integrations/lifecycle/cliGovernanceConsole';
 import type {
   ConsumerPreflightRenderOptions,
   ConsumerPreflightResult,
@@ -20,15 +19,6 @@ const buildConsumerPreflightPanelLines = (
     `Evidence source: source=${evidence.source.source} path=${evidence.source.path} digest=${evidence.source.digest ?? 'null'} generated_at=${evidence.source.generated_at ?? 'null'}`,
     `Gate: ${preflight.status} (${preflight.result.violations.length} violations)`,
   ];
-  lines.push(
-    '',
-    ...buildGovernanceConsoleSummaryLines({
-      governanceObservation: preflight.governanceObservation,
-      governanceNextAction: preflight.governanceNextAction,
-      policyValidation: preflight.policyValidation,
-      experimentalFeatures: preflight.experimentalFeatures,
-    })
-  );
   lines.push(...buildConsumerPreflightBlockingCauseLines(preflight));
 
   if (preflight.hints.length > 0) {

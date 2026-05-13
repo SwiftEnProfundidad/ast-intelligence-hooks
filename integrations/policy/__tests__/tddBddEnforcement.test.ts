@@ -23,14 +23,14 @@ const withTddBddEnforcementEnv = async <T>(
   }
 };
 
-test('resolveTddBddEnforcement defaults to strict mode', async () => {
+test('resolveTddBddEnforcement defaults to advisory mode', async () => {
   await withTddBddEnforcementEnv(undefined, () => {
     const resolved = resolveTddBddEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'strict',
+      mode: 'advisory',
       source: 'default',
-      blocking: true,
+      blocking: false,
     });
   });
 });
@@ -47,32 +47,32 @@ test('resolveTddBddEnforcement reads strict mode from environment', async () => 
   });
 });
 
-test('resolveTddBddEnforcement falls back to strict on invalid environment value', async () => {
+test('resolveTddBddEnforcement falls back to advisory on invalid environment value', async () => {
   await withTddBddEnforcementEnv('surprise', () => {
     const resolved = resolveTddBddEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'strict',
+      mode: 'advisory',
       source: 'default',
-      blocking: true,
+      blocking: false,
     });
   });
 });
 
-test('resolveTddBddEnforcement no necesita env para mantener strict por defecto', async () => {
+test('resolveTddBddEnforcement no hereda strict desde PRE_WRITE y permanece advisory por defecto', async () => {
   await withTddBddEnforcementEnv(undefined, () => {
     const resolved = resolveTddBddEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'strict',
+      mode: 'advisory',
       source: 'default',
-      blocking: true,
+      blocking: false,
     });
   });
 });
 
-test('applyTddBddEnforcement downgrades blocking findings and snapshot only with explicit advisory opt-in', async () => {
-  await withTddBddEnforcementEnv('advisory', () => {
+test('applyTddBddEnforcement downgrades blocking findings and snapshot to advisory by default', async () => {
+  await withTddBddEnforcementEnv(undefined, () => {
     const result = applyTddBddEnforcement({
       findings: [
         {
@@ -104,7 +104,6 @@ test('applyTddBddEnforcement downgrades blocking findings and snapshot only with
           slices_invalid: 0,
           integrity_ok: false,
           errors: ['missing_contract'],
-          baseline: { required: true, passed: 0, missing: 0, failed: 0 },
         },
         waiver: {
           applied: false,
@@ -150,7 +149,6 @@ test('applyTddBddEnforcement preserves blocking findings and snapshot in strict 
           slices_invalid: 0,
           integrity_ok: false,
           errors: ['missing_contract'],
-          baseline: { required: true, passed: 0, missing: 0, failed: 0 },
         },
         waiver: {
           applied: false,

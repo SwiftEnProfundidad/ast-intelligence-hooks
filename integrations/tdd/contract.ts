@@ -14,7 +14,6 @@ const tddEventSchema = z.object({
 const tddSliceSchema = z.object({
   id: z.string().min(1),
   scenario_ref: z.string().min(1),
-  baseline: tddEventSchema.optional(),
   red: tddEventSchema,
   green: tddEventSchema,
   refactor: tddEventSchema,

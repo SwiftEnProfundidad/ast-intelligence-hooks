@@ -31,15 +31,6 @@ type GitAtomicityConfig = {
 const ATOMICITY_CONFIG_FILE = '.pumuki/git-atomicity.json';
 const DEFAULT_COMMIT_PATTERN =
   '^(feat|fix|chore|refactor|docs|test|perf|build|ci|revert)(\\([^)]+\\))?:\\s.+$';
-const MANAGED_EVIDENCE_PATHS = new Set(['.ai_evidence.json', '.AI_EVIDENCE.json']);
-const BASELINE_BRANCH_REFS = [
-  'origin/main',
-  'origin/develop',
-  'upstream/main',
-  'upstream/develop',
-  'main',
-  'develop',
-];
 
 const defaultConfig: GitAtomicityConfig = {
   enabled: true,
@@ -148,9 +139,6 @@ const parseLines = (value: string): ReadonlyArray<string> =>
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
 
-const isManagedEvidencePath = (path: string): boolean =>
-  MANAGED_EVIDENCE_PATHS.has(path.replace(/\\/g, '/').trim());
-
 const toErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
     return error.message;
@@ -203,60 +191,6 @@ const collectScopePaths = (
     normalized.set(scope, [...new Set(paths)].sort());
   }
   return normalized;
-};
-
-const isSkillsContractCarrierPath = (path: string): boolean => {
-  const normalized = path.replace(/\\/g, '/').trim().toLowerCase();
-  return (
-    normalized === 'agents.md' ||
-    normalized === 'skills.lock.json' ||
-    normalized === 'skills.sources.json' ||
-    normalized.startsWith('vendor/skills/') ||
-    normalized.startsWith('docs/codex-skills/') ||
-    normalized === '.pumuki/policy-as-code.json'
-  );
-};
-
-const isSkillsEnforcementImplementationPath = (path: string): boolean => {
-  const normalized = path.replace(/\\/g, '/').trim().toLowerCase();
-  return (
-    normalized.endsWith('.feature') ||
-    normalized.startsWith('core/facts/') ||
-    normalized.startsWith('core/rules/presets/heuristics/') ||
-    normalized.startsWith('integrations/config/') ||
-    normalized === 'integrations/git/runplatformgate.ts' ||
-    normalized === 'integrations/git/__tests__/runplatformgate.test.ts' ||
-    normalized === 'integrations/git/gitatomicity.ts' ||
-    normalized === 'integrations/git/__tests__/gitatomicity.test.ts' ||
-    isSkillsContractCarrierPath(normalized)
-  );
-};
-
-const isSkillsEnforcementRemediationDiff = (
-  paths: ReadonlyArray<string>
-): boolean => {
-  if (paths.length === 0) {
-    return false;
-  }
-
-  const normalizedPaths = paths.map((path) => path.replace(/\\/g, '/').trim().toLowerCase());
-  const touchesDetectorSurface = normalizedPaths.some((path) =>
-    path.startsWith('core/facts/') ||
-    path.startsWith('core/rules/presets/heuristics/') ||
-    path.startsWith('integrations/config/') ||
-    path === 'integrations/git/runplatformgate.ts' ||
-    path === 'integrations/git/__tests__/runplatformgate.test.ts' ||
-    path === 'integrations/git/gitatomicity.ts' ||
-    path === 'integrations/git/__tests__/gitatomicity.test.ts'
-  );
-  const touchesLockOrScenario = normalizedPaths.some((path) =>
-    path === 'skills.lock.json' || path.endsWith('.feature')
-  );
-  return (
-    touchesDetectorSurface &&
-    touchesLockOrScenario &&
-    normalizedPaths.every((path) => isSkillsEnforcementImplementationPath(path))
-  );
 };
 
 const buildAtomicSlicesRemediation = (params: {
@@ -314,110 +248,12 @@ const collectCommitSubjects = (params: {
   fromRef?: string;
   toRef?: string;
 }): ReadonlyArray<string> => {
-  return collectCommitRecords(params)
-    .filter((record) => shouldEvaluateCommitRecord({ git: params.git, repoRoot: params.repoRoot, record }))
-    .map((record) => record.subject);
-};
-
-type CommitRecord = {
-  hash: string;
-  parents: ReadonlyArray<string>;
-  subject: string;
-};
-
-const parseCommitRecords = (value: string): ReadonlyArray<CommitRecord> =>
-  value
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .map((line) => {
-      const [hash = '', parents = '', subject = ''] = line.split('\u0001');
-      return {
-        hash: hash.trim(),
-        parents: parents.split(' ').map((parent) => parent.trim()).filter((parent) => parent.length > 0),
-        subject: subject.trim(),
-      };
-    })
-    .filter((record) => record.hash.length > 0);
-
-const isCommitReachableFromRef = (params: {
-  git: IGitService;
-  repoRoot: string;
-  commitHash: string;
-  ref: string;
-}): boolean => {
-  try {
-    params.git.runGit(['merge-base', '--is-ancestor', params.commitHash, params.ref], params.repoRoot);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const isInheritedBaselineCommit = (params: {
-  git: IGitService;
-  repoRoot: string;
-  commitHash: string;
-}): boolean =>
-  BASELINE_BRANCH_REFS.some((ref) =>
-    isCommitReachableFromRef({
-      git: params.git,
-      repoRoot: params.repoRoot,
-      commitHash: params.commitHash,
-      ref,
-    })
-  );
-
-const shouldEvaluateCommitRecord = (params: {
-  git: IGitService;
-  repoRoot: string;
-  record: CommitRecord;
-}): boolean => {
-  if (params.record.parents.length > 1) {
-    return false;
-  }
-  return !isInheritedBaselineCommit({
-    git: params.git,
-    repoRoot: params.repoRoot,
-    commitHash: params.record.hash,
-  });
-};
-
-const collectCommitRecords = (params: {
-  git: IGitService;
-  repoRoot: string;
-  fromRef?: string;
-  toRef?: string;
-}): ReadonlyArray<CommitRecord> => {
   if (!params.fromRef || !params.toRef) {
     return [];
   }
   try {
-    return parseCommitRecords(
-      params.git.runGit(
-        ['log', '--format=%H%x01%P%x01%s', '--reverse', `${params.fromRef}..${params.toRef}`],
-        params.repoRoot
-      )
-    );
-  } catch (error) {
-    if (isUnresolvableRevisionError(error)) {
-      return [];
-    }
-    throw error;
-  }
-};
-
-const collectCommitChangedPaths = (params: {
-  git: IGitService;
-  repoRoot: string;
-  commitHash: string;
-}): ReadonlyArray<string> => {
-  try {
     return parseLines(
-      params.git.runGit(
-        ['diff-tree', '--no-commit-id', '--name-only', '-r', '--diff-filter=ACMR', params.commitHash],
-        params.repoRoot
-      )
+      params.git.runGit(['log', '--format=%s', `${params.fromRef}..${params.toRef}`], params.repoRoot)
     );
   } catch (error) {
     if (isUnresolvableRevisionError(error)) {
@@ -425,98 +261,6 @@ const collectCommitChangedPaths = (params: {
     }
     throw error;
   }
-};
-
-const buildPathLimitViolations = (params: {
-  changedPaths: ReadonlyArray<string>;
-  config: GitAtomicityConfig;
-  stage: GitAtomicityStage;
-  atomicSlicesRemediation?: string;
-  label?: string;
-}): GitAtomicityViolation[] => {
-  const violations: GitAtomicityViolation[] = [];
-  const labelSuffix = params.label ? ` (${params.label})` : '';
-
-  if (params.changedPaths.length > params.config.maxFiles) {
-    violations.push({
-      code: 'GIT_ATOMICITY_TOO_MANY_FILES',
-      message:
-        `Git atomicity guard blocked at ${params.stage}${labelSuffix}: changed_files=${params.changedPaths.length} exceeds max_files=${params.config.maxFiles}.`,
-      remediation:
-        `Divide los cambios en commits más pequeños (máximo ${params.config.maxFiles} archivos por commit).`
-        + (params.atomicSlicesRemediation ? ` ${params.atomicSlicesRemediation}` : ''),
-    });
-  }
-
-  const scopePaths = collectScopePaths(params.changedPaths);
-  const scopeKeys = new Set(scopePaths.keys());
-  if (scopeKeys.size > params.config.maxScopes) {
-    const sortedScopes = [...scopeKeys].sort();
-    const suggestedScopeAdds = sortedScopes
-      .slice(0, Math.max(1, Math.min(params.config.maxScopes + 1, 3)))
-      .map((scope) => `git add ${scope}/`)
-      .join(' && ');
-    const scopeBreakdown = sortedScopes
-      .map((scope) => {
-        const paths = scopePaths.get(scope) ?? [];
-        const sample = paths.slice(0, 3);
-        return `${scope}{count=${paths.length}; sample=[${sample.join(', ')}]}`;
-      })
-      .join(' | ');
-    violations.push({
-      code: 'GIT_ATOMICITY_TOO_MANY_SCOPES',
-      message:
-        `Git atomicity guard blocked at ${params.stage}${labelSuffix}: changed_scopes=${scopeKeys.size} exceeds max_scopes=${params.config.maxScopes}. ` +
-        `scope_files=${scopeBreakdown}.`,
-      remediation:
-        `Agrupa cambios por ámbito funcional (máximo ${params.config.maxScopes} scopes por commit). ` +
-        `scopes_detectados=[${sortedScopes.join(', ')}]. ` +
-        `Sugerencia split: git restore --staged . && ${suggestedScopeAdds} && git commit -m "<tipo>: <scope>".`
-        + (params.atomicSlicesRemediation ? ` ${params.atomicSlicesRemediation}` : ''),
-    });
-  }
-
-  return violations;
-};
-
-const buildPrePushCommitPathLimitViolations = (params: {
-  git: IGitService;
-  repoRoot: string;
-  config: GitAtomicityConfig;
-  fromRef?: string;
-  toRef?: string;
-}): GitAtomicityViolation[] | undefined => {
-  const commitRecords = collectCommitRecords({
-    git: params.git,
-    repoRoot: params.repoRoot,
-    fromRef: params.fromRef,
-    toRef: params.toRef,
-  }).filter((record) => shouldEvaluateCommitRecord({ git: params.git, repoRoot: params.repoRoot, record }));
-  if (commitRecords.length === 0) {
-    return undefined;
-  }
-
-  const violations: GitAtomicityViolation[] = [];
-  for (const commitRecord of commitRecords) {
-    const changedPaths = collectCommitChangedPaths({
-      git: params.git,
-      repoRoot: params.repoRoot,
-      commitHash: commitRecord.hash,
-    }).filter((path) => !isManagedEvidencePath(path));
-    if (isSkillsEnforcementRemediationDiff(changedPaths)) {
-      continue;
-    }
-    violations.push(
-      ...buildPathLimitViolations({
-        changedPaths,
-        config: params.config,
-        stage: 'PRE_PUSH',
-        label: `commit=${commitRecord.hash.slice(0, 12)}`,
-      })
-    );
-  }
-
-  return violations;
 };
 
 export const evaluateGitAtomicity = (params: {
@@ -544,40 +288,51 @@ export const evaluateGitAtomicity = (params: {
     stage: params.stage,
     fromRef: params.fromRef,
     toRef: params.toRef,
-  }).filter((path) => !isManagedEvidencePath(path));
+  });
   const atomicSlicesRemediation = buildAtomicSlicesRemediation({
     git,
     repoRoot,
     stage: params.stage,
   });
-  if (params.stage === 'PRE_COMMIT' && isSkillsEnforcementRemediationDiff(changedPaths)) {
-    return {
-      enabled: true,
-      allowed: true,
-      violations: [],
-    };
+
+  if (changedPaths.length > config.maxFiles) {
+    violations.push({
+      code: 'GIT_ATOMICITY_TOO_MANY_FILES',
+      message:
+        `Git atomicity guard blocked at ${params.stage}: changed_files=${changedPaths.length} exceeds max_files=${config.maxFiles}.`,
+      remediation:
+        `Divide los cambios en commits más pequeños (máximo ${config.maxFiles} archivos por commit).`
+        + (atomicSlicesRemediation ? ` ${atomicSlicesRemediation}` : ''),
+    });
   }
 
-  const prePushCommitViolations =
-    params.stage === 'PRE_PUSH'
-      ? buildPrePushCommitPathLimitViolations({
-          git,
-          repoRoot,
-          config,
-          fromRef: params.fromRef,
-          toRef: params.toRef,
-        })
-      : undefined;
-
-  violations.push(
-    ...(prePushCommitViolations
-      ?? buildPathLimitViolations({
-        changedPaths,
-        config,
-        stage: params.stage,
-        atomicSlicesRemediation,
-      }))
-  );
+  const scopePaths = collectScopePaths(changedPaths);
+  const scopeKeys = new Set(scopePaths.keys());
+  if (scopeKeys.size > config.maxScopes) {
+    const sortedScopes = [...scopeKeys].sort();
+    const suggestedScopeAdds = sortedScopes
+      .slice(0, Math.max(1, Math.min(config.maxScopes + 1, 3)))
+      .map((scope) => `git add ${scope}/`)
+      .join(' && ');
+    const scopeBreakdown = sortedScopes
+      .map((scope) => {
+        const paths = scopePaths.get(scope) ?? [];
+        const sample = paths.slice(0, 3);
+        return `${scope}{count=${paths.length}; sample=[${sample.join(', ')}]}`;
+      })
+      .join(' | ');
+    violations.push({
+      code: 'GIT_ATOMICITY_TOO_MANY_SCOPES',
+      message:
+        `Git atomicity guard blocked at ${params.stage}: changed_scopes=${scopeKeys.size} exceeds max_scopes=${config.maxScopes}. ` +
+        `scope_files=${scopeBreakdown}.`,
+      remediation:
+        `Agrupa cambios por ámbito funcional (máximo ${config.maxScopes} scopes por commit). ` +
+        `scopes_detectados=[${sortedScopes.join(', ')}]. ` +
+        `Sugerencia split: git restore --staged . && ${suggestedScopeAdds} && git commit -m "<tipo>: <scope>".`
+        + (atomicSlicesRemediation ? ` ${atomicSlicesRemediation}` : ''),
+    });
+  }
 
   if (config.enforceCommitMessagePattern && params.stage !== 'PRE_COMMIT') {
     let pattern: RegExp;

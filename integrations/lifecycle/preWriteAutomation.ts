@@ -112,11 +112,11 @@ export const buildPreWriteAutomationTrace = async (params: {
       const gateExitCode = await params.runPlatformGate({
         policy: {
           stage: 'PRE_COMMIT',
-          blockOnOrAbove: 'INFO',
-          warnOnOrAbove: 'INFO',
+          blockOnOrAbove: 'ERROR',
+          warnOnOrAbove: 'WARN',
         },
         scope: {
-          kind: 'staged',
+          kind: 'workingTree',
         },
         auditMode: 'gate',
         dependencies: {
@@ -148,8 +148,8 @@ export const buildPreWriteAutomationTrace = async (params: {
       const gateExitCode = await params.runPlatformGate({
         policy: {
           stage: 'PRE_PUSH',
-          blockOnOrAbove: 'INFO',
-          warnOnOrAbove: 'INFO',
+          blockOnOrAbove: 'ERROR',
+          warnOnOrAbove: 'WARN',
         },
         scope: {
           kind: 'workingTree',

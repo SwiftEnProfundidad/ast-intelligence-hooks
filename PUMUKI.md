@@ -59,7 +59,7 @@ Version drift contract:
   - `version.pathExecutionHazard`
   - `version.pathExecutionWarning`
   - `version.pathExecutionWorkaroundCommand`
-- If `driftWarning` appears, align the consumer package and lifecycle state with `version.alignmentCommand`. When the consumer declares a Node runtime via `volta`, `.nvmrc`, or `package.json.engines.node`, the remediation command prepends the matching runtime switch before the Pumuki install step.
+- If `driftWarning` appears, align the consumer package and lifecycle state with `version.alignmentCommand`.
 - If `pathExecutionHazard=true`, the safe workaround is the local node invocation printed by Pumuki, for example:
 
 ```bash

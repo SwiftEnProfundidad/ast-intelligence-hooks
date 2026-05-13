@@ -2,18 +2,71 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolveSkillsEnforcement } from '../skillsEnforcement';
 
-test('resolveSkillsEnforcement defaults to strict mode', async () => {
-  const resolved = resolveSkillsEnforcement();
+const withSkillsEnforcementEnv = async <T>(
+  value: string | undefined,
+  callback: () => Promise<T> | T
+): Promise<T> => {
+  const previous = process.env.PUMUKI_SKILLS_ENFORCEMENT;
+  if (typeof value === 'undefined') {
+    delete process.env.PUMUKI_SKILLS_ENFORCEMENT;
+  } else {
+    process.env.PUMUKI_SKILLS_ENFORCEMENT = value;
+  }
+  try {
+    return await callback();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env.PUMUKI_SKILLS_ENFORCEMENT;
+    } else {
+      process.env.PUMUKI_SKILLS_ENFORCEMENT = previous;
+    }
+  }
+};
 
-  assert.deepEqual(resolved, {
-    blocking: true,
+test('resolveSkillsEnforcement defaults to advisory mode', async () => {
+  await withSkillsEnforcementEnv(undefined, () => {
+    const resolved = resolveSkillsEnforcement();
+
+    assert.deepEqual(resolved, {
+      mode: 'advisory',
+      source: 'default',
+      blocking: false,
+    });
   });
 });
 
-test('resolveSkillsEnforcement mantiene bloqueo constante', async () => {
-  const resolved = resolveSkillsEnforcement();
+test('resolveSkillsEnforcement reads strict mode from environment', async () => {
+  await withSkillsEnforcementEnv('strict', () => {
+    const resolved = resolveSkillsEnforcement();
 
-  assert.deepEqual(resolved, {
-    blocking: true,
+    assert.deepEqual(resolved, {
+      mode: 'strict',
+      source: 'env',
+      blocking: true,
+    });
+  });
+});
+
+test('resolveSkillsEnforcement falls back to advisory on invalid environment value', async () => {
+  await withSkillsEnforcementEnv('surprise', () => {
+    const resolved = resolveSkillsEnforcement();
+
+    assert.deepEqual(resolved, {
+      mode: 'advisory',
+      source: 'default',
+      blocking: false,
+    });
+  });
+});
+
+test('resolveSkillsEnforcement no hereda strict desde PRE_WRITE y permanece advisory por defecto', async () => {
+  await withSkillsEnforcementEnv(undefined, () => {
+    const resolved = resolveSkillsEnforcement();
+
+    assert.deepEqual(resolved, {
+      mode: 'advisory',
+      source: 'default',
+      blocking: false,
+    });
   });
 });

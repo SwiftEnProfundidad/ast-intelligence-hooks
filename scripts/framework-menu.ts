@@ -25,8 +25,6 @@ import {
   loadAndFormatActiveSkillsBundles,
 } from './framework-menu-skills-lib';
 import { isMenuUiV2Enabled } from './framework-menu-ui-version-lib';
-import { readLifecycleStatus } from '../integrations/lifecycle/status';
-import type { GovernanceConsoleSnapshot } from '../integrations/lifecycle/cliGovernanceConsole';
 export * from './framework-menu-builders';
 export { formatAdvancedMenuView } from './framework-menu-advanced-view-lib';
 export { buildMenuGateParams } from './framework-menu-gate-lib';
@@ -43,20 +41,6 @@ const resolveInitialMenuMode = (): MenuMode => {
     return 'advanced';
   }
   return 'consumer';
-};
-
-const readAdvancedGovernanceConsoleSnapshot = (): GovernanceConsoleSnapshot | null => {
-  try {
-    const status = readLifecycleStatus({ cwd: process.cwd() });
-    return {
-      governanceObservation: status.governanceObservation,
-      governanceNextAction: status.governanceNextAction,
-      policyValidation: status.policyValidation,
-      experimentalFeatures: status.experimentalFeatures,
-    };
-  } catch {
-    return null;
-  }
 };
 
 const menu = async (): Promise<void> => {
@@ -92,14 +76,10 @@ const menu = async (): Promise<void> => {
         consumerRuntime.printMenu();
       } else {
         const currentSummary = consumerRuntime.readCurrentSummary();
-        const lastPreflight = consumerRuntime.readLastPreflight();
-        const governanceConsole = lastPreflight ? null : readAdvancedGovernanceConsoleSnapshot();
         if (!isMenuUiV2Enabled()) {
           output.write(
             `\n${formatAdvancedMenuClassicView(advancedActions, {
               evidenceSummary: currentSummary ?? undefined,
-              preflight: lastPreflight ?? undefined,
-              governanceConsole: governanceConsole ?? undefined,
             })}\n`
           );
         } else {
@@ -107,8 +87,6 @@ const menu = async (): Promise<void> => {
             output.write(
               `\n${formatAdvancedMenuView(advancedActions, {
                 evidenceSummary: currentSummary ?? undefined,
-                preflight: lastPreflight ?? undefined,
-                governanceConsole: governanceConsole ?? undefined,
               })}\n`
             );
           } catch {
@@ -116,25 +94,12 @@ const menu = async (): Promise<void> => {
             output.write(
               `\n${formatAdvancedMenuClassicView(advancedActions, {
                 evidenceSummary: currentSummary ?? undefined,
-                preflight: lastPreflight ?? undefined,
-                governanceConsole: governanceConsole ?? undefined,
               })}\n`
             );
           }
         }
       }
-      let option: string;
-      try {
-        option = (await rl.question('\nSelect option: ')).trim();
-      } catch (error) {
-        const code = error instanceof Error && 'code' in error
-          ? String((error as { code?: unknown }).code)
-          : '';
-        if (code === 'ABORT_ERR' || code === 'ERR_USE_AFTER_CLOSE') {
-          break;
-        }
-        throw error;
-      }
+      const option = (await rl.question('\nSelect option: ')).trim();
       const normalized = option.toUpperCase();
 
       if (mode === 'consumer' && normalized === 'A') {
@@ -153,7 +118,7 @@ const menu = async (): Promise<void> => {
           output.write('Invalid option.\n');
           continue;
         }
-        if (selectedConsumer.id === '9') {
+        if (selectedConsumer.id === '10') {
           break;
         }
         try {

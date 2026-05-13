@@ -14,9 +14,7 @@ Este directorio contiene solo documentación estable de validación y runbooks o
 
 ## Estado de seguimiento
 
-- `docs/validation/` no gobierna backlog.
-- La única fuente viva del tracking interno es `PUMUKI-RESET-MASTER-PLAN.md` en la raíz del repo.
-- `docs/tracking/plan-activo-de-trabajo.md` queda retirado como espejo operativo y solo conserva valor histórico.
+- Única fuente de seguimiento: `docs/tracking/plan-activo-de-trabajo.md`
 
 ## GitHub Actions y cuota
 

@@ -2,12 +2,6 @@ import {
   evaluateAiGate,
   type AiGateCheckResult,
 } from '../integrations/gate/evaluateAiGate';
-import { resolvePrimaryBlockingCause } from '../integrations/gate/blockingCause';
-import { readLifecycleExperimentalFeaturesSnapshot } from '../integrations/lifecycle/experimentalFeaturesSnapshot';
-import { LifecycleGitService } from '../integrations/lifecycle/gitService';
-import { readGovernanceObservationSnapshot } from '../integrations/lifecycle/governanceObservationSnapshot';
-import { readGovernanceNextAction } from '../integrations/lifecycle/governanceNextAction';
-import { readLifecyclePolicyValidationSnapshot } from '../integrations/lifecycle/policyValidationSnapshot';
 import {
   emitSystemNotification,
   type PumukiCriticalNotificationEvent,
@@ -34,10 +28,7 @@ const defaultDependencies: ConsumerPreflightDependencies = {
       event: params.event,
       repoRoot: params.repoRoot,
     }),
-  readGovernanceNextAction,
 };
-
-const SECONDS_PER_MINUTE = 60;
 
 const buildNotificationEvents = (
   result: AiGateCheckResult
@@ -48,7 +39,7 @@ const buildNotificationEvents = (
     events.push({
       kind: 'evidence.stale',
       evidencePath: '.ai_evidence.json',
-      ageMinutes: Math.max(1, Math.ceil(ageSeconds / SECONDS_PER_MINUTE)),
+      ageMinutes: Math.max(1, Math.ceil(ageSeconds / 60)),
     });
   }
   if (hasViolationCode(result.violations, 'GITFLOW_PROTECTED_BRANCH')) {
@@ -59,13 +50,13 @@ const buildNotificationEvents = (
     });
   }
   if (result.status === 'BLOCKED') {
-    const primaryViolation = resolvePrimaryBlockingCause(result.violations);
-    const causeCode = primaryViolation?.code ?? 'GATE_BLOCKED';
+    const firstViolation = result.violations[0];
+    const causeCode = firstViolation?.code ?? 'GATE_BLOCKED';
     const causeMessage =
-      primaryViolation?.message
+      firstViolation?.message
       ?? `Detected ${result.violations.length} blocking violations in stage ${result.stage}.`;
     const remediation =
-      (primaryViolation ? ACTIONABLE_HINTS_BY_CODE[primaryViolation.code] : undefined)
+      (firstViolation ? ACTIONABLE_HINTS_BY_CODE[firstViolation.code] : undefined)
       ?? 'Corrige la causa bloqueante y vuelve a ejecutar el gate.';
     events.push({
       kind: 'gate.blocked',
@@ -95,19 +86,6 @@ export const runConsumerPreflight = (
     repoRoot,
     stage: params.stage,
   });
-  const experimentalFeatures = readLifecycleExperimentalFeaturesSnapshot();
-  const policyValidation = readLifecyclePolicyValidationSnapshot(repoRoot);
-  const governanceObservation = readGovernanceObservationSnapshot({
-    repoRoot,
-    experimentalFeatures,
-    policyValidation,
-    git: new LifecycleGitService(),
-  });
-  const governanceNextAction = activeDependencies.readGovernanceNextAction({
-    repoRoot,
-    stage: params.stage,
-    governanceObservation,
-  });
   const hints = buildConsumerPreflightHints(result, params.stage);
   const notificationEvents = buildNotificationEvents(result);
   const notificationResults = notificationEvents.map((event) =>
@@ -121,10 +99,6 @@ export const runConsumerPreflight = (
     stage: params.stage,
     status: result.status,
     result,
-    governanceObservation,
-    governanceNextAction,
-    policyValidation,
-    experimentalFeatures,
     hints,
     notificationResults,
   };

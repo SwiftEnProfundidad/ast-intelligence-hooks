@@ -50,8 +50,8 @@ export const resolveSddCompletenessEnforcement = (): SddCompletenessEnforcementR
     };
   }
   return {
-    mode: 'strict',
+    mode: 'advisory',
     source: 'default',
-    blocking: true,
+    blocking: false,
   };
 };

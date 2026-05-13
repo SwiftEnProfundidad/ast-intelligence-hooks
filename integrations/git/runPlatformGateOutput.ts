@@ -9,18 +9,19 @@ const BLOCK_NEXT_ACTION_BY_CODE: Readonly<Record<string, string>> = {
     'git push --set-upstream origin <branch>',
   PRE_PUSH_UPSTREAM_MISALIGNED:
     'git branch --unset-upstream && git push --set-upstream origin <branch>',
+  EVIDENCE_STALE:
+    'npx --yes --package pumuki@latest pumuki-pre-commit',
+  EVIDENCE_BRANCH_MISMATCH:
+    'npx --yes --package pumuki@latest pumuki-pre-commit',
   GIT_ATOMICITY_TOO_MANY_FILES:
     'git restore --staged . && separa cambios en commits más pequeños',
   GIT_ATOMICITY_TOO_MANY_SCOPES:
     'Revisa scope_files del bloqueo y aplica: git restore --staged . && git add <scope>/ && git commit -m "<tipo>: <scope>"',
   ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
-    'Reconcilia policy/skills y reintenta PRE_COMMIT: npx --yes --package pumuki@latest pumuki policy reconcile --strict --apply --json && npx --yes --package pumuki@latest pumuki-pre-commit',
+    'Reconcilia policy/skills y reintenta PRE_COMMIT: npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki-pre-commit',
   SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS:
     'Aplica refactor incremental: extrae 1 componente/hook por commit y vuelve a ejecutar PRE_COMMIT.',
 };
-
-const buildStageValidateCommand = (stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI' | 'PRE_WRITE'): string =>
-  `npx --yes --package pumuki@latest pumuki sdd validate --stage=${stage} --json`;
 
 const severityWeight = (severity: string): number => {
   switch (severity.toUpperCase()) {
@@ -102,21 +103,15 @@ const formatFinding = (finding: Finding): string => {
   return `[${severity}] ${finding.ruleId}: ${finding.message} -> ${location}`;
 };
 
-export const printGateFindings = (
-  findings: ReadonlyArray<Finding>,
-  params?: { stage?: 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI' }
-): void => {
+export const printGateFindings = (findings: ReadonlyArray<Finding>): void => {
   if (findings.length === 0) {
     return;
   }
   const orderedFindings = sortFindingsBySeverity(findings);
   const primary = resolvePrimaryFinding(orderedFindings);
-  const stage = params?.stage ?? 'PRE_COMMIT';
   const nextAction =
-    primary.code === 'EVIDENCE_STALE' || primary.code === 'EVIDENCE_BRANCH_MISMATCH'
-      ? buildStageValidateCommand(stage)
-      : BLOCK_NEXT_ACTION_BY_CODE[primary.code]
-        ?? 'Corrige el bloqueante primario y vuelve a ejecutar el mismo comando.';
+    BLOCK_NEXT_ACTION_BY_CODE[primary.code]
+    ?? 'Corrige el bloqueante primario y vuelve a ejecutar el mismo comando.';
   process.stdout.write(
     `[pumuki][block-summary] primary=${primary.code} severity=${primary.severity.toUpperCase()} rule=${primary.ruleId}\n`
   );

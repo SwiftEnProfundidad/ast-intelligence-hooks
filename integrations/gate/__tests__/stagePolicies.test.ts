@@ -15,8 +15,8 @@ test('resolvePolicyForStage returns default PRE_PUSH policy when skills policy i
     const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
     assert.deepEqual(resolved.policy, {
       stage: 'PRE_PUSH',
-      blockOnOrAbove: 'INFO',
-      warnOnOrAbove: 'INFO',
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
     });
     assert.equal(resolved.trace.source, 'default');
     assert.equal(resolved.trace.bundle, 'gate-policy.default.PRE_PUSH');
@@ -72,8 +72,8 @@ test('resolvePolicyForStage applies PRE_PUSH override from skills.policy.json', 
     const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
     assert.deepEqual(resolved.policy, {
       stage: 'PRE_PUSH',
-      blockOnOrAbove: 'INFO',
-      warnOnOrAbove: 'INFO',
+      blockOnOrAbove: 'CRITICAL',
+      warnOnOrAbove: 'ERROR',
     });
     assert.equal(resolved.trace.source, 'skills.policy');
     assert.equal(resolved.trace.bundle, 'gate-policy.skills.policy.PRE_PUSH');
@@ -268,7 +268,7 @@ test('resolvePolicyForStage aplica hard mode por entorno y bloquea desde WARN', 
       const resolved = resolvePolicyForStage('PRE_COMMIT', repoRoot);
       assert.deepEqual(resolved.policy, {
         stage: 'PRE_COMMIT',
-        blockOnOrAbove: 'INFO',
+        blockOnOrAbove: 'WARN',
         warnOnOrAbove: 'INFO',
       });
       assert.equal(resolved.trace.source, 'hard-mode');
@@ -294,8 +294,8 @@ test('resolvePolicyForStage aplica perfil enterprise critical-high en hard mode'
       const resolved = resolvePolicyForStage('PRE_COMMIT', repoRoot);
       assert.deepEqual(resolved.policy, {
         stage: 'PRE_COMMIT',
-        blockOnOrAbove: 'INFO',
-        warnOnOrAbove: 'INFO',
+        blockOnOrAbove: 'ERROR',
+        warnOnOrAbove: 'WARN',
       });
       assert.equal(resolved.trace.source, 'hard-mode');
       assert.equal(resolved.trace.bundle, 'gate-policy.hard-mode.critical-high.PRE_COMMIT');
@@ -332,8 +332,8 @@ test('resolvePolicyForStage aplica hard mode/profile desde config persistida sin
       const resolved = resolvePolicyForStage('CI', repoRoot);
       assert.deepEqual(resolved.policy, {
         stage: 'CI',
-        blockOnOrAbove: 'INFO',
-        warnOnOrAbove: 'INFO',
+        blockOnOrAbove: 'ERROR',
+        warnOnOrAbove: 'WARN',
       });
       assert.equal(resolved.trace.source, 'hard-mode');
       assert.equal(resolved.trace.bundle, 'gate-policy.hard-mode.critical-high.CI');

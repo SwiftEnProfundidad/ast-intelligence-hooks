@@ -21,7 +21,7 @@ export const resolvePreWriteEnforcement = (): PreWriteEnforcementResolution => {
   return {
     mode: experimentalFeature.mode,
     source: experimentalFeature.source,
-    blocking: experimentalFeature.mode !== 'off',
+    blocking: experimentalFeature.blocking,
     layer: experimentalFeature.layer,
     activationVariable: experimentalFeature.activationVariable,
     legacyActivationVariable: experimentalFeature.legacyActivationVariable,

@@ -77,18 +77,6 @@ import { runPolicyReconcile } from './policyReconcile';
 import { runLifecycleAudit, type LifecycleAuditStage } from './audit';
 import { resolvePreWriteEnforcement, type PreWriteEnforcementResolution } from '../policy/preWriteEnforcement';
 
-const POLICY_SUBCOMMAND_ARG_COUNT = 2;
-const PRE_WRITE_PANEL_MIN_COLUMNS = 86;
-const PRE_WRITE_PANEL_MAX_COLUMNS = 140;
-const PRE_WRITE_PANEL_BORDER_COLUMNS = 2;
-const PRE_WRITE_PANEL_PADDING_COLUMNS = 4;
-const WORKTREE_SLICE_PLAN_COUNT = 3;
-const WORKTREE_SLICE_FILE_COUNT = 4;
-const CLI_JSON_INDENT = 2;
-const ANALYTICS_TOOL_NAME = 'analytics';
-const ANALYTICS_FEATURE_NAME = 'analytics';
-const SAAS_INGESTION_FEATURE_NAME = 'saas_ingestion';
-
 type LifecycleCommand =
   | 'bootstrap'
   | 'install'
@@ -232,8 +220,8 @@ Pumuki lifecycle commands:
 
 const LOOP_RUN_POLICY: GatePolicy = {
   stage: 'STAGED',
-  blockOnOrAbove: 'INFO',
-  warnOnOrAbove: 'INFO',
+  blockOnOrAbove: 'ERROR',
+  warnOnOrAbove: 'WARN',
 };
 
 const isLifecycleCommand = (value: string): value is LifecycleCommand =>
@@ -823,9 +811,9 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
     }
     let policyStrict = false;
     let policyApply = false;
-    const policyArgStartIndex =
-      typeof firstArg === 'string' && !firstArg.startsWith('--') ? POLICY_SUBCOMMAND_ARG_COUNT : 1;
-    for (const arg of argv.slice(policyArgStartIndex)) {
+    const policyFlagsOffset =
+      typeof firstArg === 'string' && !firstArg.startsWith('--') ? 2 : 1;
+    for (const arg of argv.slice(policyFlagsOffset)) {
       if (arg === '--json') {
         json = true;
         continue;
@@ -1662,7 +1650,7 @@ const buildPreWriteValidateCommand = (params: {
 const buildPreWritePolicyReconcileCommand = (repoRoot?: string): string =>
   `${buildPinnedPumukiNpxCommand({
     repoRoot,
-    executableAndArgs: 'pumuki policy reconcile --strict --apply --json',
+    executableAndArgs: 'pumuki policy reconcile --strict --json',
   })} && ${buildPreWriteValidateCommand({ repoRoot, stage: 'PRE_WRITE' })}`;
 
 type PreWriteValidationEnvelope = {
@@ -1760,7 +1748,7 @@ const buildAnalyticsExperimentalDisabledEnvelope = (
   feature: LifecycleExperimentalFeaturesSnapshot['features']['analytics'],
   action: AnalyticsHotspotsCommand
 ): AnalyticsExperimentalDisabledEnvelope => ({
-  tool: ANALYTICS_TOOL_NAME,
+  tool: 'analytics',
   dryRun: true,
   executed: false,
   success: true,
@@ -1768,7 +1756,7 @@ const buildAnalyticsExperimentalDisabledEnvelope = (
     code: 'ANALYTICS_EXPERIMENTAL_DISABLED',
     message:
       'Analytics hotspots está desactivado explícitamente. Usa PUMUKI_EXPERIMENTAL_ANALYTICS=advisory o strict si necesitas este flujo.',
-    experimental_feature: ANALYTICS_FEATURE_NAME,
+    experimental_feature: 'analytics',
     mode: feature.mode,
     source: feature.source,
     activation_variable: feature.activationVariable,
@@ -1782,7 +1770,7 @@ const buildAnalyticsExperimentalDisabledEnvelope = (
 const buildSaasIngestionExperimentalDisabledEnvelope = (
   feature: LifecycleExperimentalFeaturesSnapshot['features']['saas_ingestion']
 ): SaasIngestionExperimentalDisabledEnvelope => ({
-  tool: ANALYTICS_TOOL_NAME,
+  tool: 'analytics',
   dryRun: true,
   executed: false,
   success: true,
@@ -1790,7 +1778,7 @@ const buildSaasIngestionExperimentalDisabledEnvelope = (
     code: 'SAAS_INGESTION_EXPERIMENTAL_DISABLED',
     message:
       'SaaS ingestion/federation está desactivado explícitamente. Usa PUMUKI_EXPERIMENTAL_SAAS_INGESTION=advisory o strict si necesitas este flujo.',
-    experimental_feature: SAAS_INGESTION_FEATURE_NAME,
+    experimental_feature: 'saas_ingestion',
     mode: feature.mode,
     source: feature.source,
     activation_variable: feature.activationVariable,
@@ -1850,13 +1838,11 @@ const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
   EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura unevaluated=0 y coverage_ratio=1.',
   EVIDENCE_ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES:
-    'No hay active_rule_ids para plataforma de código detectada. Reconcilia policy/skills en modo estricto con apply y revalida PRE_WRITE.',
+    'No hay active_rule_ids para plataforma de código detectada. Reconcilia policy/skills en modo estricto y revalida PRE_WRITE.',
   EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING:
-    'Reconcilia policy/skills en modo estricto con apply y materializa reglas críticas (p.ej. skills.ios.critical-test-quality).',
+    'Reconcilia policy/skills en modo estricto y materializa reglas críticas (p.ej. skills.ios.critical-test-quality).',
   EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE:
-    'Reconcilia policy/skills en modo estricto con apply para completar enforcement crítico transversal.',
-  TDD_BDD_BASELINE_BLOCKED:
-    'Corrige el baseline TDD/BDD roto y regenera la evidencia antes de continuar.',
+    'Reconcilia policy/skills en modo estricto para completar enforcement crítico transversal.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
     'Completa contrato skills/policy para el stage actual y vuelve a validar.',
   EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
@@ -1920,8 +1906,8 @@ export const resolvePreWriteNextAction = (params: {
   if (atomicSliceViolation) {
     const plan = collectWorktreeAtomicSlices({
       repoRoot: params.aiGate.repo_state.repo_root,
-      maxSlices: WORKTREE_SLICE_PLAN_COUNT,
-      maxFilesPerSlice: WORKTREE_SLICE_FILE_COUNT,
+      maxSlices: 3,
+      maxFilesPerSlice: 4,
     });
     const firstSliceCommand = plan.slices[0]?.staged_command ?? 'git add -p';
     return {
@@ -1987,14 +1973,11 @@ const renderPreWritePanel = (lines: ReadonlyArray<string>): string => {
   const terminalWidth = Number.isFinite(process.stdout.columns ?? NaN)
     ? Number(process.stdout.columns)
     : 110;
-  const width = Math.min(
-    PRE_WRITE_PANEL_MAX_COLUMNS,
-    Math.max(PRE_WRITE_PANEL_MIN_COLUMNS, terminalWidth - PRE_WRITE_PANEL_BORDER_COLUMNS)
-  );
-  const innerWidth = width - PRE_WRITE_PANEL_PADDING_COLUMNS;
+  const width = Math.min(140, Math.max(86, terminalWidth - 2));
+  const innerWidth = width - 4;
   const normalized = lines.flatMap((line) => wrapPreWritePanelLine(line, innerWidth));
-  const top = `╔${'═'.repeat(width - PRE_WRITE_PANEL_BORDER_COLUMNS)}╗`;
-  const bottom = `╚${'═'.repeat(width - PRE_WRITE_PANEL_BORDER_COLUMNS)}╝`;
+  const top = `╔${'═'.repeat(width - 2)}╗`;
+  const bottom = `╚${'═'.repeat(width - 2)}╝`;
   const body = normalized.map((line) => `║ ${line.padEnd(innerWidth, ' ')} ║`);
   return [top, ...body, bottom].join('\n');
 };
@@ -2136,7 +2119,7 @@ const writeLoopAttemptEvidence = (params: {
   const relativePath = `.pumuki/loop-sessions/${params.sessionId}.attempt-${params.attempt}.json`;
   const absolutePath = resolve(params.repoRoot, relativePath);
   mkdirSync(dirname(absolutePath), { recursive: true });
-  writeFileSync(absolutePath, `${JSON.stringify(params.payload, null, CLI_JSON_INDENT)}\n`, 'utf8');
+  writeFileSync(absolutePath, `${JSON.stringify(params.payload, null, 2)}\n`, 'utf8');
   return relativePath;
 };
 

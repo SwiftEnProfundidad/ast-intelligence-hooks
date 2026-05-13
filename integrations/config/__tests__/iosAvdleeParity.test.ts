@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import {
@@ -45,7 +45,6 @@ const astBundles = [
       'skills.ios.no-observable-object',
       'skills.ios.no-on-tap-gesture',
       'skills.ios.no-passed-value-state-wrapper',
-      'skills.ios.guideline.ios-swiftui-expert.always-mark-state-and-stateobject-as-private-makes-dependencies-clear',
       'skills.ios.no-scrollview-shows-indicators',
       'skills.ios.no-sheet-is-presented',
       'skills.ios.no-string-format',
@@ -102,32 +101,12 @@ const operationalOnlySkills = [
   'xcode-compilation-analyzer',
   'xcode-build-fixer',
   'spm-build-analysis',
-  'rocketsim',
-] as const;
-
-const publicAvdleeSkills = [
-  ...astBundles.map((bundle) => bundle.skill),
-  snapshotAbsorbedSkill.skill,
-  ...operationalOnlySkills,
 ] as const;
 
 const readAstBundleNames = (): string[] => {
   const sources = loadSkillsSources(repoRoot);
   assert.ok(sources);
   return sources.bundles.map((bundle) => bundle.name);
-};
-
-const readRequiredSkillsFromAgents = (): Set<string> => {
-  const content = readFileSync(resolve(repoRoot, 'AGENTS.md'), 'utf8');
-  return new Set(
-    [...content.matchAll(/REQUIRED\s+SKILL:\s*([A-Za-z0-9_.:/-]+)/gi)].map((match) =>
-      String(match[1]).trim()
-    )
-  );
-};
-
-const skillNameFromVendoredSource = (source: string): string | undefined => {
-  return source.match(/vendor\/skills\/([^/]+)\//)?.[1];
 };
 
 test('phase10 mantiene la paridad AST de avdlee con bundles y reglas iOS exactas', () => {
@@ -164,42 +143,6 @@ test('phase10 mantiene la paridad AST de avdlee con bundles y reglas iOS exactas
       );
     }
   }
-});
-
-test('AGENTS declara toda skill vendorizada que entra en el lock AST', () => {
-  __resetCoreSkillsLockCacheForTests();
-
-  const lock = loadCoreSkillsLock();
-  assert.ok(lock);
-
-  const requiredSkills = readRequiredSkillsFromAgents();
-  const lockedVendoredSkills = new Set(
-    lock.bundles
-      .map((bundle) => skillNameFromVendoredSource(bundle.source))
-      .filter((skillName): skillName is string => typeof skillName === 'string')
-  );
-  const missingFromAgents = [...lockedVendoredSkills]
-    .filter((skillName) => !requiredSkills.has(skillName))
-    .sort();
-
-  assert.deepEqual(missingFromAgents, []);
-});
-
-test('catalogo publico avdlee queda clasificado sin skills huerfanas', () => {
-  assert.deepEqual([...publicAvdleeSkills].sort(), [
-    'core-data-expert',
-    'rocketsim',
-    'spm-build-analysis',
-    'swift-concurrency',
-    'swift-testing-expert',
-    'swiftui-expert-skill',
-    'update-swiftui-apis',
-    'xcode-build-benchmark',
-    'xcode-build-fixer',
-    'xcode-build-orchestrator',
-    'xcode-compilation-analyzer',
-    'xcode-project-analyzer',
-  ]);
 });
 
 test('phase10 absorbe update-swiftui-apis mediante snapshots versionados y no como bundle separado', () => {

@@ -1,9 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { formatVintageEvidenceReportLines } from '../framework-menu-consumer-runtime-evidence-classic';
 import { formatEvidenceSummaryForMenu } from '../framework-menu-evidence-summary-lib';
-import { buildCliDesignTokens } from '../framework-menu-ui-components-lib';
 
 test('formatEvidenceSummaryForMenu renderiza bloque operativo', () => {
   const rendered = formatEvidenceSummaryForMenu({
@@ -71,43 +69,4 @@ test('formatEvidenceSummaryForMenu en missing da instruccion accionable', () => 
 
   assert.match(rendered, /Evidence: status=missing/);
   assert.match(rendered, /Run `\.\/node_modules\/\.bin\/pumuki-pre-commit` to generate fresh evidence\./);
-});
-
-test('formatVintageEvidenceReportLines explica Other como reglas transversales', () => {
-  const lines = formatVintageEvidenceReportLines(
-    {
-      status: 'ok',
-      stage: 'PRE_COMMIT',
-      outcome: 'BLOCK',
-      totalFindings: 4,
-      filesScanned: 10,
-      filesAffected: 3,
-      bySeverity: {
-        CRITICAL: 1,
-        ERROR: 2,
-        WARN: 1,
-        INFO: 0,
-      },
-      byEnterpriseSeverity: {
-        CRITICAL: 1,
-        HIGH: 2,
-        MEDIUM: 1,
-        LOW: 0,
-      },
-      topFiles: [],
-      topFileLocations: [],
-      topFindings: [],
-      platformAuditRows: [
-        { platform: 'iOS', violations: 2, activeRules: 42, evaluatedRules: 42 },
-        { platform: 'Android', violations: 1, activeRules: 76, evaluatedRules: 76 },
-        { platform: 'Other', violations: 1, activeRules: 150, evaluatedRules: 150 },
-      ],
-    },
-    buildCliDesignTokens({ width: 100, color: false })
-  );
-
-  const rendered = lines.join('\n');
-  assert.match(rendered, /iOS: 2 violations · rules evaluated=42\/42/);
-  assert.match(rendered, /Android: 1 violations · rules evaluated=76\/76/);
-  assert.match(rendered, /Other = cross-cutting\/generic governance, evidence, BDD and shared-type rules\./);
 });

@@ -162,7 +162,7 @@ export const resolveAstIntelligenceDualValidationMode = (
 
 const toDualValidationFinding = (params: {
   mode: Exclude<AstIntelligenceDualValidationMode, 'off'>;
-  stage: 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   summary: AstIntelligenceDualValidationSummary;
 }): Finding | undefined => {
   if (params.summary.divergences === 0) {
@@ -202,7 +202,7 @@ const toDualValidationFinding = (params: {
 };
 
 export const evaluateAstIntelligenceDualValidation = (params: {
-  stage: 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   skillsRules: RuleSet;
   facts: ReadonlyArray<Fact>;
   legacyFindings: ReadonlyArray<Finding>;

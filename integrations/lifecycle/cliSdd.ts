@@ -21,7 +21,6 @@ import {
   type PreWriteEnforcementResolution,
 } from '../policy/preWriteEnforcement';
 import { readLifecycleExperimentalFeaturesSnapshot } from './experimentalFeaturesSnapshot';
-import { resolvePrimaryBlockingCause } from '../gate/blockingCause';
 
 import {
   type ParsedArgs,
@@ -322,9 +321,9 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             return 1;
           }
           if (aiGate && !aiGate.allowed && preWriteEnforcement.blocking) {
-            const primaryViolation = resolvePrimaryBlockingCause(aiGate.violations);
-            const causeCode = primaryViolation?.code ?? 'AI_GATE_BLOCKED';
-            const causeMessage = primaryViolation?.message ?? 'AI gate blocked PRE_WRITE stage.';
+            const firstViolation = aiGate.violations[0];
+            const causeCode = firstViolation?.code ?? 'AI_GATE_BLOCKED';
+            const causeMessage = firstViolation?.message ?? 'AI gate blocked PRE_WRITE stage.';
             activeDependencies.emitGateBlockedNotification({
               repoRoot: process.cwd(),
               stage: result.stage,

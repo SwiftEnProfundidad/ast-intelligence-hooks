@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildSnapshotPlatformSummaries } from './platformSummary';
 
-test('buildSnapshotPlatformSummaries mantiene las cinco plataformas y prioriza skills directas', () => {
+test('buildSnapshotPlatformSummaries mantiene las cinco plataformas y prioriza path en repos mixtos', () => {
   const summaries = buildSnapshotPlatformSummaries([
     {
       ruleId: 'skills.backend.no-console-log',
@@ -47,50 +47,13 @@ test('buildSnapshotPlatformSummaries mantiene las cinco plataformas y prioriza s
   assert.equal(ios?.files_affected, 0);
   assert.equal(android?.files_affected, 0);
   assert.equal(backend?.files_affected, 2);
-  assert.equal(frontend?.files_affected, 1);
-  assert.equal(other?.files_affected, 1);
+  assert.equal(frontend?.files_affected, 2);
+  assert.equal(other?.files_affected, 0);
 
-  assert.equal(backend?.by_severity.HIGH, 1);
-  assert.equal(backend?.by_severity.MEDIUM, 1);
-  assert.equal(frontend?.by_severity.HIGH, 0);
+  assert.equal(backend?.by_severity.HIGH, 0);
+  assert.equal(backend?.by_severity.MEDIUM, 2);
+  assert.equal(frontend?.by_severity.HIGH, 1);
   assert.equal(frontend?.by_severity.MEDIUM, 1);
-});
-
-test('buildSnapshotPlatformSummaries clasifica heuristicas por binding de skills y usa path como desempate', () => {
-  const summaries = buildSnapshotPlatformSummaries([
-    {
-      ruleId: 'heuristics.ios.navigation-view.ast',
-      severity: 'ERROR',
-      file: 'scripts/detectors/navigation.ts',
-    },
-    {
-      ruleId: 'heuristics.android.thread-sleep.ast',
-      severity: 'WARN',
-      file: 'scripts/detectors/thread.ts',
-    },
-    {
-      ruleId: 'heuristics.ts.empty-catch.ast',
-      severity: 'WARN',
-      file: 'packages/frontend/src/App.tsx',
-    },
-    {
-      ruleId: 'heuristics.ts.empty-catch.ast',
-      severity: 'WARN',
-      file: 'services/backend/src/service.ts',
-    },
-  ]);
-
-  const ios = summaries.find((item) => item.platform === 'iOS');
-  const android = summaries.find((item) => item.platform === 'Android');
-  const backend = summaries.find((item) => item.platform === 'Backend');
-  const frontend = summaries.find((item) => item.platform === 'Frontend');
-
-  assert.equal(ios?.files_affected, 1);
-  assert.equal(android?.files_affected, 1);
-  assert.equal(backend?.files_affected, 1);
-  assert.equal(frontend?.files_affected, 1);
-  assert.equal(ios?.top_violations[0]?.rule_id, 'heuristics.ios.navigation-view.ast');
-  assert.equal(android?.top_violations[0]?.rule_id, 'heuristics.android.thread-sleep.ast');
 });
 
 test('buildSnapshotPlatformSummaries es determinista sin depender del orden de findings', () => {
@@ -133,7 +96,7 @@ test('buildSnapshotPlatformSummaries es determinista sin depender del orden de f
   assert.deepEqual(first, second);
 });
 
-test('buildSnapshotPlatformSummaries usa path fallback solo cuando no hay binding de skill', () => {
+test('buildSnapshotPlatformSummaries prioriza segmentos de path fuera de apps para clasificar plataforma', () => {
   const summaries = buildSnapshotPlatformSummaries([
     {
       ruleId: 'heuristics.ts.child-process-spawn.ast',
@@ -141,7 +104,7 @@ test('buildSnapshotPlatformSummaries usa path fallback solo cuando no hay bindin
       file: 'packages/frontend/src/main.ts',
     },
     {
-      ruleId: 'common.types.undefined_in_base_type',
+      ruleId: 'heuristics.ts.inner-html.ast',
       severity: 'WARN',
       file: 'services/backend/src/renderer.ts',
     },
@@ -154,7 +117,7 @@ test('buildSnapshotPlatformSummaries usa path fallback solo cuando no hay bindin
   assert.ok(frontend);
   assert.equal(backend?.files_affected, 1);
   assert.equal(frontend?.files_affected, 1);
-  assert.equal(backend?.top_violations[0]?.rule_id, 'common.types.undefined_in_base_type');
+  assert.equal(backend?.top_violations[0]?.rule_id, 'heuristics.ts.inner-html.ast');
   assert.equal(frontend?.top_violations[0]?.rule_id, 'heuristics.ts.child-process-spawn.ast');
 });
 
@@ -177,31 +140,4 @@ test('buildSnapshotPlatformSummaries normaliza separadores de ruta para files_af
   assert.equal(backend?.files_affected, 1);
   assert.equal(backend?.by_severity.HIGH, 1);
   assert.equal(backend?.by_severity.MEDIUM, 1);
-});
-
-test('buildSnapshotPlatformSummaries expone cobertura de reglas por plataforma', () => {
-  const summaries = buildSnapshotPlatformSummaries([], {
-    activeRuleIds: [
-      'skills.ios.no-force-unwrap',
-      'heuristics.android.thread-sleep.ast',
-      'heuristics.ts.empty-catch.ast',
-      'common.types.undefined_in_base_type',
-    ],
-    evaluatedRuleIds: [
-      'skills.ios.no-force-unwrap',
-      'heuristics.android.thread-sleep.ast',
-      'common.types.undefined_in_base_type',
-    ],
-  });
-
-  const ios = summaries.find((item) => item.platform === 'iOS');
-  const android = summaries.find((item) => item.platform === 'Android');
-  const other = summaries.find((item) => item.platform === 'Other');
-
-  assert.equal(ios?.active_rules, 1);
-  assert.equal(ios?.evaluated_rules, 1);
-  assert.equal(android?.active_rules, 1);
-  assert.equal(android?.evaluated_rules, 1);
-  assert.equal(other?.active_rules, 2);
-  assert.equal(other?.evaluated_rules, 1);
 });

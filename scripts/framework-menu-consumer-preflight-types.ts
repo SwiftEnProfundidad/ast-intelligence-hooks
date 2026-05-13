@@ -3,13 +3,6 @@ import type {
   AiGateViolation,
 } from '../integrations/gate/evaluateAiGate';
 import type {
-  GovernanceNextActionReader,
-  GovernanceNextActionSummary,
-} from '../integrations/lifecycle/governanceNextAction';
-import type { GovernanceObservationSnapshot } from '../integrations/lifecycle/governanceObservationSnapshot';
-import type { LifecycleExperimentalFeaturesSnapshot } from '../integrations/lifecycle/experimentalFeaturesSnapshot';
-import type { LifecyclePolicyValidationSnapshot } from '../integrations/lifecycle/policyValidationSnapshot';
-import type {
   PumukiCriticalNotificationEvent,
   SystemNotificationEmitResult,
 } from './framework-menu-system-notifications-lib';
@@ -20,10 +13,6 @@ export type ConsumerPreflightResult = {
   stage: ConsumerPreflightStage;
   status: AiGateCheckResult['status'];
   result: AiGateCheckResult;
-  governanceObservation: GovernanceObservationSnapshot;
-  governanceNextAction: GovernanceNextActionSummary;
-  policyValidation: LifecyclePolicyValidationSnapshot;
-  experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
   hints: ReadonlyArray<string>;
   notificationResults: ReadonlyArray<SystemNotificationEmitResult>;
 };
@@ -37,7 +26,6 @@ export type ConsumerPreflightDependencies = {
     event: PumukiCriticalNotificationEvent;
     repoRoot: string;
   }) => SystemNotificationEmitResult;
-  readGovernanceNextAction: GovernanceNextActionReader;
 };
 
 export type ConsumerPreflightRenderOptions = {

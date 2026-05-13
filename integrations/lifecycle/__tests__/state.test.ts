@@ -145,7 +145,6 @@ test('writeLifecycleState sobrescribe valores previos con contrato canónico de 
     [PUMUKI_CONFIG_KEYS.installed]: 'false',
     [PUMUKI_CONFIG_KEYS.version]: '0.0.0',
     [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit',
-    [PUMUKI_CONFIG_KEYS.installedAt]: '2026-02-17T10:00:00.000Z',
   });
 
   writeLifecycleState({
@@ -158,7 +157,7 @@ test('writeLifecycleState sobrescribe valores previos con contrato canónico de 
   assert.equal(state.installed, 'true');
   assert.equal(state.version, '6.3.13');
   assert.equal(state.hooks, PUMUKI_MANAGED_HOOKS.join(','));
-  assert.equal(state.installedAt, '2026-02-17T10:00:00.000Z');
+  assert.equal(Number.isFinite(Date.parse(String(state.installedAt))), true);
 });
 
 test('clearLifecycleState es idempotente aunque no existan claves previas', () => {

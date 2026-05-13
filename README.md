@@ -289,29 +289,25 @@ Use these docs instead of treating `README.md` as the full command manual:
 
 ## Menu Walkthrough and Screenshots
 
-### Capture 1 — Consumer Menu (archived v2)
+### Capture 1 — Consumer Menu (v2)
 
-![Consumer Menu archived v2](assets/readme/menu-option1/01-menu-consumer-v2.png)
+![Consumer Menu v2](assets/readme/menu-option1/01-menu-consumer-v2.png)
 
-Canonical consumer legacy reference:
+### Capture 2 — Option 1 Pre-flight (BLOCK context)
 
-- Git tag `v0-legacy-last`, `scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh`
+![Option 1 Pre-flight Block](assets/readme/menu-option1/02-option1-preflight-block.png)
 
-### Capture 2 — Archived v2 Full-Audit Pre-flight (BLOCK context)
+### Capture 3 — Option 1 Final Summary (BLOCK)
 
-![Archived v2 Full-Audit Pre-flight Block](assets/readme/menu-option1/02-option1-preflight-block.png)
+![Option 1 Final Summary Block](assets/readme/menu-option1/03-option1-final-summary-block.png)
 
-### Capture 3 — Archived v2 Full-Audit Final Summary (BLOCK)
+### Capture 4 — Option 1 Pre-flight (PASS scenario)
 
-![Archived v2 Full-Audit Final Summary Block](assets/readme/menu-option1/03-option1-final-summary-block.png)
+![Option 1 Pre-flight Pass Scenario](assets/readme/menu-option1/04-option1-preflight-pass.png)
 
-### Capture 4 — Archived v2 Full-Audit Pre-flight (PASS scenario)
+### Capture 5 — Option 1 Final Summary (PASS)
 
-![Archived v2 Full-Audit Pre-flight Pass Scenario](assets/readme/menu-option1/04-option1-preflight-pass.png)
-
-### Capture 5 — Archived v2 Full-Audit Final Summary (PASS)
-
-![Archived v2 Full-Audit Final Summary Pass](assets/readme/menu-option1/05-option1-final-summary-pass.png)
+![Option 1 Final Summary Pass](assets/readme/menu-option1/05-option1-final-summary-pass.png)
 
 ### Capture 6 — Menu Status After PASS Run
 

@@ -10,7 +10,7 @@ import { resolveMcpEnterpriseExperimentalFeature } from '../policy/experimentalF
 import { evaluateSddPolicy, readSddStatus } from '../sdd';
 import type { SddStage } from '../sdd';
 import { toStatusPayload } from './evidencePayloads';
-import { runEnterpriseAiGateCheckAsync } from './aiGateCheck';
+import { runEnterpriseAiGateCheck } from './aiGateCheck';
 import { runEnterprisePreFlightCheck } from './preFlightCheck';
 import { runEnterpriseAutoExecuteAiStart } from './autoExecuteAiStart';
 import { writeMcpAiGateReceipt } from './aiGateReceipt';
@@ -38,14 +38,6 @@ type EnterpriseStatusPayload = {
   lifecycle: ReturnType<typeof readLifecycleStatus> | null;
   sdd: ReturnType<typeof readSddStatus> | null;
   evidence: ReturnType<typeof toStatusPayload>;
-};
-
-type EnterpriseHealthPayload = {
-  status: 'ok';
-  repoRoot: string;
-  experimentalFeatures: {
-    mcp_enterprise: ReturnType<typeof resolveMcpEnterpriseExperimentalFeature>;
-  };
 };
 
 const ENTERPRISE_RESOURCES = [
@@ -451,7 +443,7 @@ const executeEnterpriseTool = async (
     }
     case 'ai_gate_check': {
       const stage = toSddStage(args.stage, 'PRE_COMMIT');
-      const execution = await runEnterpriseAiGateCheckAsync({
+      const execution = runEnterpriseAiGateCheck({
         repoRoot,
         stage,
       });
@@ -710,14 +702,6 @@ const buildStatusPayload = (repoRoot: string): EnterpriseStatusPayload => ({
   evidence: toStatusPayload(repoRoot),
 });
 
-const buildHealthPayload = (repoRoot: string): EnterpriseHealthPayload => ({
-  status: 'ok',
-  repoRoot,
-  experimentalFeatures: {
-    mcp_enterprise: readMcpEnterpriseExperimentalState(),
-  },
-});
-
 export const startEnterpriseMcpServer = (
   options: EnterpriseServerOptions = {}
 ): EnterpriseServerHandle => {
@@ -748,7 +732,7 @@ export const startEnterpriseMcpServer = (
         sendJson(res, 405, { error: 'Method not allowed' });
         return;
       }
-      sendJson(res, 200, buildHealthPayload(repoRoot));
+      sendJson(res, 200, { status: 'ok' });
       return;
     }
 

@@ -49,17 +49,10 @@ export const writeLifecycleState = (params: {
   openSpecManagedArtifacts?: ReadonlyArray<string>;
 }): void => {
   const { git, repoRoot, version } = params;
-  const existingInstalledAt = git.localConfig(repoRoot, PUMUKI_CONFIG_KEYS.installedAt);
   git.applyLocalConfig(repoRoot, PUMUKI_CONFIG_KEYS.installed, 'true');
   git.applyLocalConfig(repoRoot, PUMUKI_CONFIG_KEYS.version, version);
   git.applyLocalConfig(repoRoot, PUMUKI_CONFIG_KEYS.hooks, PUMUKI_MANAGED_HOOKS.join(','));
-  git.applyLocalConfig(
-    repoRoot,
-    PUMUKI_CONFIG_KEYS.installedAt,
-    typeof existingInstalledAt === 'string' && existingInstalledAt.trim().length > 0
-      ? existingInstalledAt
-      : new Date().toISOString()
-  );
+  git.applyLocalConfig(repoRoot, PUMUKI_CONFIG_KEYS.installedAt, new Date().toISOString());
   if (params.openSpecManagedArtifacts) {
     const serialized = serializeManagedArtifacts(params.openSpecManagedArtifacts);
     if (serialized) {

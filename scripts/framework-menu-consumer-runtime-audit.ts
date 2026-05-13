@@ -6,8 +6,11 @@ import {
   formatLegacyFileDiagnostics,
   formatLegacyPatternChecks,
   readLegacyAuditSummary,
+  renderLegacyPanel,
+  resolveLegacyPanelOuterWidth,
 } from './framework-menu-legacy-audit-lib';
 import {
+  formatEvidenceSummaryForMenu,
   readEvidenceSummaryForMenu,
   type FrameworkMenuEvidenceSummary,
 } from './framework-menu-evidence-summary-lib';
@@ -30,6 +33,31 @@ export const renderConsumerRuntimeSummary = (
   dependencies: ConsumerRuntimeSummaryDependencies
 ): FrameworkMenuEvidenceSummary => {
   const summary = dependencies.summaryOverride ?? readEvidenceSummaryForMenu(dependencies.repoRoot);
+  const lines = [
+    formatEvidenceSummaryForMenu(summary),
+    '',
+    'Consumer runtime snapshot',
+    `Files scanned: ${summary.filesScanned}`,
+    `Files affected: ${summary.filesAffected}`,
+  ];
+
+  if (summary.status === 'ok' && summary.topFindings.length > 0) {
+    const primaryFinding = summary.topFindings[0];
+    lines.push('', `Primary block: ${primaryFinding.ruleId}`);
+  }
+
+  if (summary.topFiles.length > 0) {
+    lines.push(
+      'Top files',
+      ...summary.topFiles.map((entry) => `- ${entry.file} (${entry.count})`)
+    );
+  }
+
+  dependencies.write(`\n${renderLegacyPanel(lines, {
+    width: resolveLegacyPanelOuterWidth(),
+    color: dependencies.useColor(),
+  })}\n`);
+
   const vintageSource =
     summary.status === 'ok' && !dependencies.summaryOverride
       ? readEvidenceSummaryForMenu(dependencies.repoRoot, {

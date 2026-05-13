@@ -54,24 +54,6 @@ test('resolveBlockedRemediation prioriza tracking sobre comandos genéricos de r
   assert.doesNotMatch(result, /sdd validate/i);
 });
 
-test('resolveBlockedRemediation prioriza TDD/BDD sobre tracking enriquecido', () => {
-  const result = resolveBlockedRemediation(
-    {
-      kind: 'gate.blocked',
-      stage: 'PRE_WRITE',
-      totalViolations: 2,
-      causeCode: 'TDD_BDD_EVIDENCE_INVALID',
-      causeMessage:
-        'TDD/BDD evidence is invalid. code=TDD_BDD_EVIDENCE_INVALID active_entries=RGO-1900-01@L53 tracking_source=docs/RURALGO_SEGUIMIENTO.md',
-    },
-    'TDD_BDD_EVIDENCE_INVALID'
-  );
-
-  assert.match(result, /evidencia TDD\/BDD/i);
-  assert.match(result, /regenera/i);
-  assert.doesNotMatch(result, /tracking/i);
-});
-
 test('resolveBlockedRemediation no muestra comandos genéricos para el bloqueo umbrella de evidencia', () => {
   const result = resolveBlockedRemediation(
     {

@@ -307,7 +307,6 @@ test('buildPreWriteAutomationTrace refresca evidence aunque SDD esté inválido 
 
 test('buildPreWriteAutomationTrace refresca evidencia cuando PRE_WRITE llega con EVIDENCE_GATE_BLOCKED', async () => {
   let runPlatformGateCalls = 0;
-  const scopes: string[] = [];
   let runEnterpriseCalls = 0;
   let sleepCalled = false;
   const refreshedAiGate = buildAiGate([]);
@@ -317,9 +316,8 @@ test('buildPreWriteAutomationTrace refresca evidencia cuando PRE_WRITE llega con
       repoRoot: '/repo',
       sdd: buildSddAllowed(),
       aiGate: buildAiGate([toViolation('EVIDENCE_GATE_BLOCKED')]),
-      runPlatformGate: async (params) => {
+      runPlatformGate: async () => {
         runPlatformGateCalls += 1;
-        scopes.push(params.scope.kind);
         return 0;
       },
     },
@@ -355,7 +353,6 @@ test('buildPreWriteAutomationTrace refresca evidencia cuando PRE_WRITE llega con
   );
 
   assert.equal(runPlatformGateCalls, 1);
-  assert.deepEqual(scopes, ['staged']);
   assert.equal(runEnterpriseCalls, 1);
   assert.equal(sleepCalled, false);
   assert.equal(result.aiGate.allowed, true);
