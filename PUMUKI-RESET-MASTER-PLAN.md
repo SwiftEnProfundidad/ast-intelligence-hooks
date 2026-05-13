@@ -1005,6 +1005,11 @@ Snapshot PARITY-IOS-MEMORY-002 (2026-05-13):
 - Implementación: se añade `heuristics.ios.memory.strong-self-escaping-closure.ast` como WARN brownfield-aware para `Task`, `DispatchQueue.async`, `Timer.scheduledTimer`, `NotificationCenter.addObserver`, `Combine.sink` y `handleEvents` cuando capturan `self.` sin capture list `[weak self]` o `[unowned self]`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
 - Alcance explícito: esta slice no intenta demostrar propiedad de ciclo real ni bloquear deuda brownfield; señala ownership no explícito en APIs escapables para remediación progresiva.
 
+Snapshot PARITY-IOS-ARCHITECTURE-001 (2026-05-13):
+- Diagnóstico: `No Singleton` y `No singletons excepto sistema` seguían como baseline iOS declarativo pese a que los singletons app-owned con `static shared` son detectables sin bloquear usos de singletons del sistema.
+- Implementación: se añade `heuristics.ios.architecture.custom-singleton.ast` como WARN brownfield-aware para declaraciones `static let shared` / `static var shared` en Swift productivo, ignorando strings/comentarios y sin marcar usos como `URLSession.shared`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: esta slice detecta singletons propios; no declara todavía cobertura completa de DI, service locators, Environment/Object graphs o factories globales.
+
 Snapshot PARITY-ANDROID-001 (2026-05-12):
 - Diagnóstico: el extractor ya emitía heurísticas semánticas SOLID Android para SRP/OCP/DIP/ISP/LSP, pero `androidRules` solo exponía reglas básicas (`Thread.sleep`, `GlobalScope`, `runBlocking`) y `skills.android.no-solid-violations` no estaba enlazada al registry.
 - Implementación objetivo: exponer esas heurísticas como baseline Android locked y mapear la skill canónica a detectores AST reales, sin introducir reglas por regex estática ni umbrales arbitrarios.

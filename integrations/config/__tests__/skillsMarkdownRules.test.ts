@@ -263,6 +263,19 @@ test('normaliza regla iOS weak self en closures a detector canonico de memoria',
   ]);
 });
 
+test('normaliza regla iOS no singletons a detector canonico de arquitectura', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
+    sourceContent:
+      '- ✅ **No Singleton** - Usar Inyección de Dependencias (NO compartir instancias globales)',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios.no-singleton-usar-inyeccio-n-de-dependencias-no-compartir-instancias-g',
+  ]);
+});
+
 test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-concurrency-guidelines',

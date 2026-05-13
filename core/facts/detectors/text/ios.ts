@@ -519,6 +519,15 @@ export const hasSwiftStrongSelfEscapingClosureUsage = (source: string): boolean 
   return false;
 };
 
+export const hasSwiftCustomSingletonUsage = (source: string): boolean => {
+  const singletonDeclarationPattern =
+    /^\s*(?:(?:private|fileprivate|internal|public|open)\s+)?static\s+(?:let|var)\s+shared\b(?:\s*:\s*[A-Za-z_][A-Za-z0-9_.<>]*)?\s*=/;
+  return source.split(/\r?\n/).some((line) => {
+    const sanitizedLine = stripSwiftLineForSemanticScan(line);
+    return singletonDeclarationPattern.test(sanitizedLine);
+  });
+};
+
 export const hasSwiftAdHocLoggingUsage = (source: string): boolean => {
   return collectSwiftRegexLines(
     source,

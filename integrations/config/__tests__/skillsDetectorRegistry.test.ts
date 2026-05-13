@@ -177,6 +177,18 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ]
   );
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.no-singleton-usar-inyeccio-n-de-dependencias-no-compartir-instancias-g'
+    ),
+    ['heuristics.ios.architecture.custom-singleton.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.no-singletons-excepto-sistema-urlsession-shared-esta-ok'
+    ),
+    ['heuristics.ios.architecture.custom-singleton.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.no-legacy-expectation-description'),
     ['heuristics.ios.testing.legacy-expectation-description.ast']
   );

@@ -220,6 +220,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.architecture.custom-singleton.ast',
+    description: 'Detects custom static shared singletons in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.architecture.custom-singleton.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a custom static shared singleton in iOS production code; dependency injection remains the preferred baseline for app-owned services.',
+      code: 'HEURISTICS_IOS_ARCHITECTURE_CUSTOM_SINGLETON_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.logging.adhoc-print.ast',
     description: 'Detects print/debugPrint/dump/NSLog/os_log usage in iOS production code.',
     severity: 'WARN',

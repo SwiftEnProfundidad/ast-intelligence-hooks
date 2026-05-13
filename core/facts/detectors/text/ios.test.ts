@@ -44,6 +44,7 @@ import {
   hasSwiftOnTapGestureUsage,
   hasSwiftOperationQueueUsage,
   hasSwiftContainsUserFilterUsage,
+  hasSwiftCustomSingletonUsage,
   hasSwiftPassedValueStateWrapperUsage,
   hasSwiftPhysicalTextAlignmentUsage,
   hasSwiftPreconcurrencyUsage,
@@ -258,6 +259,28 @@ final class CartViewModel {
 `;
 
   assert.equal(hasSwiftStrongSelfEscapingClosureUsage(source), false);
+});
+
+test('hasSwiftCustomSingletonUsage detecta singletons propios y excluye usos de singletons del sistema', () => {
+  const source = `
+final class SessionStore {
+  static let shared = SessionStore()
+}
+
+final class MutableStore {
+  public static var shared: MutableStore = MutableStore()
+}
+`;
+  const ignored = `
+final class APIClient {
+  let session = URLSession.shared
+  let text = "static let shared = SessionStore()"
+  // static let shared = SessionStore()
+}
+`;
+
+  assert.equal(hasSwiftCustomSingletonUsage(source), true);
+  assert.equal(hasSwiftCustomSingletonUsage(ignored), false);
 });
 
 test('detectores de logging iOS detectan logs ad-hoc y PII en produccion', () => {

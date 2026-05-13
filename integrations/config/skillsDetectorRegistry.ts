@@ -58,6 +58,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
       'heuristics.ios.memory.strong-self-escaping-closure.ast',
     ]
   ),
+  'skills.ios.guideline.ios.no-singleton-usar-inyeccio-n-de-dependencias-no-compartir-instancias-g': heuristicDetector(
+    'ios.architecture.custom-singleton',
+    ['heuristics.ios.architecture.custom-singleton.ast']
+  ),
+  'skills.ios.guideline.ios.no-singletons-excepto-sistema-urlsession-shared-esta-ok': heuristicDetector(
+    'ios.architecture.custom-singleton',
+    ['heuristics.ios.architecture.custom-singleton.ast']
+  ),
   'skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc': heuristicDetector(
     'ios.logging.adhoc-print',
     ['heuristics.ios.logging.adhoc-print.ast']

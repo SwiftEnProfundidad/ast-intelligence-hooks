@@ -436,6 +436,15 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios.evitar-retain-cycles-especialmente-en-closures-delegates';
     }
     if (
+      includes('no singleton') ||
+      includes('no singletons') ||
+      includes('static shared') ||
+      includes('static let shared') ||
+      includes('static var shared')
+    ) {
+      return 'skills.ios.guideline.ios.no-singleton-usar-inyeccio-n-de-dependencias-no-compartir-instancias-g';
+    }
+    if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
       includes('mixed testing frameworks')

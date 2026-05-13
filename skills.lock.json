@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-05-13T12:37:42.811Z",
+  "generatedAt": "2026-05-13T12:45:06.608Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -5764,7 +5764,7 @@
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:vendor/skills/ios-enterprise-rules/SKILL.md",
-      "hash": "32c74edc740622834bf48fa060ebc04f8d5ee0c826e9a6dd48a068212dfc2552",
+      "hash": "5c20c168bf6f54010cfac75cce1311a03ed2345ac20eef7b2a4458ad8efd3fc4",
       "rules": [
         {
           "id": "skills.ios.guideline.ios.accessibility-identifiers-para-localizar-elementos",
@@ -6728,18 +6728,6 @@
           "origin": "core"
         },
         {
-          "id": "skills.ios.guideline.ios.implementaciones-inyectadas-en-initializer-no-singleton",
-          "description": "Implementaciones inyectadas - En initializer, no Singleton",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
           "id": "skills.ios.guideline.ios.implicitly-unwrapped-solo-para-iboutlets-y-casos-muy-especi-ficos",
           "description": "Implicitly unwrapped (!) - Solo para IBOutlets y casos muy específicos",
           "severity": "WARN",
@@ -7180,19 +7168,7 @@
           "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
           "confidence": "MEDIUM",
           "locked": true,
-          "evaluationMode": "DECLARATIVE",
-          "origin": "core"
-        },
-        {
-          "id": "skills.ios.guideline.ios.no-singletons-excepto-sistema-urlsession-shared-esta-ok",
-          "description": "No singletons - Excepto sistema (URLSession.shared está OK)",
-          "severity": "WARN",
-          "platform": "ios",
-          "sourceSkill": "ios-guidelines",
-          "sourcePath": "vendor/skills/ios-enterprise-rules/SKILL.md",
-          "confidence": "MEDIUM",
-          "locked": true,
-          "evaluationMode": "DECLARATIVE",
+          "evaluationMode": "AUTO",
           "origin": "core"
         },
         {
