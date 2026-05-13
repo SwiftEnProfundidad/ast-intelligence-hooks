@@ -23,6 +23,7 @@ import {
   hasSwiftForceUnwrap,
   hasSwiftGeometryReaderUsage,
   hasSwiftHardcodedUiStringUsage,
+  hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage,
   hasSwiftLooseAssetResourceUsage,
   hasSwiftLegacyOnChangeUsage,
   hasSwiftLegacyExpectationDescriptionUsage,
@@ -375,6 +376,38 @@ func wait() async throws {
 
   assert.equal(hasSwiftMainThreadBlockingSleepUsage(source), true);
   assert.equal(hasSwiftMainThreadBlockingSleepUsage(ignored), false);
+});
+
+test('detector iOS de accesibilidad detecta botones icon-only sin label explicita', () => {
+  const source = `
+struct ToolbarView: View {
+  var body: some View {
+    Button {
+      delete()
+    } label: {
+      Image(systemName: "trash")
+    }
+  }
+}
+`;
+  const ignored = `
+struct ToolbarView: View {
+  var body: some View {
+    Button {
+      delete()
+    } label: {
+      Image(systemName: "trash")
+    }
+    .accessibilityLabel(Text("Delete item"))
+    Button("Delete") { delete() }
+    let text = "Button { Image(systemName: \\"trash\\") }"
+    // Button { Image(systemName: "trash") }
+  }
+}
+`;
+
+  assert.equal(hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage(source), true);
+  assert.equal(hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage(ignored), false);
 });
 
 test('hasSwiftUncheckedSendableUsage detecta @unchecked Sendable', () => {

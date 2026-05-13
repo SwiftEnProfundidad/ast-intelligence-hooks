@@ -417,6 +417,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios.background-threads-no-bloquear-main-thread';
     }
     if (
+      includes('accessibility labels') ||
+      includes('accessibilitylabel') ||
+      includes('accessibility label')
+    ) {
+      return 'skills.ios.guideline.ios.accessibility-labels-accessibilitylabel';
+    }
+    if (
       includes('mixing legacy xctest style') ||
       includes('mixed xctest and swift testing') ||
       includes('mixed testing frameworks')

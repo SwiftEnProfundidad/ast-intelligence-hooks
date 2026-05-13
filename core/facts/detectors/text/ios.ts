@@ -608,6 +608,20 @@ export const hasSwiftMainThreadBlockingSleepUsage = (source: string): boolean =>
   });
 };
 
+export const hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const iconOnlyButtonPattern =
+    /\bButton\s*(?:\([^)]*\))?\s*\{[\s\S]{0,240}?\bImage\s*\(\s*systemName\s*:\s*""\s*\)[\s\S]{0,240}?\}/g;
+  for (const match of sanitized.matchAll(iconOnlyButtonPattern)) {
+    const segment = match[0] ?? '';
+    const following = sanitized.slice(match.index ?? 0, (match.index ?? 0) + segment.length + 160);
+    if (!/\.\s*accessibilityLabel\s*\(/.test(following)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@unchecked', index)) {

@@ -434,6 +434,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.accessibility.icon-only-control-label.ast',
+    description: 'Detects icon-only SwiftUI controls without explicit accessibility labels.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.accessibility.icon-only-control-label.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected an icon-only SwiftUI control without accessibilityLabel; explicit accessible labels remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_ACCESSIBILITY_ICON_ONLY_CONTROL_LABEL_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.unchecked-sendable.ast',
     description: 'Detects @unchecked Sendable usage in iOS production code.',
     severity: 'WARN',
