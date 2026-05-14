@@ -394,6 +394,10 @@ export const hasSwiftAnyViewUsage = (source: string): boolean => {
   });
 };
 
+export const collectSwiftAnyViewLines = (source: string): readonly number[] => {
+  return sortedUniqueLines(collectSwiftRegexLines(source, /\bAnyView\b/));
+};
+
 export const hasSwiftNonLazyScrollForEachUsage = (source: string): boolean => {
   const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
   const nonLazyScrollableCollectionPattern =

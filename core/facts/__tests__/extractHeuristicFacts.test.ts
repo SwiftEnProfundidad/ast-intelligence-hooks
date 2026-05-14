@@ -555,6 +555,23 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.uiscreen-main-bounds.ast',
     'heuristics.ios.unchecked-sendable.ast',
   ]);
+  const anyViewFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.anyview.ast'
+  );
+  assert.deepEqual(anyViewFinding?.lines, [2]);
+  assert.deepEqual(anyViewFinding?.primary_node, {
+    kind: 'call',
+    name: 'type erasure wrapper AnyView',
+    lines: [2],
+  });
+  assert.deepEqual(anyViewFinding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: concrete View composition or @ViewBuilder branch',
+      lines: [2],
+    },
+  ]);
+  assert.match(anyViewFinding?.expected_fix ?? '', /@ViewBuilder/);
   const forceUnwrapFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.force-unwrap.ast'
   );
