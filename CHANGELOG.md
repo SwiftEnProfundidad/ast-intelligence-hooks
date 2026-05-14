@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.242] - 2026-05-14
+
+### Added
+
+- **SwiftUI Observable shared-state parity:** `skills.ios.guideline.ios-swiftui-expert.use-observable-for-shared-state-with-mainactor-if-not-using-default-ac` now maps to the existing AUTO `ObservableObject` heuristic, converting the shared-state migration guideline into runtime evidence without introducing actor-isolation false positives.
+
 ## [6.3.241] - 2026-05-14
 
 ### Added

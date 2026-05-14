@@ -254,6 +254,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-observable-object';
     }
     if (
+      (includes('@observable') || includes('observable')) &&
+      includes('shared state') &&
+      includes('mainactor')
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-observable-for-shared-state-with-mainactor-if-not-using-default-ac';
+    }
+    if (
       includes('observedobject') ||
       (includes('legacy') && includes('stateobject')) ||
       (includes('not stateobject') && includes('observable'))

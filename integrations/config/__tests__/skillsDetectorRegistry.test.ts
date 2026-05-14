@@ -135,6 +135,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-legacy-onchange'), [
     'heuristics.ios.legacy-onchange.ast',
   ]);
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.use-observable-for-shared-state-with-mainactor-if-not-using-default-ac'
+    ),
+    ['heuristics.ios.observable-object.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.prefer-swift-testing'), [
     'heuristics.ios.testing.xctest-import.ast',
     'heuristics.ios.testing.xctest-suite-modernizable.ast',

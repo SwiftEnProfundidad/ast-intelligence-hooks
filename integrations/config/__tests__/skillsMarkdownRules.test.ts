@@ -519,6 +519,22 @@ test('normaliza regla iOS task task-id a detector canonico de cancelacion lifecy
   ]);
 });
 
+test('normaliza regla SwiftUI Observable shared state a detector canonico de ObservableObject', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent:
+      '- Use @Observable for shared state (with @MainActor if not using default actor isolation).',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.ios.guideline.ios-swiftui-expert.use-observable-for-shared-state-with-mainactor-if-not-using-default-ac'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+});
+
 test('normaliza reglas Swift Testing de suites a ids canonicos del slice phase5', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-swift-testing-guidelines',

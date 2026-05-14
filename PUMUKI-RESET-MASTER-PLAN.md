@@ -931,9 +931,9 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-SWIFTUI-STATE-002` / SwiftUI: estado compartido observable debe quedar mapeado a detector AUTO sin falsos positivos brownfield. |
+| Este plan | `[🚧] - PARITY-IOS-SWIFTUI-LAYOUT-002` / SwiftUI: layout relativo debe quedar mapeado a detector AUTO sin imponer migración global brownfield. |
 
-- Estado: 🚧 PARITY-IOS-SWIFTUI-STATE-002 / no hay bugs externos activos en SAAS, R_GO ni Flux; se retoma paridad iOS antes de Android, Front y Backend.
+- Estado: 🚧 PARITY-IOS-SWIFTUI-LAYOUT-002 / no hay bugs externos activos en SAAS, R_GO ni Flux; se retoma paridad iOS antes de Android, Front y Backend.
 
 Snapshot PUMUKI-INC-141 (2026-05-14):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-INC-141`.
@@ -952,6 +952,12 @@ Snapshot PARITY-IOS-SWIFTUI-ASYNC-002 (2026-05-14):
 Snapshot PARITY-IOS-SWIFTUI-STATE-002 (2026-05-14):
 - Diagnóstico inicial: `skills.ios.guideline.ios-swiftui-expert.use-observable-for-shared-state-with-mainactor-if-not-using-default-ac` sigue como siguiente candidata iOS declarativa para convertir a AUTO.
 - Criterio de avance: detectar patrones remediables de estado compartido SwiftUI sin imponer migración global ni bloquear repos brownfield por deuda histórica no tocada.
+- Implementación: se mapea la guideline al detector AUTO existente `heuristics.ios.observable-object.ast`, porque `ObservableObject` es la evidencia runtime accionable para migrar estado compartido a `@Observable`; no se añade detector de falta de `@MainActor` para evitar falsos positivos cuando el consumer usa default actor isolation.
+- Cierre: ✅ `skills.lock.json` queda `FRESH`; la suite dirigida de registry/markdown queda en `45/45 pass`; `typecheck` pasa; `git diff --check` limpio; `npm pack --dry-run --silent` genera `pumuki-6.3.242.tgz`.
+
+Snapshot PARITY-IOS-SWIFTUI-LAYOUT-002 (2026-05-14):
+- Diagnóstico inicial: `skills.ios.guideline.ios-swiftui-expert.use-relative-layout-over-hard-coded-constants` sigue como siguiente candidata iOS declarativa para convertir a AUTO.
+- Criterio de avance: reutilizar `heuristics.ios.maintainability.magic-number-layout.ast` si cubre el caso remediable sin convertir todo número literal en bloqueo.
 
 Snapshot PUMUKI-INC-140 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, fila `PUMUKI-INC-140`.

@@ -201,6 +201,8 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-observable-object': heuristicDetector('ios.observable-object', [
     'heuristics.ios.observable-object.ast',
   ]),
+  'skills.ios.guideline.ios-swiftui-expert.use-observable-for-shared-state-with-mainactor-if-not-using-default-ac':
+    heuristicDetector('ios.observable-object', ['heuristics.ios.observable-object.ast']),
   'skills.ios.no-legacy-swiftui-observable-wrapper': heuristicDetector(
     'ios.legacy-swiftui-observable-wrapper',
     ['heuristics.ios.legacy-swiftui-observable-wrapper.ast']
