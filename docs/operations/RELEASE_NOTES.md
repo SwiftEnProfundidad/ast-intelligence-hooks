@@ -6,6 +6,10 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.263)
+
+- Published `pumuki@6.3.263` with AST-style line/node evidence for `skills.ios.no-anyview`, making SwiftUI `AnyView` type erasure remediable through concrete composition, generics or `@ViewBuilder` branches.
+
 ### 2026-05-14 (v6.3.262)
 
 - Published `pumuki@6.3.262` with AST-style line/node evidence for `skills.ios.no-force-cast`, making `as!` crashes remediable through conditional casts, typed boundaries or explicit mappers.

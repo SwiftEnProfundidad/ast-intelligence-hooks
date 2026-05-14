@@ -13,6 +13,7 @@ import {
   collectSwiftWaitForExpectationsLines,
   collectSwiftXCTestAssertionLines,
   collectSwiftXCTUnwrapLines,
+  collectSwiftAnyViewLines,
   hasSwiftAnyViewUsage,
   hasSwiftAsyncWithoutAwaitUsage,
   hasSwiftCallbackStyleSignature,
@@ -144,11 +145,13 @@ func render() -> some View {
 }
 `;
   assert.equal(hasSwiftAnyViewUsage(source), true);
+  assert.deepEqual(collectSwiftAnyViewLines(source), [3]);
 });
 
 test('hasSwiftAnyViewUsage ignora comentarios, strings y coincidencias parciales', () => {
   const source = `\n// AnyView(Text("debug"))\nlet value = "AnyView(Text(\\"debug\\"))"\nlet customAnyViewBuilder = true\n`;
   assert.equal(hasSwiftAnyViewUsage(source), false);
+  assert.deepEqual(collectSwiftAnyViewLines(source), []);
 });
 
 test('hasSwiftEmptyCatchUsage detecta catch vacio e ignora comentarios y strings', () => {

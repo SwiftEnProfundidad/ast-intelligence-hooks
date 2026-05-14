@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.263] - 2026-05-14
+
+- iOS: `skills.ios.no-anyview` now emits actionable AST-style evidence for SwiftUI `AnyView`, including exact lines, primary/related nodes and remediation toward concrete view composition or `@ViewBuilder` branches.
+
 ## [6.3.262] - 2026-05-14
 
 - iOS: `skills.ios.no-force-cast` now emits actionable AST-style evidence for Swift `as!` expressions, including exact lines, primary/related nodes and remediation toward conditional casts or typed boundaries.
