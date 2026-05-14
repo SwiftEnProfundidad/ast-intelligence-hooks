@@ -931,9 +931,9 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-SWIFTUI-LAYOUT-002` / SwiftUI: layout relativo debe quedar mapeado a detector AUTO sin imponer migración global brownfield. |
+| Este plan | `[🚧] - PARITY-IOS-SWIFTUI-BODY-002` / SwiftUI: pureza de `body` debe quedar mapeada a detector AUTO sin bloquear composición legítima. |
 
-- Estado: 🚧 PARITY-IOS-SWIFTUI-LAYOUT-002 / no hay bugs externos activos en SAAS, R_GO ni Flux; se retoma paridad iOS antes de Android, Front y Backend.
+- Estado: 🚧 PARITY-IOS-SWIFTUI-BODY-002 / no hay bugs externos activos en SAAS, R_GO ni Flux; se retoma paridad iOS antes de Android, Front y Backend.
 
 Snapshot PUMUKI-INC-141 (2026-05-14):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-INC-141`.
@@ -958,6 +958,12 @@ Snapshot PARITY-IOS-SWIFTUI-STATE-002 (2026-05-14):
 Snapshot PARITY-IOS-SWIFTUI-LAYOUT-002 (2026-05-14):
 - Diagnóstico inicial: `skills.ios.guideline.ios-swiftui-expert.use-relative-layout-over-hard-coded-constants` sigue como siguiente candidata iOS declarativa para convertir a AUTO.
 - Criterio de avance: reutilizar `heuristics.ios.maintainability.magic-number-layout.ast` si cubre el caso remediable sin convertir todo número literal en bloqueo.
+- Implementación: se mapea la guideline al detector AUTO existente `heuristics.ios.maintainability.magic-number-layout.ast`, ya acotado a patrones SwiftUI de layout en `Presentation`.
+- Cierre: ✅ `skills.lock.json` queda `FRESH`; la suite dirigida de registry/markdown queda en `46/46 pass`; `typecheck` pasa; `git diff --check` limpio; `npm pack --dry-run --silent` genera `pumuki-6.3.243.tgz`.
+
+Snapshot PARITY-IOS-SWIFTUI-BODY-002 (2026-05-14):
+- Diagnóstico inicial: continuar con la siguiente guideline declarativa de SwiftUI relacionada con `body` simple/puro, reutilizando detectores existentes si ya cubren computación o side effects en render path.
+- Criterio de avance: no bloquear composición legítima ni helpers `@ViewBuilder` pequeños; solo mapear evidencias runtime remediables.
 
 Snapshot PUMUKI-INC-140 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, fila `PUMUKI-INC-140`.

@@ -158,6 +158,21 @@ test('normaliza reglas SwiftUI list/search/layout a ids canonicos del slice phas
   ]);
 });
 
+test('normaliza regla SwiftUI relative layout a detector canonico de magic numbers', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- Use relative layout over hard-coded constants.',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.ios.guideline.ios-swiftui-expert.use-relative-layout-over-hard-coded-constants'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+});
+
 test('normaliza regla SwiftUI ViewBuilder content a detector canonico de composición', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-swiftui-expert-guidelines',

@@ -90,6 +90,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.maintainability.magic-number-layout',
     ['heuristics.ios.maintainability.magic-number-layout.ast']
   ),
+  'skills.ios.guideline.ios-swiftui-expert.use-relative-layout-over-hard-coded-constants':
+    heuristicDetector('ios.maintainability.magic-number-layout', [
+      'heuristics.ios.maintainability.magic-number-layout.ast',
+    ]),
   'skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc': heuristicDetector(
     'ios.logging.adhoc-print',
     ['heuristics.ios.logging.adhoc-print.ast']

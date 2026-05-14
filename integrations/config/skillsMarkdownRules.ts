@@ -317,6 +317,14 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-string-format';
     }
     if (
+      includes('relative layout over hard-coded constants') ||
+      includes('relative layout over hard coded constants') ||
+      includes('hard-coded constants') ||
+      includes('hard coded constants')
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-relative-layout-over-hard-coded-constants';
+    }
+    if (
       (includes('foreach') && includes('indices')) ||
       includes('stable identity for foreach') ||
       includes('never indices for dynamic content')

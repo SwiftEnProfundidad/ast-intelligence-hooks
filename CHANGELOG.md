@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.243] - 2026-05-14
+
+### Added
+
+- **SwiftUI relative-layout parity:** `skills.ios.guideline.ios-swiftui-expert.use-relative-layout-over-hard-coded-constants` now maps to the existing AUTO layout magic-number heuristic, turning the relative-layout guideline into runtime evidence without broad numeric-literal enforcement.
+
 ## [6.3.242] - 2026-05-14
 
 ### Added
