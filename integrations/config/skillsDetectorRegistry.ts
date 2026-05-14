@@ -284,6 +284,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.swiftui.large-config-context-prop', [
       'heuristics.ios.swiftui.large-config-context-prop.ast',
     ]),
+  'skills.ios.guideline.ios-swiftui-expert.prefer-modifiers-over-conditional-views-for-state-changes-maintains-vi':
+    heuristicDetector('ios.swiftui.conditional-same-view-identity', [
+      'heuristics.ios.swiftui.conditional-same-view-identity.ast',
+    ]),
   'skills.ios.guideline.ios-swiftui-expert.avoid-redundant-state-updates-in-onreceive-onchange-scroll-handlers':
     heuristicDetector('ios.swiftui.redundant-reactive-state-assignment', [
       'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',

@@ -931,9 +931,9 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-SWIFTUI-IDENTITY-001` / SwiftUI: preferir modifiers sobre conditional views para cambios de estado debe analizarse sin bloquear composición legítima. |
+| Este plan | `[🚧] - PARITY-IOS-SWIFTUI-SHEETS-001` / SwiftUI: sheets should own their actions and call dismiss internally debe convertirse a AUTO solo si hay patrón remediable sin bloquear composición legítima. |
 
-- Estado: 🚧 PARITY-IOS-SWIFTUI-IDENTITY-001 / no hay bugs externos activos en SAAS, R_GO ni Flux; se retoma paridad iOS antes de Android, Front y Backend.
+- Estado: 🚧 PARITY-IOS-SWIFTUI-SHEETS-001 / no hay bugs externos activos en SAAS, R_GO ni Flux; se retoma paridad iOS antes de Android, Front y Backend.
 
 Snapshot PUMUKI-INC-141 (2026-05-14):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-INC-141`.
@@ -977,6 +977,12 @@ Snapshot PARITY-IOS-SWIFTUI-PROPS-001 (2026-05-14):
 Snapshot PARITY-IOS-SWIFTUI-IDENTITY-001 (2026-05-14):
 - Diagnóstico inicial: `skills.ios.guideline.ios-swiftui-expert.prefer-modifiers-over-conditional-views-for-state-changes-maintains-vi` sigue como candidata declarativa.
 - Criterio de avance: solo convertir a AUTO si el detector puede distinguir conditional views que rompen identidad de composición condicional legítima.
+- Implementación: se añade `heuristics.ios.swiftui.conditional-same-view-identity.ast` como WARN brownfield-aware para `if/else` dentro de `body` donde ambas ramas reconstruyen el mismo tipo de View base (`Text`, `Image`, `Button`, `Label`, stacks o shapes) por variación de estado visual; se preservan ramas con tipos distintos como composición condicional legítima.
+- Cierre: ✅ `skills.lock.json` queda `FRESH`; la suite dirigida de detectores/extractor/preset/registry/markdown queda en `159/159 pass`; `typecheck` pasa; `git diff --check` limpio; `npm pack --dry-run --silent` genera `pumuki-6.3.246.tgz`.
+
+Snapshot PARITY-IOS-SWIFTUI-SHEETS-001 (2026-05-14):
+- Diagnóstico inicial: `skills.ios.guideline.ios-swiftui-expert.sheets-should-own-their-actions-and-call-dismiss-internally` sigue como candidata declarativa.
+- Criterio de avance: solo convertir a AUTO si se puede detectar un patrón de sheet accionable sin penalizar sheets declarativas, bindings legítimos ni coordinación externa explícita.
 
 Snapshot PUMUKI-INC-140 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, fila `PUMUKI-INC-140`.

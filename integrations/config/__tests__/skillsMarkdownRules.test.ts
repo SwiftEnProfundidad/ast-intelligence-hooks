@@ -200,6 +200,22 @@ test('normaliza regla SwiftUI pass only needed values a detector canonico de pro
   assert.equal(rules[0]?.evaluationMode, 'AUTO');
 });
 
+test('normaliza regla SwiftUI prefer modifiers over conditional views a detector canonico de identidad', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent:
+      '- Prefer modifiers over conditional views for state changes (maintains view identity)',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.ios.guideline.ios-swiftui-expert.prefer-modifiers-over-conditional-views-for-state-changes-maintains-vi'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+});
+
 test('normaliza regla SwiftUI redundant state updates a detector canonico de performance', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-swiftui-expert-guidelines',

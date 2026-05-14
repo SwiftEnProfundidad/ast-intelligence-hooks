@@ -325,6 +325,12 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios-swiftui-expert.use-relative-layout-over-hard-coded-constants';
     }
     if (
+      (includes('prefer modifiers') || includes('modifiers over conditional views')) &&
+      (includes('conditional views') || includes('view identity') || includes('maintains view identity'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.prefer-modifiers-over-conditional-views-for-state-changes-maintains-vi';
+    }
+    if (
       (includes('foreach') && includes('indices')) ||
       includes('stable identity for foreach') ||
       includes('never indices for dynamic content')

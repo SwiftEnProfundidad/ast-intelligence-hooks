@@ -981,6 +981,44 @@ export const hasSwiftLargeConfigContextViewPropertyUsage = (source: string): boo
   return false;
 };
 
+const swiftIdentitySensitiveViewConstructors = [
+  'Text',
+  'Image',
+  'Button',
+  'Label',
+  'HStack',
+  'VStack',
+  'ZStack',
+  'Group',
+  'RoundedRectangle',
+  'Circle',
+  'Capsule',
+  'Rectangle',
+] as const;
+
+export const hasSwiftUiConditionalSameViewIdentityUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const swiftUIViewBodyPattern =
+    /\bstruct\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*View\s*\{[\s\S]{0,2200}?\bvar\s+body\s*:\s*some\s+View\s*\{/m;
+
+  if (!swiftUIViewBodyPattern.test(sanitized)) {
+    return false;
+  }
+
+  for (const constructor of swiftIdentitySensitiveViewConstructors) {
+    const escapedConstructor = escapeRegex(constructor);
+    const sameViewBranchPattern = new RegExp(
+      `\\bif\\s+[^{}]+\\{\\s*${escapedConstructor}\\s*(?:\\(|\\{|\\.)[\\s\\S]{0,600}?\\}\\s*else\\s*\\{\\s*${escapedConstructor}\\s*(?:\\(|\\{|\\.)`,
+      'm'
+    );
+    if (sameViewBranchPattern.test(sanitized)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 export const hasSwiftRedundantReactiveStateAssignmentUsage = (source: string): boolean => {
   const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
   const reactiveAssignmentPattern =

@@ -1009,6 +1009,26 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.conditional-same-view-identity.ast',
+    description:
+      'Detects SwiftUI if/else branches that rebuild the same View type for state-only visual changes.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.conditional-same-view-identity.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected conditional branches rebuilding the same SwiftUI View type; prefer conditional modifiers or values to preserve view identity.',
+      code: 'HEURISTICS_IOS_SWIFTUI_CONDITIONAL_SAME_VIEW_IDENTITY_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
     description: 'Detects onChange/onReceive state assignments without a value-change guard.',
     severity: 'WARN',

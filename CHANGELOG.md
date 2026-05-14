@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.246] - 2026-05-14
+
+### Added
+
+- **SwiftUI view-identity parity:** `skills.ios.guideline.ios-swiftui-expert.prefer-modifiers-over-conditional-views-for-state-changes-maintains-vi` now maps to a conservative AUTO heuristic for `if/else` branches that rebuild the same SwiftUI View type for state-only visual changes, preserving legitimate conditional composition.
+
 ## [6.3.245] - 2026-05-14
 
 ### Added

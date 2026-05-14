@@ -74,6 +74,7 @@ import {
   hasSwiftExplicitColorStaticMemberUsage,
   hasSwiftClosureBasedViewBuilderContentUsage,
   hasSwiftLargeConfigContextViewPropertyUsage,
+  hasSwiftUiConditionalSameViewIdentityUsage,
   hasSwiftRedundantReactiveStateAssignmentUsage,
   hasSwiftInlineForEachTransformUsage,
   hasSwiftStringFormatUsage,
@@ -2070,4 +2071,44 @@ final class PumukiLspIosCanaryPremiumDiscount: PumukiLspIosCanaryDiscountApplyin
   assert.match(match.why, /LSP/i);
   assert.match(match.impact, /sustitución|precondiciones|regresiones/i);
   assert.match(match.expected_fix, /contrato base|adaptador|estrategia/i);
+});
+
+test('hasSwiftUiConditionalSameViewIdentityUsage detecta ramas que reconstruyen la misma View por estado visual', () => {
+  const source = `
+struct StatusBadge: View {
+  let isSelected: Bool
+
+  var body: some View {
+    if isSelected {
+      Text("Active")
+        .foregroundStyle(.green)
+    } else {
+      Text("Active")
+        .foregroundStyle(.secondary)
+    }
+  }
+}
+`;
+  const safe = `
+struct StatusBadge: View {
+  let isSelected: Bool
+
+  var body: some View {
+    Text("Active")
+      .foregroundStyle(isSelected ? .green : .secondary)
+
+    if isSelected {
+      SuccessBadge()
+    } else {
+      EmptyView()
+    }
+
+    let sample = "if isSelected { Text(\"Active\") } else { Text(\"Active\") }"
+    // if isSelected { Text("Active") } else { Text("Active") }
+  }
+}
+`;
+
+  assert.equal(hasSwiftUiConditionalSameViewIdentityUsage(source), true);
+  assert.equal(hasSwiftUiConditionalSameViewIdentityUsage(safe), false);
 });
