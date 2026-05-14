@@ -6,6 +6,10 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.254)
+- **Paridad AST iOS testing:** `skills.ios.no-legacy-expectation-description` ancla `expectation(description:)` a líneas y nodos accionables, con reemplazo recomendado hacia `await confirmation(...)` o `await fulfillment(of:timeout:)`.
+- **Rollout recomendado:** publicar `pumuki@6.3.254` y repinear consumers que dependan de paridad iOS/Swift Testing.
+
 ### 2026-05-14 (v6.3.253)
 
 - **Paridad AST iOS testing:** `skills.ios.no-wait-for-expectations` queda respaldada por evidencia accionable de llamada Swift, con líneas, nodo primario y remediación hacia `await fulfillment(of:timeout:)`.

@@ -6,6 +6,7 @@ import {
   findSwiftOpenClosedSwitchMatch,
   findSwiftConcreteDependencyDipMatch,
   findSwiftPresentationSrpMatch,
+  collectSwiftLegacyExpectationDescriptionLines,
   collectSwiftWaitForExpectationsLines,
   hasSwiftAnyViewUsage,
   hasSwiftAsyncWithoutAwaitUsage,
@@ -1758,6 +1759,8 @@ await confirmation("Done") { confirm in
   assert.equal(hasSwiftLegacyExpectationDescriptionUsage(legacyExpectation), true);
   assert.equal(hasSwiftLegacyExpectationDescriptionUsage(modernExpectation), false);
   assert.equal(hasSwiftLegacyExpectationDescriptionUsage(confirmationOnly), false);
+  assert.deepEqual(collectSwiftLegacyExpectationDescriptionLines(legacyExpectation), [2]);
+  assert.deepEqual(collectSwiftLegacyExpectationDescriptionLines(confirmationOnly), []);
 });
 
 test('hasSwiftNSManagedObjectBoundaryUsage detecta boundaries con NSManagedObject y excluye IDs o subclases', () => {

@@ -1374,13 +1374,15 @@ export const hasSwiftWaitForExpectationsUsage = (source: string): boolean => {
   return collectSwiftWaitForExpectationsLines(source).length > 0;
 };
 
-export const hasSwiftLegacyExpectationDescriptionUsage = (source: string): boolean => {
-  const hasLegacyExpectation = collectSwiftRegexLines(
+export const collectSwiftLegacyExpectationDescriptionLines = (source: string): readonly number[] => {
+  return sortedUniqueLines(collectSwiftRegexLines(
     source,
     /\bexpectation\s*\(\s*description\s*:/
-  ).length > 0;
+  ));
+};
 
-  if (!hasLegacyExpectation) {
+export const hasSwiftLegacyExpectationDescriptionUsage = (source: string): boolean => {
+  if (collectSwiftLegacyExpectationDescriptionLines(source).length === 0) {
     return false;
   }
 
