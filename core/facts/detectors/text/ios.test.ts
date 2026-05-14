@@ -14,6 +14,7 @@ import {
   collectSwiftXCTestAssertionLines,
   collectSwiftXCTUnwrapLines,
   collectSwiftAnyViewLines,
+  collectSwiftCallbackStyleSignatureLines,
   hasSwiftAnyViewUsage,
   hasSwiftAsyncWithoutAwaitUsage,
   hasSwiftCallbackStyleSignature,
@@ -483,11 +484,14 @@ func run(handler: @MainActor @escaping () -> Void) {}
 `;
   assert.equal(hasSwiftCallbackStyleSignature(completionSignature), true);
   assert.equal(hasSwiftCallbackStyleSignature(handlerSignature), true);
+  assert.deepEqual(collectSwiftCallbackStyleSignatureLines(completionSignature), [2]);
+  assert.deepEqual(collectSwiftCallbackStyleSignatureLines(handlerSignature), [2]);
 });
 
 test('hasSwiftCallbackStyleSignature ignora usos fuera de firmas callback', () => {
   const source = `\n// @escaping completion: @escaping () -> Void\nlet text = "@escaping completion: @escaping () -> Void"\n`;
   assert.equal(hasSwiftCallbackStyleSignature(source), false);
+  assert.deepEqual(collectSwiftCallbackStyleSignatureLines(source), []);
 });
 
 test('detecta primitivas GCD y OperationQueue en codigo ejecutable', () => {
