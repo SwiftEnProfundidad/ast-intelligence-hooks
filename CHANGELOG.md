@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.258] - 2026-05-14
+
+- iOS: `skills.ios.no-xctunwrap` now emits actionable AST-style evidence for legacy `XCTUnwrap` calls, including exact lines, primary/related nodes and native Swift Testing `#require` remediation.
+
 ## [6.3.257] - 2026-05-14
 
 - iOS: `skills.ios.no-xctassert` now emits actionable AST-style evidence for XCTest assertion calls, including exact lines, primary/related nodes and native Swift Testing `#expect` remediation.

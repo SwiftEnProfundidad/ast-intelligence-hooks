@@ -11,6 +11,7 @@ import {
   collectSwiftQuickNimbleLines,
   collectSwiftWaitForExpectationsLines,
   collectSwiftXCTestAssertionLines,
+  collectSwiftXCTUnwrapLines,
   hasSwiftAnyViewUsage,
   hasSwiftAsyncWithoutAwaitUsage,
   hasSwiftCallbackStyleSignature,
@@ -1755,6 +1756,8 @@ let text = "XCTUnwrap(optionalValue)"
 
   assert.equal(hasSwiftXCTUnwrapUsage(source), true);
   assert.equal(hasSwiftXCTUnwrapUsage(ignored), false);
+  assert.deepEqual(collectSwiftXCTUnwrapLines(source), [2]);
+  assert.deepEqual(collectSwiftXCTUnwrapLines(ignored), []);
 });
 
 test('hasSwiftWaitForExpectationsUsage detecta waits legacy y excluye await fulfillment', () => {
