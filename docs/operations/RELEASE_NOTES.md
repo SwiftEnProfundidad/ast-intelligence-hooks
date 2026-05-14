@@ -6,6 +6,10 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.256)
+
+- Published `pumuki@6.3.256` with AST-style line/node evidence for the Quick/Nimble legacy iOS testing rule, preserving brownfield visibility while making native Swift Testing the actionable remediation for new test code.
+
 ### 2026-05-14 (v6.3.255)
 
 - Published `pumuki@6.3.255` with AST-style line/node evidence for `skills.ios.no-mixed-testing-frameworks`, closing the XCTestCase + Swift Testing mixed-suite parity gap with a remediable split/migrate contract.

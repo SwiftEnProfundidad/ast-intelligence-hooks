@@ -1356,6 +1356,19 @@ export const hasSwiftQuickNimbleUsage = (source: string): boolean => {
   );
 };
 
+export const collectSwiftQuickNimbleLines = (source: string): readonly number[] => {
+  if (!hasSwiftQuickNimbleUsage(source)) {
+    return [];
+  }
+
+  return sortedUniqueLines([
+    ...collectSwiftRegexLines(source, /\bimport\s+(?:Quick|Nimble)\b/),
+    ...collectSwiftRegexLines(source, /\bclass\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*QuickSpec\b/),
+    ...collectSwiftRegexLines(source, /\b(?:describe|context|it)\s*\(/),
+    ...collectSwiftRegexLines(source, /\bexpect\s*\(/),
+  ]);
+};
+
 export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
   return (
     collectSwiftRegexLines(source, /\bXCTAssert[A-Za-z0-9_]*\s*\(/).length > 0 ||

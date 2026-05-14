@@ -617,6 +617,23 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
         ].join('\n')
       ),
       fileContentFact(
+        'apps/ios/App/Tests/LoginQuickSpec.swift',
+        [
+          'import Quick',
+          'import Nimble',
+          '',
+          'final class LoginQuickSpec: QuickSpec {',
+          '  override class func spec() {',
+          '    describe("login") {',
+          '      it("opens the session") {',
+          '        expect(true).to(beTrue())',
+          '      }',
+          '    }',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+      fileContentFact(
         'apps/ios/App/Persistence/UserRepository.swift',
         [
           'import CoreData',
@@ -728,6 +745,23 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
     },
   ]);
   assert.match(mixedFrameworksFinding?.expected_fix ?? '', /Split XCTest compatibility tests/);
+  const quickNimbleFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.testing.quick-nimble.ast'
+  );
+  assert.deepEqual(quickNimbleFinding?.lines, [1, 2, 4, 6, 7, 8]);
+  assert.deepEqual(quickNimbleFinding?.primary_node, {
+    kind: 'class',
+    name: 'QuickSpec legacy test suite',
+    lines: [1, 2, 4, 6, 7, 8],
+  });
+  assert.deepEqual(quickNimbleFinding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: Swift Testing @Suite/@Test with #expect/#require',
+      lines: [1, 2, 4, 6, 7, 8],
+    },
+  ]);
+  assert.match(quickNimbleFinding?.expected_fix ?? '', /native Swift Testing/);
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ios.core-data.nsmanagedobject-boundary.ast'),
     true

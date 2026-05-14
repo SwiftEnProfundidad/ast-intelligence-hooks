@@ -8,6 +8,7 @@ import {
   findSwiftPresentationSrpMatch,
   collectSwiftLegacyExpectationDescriptionLines,
   collectSwiftMixedTestingFrameworkLines,
+  collectSwiftQuickNimbleLines,
   collectSwiftWaitForExpectationsLines,
   hasSwiftAnyViewUsage,
   hasSwiftAsyncWithoutAwaitUsage,
@@ -1691,6 +1692,40 @@ let text = "import Quick"
   assert.equal(hasSwiftQuickNimbleUsage(quickSpec), true);
   assert.equal(hasSwiftQuickNimbleUsage(nativeSwiftTesting), false);
   assert.equal(hasSwiftQuickNimbleUsage(ignored), false);
+});
+
+test('collectSwiftQuickNimbleLines localiza nodos Quick/Nimble legacy', () => {
+  const quickSpec = `
+import Quick
+import Nimble
+
+final class LoginSpec: QuickSpec {
+  override class func spec() {
+    describe("login") {
+      context("valid credentials") {
+        it("opens the session") {
+          expect(true).to(beTrue())
+        }
+      }
+    }
+  }
+}
+`;
+  const swiftTesting = `
+import Testing
+
+@Suite
+struct LoginTests {
+  @Test func login() async {
+    #expect(true)
+  }
+}
+`;
+
+  assert.equal(hasSwiftQuickNimbleUsage(quickSpec), true);
+  assert.deepEqual(collectSwiftQuickNimbleLines(quickSpec), [2, 3, 5, 7, 8, 9, 10]);
+  assert.equal(hasSwiftQuickNimbleUsage(swiftTesting), false);
+  assert.deepEqual(collectSwiftQuickNimbleLines(swiftTesting), []);
 });
 
 test('hasSwiftXCTestAssertionUsage detecta XCTAssert y XCTFail reales', () => {
