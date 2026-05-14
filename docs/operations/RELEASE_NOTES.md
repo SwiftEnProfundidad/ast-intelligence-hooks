@@ -6,6 +6,11 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.252)
+
+- **Parser de tracking estricto:** el refresh SDD ya no interpreta bullets operativos (`Siguiente`, `next`, `delegable`) como IDs de task activa.
+- **Rollout recomendado:** sustituir `6.3.251` por `6.3.252` en RuralGo y repetir `pumuki sdd session --refresh --ttl-minutes=90`.
+
 ### 2026-05-14 (v6.3.251)
 
 - **Refresh SDD alineado con tracking activo:** `pumuki sdd session --refresh` deja de reutilizar silenciosamente una sesión antigua cuando `docs/RURALGO_SEGUIMIENTO.md` ya marca otra task activa.

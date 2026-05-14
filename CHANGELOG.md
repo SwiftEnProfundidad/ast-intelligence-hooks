@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.252] - 2026-05-14
+
+### Fixed
+
+- **SDD tracking parser precision:** active tracking resolution now ignores operational bullets such as `- 🚧 Siguiente`, `- 🚧 next` or `- 🚧 delegable`; only real task identifiers are considered when realigning `pumuki sdd session --refresh`.
+
 ## [6.3.251] - 2026-05-14
 
 ### Fixed
