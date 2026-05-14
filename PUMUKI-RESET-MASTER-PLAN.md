@@ -931,9 +931,9 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-141` / RuralGo: `skills.ios.critical-test-quality` no debe bloquear PRE_WRITE en slices iOS productivos sin tests. |
+| Este plan | `[🚧] - PARITY-IOS-SWIFTUI-STATE-002` / SwiftUI: estado compartido observable debe quedar mapeado a detector AUTO sin falsos positivos brownfield. |
 
-- Estado: 🚧 PUMUKI-INC-141 / bug externo de RuralGo con prioridad sobre `PARITY-IOS-001`.
+- Estado: 🚧 PARITY-IOS-SWIFTUI-STATE-002 / no hay bugs externos activos en SAAS, R_GO ni Flux; se retoma paridad iOS antes de Android, Front y Backend.
 
 Snapshot PUMUKI-INC-141 (2026-05-14):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-INC-141`.
@@ -943,6 +943,15 @@ Snapshot PUMUKI-INC-141 (2026-05-14):
 - Regresión: `evaluateAiGate` cubre que un PRE_WRITE iOS productivo con cobertura iOS válida no bloquea por ausencia de `skills.ios.critical-test-quality`.
 - Evidencia Pumuki: `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `88/88 pass`; `npm run -s typecheck` -> OK; `git diff --check` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.240.tgz`.
 - Cierre: ✅ publicado `pumuki@6.3.240` como `latest`; RuralGo repineado a `6.3.240`; `pumuki-pre-commit --quiet` muestra `Skills contract: enforced=yes status=PASS platforms=ios`, `AI Gate: ALLOWED`, `Violations: blocking=0 advisory=0`. El `HOOK_EXIT=1` residual se debe a `SDD_SESSION_INVALID` / tracking `RGO-1900-06`, no a `PUMUKI-INC-141`.
+
+Snapshot PARITY-IOS-SWIFTUI-ASYNC-002 (2026-05-14):
+- Diagnóstico: `skills.ios.guideline.ios-swiftui-expert.use-task-id-for-value-dependent-tasks` seguía como regla `DECLARATIVE` aunque el antipatrón `onChange { Task { ... } }` es detectable en SwiftUI Presentation.
+- Implementación: se añade `heuristics.ios.swiftui.onchange-task.ast` como WARN brownfield-aware, enlazado en extractor de hechos, preset heurístico, registry de skills y `skills.lock.json` generado.
+- Cierre: ✅ `skills.lock.json` queda `FRESH`, la suite dirigida de detectores/extractor/preset/registry/markdown queda en `152/152 pass`, `typecheck` pasa, `git diff --check` limpio y `npm pack --dry-run --silent` genera `pumuki-6.3.240.tgz` antes del bump.
+
+Snapshot PARITY-IOS-SWIFTUI-STATE-002 (2026-05-14):
+- Diagnóstico inicial: `skills.ios.guideline.ios-swiftui-expert.use-observable-for-shared-state-with-mainactor-if-not-using-default-ac` sigue como siguiente candidata iOS declarativa para convertir a AUTO.
+- Criterio de avance: detectar patrones remediables de estado compartido SwiftUI sin imponer migración global ni bloquear repos brownfield por deuda histórica no tocada.
 
 Snapshot PUMUKI-INC-140 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, fila `PUMUKI-INC-140`.

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 82);
+  assert.equal(iosRules.length, 83);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -18,6 +18,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.operation-queue.ast',
     'heuristics.ios.task-detached.ast',
     'heuristics.ios.swiftui.onappear-task.ast',
+    'heuristics.ios.swiftui.onchange-task.ast',
     'heuristics.ios.memory.strong-delegate.ast',
     'heuristics.ios.memory.strong-self-escaping-closure.ast',
     'heuristics.ios.architecture.custom-singleton.ast',
@@ -99,6 +100,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.task-detached.ast')?.then.code,
     'HEURISTICS_IOS_TASK_DETACHED_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.onchange-task.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_ONCHANGE_TASK_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.logging.adhoc-print.ast')?.then.code,

@@ -312,6 +312,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.swiftui.onappear-task',
     ['heuristics.ios.swiftui.onappear-task.ast']
   ),
+  'skills.ios.guideline.ios-swiftui-expert.use-task-id-for-value-dependent-tasks': heuristicDetector(
+    'ios.swiftui.onchange-task',
+    ['heuristics.ios.swiftui.onchange-task.ast']
+  ),
   'skills.ios.no-uiscreen-main-bounds': heuristicDetector('ios.uiscreen-main-bounds', [
     'heuristics.ios.uiscreen-main-bounds.ast',
   ]),

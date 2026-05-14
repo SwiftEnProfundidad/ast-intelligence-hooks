@@ -158,6 +158,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ['heuristics.ios.swiftui.onappear-task.ast']
   );
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.use-task-id-for-value-dependent-tasks'
+    ),
+    ['heuristics.ios.swiftui.onchange-task.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc'),
     ['heuristics.ios.logging.adhoc-print.ast']
   );

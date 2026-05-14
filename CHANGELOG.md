@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.241] - 2026-05-14
+
+### Added
+
+- **SwiftUI `.task(id:)` parity:** `skills.ios.guideline.ios-swiftui-expert.use-task-id-for-value-dependent-tasks` now maps to an AUTO heuristic that detects `Task` launched from SwiftUI `onChange`, while preserving `.task(id:)` as the clean lifecycle-aware pattern.
+
 ## [6.3.127] - 2026-04-28
 
 ### Fixed

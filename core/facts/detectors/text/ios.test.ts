@@ -54,6 +54,7 @@ import {
   hasSwiftNonPrivateStateOwnershipUsage,
   hasSwiftNonIBOutletImplicitlyUnwrappedOptionalUsage,
   hasSwiftObservableObjectUsage,
+  hasSwiftOnChangeTaskUsage,
   hasSwiftOnAppearTaskUsage,
   hasSwiftOnTapGestureUsage,
   hasSwiftOperationQueueUsage,
@@ -505,6 +506,43 @@ struct FeedView: View {
 
   assert.equal(hasSwiftOnAppearTaskUsage(source), true);
   assert.equal(hasSwiftOnAppearTaskUsage(safe), false);
+});
+
+test('hasSwiftOnChangeTaskUsage detecta Task dentro de onChange y preserva task id', () => {
+  const source = `
+struct SearchView: View {
+  @State private var query = ""
+
+  var body: some View {
+    TextField("Search", text: $query)
+      .onChange(of: query) { _, newValue in
+        Task {
+          await viewModel.search(newValue)
+        }
+      }
+  }
+}
+`;
+  const safe = `
+struct SearchView: View {
+  @State private var query = ""
+
+  var body: some View {
+    TextField("Search", text: $query)
+      .task(id: query) {
+        await viewModel.search(query)
+      }
+      .onChange(of: query) { _, newValue in
+        analytics.trackSearch(newValue)
+      }
+      let text = ".onChange(of: query) { Task { await search() } }"
+      // .onChange(of: query) { Task { await search() } }
+  }
+}
+`;
+
+  assert.equal(hasSwiftOnChangeTaskUsage(source), true);
+  assert.equal(hasSwiftOnChangeTaskUsage(safe), false);
 });
 
 test('hasSwiftStrongDelegateReferenceUsage detecta delegates fuertes y preserva weak delegates', () => {

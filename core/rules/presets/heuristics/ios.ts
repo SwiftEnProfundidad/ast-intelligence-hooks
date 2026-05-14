@@ -201,6 +201,26 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.onchange-task.ast',
+    description:
+      'Detects Task launches from SwiftUI onChange where .task(id:) should own value-dependent cancellation.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.onchange-task.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Task launched from SwiftUI onChange; .task(id:) should own value-dependent cancellation.',
+      code: 'HEURISTICS_IOS_SWIFTUI_ONCHANGE_TASK_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.memory.strong-delegate.ast',
     description: 'Detects strong delegate/dataSource references in iOS production code.',
     severity: 'WARN',

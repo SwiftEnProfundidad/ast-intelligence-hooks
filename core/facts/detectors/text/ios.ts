@@ -481,6 +481,13 @@ export const hasSwiftOnAppearTaskUsage = (source: string): boolean => {
   return /\.onAppear\s*\{[\s\S]{0,500}?\bTask\s*(?:\([^)]*\))?\s*\{/.test(sanitized);
 };
 
+export const hasSwiftOnChangeTaskUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  return /\.onChange\s*\([^)]*\)\s*\{[\s\S]{0,500}?\bTask\s*(?:\([^)]*\))?\s*\{/.test(
+    sanitized
+  );
+};
+
 export const hasSwiftStrongDelegateReferenceUsage = (source: string): boolean => {
   const delegatePropertyPattern =
     /\b(?:var|let)\s+(?:[A-Za-z_][A-Za-z0-9_]*(?:Delegate|DataSource)|delegate|dataSource)\s*:\s*(?:any\s+)?[A-Za-z_][A-Za-z0-9_]*(?:Delegate|DataSource)\b/;
