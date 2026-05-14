@@ -6,6 +6,10 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.261)
+
+- Published `pumuki@6.3.261` with AST-style line/node evidence for `skills.ios.no-force-try`, making `try!` crashes remediable through `do/catch`, throwing boundaries or explicit fallback handling.
+
 ### 2026-05-14 (v6.3.260)
 
 - Published `pumuki@6.3.260` with AST-style line/node evidence for `skills.ios.no-force-unwrap`, making postfix `!` crashes remediable through guarded optional handling or explicit failure paths.

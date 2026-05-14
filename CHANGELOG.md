@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.261] - 2026-05-14
+
+- iOS: `skills.ios.no-force-try` now emits actionable AST-style evidence for Swift `try!` expressions, including exact lines, primary/related nodes and remediation toward explicit error handling.
+
 ## [6.3.260] - 2026-05-14
 
 - iOS: `skills.ios.no-force-unwrap` now emits actionable AST-style evidence for Swift postfix force unwraps, including exact lines, primary/related nodes and remediation toward guarded optional handling.

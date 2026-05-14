@@ -572,6 +572,23 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     },
   ]);
   assert.match(forceUnwrapFinding?.expected_fix ?? '', /guard let/);
+  const forceTryFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.force-try.ast'
+  );
+  assert.deepEqual(forceTryFinding?.lines, [3]);
+  assert.deepEqual(forceTryFinding?.primary_node, {
+    kind: 'call',
+    name: 'force try expression try!',
+    lines: [3],
+  });
+  assert.deepEqual(forceTryFinding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: do/catch or throwing boundary',
+      lines: [3],
+    },
+  ]);
+  assert.match(forceTryFinding?.expected_fix ?? '', /do\/catch/);
 });
 
 test('does not detect iOS force-unwrap heuristic for safe nil comparisons', () => {
