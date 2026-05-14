@@ -185,6 +185,21 @@ test('normaliza regla SwiftUI ViewBuilder content a detector canonico de composi
   ]);
 });
 
+test('normaliza regla SwiftUI pass only needed values a detector canonico de props amplias', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- Pass only needed values to views (avoid large "config" or "context" objects)',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.ios.guideline.ios-swiftui-expert.pass-only-needed-values-to-views-avoid-large-config-or-context-objects'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+});
+
 test('normaliza regla SwiftUI redundant state updates a detector canonico de performance', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-swiftui-expert-guidelines',

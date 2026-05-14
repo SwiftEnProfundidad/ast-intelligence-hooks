@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 83);
+  assert.equal(iosRules.length, 84);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -61,6 +61,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.font-weight-bold.ast',
     'heuristics.ios.swiftui.explicit-color-static-member.ast',
     'heuristics.ios.swiftui.closure-based-viewbuilder-content.ast',
+    'heuristics.ios.swiftui.large-config-context-prop.ast',
     'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
     'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast',
     'heuristics.ios.swiftui.body-object-creation.ast',
@@ -204,6 +205,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.font-weight-bold.ast')?.then.code,
     'HEURISTICS_IOS_FONT_WEIGHT_BOLD_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.large-config-context-prop.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_LARGE_CONFIG_CONTEXT_PROP_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.uiscreen-main-bounds.ast')?.then.code,

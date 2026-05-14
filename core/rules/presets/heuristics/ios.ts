@@ -990,6 +990,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.large-config-context-prop.ast',
+    description: 'Detects broad Config/Context properties stored directly on SwiftUI Views.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.large-config-context-prop.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a SwiftUI View storing a broad config/context object; pass only needed values to reduce update fan-out.',
+      code: 'HEURISTICS_IOS_SWIFTUI_LARGE_CONFIG_CONTEXT_PROP_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
     description: 'Detects onChange/onReceive state assignments without a value-change guard.',
     severity: 'WARN',

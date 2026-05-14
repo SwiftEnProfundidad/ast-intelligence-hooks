@@ -394,6 +394,15 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios-swiftui-expert.prefer-viewbuilder-let-content-content-over-closure-based-content-prop';
     }
     if (
+      includes('pass only needed values') ||
+      includes('large config') ||
+      includes('large context') ||
+      includes('config or context objects') ||
+      includes('config/context objects')
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.pass-only-needed-values-to-views-avoid-large-config-or-context-objects';
+    }
+    if (
       includes('redundant state updates') ||
       (includes('onreceive') && includes('onchange') && includes('state updates')) ||
       (includes('check for value changes') && includes('assigning state'))

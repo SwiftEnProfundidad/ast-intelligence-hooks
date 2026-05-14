@@ -962,6 +962,25 @@ export const hasSwiftClosureBasedViewBuilderContentUsage = (source: string): boo
   );
 };
 
+export const hasSwiftLargeConfigContextViewPropertyUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const swiftUIViewPattern =
+    /\bstruct\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*View\s*\{[\s\S]{0,2200}?\bvar\s+body\s*:\s*some\s+View\s*\{/g;
+
+  for (const viewMatch of sanitized.matchAll(swiftUIViewPattern)) {
+    const viewSegment = viewMatch[0] ?? '';
+    if (
+      /\b(?:let|var)\s+(?:config|configuration|context)\s*:\s*[A-Za-z_][A-Za-z0-9_]*(?:Config|Configuration|Context)\b/.test(
+        viewSegment
+      )
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 export const hasSwiftRedundantReactiveStateAssignmentUsage = (source: string): boolean => {
   const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
   const reactiveAssignmentPattern =

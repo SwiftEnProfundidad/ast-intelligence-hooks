@@ -931,9 +931,9 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-SWIFTUI-PROPS-001` / SwiftUI: pasar solo valores necesarios a subviews debe quedar mapeado a detector AUTO si existe evidencia runtime accionable. |
+| Este plan | `[🚧] - PARITY-IOS-SWIFTUI-IDENTITY-001` / SwiftUI: preferir modifiers sobre conditional views para cambios de estado debe analizarse sin bloquear composición legítima. |
 
-- Estado: 🚧 PARITY-IOS-SWIFTUI-PROPS-001 / no hay bugs externos activos en SAAS, R_GO ni Flux; se retoma paridad iOS antes de Android, Front y Backend.
+- Estado: 🚧 PARITY-IOS-SWIFTUI-IDENTITY-001 / no hay bugs externos activos en SAAS, R_GO ni Flux; se retoma paridad iOS antes de Android, Front y Backend.
 
 Snapshot PUMUKI-INC-141 (2026-05-14):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-INC-141`.
@@ -970,6 +970,13 @@ Snapshot PARITY-IOS-SWIFTUI-BODY-002 (2026-05-14):
 Snapshot PARITY-IOS-SWIFTUI-PROPS-001 (2026-05-14):
 - Diagnóstico inicial: `skills.ios.guideline.ios-swiftui-expert.pass-only-needed-values-to-views-avoid-large-config-or-context-objects` sigue como candidata declarativa.
 - Criterio de avance: solo convertir a AUTO si existe detector acotado para props/config/context grandes; si no, dejar en backlog para evitar falsos positivos estructurales.
+- Implementación: se añade `heuristics.ios.swiftui.large-config-context-prop.ast` como WARN brownfield-aware para `struct ...: View` que almacena propiedades `config`, `configuration` o `context` tipadas como `*Config`, `*Configuration` o `*Context`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Alcance explícito: no marca dependencias normales, ViewModels ni propiedades no SwiftUI; preserva props estrechas como `title` / `subtitle`.
+- Cierre: ✅ `skills.lock.json` queda `FRESH`; la suite dirigida de detectores/extractor/preset/registry/markdown queda en `157/157 pass`; `typecheck` pasa; `git diff --check` limpio; `npm pack --dry-run --silent` genera `pumuki-6.3.245.tgz`.
+
+Snapshot PARITY-IOS-SWIFTUI-IDENTITY-001 (2026-05-14):
+- Diagnóstico inicial: `skills.ios.guideline.ios-swiftui-expert.prefer-modifiers-over-conditional-views-for-state-changes-maintains-vi` sigue como candidata declarativa.
+- Criterio de avance: solo convertir a AUTO si el detector puede distinguir conditional views que rompen identidad de composición condicional legítima.
 
 Snapshot PUMUKI-INC-140 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, fila `PUMUKI-INC-140`.

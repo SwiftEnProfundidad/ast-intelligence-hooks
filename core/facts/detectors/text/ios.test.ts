@@ -73,6 +73,7 @@ import {
   hasSwiftJSONSerializationUsage,
   hasSwiftExplicitColorStaticMemberUsage,
   hasSwiftClosureBasedViewBuilderContentUsage,
+  hasSwiftLargeConfigContextViewPropertyUsage,
   hasSwiftRedundantReactiveStateAssignmentUsage,
   hasSwiftInlineForEachTransformUsage,
   hasSwiftStringFormatUsage,
@@ -1302,6 +1303,52 @@ let ignored = "let content: () -> Content"
 
   assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(source), true);
   assert.equal(hasSwiftClosureBasedViewBuilderContentUsage(safe), false);
+});
+
+test('hasSwiftLargeConfigContextViewPropertyUsage detecta config/context grandes en SwiftUI View', () => {
+  const source = `
+struct CheckoutSummaryView: View {
+  let config: CheckoutSummaryConfiguration
+  let title: String
+
+  var body: some View {
+    VStack {
+      Text(config.title)
+    }
+  }
+}
+
+struct StoreMapView: View {
+  var context: StoreMapContext
+
+  var body: some View {
+    Text(context.title)
+  }
+}
+`;
+  const safe = `
+struct CheckoutSummaryView: View {
+  let title: String
+  let subtitle: String
+
+  var body: some View {
+    VStack {
+      Text(title)
+      Text(subtitle)
+    }
+  }
+}
+
+final class CheckoutPresenter {
+  let context: CheckoutContext
+}
+
+let ignored = "struct IgnoredView: View { let config: AppConfig var body: some View { Text(config.title) } }"
+// struct IgnoredView: View { let config: AppConfig var body: some View { Text(config.title) } }
+`;
+
+  assert.equal(hasSwiftLargeConfigContextViewPropertyUsage(source), true);
+  assert.equal(hasSwiftLargeConfigContextViewPropertyUsage(safe), false);
 });
 
 test('hasSwiftRedundantReactiveStateAssignmentUsage detecta asignaciones reactivas redundantes y preserva guard de cambio', () => {

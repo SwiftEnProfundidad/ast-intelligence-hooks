@@ -280,6 +280,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.swiftui.closure-based-viewbuilder-content', [
       'heuristics.ios.swiftui.closure-based-viewbuilder-content.ast',
     ]),
+  'skills.ios.guideline.ios-swiftui-expert.pass-only-needed-values-to-views-avoid-large-config-or-context-objects':
+    heuristicDetector('ios.swiftui.large-config-context-prop', [
+      'heuristics.ios.swiftui.large-config-context-prop.ast',
+    ]),
   'skills.ios.guideline.ios-swiftui-expert.avoid-redundant-state-updates-in-onreceive-onchange-scroll-handlers':
     heuristicDetector('ios.swiftui.redundant-reactive-state-assignment', [
       'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',

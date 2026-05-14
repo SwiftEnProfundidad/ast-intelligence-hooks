@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.245] - 2026-05-14
+
+### Added
+
+- **SwiftUI props fan-out parity:** `skills.ios.guideline.ios-swiftui-expert.pass-only-needed-values-to-views-avoid-large-config-or-context-objects` now maps to a scoped AUTO heuristic that detects SwiftUI Views storing broad `Config`/`Configuration`/`Context` properties, preserving narrow value props as the clean baseline.
+
 ## [6.3.244] - 2026-05-14
 
 ### Added
