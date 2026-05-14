@@ -7,6 +7,7 @@ import {
   findSwiftConcreteDependencyDipMatch,
   findSwiftPresentationSrpMatch,
   collectSwiftLegacyExpectationDescriptionLines,
+  collectSwiftMixedTestingFrameworkLines,
   collectSwiftWaitForExpectationsLines,
   hasSwiftAnyViewUsage,
   hasSwiftAsyncWithoutAwaitUsage,
@@ -2233,4 +2234,33 @@ struct EditItemSheet: View {
 
   assert.equal(hasSwiftUiParentOwnedSheetActionUsage(source), true);
   assert.equal(hasSwiftUiParentOwnedSheetActionUsage(safe), false);
+});
+
+
+test('collectSwiftMixedTestingFrameworkLines localiza nodos de mezcla XCTest y Swift Testing', () => {
+  const mixedSuite = `
+import XCTest
+import Testing
+
+final class LoginTests: XCTestCase {
+  func testLegacyLogin() {}
+}
+
+@Suite
+struct LoginModernTests {
+  @Test func login() async {}
+}
+`;
+  const legacyOnly = `
+import XCTest
+
+final class LoginTests: XCTestCase {
+  func testLegacyLogin() {}
+}
+`;
+
+  assert.equal(hasSwiftMixedTestingFrameworksUsage(mixedSuite), true);
+  assert.deepEqual(collectSwiftMixedTestingFrameworkLines(mixedSuite), [2, 3, 5, 9, 11]);
+  assert.equal(hasSwiftMixedTestingFrameworksUsage(legacyOnly), false);
+  assert.deepEqual(collectSwiftMixedTestingFrameworkLines(legacyOnly), []);
 });
