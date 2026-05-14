@@ -457,6 +457,10 @@ export const hasSwiftDispatchQueueUsage = (source: string): boolean => {
   });
 };
 
+export const collectSwiftDispatchQueueLines = (source: string): readonly number[] => {
+  return sortedUniqueLines(collectSwiftRegexLines(source, /\bDispatchQueue\s*\./));
+};
+
 export const hasSwiftDispatchGroupUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'D') {
