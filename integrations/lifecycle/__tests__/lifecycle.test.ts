@@ -382,7 +382,10 @@ test('runLifecycleInstall blocks when node_modules is tracked in git', () => {
     runGit(repo, ['commit', '-m', 'test: tracked node_modules']);
 
     assert.throws(
-      () => runLifecycleInstall({ cwd: repo }),
+      () => runLifecycleInstall({
+        cwd: repo,
+        notifyGateBlocked: () => ({ delivered: true, reason: 'delivered' }),
+      }),
       /blocked by repository safety checks/i
     );
   } finally {

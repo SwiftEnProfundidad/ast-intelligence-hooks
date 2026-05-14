@@ -8,6 +8,7 @@ import {
   type OpenSpecCompatibilityMigrationResult,
 } from './openSpecBootstrap';
 import { getCurrentPumukiPackageName } from './packageInfo';
+import { emitGateBlockedNotification } from '../notifications/emitAuditSummaryNotification';
 
 export type LifecycleUpdateResult = {
   repoRoot: string;
@@ -28,6 +29,7 @@ export const runLifecycleUpdate = (params?: {
   targetSpec?: string;
   git?: ILifecycleGitService;
   npm?: ILifecycleNpmService;
+  notifyGateBlocked?: typeof emitGateBlockedNotification;
 }): LifecycleUpdateResult => {
   const git = params?.git ?? new LifecycleGitService();
   const npm = params?.npm ?? new LifecycleNpmService();
@@ -61,6 +63,7 @@ export const runLifecycleUpdate = (params?: {
       cwd: doctorReport.repoRoot,
       git,
       bootstrapOpenSpec: false,
+      notifyGateBlocked: params?.notifyGateBlocked,
     });
     return {
       repoRoot: installResult.repoRoot,

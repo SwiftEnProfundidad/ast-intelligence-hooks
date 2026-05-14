@@ -186,6 +186,7 @@ test('runLifecycleUpdate ejecuta rollback si falla reinstall tras update', async
           targetSpec: `${packageName}@next`,
           git,
           npm,
+          notifyGateBlocked: () => ({ delivered: true, reason: 'delivered' }),
         }),
       /pumuki install blocked by repository safety checks/i
     );
