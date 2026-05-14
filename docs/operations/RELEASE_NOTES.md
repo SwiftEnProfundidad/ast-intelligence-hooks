@@ -6,6 +6,10 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.257)
+
+- Published `pumuki@6.3.257` with AST-style line/node evidence for `skills.ios.no-xctassert`, making legacy `XCTAssert*`/`XCTFail` assertions remediable through Swift Testing `#expect`.
+
 ### 2026-05-14 (v6.3.256)
 
 - Published `pumuki@6.3.256` with AST-style line/node evidence for the Quick/Nimble legacy iOS testing rule, preserving brownfield visibility while making native Swift Testing the actionable remediation for new test code.

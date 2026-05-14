@@ -10,6 +10,7 @@ import {
   collectSwiftMixedTestingFrameworkLines,
   collectSwiftQuickNimbleLines,
   collectSwiftWaitForExpectationsLines,
+  collectSwiftXCTestAssertionLines,
   hasSwiftAnyViewUsage,
   hasSwiftAsyncWithoutAwaitUsage,
   hasSwiftCallbackStyleSignature,
@@ -1740,6 +1741,8 @@ let text = "XCTAssertEqual(value, expected)"
 
   assert.equal(hasSwiftXCTestAssertionUsage(source), true);
   assert.equal(hasSwiftXCTestAssertionUsage(ignored), false);
+  assert.deepEqual(collectSwiftXCTestAssertionLines(source), [2, 3]);
+  assert.deepEqual(collectSwiftXCTestAssertionLines(ignored), []);
 });
 
 test('hasSwiftXCTUnwrapUsage detecta XCTUnwrap real y evita strings', () => {
