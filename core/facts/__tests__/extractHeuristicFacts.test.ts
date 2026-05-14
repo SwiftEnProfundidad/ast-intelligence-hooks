@@ -699,6 +699,23 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
   ]);
   assert.match(xctAssertFinding?.expected_fix ?? '', /#expect/);
   assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctunwrap.ast'), true);
+  const xctUnwrapFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.testing.xctunwrap.ast'
+  );
+  assert.deepEqual(xctUnwrapFinding?.lines, [6]);
+  assert.deepEqual(xctUnwrapFinding?.primary_node, {
+    kind: 'call',
+    name: 'legacy XCTest unwrap call',
+    lines: [6],
+  });
+  assert.deepEqual(xctUnwrapFinding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: #require(...)',
+      lines: [6],
+    },
+  ]);
+  assert.match(xctUnwrapFinding?.expected_fix ?? '', /#require/);
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.wait-for-expectations.ast'),
     true

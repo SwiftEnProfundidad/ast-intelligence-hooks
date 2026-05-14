@@ -6,6 +6,10 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.258)
+
+- Published `pumuki@6.3.258` with AST-style line/node evidence for `skills.ios.no-xctunwrap`, making legacy `XCTUnwrap` calls remediable through Swift Testing `#require`.
+
 ### 2026-05-14 (v6.3.257)
 
 - Published `pumuki@6.3.257` with AST-style line/node evidence for `skills.ios.no-xctassert`, making legacy `XCTAssert*`/`XCTFail` assertions remediable through Swift Testing `#expect`.

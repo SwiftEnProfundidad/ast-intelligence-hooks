@@ -1391,6 +1391,10 @@ export const hasSwiftXCTUnwrapUsage = (source: string): boolean => {
   return collectSwiftRegexLines(source, /\bXCTUnwrap\s*\(/).length > 0;
 };
 
+export const collectSwiftXCTUnwrapLines = (source: string): readonly number[] => {
+  return sortedUniqueLines(collectSwiftRegexLines(source, /\bXCTUnwrap\s*\(/));
+};
+
 const hasSwiftAwaitFulfillmentUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(source, /\bawait\s+fulfillment\s*\(\s*of\s*:/);
 };
