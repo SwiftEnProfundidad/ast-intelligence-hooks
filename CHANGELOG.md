@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.260] - 2026-05-14
+
+- iOS: `skills.ios.no-force-unwrap` now emits actionable AST-style evidence for Swift postfix force unwraps, including exact lines, primary/related nodes and remediation toward guarded optional handling.
+
 ## [6.3.259] - 2026-05-14
 
 - iOS: `skills.ios.prefer-swift-testing` now emits actionable AST-style evidence for modernizable `XCTestCase` suites, including exact lines, primary/related nodes and native Swift Testing `import Testing`/`@Suite`/`@Test` remediation.

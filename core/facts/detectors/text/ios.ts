@@ -342,7 +342,7 @@ const isForceUnwrapAt = (source: string, index: number): boolean => {
 
   const previousChar = source[previousIndex];
   const previousIdentifier = readIdentifierBackward(source, previousIndex);
-  if (previousIdentifier.value === 'as') {
+  if (previousIdentifier.value === 'as' || previousIdentifier.value === 'try') {
     return false;
   }
   if (
@@ -368,6 +368,20 @@ export const hasSwiftForceUnwrap = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     return current === '!' && isForceUnwrapAt(swiftSource, index);
   });
+};
+
+export const collectSwiftForceUnwrapLines = (source: string): readonly number[] => {
+  const lines: number[] = [];
+  source.split(/\r?\n/).forEach((line, index) => {
+    const sanitizedLine = stripSwiftLineForSemanticScan(line);
+    for (let cursor = 0; cursor < sanitizedLine.length; cursor += 1) {
+      if (sanitizedLine[cursor] === '!' && isForceUnwrapAt(sanitizedLine, cursor)) {
+        lines.push(index + 1);
+        break;
+      }
+    }
+  });
+  return sortedUniqueLines(lines);
 };
 
 export const hasSwiftAnyViewUsage = (source: string): boolean => {
