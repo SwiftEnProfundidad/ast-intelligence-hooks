@@ -711,6 +711,23 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
     findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.mixed-frameworks.ast'),
     true
   );
+  const mixedFrameworksFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.testing.mixed-frameworks.ast'
+  );
+  assert.deepEqual(mixedFrameworksFinding?.lines, [1, 2, 4, 8, 10]);
+  assert.deepEqual(mixedFrameworksFinding?.primary_node, {
+    kind: 'class',
+    name: 'mixed XCTestCase and Swift Testing suite',
+    lines: [1, 2, 4, 8, 10],
+  });
+  assert.deepEqual(mixedFrameworksFinding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: isolate XCTest compatibility from Swift Testing suites',
+      lines: [1, 2, 4, 8, 10],
+    },
+  ]);
+  assert.match(mixedFrameworksFinding?.expected_fix ?? '', /Split XCTest compatibility tests/);
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ios.core-data.nsmanagedobject-boundary.ast'),
     true

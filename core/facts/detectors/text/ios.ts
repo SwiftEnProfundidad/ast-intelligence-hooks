@@ -1336,6 +1336,19 @@ export const hasSwiftMixedTestingFrameworksUsage = (source: string): boolean => 
   return hasSwiftTestingImportUsage(source) || hasSwiftTestingSuiteAttributeUsage(source);
 };
 
+export const collectSwiftMixedTestingFrameworkLines = (source: string): readonly number[] => {
+  if (!hasSwiftMixedTestingFrameworksUsage(source)) {
+    return [];
+  }
+
+  return sortedUniqueLines([
+    ...collectSwiftRegexLines(source, /\bimport\s+XCTest\b/),
+    ...collectSwiftRegexLines(source, /\bimport\s+Testing\b/),
+    ...collectSwiftRegexLines(source, /\bclass\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*XCTestCase\b/),
+    ...collectSwiftRegexLines(source, /@\s*(?:Suite|Test)\b/),
+  ]);
+};
+
 export const hasSwiftQuickNimbleUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(
     source,

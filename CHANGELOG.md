@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.255] - 2026-05-14
+
+- iOS: `skills.ios.no-mixed-testing-frameworks` now emits actionable AST-style evidence for files mixing `XCTestCase` with Swift Testing markers, including exact lines, primary/related nodes and a concrete split-or-migrate remediation.
+
 ## [6.3.254] - 2026-05-14
 
 - iOS Swift Testing parity: `skills.ios.no-legacy-expectation-description` now emits AST-style line and node evidence for legacy `expectation(description:)` scaffolding, with actionable replacement guidance toward `await confirmation(...)` or awaited fulfillment flows.
