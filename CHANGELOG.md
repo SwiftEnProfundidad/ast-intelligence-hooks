@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.257] - 2026-05-14
+
+- iOS: `skills.ios.no-xctassert` now emits actionable AST-style evidence for XCTest assertion calls, including exact lines, primary/related nodes and native Swift Testing `#expect` remediation.
+
 ## [6.3.256] - 2026-05-14
 
 - iOS: `skills.ios.guideline.ios.quick-nimble-prohibido-usar-swift-testing-nativo` now emits actionable AST-style evidence for Quick/Nimble legacy tests, including exact lines, primary/related nodes and native Swift Testing remediation.

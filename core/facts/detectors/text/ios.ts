@@ -1376,6 +1376,17 @@ export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
   );
 };
 
+export const collectSwiftXCTestAssertionLines = (source: string): readonly number[] => {
+  if (!hasSwiftXCTestAssertionUsage(source)) {
+    return [];
+  }
+
+  return sortedUniqueLines([
+    ...collectSwiftRegexLines(source, /\bXCTAssert[A-Za-z0-9_]*\s*\(/),
+    ...collectSwiftRegexLines(source, /\bXCTFail\s*\(/),
+  ]);
+};
+
 export const hasSwiftXCTUnwrapUsage = (source: string): boolean => {
   return collectSwiftRegexLines(source, /\bXCTUnwrap\s*\(/).length > 0;
 };
