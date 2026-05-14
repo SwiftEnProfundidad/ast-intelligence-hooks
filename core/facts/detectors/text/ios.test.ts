@@ -25,6 +25,7 @@ import {
   hasSwiftEmptyCatchUsage,
   hasSwiftForEachIndicesUsage,
   hasSwiftForEachSelfIdentityUsage,
+  collectSwiftForceCastLines,
   collectSwiftForceTryLines,
   hasSwiftForceCastUsage,
   hasSwiftFontWeightBoldUsage,
@@ -466,6 +467,8 @@ let model = payload as? User
 `;
   assert.equal(hasSwiftForceCastUsage(positive), true);
   assert.equal(hasSwiftForceCastUsage(negative), false);
+  assert.deepEqual(collectSwiftForceCastLines(positive), [2]);
+  assert.deepEqual(collectSwiftForceCastLines(negative), []);
 });
 
 test('hasSwiftCallbackStyleSignature detecta firmas callback con @escaping', () => {
