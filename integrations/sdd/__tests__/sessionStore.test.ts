@@ -223,6 +223,88 @@ test('readSddSession marca la sesión como inválida cuando expiresAt ya venció
   }
 });
 
+test('refreshSddSession realinea la sesión con la única task activa del tracking', () => {
+  const repo = createRepoWithOpenSpecChange();
+  const previousCwd = process.cwd();
+  try {
+    process.chdir(repo);
+    mkdirSync(join(repo, 'openspec', 'changes', 'rgo-1900-25'), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(repo, 'openspec', 'changes', 'rgo-1900-25', 'proposal.md'),
+      '# proposal\n',
+      'utf8'
+    );
+    mkdirSync(join(repo, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repo, 'docs', 'RURALGO_SEGUIMIENTO.md'),
+      [
+        '| Estado | Task ID | Foco | Definition of done |',
+        '| --- | --- | --- | --- |',
+        '| ✅ | RGO-1900-24 | Cart | listo |',
+        '| 🚧 | RGO-1900-25 | Checkout/Payment | pendiente |',
+      ].join('\n'),
+      'utf8'
+    );
+    openSddSession({
+      changeId: 'add-auth-feature',
+      ttlMinutes: 30,
+    });
+    runGit(repo, [
+      'config',
+      '--local',
+      'pumuki.sdd.session.expiresAt',
+      '2000-01-01T00:00:00.000Z',
+    ]);
+
+    const refreshed = refreshSddSession({
+      ttlMinutes: 90,
+    });
+
+    assert.equal(refreshed.active, true);
+    assert.equal(refreshed.valid, true);
+    assert.equal(refreshed.changeId, 'rgo-1900-25');
+    assert.equal(refreshed.ttlMinutes, 90);
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('refreshSddSession no reutiliza una sesión antigua si el tracking activo no existe en OpenSpec', () => {
+  const repo = createRepoWithOpenSpecChange();
+  const previousCwd = process.cwd();
+  try {
+    process.chdir(repo);
+    mkdirSync(join(repo, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repo, 'docs', 'RURALGO_SEGUIMIENTO.md'),
+      [
+        '| Estado | Task ID | Foco | Definition of done |',
+        '| --- | --- | --- | --- |',
+        '| 🚧 | RGO-1900-25 | Checkout/Payment | pendiente |',
+      ].join('\n'),
+      'utf8'
+    );
+    openSddSession({
+      changeId: 'add-auth-feature',
+      ttlMinutes: 30,
+    });
+
+    assert.throws(
+      () => refreshSddSession(),
+      /Active tracking change "rgo-1900-25" does not exist in openspec\/changes/i
+    );
+
+    const readBack = readSddSession();
+    assert.equal(readBack.changeId, 'add-auth-feature');
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('refreshSddSession aplica TTL por defecto cuando el TTL persistido es inválido', () => {
   const repo = createRepoWithOpenSpecChange();
   const previousCwd = process.cwd();

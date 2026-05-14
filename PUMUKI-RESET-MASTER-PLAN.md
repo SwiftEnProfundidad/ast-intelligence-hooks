@@ -6,6 +6,7 @@ Este documento es la **única fuente viva** de seguimiento interno del monorepo 
 
 ## Registro reciente de incidencias externas
 
+- [🚧] - `R_GO` / `PUMUKI-INC-143` / SDD session refresh stale active task (`pumuki@6.3.251`): RuralGo reporta que `pumuki sdd session --refresh --ttl-minutes=90` refresca una sesión antigua (`rgo-1900-22`) aunque el tracking activo ya apunta a `RGO-1900-25`. Objetivo: el refresh debe realinear la sesión con la única task activa de `docs/RURALGO_SEGUIMIENTO.md` cuando exista su OpenSpec change, o bloquear con remediación accionable si el tracking activo no tiene change materializado.
 - [✅] - `R_GO` / `PUMUKI-INC-142` / zero-violation + AST-actionable findings contract (`pumuki@6.3.250`): RuralGo reporta que `pumuki@6.3.248` deja `findings_count>0`, `blocking_findings_count=0` y `gate_exit_code=0` en `PRE_COMMIT`, contradiciendo el contrato de que toda regla runtime activa bloquea. Corrección aplicada: los matches scoped de `skills.*`/`heuristics.*` sin línea, rango o nodo semántico dejan de emitirse como findings advisory; cualquier finding runtime emitido fuerza bloqueo aunque el runner devuelva exit 0. Tras publicar `pumuki@6.3.249`, el repin de RuralGo detecta un gap residual: `governance.skills.cross-platform-critical.incomplete` bloquea sobre `.ai_evidence.json` sin línea ni nodo AST. Corrección adicional: los gaps sintéticos de cobertura cross-platform dejan de emitirse como findings runtime y quedan fuera del panel de violaciones PRE_WRITE; la cobertura sigue como metadato diagnóstico. Validación: tests específicos de gate/panel/audit -> OK; `npm run -s typecheck` -> OK; `validation:package-smoke` -> OK; `npx jest --runInBand --testMatch "**/__tests__/**/*.spec.ts" --runInBand` -> OK; `npm publish` -> `+ pumuki@6.3.250`; `npm view pumuki@6.3.250 version` -> `6.3.250`; `npm view pumuki dist-tags --json` -> `latest=6.3.250`; RuralGo repineado a `6.3.250`: `npx pumuki audit --stage=PRE_COMMIT --json` -> `gate_exit_code=0`, `findings_count=0`, `blocking_findings_count=0`; `npx pumuki-pre-commit --quiet` -> `0`.
 
 ---
@@ -935,9 +936,15 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-GENERAL-DECLARATIVE-AUDIT-001` / iOS general: auditar reglas declarativas restantes y convertir solo las que tengan detector accionable seguro. |
+| Este plan | `[🚧] - PUMUKI-INC-143` / RuralGo: `pumuki sdd session --refresh` no puede conservar una task antigua si el tracking activo ya cambió. |
 
-- Estado: 🚧 PARITY-IOS-GENERAL-DECLARATIVE-AUDIT-001 / no hay bugs externos activos en SAAS, R_GO ni Flux; se mantiene prioridad iOS antes de Android, Front y Backend.
+- Estado: 🚧 PUMUKI-INC-143 / bug externo activo en RuralGo; quedan congeladas las tasks internas iOS hasta cerrar fix, regresión, release útil y rollout consumer.
+
+Snapshot PUMUKI-INC-143 (2026-05-14):
+- Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-INC-143`.
+- Reporte consumer: `pumuki@6.3.250` permite continuar tras `pumuki sdd session --refresh --ttl-minutes=90`, pero la salida queda anclada a `change=rgo-1900-22` aunque `docs/RURALGO_SEGUIMIENTO.md` ya tiene foco activo `RGO-1900-25`.
+- Diagnóstico: `refreshSddSession` refrescaba TTL sobre la sesión previa sin contrastar el tracking consumidor activo; eso produce trazabilidad válida técnicamente pero semánticamente stale.
+- Criterio de cierre: `session --refresh` debe realinear a la única task activa del tracking RuralGo si su OpenSpec change existe, o bloquear con remediación accionable si el tracking activo no está materializado en `openspec/changes`.
 
 Snapshot PUMUKI-INC-141 (2026-05-14):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-INC-141`.

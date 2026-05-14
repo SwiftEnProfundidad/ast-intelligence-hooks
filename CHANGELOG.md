@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.251] - 2026-05-14
+
+### Fixed
+
+- **SDD session refresh tracking parity:** `pumuki sdd session --refresh` now realigns the session with the single active task in `docs/RURALGO_SEGUIMIENTO.md` when the matching OpenSpec change exists, and blocks with an actionable error instead of silently refreshing a stale task.
+
 ## [6.3.250] - 2026-05-14
 
 ### Fixed
