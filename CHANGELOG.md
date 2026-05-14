@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.262] - 2026-05-14
+
+- iOS: `skills.ios.no-force-cast` now emits actionable AST-style evidence for Swift `as!` expressions, including exact lines, primary/related nodes and remediation toward conditional casts or typed boundaries.
+
 ## [6.3.261] - 2026-05-14
 
 - iOS: `skills.ios.no-force-try` now emits actionable AST-style evidence for Swift `try!` expressions, including exact lines, primary/related nodes and remediation toward explicit error handling.

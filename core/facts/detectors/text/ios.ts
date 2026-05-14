@@ -1568,6 +1568,10 @@ export const hasSwiftForceCastUsage = (source: string): boolean => {
   });
 };
 
+export const collectSwiftForceCastLines = (source: string): readonly number[] => {
+  return sortedUniqueLines(collectSwiftRegexLines(source, /\bas\s*!/));
+};
+
 export const hasSwiftCallbackStyleSignature = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@escaping', index)) {
