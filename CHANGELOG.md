@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.259] - 2026-05-14
+
+- iOS: `skills.ios.prefer-swift-testing` now emits actionable AST-style evidence for modernizable `XCTestCase` suites, including exact lines, primary/related nodes and native Swift Testing `import Testing`/`@Suite`/`@Test` remediation.
+
 ## [6.3.258] - 2026-05-14
 
 - iOS: `skills.ios.no-xctunwrap` now emits actionable AST-style evidence for legacy `XCTUnwrap` calls, including exact lines, primary/related nodes and native Swift Testing `#require` remediation.

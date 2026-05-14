@@ -6,6 +6,7 @@ import {
   findSwiftOpenClosedSwitchMatch,
   findSwiftConcreteDependencyDipMatch,
   findSwiftPresentationSrpMatch,
+  collectSwiftModernizableXCTestSuiteLines,
   collectSwiftLegacyExpectationDescriptionLines,
   collectSwiftMixedTestingFrameworkLines,
   collectSwiftQuickNimbleLines,
@@ -1624,6 +1625,8 @@ final class LoginUITests: XCTestCase {
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(legacySuite), true);
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(mixedSuite), false);
   assert.equal(hasSwiftModernizableXCTestSuiteUsage(uiSuite), false);
+  assert.deepEqual(collectSwiftModernizableXCTestSuiteLines(legacySuite), [2, 4, 5]);
+  assert.deepEqual(collectSwiftModernizableXCTestSuiteLines(mixedSuite), []);
 });
 
 test('hasSwiftMixedTestingFrameworksUsage detecta mezcla XCTestCase y Testing/@Test', () => {

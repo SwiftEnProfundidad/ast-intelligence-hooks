@@ -1328,6 +1328,18 @@ export const hasSwiftModernizableXCTestSuiteUsage = (source: string): boolean =>
   return true;
 };
 
+export const collectSwiftModernizableXCTestSuiteLines = (source: string): readonly number[] => {
+  if (!hasSwiftModernizableXCTestSuiteUsage(source)) {
+    return [];
+  }
+
+  return sortedUniqueLines([
+    ...collectSwiftRegexLines(source, /\bimport\s+XCTest\b/),
+    ...collectSwiftRegexLines(source, /\bclass\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*XCTestCase\b/),
+    ...collectSwiftRegexLines(source, /^\s*(?:override\s+)?func\s+test[A-Za-z0-9_]*\s*\(/),
+  ]);
+};
+
 export const hasSwiftMixedTestingFrameworksUsage = (source: string): boolean => {
   if (!hasSwiftXCTestImportUsage(source) || !hasSwiftXCTestCaseSubclassUsage(source)) {
     return false;

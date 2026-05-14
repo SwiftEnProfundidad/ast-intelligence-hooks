@@ -680,6 +680,23 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
     findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctest-suite-modernizable.ast'),
     true
   );
+  const modernizableSuiteFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.testing.xctest-suite-modernizable.ast'
+  );
+  assert.deepEqual(modernizableSuiteFinding?.lines, [1, 3, 4]);
+  assert.deepEqual(modernizableSuiteFinding?.primary_node, {
+    kind: 'class',
+    name: 'modernizable XCTestCase test suite',
+    lines: [1, 3, 4],
+  });
+  assert.deepEqual(modernizableSuiteFinding?.related_nodes, [
+    {
+      kind: 'class',
+      name: 'replacement: Swift Testing @Suite/@Test suite',
+      lines: [1, 3, 4],
+    },
+  ]);
+  assert.match(modernizableSuiteFinding?.expected_fix ?? '', /@Test/);
   assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctassert.ast'), true);
   const xctAssertFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.testing.xctassert.ast'
