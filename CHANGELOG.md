@@ -1,5 +1,10 @@
 # Changelog
 
+## [6.3.253] - 2026-05-14
+
+### Added
+- **iOS AST node evidence for XCTest waits:** `skills.ios.no-wait-for-expectations` now emits actionable line and node metadata for `wait(for:)`, `self.wait(for:)`, `waitForExpectations(timeout:)` and `XCTWaiter.wait(for:)`, while ignoring strings and comments.
+
 All notable changes to `pumuki` are documented here.
 
 This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).

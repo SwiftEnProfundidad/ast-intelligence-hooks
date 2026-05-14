@@ -627,6 +627,12 @@ type TextDetectorRegistryEntry = {
   readonly pathCheck: (path: string) => boolean;
   readonly excludePaths: ReadonlyArray<(path: string) => boolean>;
   readonly detect: (content: string) => boolean;
+  readonly locateLines?: (content: string) => readonly number[];
+  readonly primaryNode?: (lines: readonly number[]) => HeuristicFact['primary_node'];
+  readonly relatedNodes?: (lines: readonly number[]) => HeuristicFact['related_nodes'];
+  readonly why?: string;
+  readonly impact?: string;
+  readonly expected_fix?: string;
   readonly ruleId: string;
   readonly code: string;
   readonly message: string;
@@ -714,7 +720,7 @@ const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftModernizableXCTestSuiteUsage, ruleId: 'heuristics.ios.testing.xctest-suite-modernizable.ast', code: 'HEURISTICS_IOS_TESTING_XCTEST_SUITE_MODERNIZABLE_AST', message: 'AST heuristic detected XCTestCase/test... suite that may be modernizable to Swift Testing with import Testing and @Test.' },
   { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftXCTestAssertionUsage, ruleId: 'heuristics.ios.testing.xctassert.ast', code: 'HEURISTICS_IOS_TESTING_XCTASSERT_AST', message: 'AST heuristic detected XCTest assertion usage where #expect may be preferred.' },
   { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftXCTUnwrapUsage, ruleId: 'heuristics.ios.testing.xctunwrap.ast', code: 'HEURISTICS_IOS_TESTING_XCTUNWRAP_AST', message: 'AST heuristic detected XCTUnwrap usage where #require may be preferred.' },
-  { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftWaitForExpectationsUsage, ruleId: 'heuristics.ios.testing.wait-for-expectations.ast', code: 'HEURISTICS_IOS_TESTING_WAIT_FOR_EXPECTATIONS_AST', message: 'AST heuristic detected wait(for:)/waitForExpectations usage where await fulfillment(of:) may be preferred.' },
+  { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftWaitForExpectationsUsage, locateLines: TextIOS.collectSwiftWaitForExpectationsLines, primaryNode: (lines) => ({ kind: 'call', name: 'legacy XCTest wait call', lines }), relatedNodes: (lines) => [{ kind: 'call', name: 'replacement: await fulfillment(of:timeout:)', lines }], why: 'Legacy XCTest wait APIs block the current test thread and hide async intent that Swift concurrency can express directly.', impact: 'Async tests become less deterministic, harder to cancel and easier to keep tied to XCTest-only migration paths.', expected_fix: 'Replace wait(for:timeout:), self.wait(for:timeout:) or waitForExpectations(timeout:) with await fulfillment(of:timeout:) when the test target supports async XCTest migration.', ruleId: 'heuristics.ios.testing.wait-for-expectations.ast', code: 'HEURISTICS_IOS_TESTING_WAIT_FOR_EXPECTATIONS_AST', message: 'AST heuristic detected wait(for:)/waitForExpectations usage where await fulfillment(of:) may be preferred.' },
   { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftLegacyExpectationDescriptionUsage, ruleId: 'heuristics.ios.testing.legacy-expectation-description.ast', code: 'HEURISTICS_IOS_TESTING_LEGACY_EXPECTATION_DESCRIPTION_AST', message: 'AST heuristic detected expectation(description:) usage without modern fulfillment/confirmation flow.' },
   { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftMixedTestingFrameworksUsage, ruleId: 'heuristics.ios.testing.mixed-frameworks.ast', code: 'HEURISTICS_IOS_TESTING_MIXED_FRAMEWORKS_AST', message: 'AST heuristic detected XCTestCase and Swift Testing markers mixed in the same test file without explicit compatibility reason.' },
   { platform: 'ios', pathCheck: isIOSSwiftTestPath, excludePaths: [], detect: TextIOS.hasSwiftQuickNimbleUsage, ruleId: 'heuristics.ios.testing.quick-nimble.ast', code: 'HEURISTICS_IOS_TESTING_QUICK_NIMBLE_AST', message: 'AST heuristic detected Quick/Nimble usage where native Swift Testing remains the preferred baseline.' },
@@ -812,12 +818,19 @@ export const extractHeuristicFacts = (
         (entry.excludePaths ?? []).every((exclude) => !exclude(fileFact.path)) &&
         entry.detect(fileFact.content)
       ) {
+        const lines = entry.locateLines?.(fileFact.content);
         heuristicFacts.push(
           createHeuristicFact({
             ruleId: entry.ruleId,
             code: entry.code,
             message: entry.message,
             filePath: fileFact.path,
+            lines,
+            primary_node: lines && lines.length > 0 ? entry.primaryNode?.(lines) : undefined,
+            related_nodes: lines && lines.length > 0 ? entry.relatedNodes?.(lines) : undefined,
+            why: entry.why,
+            impact: entry.impact,
+            expected_fix: entry.expected_fix,
           })
         );
       }
