@@ -1362,11 +1362,16 @@ const hasSwiftConfirmationUsage = (source: string): boolean => {
   return hasSwiftSanitizedRegexMatch(source, /\bawait\s+confirmation\b/);
 };
 
+export const collectSwiftWaitForExpectationsLines = (source: string): readonly number[] => {
+  return sortedUniqueLines([
+    ...collectSwiftRegexLines(source, /\b(?:self\s*\.\s*)?wait\s*\(\s*for\s*:/),
+    ...collectSwiftRegexLines(source, /\bwaitForExpectations\s*\(/),
+    ...collectSwiftRegexLines(source, /\bXCTWaiter\s*\.\s*wait\s*\(\s*for\s*:/),
+  ]);
+};
+
 export const hasSwiftWaitForExpectationsUsage = (source: string): boolean => {
-  return hasSwiftSanitizedRegexMatch(
-    source,
-    /\bwait\s*\(\s*for\s*:|\bwaitForExpectations\s*\(/
-  );
+  return collectSwiftWaitForExpectationsLines(source).length > 0;
 };
 
 export const hasSwiftLegacyExpectationDescriptionUsage = (source: string): boolean => {

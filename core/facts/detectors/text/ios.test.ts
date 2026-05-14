@@ -6,6 +6,7 @@ import {
   findSwiftOpenClosedSwitchMatch,
   findSwiftConcreteDependencyDipMatch,
   findSwiftPresentationSrpMatch,
+  collectSwiftWaitForExpectationsLines,
   hasSwiftAnyViewUsage,
   hasSwiftAsyncWithoutAwaitUsage,
   hasSwiftCallbackStyleSignature,
@@ -1721,14 +1722,20 @@ test('hasSwiftWaitForExpectationsUsage detecta waits legacy y excluye await fulf
 let expectation = expectation(description: "Done")
 wait(for: [expectation], timeout: 1)
 waitForExpectations(timeout: 1)
+self.wait(for: [expectation], timeout: 1)
+XCTWaiter.wait(for: [expectation], timeout: 1)
 `;
   const modernWait = `
 let expectation = expectation(description: "Done")
 await fulfillment(of: [expectation], timeout: 1)
+let sample = "waitForExpectations(timeout: 1)"
+// wait(for: [expectation], timeout: 1)
 `;
 
   assert.equal(hasSwiftWaitForExpectationsUsage(legacyWait), true);
   assert.equal(hasSwiftWaitForExpectationsUsage(modernWait), false);
+  assert.deepEqual(collectSwiftWaitForExpectationsLines(legacyWait), [3, 4, 5, 6]);
+  assert.deepEqual(collectSwiftWaitForExpectationsLines(modernWait), []);
 });
 
 test('hasSwiftLegacyExpectationDescriptionUsage detecta expectation(description:) sin flujo moderno', () => {

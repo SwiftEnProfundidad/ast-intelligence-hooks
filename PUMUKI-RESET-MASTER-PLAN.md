@@ -7,7 +7,8 @@ Este documento es la **única fuente viva** de seguimiento interno del monorepo 
 ## Registro reciente de incidencias externas
 
 - [✅] - `R_GO` / `PUMUKI-INC-143` / SDD session refresh stale active task (`pumuki@6.3.252`): cerrado en PR #982 y publicado como `pumuki@6.3.252`; RuralGo repineado confirma que `pumuki sdd session --refresh --ttl-minutes=90` ya no conserva `rgo-1900-22` y bloquea de forma accionable cuando el tracking activo (`rgo-1900-26`) no tiene `openspec/changes/rgo-1900-26`.
-- [🚧] - `PARITY-IOS-001` / `skills.ios.no-wait-for-expectations` / detector AST real para waits XCTest: continuar la paridad iOS prioritaria con detección por nodos, sin reglas paraguas ni declarativas usadas como enforcement runtime.
+- [✅] - `PARITY-IOS-001` / `skills.ios.no-wait-for-expectations` / detector AST real para waits XCTest (`pumuki@6.3.253`): el finding enlaza llamadas `wait(for:)`, `self.wait(for:)`, `waitForExpectations(timeout:)` y `XCTWaiter.wait(for:)` con líneas, nodo primario, nodo de reemplazo y `expected_fix` hacia `await fulfillment(of:timeout:)`.
+- [🚧] - `PARITY-IOS-001` / `skills.ios.no-legacy-expectation-description` / detector AST real para expectation(description:) legacy: continuar la paridad Swift Testing con nodos accionables y sin enforcement declarativo.
 - [✅] - `R_GO` / `PUMUKI-INC-142` / zero-violation + AST-actionable findings contract (`pumuki@6.3.250`): RuralGo reporta que `pumuki@6.3.248` deja `findings_count>0`, `blocking_findings_count=0` y `gate_exit_code=0` en `PRE_COMMIT`, contradiciendo el contrato de que toda regla runtime activa bloquea. Corrección aplicada: los matches scoped de `skills.*`/`heuristics.*` sin línea, rango o nodo semántico dejan de emitirse como findings advisory; cualquier finding runtime emitido fuerza bloqueo aunque el runner devuelva exit 0. Tras publicar `pumuki@6.3.249`, el repin de RuralGo detecta un gap residual: `governance.skills.cross-platform-critical.incomplete` bloquea sobre `.ai_evidence.json` sin línea ni nodo AST. Corrección adicional: los gaps sintéticos de cobertura cross-platform dejan de emitirse como findings runtime y quedan fuera del panel de violaciones PRE_WRITE; la cobertura sigue como metadato diagnóstico. Validación: tests específicos de gate/panel/audit -> OK; `npm run -s typecheck` -> OK; `validation:package-smoke` -> OK; `npx jest --runInBand --testMatch "**/__tests__/**/*.spec.ts" --runInBand` -> OK; `npm publish` -> `+ pumuki@6.3.250`; `npm view pumuki@6.3.250 version` -> `6.3.250`; `npm view pumuki dist-tags --json` -> `latest=6.3.250`; RuralGo repineado a `6.3.250`: `npx pumuki audit --stage=PRE_COMMIT --json` -> `gate_exit_code=0`, `findings_count=0`, `blocking_findings_count=0`; `npx pumuki-pre-commit --quiet` -> `0`.
 
 ---
@@ -937,9 +938,9 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[✅] - PUMUKI-INC-143` cerrado; `[🚧] - PARITY-IOS-001 / skills.ios.no-wait-for-expectations` reactivado como siguiente detector AST iOS. |
+| Este plan | `[✅] - PUMUKI-INC-143` cerrado; `[✅] - PARITY-IOS-001 / skills.ios.no-wait-for-expectations` preparado para `pumuki@6.3.253`; `[🚧] - PARITY-IOS-001 / skills.ios.no-legacy-expectation-description` queda como siguiente detector Swift Testing. |
 
-- Estado: ✅ PUMUKI-INC-143 cerrado en `pumuki@6.3.252`; sin bugs externos abiertos conocidos tras el repin RuralGo. Task activa interna reanudada: 🚧 `PARITY-IOS-001` / `skills.ios.no-wait-for-expectations`.
+- Estado: ✅ PUMUKI-INC-143 cerrado en `pumuki@6.3.252`; sin bugs externos abiertos conocidos tras el repin RuralGo. Task iOS actual: ✅ `skills.ios.no-wait-for-expectations` preparado para `pumuki@6.3.253`; siguiente 🚧 `skills.ios.no-legacy-expectation-description`.
 
 Snapshot PUMUKI-INC-143 (2026-05-14):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-INC-143`.

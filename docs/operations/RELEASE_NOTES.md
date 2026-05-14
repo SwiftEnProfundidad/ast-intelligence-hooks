@@ -6,6 +6,11 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.253)
+
+- **Paridad AST iOS testing:** `skills.ios.no-wait-for-expectations` queda respaldada por evidencia accionable de llamada Swift, con líneas, nodo primario y remediación hacia `await fulfillment(of:timeout:)`.
+- **Rollout recomendado:** publicar `pumuki@6.3.253` y continuar con `skills.ios.no-legacy-expectation-description` si no entra bug externo nuevo.
+
 ### 2026-05-14 (v6.3.252)
 
 - **Parser de tracking estricto:** el refresh SDD ya no interpreta bullets operativos (`Siguiente`, `next`, `delegable`) como IDs de task activa.
