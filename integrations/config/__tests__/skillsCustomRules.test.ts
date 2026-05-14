@@ -496,9 +496,8 @@ test('import custom con reglas no canonicas usa DECLARATIVE y evita unsupported_
       backend: { detected: true, confidence: 'HIGH' as const },
     };
     const ruleSet = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot, detectedPlatforms);
-    assert.equal(ruleSet.rules.length, 1);
-    assert.equal(ruleSet.rules[0]?.id, importedRuleId);
-    assert.equal(ruleSet.rules[0]?.then.code.endsWith('_DECLARATIVE'), true);
+    assert.equal(ruleSet.rules.length, 0);
+    assert.deepEqual(ruleSet.registryCoverage?.declarativeRuleIds, [importedRuleId]);
     assert.deepEqual(ruleSet.unsupportedAutoRuleIds, []);
   }));
 });

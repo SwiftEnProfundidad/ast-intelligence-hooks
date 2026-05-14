@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 86);
+  assert.equal(iosRules.length, 88);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -17,6 +17,8 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.dispatchsemaphore.ast',
     'heuristics.ios.operation-queue.ast',
     'heuristics.ios.task-detached.ast',
+    'heuristics.ios.concurrency.async-without-await.ast',
+    'heuristics.ios.error.empty-catch.ast',
     'heuristics.ios.swiftui.onappear-task.ast',
     'heuristics.ios.swiftui.onchange-task.ast',
     'heuristics.ios.memory.strong-delegate.ast',
@@ -103,6 +105,14 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.task-detached.ast')?.then.code,
     'HEURISTICS_IOS_TASK_DETACHED_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.async-without-await.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_ASYNC_WITHOUT_AWAIT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.error.empty-catch.ast')?.then.code,
+    'HEURISTICS_IOS_ERROR_EMPTY_CATCH_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.swiftui.onchange-task.ast')?.then.code,
