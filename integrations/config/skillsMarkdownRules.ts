@@ -410,9 +410,15 @@ const normalizeKnownRuleTarget = (
     if (
       includes('no object creation in body') ||
       (includes('object creation') && includes('body')) ||
-      (includes('body kept simple') && includes('pure'))
+      (includes('body kept simple') && includes('pure')) ||
+      (includes('view body simple') && includes('pure')) ||
+      (includes('body simple') && includes('side effects')) ||
+      (includes('body') && includes('complex logic'))
     ) {
-      return 'skills.ios.guideline.ios-swiftui-expert.no-object-creation-in-body';
+      if (includes('no object creation') || includes('object creation')) {
+        return 'skills.ios.guideline.ios-swiftui-expert.no-object-creation-in-body';
+      }
+      return 'skills.ios.guideline.ios-swiftui-expert.keep-view-body-simple-and-pure-no-side-effects-or-complex-logic';
     }
     if (
       includes('image downsampling') ||

@@ -221,6 +221,21 @@ test('normaliza regla SwiftUI object creation in body a detector canonico de ren
   ]);
 });
 
+test('normaliza regla SwiftUI body simple y puro a detector canonico de render path', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- Keep view body simple and pure (no side effects or complex logic)',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.ios.guideline.ios-swiftui-expert.keep-view-body-simple-and-pure-no-side-effects-or-complex-logic'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+});
+
 test('normaliza regla SwiftUI UIImage data downsampling a detector canonico de imagenes', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-swiftui-expert-guidelines',

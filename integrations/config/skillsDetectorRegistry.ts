@@ -292,6 +292,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.swiftui.body-object-creation', [
       'heuristics.ios.swiftui.body-object-creation.ast',
     ]),
+  'skills.ios.guideline.ios-swiftui-expert.keep-view-body-simple-and-pure-no-side-effects-or-complex-logic':
+    heuristicDetector('ios.swiftui.body-object-creation', [
+      'heuristics.ios.swiftui.body-object-creation.ast',
+    ]),
   'skills.ios.guideline.ios-swiftui-expert.suggest-image-downsampling-when-uiimage-data-is-encountered':
     heuristicDetector('ios.swiftui.image-data-decoding', [
       'heuristics.ios.swiftui.image-data-decoding.ast',

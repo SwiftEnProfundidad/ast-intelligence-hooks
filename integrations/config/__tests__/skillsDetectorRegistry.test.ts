@@ -110,6 +110,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.keep-view-body-simple-and-pure-no-side-effects-or-complex-logic'
+    ),
+    ['heuristics.ios.swiftui.body-object-creation.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios-swiftui-expert.suggest-image-downsampling-when-uiimage-data-is-encountered'
     ),
     ['heuristics.ios.swiftui.image-data-decoding.ast']

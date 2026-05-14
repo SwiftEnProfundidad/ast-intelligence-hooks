@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.244] - 2026-05-14
+
+### Added
+
+- **SwiftUI body-purity parity:** `skills.ios.guideline.ios-swiftui-expert.keep-view-body-simple-and-pure-no-side-effects-or-complex-logic` now maps to the existing AUTO body object-creation heuristic, converting the body-purity guideline into scoped runtime evidence without banning legitimate small composition helpers.
+
 ## [6.3.243] - 2026-05-14
 
 ### Added

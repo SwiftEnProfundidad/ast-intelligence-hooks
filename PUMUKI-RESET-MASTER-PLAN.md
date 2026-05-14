@@ -931,9 +931,9 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PARITY-IOS-SWIFTUI-BODY-002` / SwiftUI: pureza de `body` debe quedar mapeada a detector AUTO sin bloquear composición legítima. |
+| Este plan | `[🚧] - PARITY-IOS-SWIFTUI-PROPS-001` / SwiftUI: pasar solo valores necesarios a subviews debe quedar mapeado a detector AUTO si existe evidencia runtime accionable. |
 
-- Estado: 🚧 PARITY-IOS-SWIFTUI-BODY-002 / no hay bugs externos activos en SAAS, R_GO ni Flux; se retoma paridad iOS antes de Android, Front y Backend.
+- Estado: 🚧 PARITY-IOS-SWIFTUI-PROPS-001 / no hay bugs externos activos en SAAS, R_GO ni Flux; se retoma paridad iOS antes de Android, Front y Backend.
 
 Snapshot PUMUKI-INC-141 (2026-05-14):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-INC-141`.
@@ -964,6 +964,12 @@ Snapshot PARITY-IOS-SWIFTUI-LAYOUT-002 (2026-05-14):
 Snapshot PARITY-IOS-SWIFTUI-BODY-002 (2026-05-14):
 - Diagnóstico inicial: continuar con la siguiente guideline declarativa de SwiftUI relacionada con `body` simple/puro, reutilizando detectores existentes si ya cubren computación o side effects en render path.
 - Criterio de avance: no bloquear composición legítima ni helpers `@ViewBuilder` pequeños; solo mapear evidencias runtime remediables.
+- Implementación: se mapea `keep-view-body-simple-and-pure-no-side-effects-or-complex-logic` al detector AUTO existente `heuristics.ios.swiftui.body-object-creation.ast`, que ya marca creación de formatters costosos dentro de `body` sin prohibir composición legítima.
+- Cierre: ✅ `skills.lock.json` queda `FRESH`; la suite dirigida de registry/markdown queda en `47/47 pass`; `typecheck` pasa; `git diff --check` limpio; `npm pack --dry-run --silent` genera `pumuki-6.3.244.tgz`.
+
+Snapshot PARITY-IOS-SWIFTUI-PROPS-001 (2026-05-14):
+- Diagnóstico inicial: `skills.ios.guideline.ios-swiftui-expert.pass-only-needed-values-to-views-avoid-large-config-or-context-objects` sigue como candidata declarativa.
+- Criterio de avance: solo convertir a AUTO si existe detector acotado para props/config/context grandes; si no, dejar en backlog para evitar falsos positivos estructurales.
 
 Snapshot PUMUKI-INC-140 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, fila `PUMUKI-INC-140`.
