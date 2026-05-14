@@ -47,11 +47,21 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-task-detached': heuristicDetector('ios.task-detached', [
     'heuristics.ios.task-detached.ast',
   ]),
+  'skills.ios.no-async-without-await': heuristicDetector('ios.concurrency.async-without-await', [
+    'heuristics.ios.concurrency.async-without-await.ast',
+  ]),
   'skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles': heuristicDetector(
     'ios.memory.strong-delegate',
     ['heuristics.ios.memory.strong-delegate.ast']
   ),
   'skills.ios.guideline.ios.evitar-retain-cycles-especialmente-en-closures-delegates': heuristicDetector(
+    'ios.memory.retain-cycles',
+    [
+      'heuristics.ios.memory.strong-delegate.ast',
+      'heuristics.ios.memory.strong-self-escaping-closure.ast',
+    ]
+  ),
+  'skills.ios.guideline.ios.retain-cycles-memory-leaks': heuristicDetector(
     'ios.memory.retain-cycles',
     [
       'heuristics.ios.memory.strong-delegate.ast',
@@ -98,6 +108,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.logging.adhoc-print',
     ['heuristics.ios.logging.adhoc-print.ast']
   ),
+  'skills.ios.guideline.ios.catch-vaci-os-prohibido-silenciar-errores-ast-common-error-emptycatch': heuristicDetector(
+    'ios.error.empty-catch',
+    ['heuristics.ios.error.empty-catch.ast']
+  ),
   'skills.ios.guideline.ios.no-loggear-pii-tokens-emails-ids-sensibles': heuristicDetector(
     'ios.logging.sensitive-data',
     ['heuristics.ios.logging.sensitive-data.ast']
@@ -110,10 +124,6 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.localization.unlocalized-dateformatter',
     ['heuristics.ios.localization.unlocalized-dateformatter.ast']
   ),
-  'skills.ios.guideline.ios.alamofire-prohibido-usar-urlsession-nativo': heuristicDetector(
-    'ios.networking.alamofire',
-    ['heuristics.ios.networking.alamofire.ast']
-  ),
   'skills.ios.guideline.ios.codable-decodificacio-n-automa-tica-de-json-nunca-jsonserialization': heuristicDetector(
     'ios.json.jsonserialization',
     ['heuristics.ios.json.jsonserialization.ast']
@@ -121,14 +131,6 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.guideline.ios.codable-para-serializacio-n-json-nunca-jsonserialization': heuristicDetector(
     'ios.json.jsonserialization',
     ['heuristics.ios.json.jsonserialization.ast']
-  ),
-  'skills.ios.guideline.ios.cocoapods-prohibido': heuristicDetector(
-    'ios.dependencies.cocoapods',
-    ['heuristics.ios.dependencies.cocoapods.ast']
-  ),
-  'skills.ios.guideline.ios.carthage-prohibido': heuristicDetector(
-    'ios.dependencies.carthage',
-    ['heuristics.ios.dependencies.carthage.ast']
   ),
   'skills.ios.guideline.ios.keychain-passwords-tokens-no-userdefaults': heuristicDetector(
     'ios.security.userdefaults-sensitive-data',
@@ -145,18 +147,6 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto': heuristicDetector(
     'ios.security.insecure-transport',
     ['heuristics.ios.security.insecure-transport.ast']
-  ),
-  'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs': heuristicDetector(
-    'ios.localization.localizable-strings',
-    ['heuristics.ios.localization.localizable-strings.ast']
-  ),
-  'skills.ios.guideline.ios.string-catalogs-xcstrings': heuristicDetector(
-    'ios.localization.localizable-strings',
-    ['heuristics.ios.localization.localizable-strings.ast']
-  ),
-  'skills.ios.guideline.ios.string-catalogs-xcstrings-sistema-moderno-de-localizacio-n-xcode-15': heuristicDetector(
-    'ios.localization.localizable-strings',
-    ['heuristics.ios.localization.localizable-strings.ast']
   ),
   'skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui': heuristicDetector(
     'ios.localization.hardcoded-ui-string',

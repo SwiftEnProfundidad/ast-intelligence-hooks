@@ -311,6 +311,11 @@ test('normaliza reglas Core Data a ids canonicos del slice phase8', () => {
     sourceSkill: 'ios-core-data-guidelines',
     sourcePath: 'docs/codex-skills/core-data-expert.md',
     sourceContent: [
+      '- ✅ Prefer `NSManagedObjectID` or mapped DTO/domain models over passing `NSManagedObject` across boundaries.',
+      '- ✅ Make context ownership explicit and keep merge boundaries controlled.',
+      '- ✅ Pass NSManagedObjectID when a different context must resolve the entity later.',
+      '- ✅ Treat managed objects as context-scoped references, not as portable domain entities.',
+      '- Use repositories that map managed objects into domain models before crossing module boundaries.',
       '- ✅ Keep Core Data orchestration inside infrastructure or repository layers instead of presentation code.',
       '- ✅ Keep SwiftData orchestration (`ModelContext`, `ModelContainer`, `@Query`, `@Model`) inside infrastructure or repository layers instead of application or presentation code.',
       '- ❌ Leaking context-scoped managed objects into SwiftUI state or view models.',
@@ -320,6 +325,7 @@ test('normaliza reglas Core Data a ids canonicos del slice phase8', () => {
   const ids = rules.map((rule) => rule.id).sort();
   assert.deepEqual(ids, [
     'skills.ios.no-core-data-layer-leak',
+    'skills.ios.no-nsmanagedobject-boundary',
     'skills.ios.no-nsmanagedobject-state-leak',
     'skills.ios.no-swiftdata-layer-leak',
   ]);
@@ -337,7 +343,7 @@ test('normaliza regla iOS ATS a detector canonico de transporte seguro', () => {
   ]);
 });
 
-test('normaliza regla iOS Localizable.strings a detector canonico de String Catalogs', () => {
+test('mantiene Localizable.strings como declarativa hasta tener detector mode-aware', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-guidelines',
     sourcePath: 'docs/codex-skills/ios-enterprise-rules.md',
@@ -347,6 +353,114 @@ test('normaliza regla iOS Localizable.strings a detector canonico de String Cata
   assert.deepEqual(rules.map((rule) => rule.id), [
     'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs',
   ]);
+});
+
+test('normaliza reglas iOS generales con detector existente como AUTO', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+    sourceContent: [
+      '- ✅ **Alamofire** - Prohibido, usar URLSession nativo',
+      '- ✅ **CocoaPods** - Prohibido',
+      '- ✅ **Carthage** - Prohibido',
+      '- ✅ **JSONSerialization** - Prohibido, usar Codable',
+      '- ✅ **Keychain** - Passwords, tokens (NO UserDefaults)',
+      '- ✅ **UserDefaults** - Settings simples, NO datos sensibles',
+      '- ✅ **Prohibido print() y logs ad-hoc**',
+      '- ✅ **Catch vacíos** - Prohibido silenciar errores (AST common.error.emptycatch)',
+      '- ✅ **No loggear PII (tokens, emails, IDs sensibles)**',
+      '- ✅ **Obfuscation** - Strings sensibles en código',
+      '- ✅ **DateFormatter** - Fechas localizadas',
+      '- ✅ **Localizable.strings** - Deprecado, usar String Catalogs',
+      '- ✅ **String Catalogs (.xcstrings)**',
+      '- ✅ **Cero strings hardcodeadas en UI**',
+      '- ✅ **Assets en Asset Catalogs** - Con soporte para todos los tamaños',
+      '- ✅ **Dynamic Type** - Font scaling automático',
+      '- ✅ **RTL support** - Right-to-left para árabe, hebreo',
+      '- ✅ **Background threads** - No bloquear main thread',
+      '- ✅ **Accessibility labels** - .accessibilityLabel()',
+      '- ✅ **Delegation pattern** - weak delegates para evitar retain cycles',
+      '- ✅ **Evitar retain cycles** especialmente en closures/delegates',
+      '- ✅ **Retain cycles & memory leaks**',
+      '- ✅ **No Singleton** - Usar Inyección de Dependencias',
+      '- ✅ **Massive View Controllers** - ViewControllers que mezclan presentación, navegación y datos',
+      '- ✅ **Implicitly unwrapped** - Solo para IBOutlets y casos muy específicos',
+      '- ✅ **Magic numbers** - Usar constantes con nombres',
+      '- ✅ **Swinject** - Prohibido, DI manual o Environment',
+      '- ✅ **NavigationStack + NavigationPath** - Para navegación moderna',
+      '- ✅ **onChange(of:)** con variante de 2 parámetros o sin parámetros',
+      '- ✅ **LazyVStack/LazyHStack** - Para listas grandes',
+      '- ✅ **Singletons** - Dificultan testing',
+      '- ✅ **XCTest** - Solo para proyectos legacy o UI tests',
+    ].join('\n'),
+  });
+
+  const expected = [
+      ['skills.ios.guideline.ios.accessibility-labels-accessibilitylabel', 'AUTO'],
+      ['skills.ios.guideline.ios.alamofire-prohibido-usar-urlsession-nativo', 'DECLARATIVE'],
+      ['skills.ios.guideline.ios.assets-en-asset-catalogs-con-soporte-para-todos-los-taman-os', 'AUTO'],
+      ['skills.ios.guideline.ios.background-threads-no-bloquear-main-thread', 'AUTO'],
+      ['skills.ios.guideline.ios.carthage-prohibido', 'DECLARATIVE'],
+      [
+        'skills.ios.guideline.ios.catch-vaci-os-prohibido-silenciar-errores-ast-common-error-emptycatch',
+        'AUTO',
+      ],
+      ['skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui', 'AUTO'],
+      ['skills.ios.guideline.ios.cocoapods-prohibido', 'DECLARATIVE'],
+      [
+        'skills.ios.guideline.ios.codable-para-serializacio-n-json-nunca-jsonserialization',
+        'AUTO',
+      ],
+      ['skills.ios.guideline.ios.dateformatter-fechas-localizadas', 'AUTO'],
+      [
+        'skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles',
+        'AUTO',
+      ],
+      ['skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico', 'AUTO'],
+      [
+        'skills.ios.guideline.ios.evitar-retain-cycles-especialmente-en-closures-delegates',
+        'AUTO',
+      ],
+      [
+        'skills.ios.guideline.ios.implicitly-unwrapped-solo-para-iboutlets-y-casos-muy-especi-ficos',
+        'AUTO',
+      ],
+      ['skills.ios.guideline.ios.keychain-passwords-tokens-no-userdefaults', 'AUTO'],
+      [
+        'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs',
+        'DECLARATIVE',
+      ],
+      ['skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres', 'AUTO'],
+      [
+        'skills.ios.guideline.ios.massive-view-controllers-viewcontrollers-que-mezclan-presentacio-n-nav',
+        'AUTO',
+      ],
+      [
+        'skills.ios.guideline.ios.no-loggear-pii-tokens-emails-ids-sensibles',
+        'AUTO',
+      ],
+      [
+        'skills.ios.guideline.ios.no-singleton-usar-inyeccio-n-de-dependencias-no-compartir-instancias-g',
+        'AUTO',
+      ],
+      ['skills.ios.guideline.ios.obfuscation-strings-sensibles-en-co-digo', 'AUTO'],
+      ['skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc', 'AUTO'],
+      ['skills.ios.guideline.ios.retain-cycles-memory-leaks', 'AUTO'],
+      ['skills.ios.guideline.ios.rtl-support-right-to-left-para-a-rabe-hebreo', 'AUTO'],
+      ['skills.ios.guideline.ios.singletons-dificultan-testing', 'AUTO'],
+      ['skills.ios.guideline.ios.string-catalogs-xcstrings', 'DECLARATIVE'],
+      ['skills.ios.guideline.ios.swinject-prohibido-di-manual-o-environment', 'AUTO'],
+      ['skills.ios.guideline.ios.userdefaults-settings-simples-no-datos-sensibles', 'AUTO'],
+      [
+        'skills.ios.guideline.ios-swiftui-expert.use-lazyvstack-lazyhstack-for-large-lists',
+        'AUTO',
+      ],
+      ['skills.ios.no-legacy-onchange', 'AUTO'],
+      ['skills.ios.no-navigation-view', 'AUTO'],
+      ['skills.ios.prefer-swift-testing', 'AUTO'],
+    ].sort();
+
+  assert.deepEqual(rules.map((rule) => [rule.id, rule.evaluationMode]).sort(), expected);
 });
 
 test('normaliza regla iOS de strings UI hardcodeadas a detector canonico de localización', () => {
@@ -540,6 +654,7 @@ test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () =
     sourceSkill: 'ios-concurrency-guidelines',
     sourcePath: 'docs/codex-skills/swift-concurrency.md',
     sourceContent: [
+      '- Remove async if not required; if required by protocol/override/@concurrent, prefer narrow suppression over adding fake awaits. See references/linting.md.',
       '- ✅ Avoid `@preconcurrency` in production code without a documented safety invariant and a removal ticket.',
       '- ✅ Avoid `nonisolated(unsafe)` in production code without a documented safety invariant and a removal ticket.',
       '- ✅ Prefer explicit actor isolation or `await MainActor.run` instead of `MainActor.assumeIsolated`.',
@@ -549,6 +664,7 @@ test('normaliza reglas Swift Concurrency a ids canonicos del slice phase9', () =
   const ids = rules.map((rule) => rule.id).sort();
   assert.deepEqual(ids, [
     'skills.ios.no-assume-isolated',
+    'skills.ios.no-async-without-await',
     'skills.ios.no-nonisolated-unsafe',
     'skills.ios.no-preconcurrency',
   ]);
@@ -595,6 +711,19 @@ test('normaliza regla iOS task task-id a detector canonico de cancelacion lifecy
   ]);
 });
 
+test('normaliza regla SwiftUI task id value-dependent a detector canonico', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- Use `.task(id:)` for value-dependent tasks',
+  });
+
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'skills.ios.guideline.ios-swiftui-expert.use-task-id-for-value-dependent-tasks',
+  ]);
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+});
+
 test('normaliza regla SwiftUI Observable shared state a detector canonico de ObservableObject', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-swiftui-expert-guidelines',
@@ -616,6 +745,7 @@ test('normaliza reglas Swift Testing de suites a ids canonicos del slice phase5'
     sourceSkill: 'ios-swift-testing-guidelines',
     sourcePath: 'docs/codex-skills/swift-testing-expert.md',
     sourceContent: [
+      '- ❌ New XCTest-only unit tests when Swift Testing is available.',
       '- ✅ Prefer `@Test` functions over `test...` methods when the target already supports Swift Testing.',
       '- ❌ Mixing legacy XCTest style into new Swift Testing suites without an explicit compatibility reason.',
     ].join('\n'),

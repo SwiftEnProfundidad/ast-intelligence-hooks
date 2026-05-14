@@ -241,7 +241,7 @@ test('runPlatformGate silent evita salida humana en stdout para contratos JSON',
   }
 });
 
-test('runPlatformGate degrada findings scoped sin ubicacion accionable a advisory', async () => {
+test('runPlatformGate descarta findings scoped de skills sin ubicacion accionable AST', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_COMMIT',
     blockOnOrAbove: 'WARN',
@@ -327,12 +327,11 @@ test('runPlatformGate degrada findings scoped sin ubicacion accionable a advisor
   });
 
   assert.equal(result, 0);
-  assert.equal(emittedArgs?.gateOutcome, 'WARN');
+  assert.equal(emittedArgs?.gateOutcome, 'PASS');
   const finding = emittedArgs?.findings.find(
     (entry) => entry.ruleId === 'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres'
   );
-  assert.equal(finding?.blocking, false);
-  assert.match(finding?.message ?? '', /no pudo atribuir este hallazgo/);
+  assert.equal(finding, undefined);
 });
 
 test('runPlatformGate usa sddDecisionOverride y evita reevaluar SDD cuando llega una decisión ya resuelta', async () => {
@@ -2561,7 +2560,7 @@ test('runPlatformGate permite cuando plataformas detectadas tienen bundles y reg
   );
 });
 
-test('runPlatformGate mantiene advisory cuando una plataforma detectada no tiene reglas críticas de skills activas', async () => {
+test('runPlatformGate no emite finding sintético cuando una plataforma detectada no tiene reglas críticas AST accionables', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_COMMIT',
     blockOnOrAbove: 'ERROR',
@@ -2695,13 +2694,11 @@ test('runPlatformGate mantiene advisory cuando una plataforma detectada no tiene
   });
 
   assert.equal(result, 0);
-  assert.equal(emittedArgs?.gateOutcome, 'WARN');
+  assert.equal(emittedArgs?.gateOutcome, 'PASS');
   const criticalCoverageFinding = emittedArgs?.findings.find(
     (finding) => finding.ruleId === 'governance.skills.cross-platform-critical.incomplete'
   );
-  assert.ok(criticalCoverageFinding);
-  assert.equal(criticalCoverageFinding.severity, 'WARN');
-  assert.match(criticalCoverageFinding.message, /ios/i);
+  assert.equal(criticalCoverageFinding, undefined);
 });
 
 test('runPlatformGate permite cuando plataformas detectadas tienen reglas críticas activas y evaluadas', async () => {
@@ -3136,16 +3133,9 @@ test('runPlatformGate aplica soft-enforcement en PRE_COMMIT para coverage de ski
     true
   );
   assert.equal(
-    emittedArgs?.findings.some(
-      (finding) => finding.ruleId === 'governance.skills.cross-platform-critical.incomplete'
-    ),
-    true
-  );
-  assert.equal(
     emittedArgs?.findings
       .filter((finding) =>
         finding.ruleId === 'governance.skills.platform-coverage.incomplete'
-        || finding.ruleId === 'governance.skills.cross-platform-critical.incomplete'
       )
       .every((finding) => finding.severity === 'WARN'),
     true

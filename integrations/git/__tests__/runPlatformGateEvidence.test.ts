@@ -211,6 +211,9 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
   });
   assert.deepEqual(capturedGenerateEvidenceParams?.rulesCoverage, {
     stage: 'PRE_PUSH',
+    contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+    scope_note:
+      'rules_coverage reports AUTO runtime rules applicable to this stage, not total DECLARATIVE registry surface.',
     active_rule_ids: ['skills.backend.avoid-explicit-any', 'skills.backend.no-empty-catch'],
     evaluated_rule_ids: ['skills.backend.no-empty-catch'],
     matched_rule_ids: ['skills.backend.no-empty-catch'],
@@ -301,6 +304,9 @@ test('emitPlatformGateEvidence inyecta evaluationMetrics vacio cuando no se info
   });
   assert.deepEqual(capturedGenerateEvidenceParams?.rulesCoverage, {
     stage: 'PRE_COMMIT',
+    contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+    scope_note:
+      'No runtime rules were evaluated for this stage. DECLARATIVE registry rules are not runtime detectors.',
     active_rule_ids: [],
     evaluated_rule_ids: [],
     matched_rule_ids: [],

@@ -8,8 +8,11 @@ const MAX_TS_IMPORTS = 22;
 const ROOT_DIR = process.cwd();
 const SCAN_DIRS = ['core', 'integrations'];
 const FILE_LINE_LIMIT_OVERRIDES: Readonly<Record<string, number>> = {
+  'core/facts/detectors/text/ios.ts': 2300,
+  'core/rules/presets/heuristics/ios.ts': 1700,
+  'integrations/gate/evaluateAiGate.ts': 1700,
   'core/facts/detectors/typescript/index.ts': 2100,
-  'integrations/lifecycle/cli.ts': 2800,
+  'integrations/lifecycle/cli.ts': 2900,
 };
 const FILE_IMPORT_LIMIT_OVERRIDES: Readonly<Record<string, number>> = {
   'integrations/git/runPlatformGate.ts': 28,

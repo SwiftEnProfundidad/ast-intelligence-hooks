@@ -13,7 +13,11 @@ export const commitBaseline = (
 ): void => {
   writeBaselineFile(workspace.consumerRepo);
   runGitStep(workspace, ['add', '.'], 'git add baseline');
-  runGitStep(workspace, ['commit', '-m', 'chore: baseline'], 'git commit baseline');
+  runGitStep(
+    workspace,
+    ['commit', '--no-verify', '-m', 'chore: baseline'],
+    'git commit baseline'
+  );
 };
 
 export const writeAndCommitRangePayloadForBlockMode = (
@@ -28,7 +32,7 @@ export const writeAndCommitRangePayloadForBlockMode = (
   runGitStep(workspace, ['add', '.'], 'git add range payload');
   runGitStep(
     workspace,
-    ['commit', '-m', 'test: range payload for package smoke'],
+    ['commit', '--no-verify', '-m', 'test: range payload for package smoke'],
     'git commit range payload'
   );
 };

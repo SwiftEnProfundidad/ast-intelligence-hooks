@@ -6,6 +6,22 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.250] - 2026-05-14
+
+### Fixed
+
+- **Zero-violation gate contract:** runtime findings are blocking regardless of severity; `pumuki audit` no longer degrades findings to non-blocking warnings just because the runner returned exit 0.
+- **AST-actionable findings contract:** scoped `skills.*` and `heuristics.*` matches without line, range or semantic node attribution are no longer emitted as advisory findings. A runtime finding must be actionable by AST/location evidence or it is not a gate finding.
+- **Synthetic coverage findings removed from runtime gates:** cross-platform critical coverage gaps are no longer emitted as `.ai_evidence.json` findings. Coverage remains diagnostic metadata; runtime findings must be source-actionable.
+
+## [6.3.248] - 2026-05-14
+
+### Fixed
+
+- **PRE_WRITE iOS critical skills parity:** `skills.ios.critical-test-quality` vuelve a materializarse como cobertura crítica de `PRE_WRITE`; el modo advisory informa sin bloquear y `PUMUKI_SKILLS_ENFORCEMENT=strict` bloquea cuando la regla crítica falta.
+- **Notification opt-out parity:** `PUMUKI_SYSTEM_NOTIFICATIONS=0` y `PUMUKI_NOTIFICATIONS=0` desactivan también el canal de notificaciones del sistema, evitando diálogos macOS en smokes/CI no interactivos.
+- **Release validation alignment:** package smoke, metadata, framework-menu, policy y `rules_coverage.contract=AUTO_RUNTIME_RULES_FOR_STAGE` quedan alineados con la política zero-violation actual.
+
 ## [6.3.247] - 2026-05-14
 
 ### Added

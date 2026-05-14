@@ -151,8 +151,8 @@ test('builds menu gate params using stage policy override from skills.policy.jso
     });
 
     assert.equal(params.policy.stage, 'PRE_PUSH');
-    assert.equal(params.policy.blockOnOrAbove, 'ERROR');
-    assert.equal(params.policy.warnOnOrAbove, 'ERROR');
+    assert.equal(params.policy.blockOnOrAbove, 'INFO');
+    assert.equal(params.policy.warnOnOrAbove, 'INFO');
     assert.equal(params.policyTrace.bundle, 'gate-policy.skills.policy.PRE_PUSH');
     assert.equal(params.scope.kind, 'range');
     assert.equal(params.scope.fromRef, 'origin/main');
@@ -169,8 +169,8 @@ test('builds menu gate params with default policy trace when skills policy is mi
     });
 
     assert.equal(params.policy.stage, 'CI');
-    assert.equal(params.policy.blockOnOrAbove, 'ERROR');
-    assert.equal(params.policy.warnOnOrAbove, 'WARN');
+    assert.equal(params.policy.blockOnOrAbove, 'INFO');
+    assert.equal(params.policy.warnOnOrAbove, 'INFO');
     assert.equal(params.policyTrace.bundle, 'gate-policy.default.CI');
     assert.equal(params.scope.kind, 'staged');
   });

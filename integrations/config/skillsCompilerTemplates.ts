@@ -109,6 +109,16 @@ export const skillsCompilerTemplates: Record<string, SkillsCompilerTemplate> = {
         locked: true,
       },
       {
+        id: 'skills.ios.no-async-without-await',
+        description:
+          'Avoid private async functions without await; remove async unless a protocol or override boundary requires it.',
+        severity: 'WARN',
+        platform: 'ios',
+        confidence: 'MEDIUM',
+        stage: 'PRE_PUSH',
+        locked: true,
+      },
+      {
         id: 'skills.ios.no-unchecked-sendable',
         description: 'Avoid @unchecked Sendable in production iOS code without strict safety invariant.',
         severity: 'ERROR',

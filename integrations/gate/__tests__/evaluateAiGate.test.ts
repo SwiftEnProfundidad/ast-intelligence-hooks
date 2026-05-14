@@ -1052,10 +1052,10 @@ test('evaluateAiGate no bloquea PRE_WRITE de iOS productivo por regla crítica d
           ],
           snapshot: {
             ...base.snapshot,
-            rules_coverage: {
-              ...base.snapshot.rules_coverage!,
-              active_rule_ids: ['skills.ios.no-force-unwrap'],
-              evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
+              rules_coverage: {
+                ...base.snapshot.rules_coverage!,
+                active_rule_ids: ['skills.ios.no-force-unwrap'],
+                evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
               matched_rule_ids: [],
               unevaluated_rule_ids: [],
               counts: {
@@ -1078,7 +1078,7 @@ test('evaluateAiGate no bloquea PRE_WRITE de iOS productivo por regla crítica d
     result.violations.some(
       (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
     ),
-    false
+    true
   );
 });
 
@@ -1155,7 +1155,7 @@ test('evaluateAiGate permite PRE_WRITE cuando iOS detectado incluye regla críti
   );
 });
 
-test('evaluateAiGate mantiene PRE_WRITE en advisory cuando plataforma backend detectada no cubre regla crítica transversal', () => {
+test('evaluateAiGate no emite advisory sintético cuando plataforma backend detectada no cubre regla crítica transversal accionable', () => {
   const base = sampleEvidence();
   const result = evaluateAiGate(
     {
@@ -1204,11 +1204,12 @@ test('evaluateAiGate mantiene PRE_WRITE en advisory cuando plataforma backend de
 
   assert.equal(result.status, 'ALLOWED');
   assert.equal(result.allowed, true);
-  const violation = result.violations.find(
-    (item) => item.code === 'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE'
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE'
+    ),
+    false
   );
-  assert.ok(violation);
-  assert.equal(violation.severity, 'WARN');
 });
 
 test('evaluateAiGate permite PRE_WRITE cuando plataforma backend detectada cubre regla crítica transversal', () => {

@@ -233,6 +233,13 @@ const normalizeKnownRuleTarget = (
     if (includes('task detached') || includes('task.detached')) {
       return 'skills.ios.no-task-detached';
     }
+    if (
+      includes('remove async if not required') ||
+      includes('async without await') ||
+      includes('async_without_await')
+    ) {
+      return 'skills.ios.no-async-without-await';
+    }
     if (includes('unchecked sendable')) {
       return 'skills.ios.no-unchecked-sendable';
     }
@@ -492,6 +499,12 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.no-uiscreen-main-bounds';
     }
     if (
+      (includes('task id') && includes('value dependent')) ||
+      (includes('task id') && includes('value-dependent'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-task-id-for-value-dependent-tasks';
+    }
+    if (
       includes('task/.task(id') ||
       includes('trabajos async con cancelacion automatica') ||
       includes('trabajos async con cancelacio n automa tica') ||
@@ -500,15 +513,127 @@ const normalizeKnownRuleTarget = (
     ) {
       return 'skills.ios.guideline.ios-swiftui-expert.use-task-modifier-for-automatic-cancellation-of-async-work';
     }
+    if (includes('jsonserialization')) {
+      if (includes('decodificacion automatica') || includes('decoding')) {
+        return 'skills.ios.guideline.ios.codable-decodificacio-n-automa-tica-de-json-nunca-jsonserialization';
+      }
+      if (includes('codable')) {
+        return 'skills.ios.guideline.ios.codable-para-serializacio-n-json-nunca-jsonserialization';
+      }
+    }
+    if (
+      (includes('keychain') && includes('userdefaults')) ||
+      (includes('passwords') && includes('tokens') && includes('userdefaults'))
+    ) {
+      return 'skills.ios.guideline.ios.keychain-passwords-tokens-no-userdefaults';
+    }
+    if (includes('userdefaults') && includes('no datos sensibles')) {
+      return 'skills.ios.guideline.ios.userdefaults-settings-simples-no-datos-sensibles';
+    }
+    if (
+      includes('print y logs ad hoc') ||
+      includes('print() y logs ad hoc') ||
+      includes('logs ad hoc')
+    ) {
+      return 'skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc';
+    }
+    if (
+      includes('catch vac') ||
+      includes('catch vaci') ||
+      includes('emptycatch') ||
+      includes('empty catch')
+    ) {
+      return 'skills.ios.guideline.ios.catch-vaci-os-prohibido-silenciar-errores-ast-common-error-emptycatch';
+    }
+    if (includes('no loggear pii') || includes('tokens emails ids sensibles')) {
+      return 'skills.ios.guideline.ios.no-loggear-pii-tokens-emails-ids-sensibles';
+    }
+    if (includes('obfuscation') && includes('strings sensibles')) {
+      return 'skills.ios.guideline.ios.obfuscation-strings-sensibles-en-co-digo';
+    }
+    if (includes('dateformatter') && includes('fechas localizadas')) {
+      return 'skills.ios.guideline.ios.dateformatter-fechas-localizadas';
+    }
+    if (includes('strings hardcodeadas') && includes('ui')) {
+      return 'skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui';
+    }
+    if (includes('assets en asset catalogs')) {
+      return 'skills.ios.guideline.ios.assets-en-asset-catalogs-con-soporte-para-todos-los-taman-os';
+    }
+    if (includes('dynamic type') && includes('font scaling')) {
+      return 'skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico';
+    }
+    if (includes('dynamic type') && includes('fuentes escalables')) {
+      return 'skills.ios.guideline.ios.dynamic-type-fuentes-escalables-y-layouts-adaptativos';
+    }
+    if (includes('rtl support') || includes('right to left')) {
+      return 'skills.ios.guideline.ios.rtl-support-right-to-left-para-a-rabe-hebreo';
+    }
+    if (includes('background threads') && includes('no bloquear main thread')) {
+      return 'skills.ios.guideline.ios.background-threads-no-bloquear-main-thread';
+    }
+    if (includes('accessibility labels') || includes('accessibilitylabel')) {
+      return 'skills.ios.guideline.ios.accessibility-labels-accessibilitylabel';
+    }
+    if (includes('delegation pattern') && includes('weak delegates')) {
+      return 'skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles';
+    }
+    if (includes('retain cycles') && includes('memory leaks')) {
+      return 'skills.ios.guideline.ios.retain-cycles-memory-leaks';
+    }
+    if (includes('retain cycles') && includes('closures')) {
+      return 'skills.ios.guideline.ios.evitar-retain-cycles-especialmente-en-closures-delegates';
+    }
+    if (includes('no singleton') || includes('no singletons')) {
+      return 'skills.ios.guideline.ios.no-singleton-usar-inyeccio-n-de-dependencias-no-compartir-instancias-g';
+    }
+    if (includes('massive view controllers')) {
+      return 'skills.ios.guideline.ios.massive-view-controllers-viewcontrollers-que-mezclan-presentacio-n-nav';
+    }
+    if (includes('implicitly unwrapped')) {
+      return 'skills.ios.guideline.ios.implicitly-unwrapped-solo-para-iboutlets-y-casos-muy-especi-ficos';
+    }
+    if (includes('magic numbers')) {
+      return 'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres';
+    }
+    if (includes('swinject')) {
+      return 'skills.ios.guideline.ios.swinject-prohibido-di-manual-o-environment';
+    }
+    if (
+      includes('navigationstack navigationpath') ||
+      includes('navigationstack + navigationpath')
+    ) {
+      return 'skills.ios.no-navigation-view';
+    }
+    if (
+      includes('onchange') &&
+      (includes('2 parametros') || includes('2 para metros') || includes('sin parametros'))
+    ) {
+      return 'skills.ios.no-legacy-onchange';
+    }
+    if (
+      includes('lazyvstack lazyhstack') ||
+      (includes('lazy loading') && includes('lazyvstack'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.use-lazyvstack-lazyhstack-for-large-lists';
+    }
+    if (includes('singletons') && includes('dificultan testing')) {
+      return 'skills.ios.guideline.ios.singletons-dificultan-testing';
+    }
     if (
       includes('swift testing over xctest') ||
       includes('prefer import testing') ||
       includes('prefer test functions over test methods') ||
       includes('test functions over test methods') ||
       includes('xctest-only unit tests') ||
+      includes('xctest only unit tests') ||
       includes('new xctest-only unit tests') ||
+      includes('new xctest only unit tests') ||
       includes('xctest only for ui') ||
-      includes('xctest only for ui performance')
+      includes('xctest only for ui performance') ||
+      (includes('xctest solo') && includes('legacy')) ||
+      (includes('xctest') && includes('solo para proyectos legacy')) ||
+      (includes('xctest') && includes('ui tests'))
     ) {
       return 'skills.ios.prefer-swift-testing';
     }
@@ -538,13 +663,6 @@ const normalizeKnownRuleTarget = (
       includes('https por defecto')
     ) {
       return 'skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto';
-    }
-    if (
-      includes('localizable strings') ||
-      includes('string catalogs') ||
-      includes('xcstrings')
-    ) {
-      return 'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs';
     }
     if (includes('strings hardcodeadas') || includes('string localized')) {
       return 'skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui';
@@ -646,9 +764,16 @@ const normalizeKnownRuleTarget = (
     }
     if (
       includes('nsmanagedobject across boundaries') ||
+      includes('nsmanagedobjectid or mapped dto') ||
+      includes('mapped dto domain models') ||
       includes('passing nsmanagedobject') ||
+      includes('pass nsmanagedobjectid when a different context') ||
       includes('nsmanagedobject through service') ||
-      includes('nsmanagedobject in shared function and property boundaries')
+      includes('nsmanagedobject in shared function and property boundaries') ||
+      includes('managed objects as context scoped references') ||
+      includes('not as portable domain entities') ||
+      includes('managed objects into domain models before crossing module boundaries') ||
+      includes('map managed objects into domain models')
     ) {
       return 'skills.ios.no-nsmanagedobject-boundary';
     }
@@ -670,6 +795,8 @@ const normalizeKnownRuleTarget = (
     }
     if (
       includes('core data orchestration inside infrastructure') ||
+      includes('make context ownership explicit') ||
+      includes('merge boundaries controlled') ||
       includes('instead of presentation code') ||
       includes('core data apis in application or presentation code') ||
       includes('avoid core data apis in application or presentation code') ||

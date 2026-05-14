@@ -182,6 +182,43 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.concurrency.async-without-await.ast',
+    description: 'Detects private async functions that do not await in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.concurrency.async-without-await.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a private async function without await; remove async unless a protocol/override boundary requires it.',
+      code: 'HEURISTICS_IOS_CONCURRENCY_ASYNC_WITHOUT_AWAIT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.error.empty-catch.ast',
+    description: 'Detects Swift catch blocks that silently swallow errors.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.error.empty-catch.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected an empty Swift catch block.',
+      code: 'HEURISTICS_IOS_ERROR_EMPTY_CATCH_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.swiftui.onappear-task.ast',
     description: 'Detects Task launches from SwiftUI onAppear where .task can provide lifecycle cancellation.',
     severity: 'WARN',

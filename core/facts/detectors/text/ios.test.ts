@@ -7,6 +7,7 @@ import {
   findSwiftConcreteDependencyDipMatch,
   findSwiftPresentationSrpMatch,
   hasSwiftAnyViewUsage,
+  hasSwiftAsyncWithoutAwaitUsage,
   hasSwiftCallbackStyleSignature,
   hasSwiftCornerRadiusUsage,
   hasSwiftDispatchGroupUsage,
@@ -14,6 +15,7 @@ import {
   hasSwiftDispatchSemaphoreUsage,
   hasSwiftAdHocLoggingUsage,
   hasSwiftAlamofireUsage,
+  hasSwiftEmptyCatchUsage,
   hasSwiftForEachIndicesUsage,
   hasSwiftForEachSelfIdentityUsage,
   hasSwiftForceCastUsage,
@@ -134,6 +136,27 @@ func render() -> some View {
 test('hasSwiftAnyViewUsage ignora comentarios, strings y coincidencias parciales', () => {
   const source = `\n// AnyView(Text("debug"))\nlet value = "AnyView(Text(\\"debug\\"))"\nlet customAnyViewBuilder = true\n`;
   assert.equal(hasSwiftAnyViewUsage(source), false);
+});
+
+test('hasSwiftEmptyCatchUsage detecta catch vacio e ignora comentarios y strings', () => {
+  const source = `
+do {
+  try repository.save()
+} catch {
+  // TODO: report error
+}
+`;
+  const safe = `
+let sample = "catch {}"
+do {
+  try repository.save()
+} catch {
+  logger.error("Save failed")
+}
+`;
+
+  assert.equal(hasSwiftEmptyCatchUsage(source), true);
+  assert.equal(hasSwiftEmptyCatchUsage(safe), false);
 });
 
 test('hasSwiftNonLazyScrollForEachUsage detecta ScrollView con stack no lazy y preserva LazyVStack', () => {
@@ -1017,6 +1040,34 @@ func wait() async throws {
 
   assert.equal(hasSwiftMainThreadBlockingSleepUsage(source), true);
   assert.equal(hasSwiftMainThreadBlockingSleepUsage(ignored), false);
+});
+
+test('detector iOS de concurrencia detecta async privado sin await y evita boundaries publicos', () => {
+  const source = `
+final class ProfileLoader {
+  private func buildSnapshot() async throws -> ProfileSnapshot {
+    ProfileSnapshot.empty
+  }
+}
+`;
+  const ignored = `
+protocol RemoteLoader {
+  func load() async throws -> ProfileSnapshot
+}
+
+final class ProfileLoader: RemoteLoader {
+  func load() async throws -> ProfileSnapshot {
+    ProfileSnapshot.empty
+  }
+
+  private func refresh() async throws -> ProfileSnapshot {
+    try await api.load()
+  }
+}
+`;
+
+  assert.equal(hasSwiftAsyncWithoutAwaitUsage(source), true);
+  assert.equal(hasSwiftAsyncWithoutAwaitUsage(ignored), false);
 });
 
 test('detector iOS de accesibilidad detecta botones icon-only sin label explicita', () => {

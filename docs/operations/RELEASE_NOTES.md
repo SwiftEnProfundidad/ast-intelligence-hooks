@@ -6,6 +6,15 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.250)
+
+- **Normalización iOS mode-aware:** la línea activa conserva reglas iOS automatizables con evidencia concreta y deja como declarativas las reglas greenfield/brownfield que requieren contexto de adopción, baseline o migración.
+- **Package smoke estable para fixtures Git:** los commits y pushes internos de preparación del consumer smoke no disparan hooks del paquete bajo prueba; el gate real sigue validándose en los pasos explícitos del smoke.
+- **Smokes no interactivos sin diálogos macOS:** `PUMUKI_SYSTEM_NOTIFICATIONS=0` y `PUMUKI_NOTIFICATIONS=0` vuelven a apagar el canal de sistema, evitando bloqueos por Swift dialog en validaciones de release.
+- **Zero-violation real:** cualquier finding runtime emitido por regla activa bloquea; los matches scoped sin línea/rango/nodo AST dejan de publicarse como findings advisory.
+- **AST accionable obligatorio:** los gaps sintéticos de cobertura cross-platform dejan de emitirse como findings sobre `.ai_evidence.json`; la cobertura queda como metadato diagnóstico y las findings runtime deben apuntar a código accionable.
+- **Rollout recomendado:** publicar `pumuki@6.3.250` tras el test suite global verde; `validation:package-smoke`, metadata local y `PRE_WRITE` strict/advisory quedan alineados para esta versión.
+
 ### 2026-04-25 (v6.3.116)
 
 - **Inventario local real de dependencias:** `status` y `doctor` conservan `trackedNodeModules*` como señal estricta de seguridad Git y añaden `dependencyInventory` como fuente de verdad de instalación local.

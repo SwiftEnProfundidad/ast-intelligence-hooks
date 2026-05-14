@@ -476,6 +476,53 @@ export const hasSwiftTaskDetachedUsage = (source: string): boolean => {
   });
 };
 
+const findMatchingSwiftBrace = (source: string, openBraceIndex: number): number => {
+  let depth = 0;
+  for (let index = openBraceIndex; index < source.length; index += 1) {
+    const current = source[index];
+    if (current === '{') {
+      depth += 1;
+    } else if (current === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+  return -1;
+};
+
+export const hasSwiftAsyncWithoutAwaitUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const privateAsyncFunctionPattern =
+    /\bprivate\s+(?:static\s+|class\s+)?func\s+[A-Za-z_][A-Za-z0-9_]*[^{};]*\basync\b[^{};]*\{/g;
+
+  for (const match of sanitized.matchAll(privateAsyncFunctionPattern)) {
+    const header = match[0] ?? '';
+    if (/\boverride\b|\bprotocol\b/.test(header)) {
+      continue;
+    }
+
+    const openBraceIndex = (match.index ?? 0) + header.length - 1;
+    const closeBraceIndex = findMatchingSwiftBrace(sanitized, openBraceIndex);
+    if (closeBraceIndex < 0) {
+      continue;
+    }
+
+    const body = sanitized.slice(openBraceIndex + 1, closeBraceIndex);
+    if (!/\bawait\b/.test(body)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+export const hasSwiftEmptyCatchUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  return /\bcatch(?:\s+(?:let|var)\s+[A-Za-z_][A-Za-z0-9_]*)?\s*\{\s*\}/.test(sanitized);
+};
+
 export const hasSwiftOnAppearTaskUsage = (source: string): boolean => {
   const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
   return /\.onAppear\s*\{[\s\S]{0,500}?\bTask\s*(?:\([^)]*\))?\s*\{/.test(sanitized);
