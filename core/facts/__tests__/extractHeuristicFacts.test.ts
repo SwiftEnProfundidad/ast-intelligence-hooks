@@ -572,6 +572,24 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     },
   ]);
   assert.match(anyViewFinding?.expected_fix ?? '', /@ViewBuilder/);
+
+  const callbackFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.callback-style.ast'
+  );
+  assert.deepEqual(callbackFinding?.lines, [5]);
+  assert.deepEqual(callbackFinding?.primary_node, {
+    kind: 'call',
+    name: 'escaping callback-style API signature',
+    lines: [5],
+  });
+  assert.deepEqual(callbackFinding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: async/await API or explicit bridge adapter',
+      lines: [5],
+    },
+  ]);
+  assert.match(callbackFinding?.expected_fix ?? '', /async\/await/);
   const forceUnwrapFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.force-unwrap.ast'
   );

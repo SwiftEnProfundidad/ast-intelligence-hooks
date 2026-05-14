@@ -398,6 +398,15 @@ export const collectSwiftAnyViewLines = (source: string): readonly number[] => {
   return sortedUniqueLines(collectSwiftRegexLines(source, /\bAnyView\b/));
 };
 
+export const collectSwiftCallbackStyleSignatureLines = (source: string): readonly number[] => {
+  return sortedUniqueLines(
+    collectSwiftRegexLines(
+      source,
+      /\b(?:completion|completionHandler|callback|handler)\s*:\s*(?:@[A-Za-z_][A-Za-z0-9_]*(?:\([^)]*\))?\s+)*@escaping\b/
+    )
+  );
+};
+
 export const hasSwiftNonLazyScrollForEachUsage = (source: string): boolean => {
   const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
   const nonLazyScrollableCollectionPattern =

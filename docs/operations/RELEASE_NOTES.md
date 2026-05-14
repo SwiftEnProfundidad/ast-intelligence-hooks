@@ -6,6 +6,10 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.264)
+
+- Published `pumuki@6.3.264` with AST-style line/node evidence for `skills.ios.no-callback-style`, making escaping callback APIs outside bridge layers remediable through `async/await`, `AsyncSequence` or explicit legacy adapters.
+
 ### 2026-05-14 (v6.3.263)
 
 - Published `pumuki@6.3.263` with AST-style line/node evidence for `skills.ios.no-anyview`, making SwiftUI `AnyView` type erasure remediable through concrete composition, generics or `@ViewBuilder` branches.
