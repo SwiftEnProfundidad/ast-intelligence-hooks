@@ -15,6 +15,7 @@ import {
   collectSwiftXCTUnwrapLines,
   collectSwiftAnyViewLines,
   collectSwiftCallbackStyleSignatureLines,
+  collectSwiftDispatchGroupLines,
   hasSwiftAnyViewUsage,
   hasSwiftAsyncWithoutAwaitUsage,
   hasSwiftCallbackStyleSignature,
@@ -508,6 +509,7 @@ OperationQueue()
   assert.equal(hasSwiftDispatchSemaphoreUsage(source), true);
   assert.equal(hasSwiftOperationQueueUsage(source), true);
   assert.deepEqual(collectSwiftDispatchQueueLines(source), [2]);
+  assert.deepEqual(collectSwiftDispatchGroupLines(source), [3]);
 });
 
 test('hasSwiftTaskDetachedUsage detecta Task.detached y evita Task normal', () => {

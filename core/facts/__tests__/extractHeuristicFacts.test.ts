@@ -555,6 +555,23 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.uiscreen-main-bounds.ast',
     'heuristics.ios.unchecked-sendable.ast',
   ]);
+  const dispatchGroupFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.dispatchgroup.ast'
+  );
+  assert.deepEqual(dispatchGroupFinding?.lines, [8]);
+  assert.deepEqual(dispatchGroupFinding?.primary_node, {
+    kind: 'call',
+    name: 'GCD DispatchGroup call',
+    lines: [8],
+  });
+  assert.deepEqual(dispatchGroupFinding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: structured concurrency TaskGroup or async aggregation boundary',
+      lines: [8],
+    },
+  ]);
+  assert.match(dispatchGroupFinding?.expected_fix ?? '', /TaskGroup/);
   const anyViewFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.anyview.ast'
   );

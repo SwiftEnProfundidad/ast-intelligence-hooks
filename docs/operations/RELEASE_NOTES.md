@@ -6,6 +6,10 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.266)
+
+- Published `pumuki@6.3.266` with AST-style line/node evidence for `skills.ios.no-dispatchgroup`, making GCD `DispatchGroup` usage remediable through `TaskGroup` or structured async aggregation boundaries.
+
 ### 2026-05-14 (v6.3.265)
 
 - Published `pumuki@6.3.265` with AST-style line/node evidence for `skills.ios.no-dispatchqueue`, making GCD `DispatchQueue` usage remediable through Swift structured concurrency, actors, `Task` or `MainActor` boundaries.
