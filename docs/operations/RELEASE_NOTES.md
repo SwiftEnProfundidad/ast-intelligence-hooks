@@ -6,6 +6,12 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.251)
+
+- **Refresh SDD alineado con tracking activo:** `pumuki sdd session --refresh` deja de reutilizar silenciosamente una sesión antigua cuando `docs/RURALGO_SEGUIMIENTO.md` ya marca otra task activa.
+- **Bloqueo accionable si falta OpenSpec:** si el tracking activo no existe en `openspec/changes`, el refresh falla con causa concreta en vez de producir una sesión válida pero semánticamente stale.
+- **Rollout recomendado:** publicar `pumuki@6.3.251`, repinear RuralGo y revalidar `pumuki sdd session --refresh --ttl-minutes=90` sobre el slice Android activo.
+
 ### 2026-05-14 (v6.3.250)
 
 - **Normalización iOS mode-aware:** la línea activa conserva reglas iOS automatizables con evidencia concreta y deja como declarativas las reglas greenfield/brownfield que requieren contexto de adopción, baseline o migración.

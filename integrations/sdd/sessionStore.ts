@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   LifecycleGitService,
@@ -16,6 +16,11 @@ const SDD_KEYS = {
 
 const DEFAULT_TTL_MINUTES = 45;
 
+const TRACKING_CANDIDATE_FILES = [
+  'docs/RURALGO_SEGUIMIENTO.md',
+  'RURALGO_SEGUIMIENTO.md',
+] as const;
+
 const resolveRepoRoot = (cwd: string, git: ILifecycleGitService): string =>
   git.resolveRepoRoot(cwd);
 
@@ -31,6 +36,51 @@ const parsePositiveMinutes = (value?: number): number =>
 
 const normalizeChangeId = (value: string): string =>
   value.trim().toLowerCase();
+
+const collectActiveTrackingChangeIds = (markdown: string): ReadonlyArray<string> => {
+  const changeIds: string[] = [];
+  const lines = markdown.split(/\r?\n/u);
+  for (const line of lines) {
+    const boardRowMatch = line.match(/^\|\s*🚧\s*\|\s*([A-Z0-9-]+)\s*\|/u);
+    if (boardRowMatch?.[1]) {
+      changeIds.push(normalizeChangeId(boardRowMatch[1]));
+      continue;
+    }
+    const tableMatch = line.match(
+      /^\|\s*\d+\s*\|\s*`([^`]+)`\s*\|.*\|\s*🚧(?:\s+reported\s+activo|\s+En construcción|\s+En construccion)?\s*\|/u
+    );
+    if (tableMatch?.[1]) {
+      changeIds.push(normalizeChangeId(tableMatch[1]));
+      continue;
+    }
+    const bulletMatch = line.match(/^- 🚧 (`?[A-Z0-9][0-9A-Za-z.-]*`?)/u);
+    if (bulletMatch?.[1]) {
+      changeIds.push(normalizeChangeId(bulletMatch[1].replace(/`/gu, '')));
+    }
+  }
+  return changeIds.filter((changeId) => changeId.length > 0);
+};
+
+const resolveSingleActiveTrackingChangeId = (repoRoot: string): string | undefined => {
+  for (const candidate of TRACKING_CANDIDATE_FILES) {
+    const candidatePath = resolve(repoRoot, candidate);
+    if (!existsSync(candidatePath)) {
+      continue;
+    }
+    const changeIds = collectActiveTrackingChangeIds(readFileSync(candidatePath, 'utf8'));
+    const uniqueChangeIds = [...new Set(changeIds)];
+    if (uniqueChangeIds.length === 1) {
+      return uniqueChangeIds[0];
+    }
+    if (uniqueChangeIds.length > 1) {
+      throw new Error(
+        `Multiple active tracking changes found in ${candidate}: ${uniqueChangeIds.join(', ')}. ` +
+        'Keep exactly one active task before refreshing the SDD session.'
+      );
+    }
+  }
+  return undefined;
+};
 
 export const listActiveOpenSpecChangeIds = (repoRoot: string): ReadonlyArray<string> => {
   const changesRoot = resolve(repoRoot, 'openspec', 'changes');
@@ -177,6 +227,24 @@ export const refreshSddSession = (params?: {
   const current = readConfig(repoRoot, git);
   if (!current.changeId) {
     throw new Error('No active SDD session to refresh. Run `pumuki sdd session --open --change=<id>` first.');
+  }
+  const trackingChangeId = resolveSingleActiveTrackingChangeId(repoRoot);
+  if (trackingChangeId && trackingChangeId !== current.changeId) {
+    const trackingChangeState = ensureChangePath(repoRoot, trackingChangeId);
+    if (!trackingChangeState.exists) {
+      throw new Error(
+        `Active tracking change "${trackingChangeId}" does not exist in openspec/changes. ` +
+        `Current SDD session points to "${current.changeId}". ` +
+        `Create openspec/changes/${trackingChangeId} or run ` +
+        `\`pumuki sdd session --open --change=${trackingChangeId}\` after creating it.`
+      );
+    }
+    if (trackingChangeState.archived) {
+      throw new Error(
+        `Active tracking change "${trackingChangeId}" is archived and cannot refresh the SDD session.`
+      );
+    }
+    git.applyLocalConfig(repoRoot, SDD_KEYS.change, trackingChangeId);
   }
   const ttlMinutes = parsePositiveMinutes(params?.ttlMinutes ?? current.ttlMinutes);
   git.applyLocalConfig(repoRoot, SDD_KEYS.updatedAt, nowIso());
