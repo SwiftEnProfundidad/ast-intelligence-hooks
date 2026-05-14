@@ -20,6 +20,7 @@ import {
   hasSwiftCallbackStyleSignature,
   hasSwiftCornerRadiusUsage,
   hasSwiftDispatchGroupUsage,
+  collectSwiftDispatchQueueLines,
   hasSwiftDispatchQueueUsage,
   hasSwiftDispatchSemaphoreUsage,
   hasSwiftAdHocLoggingUsage,
@@ -506,6 +507,7 @@ OperationQueue()
   assert.equal(hasSwiftDispatchGroupUsage(source), true);
   assert.equal(hasSwiftDispatchSemaphoreUsage(source), true);
   assert.equal(hasSwiftOperationQueueUsage(source), true);
+  assert.deepEqual(collectSwiftDispatchQueueLines(source), [2]);
 });
 
 test('hasSwiftTaskDetachedUsage detecta Task.detached y evita Task normal', () => {

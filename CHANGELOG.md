@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.265] - 2026-05-14
+
+- iOS: `skills.ios.no-dispatchqueue` now emits actionable AST-style evidence for GCD `DispatchQueue` calls, including exact lines, primary/related nodes and remediation toward Swift structured concurrency.
+
 ## [6.3.264] - 2026-05-14
 
 - iOS: `skills.ios.no-callback-style` now emits actionable AST-style evidence for escaping callback signatures outside approved bridge layers, including exact lines, primary/related nodes and remediation toward `async/await` APIs or explicit adapters.
