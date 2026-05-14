@@ -6,6 +6,10 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.259)
+
+- Published `pumuki@6.3.259` with AST-style line/node evidence for `skills.ios.prefer-swift-testing`, making modernizable `XCTestCase` suites remediable through native Swift Testing `import Testing`, `@Suite` and `@Test`.
+
 ### 2026-05-14 (v6.3.258)
 
 - Published `pumuki@6.3.258` with AST-style line/node evidence for `skills.ios.no-xctunwrap`, making legacy `XCTUnwrap` calls remediable through Swift Testing `#require`.
