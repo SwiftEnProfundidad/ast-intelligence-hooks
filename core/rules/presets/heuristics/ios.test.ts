@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 85);
+  assert.equal(iosRules.length, 86);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -63,6 +63,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.swiftui.closure-based-viewbuilder-content.ast',
     'heuristics.ios.swiftui.large-config-context-prop.ast',
     'heuristics.ios.swiftui.conditional-same-view-identity.ast',
+    'heuristics.ios.swiftui.parent-owned-sheet-action.ast',
     'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
     'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast',
     'heuristics.ios.swiftui.body-object-creation.ast',
@@ -214,6 +215,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.swiftui.conditional-same-view-identity.ast')?.then.code,
     'HEURISTICS_IOS_SWIFTUI_CONDITIONAL_SAME_VIEW_IDENTITY_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.parent-owned-sheet-action.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_PARENT_OWNED_SHEET_ACTION_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.uiscreen-main-bounds.ast')?.then.code,

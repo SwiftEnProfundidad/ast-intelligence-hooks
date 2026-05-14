@@ -104,6 +104,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.sheets-should-own-their-actions-and-call-dismiss-internally'
+    ),
+    ['heuristics.ios.swiftui.parent-owned-sheet-action.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios-swiftui-expert.avoid-redundant-state-updates-in-onreceive-onchange-scroll-handlers'
     ),
     ['heuristics.ios.swiftui.redundant-reactive-state-assignment.ast']

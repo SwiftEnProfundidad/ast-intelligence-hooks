@@ -6,6 +6,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.247] - 2026-05-14
+
+### Added
+
+- **SwiftUI sheet action parity:** `skills.ios.guideline.ios-swiftui-expert.sheets-should-own-their-actions-and-call-dismiss-internally` now maps to a scoped AUTO heuristic that detects sheet content receiving parent-owned save/cancel/dismiss callbacks, preserving sheets that own their actions internally.
+
 ## [6.3.246] - 2026-05-14
 
 ### Added

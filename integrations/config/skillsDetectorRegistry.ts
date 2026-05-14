@@ -288,6 +288,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.swiftui.conditional-same-view-identity', [
       'heuristics.ios.swiftui.conditional-same-view-identity.ast',
     ]),
+  'skills.ios.guideline.ios-swiftui-expert.sheets-should-own-their-actions-and-call-dismiss-internally':
+    heuristicDetector('ios.swiftui.parent-owned-sheet-action', [
+      'heuristics.ios.swiftui.parent-owned-sheet-action.ast',
+    ]),
   'skills.ios.guideline.ios-swiftui-expert.avoid-redundant-state-updates-in-onreceive-onchange-scroll-handlers':
     heuristicDetector('ios.swiftui.redundant-reactive-state-assignment', [
       'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',

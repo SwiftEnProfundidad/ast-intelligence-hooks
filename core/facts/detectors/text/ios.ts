@@ -1019,6 +1019,21 @@ export const hasSwiftUiConditionalSameViewIdentityUsage = (source: string): bool
   return false;
 };
 
+export const hasSwiftUiParentOwnedSheetActionUsage = (source: string): boolean => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const swiftUIViewBodyPattern =
+    /\bstruct\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*View\s*\{[\s\S]{0,2200}?\bvar\s+body\s*:\s*some\s+View\s*\{/m;
+
+  if (!swiftUIViewBodyPattern.test(sanitized)) {
+    return false;
+  }
+
+  const sheetWithCallbackPattern =
+    /\.(?:sheet|fullScreenCover)\s*\([^)]*\)\s*\{[\s\S]{0,1200}?\b[A-Za-z_][A-Za-z0-9_]*\s*\([\s\S]{0,900}?\b(?:onSave|onCancel|onDismiss|onClose|onDone|onDelete|onConfirm)\s*:\s*\{/g;
+
+  return sheetWithCallbackPattern.test(sanitized);
+};
+
 export const hasSwiftRedundantReactiveStateAssignmentUsage = (source: string): boolean => {
   const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
   const reactiveAssignmentPattern =

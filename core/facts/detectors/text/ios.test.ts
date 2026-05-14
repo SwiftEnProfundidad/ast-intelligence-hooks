@@ -75,6 +75,7 @@ import {
   hasSwiftClosureBasedViewBuilderContentUsage,
   hasSwiftLargeConfigContextViewPropertyUsage,
   hasSwiftUiConditionalSameViewIdentityUsage,
+  hasSwiftUiParentOwnedSheetActionUsage,
   hasSwiftRedundantReactiveStateAssignmentUsage,
   hasSwiftInlineForEachTransformUsage,
   hasSwiftStringFormatUsage,
@@ -2111,4 +2112,64 @@ struct StatusBadge: View {
 
   assert.equal(hasSwiftUiConditionalSameViewIdentityUsage(source), true);
   assert.equal(hasSwiftUiConditionalSameViewIdentityUsage(safe), false);
+});
+
+test('hasSwiftUiParentOwnedSheetActionUsage detecta sheets que reciben callbacks de accion del padre', () => {
+  const source = `
+struct ParentView: View {
+  @State private var selectedItem: Item?
+
+  var body: some View {
+    List(items) { item in
+      Button(item.name) {
+        selectedItem = item
+      }
+    }
+    .sheet(item: $selectedItem) { item in
+      EditItemSheet(
+        item: item,
+        onSave: { newName in
+          save(item, newName)
+        },
+        onCancel: {
+          selectedItem = nil
+        }
+      )
+    }
+  }
+}
+`;
+  const safe = `
+struct ParentView: View {
+  @State private var selectedItem: Item?
+
+  var body: some View {
+    List(items) { item in
+      Button(item.name) {
+        selectedItem = item
+      }
+    }
+    .sheet(item: $selectedItem) { item in
+      EditItemSheet(item: item)
+    }
+
+    let sample = ".sheet(item: $selectedItem) { EditItemSheet(onCancel: {}) }"
+    // .sheet(item: $selectedItem) { EditItemSheet(onSave: {}) }
+  }
+}
+
+struct EditItemSheet: View {
+  @Environment(\\.dismiss) private var dismiss
+  let item: Item
+
+  var body: some View {
+    Button("Cancel") {
+      dismiss()
+    }
+  }
+}
+`;
+
+  assert.equal(hasSwiftUiParentOwnedSheetActionUsage(source), true);
+  assert.equal(hasSwiftUiParentOwnedSheetActionUsage(safe), false);
 });

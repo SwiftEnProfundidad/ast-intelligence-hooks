@@ -216,6 +216,21 @@ test('normaliza regla SwiftUI prefer modifiers over conditional views a detector
   assert.equal(rules[0]?.evaluationMode, 'AUTO');
 });
 
+test('normaliza regla SwiftUI sheets own actions a detector canonico de ownership de sheets', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'ios-swiftui-expert-guidelines',
+    sourcePath: 'docs/codex-skills/swiftui-expert-skill.md',
+    sourceContent: '- Sheets should own their actions and call `dismiss()` internally',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(
+    rules[0]?.id,
+    'skills.ios.guideline.ios-swiftui-expert.sheets-should-own-their-actions-and-call-dismiss-internally'
+  );
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+});
+
 test('normaliza regla SwiftUI redundant state updates a detector canonico de performance', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'ios-swiftui-expert-guidelines',

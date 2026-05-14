@@ -331,6 +331,13 @@ const normalizeKnownRuleTarget = (
       return 'skills.ios.guideline.ios-swiftui-expert.prefer-modifiers-over-conditional-views-for-state-changes-maintains-vi';
     }
     if (
+      includes('sheets should own their actions') ||
+      (includes('call dismiss internally') && includes('sheet')) ||
+      (includes('avoid passing dismiss') && includes('callbacks to sheets'))
+    ) {
+      return 'skills.ios.guideline.ios-swiftui-expert.sheets-should-own-their-actions-and-call-dismiss-internally';
+    }
+    if (
       (includes('foreach') && includes('indices')) ||
       includes('stable identity for foreach') ||
       includes('never indices for dynamic content')

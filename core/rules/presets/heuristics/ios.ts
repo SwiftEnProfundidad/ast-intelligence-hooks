@@ -1029,6 +1029,26 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.parent-owned-sheet-action.ast',
+    description:
+      'Detects SwiftUI sheets that receive save/cancel/dismiss callbacks from the parent view.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.parent-owned-sheet-action.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a SwiftUI sheet receiving parent-owned action callbacks; sheets should own save/cancel actions and call dismiss() internally.',
+      code: 'HEURISTICS_IOS_SWIFTUI_PARENT_OWNED_SHEET_ACTION_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.swiftui.redundant-reactive-state-assignment.ast',
     description: 'Detects onChange/onReceive state assignments without a value-change guard.',
     severity: 'WARN',
