@@ -690,6 +690,23 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
     findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.legacy-expectation-description.ast'),
     true
   );
+  const legacyExpectationFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.testing.legacy-expectation-description.ast'
+  );
+  assert.deepEqual(legacyExpectationFinding?.lines, [7]);
+  assert.deepEqual(legacyExpectationFinding?.primary_node, {
+    kind: 'call',
+    name: 'legacy XCTest expectation(description:) call',
+    lines: [7],
+  });
+  assert.deepEqual(legacyExpectationFinding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: await confirmation or awaited fulfillment flow',
+      lines: [7],
+    },
+  ]);
+  assert.match(legacyExpectationFinding?.expected_fix ?? '', /await confirmation/);
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.mixed-frameworks.ast'),
     true
