@@ -39,7 +39,7 @@ export const configureRemoteAndFeatureBranch = (
     workspace.tmpRoot
   );
   runGitStep(workspace, ['remote', 'add', 'origin', workspace.bareRemote], 'git remote add origin');
-  runGitStep(workspace, ['push', '-u', 'origin', 'main'], 'git push origin main');
+  runGitStep(workspace, ['push', '--no-verify', '-u', 'origin', 'main'], 'git push origin main');
   runGitStep(workspace, ['checkout', '-b', 'feature/package-smoke'], 'git checkout feature branch');
   runGitStep(
     workspace,

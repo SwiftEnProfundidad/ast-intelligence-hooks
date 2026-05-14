@@ -51,7 +51,7 @@ test('runRepoGateSilent ya no inyecta sdd.policy.blocked por defecto tras degrad
   });
 });
 
-test('runRepoAndStagedPrePushGateSilent emite evidencia con stage PRE_PUSH sin sdd.policy.blocked por defecto', async () => {
+test('runRepoAndStagedPrePushGateSilent usa PRE_PUSH canónico y conserva SDD si el stage runner lo bloquea', async () => {
   await withTempDir('pumuki-menu-gate-prepush-', async (repoRoot) => {
     const previousCwd = process.cwd();
     try {
@@ -76,7 +76,7 @@ test('runRepoAndStagedPrePushGateSilent emite evidencia con stage PRE_PUSH sin s
       assert.equal(evidence.snapshot?.stage, 'PRE_PUSH');
       const findings = Array.isArray(evidence.snapshot?.findings) ? evidence.snapshot.findings : [];
       const ruleIds = findings.map((finding) => finding.ruleId ?? '');
-      assert.equal(ruleIds.includes('sdd.policy.blocked'), false);
+      assert.equal(ruleIds.includes('sdd.policy.blocked'), true);
     } finally {
       process.chdir(previousCwd);
     }

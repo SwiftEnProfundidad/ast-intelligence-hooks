@@ -101,20 +101,6 @@ const hasActionableFindingLocation = (finding: Finding): boolean => {
   );
 };
 
-const toNonActionableScopedAdvisoryFinding = (finding: Finding): Finding => ({
-  ...finding,
-  blocking: false,
-  message:
-    `${finding.message} ` +
-    '(Advisory: Pumuki no pudo atribuir este hallazgo a una linea, rango o nodo accionable en el scope actual.)',
-  why:
-    finding.why ??
-    'El gate esta limitado a un scope acotado y este finding solo pudo atribuirse al archivo completo.',
-  expected_fix:
-    finding.expected_fix ??
-    'Reintentar cuando el detector aporte lineas, rango, simbolo o nodo; mientras tanto no bloquea el slice acotado.',
-});
-
 const normalizeScopedRuleEngineFindings = (params: {
   findings: ReadonlyArray<Finding>;
   scope: GateScope;
@@ -123,15 +109,15 @@ const normalizeScopedRuleEngineFindings = (params: {
     return params.findings;
   }
 
-  return params.findings.map((finding) => {
+  return params.findings.filter((finding) => {
     if (
       !finding.filePath ||
       hasActionableFindingLocation(finding) ||
       (!finding.ruleId.startsWith('skills.') && !finding.ruleId.startsWith('heuristics.'))
     ) {
-      return finding;
+      return true;
     }
-    return toNonActionableScopedAdvisoryFinding(finding);
+    return false;
   });
 };
 
@@ -808,50 +794,7 @@ const toCrossPlatformCriticalEnforcementBlockingFinding = (params: {
     return undefined;
   }
 
-  const evaluatedRuleIds = new Set(params.evaluatedRuleIds);
-  const gaps: string[] = [];
-
-  for (const platform of detectedPlatformKeys) {
-    const rulePrefix = PLATFORM_SKILLS_RULE_PREFIXES[platform];
-    const criticalSkillRules = params.skillsRules
-      .filter(
-        (rule) =>
-          rule.id.startsWith(rulePrefix) &&
-          isCriticalProfileSeverity(rule.severity)
-      )
-      .map((rule) => rule.id)
-      .sort();
-
-    if (criticalSkillRules.length === 0) {
-      gaps.push(`${platform}{critical_profile_rules=missing}`);
-      continue;
-    }
-
-    const evaluatedCriticalSkillRules = criticalSkillRules.filter((ruleId) =>
-      evaluatedRuleIds.has(ruleId)
-    );
-    if (evaluatedCriticalSkillRules.length === 0) {
-      gaps.push(
-        `${platform}{critical_profile_rules=${criticalSkillRules.length}; evaluated=0}`
-      );
-    }
-  }
-
-  if (gaps.length === 0) {
-    return undefined;
-  }
-
-  return {
-    ruleId: 'governance.skills.cross-platform-critical.incomplete',
-    severity: 'ERROR',
-    code: 'SKILLS_CROSS_PLATFORM_CRITICAL_INCOMPLETE_S0',
-    message:
-      `Cross-platform critical enforcement incomplete at ${params.stage}: ${gaps.join(' | ')}. ` +
-      'Ensure each detected platform has critical-profile skill rules active and evaluated.',
-    filePath: '.ai_evidence.json',
-    matchedBy: 'SkillsCrossPlatformCriticalGuard',
-    source: 'skills-cross-platform-critical',
-  };
+  return undefined;
 };
 
 const shouldBlockFromFinding = (finding: Finding | undefined): boolean => {

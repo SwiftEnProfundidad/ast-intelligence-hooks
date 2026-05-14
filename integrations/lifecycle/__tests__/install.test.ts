@@ -197,6 +197,9 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
     });
     assert.deepEqual(evidence.snapshot?.rules_coverage, {
       stage: 'PRE_COMMIT',
+      contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+      scope_note:
+        'No runtime rules were evaluated for this stage. DECLARATIVE registry rules are not runtime detectors.',
       active_rule_ids: [],
       evaluated_rule_ids: [],
       matched_rule_ids: [],

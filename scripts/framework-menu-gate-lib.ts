@@ -156,6 +156,11 @@ const runMenuAuditGate = async (
   await defaultDependencies.runPlatformGate({
     ...gateParams,
     auditMode: 'engine',
+    sddDecisionOverride: {
+      allowed: true,
+      code: 'ALLOWED',
+      message: 'Framework menu audit gate runs without implicit SDD/OpenSpec bootstrap.',
+    },
     dependencies: {
       printGateFindings: () => {},
       evaluatePlatformGateFindings: (params) =>

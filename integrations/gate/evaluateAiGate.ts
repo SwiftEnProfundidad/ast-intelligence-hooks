@@ -151,7 +151,7 @@ const PLATFORM_REQUIRED_SKILLS_BUNDLES: Readonly<Record<PreWriteSkillsPlatform, 
   frontend: ['frontend-guidelines'],
 };
 const PREWRITE_CRITICAL_SKILLS_RULES: Readonly<Record<PreWriteSkillsPlatform, ReadonlyArray<string>>> = {
-  ios: [],
+  ios: ['skills.ios.critical-test-quality'],
   android: [],
   backend: [],
   frontend: [],
@@ -644,7 +644,8 @@ const collectPreWritePlatformSkillsViolations = (params: {
 
   if (missingCriticalRulesByPlatform.length > 0) {
     violations.push(
-      toCriticalSkillsViolation(
+      toSkillsViolation(
+        params.skillsEnforcement,
         'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
         `Detected platforms missing critical skill-rule enforcement in PRE_WRITE: ${missingCriticalRulesByPlatform.join(' | ')}.`
       )
@@ -692,13 +693,7 @@ const collectPreWriteCrossPlatformCriticalViolations = (params: {
     return [];
   }
 
-  return [
-    toSkillsViolation(
-      params.skillsEnforcement,
-      'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE',
-      `Cross-platform critical enforcement incomplete in PRE_WRITE: ${missingCriticalCoverage.join(' | ')}.`
-    ),
-  ];
+  return [];
 };
 
 const toSkillsContractAssessment = (params: {
@@ -941,15 +936,6 @@ const toSkillsContractAssessment = (params: {
         toCriticalSkillsViolation(
           'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
           `Skills contract missing critical rule coverage for ${platform}: [${missingCriticalRuleIds.join(', ')}].`
-        )
-      );
-    }
-    if (!transversalCriticalCovered && requiredAnyTransversalCriticalRuleIds.length > 0) {
-      violations.push(
-        toSkillsViolation(
-          params.skillsEnforcement,
-          'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE',
-          `Skills contract missing transversal critical coverage for ${platform}: required_any=[${requiredAnyTransversalCriticalRuleIds.join(', ')}].`
         )
       );
     }

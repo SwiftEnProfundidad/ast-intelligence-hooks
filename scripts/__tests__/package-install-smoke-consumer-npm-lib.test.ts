@@ -3,6 +3,7 @@ import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import packageJson from '../../package.json';
 import { verifyInstalledPumukiBinaryVersion } from '../package-install-smoke-consumer-npm-lib';
 import type { SmokeWorkspace } from '../package-install-smoke-workspace-contract';
 
@@ -39,9 +40,10 @@ const withFakeNpx = async (scriptBody: string, callback: () => void): Promise<vo
 
 test('verifyInstalledPumukiBinaryVersion valida npx --no-install pumuki status --json y registra comando', async () => {
   const workspace = createWorkspace();
+  const versionPayload = `{"packageVersion":"${packageJson.version}","version":{"effective":"${packageJson.version}"}}`;
   try {
     await withFakeNpx(
-      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.72","version":{"effective":"6.3.72"}}\\n\'\nexit 0\n',
+      `#!/usr/bin/env sh\nprintf '${versionPayload}\\n'\nexit 0\n`,
       () => {
         verifyInstalledPumukiBinaryVersion(workspace);
       }
@@ -76,13 +78,14 @@ test('verifyInstalledPumukiBinaryVersion falla cuando salida contiene MODULE_NOT
 
 test('verifyInstalledPumukiBinaryVersion usa fallback local cuando npx --no-install falla por MODULE_NOT_FOUND', async () => {
   const workspace = createWorkspace();
+  const versionPayload = `{"packageVersion":"${packageJson.version}","version":{"effective":"${packageJson.version}"}}`;
   try {
     const localBinDir = join(workspace.consumerRepo, 'node_modules', '.bin');
     mkdirSync(localBinDir, { recursive: true });
     const localPumukiBin = join(localBinDir, 'pumuki');
     writeFileSync(
       localPumukiBin,
-      '#!/usr/bin/env sh\nprintf \'{"packageVersion":"6.3.72","version":{"effective":"6.3.72"}}\\n\'\nexit 0\n',
+      `#!/usr/bin/env sh\nprintf '${versionPayload}\\n'\nexit 0\n`,
       'utf8'
     );
     chmodSync(localPumukiBin, 0o755);

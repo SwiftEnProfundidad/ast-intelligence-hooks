@@ -326,7 +326,7 @@ test('runLifecycleAudit mantiene JSON accionable si el gate bloquea sin findings
   assert.equal(result.findings[0]?.code, 'AUDIT_BLOCKED_WITHOUT_FINDINGS');
 });
 
-test('runLifecycleAudit no conserva bloqueantes stale cuando el gate actual permite', async () => {
+test('runLifecycleAudit bloquea si la evidencia contiene findings aunque el runner devuelva exit 0', async () => {
   const result = await runLifecycleAudit({
     stage: 'PRE_PUSH',
     auditMode: 'gate',
@@ -357,12 +357,11 @@ test('runLifecycleAudit no conserva bloqueantes stale cuando el gate actual perm
     },
   });
 
-  assert.equal(result.gate_exit_code, 0);
-  assert.equal(result.snapshot_outcome, 'PASS');
-  assert.equal(result.blocking_findings_count, 0);
-  assert.equal(result.findings[0]?.severity, 'WARN');
-  assert.equal(result.findings[0]?.blocking, false);
-  assert.match(result.findings[0]?.message ?? '', /current audit gate exited 0/);
+  assert.equal(result.gate_exit_code, 1);
+  assert.equal(result.snapshot_outcome, 'BLOCK');
+  assert.equal(result.blocking_findings_count, 1);
+  assert.equal(result.findings[0]?.severity, 'ERROR');
+  assert.equal(result.findings[0]?.blocking, true);
 });
 
 test('runLifecycleAudit usa scope staged en PRE_WRITE cuando hay staged soportado', async () => {

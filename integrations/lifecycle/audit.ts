@@ -283,22 +283,6 @@ const toLifecycleAuditFinding = (finding: SnapshotFinding): LifecycleAuditFindin
   blocking: isFindingBlocking(finding),
 });
 
-const toGateAllowedAuditAdvisoryFinding = (
-  finding: LifecycleAuditFinding
-): LifecycleAuditFinding => {
-  if (!finding.blocking) {
-    return finding;
-  }
-  return {
-    ...finding,
-    severity: 'WARN',
-    blocking: false,
-    message:
-      `${finding.message} ` +
-      '(Advisory: current audit gate exited 0, so this finding is not blocking for this run.)',
-  };
-};
-
 const buildBlockedWithoutFindingsFallback = (params: {
   stage: LifecycleAuditStage;
   gateExitCode: number;
@@ -540,13 +524,14 @@ export const runLifecycleAudit = async (params: {
       ? findings.map(toRangeNoSupportedCodeAuditAdvisoryFinding)
     : stagedWithoutSupportedCode
       ? findings.map(toStagedNoSupportedCodeAuditAdvisoryFinding)
-    : gateAllowed
-      ? findings.map(toGateAllowedAuditAdvisoryFinding)
       : findings;
+  const hasBlockingFinding = effectiveFindings.some((finding) => finding.blocking);
   const gateExitCode =
     scopedGlobalEnforcementOnly || rangePrePushWithoutSupportedCodeSddOnly || stagedWithoutSupportedCode
       ? 0
-      : originalGateExitCode;
+      : hasBlockingFinding
+        ? 1
+        : originalGateExitCode;
   const effectiveSnapshotOutcome =
     gateExitCode === 0 && snapshotOutcome === 'BLOCK' ? 'PASS' : snapshotOutcome;
 
