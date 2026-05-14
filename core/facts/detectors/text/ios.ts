@@ -471,6 +471,10 @@ export const hasSwiftDispatchGroupUsage = (source: string): boolean => {
   });
 };
 
+export const collectSwiftDispatchGroupLines = (source: string): readonly number[] => {
+  return sortedUniqueLines(collectSwiftRegexLines(source, /\bDispatchGroup\b/));
+};
+
 export const hasSwiftDispatchSemaphoreUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'D') {
