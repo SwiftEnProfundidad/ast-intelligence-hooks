@@ -485,6 +485,10 @@ export const hasSwiftDispatchSemaphoreUsage = (source: string): boolean => {
   });
 };
 
+export const collectSwiftDispatchSemaphoreLines = (source: string): readonly number[] => {
+  return sortedUniqueLines(collectSwiftRegexLines(source, /\bDispatchSemaphore\b/));
+};
+
 export const hasSwiftOperationQueueUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'O') {
