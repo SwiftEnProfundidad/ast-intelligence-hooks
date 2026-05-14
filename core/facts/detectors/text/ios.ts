@@ -1553,6 +1553,10 @@ export const hasSwiftForceTryUsage = (source: string): boolean => {
   });
 };
 
+export const collectSwiftForceTryLines = (source: string): readonly number[] => {
+  return sortedUniqueLines(collectSwiftRegexLines(source, /\btry\s*!/));
+};
+
 export const hasSwiftForceCastUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'a' || !hasIdentifierAt(swiftSource, index, 'as')) {

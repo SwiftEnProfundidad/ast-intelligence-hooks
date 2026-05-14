@@ -25,6 +25,7 @@ import {
   hasSwiftEmptyCatchUsage,
   hasSwiftForEachIndicesUsage,
   hasSwiftForEachSelfIdentityUsage,
+  collectSwiftForceTryLines,
   hasSwiftForceCastUsage,
   hasSwiftFontWeightBoldUsage,
   hasSwiftFixedFontSizeUsage,
@@ -452,6 +453,8 @@ func load() {
 `;
   assert.equal(hasSwiftForceTryUsage(positive), true);
   assert.equal(hasSwiftForceTryUsage(negative), false);
+  assert.deepEqual(collectSwiftForceTryLines(positive), [3]);
+  assert.deepEqual(collectSwiftForceTryLines(negative), []);
 });
 
 test('hasSwiftForceCastUsage detecta as! y descarta as?', () => {
