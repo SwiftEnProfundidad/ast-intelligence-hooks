@@ -82,6 +82,7 @@ import {
   hasSwiftJSONSerializationUsage,
   hasSwiftExplicitColorStaticMemberUsage,
   hasSwiftClosureBasedViewBuilderContentUsage,
+  collectSwiftForceUnwrapLines,
   hasSwiftLargeConfigContextViewPropertyUsage,
   hasSwiftUiConditionalSameViewIdentityUsage,
   hasSwiftUiParentOwnedSheetActionUsage,
@@ -106,6 +107,7 @@ let token = optionalToken!
 let value = loadUser()!
 `;
   assert.equal(hasSwiftForceUnwrap(source), true);
+  assert.deepEqual(collectSwiftForceUnwrapLines(source), [2, 3]);
 });
 
 test('hasSwiftForceUnwrap excluye type annotations, force cast y operadores', () => {
@@ -116,6 +118,7 @@ if left != right { print("ok") }
 let flag = value!!
 `;
   assert.equal(hasSwiftForceUnwrap(source), false);
+  assert.deepEqual(collectSwiftForceUnwrapLines(source), []);
 });
 
 test('hasSwiftForceUnwrap excluye comparaciones seguras contra nil', () => {
@@ -129,6 +132,7 @@ if waitersByKey[key] != nil {
 }
 `;
   assert.equal(hasSwiftForceUnwrap(source), false);
+  assert.deepEqual(collectSwiftForceUnwrapLines(source), []);
 });
 
 test('hasSwiftAnyViewUsage detecta AnyView en codigo real', () => {

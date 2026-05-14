@@ -555,6 +555,23 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.uiscreen-main-bounds.ast',
     'heuristics.ios.unchecked-sendable.ast',
   ]);
+  const forceUnwrapFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.force-unwrap.ast'
+  );
+  assert.deepEqual(forceUnwrapFinding?.lines, [1]);
+  assert.deepEqual(forceUnwrapFinding?.primary_node, {
+    kind: 'member',
+    name: 'force unwrap postfix !',
+    lines: [1],
+  });
+  assert.deepEqual(forceUnwrapFinding?.related_nodes, [
+    {
+      kind: 'member',
+      name: 'replacement: guarded optional binding or explicit failure path',
+      lines: [1],
+    },
+  ]);
+  assert.match(forceUnwrapFinding?.expected_fix ?? '', /guard let/);
 });
 
 test('does not detect iOS force-unwrap heuristic for safe nil comparisons', () => {
