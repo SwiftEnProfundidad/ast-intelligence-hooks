@@ -1015,7 +1015,7 @@ test('evaluateAiGate permite PRE_WRITE con plataformas detectadas cuando skills 
   );
 });
 
-test('evaluateAiGate bloquea PRE_WRITE aunque skills enforcement esté en advisory cuando iOS no incluye regla crítica de calidad de tests', () => {
+test('evaluateAiGate no bloquea PRE_WRITE de iOS productivo por regla crítica de calidad de tests no aplicable al slice', () => {
   const base = sampleEvidence();
   const result = evaluateAiGate(
     {
@@ -1072,13 +1072,14 @@ test('evaluateAiGate bloquea PRE_WRITE aunque skills enforcement esté en adviso
     }
   );
 
-  assert.equal(result.status, 'BLOCKED');
-  assert.equal(result.allowed, false);
-  const violation = result.violations.find(
-    (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+    ),
+    false
   );
-  assert.ok(violation);
-  assert.equal(violation.severity, 'ERROR');
 });
 
 test('evaluateAiGate permite PRE_WRITE cuando iOS detectado incluye regla crítica de calidad de tests', () => {

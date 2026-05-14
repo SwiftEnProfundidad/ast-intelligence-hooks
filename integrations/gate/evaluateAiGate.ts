@@ -151,7 +151,7 @@ const PLATFORM_REQUIRED_SKILLS_BUNDLES: Readonly<Record<PreWriteSkillsPlatform, 
   frontend: ['frontend-guidelines'],
 };
 const PREWRITE_CRITICAL_SKILLS_RULES: Readonly<Record<PreWriteSkillsPlatform, ReadonlyArray<string>>> = {
-  ios: ['skills.ios.critical-test-quality'],
+  ios: [],
   android: [],
   backend: [],
   frontend: [],

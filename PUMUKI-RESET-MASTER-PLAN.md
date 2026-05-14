@@ -931,9 +931,18 @@ git checkout -b refactor/s1-governance-console
 
 | Documento | Tarea 🚧 actual |
 |-----------|-----------------|
-| Este plan | `[🚧] - PUMUKI-INC-140` / RuralGo: `skills.ios.critical-test-quality` no puede degradarse a advisory permisivo en PRE_WRITE. |
+| Este plan | `[🚧] - PUMUKI-INC-141` / RuralGo: `skills.ios.critical-test-quality` no debe bloquear PRE_WRITE en slices iOS productivos sin tests. |
 
-- Estado: 🚧 PUMUKI-INC-140 / bug externo Critical de RuralGo con prioridad sobre `PARITY-IOS-001`.
+- Estado: 🚧 PUMUKI-INC-141 / bug externo de RuralGo con prioridad sobre `PARITY-IOS-001`.
+
+Snapshot PUMUKI-INC-141 (2026-05-14):
+- Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, sección `PUMUKI-INC-141`.
+- Reporte consumer: tras `pumuki@6.3.239`, PRE_WRITE bloquea un slice iOS productivo ya compilado por `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` con `ios{missing_critical_rule_ids=[skills.ios.critical-test-quality]}`; `policy reconcile --strict` devuelve PASS o SKIPPED y no remedia nada.
+- Diagnóstico: `skills.ios.critical-test-quality` es una regla crítica de superficies de test, no una regla global para cualquier fichero Swift/iOS. Exigirla como `PREWRITE_CRITICAL_SKILLS_RULES.ios` convierte slices SwiftUI/producto sin tests en bloqueos no accionables para el consumer.
+- Implementación: PRE_WRITE deja de exigir `skills.ios.critical-test-quality` como regla crítica global de plataforma iOS. La calidad de tests sigue gobernada por el guard específico de test files en `runPlatformGate` (`governance.skills.ios-test-quality.incomplete`) cuando el scope contiene XCTest/Swift tests.
+- Regresión: `evaluateAiGate` cubre que un PRE_WRITE iOS productivo con cobertura iOS válida no bloquea por ausencia de `skills.ios.critical-test-quality`.
+- Evidencia Pumuki: `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `88/88 pass`; `npm run -s typecheck` -> OK; `git diff --check` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.240.tgz`.
+- Estado: pendiente de publicación y repin RuralGo.
 
 Snapshot PUMUKI-INC-140 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, fila `PUMUKI-INC-140`.
