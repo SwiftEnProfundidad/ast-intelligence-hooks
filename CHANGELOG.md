@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.267] - 2026-05-14
+
+- iOS: `skills.ios.no-dispatchsemaphore` now emits actionable AST-style evidence for `DispatchSemaphore` usage, including exact lines, primary/related nodes and remediation toward `TaskGroup`, `AsyncStream` or explicit async boundaries.
+
 ## [6.3.266] - 2026-05-14
 
 - iOS: `skills.ios.no-dispatchgroup` now emits actionable AST-style evidence for `DispatchGroup` usage, including exact lines, primary/related nodes and remediation toward `TaskGroup` or other Swift concurrency boundaries.

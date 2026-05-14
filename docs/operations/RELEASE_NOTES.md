@@ -6,6 +6,10 @@ This file keeps only the operational highlights and rollout notes that matter wh
 
 ## 2026-04 (CLI stability and macOS notifications)
 
+### 2026-05-14 (v6.3.267)
+
+- Published `pumuki@6.3.267` with AST-style line/node evidence for `skills.ios.no-dispatchsemaphore`, making `DispatchSemaphore` usage remediable through `TaskGroup`, `AsyncStream` or explicit async boundaries.
+
 ### 2026-05-14 (v6.3.266)
 
 - Published `pumuki@6.3.266` with AST-style line/node evidence for `skills.ios.no-dispatchgroup`, making GCD `DispatchGroup` usage remediable through `TaskGroup` or structured async aggregation boundaries.

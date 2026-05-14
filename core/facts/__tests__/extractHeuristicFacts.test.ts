@@ -625,6 +625,23 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     },
   ]);
   assert.match(dispatchQueueFinding?.expected_fix ?? '', /async\/await/);
+  const dispatchSemaphoreFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.dispatchsemaphore.ast'
+  );
+  assert.deepEqual(dispatchSemaphoreFinding?.lines, [7]);
+  assert.deepEqual(dispatchSemaphoreFinding?.primary_node, {
+    kind: 'call',
+    name: 'GCD DispatchSemaphore call',
+    lines: [7],
+  });
+  assert.deepEqual(dispatchSemaphoreFinding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: structured concurrency TaskGroup, AsyncStream or explicit async boundary',
+      lines: [7],
+    },
+  ]);
+  assert.match(dispatchSemaphoreFinding?.expected_fix ?? '', /AsyncStream/);
   const forceUnwrapFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.force-unwrap.ast'
   );
