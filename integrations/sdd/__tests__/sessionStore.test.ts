@@ -305,6 +305,50 @@ test('refreshSddSession no reutiliza una sesión antigua si el tracking activo n
   }
 });
 
+test('refreshSddSession ignora bullets operativos que no son task ids', () => {
+  const repo = createRepoWithOpenSpecChange();
+  const previousCwd = process.cwd();
+  try {
+    process.chdir(repo);
+    mkdirSync(join(repo, 'openspec', 'changes', 'rgo-1900-25'), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(repo, 'openspec', 'changes', 'rgo-1900-25', 'proposal.md'),
+      '# proposal\n',
+      'utf8'
+    );
+    mkdirSync(join(repo, 'docs'), { recursive: true });
+    writeFileSync(
+      join(repo, 'docs', 'RURALGO_SEGUIMIENTO.md'),
+      [
+        '| Estado | Task ID | Foco | Definition of done |',
+        '| --- | --- | --- | --- |',
+        '| 🚧 | RGO-1900-25 | Checkout/Payment | pendiente |',
+        '',
+        '- 🚧 Siguiente',
+        '- 🚧 next',
+        '- 🚧 delegable',
+      ].join('\n'),
+      'utf8'
+    );
+    openSddSession({
+      changeId: 'add-auth-feature',
+      ttlMinutes: 30,
+    });
+
+    const refreshed = refreshSddSession({
+      ttlMinutes: 90,
+    });
+
+    assert.equal(refreshed.changeId, 'rgo-1900-25');
+    assert.equal(refreshed.valid, true);
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('refreshSddSession aplica TTL por defecto cuando el TTL persistido es inválido', () => {
   const repo = createRepoWithOpenSpecChange();
   const previousCwd = process.cwd();

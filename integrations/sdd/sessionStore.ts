@@ -53,7 +53,7 @@ const collectActiveTrackingChangeIds = (markdown: string): ReadonlyArray<string>
       changeIds.push(normalizeChangeId(tableMatch[1]));
       continue;
     }
-    const bulletMatch = line.match(/^- 🚧 (`?[A-Z0-9][0-9A-Za-z.-]*`?)/u);
+    const bulletMatch = line.match(/^- 🚧 (`?(?:P[A-Z0-9.-]*|RGO-\d[0-9.-]*)`?)/u);
     if (bulletMatch?.[1]) {
       changeIds.push(normalizeChangeId(bulletMatch[1].replace(/`/gu, '')));
     }
