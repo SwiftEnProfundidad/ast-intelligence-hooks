@@ -942,7 +942,7 @@ Snapshot PUMUKI-INC-141 (2026-05-14):
 - Implementación: PRE_WRITE deja de exigir `skills.ios.critical-test-quality` como regla crítica global de plataforma iOS. La calidad de tests sigue gobernada por el guard específico de test files en `runPlatformGate` (`governance.skills.ios-test-quality.incomplete`) cuando el scope contiene XCTest/Swift tests.
 - Regresión: `evaluateAiGate` cubre que un PRE_WRITE iOS productivo con cobertura iOS válida no bloquea por ausencia de `skills.ios.critical-test-quality`.
 - Evidencia Pumuki: `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `88/88 pass`; `npm run -s typecheck` -> OK; `git diff --check` -> OK; `npm pack --dry-run --silent` -> `pumuki-6.3.240.tgz`.
-- Estado: pendiente de publicación y repin RuralGo.
+- Cierre: ✅ publicado `pumuki@6.3.240` como `latest`; RuralGo repineado a `6.3.240`; `pumuki-pre-commit --quiet` muestra `Skills contract: enforced=yes status=PASS platforms=ios`, `AI Gate: ALLOWED`, `Violations: blocking=0 advisory=0`. El `HOOK_EXIT=1` residual se debe a `SDD_SESSION_INVALID` / tracking `RGO-1900-06`, no a `PUMUKI-INC-141`.
 
 Snapshot PUMUKI-INC-140 (2026-05-13):
 - Fuente externa: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`, fila `PUMUKI-INC-140`.
