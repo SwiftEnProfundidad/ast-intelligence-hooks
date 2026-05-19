@@ -192,6 +192,7 @@ export type ParsedArgs = {
 
 const HELP_TEXT = `
 Pumuki lifecycle commands:
+  pumuki --version | -v
   pumuki bootstrap [--enterprise] [--agent=<name>] [--json]
   pumuki install [--with-mcp] [--agent=<name>]
   pumuki uninstall [--purge-artifacts]
@@ -2255,6 +2256,11 @@ export const runLifecycleCli = async (
   dependencies: Partial<LifecycleCliDependencies> = {}
 ): Promise<number> => {
   try {
+    if (argv.length === 1 && (argv[0] === '--version' || argv[0] === '-v')) {
+      writeInfo(getCurrentPumukiVersion());
+      return 0;
+    }
+
     const activeDependencies: LifecycleCliDependencies = {
       ...defaultLifecycleCliDependencies,
       ...dependencies,

@@ -2095,3 +2095,17 @@ Snapshot PUMUKI-INC-132 (2026-05-13):
 
 - El replay historico `v5.5.49` queda restaurado en ruta estable: `/Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks__historical-v5-5-49-platform-replay`.
 - Alias locales creados: `pumuki-menu` para el menu moderno y `pumuki-old-menu` para el replay historico estable.
+
+## 2026-05-19 - INC145 CLI version command sin evidence
+
+### Decision aplicada
+
+- `pumuki --version` y `pumuki -v` pasan a ser comandos raiz estables.
+- Ambos imprimen la version efectiva de Pumuki y salen con codigo `0`.
+- No entran en `status`, `audit`, `doctor`, gates, lifecycle ni escritura de evidencia.
+
+### Alcance
+
+- Esta sub-slice evita que repos consumidores tengan que usar `pumuki status` solo para consultar version.
+- Reduce ruido operativo en `.ai_evidence.json` durante repins y comprobaciones de version.
+- No cambia deteccion, severidad, bloqueo, menu ni notificaciones.
