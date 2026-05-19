@@ -2,6 +2,10 @@
 
 ## [6.3.298] - 2026-05-19
 
+## [6.3.299] - 2026-05-19
+
+- Release line for INC145 AST/skills actionable next actions. Block summaries now emit rule, file, line and expected fix for any unmapped AST/skills finding instead of falling back to a generic primary-blocker message, while preserving specific mappings such as console.log.
+
 - Release line for the merged notification/evidence/context cleanup on develop. Keeps the published package unique after 6.3.297 was already present on npm, preserving the actionable notification payloads, expanded AST detector coverage, PRE_WRITE lease/evidence cause propagation, lifecycle hook alignment, local context gate scaffold and atomic Git hygiene rules.
 
 ## [6.3.297] - 2026-05-19
