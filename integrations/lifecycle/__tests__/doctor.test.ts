@@ -658,6 +658,12 @@ test('runLifecycleDoctor --deep marca policy-drift por fallback default como fai
             pre_push: { command: 'npx --yes --package pumuki@latest pumuki-pre-push' },
             ci: { command: 'npx --yes --package pumuki@latest pumuki-ci' },
           },
+          enforcement: {
+            pre_write: {
+              required_before_edit: true,
+              agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
+            },
+          },
           mcp: {
             enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
             evidence: { command: 'npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio' },
@@ -735,6 +741,12 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
             pre_commit: { command: 'npx --yes --package pumuki@latest pumuki-pre-commit' },
             pre_push: { command: 'npx --yes --package pumuki@latest pumuki-pre-push' },
             ci: { command: 'npx --yes --package pumuki@latest pumuki-ci' },
+          },
+          enforcement: {
+            pre_write: {
+              required_before_edit: true,
+              agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
+            },
           },
           mcp: {
             enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
@@ -828,6 +840,12 @@ test('runLifecycleDoctor --deep marca warning cuando adapter wiring usa comandos
             pre_commit: { command: 'npx --yes pumuki-pre-commit' },
             pre_push: { command: 'npx --yes pumuki-pre-push' },
             ci: { command: 'npx --yes pumuki-ci' },
+          },
+          enforcement: {
+            pre_write: {
+              required_before_edit: true,
+              agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
+            },
           },
           mcp: {
             enterprise: { command: 'npx --yes pumuki-mcp-enterprise-stdio' },
@@ -923,6 +941,12 @@ test('runLifecycleDoctor --deep marca warning cuando adapter wiring muta PATH', 
             pre_push: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-pre-push' },
             ci: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-ci' },
           },
+          enforcement: {
+            pre_write: {
+              required_before_edit: true,
+              agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
+            },
+          },
           mcp: {
             enterprise: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
             evidence: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio' },
@@ -1016,6 +1040,12 @@ test('runLifecycleDoctor --deep marca incompatibilidad cuando OpenSpec es requer
             pre_commit: { command: 'npx --yes --package pumuki@latest pumuki-pre-commit' },
             pre_push: { command: 'npx --yes --package pumuki@latest pumuki-pre-push' },
             ci: { command: 'npx --yes --package pumuki@latest pumuki-ci' },
+          },
+          enforcement: {
+            pre_write: {
+              required_before_edit: true,
+              agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
+            },
           },
           mcp: {
             enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
