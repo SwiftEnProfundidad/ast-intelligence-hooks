@@ -390,6 +390,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-concurrency.use-references-linting-md-for-rule-intent-and-preferred-fixes-avoid-du'
+    ),
+    ['heuristics.ios.concurrency.dummy-await.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.any-type-erasure-usar-generics-con-protocolos-de-frontera'
     ),
     ['heuristics.ios.type-erasure.any.ast']

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 123);
+  assert.equal(iosRules.length, 124);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -21,6 +21,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.task-detached.ast',
     'heuristics.ios.concurrency.long-task-without-cancellation-check.ast',
     'heuristics.ios.concurrency.async-without-await.ast',
+    'heuristics.ios.concurrency.dummy-await.ast',
     'heuristics.ios.error.empty-catch.ast',
     'heuristics.ios.error.nserror-throw.ast',
     'heuristics.ios.networking.endpoint-enum-ocp.ast',
@@ -152,6 +153,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.concurrency.async-without-await.ast')?.then.code,
     'HEURISTICS_IOS_CONCURRENCY_ASYNC_WITHOUT_AWAIT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.dummy-await.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_DUMMY_AWAIT_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.error.empty-catch.ast')?.then.code,

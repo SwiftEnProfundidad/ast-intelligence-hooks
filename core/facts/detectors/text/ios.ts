@@ -974,6 +974,20 @@ export const hasSwiftAsyncWithoutAwaitUsage = (source: string): boolean => {
   return false;
 };
 
+export const collectSwiftDummyAwaitLines = (source: string): readonly number[] => {
+  return sortedUniqueLines([
+    ...collectSwiftRegexLines(source, /\bawait\s+Task\s*\.\s*yield\s*\(\s*\)/),
+    ...collectSwiftRegexLines(
+      source,
+      /\bawait\s+Task\s*\.\s*sleep\s*\([^)]*(?:nanoseconds\s*:\s*0\b|for\s*:\s*\.(?:zero|seconds\s*\(\s*0\s*\)))/,
+    ),
+  ]);
+};
+
+export const hasSwiftDummyAwaitUsage = (source: string): boolean => {
+  return collectSwiftDummyAwaitLines(source).length > 0;
+};
+
 export const hasSwiftEmptyCatchUsage = (source: string): boolean => {
   const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
   return /\bcatch(?:\s+(?:let|var)\s+[A-Za-z_][A-Za-z0-9_]*)?\s*\{\s*\}/.test(sanitized);

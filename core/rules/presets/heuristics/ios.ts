@@ -257,6 +257,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.concurrency.dummy-await.ast',
+    description: 'Detects dummy awaits inserted to silence async_without_await instead of fixing the async boundary.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.concurrency.dummy-await.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected a dummy await used as a Swift concurrency lint workaround.',
+      code: 'HEURISTICS_IOS_CONCURRENCY_DUMMY_AWAIT_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.error.empty-catch.ast',
     description: 'Detects Swift catch blocks that silently swallow errors.',
     severity: 'WARN',

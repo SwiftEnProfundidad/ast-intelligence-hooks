@@ -20,6 +20,7 @@ import {
   collectSwiftCallbackStyleSignatureLines,
   collectSwiftDispatchGroupLines,
   collectSwiftDispatchSemaphoreLines,
+  collectSwiftDummyAwaitLines,
   hasSwiftAnyViewUsage,
   hasSwiftAnyTypeErasureUsage,
   hasSwiftAsyncWithoutAwaitUsage,
@@ -29,6 +30,7 @@ import {
   hasSwiftDispatchGroupUsage,
   collectSwiftDispatchQueueLines,
   hasSwiftDispatchQueueUsage,
+  hasSwiftDummyAwaitUsage,
   hasSwiftDispatchSemaphoreUsage,
   collectSwiftLongAsyncOperationWithoutCancellationCheckLines,
   hasSwiftAdHocLoggingUsage,
@@ -1863,6 +1865,33 @@ final class ProfileLoader: RemoteLoader {
 
   assert.equal(hasSwiftAsyncWithoutAwaitUsage(source), true);
   assert.equal(hasSwiftAsyncWithoutAwaitUsage(ignored), false);
+});
+
+test('detector iOS de concurrencia detecta dummy awaits usados como workaround', () => {
+  const source = `
+final class Loader {
+  func load() async {
+    await Task.yield()
+    try? await Task.sleep(nanoseconds: 0)
+    try? await Task.sleep(for: .zero)
+    try? await Task.sleep(for: .seconds(0))
+  }
+}
+`;
+  const ignored = `
+final class Loader {
+  func load() async throws {
+    try await Task.sleep(for: .seconds(1))
+    let message = "await Task.yield()"
+    // await Task.yield()
+  }
+}
+`;
+
+  assert.equal(hasSwiftDummyAwaitUsage(source), true);
+  assert.deepEqual(collectSwiftDummyAwaitLines(source), [4, 5, 6, 7]);
+  assert.equal(hasSwiftDummyAwaitUsage(ignored), false);
+  assert.deepEqual(collectSwiftDummyAwaitLines(ignored), []);
 });
 
 test('detector iOS de accesibilidad detecta botones icon-only sin label explicita', () => {
