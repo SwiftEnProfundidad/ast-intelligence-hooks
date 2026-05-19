@@ -168,6 +168,8 @@ import {
   hasSwiftManualMemoryManagementUsage,
   collectSwiftNonPascalCaseTypeDeclarationLines,
   hasSwiftNonPascalCaseTypeDeclarationUsage,
+  collectSwiftEndpointEnumLines,
+  hasSwiftEndpointEnumUsage,
   collectSwiftCellCreationWithoutReuseLines,
   hasSwiftCellCreationWithoutReuseUsage,
   hasSwiftWaitForExpectationsUsage,
@@ -349,6 +351,36 @@ let sample = "struct user_profile {}"
   assert.deepEqual(collectSwiftNonPascalCaseTypeDeclarationLines(source), [2, 3, 4]);
   assert.equal(hasSwiftNonPascalCaseTypeDeclarationUsage(safe), false);
   assert.deepEqual(collectSwiftNonPascalCaseTypeDeclarationLines(safe), []);
+});
+
+test('hasSwiftEndpointEnumUsage detecta endpoints iOS como enum central no OCP', () => {
+  const source = `
+enum APIEndpoint {
+  case login
+}
+
+enum OrdersEndpoint: String {
+  case list = "/orders"
+}
+`;
+  const safe = `
+struct APIEndpoint: Sendable {
+  let path: String
+  let method: HTTPMethod
+
+  static func login() -> APIEndpoint {
+    APIEndpoint(path: "/login", method: .post)
+  }
+}
+
+let sample = "enum APIEndpoint { case login }"
+// enum OrdersEndpoint { case list }
+`;
+
+  assert.equal(hasSwiftEndpointEnumUsage(source), true);
+  assert.deepEqual(collectSwiftEndpointEnumLines(source), [2, 6]);
+  assert.equal(hasSwiftEndpointEnumUsage(safe), false);
+  assert.deepEqual(collectSwiftEndpointEnumLines(safe), []);
 });
 
 test('hasSwiftCellCreationWithoutReuseUsage detecta celdas UIKit sin reutilizacion', () => {

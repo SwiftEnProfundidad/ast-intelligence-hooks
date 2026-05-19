@@ -293,6 +293,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.networking.endpoint-enum-ocp.ast',
+    description: 'Detects API endpoint catalogs modeled as Swift enums instead of data-driven endpoint values.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.networking.endpoint-enum-ocp.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected API endpoint modeled as enum; use a data-driven APIEndpoint struct to preserve OCP.',
+      code: 'HEURISTICS_IOS_NETWORKING_ENDPOINT_ENUM_OCP_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.swiftui.onappear-task.ast',
     description: 'Detects Task launches from SwiftUI onAppear where .task can provide lifecycle cancellation.',
     severity: 'WARN',

@@ -216,6 +216,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.error.typed-error-enum',
     ['heuristics.ios.error.nserror-throw.ast']
   ),
+  'skills.ios.guideline.ios.apiendpoint-como-struct-data-driven-ocp-endpoints-en-features-no-enum-':
+    heuristicDetector('ios.networking.endpoint-enum-ocp', [
+      'heuristics.ios.networking.endpoint-enum-ocp.ast',
+    ]),
   'skills.ios.guideline.ios.no-loggear-pii-tokens-emails-ids-sensibles': heuristicDetector(
     'ios.logging.sensitive-data',
     ['heuristics.ios.logging.sensitive-data.ast']
