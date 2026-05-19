@@ -462,6 +462,73 @@ test('evaluateAiGate expone causas accionables para findings WARN bloqueantes', 
   assert.match(violation?.message ?? '', /193,280/);
 });
 
+test('evaluateAiGate no bloquea PRE_WRITE cuando la evidencia bloqueada solo contiene WARN no bloqueantes', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+      preWriteWorktreeHygiene: {
+        enabled: false,
+      },
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          snapshot: {
+            ...base.snapshot,
+            stage: 'PRE_WRITE',
+            outcome: 'BLOCK',
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              stage: 'PRE_WRITE',
+            },
+          },
+          ai_gate: {
+            ...base.ai_gate,
+            status: 'BLOCKED',
+            violations: [
+              {
+                ruleId: 'ai_gate.repo_policy.EVIDENCE_PREWRITE_WORKTREE_WARN',
+                code: 'EVIDENCE_PREWRITE_WORKTREE_WARN',
+                message: 'PRE_WRITE worktree hygiene warning.',
+                severity: 'WARN',
+                blocking: false,
+              },
+            ],
+          },
+          rulesets: [
+            {
+              id: 'skills.backend',
+              platform: 'skills',
+              bundle: 'backend-guidelines',
+              version: '1.0.0',
+            },
+          ],
+          severity_metrics: {
+            ...base.severity_metrics,
+            gate_status: 'BLOCKED',
+            total_violations: 1,
+            by_severity: {
+              ...base.severity_metrics.by_severity,
+              WARN: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+      loadRequiredSkillsLock: () => sampleBackendSkillsLock(),
+    }
+  );
+
+  const violation = result.violations.find((item) => item.code === 'EVIDENCE_GATE_BLOCKED');
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(violation?.severity, 'WARN');
+  assert.match(violation?.message ?? '', /did not expose any blocking cause/);
+});
+
 test('evaluateAiGate normaliza package_version/lifecycle_version cuando captureRepoState llega desalineado', () => {
   const repoState = sampleEvidence().repo_state!;
   const result = evaluateAiGate(
