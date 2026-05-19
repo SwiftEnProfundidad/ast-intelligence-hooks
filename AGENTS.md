@@ -119,6 +119,47 @@ Antes de realizar cualquier accion:
   - explicar el conflicto de rama/flujo, y
   - pedir al usuario el cambio o confirmacion de rama antes de continuar.
 
+## Contrato hard de commits atomicos y limite de worktree (no negociable)
+- Todo cambio debe cerrarse en commits atomicos por slice funcional, bug o contrato tecnico.
+- Esta prohibido acumular cambios de varios subsistemas sin commit intermedio.
+- Un commit atomico debe tener una unica intencion verificable, por ejemplo:
+  - un detector AST/nodal concreto y sus tests,
+  - una correccion de gate/lifecycle concreta y sus tests,
+  - una mejora de notificacion concreta y sus tests,
+  - una actualizacion de tracking/docs estrictamente asociada a esa slice,
+  - una preparacion de release/versionado separada del codigo funcional.
+- Esta prohibido mezclar en el mismo commit:
+  - detectores AST con versionado/release,
+  - cambios de lifecycle/gate con cambios de menu/runtime no relacionados,
+  - cambios de consumers con cambios internos de Pumuki,
+  - tracking amplio con implementacion funcional no relacionada,
+  - limpieza de ramas/worktrees con codigo de producto.
+- Umbral hard de higiene:
+  - si `git status --short` muestra mas de 24 rutas pendientes, no se permite seguir implementando;
+  - si muestra mas de 12 rutas pendientes, se debe evaluar si la slice ya debe cerrarse;
+  - si existen archivos `??` fuera del alcance de la slice, deben clasificarse antes de continuar.
+- Si el worktree supera el umbral hard:
+  - declarar `STATUS: BLOCKED`,
+  - detener nuevas ediciones funcionales,
+  - listar cambios por subsistema,
+  - crear commits atomicos separados o stashes con nombre explicito antes de continuar,
+  - no usar un commit masivo para "limpiar" el estado.
+- Antes de cada commit:
+  - revisar `git diff --cached --name-status`,
+  - confirmar que todos los archivos staged pertenecen a la misma intencion,
+  - dejar fuera del stage cualquier archivo no relacionado,
+  - documentar en la respuesta la relacion `escenario -> tests -> evidencia -> task`.
+- Si los hooks bloquean por deuda ajena al staged:
+  - no ampliar el commit para "aprovechar",
+  - reportar la causa exacta,
+  - corregir Pumuki si es bug del gate,
+  - o aislar la slice si es deuda del worktree.
+- Las ramas locales y worktrees temporales deben revisarse con inventario antes de borrarse.
+- Esta prohibido borrar ramas, worktrees, stashes o directorios temporales con cambios sin:
+  - comprobar estado,
+  - preservar cambios en commit o stash con nombre explicito,
+  - y reportar la evidencia.
+
 ## Gate operativo obligatorio (antes de editar codigo)
 - Declarar internamente las skills aplicables y tratarlas como activas durante TODO el turno.
 - Verificar cumplimiento minimo previo:
