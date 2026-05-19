@@ -113,6 +113,20 @@ Antes de realizar cualquier accion:
   - `release/*`: debe salir de `develop` y solo contener cambios de estabilizacion/release.
   - `hotfix/*`: debe salir de `main` para fixes urgentes de produccion.
 - Esta prohibido commitear en `main` y `develop` sin instruccion explicita del usuario.
+- Ciclo de cierre de ramas obligatorio:
+  - una rama `feature/*`, `bugfix/*`, `chore/*`, `refactor/*` o `docs/*` terminada debe integrarse en `develop` mediante el flujo acordado;
+  - una rama `release/*` terminada debe integrarse en `main` y `develop`;
+  - una rama `hotfix/*` terminada debe integrarse en `main` y propagarse a `develop`;
+  - tras confirmar que la rama esta mergeada en sus destinos obligatorios, debe eliminarse la rama local y remota si existe;
+  - las ramas cerradas no pueden quedar acumuladas como backlog, marcador historico o pseudo-tracking.
+- Criterio de borrado seguro de ramas:
+  - antes de borrar cualquier rama, comprobar si esta mergeada con `git branch --merged <destino>`;
+  - si no aparece como mergeada, no borrarla sin revisar commits no integrados;
+  - si contiene commits utiles no integrados, integrarlos, crear backup branch explicita o stash/patch documentado antes de eliminar;
+  - nunca usar borrado forzado de ramas (`git branch -D` o delete remoto forzado) sin instruccion explicita y evidencia de preservacion.
+- La limpieza de ramas forma parte del cierre de cada slice:
+  - no se considera cerrada una task si deja worktrees temporales o ramas de trabajo ya mergeadas sin limpiar;
+  - si no se puede limpiar por riesgo, reportar `STATUS: BLOCKED` o dejar `NEXT instruction` explicita con la razon.
 - Si la rama actual no cumple naming o flujo:
   - detener implementacion,
   - declarar `STATUS: BLOCKED`,
