@@ -2258,6 +2258,10 @@ export const collectSwiftQuickNimbleLines = (source: string): readonly number[] 
 };
 
 export const hasSwiftXCTestAssertionUsage = (source: string): boolean => {
+  if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
+    return false;
+  }
+
   if (hasSwiftBrownfieldXCTestQualityPattern(source)) {
     return false;
   }
@@ -2304,6 +2308,10 @@ const hasSwiftConfirmationUsage = (source: string): boolean => {
 };
 
 export const collectSwiftWaitForExpectationsLines = (source: string): readonly number[] => {
+  if (hasSwiftLegacyXCTestUiOrPerformanceUsage(source)) {
+    return [];
+  }
+
   return sortedUniqueLines([
     ...collectSwiftRegexLines(source, /\b(?:self\s*\.\s*)?wait\s*\(\s*for\s*:/),
     ...collectSwiftRegexLines(source, /\bwaitForExpectations\s*\(/),

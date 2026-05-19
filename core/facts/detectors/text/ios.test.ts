@@ -2795,6 +2795,24 @@ let text = "XCTAssertEqual(value, expected)"
   assert.deepEqual(collectSwiftXCTestAssertionLines(ignored), []);
 });
 
+test('hasSwiftXCTestAssertionUsage permite UI tests XCTest brownfield explicitos', () => {
+  const uiTest = `
+import XCTest
+
+final class BuyerCommerceUISmokeTests: XCTestCase {
+  func testCheckoutFlow() {
+    let app = XCUIApplication()
+    app.launch()
+    XCTAssertTrue(app.buttons["Continue"].exists)
+    XCTAssertEqual(app.staticTexts["Title"].label, "RuralGo")
+  }
+}
+`;
+
+  assert.equal(hasSwiftXCTestAssertionUsage(uiTest), false);
+  assert.deepEqual(collectSwiftXCTestAssertionLines(uiTest), []);
+});
+
 test('hasSwiftXCTUnwrapUsage detecta XCTUnwrap real y evita strings', () => {
   const source = `
 let value = try XCTUnwrap(optionalValue)
@@ -2830,6 +2848,24 @@ let sample = "waitForExpectations(timeout: 1)"
   assert.equal(hasSwiftWaitForExpectationsUsage(modernWait), false);
   assert.deepEqual(collectSwiftWaitForExpectationsLines(legacyWait), [3, 4, 5, 6, 7]);
   assert.deepEqual(collectSwiftWaitForExpectationsLines(modernWait), []);
+});
+
+test('hasSwiftWaitForExpectationsUsage permite waits en UI tests XCTest brownfield explicitos', () => {
+  const uiWait = `
+import XCTest
+
+final class BuyerCommerceUISmokeTests: XCTestCase {
+  func testCheckoutFlow() {
+    let app = XCUIApplication()
+    app.launch()
+    XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 5))
+    wait(for: [expectation(description: "Loaded")], timeout: 1)
+  }
+}
+`;
+
+  assert.equal(hasSwiftWaitForExpectationsUsage(uiWait), false);
+  assert.deepEqual(collectSwiftWaitForExpectationsLines(uiWait), []);
 });
 
 test('hasSwiftLegacyExpectationDescriptionUsage detecta expectation(description:) sin flujo moderno', () => {
