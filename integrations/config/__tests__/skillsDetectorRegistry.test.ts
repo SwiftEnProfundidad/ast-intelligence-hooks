@@ -1171,6 +1171,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ['heuristics.ios.performance.blocking-sleep.ast']
   );
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-concurrency.use-references-threading-md-to-avoid-thread-centric-debugging-and-rely'
+    ),
+    ['heuristics.ios.concurrency.thread-centric-debugging.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.accessibility-labels-accessibilitylabel'),
     ['heuristics.ios.accessibility.icon-only-control-label.ast']
   );

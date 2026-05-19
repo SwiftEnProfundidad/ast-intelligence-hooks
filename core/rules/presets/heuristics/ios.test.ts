@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 122);
+  assert.equal(iosRules.length, 123);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -65,6 +65,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.accessibility.fixed-font-size.ast',
     'heuristics.ios.localization.physical-text-alignment.ast',
     'heuristics.ios.performance.blocking-sleep.ast',
+    'heuristics.ios.concurrency.thread-centric-debugging.ast',
     'heuristics.ios.accessibility.icon-only-control-label.ast',
     'heuristics.ios.accessibility.missing-accessibility-identifier.ast',
     'heuristics.ios.swiftui.missing-bindable-observable-binding.ast',
@@ -303,6 +304,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.performance.blocking-sleep.ast')?.then.code,
     'HEURISTICS_IOS_PERFORMANCE_BLOCKING_SLEEP_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.thread-centric-debugging.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_THREAD_CENTRIC_DEBUGGING_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.accessibility.icon-only-control-label.ast')?.then.code,

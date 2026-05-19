@@ -1073,6 +1073,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.concurrency.thread-centric-debugging.ast',
+    description: 'Detects Thread.current, Thread.isMainThread and pthread thread identity checks in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.concurrency.thread-centric-debugging.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected thread-centric debugging in Swift Concurrency code.',
+      code: 'HEURISTICS_IOS_CONCURRENCY_THREAD_CENTRIC_DEBUGGING_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.accessibility.icon-only-control-label.ast',
     description: 'Detects icon-only SwiftUI controls without explicit accessibility labels.',
     severity: 'WARN',
