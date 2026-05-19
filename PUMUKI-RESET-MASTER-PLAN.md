@@ -2109,3 +2109,16 @@ Snapshot PUMUKI-INC-132 (2026-05-13):
 - Esta sub-slice evita que repos consumidores tengan que usar `pumuki status` solo para consultar version.
 - Reduce ruido operativo en `.ai_evidence.json` durante repins y comprobaciones de version.
 - No cambia deteccion, severidad, bloqueo, menu ni notificaciones.
+
+## 2026-05-19 - Release pumuki@6.3.300
+
+### Cierre publicado
+
+- `pumuki@6.3.300` queda publicado en npm como release util de `INC145`.
+- Contenido funcional: `pumuki --version` y `pumuki -v` imprimen la version efectiva y salen `0` sin ejecutar `status`, `audit`, `doctor`, gates, notificaciones ni escritura de evidencia.
+- Validacion ejecutada antes de publicar: `runLifecycleCli retorna version sin activar lifecycle para flags de version` -> OK; `npm run -s typecheck` -> OK; `npm run -s validation:package-manifest` -> OK; `npm publish --dry-run` -> OK.
+- Verificacion remota: `npm view pumuki version --json` -> `6.3.300`; `npm view pumuki@6.3.300 version dist.shasum dist.integrity --json` -> shasum `52a9c86edec3e265ee01811fb4c029d5a9e70f38`.
+
+### Nota operativa
+
+- Esta release debe repinearse en consumers que necesiten comprobar version sin ensuciar `.ai_evidence.json`.
