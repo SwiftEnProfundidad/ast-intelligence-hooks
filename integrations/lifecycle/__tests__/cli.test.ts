@@ -1242,6 +1242,28 @@ test('runLifecycleCli retorna 0 para ayuda explícita en comandos lifecycle simp
   assert.equal(menuCode, 0);
 });
 
+test('runLifecycleCli retorna version sin activar lifecycle para flags de version', async () => {
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write;
+  process.stdout.write = ((chunk: string | Uint8Array) => {
+    printed.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
+  try {
+    const longCode = await runLifecycleCli(['--version']);
+    const shortCode = await runLifecycleCli(['-v']);
+
+    assert.equal(longCode, 0);
+    assert.equal(shortCode, 0);
+    assert.deepEqual(printed, [
+      `${getCurrentPumukiVersion()}\n`,
+      `${getCurrentPumukiVersion()}\n`,
+    ]);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+  }
+});
+
 test('runLifecycleCli retorna 0 para ayuda explícita en subcomandos profundos', async () => {
   const validateCode = await withSilentConsole(() =>
     runLifecycleCli(['sdd', 'validate', '--help'])
