@@ -138,6 +138,8 @@ import {
   hasSwiftPhysicalTextAlignmentUsage,
   hasSwiftPreconcurrencyUsage,
   hasSwiftProductionCommentUsage,
+  collectSwiftThreadCentricDebuggingLines,
+  hasSwiftThreadCentricDebuggingUsage,
   hasSwiftProductionTestDoubleUsage,
   hasSwiftQuickNimbleUsage,
   hasSwiftTestDoubleWithoutProtocolConformanceUsage,
@@ -1809,6 +1811,30 @@ func wait() async throws {
 
   assert.equal(hasSwiftMainThreadBlockingSleepUsage(source), true);
   assert.equal(hasSwiftMainThreadBlockingSleepUsage(ignored), false);
+});
+
+test('detector iOS de concurrencia detecta depuracion centrada en hilos', () => {
+  const source = `
+func traceCurrentExecution() {
+  print(Thread.current)
+  if Thread.isMainThread { recordMainThread() }
+  let pthread = pthread_self()
+  let mach = pthread_mach_thread_np(pthread)
+}
+`;
+  const ignored = `
+@MainActor
+func updateUI() {
+  let description = "Thread.current"
+  // Thread.isMainThread
+  Task { await reload() }
+}
+`;
+
+  assert.equal(hasSwiftThreadCentricDebuggingUsage(source), true);
+  assert.deepEqual(collectSwiftThreadCentricDebuggingLines(source), [3, 4, 5, 6]);
+  assert.equal(hasSwiftThreadCentricDebuggingUsage(ignored), false);
+  assert.deepEqual(collectSwiftThreadCentricDebuggingLines(ignored), []);
 });
 
 test('detector iOS de concurrencia detecta async privado sin await y evita boundaries publicos', () => {

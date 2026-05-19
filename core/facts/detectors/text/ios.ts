@@ -1549,6 +1549,18 @@ export const hasSwiftMainThreadBlockingSleepUsage = (source: string): boolean =>
   });
 };
 
+export const collectSwiftThreadCentricDebuggingLines = (source: string): readonly number[] => {
+  return sortedUniqueLines([
+    ...collectSwiftRegexLines(source, /\bThread\s*\.\s*(?:current|isMainThread)\b/),
+    ...collectSwiftRegexLines(source, /\bpthread_self\s*\(/),
+    ...collectSwiftRegexLines(source, /\bpthread_mach_thread_np\s*\(/),
+  ]);
+};
+
+export const hasSwiftThreadCentricDebuggingUsage = (source: string): boolean => {
+  return collectSwiftThreadCentricDebuggingLines(source).length > 0;
+};
+
 export const hasSwiftIconOnlyControlWithoutAccessibilityLabelUsage = (source: string): boolean => {
   const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
   const iconOnlyButtonPattern =

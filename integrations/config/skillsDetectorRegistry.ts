@@ -338,6 +338,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.performance.blocking-sleep',
     ['heuristics.ios.performance.blocking-sleep.ast']
   ),
+  'skills.ios.guideline.ios-concurrency.use-references-threading-md-to-avoid-thread-centric-debugging-and-rely':
+    heuristicDetector('ios.concurrency.thread-centric-debugging', [
+      'heuristics.ios.concurrency.thread-centric-debugging.ast',
+    ]),
   'skills.ios.guideline.ios.structured-concurrency-task-taskgroup-actor-asyncsequence-asyncstream':
     heuristicDetector('ios.concurrency.structured-baseline', [
       'heuristics.ios.callback-style.ast',
