@@ -25,6 +25,9 @@ export const runGateStep = (
   expectation: SmokeExpectation
 ): { outcome: string; exitCode: number } => {
   const gateEnv: NodeJS.ProcessEnv = {
+    PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS: '1',
+    PUMUKI_SYSTEM_NOTIFICATIONS: '0',
+    PUMUKI_NOTIFICATIONS: '0',
     PUMUKI_SDD_BYPASS: '1',
     ...(step.label === 'ci' ? { GITHUB_BASE_REF: 'main' } : {}),
   };

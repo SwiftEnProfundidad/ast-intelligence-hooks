@@ -3,16 +3,16 @@ import type { GateOutcome } from './GateOutcome';
 import type { GatePolicy } from './GatePolicy';
 import { isSeverityAtLeast } from '../rules/Severity';
 
+const isBlockingFinding = (finding: Finding): boolean => finding.blocking !== false;
+
 export function evaluateGate(
   findings: Finding[],
   policy: GatePolicy
 ): { outcome: GateOutcome; blocking: Finding[]; warnings: Finding[] } {
-  const blocking = findings.filter((finding) =>
-    isSeverityAtLeast(finding.severity, policy.blockOnOrAbove)
-  );
+  const blocking = findings.filter(isBlockingFinding);
   const warnings = findings.filter(
     (finding) =>
-      !isSeverityAtLeast(finding.severity, policy.blockOnOrAbove) &&
+      !isBlockingFinding(finding) &&
       isSeverityAtLeast(finding.severity, policy.warnOnOrAbove)
   );
 

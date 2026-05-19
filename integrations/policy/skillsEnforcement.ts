@@ -1,4 +1,4 @@
-export type SkillsEnforcementMode = 'advisory' | 'strict';
+export type SkillsEnforcementMode = 'strict';
 
 export type SkillsEnforcementResolution = {
   mode: SkillsEnforcementMode;
@@ -24,17 +24,6 @@ const toSkillsEnforcementMode = (
   ) {
     return 'strict';
   }
-  if (
-    normalized === 'advisory'
-    || normalized === 'warn'
-    || normalized === 'warning'
-    || normalized === '0'
-    || normalized === 'false'
-    || normalized === 'no'
-    || normalized === 'off'
-  ) {
-    return 'advisory';
-  }
   return null;
 };
 
@@ -48,8 +37,8 @@ export const resolveSkillsEnforcement = (): SkillsEnforcementResolution => {
     };
   }
   return {
-    mode: 'advisory',
+    mode: 'strict',
     source: 'default',
-    blocking: false,
+    blocking: true,
   };
 };

@@ -159,6 +159,13 @@ export const emitGateBlockedNotification = (
     causeCode: string;
     causeMessage: string;
     remediation: string;
+    blockingCauses?: ReadonlyArray<{
+      code: string;
+      message: string;
+      ruleId?: string;
+      file?: string;
+      remediation?: string;
+    }>;
   },
   dependencies: Partial<AuditSummaryNotificationDependencies> = {}
 ): SystemNotificationEmitResult => {
@@ -177,6 +184,7 @@ export const emitGateBlockedNotification = (
         causeMessage: params.causeMessage,
       }),
       remediation: params.remediation,
+      blockingCauses: params.blockingCauses,
     },
     repoRoot: params.repoRoot,
   });

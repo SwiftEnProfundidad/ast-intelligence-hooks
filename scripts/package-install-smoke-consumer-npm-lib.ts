@@ -15,10 +15,11 @@ import packageJson from '../package.json';
 const runNpmStep = (
   workspace: SmokeWorkspace,
   args: string[],
-  context: string
+  context: string,
+  env?: NodeJS.ProcessEnv
 ): void => {
   assertSuccess(
-    runCommand({ cwd: workspace.consumerRepo, executable: 'npm', args }),
+    runCommand({ cwd: workspace.consumerRepo, executable: 'npm', args, env }),
     context
   );
 };
@@ -29,10 +30,15 @@ export const installTarballIntoConsumerRepo = (
   runNpmStep(workspace, ['init', '-y'], 'npm init');
   writeFileSync(
     join(workspace.consumerRepo, '.gitignore'),
-    'node_modules/\n.ai_evidence.json\n',
+    'node_modules/\n.ai_evidence.json\n.pumuki/context/\n',
     'utf8'
   );
-  runNpmStep(workspace, ['install', workspace.tarballPath ?? ''], 'npm install <tarball>');
+  runNpmStep(
+    workspace,
+    ['install', workspace.tarballPath ?? ''],
+    'npm install <tarball>',
+    { PUMUKI_SKIP_POSTINSTALL: '1' }
+  );
 };
 
 export const verifyInstalledPackageCanBeRequired = (

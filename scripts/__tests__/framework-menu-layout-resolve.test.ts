@@ -50,13 +50,13 @@ test('resolveConsumerMenuLayout mantiene jerarquía por flujo', () => {
   const actions = buildConsumerActions();
   const groups = resolveConsumerMenuLayout(actions);
   assert.equal(groups.length, 5);
-  assert.equal(groups[0]?.title, 'Read-Only Gate Flows');
+  assert.equal(groups[0]?.title, 'Legacy Audit Flows');
   assert.deepEqual(groups[0]?.items.map((item) => item.id), ['1', '2', '3', '4']);
   assert.equal(groups[1]?.title, 'Engine · working tree (no preflight)');
   assert.deepEqual(groups[1]?.items.map((item) => item.id), ['11', '12', '13', '14']);
-  assert.equal(groups[2]?.title, 'Legacy Read-Only Export');
+  assert.equal(groups[2]?.title, 'Legacy Export');
   assert.deepEqual(groups[2]?.items.map((item) => item.id), ['8']);
-  assert.equal(groups[3]?.title, 'Legacy Read-Only Diagnostics');
+  assert.equal(groups[3]?.title, 'Legacy Diagnostics');
   assert.deepEqual(groups[3]?.items.map((item) => item.id), ['5', '6', '7', '9']);
   assert.equal(groups[4]?.title, 'System');
   assert.deepEqual(groups[4]?.items.map((item) => item.id), ['10']);

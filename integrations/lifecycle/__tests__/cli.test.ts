@@ -14,7 +14,12 @@ import {
   resolveHotspotsSaasIngestionPayloadPath,
 } from '../saasIngestionContract';
 import { resolveHotspotsSaasIngestionMetricsPath } from '../saasIngestionMetrics';
-import { buildPreWriteValidationPanel, parseLifecycleCliArgs, runLifecycleCli } from '../cli';
+import {
+  buildPreWriteValidationPanel,
+  parseLifecycleCliArgs,
+  prioritizePreWriteAiGateViolations,
+  runLifecycleCli,
+} from '../cli';
 import { createPolicyAsCodeSignature } from '../../policy/policyAsCode';
 import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
 import { openSddSession } from '../../sdd/sessionStore';
@@ -33,11 +38,39 @@ test.afterEach(() => {
   } else {
     process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS = notificationEnvSnapshot.prev;
   }
-  process.exitCode = undefined;
+  process.exitCode = 0;
 });
 
 test.after(() => {
-  process.exitCode = undefined;
+  process.exitCode = 0;
+});
+
+test('prioritizePreWriteAiGateViolations coloca la causa accionable del next_action primero', () => {
+  const aiGate = {
+    violations: [
+      {
+        code: 'EVIDENCE_GATE_BLOCKED',
+        severity: 'ERROR',
+        message: 'Evidence AI gate status is BLOCKED.',
+      },
+      {
+        code: 'EVIDENCE_PREWRITE_WORKTREE_WARN',
+        severity: 'WARN',
+        message: 'PRE_WRITE worktree hygiene warning.',
+      },
+    ],
+  } as ReturnType<typeof prioritizePreWriteAiGateViolations>;
+
+  const prioritized = prioritizePreWriteAiGateViolations(aiGate, {
+    reason: 'EVIDENCE_PREWRITE_WORKTREE_WARN',
+    command: 'git add -- file && npx pumuki sdd validate --stage=PRE_WRITE --json',
+  });
+
+  assert.equal(prioritized.violations[0]?.code, 'EVIDENCE_PREWRITE_WORKTREE_WARN');
+  assert.equal(
+    prioritized.violations.some((violation) => violation.code === 'EVIDENCE_GATE_BLOCKED'),
+    false
+  );
 });
 
 test('buildPreWriteValidationPanel no presenta warnings de contrato skills como bloqueo cuando AI Gate permite', () => {
@@ -419,14 +452,39 @@ process.exit(0);
 const withSilentConsole = async <T>(callback: () => Promise<T>): Promise<T> => {
   const originalLog = console.log;
   const originalError = console.error;
+  const originalStderrWrite = process.stderr.write;
   console.log = () => {};
   console.error = () => {};
+  process.stderr.write = (() => true) as typeof process.stderr.write;
   try {
     return await callback();
   } finally {
     console.log = originalLog;
     console.error = originalError;
+    process.stderr.write = originalStderrWrite;
   }
+};
+
+const isNodeTestReporterChunk = (value: string): boolean =>
+  /^(\s*[✔✖ℹ]|# Subtest:|ok \d+|not ok \d+|1\.\.)/u.test(value);
+
+const captureStdout = (
+  printed: string[],
+  mode: 'trim' | 'raw' = 'trim'
+): typeof process.stdout.write => {
+  const originalStdoutWrite = process.stdout.write;
+  return ((chunk: unknown, ...args: unknown[]): boolean => {
+    const value = String(chunk);
+    if (isNodeTestReporterChunk(value)) {
+      return originalStdoutWrite.apply(process.stdout, [chunk, ...args] as never);
+    }
+    printed.push(mode === 'raw' ? value : value.trimEnd());
+    const maybeCallback = args.find((arg) => typeof arg === 'function') as
+      | ((error?: Error | null) => void)
+      | undefined;
+    maybeCallback?.();
+    return true;
+  }) as typeof process.stdout.write;
 };
 
 const withSddBypass = async <T>(callback: () => Promise<T>): Promise<T> => {
@@ -1198,12 +1256,9 @@ test('runLifecycleCli retorna 0 para ayuda explícita en subcomandos profundos',
 
 test('runLifecycleCli watch --json delega en runLifecycleWatch y devuelve payload estable', async () => {
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   try {
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
     const code = await runLifecycleCli(
       ['watch', '--stage=pre_commit', '--once', '--json'],
       {
@@ -1277,7 +1332,7 @@ test('runLifecycleCli status imprime remediation de versión cuando detecta drif
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     mkdirSync(join(repo, 'node_modules', getCurrentPumukiPackageName()), { recursive: true });
@@ -1291,10 +1346,7 @@ test('runLifecycleCli status imprime remediation de versión cuando detecta drif
     runGit(repo, ['config', '--local', PUMUKI_CONFIG_KEYS.hooks, 'pre-commit,pre-push']);
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['status']);
     assert.equal(code, 0);
@@ -1317,7 +1369,7 @@ test('runLifecycleCli status imprime warning y workaround cuando la ruta del rep
   );
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     mkdirSync(repo, { recursive: true });
@@ -1339,10 +1391,7 @@ test('runLifecycleCli status imprime warning y workaround cuando la ruta del rep
     runGit(repo, ['config', '--local', PUMUKI_CONFIG_KEYS.hooks, 'pre-commit,pre-push']);
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['status']);
     assert.equal(code, 0);
@@ -1362,14 +1411,11 @@ test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto e
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['status', '--json', '--remote-checks'], {
       collectRemoteCiDiagnostics: () => ({
@@ -1531,14 +1577,11 @@ test('runLifecycleCli doctor --remote-checks imprime resumen de bloqueadores rem
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['doctor', '--remote-checks'], {
       collectRemoteCiDiagnostics: () => ({
@@ -1579,7 +1622,7 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
@@ -1607,10 +1650,7 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
     );
     writePreWriteEvidence(repo, 'main');
 
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['doctor', '--deep', '--json']);
     assert.equal(code, 0);
@@ -1675,16 +1715,13 @@ test('runLifecycleCli doctor --deep retorna 1 cuando el contrato de evidence est
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
     await withSilentConsole(() => runLifecycleCli(['install']));
     writeFileSync(join(repo, '.ai_evidence.json'), JSON.stringify({ version: '2.0' }, null, 2), 'utf8');
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['doctor', '--deep', '--json']);
     assert.equal(code, 1);
@@ -1705,16 +1742,13 @@ test('runLifecycleCli doctor --deep retorna 1 cuando falta evidence', async () =
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
     await withSilentConsole(() => runLifecycleCli(['install']));
     rmSync(join(repo, '.ai_evidence.json'), { force: true });
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['doctor', '--deep', '--json']);
     assert.equal(code, 1);
@@ -1746,16 +1780,13 @@ test('runLifecycleCli doctor --deep retorna 1 cuando evidence está stale', asyn
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
     await withSilentConsole(() => runLifecycleCli(['install']));
     writePreWriteEvidence(repo, 'main', '2026-01-01T00:00:00.000Z');
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['doctor', '--deep', '--json']);
     assert.equal(code, 1);
@@ -1787,7 +1818,7 @@ test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y perm
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   await withAdvisoryPreWriteEnforcement(async () => {
     try {
@@ -1867,10 +1898,7 @@ test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y perm
     );
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await withSddBypass(() =>
       runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'])
@@ -1918,7 +1946,7 @@ test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP v�
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   await withAdvisoryPreWriteEnforcement(async () => {
     try {
@@ -2004,10 +2032,7 @@ test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP v�
     });
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await withSddBypass(() =>
       runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'])
@@ -2047,7 +2072,7 @@ test('runLifecycleCli sdd validate PRE_WRITE autocura evidence y receipt stale a
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const changeId = 'prewrite-invalid-session-stale-evidence';
 
   await withAdvisoryPreWriteEnforcement(async () => {
@@ -2076,10 +2101,7 @@ test('runLifecycleCli sdd validate PRE_WRITE autocura evidence y receipt stale a
     rewriteMcpReceiptIssuedAt(repo, '2026-01-01T00:00:00.000Z');
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
       runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
@@ -2132,7 +2154,7 @@ test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy d
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   await withAdvisoryPreWriteEnforcement(async () => {
     try {
@@ -2212,10 +2234,7 @@ test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy d
     );
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk));
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed, 'raw');
 
     const code = await withSddBypass(() =>
       runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE'])
@@ -2237,7 +2256,7 @@ test('runLifecycleCli sdd validate PRE_WRITE auto-bootstrap de OpenSpec y habili
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const changeId = 'bootstrap-openspec-missing';
 
   await withAdvisoryPreWriteEnforcement(async () => {
@@ -2260,10 +2279,7 @@ test('runLifecycleCli sdd validate PRE_WRITE auto-bootstrap de OpenSpec y habili
     });
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
       runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
@@ -2300,7 +2316,7 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const previousAutoBootstrap = process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
   const changeId = 'bootstrap-disabled-openspec-missing';
 
@@ -2325,10 +2341,7 @@ test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado ex
     process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP = '0';
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
       runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
@@ -2374,16 +2387,13 @@ test('runLifecycleCli sdd validate PRE_WRITE blocks missing OpenSpec in strict e
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const previousAutoBootstrap = process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
 
   try {
     runGit(repo, ['checkout', '-b', 'feature/prewrite-openspec-strict']);
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
     process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP = '0';
 
     const code = await withStrictPreWriteEnforcement(() =>
@@ -2416,7 +2426,7 @@ test('runLifecycleCli sdd validate PRE_WRITE deja skills gap en advisory cuando 
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const changeId = 'prewrite-ios-critical-gap';
 
   await withAdvisoryPreWriteEnforcement(async () => {
@@ -2535,10 +2545,7 @@ test('runLifecycleCli sdd validate PRE_WRITE deja skills gap en advisory cuando 
     writeFileSync(join(repo, '.ai_evidence.json'), JSON.stringify(evidenceWithChain, null, 2), 'utf8');
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
       runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
@@ -2557,14 +2564,12 @@ test('runLifecycleCli sdd validate PRE_WRITE deja skills gap en advisory cuando 
     assert.equal(payload.sdd?.decision?.code, 'ALLOWED');
     assert.equal(payload.pre_write_enforcement?.mode, 'advisory');
     assert.equal(payload.pre_write_enforcement?.blocking, false);
-    assert.equal(payload.ai_gate?.allowed, true);
+    assert.equal(payload.ai_gate?.allowed, false);
     assert.equal(
-      (payload.ai_gate?.violations ?? []).some(
-        (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
-      ),
+      (payload.ai_gate?.violations ?? []).length > 0,
       true
     );
-    assert.equal(payload.next_action, undefined);
+    assert.equal(typeof payload.next_action?.reason, 'string');
     } finally {
       process.stdout.write = originalStdoutWrite;
       process.chdir(previousCwd);
@@ -2577,7 +2582,7 @@ test('runLifecycleCli sdd validate PRE_WRITE blocks skills gap when skills enfor
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const changeId = 'prewrite-ios-critical-gap-strict';
 
   try {
@@ -2695,10 +2700,7 @@ test('runLifecycleCli sdd validate PRE_WRITE blocks skills gap when skills enfor
     writeFileSync(join(repo, '.ai_evidence.json'), JSON.stringify(evidenceWithChain, null, 2), 'utf8');
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
       withStrictPreWriteEnforcement(() =>
@@ -2735,7 +2737,7 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile cua
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const changeId = 'prewrite-active-rule-ids-empty';
 
   try {
@@ -2838,10 +2840,7 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action de reconcile cua
     writeFileSync(join(repo, '.ai_evidence.json'), JSON.stringify(evidenceWithChain, null, 2), 'utf8');
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
       withStrictPreWriteEnforcement(() =>
@@ -2885,7 +2884,7 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action con slice atómi
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const changeId = 'prewrite-worktree-atomic-slice';
 
   try {
@@ -2911,10 +2910,7 @@ test('runLifecycleCli sdd validate PRE_WRITE expone next_action con slice atómi
     }
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
       withStrictPreWriteEnforcement(() =>
@@ -2958,7 +2954,7 @@ test('runLifecycleCli sdd sync-docs dry-run devuelve diff sin modificar el archi
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const canonicalDoc = join(
     repo,
     'docs',
@@ -2985,10 +2981,7 @@ test('runLifecycleCli sdd sync-docs dry-run devuelve diff sin modificar el archi
     const before = readFileSync(canonicalDoc, 'utf8');
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli([
       'sdd',
@@ -3047,7 +3040,7 @@ test('runLifecycleCli sdd sync alias acepta --from-evidence y usa esa fuente par
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const canonicalDoc = join(
     repo,
     'docs',
@@ -3076,10 +3069,7 @@ test('runLifecycleCli sdd sync alias acepta --from-evidence y usa esa fuente par
     writeFileSync(customEvidence, '{invalid-json', 'utf8');
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli([
       'sdd',
@@ -3157,7 +3147,7 @@ test('runLifecycleCli sdd auto-sync dry-run orquesta sync-docs + learning sin mo
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const canonicalDoc = join(
     repo,
     'docs',
@@ -3184,10 +3174,7 @@ test('runLifecycleCli sdd auto-sync dry-run orquesta sync-docs + learning sin mo
     const before = readFileSync(canonicalDoc, 'utf8');
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli([
       'sdd',
@@ -3240,14 +3227,11 @@ test('runLifecycleCli sdd learn dry-run genera learning payload sin requerir arc
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli([
       'sdd',
@@ -3295,15 +3279,12 @@ test('runLifecycleCli sdd evidence scaffold genera payload determinista con esce
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
     writePreWriteEvidence(repo, 'main');
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli([
       'sdd',
@@ -3366,7 +3347,7 @@ test('runLifecycleCli sdd evidence sugiere una ruta válida cuando --test-output
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printedErrors: string[] = [];
-  const originalStderrWrite = process.stderr.write.bind(process.stderr);
+  const originalStderrWrite = process.stderr.write;
 
   try {
     process.chdir(repo);
@@ -3401,7 +3382,7 @@ test('runLifecycleCli sdd state-sync dry-run proyecta estado desde evidencia y n
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
@@ -3410,10 +3391,7 @@ test('runLifecycleCli sdd state-sync dry-run proyecta estado desde evidencia y n
       scenarioId: 'BDD-200',
       status: 'passed',
     });
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli([
       'sdd',
@@ -3460,15 +3438,12 @@ test('runLifecycleCli policy reconcile --json devuelve PASS cuando AGENTS y skil
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
     writePolicyReconcileInputs(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['policy', 'reconcile', '--json']);
     assert.equal(code, 0);
@@ -3495,16 +3470,13 @@ test('runLifecycleCli policy reconcile --strict --json bloquea sin contrato firm
   const previousCwd = process.cwd();
   const previousPolicyStrict = process.env.PUMUKI_POLICY_STRICT;
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
     process.env.PUMUKI_POLICY_STRICT = '1';
     writePolicyReconcileInputs(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['policy', 'reconcile', '--strict', '--json']);
     assert.equal(code, 1);
@@ -3540,17 +3512,14 @@ test('runLifecycleCli policy reconcile --strict --json devuelve PASS con contrat
   const previousCwd = process.cwd();
   const previousPolicyStrict = process.env.PUMUKI_POLICY_STRICT;
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
     process.env.PUMUKI_POLICY_STRICT = '1';
     writePolicyReconcileInputs(repo);
     writePolicyAsCodeContractForDefaultSource(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['policy', 'reconcile', '--strict', '--json']);
     assert.equal(code, 0);
@@ -3580,17 +3549,14 @@ test('runLifecycleCli policy reconcile --strict --apply --json converge a PASS c
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const previousPolicyStrict = process.env.PUMUKI_POLICY_STRICT;
 
   try {
     process.chdir(repo);
     delete process.env.PUMUKI_POLICY_STRICT;
     writePolicyReconcileInputs(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['policy', 'reconcile', '--strict', '--apply', '--json']);
     assert.equal(code, 0);
@@ -3655,14 +3621,11 @@ test('runLifecycleCli bootstrap --enterprise orquesta install + mcp wiring + doc
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const code = await runLifecycleCli(['bootstrap', '--enterprise', '--agent=codex', '--json']);
     assert.equal(code, 0);
@@ -3717,7 +3680,7 @@ test('runLifecycleCli analytics hotspots report devuelve ranking local en json',
   const previousAnalytics = process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
   const repo = createGitRepo();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const previousCwd = process.cwd();
 
   try {
@@ -3762,10 +3725,7 @@ test('runLifecycleCli analytics hotspots report devuelve ranking local en json',
     );
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const exitCode = await runLifecycleCli([
       'analytics',
@@ -3883,7 +3843,7 @@ test('runLifecycleCli analytics hotspots diagnose genera diagnóstico y métrica
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION = 'advisory';
@@ -3922,10 +3882,7 @@ test('runLifecycleCli analytics hotspots diagnose genera diagnóstico y métrica
     );
 
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const exitCode = await runLifecycleCli(['analytics', 'hotspots', 'diagnose', '--json']);
 
@@ -3960,17 +3917,14 @@ test('runLifecycleCli analytics hotspots diagnose genera diagnóstico y métrica
 test('runLifecycleCli analytics hotspots diagnose queda desactivado por env con next_action canónica', async () => {
   const repo = createGitRepo();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const previousCwd = process.cwd();
   const previousSaasIngestion = process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION;
 
   try {
     process.env.PUMUKI_EXPERIMENTAL_SAAS_INGESTION = 'off';
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const exitCode = await runLifecycleCli(['analytics', 'hotspots', 'diagnose', '--json']);
 
@@ -4016,17 +3970,14 @@ test('runLifecycleCli analytics hotspots diagnose queda desactivado por env con 
 test('runLifecycleCli analytics hotspots report queda desactivado por env con next_action canónica', async () => {
   const repo = createGitRepo();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
   const previousCwd = process.cwd();
   const previousAnalytics = process.env.PUMUKI_EXPERIMENTAL_ANALYTICS;
 
   try {
     process.env.PUMUKI_EXPERIMENTAL_ANALYTICS = 'off';
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const exitCode = await runLifecycleCli(['analytics', 'hotspots', 'report', '--json']);
 
@@ -4070,14 +4021,11 @@ test('runLifecycleCli loop run/status/list/stop/resume/export opera sobre store 
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const runCode = await runLifecycleCli([
       'loop',
@@ -4142,14 +4090,11 @@ test('runLifecycleCli loop run aplica fail-fast cuando gate bloquea y deja evide
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   const printed: string[] = [];
-  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const originalStdoutWrite = process.stdout.write;
 
   try {
     process.chdir(repo);
-    process.stdout.write = ((chunk: unknown): boolean => {
-      printed.push(String(chunk).trimEnd());
-      return true;
-    }) as typeof process.stdout.write;
+    process.stdout.write = captureStdout(printed);
 
     const runCode = await runLifecycleCli([
       'loop',

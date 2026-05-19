@@ -6,6 +6,7 @@ import { runPlatformGate } from '../git/runPlatformGate';
 import { evaluatePlatformGateFindings } from '../git/runPlatformGateEvaluation';
 import { DEFAULT_FACT_FILE_EXTENSIONS } from '../git/runPlatformGateFacts';
 import { resolvePolicyForStage, type ResolvedStagePolicy } from '../gate/stagePolicies';
+import { writePreWriteLease } from './preWriteLease';
 
 export type LifecycleAuditStage = 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 
@@ -59,6 +60,7 @@ type LifecycleAuditDependencies = {
   readEvidence: typeof readEvidence;
   resolvePolicyForStage: typeof resolvePolicyForStage;
   runPlatformGate: typeof runPlatformGate;
+  writePreWriteLease: typeof writePreWriteLease;
 };
 
 type LifecycleAuditScope =
@@ -270,7 +272,7 @@ const toResultScope = (params: {
 };
 
 const isFindingBlocking = (finding: SnapshotFinding): boolean => {
-  return Boolean(finding.ruleId);
+  return finding.blocking !== false;
 };
 
 const toLifecycleAuditFinding = (finding: SnapshotFinding): LifecycleAuditFinding => ({
@@ -435,6 +437,7 @@ export const runLifecycleAudit = async (params: {
     readEvidence,
     resolvePolicyForStage,
     runPlatformGate,
+    writePreWriteLease,
     ...params.dependencies,
   };
   const git = activeDependencies.git;
@@ -525,13 +528,55 @@ export const runLifecycleAudit = async (params: {
     : stagedWithoutSupportedCode
       ? findings.map(toStagedNoSupportedCodeAuditAdvisoryFinding)
       : findings;
-  const hasBlockingFinding = effectiveFindings.some((finding) => finding.blocking);
-  const gateExitCode =
+  let mutableEffectiveFindings = effectiveFindings;
+  const hasBlockingFinding = mutableEffectiveFindings.some((finding) => finding.blocking);
+  let gateExitCode =
     scopedGlobalEnforcementOnly || rangePrePushWithoutSupportedCodeSddOnly || stagedWithoutSupportedCode
       ? 0
       : hasBlockingFinding
         ? 1
         : originalGateExitCode;
+
+  if (params.stage === 'PRE_WRITE' && params.auditMode === 'gate' && gateExitCode === 0) {
+    try {
+      const lease = activeDependencies.writePreWriteLease({
+        repoRoot,
+        git,
+        allowExistingCodeChanges: true,
+      });
+      if (!lease.valid) {
+        mutableEffectiveFindings = [
+          ...mutableEffectiveFindings,
+          {
+            ruleId: 'governance.prewrite.lease-write-failed',
+            severity: 'ERROR',
+            code: lease.code,
+            message: lease.message,
+            file: lease.path,
+            blocking: true,
+          },
+        ];
+        gateExitCode = 1;
+      }
+    } catch (error) {
+      mutableEffectiveFindings = [
+        ...mutableEffectiveFindings,
+        {
+          ruleId: 'governance.prewrite.lease-write-failed',
+          severity: 'ERROR',
+          code: 'PRE_WRITE_LEASE_WRITE_FAILED',
+          message:
+            error instanceof Error
+              ? `PRE_WRITE audit passed but could not write the required lease: ${error.message}`
+              : 'PRE_WRITE audit passed but could not write the required lease.',
+          file: '.pumuki/prewrite-lease.json',
+          blocking: true,
+        },
+      ];
+      gateExitCode = 1;
+    }
+  }
+
   const effectiveSnapshotOutcome =
     gateExitCode === 0 && snapshotOutcome === 'BLOCK' ? 'PASS' : snapshotOutcome;
 
@@ -545,14 +590,14 @@ export const runLifecycleAudit = async (params: {
     files_scanned: filesScanned,
     untracked_matching_extensions_count: untrackedMatchingExtensionsCount,
     snapshot_outcome: effectiveSnapshotOutcome,
-    findings_count: effectiveFindings.length,
-    blocking_findings_count: effectiveFindings.filter((finding) => finding.blocking).length,
+    findings_count: mutableEffectiveFindings.length,
+    blocking_findings_count: mutableEffectiveFindings.filter((finding) => finding.blocking).length,
     rules_coverage: evidence?.snapshot.rules_coverage ?? null,
     rule_id_normalization: buildRuleIdNormalization({
-      findings: effectiveFindings,
+      findings: mutableEffectiveFindings,
       rulesCoverage: evidence?.snapshot.rules_coverage,
     }),
-    findings: effectiveFindings,
+    findings: mutableEffectiveFindings,
     policy_reconcile_hint: POLICY_RECONCILE_HINT,
   };
 };

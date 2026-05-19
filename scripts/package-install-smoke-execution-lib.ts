@@ -4,6 +4,7 @@ import {
   assertLifecycleStatusMatchesSnapshot,
   captureLifecycleStatusSnapshot,
   runLifecycleInstallStep,
+  runLifecyclePreWriteStep,
   runLifecycleUninstallStep,
 } from './package-install-smoke-lifecycle-lib';
 import {
@@ -37,10 +38,11 @@ export const runPackageInstallSmoke = (mode: SmokeMode): void => {
     });
 
     setupConsumerRepository(workspace, mode);
+    runLifecycleInstallStep(workspace);
+    runLifecyclePreWriteStep(workspace);
     writeStagedPayload(workspace, mode);
 
     const lifecycleStatusSnapshot = captureLifecycleStatusSnapshot(workspace);
-    runLifecycleInstallStep(workspace);
 
     const results = runDefaultSmokeGateSteps({
       workspace,

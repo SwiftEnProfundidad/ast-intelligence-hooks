@@ -340,6 +340,124 @@ test('consumer runtime opción 2 resume un bloqueo PRE_PUSH aunque no exista evi
   }
 });
 
+test('consumer runtime opción 1 usa el bloqueo devuelto por el gate aunque no exista evidencia canónica', { concurrency: false }, async () => {
+  const previous = process.cwd();
+  const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-summary-blocked-opt1-'));
+  process.chdir(temp);
+  try {
+    const output: string[] = [];
+    const runtime = createConsumerMenuRuntime({
+      runRepoGate: async () => ({
+        blocked: {
+          stage: 'PRE_COMMIT',
+          totalViolations: 3,
+          causeCode: 'SKILLS_BACKEND_NO_SOLID_VIOLATIONS',
+          causeMessage: 'SOLID rule violated.',
+          remediation: 'Split responsibilities and re-run the gate.',
+          blockingCauses: [
+            {
+              code: 'NO_SOLID',
+              ruleId: 'skills.backend.no-solid-violations',
+              message: 'Backend SOLID violation.',
+              file: 'apps/backend/src/service.ts',
+              remediation: 'Split service responsibilities.',
+            },
+            {
+              code: 'NO_CONSOLE',
+              ruleId: 'skills.frontend.no-console-log',
+              message: 'Frontend console violation.',
+              file: 'apps/web/src/App.tsx',
+              remediation: 'Remove console.log.',
+            },
+          ],
+        },
+      }),
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
+      runPreflight: async () => {},
+      write: (text) => {
+        output.push(text);
+      },
+    });
+
+    const action = runtime.actions.find((item) => item.id === '1');
+    assert.ok(action, 'Expected consumer action id=1');
+    await action.execute();
+
+    const rendered = output.join('\n');
+    assert.match(rendered, /Collecting source files/);
+    assert.match(rendered, /Running pattern checks/);
+    assert.match(rendered, /Running ESLint audits/);
+    assert.match(rendered, /AST Intelligence/);
+    assert.match(rendered, /Running AST analysis/);
+    assert.match(rendered, /Evidence: status=ok stage=PRE_COMMIT outcome=BLOCK findings=3/);
+    assert.match(rendered, /Gate blocked: SKILLS_BACKEND_NO_SOLID_VIOLATIONS/);
+    assert.match(rendered, /Blocking causes: 2/);
+    assert.match(rendered, /skills\.backend\.no-solid-violations @ apps\/backend\/src\/service\.ts/);
+    assert.match(rendered, /Solution: Split service responsibilities/);
+    assert.match(rendered, /skills\.frontend\.no-console-log @ apps\/web\/src\/App\.tsx/);
+    assert.match(rendered, /Solution: Remove console\.log/);
+    assert.match(rendered, /Primary block: skills\.backend\.no-solid-violations/);
+    assert.match(rendered, /FINAL SUMMARY - VIOLATIONS BY SEVERITY/);
+    assert.match(rendered, /Total violations: 3/);
+    assert.match(rendered, /PLATFORM-SPECIFIC ANALYSIS/);
+    assert.match(rendered, /Platform: Backend -> 1 violations/);
+    assert.match(rendered, /Platform: Frontend -> 1 violations/);
+    assert.match(rendered, /TOP VIOLATIONS & REMEDIATION/);
+    assert.match(rendered, /skills\.backend\.no-solid-violations -> apps\/backend\/src\/service\.ts:1/);
+    assert.match(rendered, /skills\.frontend\.no-console-log -> apps\/web\/src\/App\.tsx:1/);
+    assert.equal(runtime.readCurrentSummary()?.totalFindings, 3);
+  } finally {
+    process.chdir(previous);
+  }
+});
+
+test('consumer runtime avisa drift cuando el bloqueo del gate contradice la evidencia canónica', { concurrency: false }, async () => {
+  const previous = process.cwd();
+  const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-drift-'));
+  process.chdir(temp);
+  try {
+    writeEvidenceWithLines(temp);
+    const output: string[] = [];
+    const runtime = createConsumerMenuRuntime({
+      runRepoGate: async () => ({
+        blocked: {
+          stage: 'PRE_COMMIT',
+          totalViolations: 3,
+          causeCode: 'SKILLS_BACKEND_NO_SOLID_VIOLATIONS',
+          causeMessage: 'SOLID rule violated.',
+          remediation: 'Split responsibilities and re-run the gate.',
+        },
+      }),
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runUnstagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runWorkingTreePreCommitGate: async () => {},
+      runPreflight: async () => {},
+      write: (text) => {
+        output.push(text);
+      },
+    });
+
+    const action = runtime.actions.find((item) => item.id === '1');
+    assert.ok(action, 'Expected consumer action id=1');
+    await action.execute();
+
+    const rendered = output.join('\n');
+    assert.match(rendered, /Menu\/gate evidence drift detected/);
+    assert.match(rendered, /Diagnostic code: MENU_GATE_EVIDENCE_DRIFT/);
+    assert.match(rendered, /Diagnostic severity: HIGH/);
+    assert.match(rendered, /totalFindings gate=3 evidence=2/);
+    assert.match(rendered, /severity\.CRITICAL gate=0 evidence=1/);
+  } finally {
+    process.chdir(previous);
+  }
+});
+
 test('consumer runtime opción 8 exporta el bloqueo en memoria cuando la opción 2 no generó evidencia', { concurrency: false }, async () => {
   const previous = process.cwd();
   const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-export-blocked-'));

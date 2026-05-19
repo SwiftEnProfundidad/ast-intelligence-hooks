@@ -15,7 +15,7 @@ export const commitBaseline = (
   runGitStep(workspace, ['add', '.'], 'git add baseline');
   runGitStep(
     workspace,
-    ['commit', '--no-verify', '-m', 'chore: baseline'],
+    ['commit', '-m', 'chore: baseline'],
     'git commit baseline'
   );
 };
@@ -32,7 +32,7 @@ export const writeAndCommitRangePayloadForBlockMode = (
   runGitStep(workspace, ['add', '.'], 'git add range payload');
   runGitStep(
     workspace,
-    ['commit', '--no-verify', '-m', 'test: range payload for package smoke'],
+    ['commit', '-m', 'test: range payload for package smoke'],
     'git commit range payload'
   );
 };

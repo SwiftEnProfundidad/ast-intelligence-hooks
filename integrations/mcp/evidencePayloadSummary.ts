@@ -19,12 +19,14 @@ import {
   toSeverityCounts,
 } from './evidenceFacets';
 import { toSuppressedSummaryFields } from './evidencePayloadSummarySuppressed';
+import { extractEvidenceBlockingCauses } from '../evidence/blockingCauses';
 
 export const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
   const sortedPlatforms = sortPlatforms(evidence.platforms);
   const detectedPlatforms = sortedPlatforms.filter((entry) => entry.detected);
   const suppressedFindingsCount = evidence.consolidation?.suppressed?.length ?? 0;
   const findingsWithLinesCount = toFindingsWithLinesCount(evidence.snapshot.findings);
+  const blockingCauses = extractEvidenceBlockingCauses(evidence);
   return {
     version: evidence.version,
     timestamp: evidence.timestamp,
@@ -41,6 +43,8 @@ export const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
       highest_severity: toHighestSeverity(evidence.snapshot.findings),
       blocking_findings_count: toBlockingFindingsCount(evidence.snapshot.findings),
+      blocking_causes_count: blockingCauses.length,
+      blocking_causes: blockingCauses,
     },
     ledger_count: evidence.ledger.length,
     ledger_files_count: toLedgerFilesCount(evidence.ledger),

@@ -3,7 +3,7 @@ import type { MenuLayoutGroup } from './framework-menu-layout-types';
 export const CONSUMER_MENU_LAYOUT: ReadonlyArray<MenuLayoutGroup> = [
   {
     key: 'read-only-gates',
-    title: 'Read-Only Gate Flows',
+    title: 'Classic audit flows',
     itemIds: ['1', '2', '3', '4'],
   },
   {
@@ -13,12 +13,12 @@ export const CONSUMER_MENU_LAYOUT: ReadonlyArray<MenuLayoutGroup> = [
   },
   {
     key: 'export',
-    title: 'Legacy Read-Only Export',
+    title: 'Classic export',
     itemIds: ['8'],
   },
   {
     key: 'legacy-read-only-diagnostics',
-    title: 'Legacy Read-Only Diagnostics',
+    title: 'Classic diagnostics',
     itemIds: ['5', '6', '7', '9'],
   },
   {

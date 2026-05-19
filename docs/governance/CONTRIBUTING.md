@@ -89,4 +89,4 @@ npm run test:heuristics
 ## Notes for automation contributors
 
 This repository still contains legacy hooks/scripts for compatibility.
-For framework refactor commits, maintainers may use `--no-verify` to avoid unrelated legacy hook failures.
+Framework refactor commits must run through the managed hooks; bypassing verification is not an accepted maintainer workflow.

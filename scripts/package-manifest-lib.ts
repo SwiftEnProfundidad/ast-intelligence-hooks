@@ -9,6 +9,7 @@ export const REQUIRED_PACKAGE_PATHS = [
   'core/facts/detectors/typescript/index.ts',
   'core/rules/presets/heuristics/typescript.ts',
   'scripts/package-install-smoke.ts',
+  'integrations/context/contextGate.ts',
   'integrations/git/runPlatformGate.ts',
   'integrations/policy/policyProfiles.ts',
   'integrations/policy/experimentalFeatures.ts',

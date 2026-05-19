@@ -192,6 +192,46 @@ test('runLifecycleAudit expone findings canónicos en JSON', async () => {
   assert.equal(result.rule_id_normalization.entries[0]?.status, 'registry_1_to_1');
 });
 
+test('runLifecycleAudit respeta findings advisory del snapshot aunque tengan ruleId', async () => {
+  const result = await runLifecycleAudit({
+    stage: 'PRE_COMMIT',
+    auditMode: 'gate',
+    dependencies: {
+      git: buildGitStub('/repo', '', 'apps/ios/BuyerShellView.swift\n'),
+      resolvePolicyForStage: (stage) =>
+        ({
+          policy: { stage, blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          trace: { stage },
+        }) as never,
+      runPlatformGate: async () => 0,
+      readEvidence: () =>
+        buildEvidence({
+          stage: 'PRE_COMMIT',
+          outcome: 'PASS',
+          files_scanned: 1,
+          findings: [
+            {
+              ruleId: 'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres',
+              severity: 'INFO',
+              code: 'SKILLS_IOS_MAGIC_NUMBERS_USAR_CONSTANTES_CON_NOMBRES',
+              message:
+                'Magic numbers - Usar constantes con nombres Baseline brownfield outside the staged diff; tracked as advisory for this atomic slice.',
+              file: 'apps/ios/BuyerShellView.swift',
+              lines: [193],
+              blocking: false,
+            },
+          ],
+        }),
+    },
+  });
+
+  assert.equal(result.gate_exit_code, 0);
+  assert.equal(result.findings_count, 1);
+  assert.equal(result.blocking_findings_count, 0);
+  assert.equal(result.findings[0]?.blocking, false);
+  assert.equal(result.findings[0]?.severity, 'INFO');
+});
+
 test('runLifecycleAudit usa scope staged en PRE_COMMIT cuando hay staged files', async () => {
   let capturedScope: string | undefined;
   const result = await runLifecycleAudit({
@@ -394,6 +434,14 @@ test('runLifecycleAudit usa scope staged en PRE_WRITE cuando hay staged soportad
           files_scanned: 1,
           findings: [],
         }),
+      writePreWriteLease: (leaseParams) => ({
+        path: `${leaseParams.repoRoot}/.pumuki/prewrite-lease.json`,
+        written: true,
+        valid: true,
+        code: 'PRE_WRITE_LEASE_WRITTEN',
+        message: 'PRE_WRITE lease written for validated code diff.',
+        changedCodePaths: [],
+      }),
     },
   });
 
@@ -402,6 +450,65 @@ test('runLifecycleAudit usa scope staged en PRE_WRITE cuando hay staged soportad
   assert.equal(result.scope.staged_matching_extensions_count, 1);
   assert.equal(result.gate_exit_code, 0);
   assert.equal(result.findings_count, 0);
+});
+
+test('runLifecycleAudit materializa lease PRE_WRITE cuando el audit staged sale limpio', async () => {
+  let leaseWrittenForPaths: ReadonlyArray<string> = [];
+  const git = buildGitStub(
+    '/repo',
+    '',
+    'apps/ios/Presentation/Features/BuyerCommerce/BuyerLaunchFlowModel.swift'
+  );
+  const result = await runLifecycleAudit({
+    stage: 'PRE_WRITE',
+    auditMode: 'gate',
+    dependencies: {
+      git,
+      resolvePolicyForStage: (stage) =>
+        ({
+          policy: { stage, blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          trace: { stage },
+        }) as never,
+      runPlatformGate: async () => 0,
+      readEvidence: () =>
+        buildEvidence({
+          stage: 'PRE_WRITE',
+          outcome: 'PASS',
+          files_scanned: 1,
+          findings: [],
+        }),
+      writePreWriteLease: (params) => {
+        leaseWrittenForPaths = params.git.runGit(['diff', '--cached', '--name-only'], params.repoRoot)
+          .split('\n')
+          .filter(Boolean);
+        return {
+          path: `${params.repoRoot}/.pumuki/prewrite-lease.json`,
+          written: true,
+          valid: true,
+          code: 'PRE_WRITE_LEASE_WRITTEN',
+          message: 'PRE_WRITE lease written for validated code diff.',
+          changedCodePaths: [...leaseWrittenForPaths],
+          lease: {
+            version: '1',
+            kind: 'pumuki-pre-write-lease',
+            validation_mode: 'validated-diff',
+            repo_root: params.repoRoot,
+            head: 'head',
+            branch: 'feature/rgo-1900-02-checkout-pixel-perfect',
+            issued_at: '2026-05-19T00:00:00.000Z',
+            expires_at: '2026-05-19T04:00:00.000Z',
+            pre_change_code_changes_count: leaseWrittenForPaths.length,
+            pre_change_code_paths: [...leaseWrittenForPaths],
+          },
+        };
+      },
+    },
+  });
+
+  assert.equal(result.gate_exit_code, 0);
+  assert.deepEqual(leaseWrittenForPaths, [
+    'apps/ios/Presentation/Features/BuyerCommerce/BuyerLaunchFlowModel.swift',
+  ]);
 });
 
 test('runLifecycleAudit no bloquea audit staged PRE_WRITE solo por enforcement global incompleto', async () => {
@@ -436,6 +543,14 @@ test('runLifecycleAudit no bloquea audit staged PRE_WRITE solo por enforcement g
             },
           ],
         }),
+      writePreWriteLease: (leaseParams) => ({
+        path: `${leaseParams.repoRoot}/.pumuki/prewrite-lease.json`,
+        written: true,
+        valid: true,
+        code: 'PRE_WRITE_LEASE_WRITTEN',
+        message: 'PRE_WRITE lease written for validated code diff.',
+        changedCodePaths: [],
+      }),
     },
   });
 

@@ -104,6 +104,16 @@ export const runStagedGateSilent = async (): Promise<void> => {
   await runMenuAuditGate(gateParams);
 };
 
+export const runStagedGateSilentWithBlocked = async (): Promise<
+  ConsumerRuntimeGateResult | void
+> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'staged' },
+  });
+  return await runMenuAuditGateWithBlocked(gateParams);
+};
+
 export const runRepoGateSilent = async (): Promise<void> => {
   const gateParams = buildMenuGateParams({
     stage: 'PRE_COMMIT',
@@ -112,12 +122,32 @@ export const runRepoGateSilent = async (): Promise<void> => {
   await runMenuAuditGate(gateParams);
 };
 
+export const runRepoGateSilentWithBlocked = async (): Promise<
+  ConsumerRuntimeGateResult | void
+> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'repo' },
+  });
+  return await runMenuAuditGateWithBlocked(gateParams);
+};
+
 export const runRepoAndStagedGateSilent = async (): Promise<void> => {
   const gateParams = buildMenuGateParams({
     stage: 'PRE_COMMIT',
     scope: { kind: 'repoAndStaged' },
   });
   await runMenuAuditGate(gateParams);
+};
+
+export const runRepoAndStagedGateSilentWithBlocked = async (): Promise<
+  ConsumerRuntimeGateResult | void
+> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'repoAndStaged' },
+  });
+  return await runMenuAuditGateWithBlocked(gateParams);
 };
 
 export const runRepoAndStagedPrePushGateSilent = async (): Promise<
@@ -134,12 +164,32 @@ export const runWorkingTreeGateSilent = async (): Promise<void> => {
   await runMenuAuditGate(gateParams);
 };
 
+export const runWorkingTreeGateSilentWithBlocked = async (): Promise<
+  ConsumerRuntimeGateResult | void
+> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'workingTree' },
+  });
+  return await runMenuAuditGateWithBlocked(gateParams);
+};
+
 export const runWorkingTreePrePushGateSilent = async (): Promise<void> => {
   const gateParams = buildMenuGateParams({
     stage: 'PRE_PUSH',
     scope: { kind: 'workingTree' },
   });
   await runMenuAuditGate(gateParams);
+};
+
+export const runWorkingTreePrePushGateSilentWithBlocked = async (): Promise<
+  ConsumerRuntimeGateResult | void
+> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_PUSH',
+    scope: { kind: 'workingTree' },
+  });
+  return await runMenuAuditGateWithBlocked(gateParams);
 };
 
 export const runUnstagedGateSilent = async (): Promise<void> => {
@@ -150,10 +200,29 @@ export const runUnstagedGateSilent = async (): Promise<void> => {
   await runMenuAuditGate(gateParams);
 };
 
+export const runUnstagedGateSilentWithBlocked = async (): Promise<
+  ConsumerRuntimeGateResult | void
+> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'unstaged' },
+  });
+  return await runMenuAuditGateWithBlocked(gateParams);
+};
+
 const runMenuAuditGate = async (
   gateParams: ReturnType<typeof buildMenuGateParams>
 ): Promise<void> => {
-  await defaultDependencies.runPlatformGate({
+  await runMenuAuditGateWithBlocked(gateParams);
+};
+
+const runMenuAuditGateWithBlocked = async (
+  gateParams: ReturnType<typeof buildMenuGateParams>,
+  dependencies: MenuGateDependencies = defaultDependencies
+): Promise<ConsumerRuntimeGateResult | void> => {
+  let blocked: ConsumerRuntimeGateResult['blocked'];
+
+  await dependencies.runPlatformGate({
     ...gateParams,
     auditMode: 'engine',
     sddDecisionOverride: {
@@ -163,6 +232,20 @@ const runMenuAuditGate = async (
     },
     dependencies: {
       printGateFindings: () => {},
+      notifyGateBlocked: (params) => {
+        blocked = {
+          stage: params.stage,
+          totalViolations: params.totalViolations,
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+          remediation: params.remediation,
+          blockingCauses: params.blockingCauses,
+        };
+        return {
+          delivered: false,
+          reason: 'menu-silent-capture',
+        };
+      },
       evaluatePlatformGateFindings: (params) =>
         evaluatePlatformGateFindings(params, {
           loadHeuristicsConfig: () => ({
@@ -172,6 +255,8 @@ const runMenuAuditGate = async (
         }),
     },
   });
+
+  return blocked ? { blocked } : undefined;
 };
 
 const runRepoAndStagedPrePushGateSilentWithDependencies = async (
@@ -189,6 +274,7 @@ const runRepoAndStagedPrePushGateSilentWithDependencies = async (
         causeCode: params.causeCode,
         causeMessage: params.causeMessage,
         remediation: params.remediation,
+        blockingCauses: params.blockingCauses,
       };
     },
     writeHookGateSummary: () => {},
@@ -198,5 +284,6 @@ const runRepoAndStagedPrePushGateSilentWithDependencies = async (
 };
 
 export const __testables = {
+  runMenuAuditGateWithBlocked,
   runRepoAndStagedPrePushGateSilentWithDependencies,
 };

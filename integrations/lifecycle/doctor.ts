@@ -20,12 +20,23 @@ import {
   readLifecycleDependencyInventory,
   type LifecycleDependencyInventory,
 } from './dependencyInventory';
+import { readPreWriteLeaseStatus } from './preWriteLease';
+import {
+  readLifecycleNotificationStatus,
+  type LifecycleNotificationStatus,
+} from './notificationStatus';
+import {
+  extractEvidenceBlockingCauses,
+  formatEvidenceBlockingCause,
+  type EvidenceBlockingCause,
+} from '../evidence/blockingCauses';
 
 export type DoctorIssueSeverity = 'warning' | 'error';
 
 export type DoctorIssue = {
   severity: DoctorIssueSeverity;
   message: string;
+  blockingCauses?: ReadonlyArray<EvidenceBlockingCause>;
 };
 
 export type DoctorDeepCheckId =
@@ -101,6 +112,7 @@ export type LifecycleDoctorReport = {
   hooksDirectory: string;
   hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   policyValidation: LifecyclePolicyValidationSnapshot;
+  notifications: LifecycleNotificationStatus;
   policy_signature_remediation?: string;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
@@ -116,7 +128,32 @@ const buildDoctorIssues = (params: {
   lifecycleState: LifecycleState;
 }): ReadonlyArray<DoctorIssue> => {
   const issues: DoctorIssue[] = [];
+  const notificationStatus = readLifecycleNotificationStatus({
+    repoRoot: params.repoRoot,
+  });
   const evidenceResult = readEvidenceResult(params.repoRoot);
+  const preWriteLeaseStatus = readPreWriteLeaseStatus({
+    repoRoot: params.repoRoot,
+    git: new LifecycleGitService(),
+  });
+
+  if (!preWriteLeaseStatus.valid && preWriteLeaseStatus.changedCodePaths.length > 0) {
+    issues.push({
+      severity: 'error',
+      message:
+        `ENFORCEMENT_GAP: PRE_WRITE hard-stop lease is not valid (${preWriteLeaseStatus.code}) ` +
+        `for ${preWriteLeaseStatus.changedCodePaths.length} changed code file(s).`,
+    });
+  }
+
+  if (!notificationStatus.deliverable) {
+    issues.push({
+      severity: 'warning',
+      message:
+        `System notifications are not deliverable (${notificationStatus.disabledReason ?? 'unknown'}). ` +
+        `${notificationStatus.remediation ?? 'Review notification configuration.'}`,
+    });
+  }
 
   if (params.trackedNodeModulesPaths.length > 0) {
     issues.push({
@@ -162,12 +199,20 @@ const buildDoctorIssues = (params: {
       evidence.severity_metrics.gate_status === 'BLOCKED';
     if (blocked) {
       const blockedStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
+      const blockingCauses = extractEvidenceBlockingCauses(evidence);
+      const causeDetails =
+        blockingCauses.length > 0
+          ? ` Blocking causes: ${blockingCauses.length}. ${blockingCauses
+              .map(formatEvidenceBlockingCause)
+              .join(' | ')}`
+          : '';
       issues.push({
         severity: 'error',
         message: appendTrackingActionableContext({
           repoRoot: params.repoRoot,
-          message: `Governance is blocked (${blockedStage}).`,
+          message: `Governance is blocked (${blockedStage}).${causeDetails}`,
         }),
+        blockingCauses,
       });
     } else if (evidence.snapshot.outcome === 'WARN') {
       const warnStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
@@ -886,6 +931,7 @@ export const runLifecycleDoctor = (params?: {
 
   const policyValidation = readLifecyclePolicyValidationSnapshot(repoRoot);
   const policySignatureRemediation = buildPolicySignatureRemediation(policyValidation);
+  const notifications = readLifecycleNotificationStatus({ repoRoot });
 
   return {
     repoRoot,
@@ -898,6 +944,7 @@ export const runLifecycleDoctor = (params?: {
     hooksDirectory: hooksDirectory.path,
     hooksDirectoryResolution: hooksDirectory.source,
     policyValidation,
+    notifications,
     ...(policySignatureRemediation
       ? { policy_signature_remediation: policySignatureRemediation }
       : {}),

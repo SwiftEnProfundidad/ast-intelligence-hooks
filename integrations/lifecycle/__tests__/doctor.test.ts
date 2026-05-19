@@ -150,6 +150,17 @@ const writeBlockedEvidence = (params: {
   });
   evidence.snapshot.stage = params.stage;
   evidence.snapshot.outcome = 'BLOCK';
+  evidence.snapshot.findings = [
+    {
+      ruleId: 'skills.ios.no-force-unwrap',
+      severity: 'ERROR',
+      code: 'NO_FORCE_UNWRAP',
+      message: 'Force unwrap is not allowed.',
+      file: 'apps/ios/App/Feature.swift',
+      lines: [12],
+      expected_fix: 'Use guard let or optional binding.',
+    },
+  ];
   evidence.ai_gate.status = 'BLOCKED';
   evidence.severity_metrics = {
     gate_status: 'BLOCKED',
@@ -317,6 +328,10 @@ test('runLifecycleDoctor itemiza el tracking canónico cuando governance está b
       report.issues.find((issue) => issue.message.includes('Governance is blocked'))?.message ?? '',
       /active_entries=PUMUKI-INC-078@L3, PUMUKI-INC-079@L4/i
     );
+    const issue = report.issues.find((entry) => entry.message.includes('Governance is blocked'));
+    assert.match(issue?.message ?? '', /skills\.ios\.no-force-unwrap/i);
+    assert.equal(issue?.blockingCauses?.length, 1);
+    assert.equal(issue?.blockingCauses?.[0]?.file, 'apps/ios/App/Feature.swift');
   });
 });
 
@@ -411,6 +426,38 @@ test('runLifecycleDoctor queda limpio cuando estado y hooks son consistentes', a
     });
 
     assert.deepEqual(report.issues, []);
+    assert.equal(doctorHasBlockingIssues(report), false);
+  });
+});
+
+test('runLifecycleDoctor expone warning cuando las notificaciones estan desactivadas', async () => {
+  await withTempDir('pumuki-doctor-notifications-disabled-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'system-notifications.json'),
+      JSON.stringify({ enabled: false, channel: 'macos', blockedDialogEnabled: true }, null, 2),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: '6.3.11',
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.notifications.enabled, false);
+    assert.equal(report.notifications.deliverable, false);
+    assert.equal(report.notifications.disabledReason, 'disabled');
+    assert.match(
+      report.issues.map((issue) => issue.message).join('\n'),
+      /System notifications are not deliverable/
+    );
     assert.equal(doctorHasBlockingIssues(report), false);
   });
 });

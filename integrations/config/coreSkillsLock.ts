@@ -20,7 +20,8 @@ export const resolveCoreSkillsLockForPackageRoot = (
     if (compiledLock.bundles.length > 0) {
       return compiledLock;
     }
-  } catch {
+  } catch (error) {
+    void error;
   }
 
   return loadSkillsLock(packageRoot);
