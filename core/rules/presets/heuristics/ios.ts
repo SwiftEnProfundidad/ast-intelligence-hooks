@@ -1865,6 +1865,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.glass-interactive-static-element.ast',
+    description: 'Detects Liquid Glass interactive styling on static SwiftUI elements.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.glass-interactive-static-element.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Liquid Glass .interactive() on a static SwiftUI element.',
+      code: 'HEURISTICS_IOS_SWIFTUI_GLASS_INTERACTIVE_STATIC_ELEMENT_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.string-format.ast',
     description: 'Detects String(format:) usage in iOS production code.',
     severity: 'WARN',

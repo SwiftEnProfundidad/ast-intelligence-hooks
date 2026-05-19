@@ -71,6 +71,7 @@ import {
   collectSwiftAnimationWithoutReduceMotionLines,
   collectSwiftUiInlineActionLogicLines,
   collectSwiftOnTapGestureWithoutButtonTraitLines,
+  collectSwiftGlassInteractiveOnStaticElementLines,
   collectSwiftForEachIndicesLines,
   collectSwiftForEachSelfIdentityLines,
   collectSwiftInlineForEachTransformLines,
@@ -127,6 +128,7 @@ import {
   collectSwiftOnAppearTaskLines,
   hasSwiftOnTapGestureUsage,
   hasSwiftOnTapGestureWithoutButtonTraitUsage,
+  hasSwiftGlassInteractiveOnStaticElementUsage,
   hasSwiftOperationQueueUsage,
   hasSwiftContainsUserFilterUsage,
   hasSwiftCustomSingletonUsage,
@@ -2045,6 +2047,41 @@ struct RowView: View {
   assert.deepEqual(collectSwiftOnTapGestureWithoutButtonTraitLines(source), [5]);
   assert.equal(hasSwiftOnTapGestureWithoutButtonTraitUsage(safe), false);
   assert.deepEqual(collectSwiftOnTapGestureWithoutButtonTraitLines(safe), []);
+});
+
+test('hasSwiftGlassInteractiveOnStaticElementUsage detecta Liquid Glass interactivo en contenido estatico', () => {
+  const source = `
+struct CardView: View {
+  var body: some View {
+    Text("Estado")
+      .padding()
+      .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
+  }
+}
+`;
+  const safe = `
+struct CardView: View {
+  var body: some View {
+    Button("Continuar") { submit() }
+      .glassEffect(.regular.interactive(), in: .capsule)
+
+    Text("Mas informacion")
+      .onTapGesture { showDetails() }
+      .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
+
+    Text("decorativo")
+      .glassEffect(.regular, in: .rect(cornerRadius: 16))
+
+    let sample = ".glassEffect(.regular.interactive())"
+    // .glassEffect(.regular.interactive())
+  }
+}
+`;
+
+  assert.equal(hasSwiftGlassInteractiveOnStaticElementUsage(source), true);
+  assert.deepEqual(collectSwiftGlassInteractiveOnStaticElementLines(source), [6]);
+  assert.equal(hasSwiftGlassInteractiveOnStaticElementUsage(safe), false);
+  assert.deepEqual(collectSwiftGlassInteractiveOnStaticElementLines(safe), []);
 });
 
 test('detectores legacy ignoran strings y comentarios', () => {

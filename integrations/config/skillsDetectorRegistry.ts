@@ -379,6 +379,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.accessibility.on-tap-without-button-trait',
     ['heuristics.ios.accessibility.on-tap-without-button-trait.ast']
   ),
+  'skills.ios.guideline.ios-swiftui-expert.use-interactive-only-for-tappable-focusable-elements':
+    heuristicDetector('ios.swiftui.glass-interactive-static-element', [
+      'heuristics.ios.swiftui.glass-interactive-static-element.ast',
+    ]),
   'skills.ios.guideline.ios.image-optimization-resize-compress-cache': heuristicDetector(
     'ios.swiftui.image-data-decoding',
     ['heuristics.ios.swiftui.image-data-decoding.ast']

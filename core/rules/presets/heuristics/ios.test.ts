@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 119);
+  assert.equal(iosRules.length, 120);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -108,6 +108,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.tab-item.ast',
     'heuristics.ios.on-tap-gesture.ast',
     'heuristics.ios.accessibility.on-tap-without-button-trait.ast',
+    'heuristics.ios.swiftui.glass-interactive-static-element.ast',
     'heuristics.ios.string-format.ast',
     'heuristics.ios.scrollview-shows-indicators.ast',
     'heuristics.ios.sheet-is-presented.ast',
