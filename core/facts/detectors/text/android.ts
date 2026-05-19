@@ -134,6 +134,38 @@ const countTokenOccurrences = (line: string, token: string): number => {
   return line.split(token).length - 1;
 };
 
+const extractBalancedCallSegment = (source: string, openParenIndex: number): string | undefined => {
+  let depth = 0;
+  for (let index = openParenIndex; index < source.length; index += 1) {
+    const character = source[index];
+    if (character === '(') {
+      depth += 1;
+    } else if (character === ')') {
+      depth -= 1;
+      if (depth === 0) {
+        return source.slice(openParenIndex, index + 1);
+      }
+    }
+  }
+  return undefined;
+};
+
+const extractBalancedBlockSegment = (source: string, openBraceIndex: number): string | undefined => {
+  let depth = 0;
+  for (let index = openBraceIndex; index < source.length; index += 1) {
+    const character = source[index];
+    if (character === '{') {
+      depth += 1;
+    } else if (character === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return source.slice(openBraceIndex, index + 1);
+      }
+    }
+  }
+  return undefined;
+};
+
 const normalizeKotlinWhenBranchName = (rawLabel: string): string => {
   const normalized = rawLabel.split(',')[0]?.trim() ?? rawLabel.trim();
   const withoutGuard = normalized.split(/\s+if\s+/)[0]?.trim() ?? normalized;
@@ -289,6 +321,28 @@ export const hasKotlinProductionMockUsage = (source: string): boolean => {
   ).length > 0;
 };
 
+export const collectKotlinHardcodedUiStringLines = (source: string): readonly number[] => {
+  return source
+    .split(/\r?\n/)
+    .map((line, index) => ({ line, number: index + 1 }))
+    .filter(({ line }) => {
+      const withoutComment = line.replace(/\/\/.*$/, '');
+      if (withoutComment.trimStart().startsWith('import ')) {
+        return false;
+      }
+      return (
+        /\bText\s*\(\s*"[^"$\n]+"/.test(withoutComment) ||
+        /\bcontentDescription\s*=\s*"[^"$\n]+"/.test(withoutComment) ||
+        /\b(?:Button|OutlinedButton|TextButton|NavigationBarItem)\s*\([^)]*text\s*=\s*"[^"$\n]+"/.test(withoutComment)
+      );
+    })
+    .map(({ number }) => number);
+};
+
+export const hasKotlinHardcodedUiStringUsage = (source: string): boolean => {
+  return collectKotlinHardcodedUiStringLines(source).length > 0;
+};
+
 export const hasKotlinSupervisorScopeUsage = (source: string): boolean => {
   return collectKotlinRegexLines(source, /\bsupervisorScope\s*(?:<[^>\n]+>\s*)?(?:\(|\{)/).length > 0;
 };
@@ -343,11 +397,393 @@ export const hasKotlinRunBlockingUsage = (source: string): boolean => {
   });
 };
 
+export const hasAndroidAsyncTaskUsage = (source: string): boolean => {
+  return scanCodeLikeSource(source, ({ source: androidSource, index, current }) => {
+    if (current !== 'A' && current !== 'a') {
+      return false;
+    }
+
+    const isBareAsyncTask = hasIdentifierAt(androidSource, index, 'AsyncTask');
+    const isQualifiedAsyncTask =
+      hasIdentifierAt(androidSource, index, 'android') &&
+      androidSource.startsWith('.os.AsyncTask', index + 'android'.length);
+
+    if (!isBareAsyncTask && !isQualifiedAsyncTask) {
+      return false;
+    }
+
+    const start = isBareAsyncTask
+      ? index + 'AsyncTask'.length
+      : index + 'android.os.AsyncTask'.length;
+    const tail = androidSource.slice(start, start + 48);
+    return /^\s*(<[^>\n]+>\s*)?(?:\(|\{|:|\.|$)/.test(tail);
+  });
+};
+
+const androidActivityBaseTypes = new Set([
+  'Activity',
+  'ComponentActivity',
+  'AppCompatActivity',
+  'FragmentActivity',
+]);
+
+export const hasKotlinGodActivityUsage = (source: string): boolean => {
+  const lines = source.split(/\r?\n/);
+  const declarations = parseKotlinTypeDeclarations(source);
+
+  return declarations.some((declaration) => {
+    const isActivity = declaration.conformances.some((conformance) =>
+      androidActivityBaseTypes.has(conformance)
+    );
+    if (!isActivity) {
+      return false;
+    }
+
+    const body = lines
+      .slice(declaration.bodyStartLine - 1, declaration.bodyEndLine)
+      .map((line) => stripKotlinLineForSemanticScan(line))
+      .filter((line) => !line.trimStart().startsWith('import '))
+      .join('\n');
+
+    const hasUiEntrypoint = /\bsetContent\s*\{/.test(body) || /@Composable\b/.test(body);
+    const hasNetworkResponsibility =
+      /\b(?:OkHttpClient|Retrofit|HttpURLConnection|newCall|enqueue|execute)\b/.test(body);
+    const hasPersistenceResponsibility =
+      /\b(?:Room\.databaseBuilder|SharedPreferences|getSharedPreferences|DataStore|SQLiteDatabase)\b/.test(body);
+    const hasNavigationResponsibility =
+      /\b(?:NavController|rememberNavController|navigate\s*\(|NavHost\s*\()\b/.test(body);
+    const functionCount = (body.match(/\bfun\s+[A-Za-z_][A-Za-z0-9_]*\s*\(/g) ?? []).length;
+    const activityBodyLines = Math.max(0, declaration.bodyEndLine - declaration.bodyStartLine + 1);
+
+    return (
+      (hasUiEntrypoint &&
+        [hasNetworkResponsibility, hasPersistenceResponsibility, hasNavigationResponsibility].filter(Boolean)
+          .length >= 2) ||
+      (hasUiEntrypoint && functionCount >= 8) ||
+      activityBodyLines >= 140
+    );
+  });
+};
+
+export const hasKotlinNonLazyScrollableCollectionUsage = (source: string): boolean => {
+  const sanitizedSource = source
+    .split(/\r?\n/)
+    .map((line) => stripKotlinLineForSemanticScan(line))
+    .filter((line) => !line.trimStart().startsWith('import '))
+    .join('\n');
+
+  const scrollableColumnOrRowPattern =
+    /\b(?:Column|Row)\s*\([^)]*\bModifier\s*\.[^)]*(?:verticalScroll|horizontalScroll)\s*\([^)]*\)[\s\S]*?\{([\s\S]*?)\n\s*\}/g;
+
+  let match: RegExpExecArray | null;
+  while ((match = scrollableColumnOrRowPattern.exec(sanitizedSource)) !== null) {
+    const body = match[1] ?? '';
+    if (/\b(?:forEach|forEachIndexed|map|repeat)\s*(?:\(|\{)|\bfor\s*\([^)]+\bin\b[^)]*\)/.test(body)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+export const hasKotlinUnstableLaunchedEffectKeyUsage = (source: string): boolean => {
+  return collectKotlinRegexLines(
+    source,
+    /\bLaunchedEffect\s*\(\s*(?:Unit|true|false|null)?\s*\)\s*\{/
+  ).length > 0;
+};
+
+export const hasKotlinLaunchedEffectBusyLoopUsage = (source: string): boolean => {
+  const sanitizedSource = source
+    .split(/\r?\n/)
+    .map((line) => stripKotlinLineForSemanticScan(line))
+    .filter((line) => !line.trimStart().startsWith('import '))
+    .join('\n');
+
+  const launchedEffectPattern = /\bLaunchedEffect\s*\([^)]*\)\s*\{/g;
+  let match: RegExpExecArray | null;
+  while ((match = launchedEffectPattern.exec(sanitizedSource)) !== null) {
+    const bodyStartIndex = sanitizedSource.indexOf('{', match.index);
+    const segment = extractBalancedBlockSegment(sanitizedSource, bodyStartIndex);
+    if (
+      segment &&
+      /\bwhile\s*\(\s*(?:true|isActive)\s*\)\s*\{/.test(segment) &&
+      !/\bdelay\s*\(/.test(segment)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+export const hasKotlinProductionLoggingUsage = (source: string): boolean => {
+  return source.split(/\r?\n/).some((line) => {
+    const sanitized = stripKotlinLineForSemanticScan(line);
+    if (sanitized.trimStart().startsWith('import ') || sanitized.includes('BuildConfig.DEBUG')) {
+      return false;
+    }
+    return /\b(?:println\s*\(|System\s*\.\s*(?:out|err)\s*\.\s*println\s*\(|Log\s*\.\s*(?:v|d|i|w|e|wtf)\s*\(|Timber\s*\.\s*(?:v|d|i|w|e|wtf)\s*\()/.test(sanitized);
+  });
+};
+
+export const hasKotlinModifierBackgroundBeforePaddingUsage = (source: string): boolean => {
+  const sanitizedSource = source
+    .split(/\r?\n/)
+    .map((line) => stripKotlinLineForSemanticScan(line))
+    .filter((line) => !line.trimStart().startsWith('import '))
+    .join('\n');
+
+  return /\bModifier\b[\s\S]*?\.background\s*\([^)]*\)[\s\S]*?\.padding\s*\(/.test(sanitizedSource);
+};
+
+export const hasKotlinMissingContentDescriptionUsage = (source: string): boolean => {
+  const sanitizedSource = source
+    .split(/\r?\n/)
+    .map((line) => stripKotlinLineForSemanticScan(line))
+    .filter((line) => !line.trimStart().startsWith('import '))
+    .join('\n');
+
+  const callPattern = /\b(?:Image|Icon)\s*\(/g;
+  let match: RegExpExecArray | null;
+  while ((match = callPattern.exec(sanitizedSource)) !== null) {
+    const openParenIndex = sanitizedSource.indexOf('(', match.index);
+    const segment = extractBalancedCallSegment(sanitizedSource, openParenIndex);
+    if (segment && !/\bcontentDescription\s*=/.test(segment)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+export const hasKotlinFontScaleDisabledUsage = (source: string): boolean => {
+  return collectKotlinRegexLines(
+    source,
+    /\bfontScale\s*=\s*(?:1(?:\.0)?f?|1(?:\.0)?)\b/
+  ).length > 0;
+};
+
+export const hasKotlinIncompleteMaterialThemeUsage = (source: string): boolean => {
+  const sanitizedSource = source
+    .split(/\r?\n/)
+    .map((line) => stripKotlinLineForSemanticScan(line))
+    .filter((line) => !line.trimStart().startsWith('import '))
+    .join('\n');
+
+  const callPattern = /\bMaterialTheme\s*\(/g;
+  let match: RegExpExecArray | null;
+  while ((match = callPattern.exec(sanitizedSource)) !== null) {
+    const openParenIndex = sanitizedSource.indexOf('(', match.index);
+    const segment = extractBalancedCallSegment(sanitizedSource, openParenIndex);
+    if (
+      segment &&
+      (!/\bcolorScheme\s*=/.test(segment) ||
+        !/\btypography\s*=/.test(segment) ||
+        !/\bshapes\s*=/.test(segment))
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+export const hasKotlinLegacyBottomNavigationUsage = (source: string): boolean => {
+  return collectKotlinRegexLines(
+    source,
+    /\b(?:BottomNavigation|BottomNavigationItem)\s*(?:\(|\{)/
+  ).length > 0;
+};
+
+export const hasKotlinImperativeNavigationUsage = (source: string): boolean => {
+  return collectKotlinRegexLines(
+    source,
+    /\b(?:startActivity\s*\(\s*Intent\s*\(|supportFragmentManager\s*\.\s*beginTransaction\s*\(|childFragmentManager\s*\.\s*beginTransaction\s*\(|parentFragmentManager\s*\.\s*beginTransaction\s*\(|FragmentTransaction\b|FragmentManager\b)/
+  ).length > 0;
+};
+
+export const hasKotlinComposableObjectCreationWithoutRememberUsage = (source: string): boolean => {
+  const lines = source.split(/\r?\n/);
+  let pendingComposableAnnotation = false;
+  let insideComposable = false;
+  let braceDepth = 0;
+
+  for (const rawLine of lines) {
+    const sanitized = stripKotlinLineForSemanticScan(rawLine);
+    if (sanitized.trimStart().startsWith('import ')) {
+      continue;
+    }
+
+    if (/@Composable\b/.test(sanitized)) {
+      pendingComposableAnnotation = true;
+    }
+
+    if (pendingComposableAnnotation && /\bfun\s+[A-Za-z_][A-Za-z0-9_]*\s*\(/.test(sanitized)) {
+      insideComposable = true;
+      pendingComposableAnnotation = false;
+      braceDepth = 0;
+    }
+
+    if (insideComposable) {
+      const createsObject =
+        /\b(?:Regex|SimpleDateFormat|DecimalFormat)\s*\(/.test(sanitized) ||
+        /\bDateTimeFormatter\s*\.\s*ofPattern\s*\(/.test(sanitized);
+      if (createsObject && !/\bremember\s*\{/.test(sanitized)) {
+        return true;
+      }
+
+      braceDepth += countTokenOccurrences(sanitized, '{');
+      braceDepth -= countTokenOccurrences(sanitized, '}');
+      if (braceDepth <= 0 && sanitized.includes('}')) {
+        insideComposable = false;
+      }
+    }
+  }
+
+  return false;
+};
+
+export const hasKotlinComposableStateCreationWithoutRememberUsage = (source: string): boolean => {
+  const lines = source.split(/\r?\n/);
+  let pendingComposableAnnotation = false;
+  let insideComposable = false;
+  let braceDepth = 0;
+
+  for (const rawLine of lines) {
+    const sanitized = stripKotlinLineForSemanticScan(rawLine);
+    if (sanitized.trimStart().startsWith('import ')) {
+      continue;
+    }
+
+    if (/@Composable\b/.test(sanitized)) {
+      pendingComposableAnnotation = true;
+    }
+
+    if (pendingComposableAnnotation && /\bfun\s+[A-Za-z_][A-Za-z0-9_]*\s*\(/.test(sanitized)) {
+      insideComposable = true;
+      pendingComposableAnnotation = false;
+      braceDepth = 0;
+    }
+
+    if (insideComposable) {
+      const createsState = /\b(?:mutableStateOf|derivedStateOf)\s*\(/.test(sanitized);
+      if (createsState && !/\bremember\s*\{/.test(sanitized)) {
+        return true;
+      }
+
+      braceDepth += countTokenOccurrences(sanitized, '{');
+      braceDepth -= countTokenOccurrences(sanitized, '}');
+      if (braceDepth <= 0 && sanitized.includes('}')) {
+        insideComposable = false;
+      }
+    }
+  }
+
+  return false;
+};
+
+export const hasKotlinForceUnwrapUsage = (source: string): boolean => {
+  return source.split(/\r?\n/).some((line) => {
+    const sanitized = stripKotlinLineForSemanticScan(line);
+    if (sanitized.trimStart().startsWith('import ')) {
+      return false;
+    }
+    return /!!(?!\s*(?:=|is))/.test(sanitized);
+  });
+};
+
 export const hasKotlinLiveDataStateExposureUsage = (source: string): boolean => {
   return collectKotlinRegexLines(
     source,
     /\b(?:MutableLiveData|LiveData)\s*(?:<|\(|\.)/
   ).length > 0;
+};
+
+export const hasKotlinViewModelFlowWithoutStateInUsage = (source: string): boolean => {
+  const lines = source.split(/\r?\n/);
+  let insideViewModel = false;
+  let braceDepth = 0;
+  let exposesFlowState = false;
+  let usesStateIn = false;
+
+  for (const rawLine of lines) {
+    const sanitized = stripKotlinLineForSemanticScan(rawLine);
+    if (sanitized.trimStart().startsWith('import ')) {
+      continue;
+    }
+
+    if (!insideViewModel && /\bclass\s+\w*ViewModel\b/.test(sanitized)) {
+      insideViewModel = true;
+      braceDepth =
+        countTokenOccurrences(sanitized, '{') - countTokenOccurrences(sanitized, '}');
+    } else if (insideViewModel) {
+      braceDepth += countTokenOccurrences(sanitized, '{');
+      braceDepth -= countTokenOccurrences(sanitized, '}');
+    }
+
+    if (insideViewModel) {
+      if (/\b(?:val|var)\s+\w+\s*:\s*Flow\s*</.test(sanitized)) {
+        exposesFlowState = true;
+      }
+      if (/\.\s*stateIn\s*\(/.test(sanitized)) {
+        usesStateIn = true;
+      }
+    }
+
+    if (insideViewModel && braceDepth <= 0 && sanitized.includes('}')) {
+      if (exposesFlowState && !usesStateIn) {
+        return true;
+      }
+      insideViewModel = false;
+      exposesFlowState = false;
+      usesStateIn = false;
+    }
+  }
+
+  return insideViewModel && exposesFlowState && !usesStateIn;
+};
+
+export const hasKotlinSharedFlowUsedAsStateUsage = (source: string): boolean => {
+  const lines = source.split(/\r?\n/);
+  let insideViewModel = false;
+  let braceDepth = 0;
+
+  for (const rawLine of lines) {
+    const sanitized = stripKotlinLineForSemanticScan(rawLine);
+    if (sanitized.trimStart().startsWith('import ')) {
+      continue;
+    }
+
+    if (!insideViewModel && /\bclass\s+\w*ViewModel\b/.test(sanitized)) {
+      insideViewModel = true;
+      braceDepth =
+        countTokenOccurrences(sanitized, '{') - countTokenOccurrences(sanitized, '}');
+    } else if (insideViewModel) {
+      braceDepth += countTokenOccurrences(sanitized, '{');
+      braceDepth -= countTokenOccurrences(sanitized, '}');
+    }
+
+    if (
+      insideViewModel &&
+      /\b(?:val|var)\s+(?:_)?(?:uiState|state|screenState|viewState)\b[^:\n]*:\s*(?:Mutable)?SharedFlow\s*</.test(sanitized)
+    ) {
+      return true;
+    }
+
+    if (
+      insideViewModel &&
+      /\b(?:val|var)\s+\w+\s*:\s*(?:Mutable)?SharedFlow\s*<\s*[A-Za-z_][A-Za-z0-9_]*State\s*>/.test(sanitized)
+    ) {
+      return true;
+    }
+
+    if (insideViewModel && braceDepth <= 0 && sanitized.includes('}')) {
+      insideViewModel = false;
+    }
+  }
+
+  return false;
 };
 
 export const hasKotlinManualCoroutineScopeInViewModelUsage = (source: string): boolean => {
