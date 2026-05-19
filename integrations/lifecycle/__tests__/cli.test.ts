@@ -18,6 +18,7 @@ import {
   buildPreWriteValidationPanel,
   parseLifecycleCliArgs,
   prioritizePreWriteAiGateViolations,
+  resolvePreWriteNextAction,
   runLifecycleCli,
 } from '../cli';
 import { createPolicyAsCodeSignature } from '../../policy/policyAsCode';
@@ -71,6 +72,32 @@ test('prioritizePreWriteAiGateViolations coloca la causa accionable del next_act
     prioritized.violations.some((violation) => violation.code === 'EVIDENCE_GATE_BLOCKED'),
     false
   );
+});
+
+test('resolvePreWriteNextAction no convierte EVIDENCE_PREWRITE_WORKTREE_WARN en accion bloqueante', () => {
+  const nextAction = resolvePreWriteNextAction({
+    sdd: {
+      decision: {
+        allowed: true,
+        code: 'ALLOWED',
+      },
+    },
+    aiGate: {
+      allowed: false,
+      violations: [
+        {
+          code: 'EVIDENCE_PREWRITE_WORKTREE_WARN',
+          severity: 'WARN',
+          message: 'PRE_WRITE worktree hygiene warning.',
+        },
+      ],
+      repo_state: {
+        repo_root: '/repo',
+      },
+    },
+  } as Parameters<typeof resolvePreWriteNextAction>[0]);
+
+  assert.equal(nextAction, undefined);
 });
 
 test('buildPreWriteValidationPanel no presenta warnings de contrato skills como bloqueo cuando AI Gate permite', () => {

@@ -1949,8 +1949,12 @@ export const resolvePreWriteNextAction = (params: {
       command: buildPreWritePolicyReconcileCommand(params.aiGate.repo_state.repo_root),
     };
   }
+  const hasOnlyPreWriteWorktreeWarn =
+    params.aiGate.violations.length > 0
+    && params.aiGate.violations.every((violation) => violation.code === 'EVIDENCE_PREWRITE_WORKTREE_WARN');
   const atomicSliceViolation = params.aiGate.violations.find((violation) =>
     PRE_WRITE_ATOMIC_SLICE_CODES.has(violation.code)
+    && !(hasOnlyPreWriteWorktreeWarn && violation.code === 'EVIDENCE_PREWRITE_WORKTREE_WARN')
   );
   if (atomicSliceViolation) {
     const plan = collectWorktreeAtomicSlices({
