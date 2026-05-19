@@ -1845,6 +1845,7 @@ Snapshot PUMUKI-INC-132 (2026-05-13):
 - [✅] `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsDetectorRegistry.test.ts integrations/config/__tests__/skillsRuleClassification.test.ts core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/ios.test.ts` -> `173/173 OK`.
 - [✅] `npm run -s skills:compile && npm run -s skills:lock:check && npm run -s skills:classify` -> `FRESH`, `AST_IMPLEMENTED=334`, `REQUIERE_ESTUDIO=393`.
 - [✅] `npm run -s typecheck` -> OK.
+- [✅] `npm view pumuki version dist.shasum dist.integrity --json` -> `pumuki@6.3.302` publicado, `dist.shasum=1a579a522e3e85d7d7f61ce3f5c5b62817a76b7f`.
 - [✅] `npm run -s skills:classify` -> `AST_IMPLEMENTED=285`, `IMPLEMENTAR_DETECTOR=0`, `REQUIERE_ESTUDIO=442`, `NO_ES_REGLA_DE_CODIGO=25`.
 - [✅] `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsDetectorRegistry.test.ts integrations/config/__tests__/skillsRuleClassification.test.ts core/facts/detectors/typescript/index.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/typescript.test.ts` -> `120/120 OK`.
 - [✅] `npm run -s skills:classify` -> `AST_IMPLEMENTED=287`, `IMPLEMENTAR_DETECTOR=0`, `REQUIERE_ESTUDIO=440`, `NO_ES_REGLA_DE_CODIGO=25`.
