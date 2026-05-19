@@ -468,13 +468,26 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
     });
   }
 
+  const preWriteEnforcementCommand =
+    readNestedString(parsed, ['enforcement', 'pre_write', 'command']) ??
+    readNestedString(parsed, ['hooks', 'pre_write', 'command']);
+  const preWriteAgentInstruction = readNestedString(parsed, [
+    'enforcement',
+    'pre_write',
+    'agent_instruction',
+  ]);
+
   return buildDeepCheck({
     id: 'adapter-wiring',
     status: 'pass',
     severity: 'info',
-    message: 'Adapter wiring contract is valid.',
+    message:
+      'Adapter wiring contract is valid; PRE_WRITE hard-stop is required before editing.',
     metadata: {
       path: adapterPath,
+      pre_write_required_before_edit: true,
+      pre_write_command: preWriteEnforcementCommand ?? null,
+      pre_write_agent_instruction: preWriteAgentInstruction ?? null,
     },
   });
 };

@@ -661,6 +661,7 @@ test('runLifecycleDoctor --deep marca policy-drift por fallback default como fai
           enforcement: {
             pre_write: {
               required_before_edit: true,
+              command: 'npx --yes --package pumuki@latest pumuki-pre-write',
               agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
             },
           },
@@ -819,6 +820,18 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
     assert.equal(report.policyValidation.stages.PRE_COMMIT.source, 'skills.policy');
     assert.equal(report.policyValidation.stages.PRE_PUSH.source, 'skills.policy');
     assert.equal(report.deep?.checks.every((check) => check.status === 'pass'), true);
+    const adapterCheck = report.deep?.checks.find((check) => check.id === 'adapter-wiring');
+    assert.ok(adapterCheck);
+    assert.match(adapterCheck.message, /PRE_WRITE hard-stop is required before editing/);
+    assert.equal(adapterCheck.metadata?.pre_write_required_before_edit, true);
+    assert.equal(
+      adapterCheck.metadata?.pre_write_command,
+      'npx --yes --package pumuki@latest pumuki-pre-write'
+    );
+    assert.match(
+      String(adapterCheck.metadata?.pre_write_agent_instruction ?? ''),
+      /STOP before editing files/
+    );
     assert.equal(report.deep?.contract.overall, 'compatible');
     assert.equal(report.deep?.blocking, false);
     assert.equal(doctorHasBlockingIssues(report), false);
