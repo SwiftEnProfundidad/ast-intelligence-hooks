@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.301] - 2026-05-19
+
+- `PUMUKI-INC-157`: PRE_WRITE no longer hard-blocks when evidence reports `ai_gate.status=BLOCKED` but exposes no real blocking causes and only non-blocking WARN signals such as worktree hygiene warnings. Explicit AST/skills findings with `blocking=true` still block, even when their inherited severity is WARN.
+
 ## [6.3.300] - 2026-05-19
 
 - CLI: `pumuki --version` and `pumuki -v` now return the effective package version with exit code `0` without invoking lifecycle status, audit, gates, notifications or evidence writes. This prevents consumer repin checks from mutating `.ai_evidence.json` just to read the installed version.
