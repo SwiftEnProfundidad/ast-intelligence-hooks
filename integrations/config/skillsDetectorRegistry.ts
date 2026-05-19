@@ -81,6 +81,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-task-detached': heuristicDetector('ios.task-detached', [
     'heuristics.ios.task-detached.ast',
   ]),
+  'skills.ios.guideline.ios.cancelar-correctamente-comprobar-task-iscancelled-en-operaciones-larga':
+    heuristicDetector('ios.concurrency.long-task-cancellation-check', [
+      'heuristics.ios.concurrency.long-task-without-cancellation-check.ast',
+    ]),
   'skills.ios.no-async-without-await': heuristicDetector('ios.concurrency.async-without-await', [
     'heuristics.ios.concurrency.async-without-await.ast',
   ]),

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 118);
+  assert.equal(iosRules.length, 119);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -19,6 +19,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.dispatchsemaphore.ast',
     'heuristics.ios.operation-queue.ast',
     'heuristics.ios.task-detached.ast',
+    'heuristics.ios.concurrency.long-task-without-cancellation-check.ast',
     'heuristics.ios.concurrency.async-without-await.ast',
     'heuristics.ios.error.empty-catch.ast',
     'heuristics.ios.error.nserror-throw.ast',
@@ -139,6 +140,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.task-detached.ast')?.then.code,
     'HEURISTICS_IOS_TASK_DETACHED_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.long-task-without-cancellation-check.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_LONG_TASK_WITHOUT_CANCELLATION_CHECK_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.concurrency.async-without-await.ast')?.then.code,
