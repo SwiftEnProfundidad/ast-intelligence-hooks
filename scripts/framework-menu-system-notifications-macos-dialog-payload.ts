@@ -1,5 +1,6 @@
 import type { PumukiCriticalNotificationEvent } from './framework-menu-system-notifications-types';
 import {
+  resolvePrioritizedBlockingCauses,
   resolveBlockedCauseSummary,
   resolveBlockedRemediation,
   resolveProjectLabel,
@@ -25,7 +26,7 @@ const buildBlockingCausesDetails = (
   const header = total === 1
     ? 'Causas bloqueantes: 1'
     : `Causas bloqueantes: ${total}`;
-  return causes
+  return resolvePrioritizedBlockingCauses(causes)
     .flatMap((cause, index) => formatBlockingCauseForDialog(cause, index))
     .reduce((lines, line) => [...lines, line], [header])
     .join('\n');
