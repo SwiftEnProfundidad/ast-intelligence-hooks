@@ -353,6 +353,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-swiftui-expert.use-interactive-only-for-tappable-focusable-elements'
+    ),
+    ['heuristics.ios.swiftui.glass-interactive-static-element.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.android.guideline.android.verificar-que-no-viole-solid-srp-ocp-lsp-isp-dip'
     ),
     [
@@ -660,7 +666,7 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios-swiftui-expert.use-interactive-only-for-tappable-focusable-elements'
     ),
-    []
+    ['heuristics.ios.swiftui.glass-interactive-static-element.ast']
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(

@@ -2107,6 +2107,59 @@ export const hasSwiftOnTapGestureWithoutButtonTraitUsage = (source: string): boo
   return collectSwiftOnTapGestureWithoutButtonTraitLines(source).length > 0;
 };
 
+export const collectSwiftGlassInteractiveOnStaticElementLines = (source: string): readonly number[] => {
+  const sanitizedLines = sanitizeSwiftSourceForMultilineRegex(source).split(/\r?\n/);
+  const originalLines = source.split(/\r?\n/);
+  const matches: number[] = [];
+
+  for (let index = 0; index < sanitizedLines.length; index += 1) {
+    const line = sanitizedLines[index] ?? '';
+    if (!/\.glassEffect\s*\(/.test(line)) {
+      continue;
+    }
+
+    const previousWindow = sanitizedLines.slice(Math.max(0, index - 4), index).join('\n');
+    const followingWindow = sanitizedLines
+      .slice(index, Math.min(sanitizedLines.length, index + 8))
+      .join('\n');
+    const modifierWindow = `${previousWindow}\n${followingWindow}`;
+    const currentStartsModifierChain = /^\s*\./.test(line);
+
+    if (!/\.interactive\s*\(/.test(modifierWindow)) {
+      continue;
+    }
+
+    if (
+      /\b(?:Button|NavigationLink|Menu|Toggle|Picker|Slider|Stepper|TextField|SecureField)\s*(?:<[^>]+>)?\s*\(/.test(
+        modifierWindow
+      ) ||
+      /^\s*\.onTapGesture\s*(?:\(|\{)/m.test(followingWindow) ||
+      (currentStartsModifierChain && /\.onTapGesture\s*(?:\(|\{)/.test(previousWindow)) ||
+      /^\s*\.accessibilityAction\s*\(/m.test(followingWindow) ||
+      (currentStartsModifierChain && /\.accessibilityAction\s*\(/.test(previousWindow)) ||
+      /^\s*\.accessibilityAddTraits\s*\(\s*(?:AccessibilityTraits\s*\.\s*)?\.isButton\s*\)/m.test(followingWindow) ||
+      (currentStartsModifierChain &&
+        /\.accessibilityAddTraits\s*\(\s*(?:AccessibilityTraits\s*\.\s*)?\.isButton\s*\)/.test(previousWindow)) ||
+      /^\s*\.focusable\s*\(\s*true\s*\)/m.test(followingWindow) ||
+      (currentStartsModifierChain && /\.focusable\s*\(\s*true\s*\)/.test(previousWindow))
+    ) {
+      continue;
+    }
+
+    if (!/\.glassEffect\s*\(/.test(stripSwiftLineForSemanticScan(originalLines[index] ?? ''))) {
+      continue;
+    }
+
+    matches.push(index + 1);
+  }
+
+  return sortedUniqueLines(matches);
+};
+
+export const hasSwiftGlassInteractiveOnStaticElementUsage = (source: string): boolean => {
+  return collectSwiftGlassInteractiveOnStaticElementLines(source).length > 0;
+};
+
 export const hasSwiftStringFormatUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'S' || !hasIdentifierAt(swiftSource, index, 'String')) {
