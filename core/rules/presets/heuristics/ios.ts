@@ -1902,6 +1902,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.swiftui.glasseffectid-without-namespace.ast',
+    description: 'Detects SwiftUI glassEffectID usage without @Namespace or Namespace.ID ownership.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.swiftui.glasseffectid-without-namespace.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected glassEffectID without @Namespace or Namespace.ID.',
+      code: 'HEURISTICS_IOS_SWIFTUI_GLASSEFFECTID_WITHOUT_NAMESPACE_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.string-format.ast',
     description: 'Detects String(format:) usage in iOS production code.',
     severity: 'WARN',

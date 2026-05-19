@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 121);
+  assert.equal(iosRules.length, 122);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -110,6 +110,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.on-tap-gesture.ast',
     'heuristics.ios.accessibility.on-tap-without-button-trait.ast',
     'heuristics.ios.swiftui.glass-interactive-static-element.ast',
+    'heuristics.ios.swiftui.glasseffectid-without-namespace.ast',
     'heuristics.ios.string-format.ast',
     'heuristics.ios.scrollview-shows-indicators.ast',
     'heuristics.ios.sheet-is-presented.ast',
@@ -206,6 +207,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.accessibility.on-tap-without-button-trait.ast')?.then.code,
     'HEURISTICS_IOS_ACCESSIBILITY_ON_TAP_WITHOUT_BUTTON_TRAIT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.glasseffectid-without-namespace.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_GLASSEFFECTID_WITHOUT_NAMESPACE_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.maintainability.nested-if-pyramid.ast')?.then.code,

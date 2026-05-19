@@ -2179,6 +2179,19 @@ export const hasSwiftGlassInteractiveOnStaticElementUsage = (source: string): bo
   return collectSwiftGlassInteractiveOnStaticElementLines(source).length > 0;
 };
 
+export const collectSwiftGlassEffectIDWithoutNamespaceLines = (source: string): readonly number[] => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  if (/@Namespace\b/.test(sanitized) || /\bNamespace\s*\.\s*ID\b/.test(sanitized)) {
+    return [];
+  }
+
+  return collectSwiftRegexLines(source, /\.\s*glassEffectID\s*\(/);
+};
+
+export const hasSwiftGlassEffectIDWithoutNamespaceUsage = (source: string): boolean => {
+  return collectSwiftGlassEffectIDWithoutNamespaceLines(source).length > 0;
+};
+
 export const hasSwiftStringFormatUsage = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'S' || !hasIdentifierAt(swiftSource, index, 'String')) {
