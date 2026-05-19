@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.298] - 2026-05-19
+
+- Release line for the merged notification/evidence/context cleanup on develop. Keeps the published package unique after 6.3.297 was already present on npm, preserving the actionable notification payloads, expanded AST detector coverage, PRE_WRITE lease/evidence cause propagation, lifecycle hook alignment, local context gate scaffold and atomic Git hygiene rules.
+
 ## [6.3.297] - 2026-05-19
 
 - `PUMUKI-INC-157`: staged no-code/documentation/repin scopes no longer fail the skills contract with `EVIDENCE_SKILLS_PLATFORMS_UNDETECTED`. When the effective staged scope has no iOS, Android, backend or frontend code paths, platform skills are reported as `NOT_APPLICABLE` instead of blocking, while code-bearing slices keep the hard skills gate.
