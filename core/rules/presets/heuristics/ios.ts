@@ -540,6 +540,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.architecture.tca-composable-architecture.ast',
+    description: 'Detects The Composable Architecture usage in iOS production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.architecture.tca-composable-architecture.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected The Composable Architecture usage; native SwiftUI state, use cases, actors and explicit environment boundaries remain the preferred baseline.',
+      code: 'HEURISTICS_IOS_ARCHITECTURE_TCA_COMPOSABLE_ARCHITECTURE_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.architecture.massive-view-controller.ast',
     description: 'Detects UIViewController classes with direct infrastructure/data access.',
     severity: 'WARN',
