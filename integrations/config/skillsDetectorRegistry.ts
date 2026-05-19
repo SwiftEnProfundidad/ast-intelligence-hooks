@@ -92,6 +92,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.concurrency.avoid-overuse-async-without-await', [
       'heuristics.ios.concurrency.async-without-await.ast',
     ]),
+  'skills.ios.guideline.ios-concurrency.use-references-linting-md-for-rule-intent-and-preferred-fixes-avoid-du':
+    heuristicDetector('ios.concurrency.dummy-await', [
+      'heuristics.ios.concurrency.dummy-await.ast',
+    ]),
   'skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles': heuristicDetector(
     'ios.memory.strong-delegate',
     ['heuristics.ios.memory.strong-delegate.ast']
