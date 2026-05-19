@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 120);
+  assert.equal(iosRules.length, 121);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -23,6 +23,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.concurrency.async-without-await.ast',
     'heuristics.ios.error.empty-catch.ast',
     'heuristics.ios.error.nserror-throw.ast',
+    'heuristics.ios.networking.endpoint-enum-ocp.ast',
     'heuristics.ios.swiftui.onappear-task.ast',
     'heuristics.ios.swiftui.onchange-task.ast',
     'heuristics.ios.swiftui.onchange-readonly-var.ast',

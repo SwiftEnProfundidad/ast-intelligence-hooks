@@ -985,6 +985,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.error-handling-global-custom-error-enum'),
     ['heuristics.ios.error.nserror-throw.ast']
   );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.apiendpoint-como-struct-data-driven-ocp-endpoints-en-features-no-enum-'
+    ),
+    ['heuristics.ios.networking.endpoint-enum-ocp.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-sheet-is-presented'), [
     'heuristics.ios.sheet-is-presented.ast',
   ]);

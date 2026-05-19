@@ -204,6 +204,25 @@ export const hasSwiftNonPascalCaseTypeDeclarationUsage = (source: string): boole
   return collectSwiftNonPascalCaseTypeDeclarationLines(source).length > 0;
 };
 
+export const collectSwiftEndpointEnumLines = (source: string): readonly number[] => {
+  const matches: number[] = [];
+  const endpointEnumPattern =
+    /\benum\s+(?:APIEndpoint|[A-Za-z_][A-Za-z0-9_]*(?:Endpoint|Endpoints))\b/;
+
+  source.split(/\r?\n/).forEach((rawLine, index) => {
+    const line = stripSwiftLineForSemanticScan(rawLine);
+    if (endpointEnumPattern.test(line)) {
+      matches.push(index + 1);
+    }
+  });
+
+  return sortedUniqueLines(matches);
+};
+
+export const hasSwiftEndpointEnumUsage = (source: string): boolean => {
+  return collectSwiftEndpointEnumLines(source).length > 0;
+};
+
 const collectSwiftMethodBodyLines = (
   source: string,
   methodPattern: RegExp,
