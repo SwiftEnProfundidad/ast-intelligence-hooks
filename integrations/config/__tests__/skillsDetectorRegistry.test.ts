@@ -966,6 +966,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     'heuristics.ios.concurrency.async-without-await.ast',
   ]);
   assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.cancelar-correctamente-comprobar-task-iscancelled-en-operaciones-larga'
+    ),
+    ['heuristics.ios.concurrency.long-task-without-cancellation-check.ast']
+  );
+  assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.error-handling-custom-networkerror-enum'),
     ['heuristics.ios.error.nserror-throw.ast']
   );

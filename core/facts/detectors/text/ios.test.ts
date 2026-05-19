@@ -30,6 +30,7 @@ import {
   collectSwiftDispatchQueueLines,
   hasSwiftDispatchQueueUsage,
   hasSwiftDispatchSemaphoreUsage,
+  collectSwiftLongAsyncOperationWithoutCancellationCheckLines,
   hasSwiftAdHocLoggingUsage,
   hasSwiftAlamofireUsage,
   collectSwiftComposableArchitectureUsageLines,
@@ -86,6 +87,7 @@ import {
   collectSwiftEnvironmentObjectLines,
   hasSwiftEnvironmentObjectUsage,
   hasSwiftLowContrastStaticColorPairUsage,
+  hasSwiftLongAsyncOperationWithoutCancellationCheckUsage,
   hasSwiftMainThreadBlockingSleepUsage,
   hasSwiftDirectSUTInstantiationWithoutMakeSUTUsage,
   hasSwiftMakeSUTWithoutMemoryTrackingUsage,
@@ -254,6 +256,46 @@ let ignored = "[unowned self]"
 
   assert.equal(hasSwiftUnownedSelfCaptureUsage(source), true);
   assert.equal(hasSwiftUnownedSelfCaptureUsage(safe), false);
+});
+
+test('hasSwiftLongAsyncOperationWithoutCancellationCheckUsage detecta bucles async sin cancelacion cooperativa', () => {
+  const source = `
+final class SyncService {
+  func syncAll(items: [Item]) async throws {
+    for item in items {
+      try await upload(item)
+    }
+  }
+
+  func poll() async {
+    while true {
+      await refresh()
+    }
+  }
+}
+`;
+  const safe = `
+final class SyncService {
+  func syncAll(items: [Item]) async throws {
+    for item in items {
+      if Task.isCancelled { return }
+      try await upload(item)
+    }
+  }
+
+  func poll() async throws {
+    while isRunning {
+      try Task.checkCancellation()
+      await refresh()
+    }
+  }
+}
+`;
+
+  assert.equal(hasSwiftLongAsyncOperationWithoutCancellationCheckUsage(source), true);
+  assert.deepEqual(collectSwiftLongAsyncOperationWithoutCancellationCheckLines(source), [4, 10]);
+  assert.equal(hasSwiftLongAsyncOperationWithoutCancellationCheckUsage(safe), false);
+  assert.deepEqual(collectSwiftLongAsyncOperationWithoutCancellationCheckLines(safe), []);
 });
 
 test('hasSwiftManualMemoryManagementUsage detecta bypass manual de ARC', () => {

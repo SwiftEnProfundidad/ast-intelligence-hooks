@@ -219,6 +219,25 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.concurrency.long-task-without-cancellation-check.ast',
+    description: 'Detects long-running async Swift loops without Task cancellation checks.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.concurrency.long-task-without-cancellation-check.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a long async operation without cooperative Task cancellation checks.',
+      code: 'HEURISTICS_IOS_CONCURRENCY_LONG_TASK_WITHOUT_CANCELLATION_CHECK_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.concurrency.async-without-await.ast',
     description: 'Detects private async functions that do not await in iOS production code.',
     severity: 'WARN',

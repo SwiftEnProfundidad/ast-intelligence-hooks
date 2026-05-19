@@ -857,6 +857,62 @@ export const hasSwiftTaskDetachedUsage = (source: string): boolean => {
   });
 };
 
+const swiftCancellationCheckPattern =
+  /\bTask\s*\.\s*isCancelled\b|\bTask\s*\.\s*checkCancellation\s*\(/;
+
+const swiftLoopPattern = /\b(?:for\s+[A-Za-z_][A-Za-z0-9_]*\s+in|while\s+|repeat\b)/;
+
+export const collectSwiftLongAsyncOperationWithoutCancellationCheckLines = (
+  source: string
+): readonly number[] => {
+  const lines = source.split(/\r?\n/);
+  const matches: number[] = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const declarationLine = stripSwiftLineForSemanticScan(lines[index] ?? '');
+    if (!/\bfunc\s+[A-Za-z_][A-Za-z0-9_]*[\s\S]*\basync\b/.test(declarationLine)) {
+      continue;
+    }
+
+    let braceDepth =
+      countTokenOccurrences(declarationLine, '{') - countTokenOccurrences(declarationLine, '}');
+    if (braceDepth <= 0 && !declarationLine.includes('{')) {
+      continue;
+    }
+
+    const localLoopLines: number[] = [];
+    let hasCancellationCheck = swiftCancellationCheckPattern.test(declarationLine);
+
+    for (let cursor = index + 1; cursor < lines.length; cursor += 1) {
+      const line = stripSwiftLineForSemanticScan(lines[cursor] ?? '');
+      if (swiftCancellationCheckPattern.test(line)) {
+        hasCancellationCheck = true;
+      }
+      if (swiftLoopPattern.test(line)) {
+        localLoopLines.push(cursor + 1);
+      }
+
+      braceDepth += countTokenOccurrences(line, '{');
+      braceDepth -= countTokenOccurrences(line, '}');
+      if (braceDepth <= 0) {
+        break;
+      }
+    }
+
+    if (!hasCancellationCheck && localLoopLines.length > 0) {
+      matches.push(...localLoopLines);
+    }
+  }
+
+  return sortedUniqueLines(matches);
+};
+
+export const hasSwiftLongAsyncOperationWithoutCancellationCheckUsage = (
+  source: string
+): boolean => {
+  return collectSwiftLongAsyncOperationWithoutCancellationCheckLines(source).length > 0;
+};
+
 const findMatchingSwiftBrace = (source: string, openBraceIndex: number): number => {
   let depth = 0;
   for (let index = openBraceIndex; index < source.length; index += 1) {
