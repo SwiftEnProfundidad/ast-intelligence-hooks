@@ -1154,6 +1154,18 @@ export const hasSwiftSwinjectUsage = (source: string): boolean => {
   );
 };
 
+export const collectSwiftComposableArchitectureUsageLines = (source: string): readonly number[] => {
+  return sortedUniqueLines([
+    ...collectSwiftRegexLines(source, /\bimport\s+ComposableArchitecture\b/),
+    ...collectSwiftRegexLines(source, /\b(?:StoreOf|ViewStore|WithViewStore|ReducerOf)\s*</),
+    ...collectSwiftRegexLines(source, /\b(?:Store|Reducer|Effect|TestStore)\s*</),
+  ]);
+};
+
+export const hasSwiftComposableArchitectureUsage = (source: string): boolean => {
+  return collectSwiftComposableArchitectureUsageLines(source).length > 0;
+};
+
 export const hasSwiftMassiveViewControllerResponsibilityUsage = (source: string): boolean => {
   const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
   const viewControllerPattern =

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 117);
+  assert.equal(iosRules.length, 118);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -36,6 +36,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.maintainability.warning-suppression.ast',
     'heuristics.ios.architecture.custom-singleton.ast',
     'heuristics.ios.architecture.swinject.ast',
+    'heuristics.ios.architecture.tca-composable-architecture.ast',
     'heuristics.ios.architecture.massive-view-controller.ast',
     'heuristics.ios.maintainability.magic-number-layout.ast',
     'heuristics.ios.uikit.manual-frame-layout.ast',
@@ -234,6 +235,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.networking.alamofire.ast')?.then.code,
     'HEURISTICS_IOS_NETWORKING_ALAMOFIRE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.architecture.tca-composable-architecture.ast')?.then.code,
+    'HEURISTICS_IOS_ARCHITECTURE_TCA_COMPOSABLE_ARCHITECTURE_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.json.jsonserialization.ast')?.then.code,

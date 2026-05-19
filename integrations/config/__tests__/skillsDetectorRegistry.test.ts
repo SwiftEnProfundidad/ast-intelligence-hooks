@@ -768,6 +768,7 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
       'heuristics.ios.dependencies.cocoapods.ast',
       'heuristics.ios.dependencies.carthage.ast',
       'heuristics.ios.architecture.swinject.ast',
+      'heuristics.ios.architecture.tca-composable-architecture.ast',
     ]
   );
   assert.deepEqual(
@@ -777,6 +778,7 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
       'heuristics.ios.dependencies.cocoapods.ast',
       'heuristics.ios.dependencies.carthage.ast',
       'heuristics.ios.architecture.swinject.ast',
+      'heuristics.ios.architecture.tca-composable-architecture.ast',
     ]
   );
   assert.deepEqual(

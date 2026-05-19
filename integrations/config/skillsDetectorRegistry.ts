@@ -176,6 +176,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.architecture.swinject',
     ['heuristics.ios.architecture.swinject.ast']
   ),
+  'skills.ios.guideline.ios.tca-the-composable-architecture-para-apps-grandes-funcional':
+    heuristicDetector('ios.architecture.tca-composable-architecture', [
+      'heuristics.ios.architecture.tca-composable-architecture.ast',
+    ]),
+  'skills.ios.guideline.ios.navegacio-n-event-driven-estilo-tca-cuando-el-modelo-lo-requiera-event':
+    heuristicDetector('ios.navigation.event-driven-no-tca-runtime', [
+      'heuristics.ios.architecture.tca-composable-architecture.ast',
+    ]),
   'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres': heuristicDetector(
     'ios.maintainability.magic-number-layout',
     ['heuristics.ios.maintainability.magic-number-layout.ast']
@@ -246,6 +254,7 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
       'heuristics.ios.dependencies.cocoapods.ast',
       'heuristics.ios.dependencies.carthage.ast',
       'heuristics.ios.architecture.swinject.ast',
+      'heuristics.ios.architecture.tca-composable-architecture.ast',
     ]),
   'skills.ios.guideline.ios.libreri-as-de-terceros-usar-apis-nativas': heuristicDetector(
     'ios.dependencies.third-party-native-baseline',
@@ -254,6 +263,7 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
       'heuristics.ios.dependencies.cocoapods.ast',
       'heuristics.ios.dependencies.carthage.ast',
       'heuristics.ios.architecture.swinject.ast',
+      'heuristics.ios.architecture.tca-composable-architecture.ast',
     ]
   ),
   'skills.ios.guideline.ios.keychain-passwords-tokens-no-userdefaults': heuristicDetector(

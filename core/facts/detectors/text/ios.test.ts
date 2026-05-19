@@ -32,6 +32,7 @@ import {
   hasSwiftDispatchSemaphoreUsage,
   hasSwiftAdHocLoggingUsage,
   hasSwiftAlamofireUsage,
+  collectSwiftComposableArchitectureUsageLines,
   hasSwiftEmptyCatchUsage,
   collectSwiftNSErrorThrowLines,
   hasSwiftNSErrorThrowUsage,
@@ -155,6 +156,7 @@ import {
   hasSwiftStrongDelegateReferenceUsage,
   hasSwiftStrongSelfEscapingClosureUsage,
   hasSwiftSwinjectUsage,
+  hasSwiftComposableArchitectureUsage,
   hasSwiftTabItemUsage,
   hasSwiftTaskDetachedUsage,
   hasSwiftUnownedSelfCaptureUsage,
@@ -1294,6 +1296,55 @@ let text = "import Swinject"
   assert.equal(hasSwiftSwinjectUsage(source), true);
   assert.equal(hasSwiftSwinjectUsage(native), false);
   assert.equal(hasSwiftSwinjectUsage(ignored), false);
+});
+
+test('hasSwiftComposableArchitectureUsage detecta TCA y preserva arquitectura nativa', () => {
+  const source = `
+import SwiftUI
+import ComposableArchitecture
+
+struct CheckoutFeature: Reducer {
+  struct State: Equatable {}
+  enum Action {}
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in .none }
+  }
+}
+
+struct CheckoutView: View {
+  let store: StoreOf<CheckoutFeature>
+  var body: some View {
+    WithViewStore(store, observe: { $0 }) { viewStore in
+      Text("Checkout")
+    }
+  }
+}
+`;
+  const native = `
+import SwiftUI
+
+@Observable
+final class CheckoutViewModel {
+  func submit() async {}
+}
+
+struct CheckoutView: View {
+  @State private var model = CheckoutViewModel()
+  var body: some View {
+    Button("Checkout") { Task { await model.submit() } }
+  }
+}
+`;
+  const ignored = `
+let sample = "import ComposableArchitecture"
+// let store: StoreOf<CheckoutFeature>
+`;
+
+  assert.equal(hasSwiftComposableArchitectureUsage(source), true);
+  assert.deepEqual(collectSwiftComposableArchitectureUsageLines(source), [3, 8, 14]);
+  assert.equal(hasSwiftComposableArchitectureUsage(native), false);
+  assert.equal(hasSwiftComposableArchitectureUsage(ignored), false);
+  assert.deepEqual(collectSwiftComposableArchitectureUsageLines(ignored), []);
 });
 
 test('hasSwiftMassiveViewControllerResponsibilityUsage detecta ViewControllers con acceso directo a infraestructura', () => {
