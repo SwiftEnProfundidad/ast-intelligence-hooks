@@ -499,6 +499,72 @@ test('buildPreWriteAutomationTrace refresca workingTree cuando staged solo conti
   }
 });
 
+test('buildPreWriteAutomationTrace refresca workingTree cuando el staged del ai_gate esta stale', async () => {
+  const repo = mkdtempSync(join(tmpdir(), 'pumuki-prewrite-refresh-stale-staged-'));
+  const scopes: string[] = [];
+  const repoStateWithStaleStaged: RepoState = {
+    ...sampleRepoState,
+    repo_root: repo,
+    git: {
+      ...sampleRepoState.git,
+      dirty: true,
+      staged: 1,
+      unstaged: 1,
+    },
+  };
+  const refreshedAiGate = buildAiGateWithRepoState([], repoStateWithStaleStaged);
+
+  try {
+    execFileSync('git', ['init'], { cwd: repo, stdio: 'ignore' });
+    mkdirSync(join(repo, 'apps/ios'), { recursive: true });
+    writeFileSync(join(repo, 'apps/ios/AuthView.swift'), 'struct AuthView {}\n', 'utf8');
+
+    const result = await buildPreWriteAutomationTrace(
+      {
+        repoRoot: repo,
+        sdd: buildSddAllowed(),
+        aiGate: buildAiGateWithRepoState(
+          [toViolation('EVIDENCE_GATE_BLOCKED')],
+          repoStateWithStaleStaged
+        ),
+        runPlatformGate: async (params) => {
+          scopes.push(params.scope.kind);
+          return 0;
+        },
+      },
+      {
+        runEnterpriseAiGateCheck: () => ({
+          tool: 'ai_gate_check',
+          dryRun: true,
+          executed: true,
+          success: refreshedAiGate.allowed,
+          result: refreshedAiGate,
+        }),
+        evaluateAiGate: () => refreshedAiGate,
+        writeMcpAiGateReceipt: () => ({
+          path: join(repo, '.pumuki/artifacts/mcp-ai-gate-receipt.json'),
+          receipt: {
+            version: '1',
+            source: 'pumuki-enterprise-mcp',
+            tool: 'ai_gate_check',
+            repo_root: repo,
+            stage: 'PRE_WRITE',
+            status: 'ALLOWED',
+            allowed: true,
+            issued_at: new Date('2026-03-03T00:00:00.000Z').toISOString(),
+          },
+        }),
+        sleep: async () => {},
+      }
+    );
+
+    assert.deepEqual(scopes, ['workingTree']);
+    assert.equal(result.aiGate.allowed, true);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('buildPreWriteAutomationTrace usa PRE_WRITE para refrescar evidencia sin exigir lease previo', async () => {
   const stageCalls: string[] = [];
   let runEnterpriseCalls = 0;

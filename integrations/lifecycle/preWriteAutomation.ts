@@ -103,7 +103,7 @@ const isFunctionalPath = (filePath: string): boolean => {
   return PRE_WRITE_FUNCTIONAL_EXTENSIONS.some((extension) => normalized.endsWith(extension));
 };
 
-const collectStagedPaths = (repoRoot: string): ReadonlyArray<string> => {
+const collectStagedPaths = (repoRoot: string): ReadonlyArray<string> | null => {
   try {
     return execFileSync('git', ['diff', '--cached', '--name-only'], {
       cwd: repoRoot,
@@ -114,7 +114,7 @@ const collectStagedPaths = (repoRoot: string): ReadonlyArray<string> => {
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
   } catch {
-    return [];
+    return null;
   }
 };
 
@@ -124,7 +124,7 @@ const resolvePreWriteRefreshScope = (aiGate: ReturnType<typeof evaluateAiGate>):
     return { kind: 'workingTree' };
   }
   const stagedPaths = collectStagedPaths(aiGate.repo_state.repo_root);
-  if (stagedPaths.length === 0 || stagedPaths.some(isFunctionalPath)) {
+  if (stagedPaths === null || stagedPaths.some(isFunctionalPath)) {
     return { kind: 'staged' };
   }
   return { kind: 'workingTree' };
