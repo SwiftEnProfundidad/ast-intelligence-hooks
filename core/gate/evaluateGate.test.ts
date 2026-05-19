@@ -25,12 +25,14 @@ test('evaluateGate devuelve WARN cuando hay warnings sin bloqueantes', () => {
       severity: 'WARN',
       code: 'RULE_WARN',
       message: 'Warn finding',
+      blocking: false,
     },
     {
       ruleId: 'rule.info',
       severity: 'INFO',
       code: 'RULE_INFO',
       message: 'Info finding',
+      blocking: false,
     },
   ];
 
@@ -42,7 +44,7 @@ test('evaluateGate devuelve WARN cuando hay warnings sin bloqueantes', () => {
   assert.equal(result.warnings[0]?.ruleId, 'rule.warn');
 });
 
-test('evaluateGate devuelve BLOCK cuando existe al menos un finding bloqueante', () => {
+test('evaluateGate devuelve BLOCK para cualquier finding runtime salvo blocking=false', () => {
   const findings: Finding[] = [
     {
       ruleId: 'rule.error',
@@ -62,18 +64,24 @@ test('evaluateGate devuelve BLOCK cuando existe al menos un finding bloqueante',
       code: 'RULE_WARN',
       message: 'Warn finding',
     },
+    {
+      ruleId: 'rule.info.advisory',
+      severity: 'INFO',
+      code: 'RULE_INFO_ADVISORY',
+      message: 'Info advisory finding',
+      blocking: false,
+    },
   ];
 
   const result = evaluateGate(findings, defaultPolicy);
 
   assert.equal(result.outcome, 'BLOCK');
-  assert.equal(result.blocking.length, 2);
+  assert.equal(result.blocking.length, 3);
   assert.deepEqual(
     result.blocking.map((finding) => finding.ruleId),
-    ['rule.error', 'rule.critical']
+    ['rule.error', 'rule.critical', 'rule.warn']
   );
-  assert.equal(result.warnings.length, 1);
-  assert.equal(result.warnings[0]?.ruleId, 'rule.warn');
+  assert.deepEqual(result.warnings, []);
 });
 
 test('evaluateGate bloquea cualquier severidad cuando la policy zero-violations usa INFO', () => {

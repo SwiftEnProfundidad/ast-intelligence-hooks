@@ -23,14 +23,14 @@ const withTddBddEnforcementEnv = async <T>(
   }
 };
 
-test('resolveTddBddEnforcement defaults to advisory mode', async () => {
+test('resolveTddBddEnforcement defaults to strict mode', async () => {
   await withTddBddEnforcementEnv(undefined, () => {
     const resolved = resolveTddBddEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'advisory',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
     });
   });
 });
@@ -47,31 +47,31 @@ test('resolveTddBddEnforcement reads strict mode from environment', async () => 
   });
 });
 
-test('resolveTddBddEnforcement falls back to advisory on invalid environment value', async () => {
+test('resolveTddBddEnforcement falls back to strict on invalid environment value', async () => {
   await withTddBddEnforcementEnv('surprise', () => {
     const resolved = resolveTddBddEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'advisory',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
     });
   });
 });
 
-test('resolveTddBddEnforcement no hereda strict desde PRE_WRITE y permanece advisory por defecto', async () => {
+test('resolveTddBddEnforcement mantiene strict por defecto sin depender de PRE_WRITE', async () => {
   await withTddBddEnforcementEnv(undefined, () => {
     const resolved = resolveTddBddEnforcement();
 
     assert.deepEqual(resolved, {
-      mode: 'advisory',
+      mode: 'strict',
       source: 'default',
-      blocking: false,
+      blocking: true,
     });
   });
 });
 
-test('applyTddBddEnforcement downgrades blocking findings and snapshot to advisory by default', async () => {
+test('applyTddBddEnforcement preserves blocking findings and snapshot by default', async () => {
   await withTddBddEnforcementEnv(undefined, () => {
     const result = applyTddBddEnforcement({
       findings: [
@@ -111,8 +111,8 @@ test('applyTddBddEnforcement downgrades blocking findings and snapshot to adviso
       },
     });
 
-    assert.equal(result.findings[0]?.severity, 'WARN');
-    assert.equal(result.snapshot.status, 'advisory');
+    assert.equal(result.findings[0]?.severity, 'ERROR');
+    assert.equal(result.snapshot.status, 'blocked');
   });
 });
 

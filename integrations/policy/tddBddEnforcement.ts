@@ -52,9 +52,9 @@ export const resolveTddBddEnforcement = (): TddBddEnforcementResolution => {
     };
   }
   return {
-    mode: 'advisory',
+    mode: 'strict',
     source: 'default',
-    blocking: false,
+    blocking: true,
   };
 };
 
@@ -71,6 +71,7 @@ const applyTddBddFindingEnforcement = (
   return {
     ...finding,
     severity: 'WARN',
+    blocking: false,
   };
 };
 
