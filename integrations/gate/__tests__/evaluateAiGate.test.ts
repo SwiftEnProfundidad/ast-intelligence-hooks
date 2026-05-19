@@ -2424,6 +2424,111 @@ test('evaluateAiGate no arrastra plataformas desde el árbol completo del repo e
   }
 });
 
+test('evaluateAiGate detecta plataforma iOS desde staged Swift cuando PRE_WRITE evidence no materializa platforms', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
+    const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-prewrite-ios-staged-'));
+
+    try {
+      execFileSync('git', ['init'], { cwd: tmpRoot, stdio: 'ignore' });
+      mkdirSync(join(tmpRoot, 'apps/ios/Presentation/Features/BuyerCommerce'), { recursive: true });
+      writeFileSync(
+        join(tmpRoot, 'apps/ios/Presentation/Features/BuyerCommerce/BuyerAuthScreen.swift'),
+        'struct BuyerAuthScreen {}\n'
+      );
+      execFileSync(
+        'git',
+        ['add', 'apps/ios/Presentation/Features/BuyerCommerce/BuyerAuthScreen.swift'],
+        { cwd: tmpRoot, stdio: 'ignore' }
+      );
+
+      const base = sampleEvidence();
+      const result = evaluateAiGate(
+        {
+          repoRoot: tmpRoot,
+          stage: 'PRE_WRITE',
+        },
+        {
+          now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+          readEvidenceResult: () =>
+            validEvidenceResult({
+              ...base,
+              platforms: {},
+              rulesets: [
+                {
+                  platform: 'skills',
+                  bundle: 'ios-guidelines@1.0.0',
+                  hash: 'skills-ios-hash',
+                },
+                {
+                  platform: 'skills',
+                  bundle: 'ios-concurrency-guidelines@1.0.0',
+                  hash: 'skills-ios-concurrency-hash',
+                },
+                {
+                  platform: 'skills',
+                  bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+                  hash: 'skills-ios-swiftui-hash',
+                },
+              ],
+              repo_state: {
+                ...base.repo_state!,
+                repo_root: tmpRoot,
+              },
+              snapshot: {
+                ...base.snapshot,
+                stage: 'PRE_WRITE',
+                rules_coverage: {
+                  ...base.snapshot.rules_coverage!,
+                  stage: 'PRE_WRITE',
+                  active_rule_ids: ['skills.ios.no-force-unwrap'],
+                  evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
+                  matched_rule_ids: [],
+                  unevaluated_rule_ids: [],
+                  counts: {
+                    active: 1,
+                    evaluated: 1,
+                    matched: 0,
+                    unevaluated: 0,
+                  },
+                  coverage_ratio: 1,
+                },
+              },
+            }),
+          captureRepoState: () => ({
+            ...sampleEvidence().repo_state!,
+            repo_root: tmpRoot,
+            git: {
+              ...sampleEvidence().repo_state!.git,
+              pending_changes: 1,
+              staged: 1,
+              unstaged: 0,
+            },
+          }),
+          loadRequiredSkillsLock: () => sampleMultiPlatformSkillsLock(),
+        }
+      );
+
+      assert.equal(result.status, 'ALLOWED');
+      assert.equal(result.allowed, true);
+      assert.equal(result.skills_contract?.enforced, true);
+      assert.equal(result.skills_contract?.status, 'PASS');
+      assert.deepEqual(result.skills_contract?.detected_platforms, ['ios']);
+      assert.equal(
+        result.skills_contract?.violations.some(
+          (item) => item.code === 'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED'
+        ),
+        false
+      );
+      assert.equal(
+        result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
+        false
+      );
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+});
+
 test('evaluateAiGate no bloquea PRE_WRITE cuando el worktree está limpio y no hay plataformas activas detectables', async () => {
   await withSkillsEnforcementEnv('strict', async () => {
     const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-prewrite-clean-'));

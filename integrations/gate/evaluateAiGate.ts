@@ -553,6 +553,18 @@ const hasEffectiveChangedCodePlatforms = (params: {
     params.requiredPlatforms.some((platform) => isPlatformPath(platform, filePath))
   );
 
+const toChangedPathDetectedPlatforms = (params: {
+  changedPaths: ReadonlyArray<string>;
+  requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
+}): ReadonlyArray<PreWriteSkillsPlatform> => {
+  if (params.changedPaths.length === 0 || params.requiredPlatforms.length === 0) {
+    return [];
+  }
+  return params.requiredPlatforms.filter((platform) =>
+    params.changedPaths.some((filePath) => isPlatformPath(platform, filePath))
+  );
+};
+
 const toLockRequiredPlatforms = (
   requiredLock: SkillsLockV1 | undefined
 ): ReadonlyArray<PreWriteSkillsPlatform> => {
@@ -870,6 +882,10 @@ const toSkillsContractAssessment = (params: {
   const coverage = params.evidenceResult.evidence.snapshot.rules_coverage;
   const explicitlyDetectedPlatforms = toDetectedSkillsPlatforms(params.evidenceResult.evidence.platforms);
   const inferredPlatforms = toCoverageInferredPlatforms(coverage);
+  const changedPathDetectedPlatforms = toChangedPathDetectedPlatforms({
+    changedPaths: effectiveChangedPaths,
+    requiredPlatforms,
+  });
   const repoTreeDetectedPlatforms =
     params.stage !== 'PRE_WRITE' && requiredPlatforms.length > 0 && !hasEffectiveChangedPaths
       ? toRepoTreeDetectedPlatforms({
@@ -889,7 +905,9 @@ const toSkillsContractAssessment = (params: {
       ? explicitlyDetectedEffectivePlatforms
       : inferredPlatforms.length > 0
         ? inferredPlatforms
-        : repoTreeDetectedPlatforms;
+        : changedPathDetectedPlatforms.length > 0
+          ? changedPathDetectedPlatforms
+          : repoTreeDetectedPlatforms;
   const pendingChanges = resolvePendingChanges(params.repoState);
   const detectedPlatformSet = new Set(detectedPlatforms);
   const assessmentPlatforms =
