@@ -300,7 +300,11 @@ export const toPreWriteEnforcementGapFinding = (params: {
     code: 'ENFORCEMENT_GAP_PRE_WRITE_LEASE_MISSING',
     message:
       `PRE_WRITE hard-stop lease is not valid at ${params.stage}: ${params.status.code}. ` +
-      'Run PRE_WRITE before editing code; hooks/audit cannot accept code diffs without a prior clean PRE_WRITE lease.',
+      'User action: run `npx pumuki-pre-write` before editing code, then rerun the gate. ' +
+      'AI agent instruction: STOP; do not edit files until a valid PRE_WRITE lease exists for this repo and diff.',
+    expected_fix:
+      'User: run `npx pumuki-pre-write` or `npx pumuki sdd validate --stage=PRE_WRITE --json` before editing. ' +
+      'AI agent: stop immediately, do not apply patches or write files, and continue only after the command produces a valid clean or validated-diff PRE_WRITE lease.',
     filePath: '.pumuki/prewrite-lease.json',
     matchedBy: 'PreWriteLeaseGuard',
     source: 'prewrite-lease',
