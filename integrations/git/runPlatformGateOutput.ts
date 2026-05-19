@@ -121,6 +121,16 @@ const formatLocation = (finding: Finding): string | null => {
   return `${finding.filePath.replace(/\\/g, '/')}:${anchorLine}`;
 };
 
+const resolveAstSkillNextAction = (finding: Finding): string | null => {
+  if (!isAstSkillFinding(finding)) {
+    return null;
+  }
+  const location = formatLocation(finding);
+  const fix = finding.expected_fix?.trim() || 'corrige la violación indicada por la regla';
+  const locationText = location ? ` en ${location}` : '';
+  return `Corrige ${finding.ruleId}${locationText}: ${fix}. Vuelve a ejecutar el gate.`;
+};
+
 const formatFinding = (finding: Finding): string => {
   const location = formatLocation(finding);
   const severity = finding.severity.toUpperCase();
@@ -138,6 +148,7 @@ export const printGateFindings = (findings: ReadonlyArray<Finding>): void => {
   const primary = resolvePrimaryFinding(orderedFindings);
   const nextAction =
     BLOCK_NEXT_ACTION_BY_CODE[primary.code]
+    ?? resolveAstSkillNextAction(primary)
     ?? 'Corrige el bloqueante primario y vuelve a ejecutar el mismo comando.';
   process.stdout.write(
     `[pumuki][block-summary] primary=${primary.code} severity=${primary.severity.toUpperCase()} rule=${primary.ruleId}\n`
