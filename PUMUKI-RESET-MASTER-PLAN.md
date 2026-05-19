@@ -2068,3 +2068,16 @@ Snapshot PUMUKI-INC-132 (2026-05-13):
 
 - Esta sub-slice solo mejora remediacion textual de `block-summary`.
 - No cambia deteccion, severidad ni bloqueo.
+
+## 2026-05-19 - INC145 next_action accionable para cualquier AST/skill
+
+### Decision aplicada
+
+- `printGateFindings` deja de usar `Corrige el bloqueante primario...` cuando la causa primaria es una regla `skills.*`, `heuristics.*`, `SKILLS_*`, `HEURISTICS_*` o `*_AST` sin mapeo especifico.
+- Para cualquier finding AST/skill no mapeado, `next_action` incluye regla, fichero, linea y `expected_fix` cuando existe.
+- Los mapeos especificos existentes, como `console.log`, siguen teniendo prioridad sobre el fallback generico AST/skill.
+
+### Alcance
+
+- Esta sub-slice solo corrige salida humana de `block-summary`.
+- No cambia deteccion, severidad, bloqueo ni notificaciones macOS.

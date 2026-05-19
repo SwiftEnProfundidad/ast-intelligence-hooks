@@ -141,6 +141,38 @@ test('printGateFindings emite next_action específico para console.log frontend'
   assert.match(output, /next_action=Elimina console\.log del frontend de producción/i);
 });
 
+test('printGateFindings emite next_action accionable para regla AST/skill no mapeada', () => {
+  const findings: Finding[] = [
+    {
+      ruleId: 'skills.ios.guideline.ios.dynamic-type-font-scaling-automatico',
+      severity: 'WARN',
+      code: 'SKILLS_SKILLS_IOS_GUIDELINE_IOS_DYNAMIC_TYPE_FONT_SCALING_AUTOMATICO',
+      message: 'Dynamic Type - Font scaling automatico',
+      filePath: 'apps/ios/Presentation/Views/RuralGoWordmarkView.swift',
+      lines: 22,
+      expected_fix:
+        'Usa estilos semánticos SwiftUI como .headline/.body o Font.TextStyle.',
+      matchedBy: 'AstRule',
+      source: 'skills-ir',
+    },
+  ];
+
+  const output = withCapturedStdout(() => {
+    printGateFindings(findings);
+  }).join('');
+
+  assert.match(
+    output,
+    /\[pumuki\]\[block-summary\] primary=SKILLS_SKILLS_IOS_GUIDELINE_IOS_DYNAMIC_TYPE_FONT_SCALING_AUTOMATICO/i
+  );
+  assert.match(
+    output,
+    /next_action=Corrige skills\.ios\.guideline\.ios\.dynamic-type-font-scaling-automatico en apps\/ios\/Presentation\/Views\/RuralGoWordmarkView\.swift:22/i
+  );
+  assert.match(output, /Usa estilos semánticos SwiftUI como \.headline\/\.body o Font\.TextStyle/i);
+  assert.doesNotMatch(output, /Corrige el bloqueante primario/i);
+});
+
 test('printGateFindings emite next_action de reconcile cuando active_rule_ids está vacío con cambios de código', () => {
   const findings: Finding[] = [
     {
