@@ -2135,3 +2135,12 @@ Snapshot PUMUKI-INC-132 (2026-05-13):
 
 - Esta sub-slice corrige la semantica reportada por RuralGo: un PRE_WRITE con `skills_contract=PASS` y solo `EVIDENCE_PREWRITE_WORKTREE_WARN` no debe bloquear.
 - No relaja el contrato de bloqueo por reglas AST/skills; solo evita que un estado `BLOCKED` opaco sin causas bloqueantes se convierta en falso hard stop.
+
+## 2026-05-19 - Release pumuki@6.3.301
+
+### Cierre publicado
+
+- `pumuki@6.3.301` queda publicado en npm como release util para la recurrencia de `PUMUKI-INC-157`.
+- Contenido funcional: `PRE_WRITE` no hard-blockea cuando la evidencia solo contiene avisos no bloqueantes y no expone causas bloqueantes reales; los findings AST/skills con `blocking=true` siguen bloqueando.
+- Validacion ejecutada antes de publicar: `evaluateAiGate.test.ts` -> `50/50` OK; `npm run -s typecheck` -> OK; `npm run -s validation:package-manifest` -> OK; `npm publish --dry-run` -> OK.
+- Verificacion remota: `npm view pumuki version --json` -> `6.3.301`; `npm view pumuki@6.3.301 version dist.shasum dist.integrity --json` -> shasum `fd667c5549d3cab4957f39ea0612152a40046c97`.
