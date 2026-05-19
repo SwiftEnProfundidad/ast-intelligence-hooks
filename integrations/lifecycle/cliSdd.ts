@@ -37,6 +37,7 @@ import {
   buildSddExperimentalEnableAdvisoryCommand,
   runRawPreWriteAiGateCheck,
   buildPreWriteExperimentalEnableAdvisoryCommand,
+  prioritizePreWriteAiGateViolations,
 } from './cli';
 
 export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: LifecycleCliDependencies): Promise<number> => {
@@ -205,6 +206,10 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             sdd: result,
             aiGate: rawPreWriteAiGate ?? aiGate,
           });
+          const effectiveAiGate = rawPreWriteAiGate ?? aiGate;
+          const reportedAiGate = effectiveAiGate
+            ? prioritizePreWriteAiGateViolations(effectiveAiGate, nextAction)
+            : null;
           const sddExperimentalNextAction =
             !aiGate && result.decision.code === 'SDD_EXPERIMENTAL_DISABLED'
               ? {
@@ -215,10 +220,10 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
           if (parsed.json) {
             writeInfo(
               JSON.stringify(
-                (rawPreWriteAiGate ?? aiGate)
+                reportedAiGate
                   ? buildPreWriteValidationEnvelope(
                     result,
-                    rawPreWriteAiGate ?? aiGate!,
+                    reportedAiGate,
                     preWriteEnforcement,
                     experimentalFeatures,
                     policyValidation,
@@ -272,16 +277,16 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
                 );
               }
             }
-            if (aiGate) {
+            if (reportedAiGate) {
               writeInfo(buildPreWriteValidationPanel({
                 sdd: result,
-                aiGate,
+                aiGate: reportedAiGate,
                 automation: automationTrace,
               }));
               writeInfo(
-                `[pumuki][ai-gate] stage=${aiGate.stage} status=${aiGate.status} violations=${aiGate.violations.length}`
+                `[pumuki][ai-gate] stage=${reportedAiGate.stage} status=${reportedAiGate.status} violations=${reportedAiGate.violations.length}`
               );
-              for (const violation of aiGate.violations) {
+              for (const violation of reportedAiGate.violations) {
                 writeInfo(
                   withOptionalLocation(
                     `[pumuki][ai-gate] ${violation.code}: ${violation.message}`,
@@ -303,14 +308,14 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             activeDependencies.emitAuditSummaryNotificationFromAiGate({
               repoRoot: process.cwd(),
               stage: result.stage,
-              aiGateResult: aiGate,
+              aiGateResult: reportedAiGate ?? aiGate,
             });
           }
           if (!result.decision.allowed && preWriteEnforcement.blocking) {
             activeDependencies.emitGateBlockedNotification({
               repoRoot: process.cwd(),
               stage: result.stage,
-              totalViolations: aiGate?.violations.length ?? 0,
+              totalViolations: reportedAiGate?.violations.length ?? aiGate?.violations.length ?? 0,
               causeCode: result.decision.code,
               causeMessage: result.decision.message,
               remediation: resolvePreWriteBlockedRemediation({
@@ -320,20 +325,30 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             });
             return 1;
           }
-          if (aiGate && !aiGate.allowed && preWriteEnforcement.blocking) {
-            const firstViolation = aiGate.violations[0];
+          if (reportedAiGate && !reportedAiGate.allowed && preWriteEnforcement.blocking) {
+            const firstViolation = reportedAiGate.violations[0];
             const causeCode = firstViolation?.code ?? 'AI_GATE_BLOCKED';
             const causeMessage = firstViolation?.message ?? 'AI gate blocked PRE_WRITE stage.';
             activeDependencies.emitGateBlockedNotification({
               repoRoot: process.cwd(),
               stage: result.stage,
-              totalViolations: aiGate.violations.length,
+              totalViolations: reportedAiGate.violations.length,
               causeCode,
               causeMessage,
               remediation: resolvePreWriteBlockedRemediation({
                 causeCode,
                 nextAction,
               }),
+              blockingCauses: reportedAiGate.violations.map((violation) => ({
+                code: violation.code,
+                message: violation.message,
+                ruleId: violation.code,
+                file: resolveAiGateViolationLocation(violation.code),
+                remediation: resolvePreWriteBlockedRemediation({
+                  causeCode: violation.code,
+                  nextAction,
+                }),
+              })),
             });
             return 1;
           }

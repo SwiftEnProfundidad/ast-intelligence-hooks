@@ -84,6 +84,9 @@ const defaultDependencies: PlatformGateEvaluationDependencies = {
 const normalizeStageForSkills = (
   stage: GateStage
 ): Exclude<GateStage, 'STAGED'> => {
+  if (stage === 'PRE_WRITE') {
+    return 'CI';
+  }
   return stage === 'STAGED' ? 'PRE_COMMIT' : stage;
 };
 

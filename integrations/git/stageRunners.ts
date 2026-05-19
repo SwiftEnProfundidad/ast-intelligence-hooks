@@ -124,6 +124,13 @@ type StageRunnerDependencies = {
     causeCode: string;
     causeMessage: string;
     remediation: string;
+    blockingCauses?: ReadonlyArray<{
+      code: string;
+      message: string;
+      ruleId?: string;
+      file?: string;
+      remediation?: string;
+    }>;
   }) => void;
   readEvidenceResult: (repoRoot: string) => EvidenceReadResult;
   readEvidence: typeof readEvidence;
@@ -263,6 +270,22 @@ const resolvePrimaryBlockedStageFinding = (
   findings: ReadonlyArray<SnapshotFinding>
 ): SnapshotFinding | undefined => (
   findings.find((finding) => {
+    const ruleId = finding.ruleId.toLowerCase();
+    const source = finding.source?.toLowerCase() ?? '';
+    const matchedBy = finding.matchedBy?.toLowerCase() ?? '';
+    return (
+      isSeverityAtLeast(finding.severity, 'ERROR') &&
+      !ruleId.startsWith('governance.') &&
+      (
+        ruleId.startsWith('skills.') ||
+        ruleId.startsWith('heuristics.') ||
+        source.includes('heuristic') ||
+        matchedBy.includes('ast') ||
+        matchedBy.includes('heuristic')
+      )
+    );
+  }) ??
+  findings.find((finding) => {
     return isSeverityAtLeast(finding.severity, 'ERROR');
   }) ?? findings[0]
 );
@@ -288,6 +311,13 @@ const notifyGateBlockedForStage = (params: {
     BLOCKED_REMEDIATION_BY_CODE[causeCode]
     ?? params.fallbackRemediation
     ?? DEFAULT_BLOCKED_REMEDIATION;
+  const blockingCauses = stageFindings.map((finding) => ({
+    code: finding.code ?? finding.ruleId,
+    message: finding.message,
+    ruleId: finding.ruleId,
+    file: finding.file,
+    remediation: finding.expected_fix,
+  }));
   params.dependencies.notifyGateBlocked({
     repoRoot,
     stage: params.stage,
@@ -297,6 +327,7 @@ const notifyGateBlockedForStage = (params: {
     causeCode,
     causeMessage,
     remediation,
+    blockingCauses,
   });
 };
 
@@ -792,6 +823,13 @@ const enforceGitAtomicityGate = (params: {
     causeCode: firstViolation.code,
     causeMessage: firstViolation.message,
     remediation: firstViolation.remediation,
+    blockingCauses: atomicity.violations.map((violation) => ({
+      code: violation.code,
+      message: violation.message,
+      ruleId: 'git.atomicity.blocked',
+      file: '.pumuki/git-atomicity.json',
+      remediation: violation.remediation,
+    })),
   });
   notifyAuditSummaryForStage(params.dependencies, params.stage);
   return true;
@@ -898,9 +936,7 @@ export async function runPrePushStage(
         repoRoot,
         stage: 'PRE_PUSH',
         scope: {
-          kind: 'range',
-          fromRef: bootstrapBaseRef,
-          toRef: 'HEAD',
+          kind: 'repoAndStaged',
         },
       });
       if (
@@ -1006,9 +1042,7 @@ export async function runPrePushStage(
     repoRoot,
     stage: 'PRE_PUSH',
     scope: {
-      kind: 'range',
-      fromRef: prePushFromRef,
-      toRef: prePushToRef,
+      kind: 'repoAndStaged',
     },
     sddDecisionOverride: historicalPrePushSddOverride,
   });
@@ -1064,9 +1098,7 @@ export async function runCiStage(
     policy: resolved.policy,
     policyTrace: resolved.trace,
     scope: {
-      kind: 'range',
-      fromRef: ciBaseRef,
-      toRef: 'HEAD',
+      kind: 'repo',
     },
   });
   if (exitCode !== 0) {

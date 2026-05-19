@@ -17,6 +17,15 @@ import {
   readLifecycleDependencyInventory,
   type LifecycleDependencyInventory,
 } from './dependencyInventory';
+import { readPreWriteLeaseStatus } from './preWriteLease';
+import {
+  readLifecycleNotificationStatus,
+  type LifecycleNotificationStatus,
+} from './notificationStatus';
+import {
+  extractEvidenceBlockingCauses,
+  formatEvidenceBlockingCause,
+} from '../evidence/blockingCauses';
 
 export type LifecycleStatus = {
   repoRoot: string;
@@ -30,13 +39,40 @@ export type LifecycleStatus = {
   dependencyInventory: LifecycleDependencyInventory;
   policyValidation: LifecyclePolicyValidationSnapshot;
   experimentalFeatures: LifecycleExperimentalFeaturesSnapshot;
+  notifications: LifecycleNotificationStatus;
   issues: ReadonlyArray<DoctorIssue>;
 };
 
 const buildLifecycleIssues = (repoRoot: string): ReadonlyArray<DoctorIssue> => {
+  const notificationStatus = readLifecycleNotificationStatus({ repoRoot });
   const evidenceResult = readEvidenceResult(repoRoot);
+  const preWriteLeaseStatus = readPreWriteLeaseStatus({
+    repoRoot,
+    git: new LifecycleGitService(),
+  });
+  const notificationIssues: DoctorIssue[] = notificationStatus.deliverable
+    ? []
+    : [
+        {
+          severity: 'warning',
+          message:
+            `System notifications are not deliverable (${notificationStatus.disabledReason ?? 'unknown'}). ` +
+            `${notificationStatus.remediation ?? 'Review notification configuration.'}`,
+        },
+      ];
+  const leaseIssues: DoctorIssue[] =
+    !preWriteLeaseStatus.valid && preWriteLeaseStatus.changedCodePaths.length > 0
+      ? [
+          {
+            severity: 'error',
+            message:
+              `ENFORCEMENT_GAP: PRE_WRITE hard-stop lease is not valid (${preWriteLeaseStatus.code}) ` +
+              `for ${preWriteLeaseStatus.changedCodePaths.length} changed code file(s).`,
+          },
+        ]
+      : [];
   if (evidenceResult.kind !== 'valid') {
-    return [];
+    return [...notificationIssues, ...leaseIssues];
   }
 
   const evidence = evidenceResult.evidence;
@@ -47,11 +83,13 @@ const buildLifecycleIssues = (repoRoot: string): ReadonlyArray<DoctorIssue> => {
 
   if (!blocked) {
     if (evidence.snapshot.outcome !== 'WARN') {
-      return [];
+      return [...notificationIssues, ...leaseIssues];
     }
 
     const warnStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
     return [
+      ...notificationIssues,
+      ...leaseIssues,
       {
         severity: 'warning',
         message: appendTrackingActionableContext({
@@ -67,10 +105,20 @@ const buildLifecycleIssues = (repoRoot: string): ReadonlyArray<DoctorIssue> => {
     repoRoot,
     message: `Governance is blocked (${blockedStage}).`,
   });
+  const blockingCauses = extractEvidenceBlockingCauses(evidence);
+  const causeDetails =
+    blockingCauses.length > 0
+      ? ` Blocking causes: ${blockingCauses.length}. ${blockingCauses
+          .map(formatEvidenceBlockingCause)
+          .join(' | ')}`
+      : '';
   return [
+    ...notificationIssues,
+    ...leaseIssues,
     {
       severity: 'error',
-      message,
+      message: `${message}${causeDetails}`,
+      blockingCauses,
     },
   ];
 };
@@ -92,6 +140,7 @@ export const readLifecycleStatus = (params?: {
   });
   const policyValidation = readLifecyclePolicyValidationSnapshot(repoRoot);
   const experimentalFeatures = readLifecycleExperimentalFeaturesSnapshot();
+  const notifications = readLifecycleNotificationStatus({ repoRoot });
   const issues = buildLifecycleIssues(repoRoot);
 
   return {
@@ -106,6 +155,7 @@ export const readLifecycleStatus = (params?: {
     dependencyInventory,
     policyValidation,
     experimentalFeatures,
+    notifications,
     issues,
   };
 };

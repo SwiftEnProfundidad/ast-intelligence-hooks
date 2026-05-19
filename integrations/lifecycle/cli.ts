@@ -76,6 +76,11 @@ import {
 import { runPolicyReconcile } from './policyReconcile';
 import { runLifecycleAudit, type LifecycleAuditStage } from './audit';
 import { resolvePreWriteEnforcement, type PreWriteEnforcementResolution } from '../policy/preWriteEnforcement';
+import {
+  readLocalContextStatus,
+  repairLocalContext,
+  writeLocalContext,
+} from '../context/contextGate';
 
 type LifecycleCommand =
   | 'bootstrap'
@@ -92,6 +97,7 @@ type LifecycleCommand =
   | 'adapter'
   | 'analytics'
   | 'policy'
+  | 'context'
   | 'audit';
 
 type SddCommand =
@@ -107,6 +113,7 @@ type LoopCommand = 'run' | 'status' | 'stop' | 'resume' | 'list' | 'export';
 type AnalyticsCommand = 'hotspots';
 type AnalyticsHotspotsCommand = 'report' | 'diagnose';
 type PolicyCommand = 'reconcile';
+type ContextCommand = 'init' | 'status' | 'repair';
 
 type SddSessionAction = 'open' | 'refresh' | 'close';
 
@@ -178,6 +185,7 @@ export type ParsedArgs = {
   policyCommand?: PolicyCommand;
   policyStrict?: boolean;
   policyApply?: boolean;
+  contextCommand?: ContextCommand;
   auditStage?: LifecycleAuditStage;
   auditEngine?: boolean;
 };
@@ -204,6 +212,9 @@ Pumuki lifecycle commands:
   pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]
   pumuki analytics hotspots diagnose [--json]
   pumuki policy reconcile [--strict] [--apply] [--json]
+  pumuki context init [--json]
+  pumuki context status [--json]
+  pumuki context repair [--json]
   pumuki sdd status [--json]
   pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]
   pumuki sdd session --open --change=<change-id|auto> [--ttl-minutes=<n>] [--json]
@@ -239,6 +250,7 @@ const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'adapter' ||
   value === 'analytics' ||
   value === 'policy' ||
+  value === 'context' ||
   value === 'audit';
 
 const parseAdapterAgent = (value?: string): AdapterAgent => {
@@ -651,6 +663,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let analyticsSinceDays: ParsedArgs['analyticsSinceDays'];
   let analyticsJsonOutputPath: ParsedArgs['analyticsJsonOutputPath'];
   let analyticsMarkdownOutputPath: ParsedArgs['analyticsMarkdownOutputPath'];
+  let contextCommand: ParsedArgs['contextCommand'];
   let auditStage: LifecycleAuditStage | undefined;
   let auditEngine = false;
 
@@ -860,6 +873,31 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       json,
       auditStage: auditStage ?? 'PRE_COMMIT',
       ...(auditEngine ? { auditEngine: true } : {}),
+    };
+  }
+
+  if (commandRaw === 'context') {
+    const subcommandRaw = argv[1] ?? 'status';
+    if (
+      subcommandRaw !== 'init' &&
+      subcommandRaw !== 'status' &&
+      subcommandRaw !== 'repair'
+    ) {
+      throw new Error(`Unsupported context subcommand "${subcommandRaw}".\n\n${HELP_TEXT}`);
+    }
+    contextCommand = subcommandRaw;
+    for (const arg of argv.slice(2)) {
+      if (arg === '--json') {
+        json = true;
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    }
+    return {
+      command: commandRaw,
+      purgeArtifacts: false,
+      json,
+      contextCommand,
     };
   }
 
@@ -1582,6 +1620,16 @@ const printDoctorReport = (
     `PRE_PUSH=${report.policyValidation.stages.PRE_PUSH.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.PRE_PUSH.strict ? 'yes' : 'no'} ` +
     `CI=${report.policyValidation.stages.CI.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.CI.strict ? 'yes' : 'no'}`
   );
+  writeInfo(
+    `[pumuki] notifications: enabled=${report.notifications.enabled ? 'yes' : 'no'} ` +
+    `deliverable=${report.notifications.deliverable ? 'yes' : 'no'} ` +
+    `channel=${report.notifications.channel} ` +
+    `blocked_dialog=${report.notifications.blockedDialogEnabled ? 'yes' : 'no'} ` +
+    `reason=${report.notifications.disabledReason ?? 'none'}`
+  );
+  if (report.notifications.remediation) {
+    writeInfo(`[pumuki] notifications remediation: ${report.notifications.remediation}`);
+  }
 
   for (const issue of report.issues) {
     writeInfo(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
@@ -1942,6 +1990,34 @@ export const resolvePreWriteBlockedRemediation = (params: {
     return params.nextAction.command;
   }
   return PRE_WRITE_HINTS_BY_CODE[params.causeCode] ?? buildPreWriteDefaultRemediation();
+};
+
+export const prioritizePreWriteAiGateViolations = (
+  aiGate: ReturnType<typeof evaluateAiGate>,
+  nextAction?: PreWriteValidationEnvelope['next_action']
+): ReturnType<typeof evaluateAiGate> => {
+  if (!nextAction?.reason) {
+    return aiGate;
+  }
+  const hasActionableReason = aiGate.violations.some((violation) => violation.code === nextAction.reason);
+  const violations = aiGate.violations.filter((violation) => {
+    if (!hasActionableReason) {
+      return true;
+    }
+    if (nextAction.reason === 'EVIDENCE_GATE_BLOCKED') {
+      return true;
+    }
+    return violation.code !== 'EVIDENCE_GATE_BLOCKED';
+  });
+  violations.sort((left, right) => {
+    const leftMatches = left.code === nextAction.reason ? 0 : 1;
+    const rightMatches = right.code === nextAction.reason ? 0 : 1;
+    return leftMatches - rightMatches;
+  });
+  return {
+    ...aiGate,
+    violations,
+  };
 };
 
 const wrapPreWritePanelLine = (value: string, width: number): string[] => {
@@ -2377,6 +2453,28 @@ export const runLifecycleCli = async (
         }
         return result.gate_exit_code;
       }
+      case 'context': {
+        const repoRoot = process.cwd();
+        const result =
+          parsed.contextCommand === 'init'
+            ? writeLocalContext(repoRoot)
+            : parsed.contextCommand === 'repair'
+              ? repairLocalContext(repoRoot)
+              : readLocalContextStatus(repoRoot);
+        if (parsed.json) {
+          writeInfo(JSON.stringify(result, null, 2));
+        } else {
+          writeInfo(`[pumuki][context] status=${result.status}`);
+          writeInfo(`[pumuki][context] path=${result.path}`);
+          writeInfo(`[pumuki][context] ${result.message}`);
+          if (result.document) {
+            writeInfo(`[pumuki][context] repo=${result.document.repo_root}`);
+            writeInfo(`[pumuki][context] agent=${result.document.contract.agent_instruction}`);
+            writeInfo(`[pumuki][context] user=${result.document.contract.user_remediation}`);
+          }
+        }
+        return result.status === 'ok' ? 0 : 1;
+      }
       case 'doctor': {
         const report = runLifecycleDoctor({
           deep: parsed.doctorDeep === true,
@@ -2467,6 +2565,16 @@ export const runLifecycleCli = async (
             `PRE_PUSH=${status.policyValidation.stages.PRE_PUSH.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.PRE_PUSH.strict ? 'yes' : 'no'} ` +
             `CI=${status.policyValidation.stages.CI.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.CI.strict ? 'yes' : 'no'}`
           );
+          writeInfo(
+            `[pumuki] notifications: enabled=${status.notifications.enabled ? 'yes' : 'no'} ` +
+            `deliverable=${status.notifications.deliverable ? 'yes' : 'no'} ` +
+            `channel=${status.notifications.channel} ` +
+            `blocked_dialog=${status.notifications.blockedDialogEnabled ? 'yes' : 'no'} ` +
+            `reason=${status.notifications.disabledReason ?? 'none'}`
+          );
+          if (status.notifications.remediation) {
+            writeInfo(`[pumuki] notifications remediation: ${status.notifications.remediation}`);
+          }
           writeInfo(
             `[pumuki] experimental: ANALYTICS=${status.experimentalFeatures.features.analytics.mode} source=${status.experimentalFeatures.features.analytics.source} layer=${status.experimentalFeatures.features.analytics.layer} blocking=${status.experimentalFeatures.features.analytics.blocking ? 'yes' : 'no'} env=${status.experimentalFeatures.features.analytics.activationVariable}`
           );
@@ -2849,8 +2957,18 @@ export const runLifecycleCli = async (
   }
 };
 
-if (require.main === module) {
-  void runLifecycleCli(process.argv.slice(2)).then((code) => {
-    process.exitCode = code;
-  });
+if (
+  require.main === module &&
+  process.env.PUMUKI_RUNTIME_EXECUTION_SOURCE === 'source-bin'
+) {
+  void runLifecycleCli(process.argv.slice(2)).then(
+    (code) => {
+      process.exit(code);
+    },
+    (error) => {
+      const message = error instanceof Error ? error.message : 'Unexpected lifecycle CLI error.';
+      writeError(message);
+      process.exit(1);
+    }
+  );
 }

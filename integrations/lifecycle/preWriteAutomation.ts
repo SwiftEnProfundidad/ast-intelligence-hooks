@@ -1,8 +1,12 @@
+import { existsSync } from 'node:fs';
 import { evaluateAiGate } from '../gate/evaluateAiGate';
+import { GitService } from '../git/GitService';
 import { runPlatformGate } from '../git/runPlatformGate';
+import type { GateScope } from '../git/runPlatformGateFacts';
 import { runEnterpriseAiGateCheck } from '../mcp/aiGateCheck';
 import { writeMcpAiGateReceipt } from '../mcp/aiGateReceipt';
 import { evaluateSddPolicy } from '../sdd';
+import { writePreWriteLease } from './preWriteLease';
 
 const PRE_WRITE_AUTOMATION_RETRY_BACKOFF_MS = 200;
 
@@ -33,7 +37,7 @@ const PRE_WRITE_AUTOFIXABLE_MCP_RECEIPT_CODES = new Set<string>([
 ]);
 
 export type PreWriteAutomationAction = {
-  action: 'refresh_evidence' | 'refresh_mcp_receipt' | 'retry_backoff';
+  action: 'refresh_evidence' | 'refresh_mcp_receipt' | 'retry_backoff' | 'write_prewrite_lease';
   status: 'OK' | 'FAILED';
   details: string;
 };
@@ -47,6 +51,7 @@ type PreWriteAutomationDependencies = {
   evaluateAiGate: typeof evaluateAiGate;
   runEnterpriseAiGateCheck: typeof runEnterpriseAiGateCheck;
   writeMcpAiGateReceipt: typeof writeMcpAiGateReceipt;
+  writePreWriteLease: typeof writePreWriteLease;
   sleep: (ms: number) => Promise<void>;
   retryBackoffMs: number;
 };
@@ -55,6 +60,7 @@ const defaultDependencies: PreWriteAutomationDependencies = {
   evaluateAiGate,
   runEnterpriseAiGateCheck,
   writeMcpAiGateReceipt,
+  writePreWriteLease,
   sleep: (ms: number) =>
     new Promise((resolve) => {
       setTimeout(resolve, ms);
@@ -81,6 +87,13 @@ const collectAutoFixableViolationCodes = (aiGate: ReturnType<typeof evaluateAiGa
     .map((violation) => violation.code)
     .sort((left, right) => left.localeCompare(right));
 
+const resolvePreWriteRefreshScope = (aiGate: ReturnType<typeof evaluateAiGate>): GateScope => {
+  const staged = aiGate.repo_state.git.staged ?? 0;
+  return staged > 0
+    ? { kind: 'staged' }
+    : { kind: 'workingTree' };
+};
+
 export const buildPreWriteAutomationTrace = async (params: {
   repoRoot: string;
   sdd: ReturnType<typeof evaluateSddPolicy>;
@@ -98,7 +111,7 @@ export const buildPreWriteAutomationTrace = async (params: {
     attempted: false,
     actions: [],
   };
-  if (params.sdd.stage !== 'PRE_WRITE' || params.aiGate.allowed) {
+  if (params.sdd.stage !== 'PRE_WRITE') {
     return {
       aiGate: params.aiGate,
       trace,
@@ -106,18 +119,19 @@ export const buildPreWriteAutomationTrace = async (params: {
   }
 
   let aiGate = params.aiGate;
-  if (hasAutoFixableEvidenceViolation(aiGate)) {
+  if (
+    process.env.PUMUKI_PRE_WRITE_REFRESH_GATE !== '0' ||
+    hasAutoFixableEvidenceViolation(aiGate)
+  ) {
     trace.attempted = true;
     try {
       const gateExitCode = await params.runPlatformGate({
         policy: {
-          stage: 'PRE_COMMIT',
-          blockOnOrAbove: 'ERROR',
-          warnOnOrAbove: 'WARN',
+          stage: 'PRE_WRITE',
+          blockOnOrAbove: 'INFO',
+          warnOnOrAbove: 'INFO',
         },
-        scope: {
-          kind: 'workingTree',
-        },
+        scope: resolvePreWriteRefreshScope(aiGate),
         auditMode: 'gate',
         dependencies: {
           printGateFindings: () => {},
@@ -126,7 +140,7 @@ export const buildPreWriteAutomationTrace = async (params: {
       trace.actions.push({
         action: 'refresh_evidence',
         status: 'OK',
-        details: `stage=PRE_COMMIT runPlatformGate exit_code=${gateExitCode}`,
+        details: `stage=PRE_WRITE runPlatformGate exit_code=${gateExitCode}`,
       });
       aiGate = activeDependencies.runEnterpriseAiGateCheck({
         repoRoot: params.repoRoot,
@@ -147,13 +161,11 @@ export const buildPreWriteAutomationTrace = async (params: {
     try {
       const gateExitCode = await params.runPlatformGate({
         policy: {
-          stage: 'PRE_PUSH',
+          stage: 'PRE_WRITE',
           blockOnOrAbove: 'ERROR',
           warnOnOrAbove: 'WARN',
         },
-        scope: {
-          kind: 'workingTree',
-        },
+        scope: resolvePreWriteRefreshScope(aiGate),
         auditMode: 'gate',
         dependencies: {
           printGateFindings: () => {},
@@ -162,7 +174,7 @@ export const buildPreWriteAutomationTrace = async (params: {
       trace.actions.push({
         action: 'refresh_evidence',
         status: 'OK',
-        details: `stage=PRE_PUSH runPlatformGate exit_code=${gateExitCode}`,
+        details: `stage=PRE_WRITE runPlatformGate exit_code=${gateExitCode}`,
       });
       aiGate = activeDependencies.runEnterpriseAiGateCheck({
         repoRoot: params.repoRoot,
@@ -231,6 +243,29 @@ export const buildPreWriteAutomationTrace = async (params: {
         action: 'retry_backoff',
         status: 'FAILED',
         details: error instanceof Error ? error.message : 'Unknown PRE_WRITE retry error',
+      });
+    }
+  }
+
+  if (params.sdd.decision.allowed && aiGate.allowed && existsSync(params.repoRoot)) {
+    trace.attempted = true;
+    try {
+      const git = new GitService();
+      const leaseResult = activeDependencies.writePreWriteLease({
+        repoRoot: params.repoRoot,
+        git,
+        allowExistingCodeChanges: true,
+      });
+      trace.actions.push({
+        action: 'write_prewrite_lease',
+        status: leaseResult.valid ? 'OK' : 'FAILED',
+        details: `${leaseResult.code} path=${leaseResult.path}`,
+      });
+    } catch (error) {
+      trace.actions.push({
+        action: 'write_prewrite_lease',
+        status: 'FAILED',
+        details: error instanceof Error ? error.message : 'Unknown PRE_WRITE lease write error',
       });
     }
   }

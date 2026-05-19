@@ -88,6 +88,59 @@ test('printGateFindings emite next_action incremental para bloqueo SOLID de fron
   assert.match(output, /next_action=Aplica refactor incremental: extrae 1 componente\/hook por commit/i);
 });
 
+test('printGateFindings prioriza violación AST/skills frente a repo policy con misma severidad', () => {
+  const findings: Finding[] = [
+    {
+      ruleId: 'ai_gate.repo_policy.GITFLOW_PROTECTED_BRANCH',
+      severity: 'ERROR',
+      code: 'GITFLOW_PROTECTED_BRANCH',
+      message: 'Direct work on protected branch "main" is not allowed.',
+      matchedBy: 'RepoPolicy',
+      source: 'ai_gate:repo_policy',
+    },
+    {
+      ruleId: 'skills.backend.no-console-log',
+      severity: 'ERROR',
+      code: 'SKILLS_SKILLS_BACKEND_NO_CONSOLE_LOG',
+      message: 'Disallow console.log in backend runtime code.',
+      filePath: 'scripts/sample.ts',
+      lines: 1,
+      matchedBy: 'AstRule',
+      source: 'skills-ir',
+    },
+  ];
+
+  const output = withCapturedStdout(() => {
+    printGateFindings(findings);
+  }).join('');
+
+  assert.match(output, /\[pumuki\]\[block-summary\] primary=SKILLS_SKILLS_BACKEND_NO_CONSOLE_LOG/i);
+  assert.match(output, /next_action=Elimina console\.log del backend o sustitúyelo por el logger aprobado/i);
+  assert.doesNotMatch(output, /\[pumuki\]\[block-summary\] primary=GITFLOW_PROTECTED_BRANCH/i);
+});
+
+test('printGateFindings emite next_action específico para console.log frontend', () => {
+  const findings: Finding[] = [
+    {
+      ruleId: 'skills.frontend.no-console-log',
+      severity: 'ERROR',
+      code: 'SKILLS_SKILLS_FRONTEND_NO_CONSOLE_LOG',
+      message: 'Disallow console.log in frontend production code.',
+      filePath: 'apps/web/src/App.tsx',
+      lines: 1,
+      matchedBy: 'AstRule',
+      source: 'skills-ir',
+    },
+  ];
+
+  const output = withCapturedStdout(() => {
+    printGateFindings(findings);
+  }).join('');
+
+  assert.match(output, /\[pumuki\]\[block-summary\] primary=SKILLS_SKILLS_FRONTEND_NO_CONSOLE_LOG/i);
+  assert.match(output, /next_action=Elimina console\.log del frontend de producción/i);
+});
+
 test('printGateFindings emite next_action de reconcile cuando active_rule_ids está vacío con cambios de código', () => {
   const findings: Finding[] = [
     {
@@ -137,5 +190,8 @@ test('printGateFindings separa warning secundario cuando convive con un blocker 
 
   assert.match(output, /\[pumuki\]\[block-summary\] primary=TRACKING_CANONICAL_IN_PROGRESS_INVALID/i);
   assert.match(output, /\[pumuki\]\[warning-summary\] secondary=EVIDENCE_PREWRITE_WORKTREE_WARN/i);
+  assert.match(output, /\[pumuki\]\[findings\] total=2/i);
+  assert.match(output, /\n1\. \[ERROR\] ai_gate\.repo_policy\.TRACKING_CANONICAL_IN_PROGRESS_INVALID/i);
+  assert.match(output, /\n2\. \[WARN\] ai_gate\.repo_policy\.EVIDENCE_PREWRITE_WORKTREE_WARN/i);
   assert.match(output, /active_entries=PUMUKI-INC-081@L10, PUMUKI-INC-083@L11/i);
 });

@@ -129,6 +129,14 @@ const buildAiGate = (violations: AiGateViolation[]): AiGateCheckResult => {
   };
 };
 
+const buildAiGateWithRepoState = (
+  violations: AiGateViolation[],
+  repoState: RepoState
+): AiGateCheckResult => ({
+  ...buildAiGate(violations),
+  repo_state: repoState,
+});
+
 test('buildPreWriteAutomationTrace aplica retry backoff único cuando persiste violación auto-curable', async () => {
   let runPlatformGateCalls = 0;
   let runEnterpriseCalls = 0;
@@ -192,7 +200,7 @@ test('buildPreWriteAutomationTrace aplica retry backoff único cuando persiste v
   assert.equal(result.trace.actions[1]?.details.includes('EVIDENCE_STALE'), true);
 });
 
-test('buildPreWriteAutomationTrace no ejecuta retry cuando no hay violaciones auto-curables', async () => {
+test('buildPreWriteAutomationTrace refresca gate PRE_WRITE aunque el bloqueo inicial no sea auto-curable', async () => {
   let runPlatformGateCalls = 0;
   let runEnterpriseCalls = 0;
   let sleepCalled = false;
@@ -239,12 +247,13 @@ test('buildPreWriteAutomationTrace no ejecuta retry cuando no hay violaciones au
     }
   );
 
-  assert.equal(runPlatformGateCalls, 0);
-  assert.equal(runEnterpriseCalls, 0);
+  assert.equal(runPlatformGateCalls, 1);
+  assert.equal(runEnterpriseCalls, 1);
   assert.equal(sleepCalled, false);
   assert.equal(result.aiGate.allowed, false);
-  assert.equal(result.trace.attempted, false);
-  assert.equal(result.trace.actions.length, 0);
+  assert.equal(result.trace.attempted, true);
+  assert.equal(result.trace.actions.length, 1);
+  assert.equal(result.trace.actions[0]?.action, 'refresh_evidence');
 });
 
 test('buildPreWriteAutomationTrace refresca evidence aunque SDD esté inválido si PRE_WRITE llega con stale evidence', async () => {
@@ -362,7 +371,63 @@ test('buildPreWriteAutomationTrace refresca evidencia cuando PRE_WRITE llega con
   );
 });
 
-test('buildPreWriteAutomationTrace aplica refresh PRE_PUSH cuando EVIDENCE_GATE_BLOCKED persiste tras PRE_COMMIT', async () => {
+test('buildPreWriteAutomationTrace refresca solo staged cuando existe slice stageado', async () => {
+  const scopes: string[] = [];
+  const repoStateWithMixedWorktree: RepoState = {
+    ...sampleRepoState,
+    git: {
+      ...sampleRepoState.git,
+      dirty: true,
+      staged: 1,
+      unstaged: 1,
+    },
+  };
+  const refreshedAiGate = buildAiGateWithRepoState([], repoStateWithMixedWorktree);
+
+  const result = await buildPreWriteAutomationTrace(
+    {
+      repoRoot: '/repo',
+      sdd: buildSddAllowed(),
+      aiGate: buildAiGateWithRepoState(
+        [toViolation('EVIDENCE_GATE_BLOCKED')],
+        repoStateWithMixedWorktree
+      ),
+      runPlatformGate: async (params) => {
+        scopes.push(params.scope.kind);
+        return 0;
+      },
+    },
+    {
+      runEnterpriseAiGateCheck: () => ({
+        tool: 'ai_gate_check',
+        dryRun: true,
+        executed: true,
+        success: refreshedAiGate.allowed,
+        result: refreshedAiGate,
+      }),
+      evaluateAiGate: () => refreshedAiGate,
+      writeMcpAiGateReceipt: () => ({
+        path: '/repo/.pumuki/artifacts/mcp-ai-gate-receipt.json',
+        receipt: {
+          version: '1',
+          source: 'pumuki-enterprise-mcp',
+          tool: 'ai_gate_check',
+          repo_root: '/repo',
+          stage: 'PRE_WRITE',
+          status: 'ALLOWED',
+          allowed: true,
+          issued_at: new Date('2026-03-03T00:00:00.000Z').toISOString(),
+        },
+      }),
+      sleep: async () => {},
+    }
+  );
+
+  assert.deepEqual(scopes, ['staged']);
+  assert.equal(result.aiGate.allowed, true);
+});
+
+test('buildPreWriteAutomationTrace usa PRE_WRITE para refrescar evidencia sin exigir lease previo', async () => {
   const stageCalls: string[] = [];
   let runEnterpriseCalls = 0;
   const aiGateSequence: AiGateCheckResult[] = [
@@ -410,13 +475,13 @@ test('buildPreWriteAutomationTrace aplica refresh PRE_PUSH cuando EVIDENCE_GATE_
     }
   );
 
-  assert.deepEqual(stageCalls, ['PRE_COMMIT', 'PRE_PUSH']);
+  assert.deepEqual(stageCalls, ['PRE_WRITE', 'PRE_WRITE']);
   assert.equal(runEnterpriseCalls, 2);
   assert.equal(result.aiGate.allowed, true);
   assert.deepEqual(
     result.trace.actions.map((item) => item.action),
     ['refresh_evidence', 'refresh_evidence']
   );
-  assert.equal(result.trace.actions[0]?.details.includes('stage=PRE_COMMIT'), true);
-  assert.equal(result.trace.actions[1]?.details.includes('stage=PRE_PUSH'), true);
+  assert.equal(result.trace.actions[0]?.details.includes('stage=PRE_WRITE'), true);
+  assert.equal(result.trace.actions[1]?.details.includes('stage=PRE_WRITE'), true);
 });

@@ -155,7 +155,8 @@ const defaultDependencies: LifecycleWatchDependencies = {
   ensureRuntimeArtifactsIgnored: (repoRoot) => {
     try {
       ensureRuntimeArtifactsIgnored(repoRoot);
-    } catch {
+    } catch (error) {
+      void error;
     }
   },
   emitAuditSummaryNotificationFromEvidence,
@@ -678,6 +679,13 @@ export const runLifecycleWatch = async (
               causeCode: cause.code,
               causeMessage: cause.message,
               remediation: cause.remediation,
+              blockingCauses: matchedFindings.map((finding) => ({
+                code: finding.code ?? finding.ruleId,
+                message: finding.message,
+                ruleId: finding.ruleId,
+                file: finding.file,
+                remediation: finding.expected_fix,
+              })),
             });
           } else {
             notificationResult = activeDependencies.emitAuditSummaryNotificationFromEvidence({
