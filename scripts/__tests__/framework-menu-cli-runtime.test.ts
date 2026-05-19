@@ -22,6 +22,7 @@ test('framework menu CLI exits cleanly in classic mode', () => {
     `framework menu classic mode must exit 0\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
   );
   assert.ok(!result.stderr.includes('ReferenceError'));
+  assert.match(result.stdout, /Choose an option:/);
 });
 
 test('framework menu CLI exits cleanly in modern mode', () => {

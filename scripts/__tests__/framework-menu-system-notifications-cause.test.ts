@@ -130,3 +130,77 @@ test('resolveBlockedCauseSummary no deja copy en inglés cuando llega un bloqueo
   assert.match(result, /PRE_COMMIT/i);
   assert.doesNotMatch(result, /AST heuristic detected console\.log usage\./i);
 });
+
+test('resolveBlockedCauseSummary resume causas bloqueantes AST sin quedar tapado por tracking', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 3,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Tracking bloqueado: RGO-1900-35 en docs/RURALGO_SEGUIMIENTO.md.',
+      blockingCauses: [
+        {
+          code: 'SKILLS_IOS_NO_FOREGROUND_COLOR',
+          ruleId: 'skills.ios.no-foreground-color',
+          file: 'apps/ios/HomeView.swift',
+          message: 'foregroundColor is not allowed.',
+          remediation: 'Usa tokens semánticos de diseño.',
+        },
+        {
+          code: 'SDD_SESSION_INVALID',
+          ruleId: 'sdd.policy.blocked',
+          file: 'openspec/changes',
+          message: 'Tracking bloqueado.',
+        },
+      ],
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /skills\.ios\.no-foreground-color/);
+  assert.match(result, /apps\/ios\/HomeView\.swift/);
+  assert.doesNotMatch(result, /Tracking bloqueado/);
+});
+
+test('resolveBlockedCauseSummary cuenta todas las causas restantes aunque priorice AST', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 4,
+      causeCode: 'SKILLS_SKILLS_BACKEND_NO_CONSOLE_LOG',
+      blockingCauses: [
+        {
+          code: 'SKILLS_SKILLS_BACKEND_NO_CONSOLE_LOG',
+          ruleId: 'skills.backend.no-console-log',
+          file: 'scripts/sample.ts',
+          message: 'Disallow console.log in backend runtime code.',
+        },
+        {
+          code: 'SKILLS_SKILLS_FRONTEND_NO_CONSOLE_LOG',
+          ruleId: 'skills.frontend.no-console-log',
+          file: 'apps/web/src/App.tsx',
+          message: 'Disallow console.log in frontend production code.',
+        },
+        {
+          code: 'CONTEXT_NOT_APPLIED',
+          ruleId: 'governance.context.local-context-not-applied',
+          file: '.pumuki/context/context.json',
+          message: 'Contexto local obligatorio no aplicado.',
+        },
+        {
+          code: 'GITFLOW_PROTECTED_BRANCH',
+          ruleId: 'ai_gate.repo_policy.GITFLOW_PROTECTED_BRANCH',
+          message: 'Direct work on protected branch main is not allowed.',
+        },
+      ],
+    },
+    'SKILLS_SKILLS_BACKEND_NO_CONSOLE_LOG'
+  );
+
+  assert.match(result, /skills\.backend\.no-console-log/);
+  assert.match(result, /\(\+3 más\)/);
+  assert.doesNotMatch(result, /\(\+1 más\)/);
+});

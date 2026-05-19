@@ -12,9 +12,15 @@ export const formatLegacyStatusLine = (summary: LegacyAuditSummary): string => {
 };
 
 const formatPlatformBlock = (platform: PlatformSummary): string => {
+  const total =
+    platform.bySeverity.CRITICAL
+    + platform.bySeverity.HIGH
+    + platform.bySeverity.MEDIUM
+    + platform.bySeverity.LOW;
   const lines = [
     `┌ Platform: ${platform.platform}`,
     `│ ● CRITICAL: ${platform.bySeverity.CRITICAL} ● HIGH: ${platform.bySeverity.HIGH} ● MEDIUM: ${platform.bySeverity.MEDIUM} ● LOW: ${platform.bySeverity.LOW}`,
+    `│ TOTAL: ${total}`,
     `│ Files affected: ${platform.filesAffected}`,
     '│ Top violations:',
   ];

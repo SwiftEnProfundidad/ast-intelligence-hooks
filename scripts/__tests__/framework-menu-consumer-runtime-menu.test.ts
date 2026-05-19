@@ -47,15 +47,20 @@ test('consumer runtime printMenu agrupa opciones por shell mínima y diagnóstic
 
     runtime.printMenu();
     const rendered = output.join('\n');
-    assert.match(rendered, /Read-Only Gate Flows/i);
+    assert.match(rendered, /██████╗ ██╗   ██╗███╗   ███╗██╗   ██╗██╗  ██╗██╗/);
+    assert.match(rendered, /Advanced Project Audit — AST Intelligence & Quality Gate/i);
+    assert.match(rendered, /Classic audit flows/i);
     assert.match(rendered, /Engine · working tree \(no preflight\)/i);
     assert.match(rendered, /11\)\s+Engine audit · STAGED only/i);
     assert.match(rendered, /14\)\s+Engine audit · tracked repo files \(AUTO runtime rules · PRE_COMMIT\)/i);
-    assert.match(rendered, /Legacy Read-Only Export/i);
-    assert.match(rendered, /Legacy Read-Only Diagnostics/i);
+    assert.match(rendered, /Classic export/i);
+    assert.match(rendered, /Classic diagnostics/i);
     assert.match(rendered, /System/i);
-    assert.match(rendered, /1\)\s+Consumer preflight \+ gate: ALL tracked files/i);
-    assert.match(rendered, /8\)\s+Export legacy read-only evidence snapshot/i);
+    assert.match(rendered, /1\)\s+Full audit \(repo analysis\)/i);
+    assert.match(rendered, /2\)\s+Strict REPO\+STAGING \(CI\/CD\)/i);
+    assert.match(rendered, /3\)\s+Strict STAGING only \(dev\)/i);
+    assert.match(rendered, /4\)\s+Standard CRITICAL\/HIGH/i);
+    assert.match(rendered, /8\)\s+Export Markdown/i);
     assert.match(rendered, /10\)\s+Exit/i);
   } finally {
     if (typeof previousUiV2 === 'string') {
@@ -149,9 +154,12 @@ test('consumer runtime printMenu usa vista clásica agrupada por shell mínima c
     });
     runtime.printMenu();
     const rendered = output.join('\n');
-    assert.match(rendered, /A\. Switch to advanced menu/);
-    assert.match(rendered, /Read-Only Gate Flows/i);
-    assert.match(rendered, /Legacy Read-Only Diagnostics/i);
+    assert.match(rendered, /██████╗ ██╗   ██╗███╗   ███╗██╗   ██╗██╗  ██╗██╗/);
+    assert.match(rendered, /Choose an option|Advanced Project Audit/);
+    assert.match(rendered, /1\)\s+Full audit \(repo analysis\)\s+6\)\s+ESLint Admin\+Web/i);
+    assert.match(rendered, /7\)\s+AST Intelligence/i);
+    assert.match(rendered, /Additional engine flows/i);
+    assert.match(rendered, /A\) Switch to advanced menu/);
   } finally {
     if (typeof previousUiV2 === 'string') {
       process.env.PUMUKI_MENU_UI_V2 = previousUiV2;

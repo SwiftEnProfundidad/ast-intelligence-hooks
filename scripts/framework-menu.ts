@@ -11,12 +11,16 @@ import {
   runRepoAndStagedGate,
   runRepoAndStagedGateSilent,
   runRepoGateSilent,
+  runRepoGateSilentWithBlocked,
   runStagedGate,
   runStagedGateSilent,
+  runStagedGateSilentWithBlocked,
   runWorkingTreeGateSilent,
+  runWorkingTreeGateSilentWithBlocked,
   runRepoAndStagedPrePushGateSilent,
   runWorkingTreePrePushGateSilent,
-  runUnstagedGateSilent,
+  runWorkingTreePrePushGateSilentWithBlocked,
+  runUnstagedGateSilentWithBlocked,
 } from './framework-menu-gate-lib';
 import { createFrameworkMenuPrompts } from './framework-menu-prompts';
 import { resolveDefaultRangeFrom } from './framework-menu-runners';
@@ -60,12 +64,12 @@ const menu = async (): Promise<void> => {
       printActiveSkillsBundles,
     });
     const consumerRuntime = createConsumerMenuRuntime({
-      runRepoGate: runRepoGateSilent,
+      runRepoGate: runRepoGateSilentWithBlocked,
       runRepoAndStagedGate: runRepoAndStagedPrePushGateSilent,
-      runStagedGate: runStagedGateSilent,
-      runUnstagedGate: runUnstagedGateSilent,
-      runWorkingTreeGate: runWorkingTreePrePushGateSilent,
-      runWorkingTreePreCommitGate: runWorkingTreeGateSilent,
+      runStagedGate: runStagedGateSilentWithBlocked,
+      runUnstagedGate: runUnstagedGateSilentWithBlocked,
+      runWorkingTreeGate: runWorkingTreePrePushGateSilentWithBlocked,
+      runWorkingTreePreCommitGate: runWorkingTreeGateSilentWithBlocked,
       write: (text) => {
         output.write(text);
       },
@@ -99,7 +103,8 @@ const menu = async (): Promise<void> => {
           }
         }
       }
-      const option = (await rl.question('\nSelect option: ')).trim();
+      const prompt = mode === 'consumer' ? '\nChoose an option: ' : '\nSelect option: ';
+      const option = (await rl.question(prompt)).trim();
       const normalized = option.toUpperCase();
 
       if (mode === 'consumer' && normalized === 'A') {

@@ -21,7 +21,12 @@ test('formatLegacyAuditReport renderiza secciones legacy con resumen por platafo
     assert.match(rendered, /AST INTELLIGENCE — SEVERITY BREAKDOWN/);
     assert.match(rendered, /Platform: iOS/);
     assert.match(rendered, /Platform: Android/);
+    assert.match(rendered, /Platform: Backend/);
+    assert.match(rendered, /Platform: Frontend/);
+    assert.match(rendered, /Platform: Other/);
     assert.match(rendered, /┌ Platform: iOS/);
+    assert.match(rendered, /TOTAL:\s+1/);
+    assert.match(rendered, /TOTAL:\s+0/);
     assert.match(rendered, /└ End platform block/);
     assert.match(rendered, /4\) RULESET COVERAGE/);
     assert.match(rendered, /iosEnterpriseRuleSet \(inferred\)/);

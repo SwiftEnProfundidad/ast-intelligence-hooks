@@ -1,5 +1,6 @@
 import type { FrameworkMenuEvidenceSummary } from './framework-menu-evidence-summary-lib';
 import type {
+  PumukiBlockedNotificationCause,
   PumukiCriticalNotificationEvent,
   SystemNotificationEmitResult,
 } from './framework-menu-system-notifications-lib';
@@ -16,6 +17,7 @@ export type ConsumerRuntimeBlockedGate = {
   causeCode: string;
   causeMessage: string;
   remediation: string;
+  blockingCauses?: ReadonlyArray<PumukiBlockedNotificationCause>;
 };
 
 export type ConsumerRuntimeGateResult = {

@@ -41,6 +41,9 @@ const BLOCKED_REMEDIATION_MAX_LENGTH_BY_VARIANT: Readonly<Record<BlockedRemediat
 const GENERIC_BLOCKED_REMEDIATION =
   'Corrige el bloqueo indicado y vuelve a ejecutar el comando.';
 
+const buildMultipleCausesRemediation = (count: number): string =>
+  `Corrige las ${count} causas bloqueantes listadas arriba, empezando por violaciones AST/skills de codigo cuando existan, y vuelve a ejecutar el gate.`;
+
 const normalizeBlockedRemediation = (value: string): string =>
   normalizeNotificationText(value)
     .replace(/^cómo solucionarlo:\s*/i, '')
@@ -102,6 +105,22 @@ export const resolveBlockedRemediation = (
 ): string => {
   const variant = options?.variant ?? 'dialog';
   const maxLength = BLOCKED_REMEDIATION_MAX_LENGTH_BY_VARIANT[variant];
+  const blockingCausesCount = event.blockingCauses?.length ?? 0;
+  if (blockingCausesCount > 1) {
+    return truncateNotificationText(
+      buildMultipleCausesRemediation(blockingCausesCount),
+      maxLength
+    );
+  }
+  const firstCauseWithRemediation = event.blockingCauses?.find(
+    (cause) => cause.remediation && cause.remediation.trim().length > 0
+  );
+  if (firstCauseWithRemediation?.remediation) {
+    return truncateNotificationText(
+      normalizeBlockedRemediation(firstCauseWithRemediation.remediation),
+      maxLength
+    );
+  }
   const fromEvent = event.remediation
     ? normalizeBlockedRemediation(event.remediation)
     : '';

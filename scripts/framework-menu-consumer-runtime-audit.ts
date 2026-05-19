@@ -33,6 +33,9 @@ export const renderConsumerRuntimeSummary = (
   dependencies: ConsumerRuntimeSummaryDependencies
 ): FrameworkMenuEvidenceSummary => {
   const summary = dependencies.summaryOverride ?? readEvidenceSummaryForMenu(dependencies.repoRoot);
+  const canonicalSummary = dependencies.summaryOverride
+    ? readEvidenceSummaryForMenu(dependencies.repoRoot)
+    : null;
   const lines = [
     formatEvidenceSummaryForMenu(summary),
     '',
@@ -40,6 +43,13 @@ export const renderConsumerRuntimeSummary = (
     `Files scanned: ${summary.filesScanned}`,
     `Files affected: ${summary.filesAffected}`,
   ];
+
+  const driftLines = canonicalSummary
+    ? buildConsumerRuntimeEvidenceDriftLines(summary, canonicalSummary)
+    : [];
+  if (driftLines.length > 0) {
+    lines.push('', ...driftLines);
+  }
 
   if (summary.status === 'ok' && summary.topFindings.length > 0) {
     const primaryFinding = summary.topFindings[0];
@@ -74,6 +84,62 @@ export const renderConsumerRuntimeSummary = (
   return summary;
 };
 
+const toPlatformMap = (
+  summary: FrameworkMenuEvidenceSummary
+): Map<string, number> =>
+  new Map((summary.platformAuditRows ?? []).map((row) => [row.platform, row.violations]));
+
+const buildConsumerRuntimeEvidenceDriftLines = (
+  gateSummary: FrameworkMenuEvidenceSummary,
+  canonicalSummary: FrameworkMenuEvidenceSummary
+): string[] => {
+  const drifts: string[] = [];
+  if (canonicalSummary.status !== 'ok') {
+    return [
+      `⚠ Menu/gate evidence drift: canonical_evidence=${canonicalSummary.status}; using gate blocked summary`,
+    ];
+  }
+  if (gateSummary.stage !== canonicalSummary.stage) {
+    drifts.push(`stage gate=${gateSummary.stage ?? 'null'} evidence=${canonicalSummary.stage ?? 'null'}`);
+  }
+  if (gateSummary.outcome !== canonicalSummary.outcome) {
+    drifts.push(`outcome gate=${gateSummary.outcome ?? 'null'} evidence=${canonicalSummary.outcome ?? 'null'}`);
+  }
+  if (gateSummary.totalFindings !== canonicalSummary.totalFindings) {
+    drifts.push(`totalFindings gate=${gateSummary.totalFindings} evidence=${canonicalSummary.totalFindings}`);
+  }
+
+  const severityKeys = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const;
+  for (const key of severityKeys) {
+    const gateValue = gateSummary.byEnterpriseSeverity?.[key] ?? 0;
+    const evidenceValue = canonicalSummary.byEnterpriseSeverity?.[key] ?? 0;
+    if (gateValue !== evidenceValue) {
+      drifts.push(`severity.${key} gate=${gateValue} evidence=${evidenceValue}`);
+    }
+  }
+
+  const gatePlatforms = toPlatformMap(gateSummary);
+  const evidencePlatforms = toPlatformMap(canonicalSummary);
+  const platformNames = [...new Set([...gatePlatforms.keys(), ...evidencePlatforms.keys()])].sort();
+  for (const platform of platformNames) {
+    const gateValue = gatePlatforms.get(platform) ?? 0;
+    const evidenceValue = evidencePlatforms.get(platform) ?? 0;
+    if (gateValue !== evidenceValue) {
+      drifts.push(`platform.${platform} gate=${gateValue} evidence=${evidenceValue}`);
+    }
+  }
+
+  if (drifts.length === 0) {
+    return [];
+  }
+  return [
+    '⚠ Menu/gate evidence drift detected',
+    'Diagnostic code: MENU_GATE_EVIDENCE_DRIFT',
+    'Diagnostic severity: HIGH',
+    ...drifts.map((drift) => `- ${drift}`),
+  ];
+};
+
 export const printPrePushTrackedEvidenceDiskHint = (params: {
   write: ConsumerRuntimeSummaryDependencies['write'];
 }): void => {
@@ -89,46 +155,123 @@ export const printPrePushTrackedEvidenceDiskHint = (params: {
 
 export const buildConsumerRuntimeBlockedSummary = (
   blocked: ConsumerRuntimeBlockedGate
-): FrameworkMenuEvidenceSummary => ({
-  status: 'ok',
-  stage: blocked.stage,
-  outcome: 'BLOCK',
-  totalFindings: blocked.totalViolations,
-  filesScanned: 0,
-  filesAffected: 0,
-  bySeverity: {
-    CRITICAL: 0,
-    ERROR: 1,
-    WARN: 0,
-    INFO: 0,
-  },
-  byEnterpriseSeverity: {
-    CRITICAL: 0,
-    HIGH: 1,
-    MEDIUM: 0,
-    LOW: 0,
-  },
-  topFiles: [
-    {
-      file: 'PROJECT_ROOT',
-      count: 1,
+): FrameworkMenuEvidenceSummary => {
+  const normalizedCause = blocked.causeCode.toLowerCase();
+  const inferredPlatform = normalizedCause.includes('backend')
+    ? 'Backend'
+    : normalizedCause.includes('frontend') || normalizedCause.includes('web')
+      ? 'Frontend'
+      : normalizedCause.includes('ios')
+        ? 'iOS'
+        : normalizedCause.includes('android')
+          ? 'Android'
+        : null;
+  const blockingCauses = blocked.blockingCauses ?? [];
+  const topFindings =
+    blockingCauses.length > 0
+      ? blockingCauses.map((cause) => ({
+          severity: 'HIGH' as const,
+          ruleId: cause.ruleId ?? cause.code,
+          file: cause.file ?? 'PROJECT_ROOT',
+          line: 1,
+        }))
+      : [
+          {
+            severity: 'HIGH' as const,
+            ruleId: blocked.causeCode,
+            file: 'PROJECT_ROOT',
+            line: 1,
+          },
+        ];
+  const topFiles = new Map<string, number>();
+  for (const finding of topFindings) {
+    topFiles.set(finding.file, (topFiles.get(finding.file) ?? 0) + 1);
+  }
+  const platformCounts = new Map<string, number>();
+  const inferPlatform = (value: string): string | null => {
+    const normalized = value.toLowerCase();
+    if (normalized.includes('backend')) {
+      return 'Backend';
+    }
+    if (normalized.includes('frontend') || normalized.includes('/web/') || normalized.includes('web')) {
+      return 'Frontend';
+    }
+    if (normalized.includes('ios')) {
+      return 'iOS';
+    }
+    if (normalized.includes('android')) {
+      return 'Android';
+    }
+    return null;
+  };
+  if (blockingCauses.length > 0) {
+    for (const cause of blockingCauses) {
+      const platform = inferPlatform(`${cause.ruleId ?? cause.code} ${cause.file ?? ''}`);
+      if (platform) {
+        platformCounts.set(platform, (platformCounts.get(platform) ?? 0) + 1);
+      }
+    }
+  } else if (inferredPlatform) {
+    platformCounts.set(inferredPlatform, blocked.totalViolations);
+  }
+  return {
+    status: 'ok',
+    stage: blocked.stage,
+    outcome: 'BLOCK',
+    totalFindings: blocked.totalViolations,
+    filesScanned: 0,
+    filesAffected: 0,
+    bySeverity: {
+      CRITICAL: 0,
+      ERROR: 1,
+      WARN: 0,
+      INFO: 0,
     },
-  ],
-  topFileLocations: [
-    {
-      file: 'PROJECT_ROOT',
-      line: 1,
+    byEnterpriseSeverity: {
+      CRITICAL: 0,
+      HIGH: 1,
+      MEDIUM: 0,
+      LOW: 0,
     },
-  ],
-  topFindings: [
-    {
-      severity: 'HIGH',
-      ruleId: blocked.causeCode,
-      file: 'PROJECT_ROOT',
-      line: 1,
-    },
-  ],
-});
+    topFiles: [
+      ...topFiles.entries(),
+    ].map(([file, count]) => ({
+      file,
+      count,
+    })),
+    topFileLocations: topFindings.map((finding) => ({
+      file: finding.file,
+      line: finding.line,
+    })),
+    topFindings,
+    platformAuditRows: [...platformCounts.entries()].map(([platform, violations]) => ({
+      platform,
+      violations,
+    })),
+  };
+};
+
+export const buildConsumerRuntimeBlockedCauseLines = (
+  blocked: ConsumerRuntimeBlockedGate
+): string[] => {
+  const causes = blocked.blockingCauses ?? [];
+  if (causes.length === 0) {
+    return [
+      `🔴 Gate blocked: ${blocked.causeCode}`,
+      `Cause: ${blocked.causeMessage}`,
+      `Solution: ${blocked.remediation}`,
+    ];
+  }
+  return [
+    `🔴 Gate blocked: ${blocked.causeCode}`,
+    `Blocking causes: ${causes.length}`,
+    ...causes.flatMap((cause, index) => [
+      `${index + 1}. ${cause.ruleId ?? cause.code}${cause.file ? ` @ ${cause.file}` : ''}`,
+      `   Cause: ${cause.message}`,
+      `   Solution: ${cause.remediation ?? blocked.remediation}`,
+    ]),
+  ];
+};
 
 export const printConsumerRuntimeEmptyScopeHint = (
   dependencies: Pick<ConsumerRuntimeSummaryDependencies, 'write'>,
