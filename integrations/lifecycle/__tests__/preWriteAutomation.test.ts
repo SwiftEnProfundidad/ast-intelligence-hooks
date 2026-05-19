@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 import type { RepoState } from '../../evidence/schema';
 import type { AiGateCheckResult, AiGateViolation } from '../../gate/evaluateAiGate';
@@ -425,6 +429,74 @@ test('buildPreWriteAutomationTrace refresca solo staged cuando existe slice stag
 
   assert.deepEqual(scopes, ['staged']);
   assert.equal(result.aiGate.allowed, true);
+});
+
+test('buildPreWriteAutomationTrace refresca workingTree cuando staged solo contiene artefactos Pumuki', async () => {
+  const repo = mkdtempSync(join(tmpdir(), 'pumuki-prewrite-refresh-scope-'));
+  const scopes: string[] = [];
+  const repoStateWithArtifactStaged: RepoState = {
+    ...sampleRepoState,
+    repo_root: repo,
+    git: {
+      ...sampleRepoState.git,
+      dirty: true,
+      staged: 1,
+      unstaged: 1,
+    },
+  };
+  const refreshedAiGate = buildAiGateWithRepoState([], repoStateWithArtifactStaged);
+
+  try {
+    execFileSync('git', ['init'], { cwd: repo, stdio: 'ignore' });
+    mkdirSync(join(repo, 'apps/ios'), { recursive: true });
+    writeFileSync(join(repo, '.ai_evidence.json'), '{}\n', 'utf8');
+    writeFileSync(join(repo, 'apps/ios/AuthView.swift'), 'struct AuthView {}\n', 'utf8');
+    execFileSync('git', ['add', '.ai_evidence.json'], { cwd: repo, stdio: 'ignore' });
+
+    const result = await buildPreWriteAutomationTrace(
+      {
+        repoRoot: repo,
+        sdd: buildSddAllowed(),
+        aiGate: buildAiGateWithRepoState(
+          [toViolation('EVIDENCE_GATE_BLOCKED')],
+          repoStateWithArtifactStaged
+        ),
+        runPlatformGate: async (params) => {
+          scopes.push(params.scope.kind);
+          return 0;
+        },
+      },
+      {
+        runEnterpriseAiGateCheck: () => ({
+          tool: 'ai_gate_check',
+          dryRun: true,
+          executed: true,
+          success: refreshedAiGate.allowed,
+          result: refreshedAiGate,
+        }),
+        evaluateAiGate: () => refreshedAiGate,
+        writeMcpAiGateReceipt: () => ({
+          path: join(repo, '.pumuki/artifacts/mcp-ai-gate-receipt.json'),
+          receipt: {
+            version: '1',
+            source: 'pumuki-enterprise-mcp',
+            tool: 'ai_gate_check',
+            repo_root: repo,
+            stage: 'PRE_WRITE',
+            status: 'ALLOWED',
+            allowed: true,
+            issued_at: new Date('2026-03-03T00:00:00.000Z').toISOString(),
+          },
+        }),
+        sleep: async () => {},
+      }
+    );
+
+    assert.deepEqual(scopes, ['workingTree']);
+    assert.equal(result.aiGate.allowed, true);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
 });
 
 test('buildPreWriteAutomationTrace usa PRE_WRITE para refrescar evidencia sin exigir lease previo', async () => {

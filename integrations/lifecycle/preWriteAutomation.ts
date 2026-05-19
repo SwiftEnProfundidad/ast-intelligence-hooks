@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { evaluateAiGate } from '../gate/evaluateAiGate';
 import { GitService } from '../git/GitService';
 import { runPlatformGate } from '../git/runPlatformGate';
@@ -87,11 +88,46 @@ const collectAutoFixableViolationCodes = (aiGate: ReturnType<typeof evaluateAiGa
     .map((violation) => violation.code)
     .sort((left, right) => left.localeCompare(right));
 
+const PRE_WRITE_FUNCTIONAL_EXTENSIONS = [
+  '.swift',
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.kt',
+  '.kts',
+] as const;
+
+const isFunctionalPath = (filePath: string): boolean => {
+  const normalized = filePath.trim().toLowerCase();
+  return PRE_WRITE_FUNCTIONAL_EXTENSIONS.some((extension) => normalized.endsWith(extension));
+};
+
+const collectStagedPaths = (repoRoot: string): ReadonlyArray<string> => {
+  try {
+    return execFileSync('git', ['diff', '--cached', '--name-only'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+  } catch {
+    return [];
+  }
+};
+
 const resolvePreWriteRefreshScope = (aiGate: ReturnType<typeof evaluateAiGate>): GateScope => {
   const staged = aiGate.repo_state.git.staged ?? 0;
-  return staged > 0
-    ? { kind: 'staged' }
-    : { kind: 'workingTree' };
+  if (staged <= 0) {
+    return { kind: 'workingTree' };
+  }
+  const stagedPaths = collectStagedPaths(aiGate.repo_state.repo_root);
+  if (stagedPaths.length === 0 || stagedPaths.some(isFunctionalPath)) {
+    return { kind: 'staged' };
+  }
+  return { kind: 'workingTree' };
 };
 
 export const buildPreWriteAutomationTrace = async (params: {
