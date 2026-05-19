@@ -387,6 +387,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.swiftui.glass-interactive-static-element', [
       'heuristics.ios.swiftui.glass-interactive-static-element.ast',
     ]),
+  'skills.ios.guideline.ios-swiftui-expert.use-glasseffectid-with-namespace-for-morphing-transitions':
+    heuristicDetector('ios.swiftui.glasseffectid-namespace', [
+      'heuristics.ios.swiftui.glasseffectid-without-namespace.ast',
+    ]),
   'skills.ios.guideline.ios.image-optimization-resize-compress-cache': heuristicDetector(
     'ios.swiftui.image-data-decoding',
     ['heuristics.ios.swiftui.image-data-decoding.ast']

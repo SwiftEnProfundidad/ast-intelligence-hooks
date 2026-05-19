@@ -72,6 +72,7 @@ import {
   collectSwiftUiInlineActionLogicLines,
   collectSwiftOnTapGestureWithoutButtonTraitLines,
   collectSwiftGlassInteractiveOnStaticElementLines,
+  collectSwiftGlassEffectIDWithoutNamespaceLines,
   collectSwiftForEachIndicesLines,
   collectSwiftForEachSelfIdentityLines,
   collectSwiftInlineForEachTransformLines,
@@ -129,6 +130,7 @@ import {
   hasSwiftOnTapGestureUsage,
   hasSwiftOnTapGestureWithoutButtonTraitUsage,
   hasSwiftGlassInteractiveOnStaticElementUsage,
+  hasSwiftGlassEffectIDWithoutNamespaceUsage,
   hasSwiftOperationQueueUsage,
   hasSwiftContainsUserFilterUsage,
   hasSwiftCustomSingletonUsage,
@@ -2114,6 +2116,46 @@ struct CardView: View {
   assert.deepEqual(collectSwiftGlassInteractiveOnStaticElementLines(source), [6]);
   assert.equal(hasSwiftGlassInteractiveOnStaticElementUsage(safe), false);
   assert.deepEqual(collectSwiftGlassInteractiveOnStaticElementLines(safe), []);
+});
+
+test('hasSwiftGlassEffectIDWithoutNamespaceUsage detecta glassEffectID sin Namespace real', () => {
+  const source = `
+struct CardView: View {
+  var body: some View {
+    Text("Card")
+      .glassEffect()
+      .glassEffectID("card", in: animation)
+  }
+}
+`;
+  const safe = `
+struct CardView: View {
+  @Namespace private var animation
+
+  var body: some View {
+    Text("Card")
+      .glassEffect()
+      .glassEffectID("card", in: animation)
+  }
+}
+
+struct ChildCard: View {
+  let animation: Namespace.ID
+
+  var body: some View {
+    Text("Card")
+      .glassEffectID("card", in: animation)
+  }
+}
+
+let sample = ".glassEffectID(\\"card\\", in: animation)"
+// .glassEffectID("card", in: animation)
+`;
+
+  assert.equal(hasSwiftGlassEffectIDWithoutNamespaceUsage(source), true);
+  assert.deepEqual(collectSwiftGlassEffectIDWithoutNamespaceLines(source), [6]);
+  assert.equal(hasSwiftGlassEffectIDWithoutNamespaceUsage(safe), false);
+  assert.deepEqual(collectSwiftGlassEffectIDWithoutNamespaceLines(safe), []);
 });
 
 test('detectores legacy ignoran strings y comentarios', () => {

@@ -688,7 +688,7 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios-swiftui-expert.use-glasseffectid-with-namespace-for-morphing-transitions'
     ),
-    []
+    ['heuristics.ios.swiftui.glasseffectid-without-namespace.ast']
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
