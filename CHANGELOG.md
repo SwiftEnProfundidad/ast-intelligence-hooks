@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.300] - 2026-05-19
+
+- CLI: `pumuki --version` and `pumuki -v` now return the effective package version with exit code `0` without invoking lifecycle status, audit, gates, notifications or evidence writes. This prevents consumer repin checks from mutating `.ai_evidence.json` just to read the installed version.
+
 ## [6.3.298] - 2026-05-19
 
 ## [6.3.299] - 2026-05-19
