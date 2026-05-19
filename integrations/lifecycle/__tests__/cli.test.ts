@@ -1687,6 +1687,12 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
             pre_push: { command: 'npx --yes --package pumuki@latest pumuki-pre-push' },
             ci: { command: 'npx --yes --package pumuki@latest pumuki-ci' },
           },
+          enforcement: {
+            pre_write: {
+              required_before_edit: true,
+              agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
+            },
+          },
           mcp: {
             enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
             evidence: { command: 'npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio' },

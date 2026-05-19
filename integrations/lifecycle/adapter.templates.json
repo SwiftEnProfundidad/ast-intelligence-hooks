@@ -24,6 +24,13 @@
           "evidence": {
             "command": "npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio"
           }
+        },
+        "enforcement": {
+          "pre_write": {
+            "required_before_edit": true,
+            "command": "npx --yes --package pumuki@latest pumuki-pre-write",
+            "agent_instruction": "STOP before editing files unless this command has produced a valid PRE_WRITE lease for the current repo and diff."
+          }
         }
       }
     }
@@ -54,6 +61,13 @@
           "evidence": {
             "command": "npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio"
           }
+        },
+        "enforcement": {
+          "pre_write": {
+            "required_before_edit": true,
+            "command": "npx --yes --package pumuki@latest pumuki-pre-write",
+            "agent_instruction": "STOP before editing files unless this command has produced a valid PRE_WRITE lease for the current repo and diff."
+          }
         }
       }
     }
@@ -75,6 +89,13 @@
             },
             "ci": {
               "command": "npx --yes --package pumuki@latest pumuki-ci"
+            }
+          },
+          "enforcement": {
+            "pre_write": {
+              "required_before_edit": true,
+              "command": "npx --yes --package pumuki@latest pumuki-pre-write",
+              "agent_instruction": "STOP before editing files unless this command has produced a valid PRE_WRITE lease for the current repo and diff."
             }
           }
         },
@@ -139,6 +160,13 @@
           "ci": {
             "command": "npx --yes --package pumuki@latest pumuki-ci"
           }
+        },
+        "enforcement": {
+          "pre_write": {
+            "required_before_edit": true,
+            "command": "npx --yes --package pumuki@latest pumuki-pre-write",
+            "agent_instruction": "STOP before editing files unless this command has produced a valid PRE_WRITE lease for the current repo and diff."
+          }
         }
       }
     },
@@ -166,6 +194,13 @@
           "evidence": {
             "command": "npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio"
           }
+        },
+        "enforcement": {
+          "pre_write": {
+            "required_before_edit": true,
+            "command": "npx --yes --package pumuki@latest pumuki-pre-write",
+            "agent_instruction": "STOP before editing files unless this command has produced a valid PRE_WRITE lease for the current repo and diff."
+          }
         }
       }
     }
@@ -178,7 +213,14 @@
         "postCommand": "npx --yes --package pumuki@latest pumuki-pre-commit",
         "pushCommand": "npx --yes --package pumuki@latest pumuki-pre-push",
         "ciCommand": "npx --yes --package pumuki@latest pumuki-ci",
-        "mcpCommand": "npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio"
+        "mcpCommand": "npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio",
+        "enforcement": {
+          "pre_write": {
+            "required_before_edit": true,
+            "command": "npx --yes --package pumuki@latest pumuki-pre-write",
+            "agent_instruction": "STOP before editing files unless this command has produced a valid PRE_WRITE lease for the current repo and diff."
+          }
+        }
       }
     },
     {
@@ -245,6 +287,13 @@
           },
           "evidence": {
             "command": "npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio"
+          }
+        },
+        "enforcement": {
+          "pre_write": {
+            "required_before_edit": true,
+            "command": "npx --yes --package pumuki@latest pumuki-pre-write",
+            "agent_instruction": "STOP before editing files unless this command has produced a valid PRE_WRITE lease for the current repo and diff."
           }
         }
       }

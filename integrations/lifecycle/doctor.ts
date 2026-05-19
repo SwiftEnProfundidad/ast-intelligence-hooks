@@ -269,6 +269,20 @@ const readNestedString = (
   return typeof cursor === 'string' && cursor.trim().length > 0 ? cursor : undefined;
 };
 
+const readNestedBoolean = (
+  source: Record<string, unknown>,
+  path: ReadonlyArray<string>
+): boolean | undefined => {
+  let cursor: unknown = source;
+  for (const segment of path) {
+    if (!isRecord(cursor)) {
+      return undefined;
+    }
+    cursor = cursor[segment];
+  }
+  return typeof cursor === 'boolean' ? cursor : undefined;
+};
+
 const hasRobustPumukiCommandResolution = (command: string): boolean => {
   const normalized = command.trim();
   if (normalized.length === 0) {
@@ -396,17 +410,26 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
   const missingPaths = requiredCommandPaths
     .filter((path) => !readNestedString(parsed, path))
     .map((path) => path.join('.'));
+  const missingContractPaths = [
+    !readNestedBoolean(parsed, ['enforcement', 'pre_write', 'required_before_edit'])
+      ? 'enforcement.pre_write.required_before_edit'
+      : undefined,
+    !readNestedString(parsed, ['enforcement', 'pre_write', 'agent_instruction'])
+      ? 'enforcement.pre_write.agent_instruction'
+      : undefined,
+  ].filter((path): path is string => typeof path === 'string');
 
-  if (missingPaths.length > 0) {
+  if (missingPaths.length > 0 || missingContractPaths.length > 0) {
+    const missing = [...missingPaths, ...missingContractPaths];
     return buildDeepCheck({
       id: 'adapter-wiring',
       status: 'fail',
       severity: 'error',
-      message: `Adapter wiring is incomplete (missing: ${missingPaths.join(', ')}).`,
+      message: `Adapter wiring is incomplete (missing: ${missing.join(', ')}).`,
       remediation: 'Re-run "pumuki adapter install --agent=codex" and keep generated commands unchanged.',
       metadata: {
         path: adapterPath,
-        missing_count: missingPaths.length,
+        missing_count: missing.length,
       },
     });
   }
