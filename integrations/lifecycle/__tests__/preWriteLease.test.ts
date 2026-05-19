@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import {
   readPreWriteLeaseStatus,
   resolvePreWriteLeasePath,
+  toPreWriteEnforcementGapFinding,
   writePreWriteLease,
 } from '../preWriteLease';
 
@@ -153,4 +154,23 @@ test('readPreWriteLeaseStatus invalida lease emitido con HEAD distinto', () => {
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }
+});
+
+test('toPreWriteEnforcementGapFinding emite instrucciones separadas para usuario y agente IA', () => {
+  const finding = toPreWriteEnforcementGapFinding({
+    stage: 'PRE_COMMIT',
+    status: {
+      valid: false,
+      code: 'PRE_WRITE_LEASE_MISSING',
+      path: '.pumuki/prewrite-lease.json',
+      changedCodePaths: ['apps/ios/App.swift'],
+      message: 'No valid PRE_WRITE lease exists for this code diff.',
+    },
+  });
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'ENFORCEMENT_GAP_PRE_WRITE_LEASE_MISSING');
+  assert.match(finding.message, /User action: run `npx pumuki-pre-write`/);
+  assert.match(finding.message, /AI agent instruction: STOP/);
+  assert.match(finding.expected_fix ?? '', /do not apply patches or write files/);
 });
