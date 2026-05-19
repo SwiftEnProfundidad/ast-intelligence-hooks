@@ -2122,3 +2122,16 @@ Snapshot PUMUKI-INC-132 (2026-05-13):
 ### Nota operativa
 
 - Esta release debe repinearse en consumers que necesiten comprobar version sin ensuciar `.ai_evidence.json`.
+
+## 2026-05-19 - PUMUKI-INC-157 recurrence: WARN-only AI Gate no hard block
+
+### Decision aplicada
+
+- `evaluateAiGate` deja de convertir `ai_gate.status=BLOCKED` en hard block cuando la evidencia no expone ninguna causa bloqueante real.
+- Si `extractEvidenceBlockingCauses()` devuelve cero causas, `EVIDENCE_GATE_BLOCKED` se degrada a `WARN` con mensaje explicito.
+- Las violaciones de skills/reglas con `blocking=true` siguen bloqueando aunque su severidad heredada sea `WARN`.
+
+### Alcance
+
+- Esta sub-slice corrige la semantica reportada por RuralGo: un PRE_WRITE con `skills_contract=PASS` y solo `EVIDENCE_PREWRITE_WORKTREE_WARN` no debe bloquear.
+- No relaja el contrato de bloqueo por reglas AST/skills; solo evita que un estado `BLOCKED` opaco sin causas bloqueantes se convierta en falso hard stop.

@@ -226,6 +226,9 @@ const buildEvidenceGateBlockedMessage = (result: Extract<EvidenceReadResult, { k
   return `Evidence AI gate status is BLOCKED. Blocking causes: ${formattedCauses.join(' || ')}${suffix}`;
 };
 
+const hasEvidenceBlockingCause = (result: Extract<EvidenceReadResult, { kind: 'valid' }>): boolean =>
+  extractEvidenceBlockingCauses(result.evidence).length > 0;
+
 const normalizeRepoStateLifecycleVersions = (repoState: RepoState): RepoState => {
   const packageVersion = repoState.lifecycle.package_version;
   const lifecycleVersion = repoState.lifecycle.lifecycle_version;
@@ -1273,7 +1276,12 @@ const collectEvidenceViolations = (
   if (result.evidence.ai_gate.status === 'BLOCKED') {
     const gateBlockedMessage = buildEvidenceGateBlockedMessage(result);
     violations.push(
-      isAdvisoryDocumentationRenderSlice(repoRoot, ageSeconds, maxAgeSeconds)
+      !hasEvidenceBlockingCause(result) && ageSeconds <= maxAgeSeconds
+        ? toWarnViolation(
+            'EVIDENCE_GATE_BLOCKED',
+            `${gateBlockedMessage} Advisory because the evidence snapshot did not expose any blocking cause.`
+          )
+        : isAdvisoryDocumentationRenderSlice(repoRoot, ageSeconds, maxAgeSeconds)
         ? toWarnViolation(
             'EVIDENCE_GATE_BLOCKED',
             `${gateBlockedMessage} Advisory because the current slice only contains documentation/render/tooling artifacts and evidence is fresh.`
