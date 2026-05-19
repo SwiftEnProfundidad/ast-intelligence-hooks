@@ -1,6 +1,6 @@
 {
   "name": "pumuki",
-  "version": "6.3.267",
+  "version": "6.3.297",
   "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
   "main": "index.js",
   "bin": {
@@ -109,6 +109,7 @@
     "validation:consumer-startup-unblock-status": "npx --yes tsx@4.21.0 scripts/build-consumer-startup-unblock-status.ts",
     "validation:consumer-startup-triage": "npx --yes tsx@4.21.0 scripts/build-consumer-startup-triage.ts",
     "validation:mock-consumer-ab-report": "npx --yes tsx@4.21.0 scripts/build-mock-consumer-ab-report.ts",
+    "skills:classify": "npx --yes tsx@4.21.0 scripts/classify-skills-rules.ts",
     "validation:adapter-readiness": "npx --yes tsx@4.21.0 scripts/build-adapter-readiness.ts",
     "validation:adapter-real-session-report": "npx --yes tsx@4.21.0 scripts/build-adapter-real-session-report.ts",
     "validation:adapter-session-status": "npx --yes tsx@4.21.0 scripts/build-adapter-session-status.ts",
@@ -238,6 +239,7 @@
     "core/rules/presets/*.ts",
     "core/rules/presets/heuristics/*.ts",
     "integrations/config/*.ts",
+    "integrations/context/*.ts",
     "integrations/evidence/*.ts",
     "integrations/gate/*.ts",
     "integrations/git/*.ts",

@@ -4,6 +4,30 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-18 (v6.3.277)
+
+- `PUMUKI-INC-146`: PRE_WRITE uses staged paths as the effective slice for `skills.ios.critical-test-quality` when staged files exist. Unstaged Swift tests no longer contaminate a staged production-only iOS commit, but staged Swift tests still require the critical test-quality rule and remain fail-closed.
+
+### 2026-05-18 (v6.3.276)
+
+- `PUMUKI-INC-146`: PRE_WRITE keeps `skills.ios.critical-test-quality` fail-closed for real Swift test slices, but stops applying that test-quality critical rule to iOS/SwiftUI production-only slices. RuralGo wordmark/splash-style commits should still be blocked by real iOS AST/skills violations, SDD, context or evidence issues, but not by missing XCTest quality coverage when no test file is in scope.
+
+### 2026-05-18 (v6.3.275)
+
+- `PUMUKI-INC-143`: PRE_WRITE now loads the full runtime skills contract for detected platforms. Frontend slices now materialize `skills.frontend.*` in `active_rule_ids` and `evaluated_rule_ids` instead of failing on missing scope coverage before any frontend rule can run.
+
+### 2026-05-18 (v6.3.274)
+
+- Notifications now carry all blocking causes instead of a single collapsed cause. Hooks and audit output emit `[pumuki][blocked-cause]` for each violation with code, rule, file, reason and fix; macOS blocked dialogs show rule/file/solution details and no longer hide AST skill violations behind tracking/governance blockers.
+
+### 2026-05-18 (v6.3.272)
+
+- `PUMUKI-INC-142`: `sdd validate --stage=PRE_WRITE` refreshes evidence with PRE_WRITE semantics before writing the validated-diff lease, avoiding the PRE_COMMIT/PRE_PUSH bootstrap loop that still produced `ENFORCEMENT_GAP_PRE_WRITE_LEASE_MISSING` in real RuralGo commits.
+
+### 2026-05-18 (v6.3.271)
+
+- Published `pumuki@6.3.271` with `PUMUKI-INC-142` lease parity: PRE_WRITE validated staged slices now create a `validated-diff` lease consumed by PRE_COMMIT/PRE_PUSH when the diff is unchanged, while changed slices still fail closed.
+
 ## 2026-04 (CLI stability and macOS notifications)
 
 ### 2026-05-14 (v6.3.267)
