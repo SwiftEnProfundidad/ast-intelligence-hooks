@@ -6,6 +6,9 @@ Este documento es la **única fuente viva** de seguimiento interno del monorepo 
 
 ## Registro reciente de incidencias externas
 
+- [✅] - `Pumuki` / release operativa `6.3.298`: publicado en npm el 2026-05-19 tras validar `node -p "require(./package.json).version"` -> `6.3.298`, `npm run -s validation:package-manifest` -> OK (`1116` ficheros), `npm publish --dry-run` -> OK y `npm publish` -> `+ pumuki.3.298`. Verificación remota: `npm view pumuki version --json` -> `6.3.298`; `npm view pumuki.3.298 version dist.shasum dist.integrity --json` -> shasum `acbdb6b361b04229053a8e3f7b3c5957b6b5d40f`. Cierra el bump único necesario porque `6.3.297` ya existía en npm con shasum distinto al tarball local, preservando notificaciones accionables, contexto local, lease/evidence causes, semántica de gate y reglas de higiene Git/worktree.
+
+
 - [✅] - `R_GO` / `PUMUKI-INC-143` / SDD session refresh stale active task (`pumuki@6.3.252`): cerrado en PR #982 y publicado como `pumuki@6.3.252`; RuralGo repineado confirma que `pumuki sdd session --refresh --ttl-minutes=90` ya no conserva `rgo-1900-22` y bloquea de forma accionable cuando el tracking activo (`rgo-1900-26`) no tiene `openspec/changes/rgo-1900-26`.
 - [✅] - `PARITY-IOS-001` / `skills.ios.no-wait-for-expectations` / detector AST real para waits XCTest (`pumuki@6.3.253`): el finding enlaza llamadas `wait(for:)`, `self.wait(for:)`, `waitForExpectations(timeout:)` y `XCTWaiter.wait(for:)` con líneas, nodo primario, nodo de reemplazo y `expected_fix` hacia `await fulfillment(of:timeout:)`.
 - [✅] - `PARITY-IOS-001` / `skills.ios.no-legacy-expectation-description` / detector AST real para `expectation(description:)` legacy (`pumuki@6.3.254`): el finding enlaza la llamada con línea, nodo primario, nodo de reemplazo y `expected_fix` hacia `await confirmation(...)` o `await fulfillment(of:timeout:)`.
