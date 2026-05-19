@@ -2081,3 +2081,17 @@ Snapshot PUMUKI-INC-132 (2026-05-13):
 
 - Esta sub-slice solo corrige salida humana de `block-summary`.
 - No cambia deteccion, severidad, bloqueo ni notificaciones macOS.
+
+## 2026-05-19 - Release pumuki@6.3.299
+
+### Cierre publicado
+
+- `pumuki@6.3.299` queda publicado en npm como release util de `INC145`.
+- Contenido funcional: `block-summary` genera `next_action` accionable para cualquier finding AST/skill no mapeado, incluyendo regla, fichero, linea y `expected_fix` cuando existe.
+- Validacion ejecutada antes de publicar: `runPlatformGateOutput.test.ts` -> `8/8` OK; `npm run -s typecheck` -> OK; `npm run -s validation:package-manifest` -> OK; `npm publish --dry-run` -> OK.
+- Verificacion remota: `npm view pumuki version --json` -> `6.3.299`; `npm view pumuki@6.3.299 version dist.shasum dist.integrity --json` -> shasum `56f576979d8e92ad8361467837ef4ad17339a936`.
+
+### Nota operativa
+
+- El replay historico `v5.5.49` queda restaurado en ruta estable: `/Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks__historical-v5-5-49-platform-replay`.
+- Alias locales creados: `pumuki-menu` para el menu moderno y `pumuki-old-menu` para el replay historico estable.
