@@ -175,6 +175,7 @@ import {
   collectSwiftSensitiveLoggingLines,
   hasSwiftSensitiveLoggingUsage,
   hasSwiftSelfPrintChangesUsage,
+  collectSwiftInsecureTransportLines,
   collectSwiftSensitiveUserDefaultsStorageLines,
   hasSwiftSensitiveUserDefaultsStorageUsage,
   hasSwiftInsecureTransportUsage,
@@ -2080,8 +2081,11 @@ let text = "https://example.com/catalog.json"
 `;
 
   assert.equal(hasSwiftInsecureTransportUsage(source), true);
+  assert.deepEqual(collectSwiftInsecureTransportLines(source), [4]);
   assert.equal(hasSwiftInsecureTransportUsage(plist), true);
+  assert.deepEqual(collectSwiftInsecureTransportLines(plist), [5]);
   assert.equal(hasSwiftInsecureTransportUsage(ignored), false);
+  assert.deepEqual(collectSwiftInsecureTransportLines(ignored), []);
 });
 
 test('detector iOS de localización detecta strings UI hardcodeadas sin confundir keys ni comentarios', () => {

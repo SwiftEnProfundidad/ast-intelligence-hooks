@@ -2582,6 +2582,20 @@ Evidencia:
 - Siguiente foco iOS: continuar con detectores/nodos de seguridad y arquitectura que aún salen sin línea o sin fix específico.
 
 Evidencia:
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts` -> 132/132
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts` -> 74/74
+- `npm run -s typecheck` -> OK
+- `git diff --check && npm run -s validation:tracking-single-active` -> OK
+
+### 2026-05-20 - INC145 / iOS detector nodal mejorado: transporte inseguro HTTP/ATS
+
+- ✅ Convertido `heuristics.ios.security.insecure-transport.ast` en finding nodal accionable.
+- ✅ Ahora localiza líneas exactas de literales `http://` en Swift productivo y `NSAllowsArbitraryLoads` permisivo en `Info.plist`.
+- ✅ Añadidos `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para que la notificación indique el endpoint/configuración concreta y la solución HTTPS/ATS.
+- ✅ Mantiene el mapeo existente a la skill iOS de App Transport Security.
+- Siguiente foco iOS: continuar con detectores/nodos de seguridad y arquitectura que aún salen sin línea o sin fix específico.
+
+Evidencia:
 - `npx --yes tsx.21.0 --test core/facts/detectors/text/ios.test.ts` -> 132/132
 - `npx --yes tsx.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts` -> 74/74
 - `npm run -s typecheck` -> OK

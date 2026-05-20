@@ -1737,22 +1737,39 @@ export const collectSwiftSensitiveUserDefaultsStorageLines = (source: string): r
 };
 
 export const hasSwiftInsecureTransportUsage = (source: string): boolean => {
-  const withoutBlockComments = source.replace(/\/\*[\s\S]*?\*\//g, '\n');
-  const hasHttpUrlLiteral = withoutBlockComments.split(/\r?\n/).some((line) => {
-    if (/^\s*\/\//.test(line)) {
-      return false;
+  return collectSwiftInsecureTransportLines(source).length > 0;
+};
+
+export const collectSwiftInsecureTransportLines = (source: string): readonly number[] => {
+  const lines = source.split(/\r?\n/);
+  const result: number[] = [];
+  let pendingAtsKeyLine: number | null = null;
+
+  lines.forEach((line, index) => {
+    const lineNumber = index + 1;
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    if (!/^\s*\/\//.test(line) && /["']http:\/\/[^"']*["']/.test(line)) {
+      result.push(lineNumber);
     }
-    return /["']http:\/\/[^"']*["']/.test(line);
+
+    if (/\bNSAllowsArbitraryLoads\b\s*=\s*(?:true|YES|1)\b/i.test(sanitized)) {
+      result.push(lineNumber);
+      pendingAtsKeyLine = null;
+      return;
+    }
+
+    if (/<key>\s*NSAllowsArbitraryLoads\s*<\/key>/i.test(line)) {
+      pendingAtsKeyLine = lineNumber;
+      return;
+    }
+
+    if (pendingAtsKeyLine !== null && /<true\s*\/>/i.test(line)) {
+      result.push(pendingAtsKeyLine);
+      pendingAtsKeyLine = null;
+    }
   });
 
-  if (hasHttpUrlLiteral) {
-    return true;
-  }
-
-  return (
-    /<key>\s*NSAllowsArbitraryLoads\s*<\/key>\s*<true\s*\/>/i.test(source) ||
-    /\bNSAllowsArbitraryLoads\b\s*=\s*(?:true|YES|1)\b/i.test(source)
-  );
+  return sortedUniqueLines(result);
 };
 
 const swiftUiLiteralTextPatterns = [

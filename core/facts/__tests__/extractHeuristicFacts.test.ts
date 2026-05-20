@@ -614,6 +614,15 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     lines: userDefaultsSensitiveFinding?.lines ?? [],
   });
   assert.match(userDefaultsSensitiveFinding?.expected_fix ?? '', /Keychain/);
+  const insecureTransportFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.security.insecure-transport.ast'
+  );
+  assert.deepEqual(insecureTransportFinding?.primary_node, {
+    kind: 'property',
+    name: 'ATS NSAllowsArbitraryLoads enabled',
+    lines: insecureTransportFinding?.lines ?? [],
+  });
+  assert.match(insecureTransportFinding?.expected_fix ?? '', /ATS enabled/);
   const dispatchSemaphoreFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.dispatchsemaphore.ast'
   );
