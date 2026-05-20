@@ -1056,6 +1056,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.concurrency.mainactor-run-patch.ast',
+    description: 'Detects MainActor.run used as an isolation patch inside non-isolated iOS state owners.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.concurrency.mainactor-run-patch.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected MainActor.run used as an isolation patch in iOS production code.',
+      code: 'HEURISTICS_IOS_CONCURRENCY_MAINACTOR_RUN_PATCH_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.naming.non-pascal-case-type.ast',
     description: 'Detects Swift type declarations that are not PascalCase.',
     severity: 'WARN',

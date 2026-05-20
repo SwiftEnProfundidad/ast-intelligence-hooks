@@ -2410,3 +2410,18 @@ Validación prevista:
 - `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
 - `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
 - `git diff --check`
+
+
+### 2026-05-20 - INC145 / iOS detector nodal nuevo: MainActor.run patch
+
+- ✅ Implementado `heuristics.ios.concurrency.mainactor-run-patch.ast`.
+- ✅ Detecta `MainActor.run` dentro de owners iOS `ViewModel`, `Presenter`, `Store` o `Manager` que no están aislados con `@MainActor`.
+- ✅ Mantiene el detector conservador: no marca funciones sueltas, actores, ni owners ya anotados con `@MainActor`.
+- ✅ Asociado a `skills.ios.guideline.ios.no-usar-mainactor-como-parche-justificar-el-aislamiento` junto con `assume-isolated`, para cubrir el caso real de parcheo con hop al main actor.
+- 🚧 Siguiente foco iOS: seguir cerrando reglas de concurrencia/arquitectura con detectores específicos y no aliases genéricos.
+
+Validación prevista:
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
+- `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `git diff --check`

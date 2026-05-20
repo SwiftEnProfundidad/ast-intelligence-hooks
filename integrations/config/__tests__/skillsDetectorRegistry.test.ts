@@ -1076,7 +1076,7 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.no-usar-mainactor-como-parche-justificar-el-aislamiento'
     ),
-    ['heuristics.ios.assume-isolated.ast']
+    ['heuristics.ios.assume-isolated.ast', 'heuristics.ios.concurrency.mainactor-run-patch.ast']
   );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-async-without-await'), [
     'heuristics.ios.concurrency.async-without-await.ast',

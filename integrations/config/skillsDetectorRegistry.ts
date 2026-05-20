@@ -524,7 +524,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'heuristics.ios.assume-isolated.ast',
   ]),
   'skills.ios.guideline.ios.no-usar-mainactor-como-parche-justificar-el-aislamiento':
-    heuristicDetector('ios.assume-isolated', ['heuristics.ios.assume-isolated.ast']),
+    heuristicDetector('ios.assume-isolated', [
+      'heuristics.ios.assume-isolated.ast',
+      'heuristics.ios.concurrency.mainactor-run-patch.ast',
+    ]),
   'skills.ios.no-observable-object': heuristicDetector('ios.observable-object', [
     'heuristics.ios.observable-object.ast',
   ]),

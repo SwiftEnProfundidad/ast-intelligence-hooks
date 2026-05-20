@@ -64,6 +64,8 @@ import {
   hasSwiftUiStateWithoutMainActorUsage,
   collectSwiftSharedMutableStateWithoutActorLines,
   hasSwiftSharedMutableStateWithoutActorUsage,
+  collectSwiftMainActorRunPatchLines,
+  hasSwiftMainActorRunPatchUsage,
   collectSwiftNavigationPathWithoutRestorationLines,
   hasSwiftNavigationPathWithoutRestorationUsage,
   hasSwiftForEachIndicesUsage,
@@ -978,6 +980,41 @@ let sample = "final class TokenCache { var token: String? }"
   assert.deepEqual(collectSwiftSharedMutableStateWithoutActorLines(source), [2]);
   assert.equal(hasSwiftSharedMutableStateWithoutActorUsage(safe), false);
   assert.deepEqual(collectSwiftSharedMutableStateWithoutActorLines(safe), []);
+});
+
+test('hasSwiftMainActorRunPatchUsage detecta MainActor.run como parche en owners no aislados', () => {
+  const source = `
+final class BuyerAuthViewModel {
+  func load() async {
+    await MainActor.run {
+      self.title = "Ready"
+    }
+  }
+}
+`;
+  const safe = `
+@MainActor
+final class BuyerAuthViewModel {
+  func load() async {
+    await MainActor.run { self.title = "Ready" }
+  }
+}
+actor BuyerSessionManager {
+  func load() async {
+    await MainActor.run { print("bridge") }
+  }
+}
+func bridgeToUi() async {
+  await MainActor.run { print("approved explicit boundary") }
+}
+let sample = "MainActor.run { value = 1 }"
+// await MainActor.run { value = 2 }
+`;
+
+  assert.equal(hasSwiftMainActorRunPatchUsage(source), true);
+  assert.deepEqual(collectSwiftMainActorRunPatchLines(source), [4]);
+  assert.equal(hasSwiftMainActorRunPatchUsage(safe), false);
+  assert.deepEqual(collectSwiftMainActorRunPatchLines(safe), []);
 });
 
 test('hasSwiftNavigationPathWithoutRestorationUsage detecta NavigationPath sin restauracion', () => {

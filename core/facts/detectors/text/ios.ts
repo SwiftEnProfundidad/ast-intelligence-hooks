@@ -1309,6 +1309,54 @@ export const hasSwiftSharedMutableStateWithoutActorUsage = (source: string): boo
   return collectSwiftSharedMutableStateWithoutActorLines(source).length > 0;
 };
 
+const swiftActorPatchOwnerDeclarationPattern =
+  /\b(?:final\s+)?(?:class|struct)\s+([A-Za-z_][A-Za-z0-9_]*(?:ViewModel|Presenter|Store|Manager))\b/;
+
+const findNearestSwiftActorPatchOwnerIndex = (
+  lines: readonly string[],
+  usageIndex: number
+): number | undefined => {
+  const start = Math.max(0, usageIndex - 80);
+  for (let index = usageIndex; index >= start; index -= 1) {
+    const line = stripSwiftLineForSemanticScan(lines[index] ?? '');
+    if (swiftActorPatchOwnerDeclarationPattern.test(line)) {
+      return index;
+    }
+    if (/^\s*(?:actor|enum|protocol)\s+[A-Za-z_][A-Za-z0-9_]*\b/.test(line)) {
+      return undefined;
+    }
+  }
+  return undefined;
+};
+
+export const collectSwiftMainActorRunPatchLines = (source: string): readonly number[] => {
+  const matches: number[] = [];
+  const lines = source.split(/\r?\n/);
+
+  lines.forEach((rawLine, index) => {
+    const line = stripSwiftLineForSemanticScan(rawLine);
+    if (!/\bMainActor\s*\.\s*run\s*(?:\(|\{)/.test(line)) {
+      return;
+    }
+
+    const ownerIndex = findNearestSwiftActorPatchOwnerIndex(lines, index);
+    if (ownerIndex === undefined) {
+      return;
+    }
+    if (hasSwiftMainActorAnnotationNear(lines, ownerIndex)) {
+      return;
+    }
+
+    matches.push(index + 1);
+  });
+
+  return sortedUniqueLines(matches);
+};
+
+export const hasSwiftMainActorRunPatchUsage = (source: string): boolean => {
+  return collectSwiftMainActorRunPatchLines(source).length > 0;
+};
+
 const swiftNavigationPathRestorationPattern =
   /@(?:SceneStorage|AppStorage)\b|\bCodableRepresentation\b|\.codable\b|\b(?:restore|rehydrate|persist|save|load)[A-Za-z0-9_]*(?:Navigation)?Path\b/i;
 

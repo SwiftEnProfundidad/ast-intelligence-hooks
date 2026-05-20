@@ -284,6 +284,10 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
   ['skills.ios.no-unchecked-sendable', 'heuristics.ios.unchecked-sendable.ast'],
   ['skills.ios.no-preconcurrency', 'heuristics.ios.preconcurrency.ast'],
   [
+    'skills.ios.guideline.ios.no-usar-mainactor-como-parche-justificar-el-aislamiento',
+    'heuristics.ios.concurrency.mainactor-run-patch.ast',
+  ],
+  [
     'skills.ios.guideline.ios-concurrency.use-grep-for-swiftstrictconcurrency-or-swiftdefaultactorisolation-in-p',
     'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
     'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
