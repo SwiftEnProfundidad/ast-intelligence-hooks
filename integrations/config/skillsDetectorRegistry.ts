@@ -467,6 +467,7 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.concurrency.project-settings', [
       'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
       'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
       'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
       'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
     ]),
@@ -474,6 +475,7 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.concurrency.project-settings', [
       'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
       'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
       'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
       'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
     ]),

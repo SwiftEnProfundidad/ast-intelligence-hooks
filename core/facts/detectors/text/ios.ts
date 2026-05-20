@@ -1142,6 +1142,40 @@ export const hasSwiftDefaultActorIsolationNotMainActorUsage = (source: string): 
   return collectSwiftDefaultActorIsolationNotMainActorLines(source).length > 0;
 };
 
+export const collectSwiftUpcomingFeatureDisabledLines = (source: string): readonly number[] => {
+  const lines: number[] = [];
+
+  source.split(/\r?\n/).forEach((rawLine, index) => {
+    const line = stripSwiftLineForSemanticScan(rawLine);
+    const upcomingFeatureMatch =
+      /\bSWIFT_UPCOMING_FEATURE_[A-Za-z0-9_]+\s*=\s*([A-Za-z0-9_]+)\s*;?/.exec(line);
+    if (upcomingFeatureMatch) {
+      const value = (upcomingFeatureMatch[1] ?? '').trim().toLowerCase();
+      if (value === 'no' || value === 'false' || value === '0') {
+        lines.push(index + 1);
+      }
+      return;
+    }
+
+    const experimentalFeaturesMatch =
+      /\bSWIFT_ENABLE_EXPERIMENTAL_FEATURES\s*=\s*(.*?)\s*;?$/.exec(line);
+    if (!experimentalFeaturesMatch) {
+      return;
+    }
+
+    const value = (experimentalFeaturesMatch[1] ?? '').trim().toLowerCase();
+    if (value === '' || value === 'no' || value === 'false' || value === '0') {
+      lines.push(index + 1);
+    }
+  });
+
+  return sortedUniqueLines(lines);
+};
+
+export const hasSwiftUpcomingFeatureDisabledUsage = (source: string): boolean => {
+  return collectSwiftUpcomingFeatureDisabledLines(source).length > 0;
+};
+
 export const hasSwiftOnAppearTaskUsage = (source: string): boolean => {
   return collectSwiftOnAppearTaskLines(source).length > 0;
 };

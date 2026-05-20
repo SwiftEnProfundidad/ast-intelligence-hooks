@@ -1002,6 +1002,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
+    description: 'Detects Xcode iOS targets with required Swift upcoming features disabled.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected disabled Swift upcoming feature settings in an iOS Xcode project.',
+      code: 'HEURISTICS_IOS_CONCURRENCY_UPCOMING_FEATURE_DISABLED_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.naming.non-pascal-case-type.ast',
     description: 'Detects Swift type declarations that are not PascalCase.',
     severity: 'WARN',

@@ -2350,3 +2350,19 @@ Evidencia:
   - PUMUKI-INC asociado al false positive `critical-test-quality` sin cambios efectivos queda corregido en `6.3.308`;
   - R_GO no queda libre para commit porque ahora el gate bloquea por violaciones reales de skills, que deben corregirse en el consumer o aislarse por slice.
 
+
+### 2026-05-20 - INC145 / iOS detector nodal nuevo: Swift upcoming features
+
+- ✅ Implementado `heuristics.ios.concurrency.upcoming-feature-disabled.ast`.
+- ✅ Detecta en proyectos Xcode iOS:
+  - `SWIFT_UPCOMING_FEATURE_* = NO/false/0`;
+  - `SWIFT_ENABLE_EXPERIMENTAL_FEATURES` vacío o desactivado.
+- ✅ Ignora comentarios y strings; no convierte la ausencia de setting en bloqueo opaco.
+- ✅ Asociado a skills iOS de validación de configuración de concurrencia Swift 6.2 para que el bloqueo tenga regla, fichero, línea y solución.
+- 🚧 Siguiente foco iOS: continuar con detectores nodales de arquitectura/testing iOS pendientes antes de pasar a Android.
+
+Validación prevista:
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
+- `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+

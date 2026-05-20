@@ -58,6 +58,8 @@ import {
   hasSwiftStrictConcurrencyBelowCompleteUsage,
   collectSwiftDefaultActorIsolationNotMainActorLines,
   hasSwiftDefaultActorIsolationNotMainActorUsage,
+  collectSwiftUpcomingFeatureDisabledLines,
+  hasSwiftUpcomingFeatureDisabledUsage,
   hasSwiftForEachIndicesUsage,
   hasSwiftForEachSelfIdentityUsage,
   collectSwiftForceCastLines,
@@ -882,6 +884,30 @@ buildSettings = {
   assert.deepEqual(collectSwiftDefaultActorIsolationNotMainActorLines(source), [3, 5]);
   assert.equal(hasSwiftDefaultActorIsolationNotMainActorUsage(safe), false);
   assert.deepEqual(collectSwiftDefaultActorIsolationNotMainActorLines(safe), []);
+});
+
+test('hasSwiftUpcomingFeatureDisabledUsage detecta upcoming features Swift desactivadas', () => {
+  const source = `
+buildSettings = {
+  SWIFT_UPCOMING_FEATURE_CONCISE_MAGIC_FILE = NO;
+  SWIFT_UPCOMING_FEATURE_FORWARD_TRAILING_CLOSURES = 0;
+  SWIFT_ENABLE_EXPERIMENTAL_FEATURES = ;
+};
+`;
+  const safe = `
+buildSettings = {
+  SWIFT_UPCOMING_FEATURE_CONCISE_MAGIC_FILE = YES;
+  SWIFT_UPCOMING_FEATURE_FORWARD_TRAILING_CLOSURES = true;
+  SWIFT_ENABLE_EXPERIMENTAL_FEATURES = StrictConcurrency;
+  let sample = "SWIFT_UPCOMING_FEATURE_CONCISE_MAGIC_FILE = NO;"
+  // SWIFT_ENABLE_EXPERIMENTAL_FEATURES = ;
+};
+`;
+
+  assert.equal(hasSwiftUpcomingFeatureDisabledUsage(source), true);
+  assert.deepEqual(collectSwiftUpcomingFeatureDisabledLines(source), [3, 4, 5]);
+  assert.equal(hasSwiftUpcomingFeatureDisabledUsage(safe), false);
+  assert.deepEqual(collectSwiftUpcomingFeatureDisabledLines(safe), []);
 });
 
 test('hasSwiftNonLazyScrollForEachUsage detecta ScrollView con stack no lazy y preserva LazyVStack', () => {

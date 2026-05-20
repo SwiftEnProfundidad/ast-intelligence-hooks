@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 131);
+  assert.equal(iosRules.length, 132);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -61,6 +61,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
     'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
     'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
     'heuristics.ios.naming.non-pascal-case-type.ast',
     'heuristics.ios.uikit.cell-without-reuse.ast',
     'heuristics.ios.security.userdefaults-sensitive-data.ast',
@@ -200,6 +201,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast')?.then.code,
     'HEURISTICS_IOS_CONCURRENCY_DEFAULT_ACTOR_ISOLATION_NOT_MAINACTOR_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.upcoming-feature-disabled.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_UPCOMING_FEATURE_DISABLED_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.architecture.cross-feature-import.ast')?.then.code,
