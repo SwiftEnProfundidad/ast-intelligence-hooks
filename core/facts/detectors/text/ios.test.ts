@@ -150,6 +150,7 @@ import {
   hasSwiftOnChangeTaskUsage,
   collectSwiftOnChangeTaskLines,
   collectSwiftOnChangeReadonlyVarLines,
+  collectSwiftStrongDelegateReferenceLines,
   hasSwiftOnChangeReadonlyVarUsage,
   hasSwiftOnAppearTaskUsage,
   collectSwiftOnAppearTaskLines,
@@ -1638,7 +1639,9 @@ final class CheckoutCoordinator {
 `;
 
   assert.equal(hasSwiftStrongDelegateReferenceUsage(positive), true);
+  assert.deepEqual(collectSwiftStrongDelegateReferenceLines(positive), [3, 4]);
   assert.equal(hasSwiftStrongDelegateReferenceUsage(negative), false);
+  assert.deepEqual(collectSwiftStrongDelegateReferenceLines(negative), []);
 });
 
 test('hasSwiftStrongDelegateReferenceUsage no marca propiedades no delegate', () => {

@@ -70,3 +70,33 @@ test('facts barrel expone extractHeuristicFacts y permite retorno vacio sin plat
 
   assert.deepEqual(extractedFacts, []);
 });
+
+test('extractHeuristicFacts emite strong delegate iOS con linea y remediation accionable', () => {
+  const params: HeuristicExtractionParams = {
+    facts: [
+      {
+        kind: 'FileContent',
+        source: 'repo',
+        path: 'apps/ios/Infrastructure/Permissions/SystemPermissionsService.swift',
+        content: `
+final class SystemPermissionsService {
+  var delegate: PermissionsServiceDelegate?
+}
+`,
+      },
+    ],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+    },
+  };
+
+  const extractedFacts = extractHeuristicFacts(params);
+  const match = extractedFacts.find(
+    (fact) => fact.ruleId === 'heuristics.ios.memory.strong-delegate.ast'
+  );
+
+  assert.ok(match);
+  assert.deepEqual(match.lines, [3]);
+  assert.deepEqual(match.primary_node?.lines, [3]);
+  assert.match(match.expected_fix ?? '', /weak var delegate/i);
+});

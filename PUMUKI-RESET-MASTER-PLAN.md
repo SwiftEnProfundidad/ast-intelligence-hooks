@@ -1312,7 +1312,7 @@ Snapshot PARITY-IOS-ACCESSIBILITY-002 (2026-05-13):
 
 Snapshot PARITY-IOS-MEMORY-001 (2026-05-13):
 - Diagnóstico: `skills.ios.guideline.ios.delegation-pattern-weak-delegates-para-evitar-retain-cycles` y la regla relacionada de retain cycles en delegates seguían como baseline iOS declarativo aunque los delegates fuertes son verificables en Swift production.
-- Implementación: se añade `heuristics.ios.memory.strong-delegate.ast` como WARN brownfield-aware para propiedades `delegate`/`dataSource` o tipos `*Delegate`/`*DataSource` declaradas sin `weak var`, ignorando strings/comentarios y sin marcar `weak var`.
+- Implementación: se añade `heuristics.ios.memory.strong-delegate.ast` como WARN brownfield-aware para propiedades `delegate`/`dataSource` o tipos `*Delegate`/`*DataSource` declaradas sin `weak var`, ignorando strings/comentarios y sin marcar `weak var`. Refuerzo 2026-05-20: el finding ya emite línea exacta, nodo `strong delegate or dataSource property`, nodo de reemplazo `weak var delegate/dataSource` y solución accionable para declarar el delegate/dataSource como `weak var` con protocolo class-bound cuando aplique.
 - Alcance explícito: esta slice cubre delegates fuertes; no declara todavía cobertura completa de `[weak self]` en closures/tasks, `Timer`, `NotificationCenter` o ciclos de Combine.
 
 Snapshot PARITY-IOS-MEMORY-002 (2026-05-13):

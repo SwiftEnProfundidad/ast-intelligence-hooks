@@ -1474,6 +1474,25 @@ export const hasSwiftStrongDelegateReferenceUsage = (source: string): boolean =>
   });
 };
 
+export const collectSwiftStrongDelegateReferenceLines = (source: string): readonly number[] => {
+  const delegatePropertyPattern =
+    /\b(?:var|let)\s+(?:[A-Za-z_][A-Za-z0-9_]*(?:Delegate|DataSource)|delegate|dataSource)\s*:\s*(?:any\s+)?[A-Za-z_][A-Za-z0-9_]*(?:Delegate|DataSource)\b/;
+  const lines: number[] = [];
+
+  source.split(/\r?\n/).forEach((line, index) => {
+    const sanitizedLine = stripSwiftLineForSemanticScan(line);
+    if (!delegatePropertyPattern.test(sanitizedLine)) {
+      return;
+    }
+    if (/\bweak\s+var\b/.test(sanitizedLine)) {
+      return;
+    }
+    lines.push(index + 1);
+  });
+
+  return sortedUniqueLines(lines);
+};
+
 const swiftStrongSelfEscapingClosurePatterns = [
   /\bTask\s*(?:\([^)]*\))?\s*\{/g,
   /\bDispatchQueue\s*\.\s*[A-Za-z0-9_.]+\s*\.\s*async(?:After)?\s*(?:\([^)]*\))?\s*\{/g,
