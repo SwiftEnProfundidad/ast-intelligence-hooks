@@ -230,10 +230,11 @@ test('buildBlockedDialogPayload explica contrato de skills incompleto sin códig
   assert.match(payload.cause, /contrato de skills incompleto/);
   assert.match(payload.cause, /Plataforma: iOS/);
   assert.match(payload.cause, /skills\.ios\.critical-test-quality/);
-  assert.match(payload.cause, /repinea Pumuki/);
+  assert.doesNotMatch(payload.cause, /Causas bloqueantes: 2/);
+  assert.match(payload.cause, /bug del motor de Pumuki/);
   assert.equal(
     payload.remediation,
-    'Actualiza o reconcilia el contrato de skills de Pumuki y vuelve a intentar el commit. Si estás en un repo consumidor, repinea Pumuki a una versión que incluya esa regla crítica.'
+    'Actualiza o reconcilia el contrato de skills de Pumuki y vuelve a intentar el commit. Si ya estás en la última versión, es un bug del motor de Pumuki y debe corregirse allí antes de cerrar el commit.'
   );
   assert.doesNotMatch(payload.cause, /EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING/);
   assert.doesNotMatch(payload.cause, /EVIDENCE_SKILLS_CONTRACT_INCOMPLETE/);

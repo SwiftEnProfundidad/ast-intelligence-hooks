@@ -65,16 +65,20 @@ const formatPlatformName = (platform: string | null): string =>
     : 'plataforma detectada';
 
 const extractSkillsContractPlatform = (message: string): string | null =>
-  message.match(/\bplatforms?=([a-z0-9_,.-]+)/i)?.[1]?.split(',')[0]?.trim() ?? null;
+  message.match(/\bplatforms?=([a-z0-9_,.-]+)/i)?.[1]?.split(',')[0]?.trim()
+  ?? message.match(/\b(ios|android|frontend|backend)\(missing_critical_rule_ids=/i)?.[1]?.trim()
+  ?? message.match(/\bfor\s+(ios|android|frontend|backend)\s*:/i)?.[1]?.trim()
+  ?? null;
 
 const extractSkillsContractRules = (message: string): string | null => {
   const rulesMatch = message.match(/\brules?=\{([^}]+)\}/i)?.[1];
   const missingMatch = message.match(/\bmissing=\[([^\]]+)\]/i)?.[1];
-  return normalizeNotificationText(rulesMatch ?? missingMatch ?? '');
+  const criticalMissingMatch = message.match(/\bmissing_critical_rule_ids=\[([^\]]+)\]/i)?.[1];
+  return normalizeNotificationText(rulesMatch ?? criticalMissingMatch ?? missingMatch ?? '');
 };
 
 const SKILLS_CONTRACT_REMEDIATION =
-  'Actualiza o reconcilia el contrato de skills de Pumuki y vuelve a intentar el commit. Si estás en un repo consumidor, repinea Pumuki a una versión que incluya esa regla crítica.';
+  'Actualiza o reconcilia el contrato de skills de Pumuki y vuelve a intentar el commit. Si ya estás en la última versión, es un bug del motor de Pumuki y debe corregirse allí antes de cerrar el commit.';
 
 const extractExpectedBddFeatureFile = (cause: BlockedCause): string => {
   const directFile = cause.file?.endsWith('.feature') ? cause.file : null;

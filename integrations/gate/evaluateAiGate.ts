@@ -1696,6 +1696,9 @@ export const evaluateAiGate = (
     suppressSkillsContractViolation
     || skillsContract.status !== 'FAIL'
     || (params.stage === 'PRE_WRITE' && requiredSkillsPlatforms.length === 0)
+    || skillsContract.violations.some((violation) =>
+      violation.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+    )
         ? []
       : [
           toSkillsViolation(

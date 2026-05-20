@@ -213,7 +213,7 @@ test('buildGateBlockedPayload resume contrato de skills incompleto en lenguaje d
   assert.match(payload.subtitle ?? '', /Contrato de skills incompleto: iOS/);
   assert.match(payload.message, /Pumuki detecta iOS/);
   assert.match(payload.message, /skills\.ios\.critical-test-quality/);
-  assert.match(payload.message, /repinea Pumuki/);
+  assert.match(payload.message, /bug del motor de Pumuki/);
   assert.doesNotMatch(payload.subtitle ?? '', /EVIDENCE_/);
   assert.doesNotMatch(payload.message, /EVIDENCE_/);
   assert.doesNotMatch(payload.message, /\.ai_evidence\.json/);
