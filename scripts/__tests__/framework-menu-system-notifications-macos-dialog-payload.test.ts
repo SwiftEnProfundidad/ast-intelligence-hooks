@@ -138,3 +138,27 @@ test('buildBlockedDialogPayload no muestra comandos npx largos en la ventana vis
   assert.doesNotMatch(payload.cause, /npx --yes --package/);
   assert.doesNotMatch(payload.remediation, /npx --yes --package/);
 });
+
+test('buildBlockedDialogPayload muestra remediación SDD accionable en vez de repetir pumuki-pre-write', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'SDD_SESSION_MISSING',
+      causeMessage: 'No hay sesión SDD activa.',
+      remediation:
+        'Corrige la causa bloqueante y vuelve a ejecutar: npx --yes --package pumuki@6.3.308 pumuki-pre-write',
+    }),
+    repoRoot: '/tmp/stack-my-architecture',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'stack-my-architecture',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.equal(payload.title, '🔴 Pumuki bloqueado · stack-my-architecture');
+  assert.equal(payload.cause, 'No hay sesión SDD activa.');
+  assert.match(payload.remediation, /session --open --change=<id>/);
+  assert.match(payload.remediation, /Agente IA: STOP/i);
+  assert.doesNotMatch(payload.remediation, /pumuki-pre-write/i);
+  assert.doesNotMatch(payload.remediation, /npx --yes --package/i);
+});

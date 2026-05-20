@@ -72,6 +72,45 @@ test('resolveBlockedRemediation no muestra comandos genéricos para el bloqueo u
   assert.doesNotMatch(result, /policy reconcile/i);
 });
 
+test('resolveBlockedRemediation no sustituye SDD_SESSION_MISSING por comando genérico pre-write', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'SDD_SESSION_MISSING',
+      causeMessage: 'No hay sesión SDD activa.',
+      remediation:
+        'Corrige la causa bloqueante y vuelve a ejecutar: npx --yes --package pumuki@6.3.308 pumuki-pre-write',
+    },
+    'SDD_SESSION_MISSING'
+  );
+
+  assert.match(result, /sesión SDD válida/i);
+  assert.match(result, /session --open --change=<id>/);
+  assert.match(result, /Agente IA: STOP/i);
+  assert.doesNotMatch(result, /pumuki-pre-write/i);
+  assert.doesNotMatch(result, /npx --yes --package/i);
+});
+
+test('resolveBlockedRemediation detecta SDD_SESSION_MISSING aunque venga tapado por EVIDENCE_GATE_BLOCKED', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage: 'EVIDENCE_GATE_BLOCKED: SDD_SESSION_MISSING. No hay sesión SDD activa.',
+      remediation:
+        'Corrige la causa bloqueante y vuelve a ejecutar: npx --yes --package pumuki@6.3.308 pumuki-pre-write',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /sesión SDD válida/i);
+  assert.doesNotMatch(result, /pumuki-pre-write/i);
+});
+
 test('resolveBlockedRemediation cae a fallback genérico cuando no conoce el bloqueo', () => {
   const result = resolveBlockedRemediation(
     {
