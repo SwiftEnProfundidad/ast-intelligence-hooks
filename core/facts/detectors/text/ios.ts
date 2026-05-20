@@ -1176,6 +1176,68 @@ export const hasSwiftUpcomingFeatureDisabledUsage = (source: string): boolean =>
   return collectSwiftUpcomingFeatureDisabledLines(source).length > 0;
 };
 
+const swiftUiStateOwnerDeclarationPattern =
+  /\b(?:final\s+)?(?:class|struct)\s+([A-Za-z_][A-Za-z0-9_]*(?:ViewModel|Presenter|Store))\b/;
+
+const hasSwiftMainActorAnnotationNear = (
+  lines: readonly string[],
+  declarationIndex: number
+): boolean => {
+  const start = Math.max(0, declarationIndex - 3);
+  const context = lines
+    .slice(start, declarationIndex + 1)
+    .map((line) => stripSwiftLineForSemanticScan(line))
+    .join('\n');
+  return /@MainActor\b/.test(context);
+};
+
+const hasSwiftObservableUiStateEvidence = (
+  lines: readonly string[],
+  declarationIndex: number
+): boolean => {
+  const annotationStart = Math.max(0, declarationIndex - 2);
+  const end = Math.min(lines.length, declarationIndex + 60);
+  const annotationContext = lines
+    .slice(annotationStart, declarationIndex + 1)
+    .map((line) => stripSwiftLineForSemanticScan(line))
+    .join('\n');
+  const bodyContext = lines
+    .slice(declarationIndex, end)
+    .map((line) => stripSwiftLineForSemanticScan(line))
+    .join('\n');
+
+  return (
+    /@Observable\b/.test(annotationContext) ||
+    /\bObservableObject\b/.test(bodyContext) ||
+    /@Published\b/.test(bodyContext)
+  );
+};
+
+export const collectSwiftUiStateWithoutMainActorLines = (source: string): readonly number[] => {
+  const matches: number[] = [];
+  const lines = source.split(/\r?\n/);
+
+  lines.forEach((rawLine, index) => {
+    const line = stripSwiftLineForSemanticScan(rawLine);
+    if (!swiftUiStateOwnerDeclarationPattern.test(line)) {
+      return;
+    }
+    if (hasSwiftMainActorAnnotationNear(lines, index)) {
+      return;
+    }
+    if (!hasSwiftObservableUiStateEvidence(lines, index)) {
+      return;
+    }
+    matches.push(index + 1);
+  });
+
+  return sortedUniqueLines(matches);
+};
+
+export const hasSwiftUiStateWithoutMainActorUsage = (source: string): boolean => {
+  return collectSwiftUiStateWithoutMainActorLines(source).length > 0;
+};
+
 const swiftNavigationPathRestorationPattern =
   /@(?:SceneStorage|AppStorage)\b|\bCodableRepresentation\b|\.codable\b|\b(?:restore|rehydrate|persist|save|load)[A-Za-z0-9_]*(?:Navigation)?Path\b/i;
 

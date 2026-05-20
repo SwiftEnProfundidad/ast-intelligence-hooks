@@ -1020,6 +1020,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+    description: 'Detects observable iOS UI state owners without @MainActor isolation.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected observable iOS UI state without @MainActor isolation.',
+      code: 'HEURISTICS_IOS_CONCURRENCY_UI_STATE_WITHOUT_MAINACTOR_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.naming.non-pascal-case-type.ast',
     description: 'Detects Swift type declarations that are not PascalCase.',
     severity: 'WARN',

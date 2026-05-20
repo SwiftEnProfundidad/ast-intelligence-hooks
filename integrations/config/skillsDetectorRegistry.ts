@@ -63,6 +63,7 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.guideline.ios.mainactor-para-co-digo-que-debe-ejecutarse-en-el-hilo-principal':
     heuristicDetector('ios.concurrency.mainactor-dispatchqueue', [
       'heuristics.ios.dispatchqueue.ast',
+      'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
     ]),
   'skills.ios.guideline.ios.actor-para-estado-compartido-thread-safe':
     heuristicDetector('ios.concurrency.shared-state-actor-boundary', [

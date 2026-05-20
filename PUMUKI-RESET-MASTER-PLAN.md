@@ -2380,3 +2380,18 @@ Validación prevista:
 - `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
 - `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
 - `git diff --check`
+
+
+### 2026-05-20 - INC145 / iOS detector nodal nuevo: UI state MainActor isolation
+
+- ✅ Implementado `heuristics.ios.concurrency.ui-state-without-mainactor.ast`.
+- ✅ Detecta owners de estado UI iOS (`ViewModel`, `Presenter`, `Store`) con `ObservableObject`, `@Observable` o `@Published` sin `@MainActor`.
+- ✅ Evita falsos positivos obvios: no marca tipos sin evidencia observable, ignora strings/comentarios y no fuerza UIKit/ViewController en esta slice.
+- ✅ Asociado a `skills.ios.guideline.ios.mainactor-para-co-digo-que-debe-ejecutarse-en-el-hilo-principal` para que la regla deje de depender solo de aliases sobre `DispatchQueue`.
+- 🚧 Siguiente foco iOS: seguir reemplazando aliases débiles por detectores nodales específicos antes de pasar a Android.
+
+Validación prevista:
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
+- `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `git diff --check`

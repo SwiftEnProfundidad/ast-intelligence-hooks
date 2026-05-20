@@ -414,6 +414,15 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.mainactor-para-co-digo-que-debe-ejecutarse-en-el-hilo-principal'
+    ),
+    [
+      'heuristics.ios.dispatchqueue.ast',
+      'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+    ]
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios-concurrency.use-references-linting-md-for-rule-intent-and-preferred-fixes-avoid-du'
     ),
     ['heuristics.ios.concurrency.dummy-await.ast']
@@ -891,7 +900,10 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.mainactor-para-co-digo-que-debe-ejecutarse-en-el-hilo-principal'
     ),
-    ['heuristics.ios.dispatchqueue.ast']
+    [
+      'heuristics.ios.dispatchqueue.ast',
+      'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+    ]
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.taskgroup-para-operaciones-paralelas'),

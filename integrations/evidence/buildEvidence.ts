@@ -265,6 +265,10 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
     'heuristics.ios.callback-style.ast',
   ],
   ['ios.no-gcd', 'skills.ios.no-dispatchqueue', 'heuristics.ios.dispatchqueue.ast'],
+  [
+    'skills.ios.guideline.ios.mainactor-para-co-digo-que-debe-ejecutarse-en-el-hilo-principal',
+    'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+  ],
   ['ios.no-gcd', 'skills.ios.no-dispatchgroup', 'heuristics.ios.dispatchgroup.ast'],
   ['ios.no-gcd', 'skills.ios.no-dispatchsemaphore', 'heuristics.ios.dispatchsemaphore.ast'],
   ['ios.no-gcd', 'skills.ios.no-operation-queue', 'heuristics.ios.operation-queue.ast'],

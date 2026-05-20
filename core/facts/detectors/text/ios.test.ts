@@ -60,6 +60,8 @@ import {
   hasSwiftDefaultActorIsolationNotMainActorUsage,
   collectSwiftUpcomingFeatureDisabledLines,
   hasSwiftUpcomingFeatureDisabledUsage,
+  collectSwiftUiStateWithoutMainActorLines,
+  hasSwiftUiStateWithoutMainActorUsage,
   collectSwiftNavigationPathWithoutRestorationLines,
   hasSwiftNavigationPathWithoutRestorationUsage,
   hasSwiftForEachIndicesUsage,
@@ -910,6 +912,34 @@ buildSettings = {
   assert.deepEqual(collectSwiftUpcomingFeatureDisabledLines(source), [3, 4, 5]);
   assert.equal(hasSwiftUpcomingFeatureDisabledUsage(safe), false);
   assert.deepEqual(collectSwiftUpcomingFeatureDisabledLines(safe), []);
+});
+
+test('hasSwiftUiStateWithoutMainActorUsage detecta estado UI observable sin MainActor', () => {
+  const source = `
+final class BuyerAuthViewModel: ObservableObject {
+  @Published var title = "Login"
+}
+struct BuyerSessionStore {
+  var token: String?
+}
+`;
+  const safe = `
+@MainActor
+@Observable
+final class BuyerAuthViewModel {
+  var title = "Login"
+}
+final class BackgroundStore {
+  let cache = NSCache<NSString, NSString>()
+}
+let sample = "final class FakeViewModel: ObservableObject"
+// final class CommentedViewModel: ObservableObject {}
+`;
+
+  assert.equal(hasSwiftUiStateWithoutMainActorUsage(source), true);
+  assert.deepEqual(collectSwiftUiStateWithoutMainActorLines(source), [2]);
+  assert.equal(hasSwiftUiStateWithoutMainActorUsage(safe), false);
+  assert.deepEqual(collectSwiftUiStateWithoutMainActorLines(safe), []);
 });
 
 test('hasSwiftNavigationPathWithoutRestorationUsage detecta NavigationPath sin restauracion', () => {
