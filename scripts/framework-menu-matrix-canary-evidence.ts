@@ -1,9 +1,30 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-export const extractRuleIdsFromEvidence = (repoRoot: string): string[] => {
+export type CanaryEvidenceRuleMatch = {
+  ruleId: string;
+  filePath: string;
+};
+
+const normalizeEvidencePath = (value: string): string => value.replaceAll('\\', '/');
+
+const readEvidenceSnapshotFindings = (repoRoot: string): Array<Record<string, unknown>> => {
   const evidencePath = join(repoRoot, '.ai_evidence.json');
   try {
+    const parsed = JSON.parse(readFileSync(evidencePath, 'utf8')) as {
+      snapshot?: {
+        findings?: Array<Record<string, unknown>>;
+      };
+    };
+    return Array.isArray(parsed?.snapshot?.findings) ? parsed.snapshot.findings : [];
+  } catch {
+    return [];
+  }
+};
+
+export const extractRuleIdsFromEvidence = (repoRoot: string): string[] => {
+  try {
+    const evidencePath = join(repoRoot, '.ai_evidence.json');
     const parsed = JSON.parse(readFileSync(evidencePath, 'utf8')) as {
       snapshot?: {
         findings?: Array<{ ruleId?: unknown }>;
@@ -31,4 +52,24 @@ export const extractRuleIdsFromEvidence = (repoRoot: string): string[] => {
   } catch {
     return [];
   }
+};
+
+export const extractRuleMatchesFromEvidence = (repoRoot: string): CanaryEvidenceRuleMatch[] => {
+  return readEvidenceSnapshotFindings(repoRoot)
+    .map((finding) => {
+      const ruleId = typeof finding.ruleId === 'string' ? finding.ruleId : '';
+      const filePath =
+        typeof finding.filePath === 'string'
+          ? finding.filePath
+          : typeof finding.file === 'string'
+            ? finding.file
+            : typeof finding.path === 'string'
+              ? finding.path
+              : '';
+      return {
+        ruleId,
+        filePath: normalizeEvidencePath(filePath),
+      };
+    })
+    .filter((match) => match.ruleId.length > 0 && match.filePath.length > 0);
 };

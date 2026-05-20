@@ -1041,6 +1041,57 @@ export const hasSwiftPackageToolsVersionBelow62Usage = (source: string): boolean
   return collectSwiftPackageToolsVersionBelow62Lines(source).length > 0;
 };
 
+export const collectSwiftPackageDefaultIsolationNotMainActorLines = (
+  source: string
+): readonly number[] => {
+  const lines: number[] = [];
+
+  source.split(/\r?\n/).forEach((rawLine, index) => {
+    const line = stripSwiftLineForSemanticScan(rawLine);
+    const match = /\.defaultIsolation\s*\(\s*([A-Za-z_][A-Za-z0-9_.]*)\s*\)/.exec(line);
+    if (!match) {
+      return;
+    }
+
+    const value = (match[1] ?? '').trim().toLowerCase();
+    if (value !== 'mainactor' && value !== 'mainactor.self') {
+      lines.push(index + 1);
+    }
+  });
+
+  return sortedUniqueLines(lines);
+};
+
+export const hasSwiftPackageDefaultIsolationNotMainActorUsage = (source: string): boolean => {
+  return collectSwiftPackageDefaultIsolationNotMainActorLines(source).length > 0;
+};
+
+export const collectSwiftPackageStrictConcurrencyBelowCompleteLines = (
+  source: string
+): readonly number[] => {
+  const lines: number[] = [];
+
+  source.split(/\r?\n/).forEach((rawLine, index) => {
+    const line = rawLine.trim();
+    if (line.startsWith('//')) {
+      return;
+    }
+    const match =
+      /\.enable(?:Experimental|Upcoming)Feature\s*\(\s*"StrictConcurrency\s*=\s*(minimal|targeted)"\s*\)/i.exec(
+        line
+      );
+    if (match) {
+      lines.push(index + 1);
+    }
+  });
+
+  return sortedUniqueLines(lines);
+};
+
+export const hasSwiftPackageStrictConcurrencyBelowCompleteUsage = (source: string): boolean => {
+  return collectSwiftPackageStrictConcurrencyBelowCompleteLines(source).length > 0;
+};
+
 export const collectSwiftStrictConcurrencyBelowCompleteLines = (source: string): readonly number[] => {
   const lines: number[] = [];
 
@@ -1062,6 +1113,33 @@ export const collectSwiftStrictConcurrencyBelowCompleteLines = (source: string):
 
 export const hasSwiftStrictConcurrencyBelowCompleteUsage = (source: string): boolean => {
   return collectSwiftStrictConcurrencyBelowCompleteLines(source).length > 0;
+};
+
+export const collectSwiftDefaultActorIsolationNotMainActorLines = (
+  source: string
+): readonly number[] => {
+  const lines: number[] = [];
+
+  source.split(/\r?\n/).forEach((rawLine, index) => {
+    const line = stripSwiftLineForSemanticScan(rawLine);
+    const match = /\bSWIFT_DEFAULT_ACTOR_ISOLATION\s*=\s*([A-Za-z_][A-Za-z0-9_.]*)\s*;?/.exec(
+      line
+    );
+    if (!match) {
+      return;
+    }
+
+    const value = (match[1] ?? '').trim().toLowerCase();
+    if (value !== 'mainactor' && value !== 'mainactor.self') {
+      lines.push(index + 1);
+    }
+  });
+
+  return sortedUniqueLines(lines);
+};
+
+export const hasSwiftDefaultActorIsolationNotMainActorUsage = (source: string): boolean => {
+  return collectSwiftDefaultActorIsolationNotMainActorLines(source).length > 0;
 };
 
 export const hasSwiftOnAppearTaskUsage = (source: string): boolean => {
@@ -1668,6 +1746,227 @@ export const collectSwiftBindableMissingForObservableBindingUsageLines = (
 
 export const hasSwiftBindableMissingForObservableBindingUsage = (source: string): boolean => {
   return collectSwiftBindableMissingForObservableBindingLines(source).length > 0;
+};
+
+const allowedCrossFeatureImportModules = new Set([
+  'Combine',
+  'CoreData',
+  'DesignSystem',
+  'Foundation',
+  'LocalAuthentication',
+  'MapKit',
+  'Navigation',
+  'Observation',
+  'PhotosUI',
+  'Shared',
+  'SharedKernel',
+  'SwiftData',
+  'SwiftUI',
+  'Testing',
+  'UIKit',
+  'XCTest',
+]);
+
+const featureNameFromSwiftPath = (path: string): string | undefined => {
+  const normalized = path.replace(/\\/g, '/');
+  const match = /\/Features\/([^/]+)\//.exec(normalized);
+  return match?.[1];
+};
+
+export const collectSwiftCrossFeatureImportLines = (
+  source: string,
+  path: string
+): readonly number[] => {
+  const currentFeature = featureNameFromSwiftPath(path);
+  if (!currentFeature) {
+    return [];
+  }
+
+  const lines: number[] = [];
+  source.split(/\r?\n/).forEach((rawLine, index) => {
+    const line = stripSwiftLineForSemanticScan(rawLine);
+    const match = /^\s*import\s+(?:@\w+\s+)?([A-Za-z_][A-Za-z0-9_]*)\b/.exec(line);
+    if (!match?.[1]) {
+      return;
+    }
+
+    const moduleName = match[1];
+    if (moduleName === currentFeature || allowedCrossFeatureImportModules.has(moduleName)) {
+      return;
+    }
+    if (moduleName.endsWith('Kit') || moduleName.startsWith('Swift')) {
+      return;
+    }
+
+    lines.push(index + 1);
+  });
+
+  return sortedUniqueLines(lines);
+};
+
+export const hasSwiftCrossFeatureImportUsage = (source: string, path: string): boolean => {
+  return collectSwiftCrossFeatureImportLines(source, path).length > 0;
+};
+
+type SwiftArchitectureLayer = 'domain' | 'application' | 'presentation' | 'infrastructure';
+
+const forbiddenLayerImports: Record<SwiftArchitectureLayer, ReadonlySet<string>> = {
+  domain: new Set([
+    'Alamofire',
+    'AppKit',
+    'CloudKit',
+    'Combine',
+    'ComposableArchitecture',
+    'CoreData',
+    'Firebase',
+    'GRDB',
+    'Kingfisher',
+    'RealmSwift',
+    'Swinject',
+    'SwiftData',
+    'SwiftUI',
+    'UIKit',
+    'WatchKit',
+  ]),
+  application: new Set([
+    'Alamofire',
+    'AppKit',
+    'CloudKit',
+    'ComposableArchitecture',
+    'CoreData',
+    'Firebase',
+    'GRDB',
+    'Kingfisher',
+    'RealmSwift',
+    'Swinject',
+    'SwiftData',
+    'SwiftUI',
+    'UIKit',
+    'WatchKit',
+  ]),
+  presentation: new Set([
+    'Alamofire',
+    'CloudKit',
+    'CoreData',
+    'Firebase',
+    'GRDB',
+    'RealmSwift',
+    'Swinject',
+    'SwiftData',
+  ]),
+  infrastructure: new Set([]),
+};
+
+const swiftArchitectureLayerFromPath = (path: string): SwiftArchitectureLayer | undefined => {
+  const normalized = path.replace(/\\/g, '/').toLowerCase();
+  if (normalized.includes('/domain/')) {
+    return 'domain';
+  }
+  if (normalized.includes('/application/') || normalized.includes('/usecases/')) {
+    return 'application';
+  }
+  if (normalized.includes('/presentation/')) {
+    return 'presentation';
+  }
+  if (normalized.includes('/infrastructure/')) {
+    return 'infrastructure';
+  }
+  return undefined;
+};
+
+const hasForbiddenLayerImportName = (
+  layer: SwiftArchitectureLayer,
+  moduleName: string
+): boolean => {
+  if (forbiddenLayerImports[layer].has(moduleName)) {
+    return true;
+  }
+  if (moduleName.startsWith('Firebase')) {
+    return true;
+  }
+  if (layer === 'domain') {
+    return (
+      moduleName.includes('Application') ||
+      moduleName.includes('Presentation') ||
+      moduleName.includes('Infrastructure')
+    );
+  }
+  if (layer === 'application') {
+    return moduleName.includes('Presentation') || moduleName.includes('Infrastructure');
+  }
+  if (layer === 'presentation') {
+    return moduleName.includes('Infrastructure');
+  }
+  return false;
+};
+
+export const collectSwiftLayerDirectionViolationLines = (
+  source: string,
+  path: string
+): readonly number[] => {
+  const layer = swiftArchitectureLayerFromPath(path);
+  if (!layer) {
+    return [];
+  }
+
+  if (layer === 'infrastructure') {
+    return [];
+  }
+
+  const lines: number[] = [];
+  source.split(/\r?\n/).forEach((rawLine, index) => {
+    const line = stripSwiftLineForSemanticScan(rawLine);
+    const match = /^\s*import\s+(?:@\w+\s+)?([A-Za-z_][A-Za-z0-9_]*)\b/.exec(line);
+    if (match?.[1] && hasForbiddenLayerImportName(layer, match[1])) {
+      lines.push(index + 1);
+    }
+  });
+
+  return sortedUniqueLines(lines);
+};
+
+export const hasSwiftLayerDirectionViolationUsage = (source: string, path: string): boolean => {
+  return collectSwiftLayerDirectionViolationLines(source, path).length > 0;
+};
+
+const isSwiftAppImplementationPath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/').toLowerCase();
+  if (
+    !normalized.endsWith('.swift') ||
+    /(^|\/)(tests?|uitests?|testsupport|fixtures?|mocks?)(\/|$)/.test(normalized) ||
+    /(?:tests?|spec)\.swift$/.test(normalized)
+  ) {
+    return false;
+  }
+  if (normalized.includes('/sources/') || normalized.includes('/public/') || normalized.includes('/exports/')) {
+    return false;
+  }
+  return normalized.includes('/apps/ios/') || normalized.includes('/ios/');
+};
+
+export const collectSwiftExcessivePublicApiLines = (
+  source: string,
+  path: string
+): readonly number[] => {
+  if (!isSwiftAppImplementationPath(path)) {
+    return [];
+  }
+
+  const lines: number[] = [];
+  source.split(/\r?\n/).forEach((rawLine, index) => {
+    const line = stripSwiftLineForSemanticScan(rawLine);
+    if (
+      /^\s*(?:@(?:MainActor|Observable|objc|objcMembers|available|Published|ViewBuilder|discardableResult)[^\n]*\s*)*(?:public|open)\s+(?:(?:final|static|class|override|mutating|nonisolated)\s+)*(?:class|struct|enum|actor|protocol|extension|func|var|let|subscript|init)\b/.test(line)
+    ) {
+      lines.push(index + 1);
+    }
+  });
+
+  return lines.length >= 3 ? sortedUniqueLines(lines) : [];
+};
+
+export const hasSwiftExcessivePublicApiUsage = (source: string, path: string): boolean => {
+  return collectSwiftExcessivePublicApiLines(source, path).length > 0;
 };
 
 export const hasSwiftUncheckedSendableUsage = (source: string): boolean => {
@@ -2421,6 +2720,24 @@ export const collectSwiftQuickNimbleLines = (source: string): readonly number[] 
     ...collectSwiftRegexLines(source, /\bclass\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*QuickSpec\b/),
     ...collectSwiftRegexLines(source, /\b(?:describe|context|it)\s*\(/),
     ...collectSwiftRegexLines(source, /\bexpect\s*\(/),
+  ]);
+};
+
+export const hasSwiftThirdPartyUiTestFrameworkUsage = (source: string): boolean => {
+  return hasSwiftSanitizedRegexMatch(
+    source,
+    /\bimport\s+(?:KIF|EarlGrey|GREYMatchers|GREYActions|Detox|Appium|Calabash)\b|\b(?:tester|KIFUITestActor|EarlGrey|GREYMatchers|GREYActions|Detox|Appium|Calabash)\b/
+  );
+};
+
+export const collectSwiftThirdPartyUiTestFrameworkLines = (source: string): readonly number[] => {
+  if (!hasSwiftThirdPartyUiTestFrameworkUsage(source)) {
+    return [];
+  }
+
+  return sortedUniqueLines([
+    ...collectSwiftRegexLines(source, /\bimport\s+(?:KIF|EarlGrey|GREYMatchers|GREYActions|Detox|Appium|Calabash)\b/),
+    ...collectSwiftRegexLines(source, /\b(?:tester|KIFUITestActor|EarlGrey|GREYMatchers|GREYActions|Detox|Appium|Calabash)\b/),
   ]);
 };
 

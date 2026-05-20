@@ -6,6 +6,9 @@ Este documento es la **única fuente viva** de seguimiento interno del monorepo 
 
 ## Registro reciente de incidencias externas
 
+- [✅] - `R_GO` / `PUMUKI-GAP-144 + PUMUKI-INC-145` / canary contractual de bloqueo real por `skills.*` en las cuatro plataformas: se endurece la regresion del menu/audit para que la opcion 1 falle si backend, frontend, iOS o Android no materializan y bloquean por una regla `skills.*` AST/nodal real. Cobertura probada: `skills.backend.no-empty-catch`, `skills.frontend.avoid-explicit-any`, `skills.ios.no-force-unwrap` y `skills.android.no-runblocking`. Validacion 2026-05-20: `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-canary-runner.test.ts` -> `7/7` OK, incluyendo subtests reales por plataforma (`backend`, `frontend`, `ios`, `android`). Este cierre no significa que todas las reglas de todas las skills esten ya implementadas: fija el canary minimo no negociable para impedir regresiones donde una plataforma completa deje de bloquear por `skills.*`.
+- [✅] - `PARITY-IOS-001` / `skills.ios.guideline.ios.voiceover-labels-hints-traits` / mapeo AST/nodal iOS: la regla deja de quedar en `REQUIERE_ESTUDIO` y pasa a `AST_IMPLEMENTED`, enlazada a `heuristics.ios.accessibility.icon-only-control-label.ast` y `heuristics.ios.accessibility.on-tap-without-button-trait.ast`. Criterio: no se inventa un detector global pobre para "hints"; se materializan las partes observables por nodos SwiftUI accionables: controles icon-only sin `accessibilityLabel` y elementos tappable sin trait/semantica de boton. Validacion 2026-05-20: `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsDetectorRegistry.test.ts` -> `3/3` OK; clasificacion iOS -> `307` reglas, `219` `AST_IMPLEMENTED`, `82` `REQUIERE_ESTUDIO`, `6` `NO_ES_REGLA_DE_CODIGO`; `npm run -s typecheck` -> OK; `git diff --check` -> OK.
+
 - [✅] - `Pumuki` / release operativa `6.3.298`: publicado en npm el 2026-05-19 tras validar `node -p "require(./package.json).version"` -> `6.3.298`, `npm run -s validation:package-manifest` -> OK (`1116` ficheros), `npm publish --dry-run` -> OK y `npm publish` -> `+ pumuki.3.298`. Verificación remota: `npm view pumuki version --json` -> `6.3.298`; `npm view pumuki.3.298 version dist.shasum dist.integrity --json` -> shasum `acbdb6b361b04229053a8e3f7b3c5957b6b5d40f`. Cierra el bump único necesario porque `6.3.297` ya existía en npm con shasum distinto al tarball local, preservando notificaciones accionables, contexto local, lease/evidence causes, semántica de gate y reglas de higiene Git/worktree.
 
 
@@ -2158,3 +2161,192 @@ Snapshot PUMUKI-INC-132 (2026-05-13):
 - Contenido funcional: `PRE_WRITE` no hard-blockea cuando la evidencia solo contiene avisos no bloqueantes y no expone causas bloqueantes reales; los findings AST/skills con `blocking=true` siguen bloqueando.
 - Validacion ejecutada antes de publicar: `evaluateAiGate.test.ts` -> `50/50` OK; `npm run -s typecheck` -> OK; `npm run -s validation:package-manifest` -> OK; `npm publish --dry-run` -> OK.
 - Verificacion remota: `npm view pumuki version --json` -> `6.3.301`; `npm view pumuki@6.3.301 version dist.shasum dist.integrity --json` -> shasum `fd667c5549d3cab4957f39ea0612152a40046c97`.
+
+### 2026-05-20 - INC145 / Canary enforcement hardening checkpoint
+
+- ✅ Canario de menú/gate endurecido para las 4 plataformas: ya no basta con `totalViolations > 0`.
+- ✅ El canario exige ahora `outcome=BLOCK`, `diagnosis=violations-detected`, `ruleId` esperado o equivalente, y finding asociado al fichero canario inyectado.
+- ✅ iOS canary acepta equivalencia controlada `skills.ios.no-force-unwrap` / `ios.no-force-unwrap` hasta normalizar IDs runtime.
+- ✅ Backend canary evita contaminación por reglas secundarias y acepta equivalencia controlada `skills.backend.no-empty-catch` / `common.error.empty_catch` / `heuristics.ts.empty-catch.ast`.
+- ✅ Tests de contrato actualizados: `scripts/__tests__/framework-menu-matrix-canary-runner.test.ts` valida bloqueo real y archivo canario.
+- ✅ Clasificación iOS actual: total `307`, `AST_IMPLEMENTED=223`, `REQUIERE_ESTUDIO=78`, `NO_ES_REGLA_DE_CODIGO=6`.
+- 🚧 Siguiente foco: no cerrar más reglas iOS con aliases débiles; implementar detectores nodales específicos para las familias que no tienen detector real.
+- ⏳ Familias iOS que requieren detector nuevo antes de marcar como AST completo: concurrencia/configuración, composición SwiftUI por intención, arquitectura/Clean/SOLID por grafo de feature, networking/security, testing/proceso.
+
+Evidencia:
+
+- `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-canary-runner.test.ts`
+- `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `npm run -s typecheck`
+- `git diff --check`
+
+### 2026-05-20 - INC145 / iOS detector nodal nuevo: default actor isolation
+
+- ✅ Implementado detector AST/text-node específico `heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast`.
+- ✅ Detecta en `.pbxproj` líneas `SWIFT_DEFAULT_ACTOR_ISOLATION = ...` cuyo valor explícito no sea `MainActor` ni `MainActor.self`.
+- ✅ El finding incluye línea, nodo primario, impacto y fix esperado; no bloquea por ausencia opaca ni por contrato paraguas.
+- ✅ Asociado a skills de configuración de concurrencia iOS:
+  - `skills.ios.guideline.ios-concurrency.use-grep-for-swiftstrictconcurrency-or-swiftdefaultactorisolation-in-p`
+  - `skills.ios.guideline.ios.validar-configuracio-n-de-concurrencia-swiftstrictconcurrency-swiftdef`
+- ✅ Integrado en evidencia skill -> heuristic para que el bloqueo pueda explicar regla, fichero, línea y solución.
+- 🚧 Siguiente foco: `SWIFT_UPCOMING_FEATURE_*` / `SWIFT_ENABLE_EXPERIMENTAL_FEATURES` necesita detector propio o decisión documentada; no queda cubierto por este detector.
+
+Evidencia:
+
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `npm run -s typecheck`
+- `git diff --check`
+
+### 2026-05-20 - INC145 / iOS detector nodal nuevo: SwiftPM concurrency settings
+
+- ✅ Implementados detectores AST/text-node específicos para `Package.swift`:
+  - `heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast`
+  - `heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast`
+- ✅ Detectan llamadas reales `.defaultIsolation(...)`, `.enableExperimentalFeature("StrictConcurrency=targeted|minimal")` y `.enableUpcomingFeature("StrictConcurrency=targeted|minimal")` con línea concreta.
+- ✅ Ignoran comentarios y strings sueltas; no bloquean por ausencia opaca ni por checklist manual.
+- ✅ Integrados en extractor, preset de reglas, registry de skills y evidencia skill -> heuristic.
+- ✅ Asociados a skills iOS de configuración SwiftPM/concurrencia para que el bloqueo explique regla, fichero, línea y solución.
+- 🚧 Siguiente foco iOS recomendado por revisión paralela: `heuristics.ios.architecture.cross-feature-import.ast`.
+
+Evidencia:
+
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
+- `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `npm run -s typecheck`
+- `git diff --check`
+
+### 2026-05-20 - INC145 / iOS detector nodal nuevo: cross-feature import
+
+- ✅ Implementado detector AST/text-node específico `heuristics.ios.architecture.cross-feature-import.ast`.
+- ✅ Detecta `import <OtroModulo>` dentro de rutas `apps/ios/**/Features/<Feature>/...` cuando el import apunta a un módulo de feature ajeno.
+- ✅ Permite módulos compartidos/sistema como `SharedKernel`, `Shared`, `DesignSystem`, `Navigation`, `Foundation`, `SwiftUI`, `UIKit`, `CoreData`, `SwiftData`, `Testing`, `XCTest`.
+- ✅ Emite línea concreta, nodo primario, impacto y fix esperado.
+- ✅ Asociado a skills iOS:
+  - `skills.ios.guideline.ios.feature-first-cada-feature-es-un-bounded-context-no-se-acoplan-entre-s`
+  - `skills.ios.guideline.ios.las-features-no-se-importan-entre-si`
+  - `skills.ios.guideline.ios.shared-kernel-solo-tipos-mi-nimos-compartidos-entre-features`
+- ✅ Integrado en extractor, preset de reglas, registry de skills y evidencia skill -> heuristic.
+- 🚧 Siguiente foco iOS propuesto: detector de violación de dirección Clean Architecture por capa (`heuristics.ios.architecture.layer-direction-violation.ast`).
+
+Evidencia:
+
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
+- `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-canary-runner.test.ts`
+- `npm run -s typecheck`
+- `git diff --check`
+### 2026-05-20 - INC145 / iOS detector nodal nuevo: Clean Architecture layer direction
+- ✅ Implementado `heuristics.ios.architecture.layer-direction-violation.ast`.
+- ✅ Detecta imports prohibidos por capa segun path `/Domain/`, `/Application/`, `/Presentation/`.
+- ✅ `Domain` bloquea UI, persistencia, red concreta y dependencias hacia capas exteriores.
+- ✅ `Application` bloquea UI, infraestructura concreta y dependencias hacia `Presentation`/`Infrastructure`.
+- ✅ `Presentation` bloquea infraestructura, persistencia, red concreta y modulos `*Infrastructure*`.
+- ✅ Excluye tests mediante `isSwiftTestPath`; no bloquea `Foundation` ni el uso de `Domain` desde capas exteriores.
+- ✅ Integrado en extractor, preset, registry y evidence mapping.
+- 🚧 Siguiente foco iOS: `heuristics.ios.testing.third-party-ui-test-framework.ast` por bajo riesgo de falso positivo frente a `excessive-public-api`.
+
+Evidencia:
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
+- `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `npm run -s typecheck`
+- `git diff --check`
+
+### 2026-05-20 - INC145 / iOS detector nodal nuevo: third-party UI test framework
+- ✅ Implementado `heuristics.ios.testing.third-party-ui-test-framework.ast`.
+- ✅ Detecta frameworks UI-test no nativos en tests Swift: `KIF`, `EarlGrey`, `GREYMatchers`, `GREYActions`, `Detox`, `Appium`, `Calabash`.
+- ✅ Preserva `XCUITest` nativo (`XCUIApplication`, `XCUIElement`) sin findings.
+- ✅ Devuelve lineas accionables y nodos: import/framework/call exacto.
+- ✅ Mapeado a `skills.ios.guideline.ios.xcuitest-ui-testing-nativo`.
+- ✅ Integrado tambien en los contratos iOS de "cero librerias de terceros" y "librerias de terceros usar APIs nativas".
+- 🚧 Siguiente foco iOS: continuar con detectores nodales de arquitectura iOS conservadores antes de pasar a Android.
+
+Evidencia:
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `npm run -s typecheck`
+- `git diff --check`
+
+### 2026-05-20 - INC145 / iOS detector nodal nuevo: excessive public API
+- ✅ Implementado `heuristics.ios.architecture.excessive-public-api.ast`.
+- ✅ Detecta superficies Swift `public/open` excesivas en app iOS con evidencia de linea.
+- ✅ Umbral conservador: bloquea desde 3 declaraciones `public/open` en archivos de implementacion de app.
+- ✅ Excluye tests, `Sources`, `Public` y `Exports` para no romper SDKs o paquetes SwiftPM que si exportan API por diseno.
+- ✅ Mapeado a `skills.ios.guideline.ios.public-api-solo-exponer-lo-necesario-public-internal-private`.
+- ✅ Integrado en extractor, preset, registry y evidence mapping.
+- 🚧 Siguiente foco iOS: continuar con detectores nodales pendientes de arquitectura/testing iOS antes de pasar a Android.
+
+Evidencia:
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
+- `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `npm run -s typecheck`
+- `git diff --check`
+
+### 2026-05-20 - R_GO / PRE_WRITE no-code critical-test-quality scope
+- ✅ Fix aplicado para el bloqueo reportado por RuralGo con `pumuki@6.3.307`.
+- ✅ `evaluateAiGate` mantiene `skills.ios.critical-test-quality` fuera de `required_critical_rule_ids` cuando PRE_WRITE no tiene cambios efectivos de test iOS en scope.
+- ✅ Añadida regresion: PRE_WRITE con repo sin cambios efectivos, evidencia `platforms.ios` y cobertura sin `skills.ios.critical-test-quality` no emite `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING`.
+- ✅ Preservadas regresiones existentes: iOS productivo staged no exige critical-test-quality; iOS test staged si bloquea si falta; PRE_COMMIT/PRE_PUSH/strict no pierden contrato de plataforma.
+- 🚧 Siguiente accion operativa: publicar `pumuki@6.3.308` y repinear RuralGo para recuperar `stash@{0}` y `stash@{1}` sin volver al bloqueo falso.
+
+Evidencia:
+- `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `npm run -s typecheck`
+- `git diff --check`
+
+## 2026-05-20 - Release 6.3.308 bloqueada por sesión npm no autenticada
+
+- Estado: ⛔ BLOCKED.
+- Branch: bugfix/platform-skills-enforcement-canary.
+- Comprobación de sesión:
+  - `npm config get registry` apunta a `https://registry.npmjs.org/`;
+  - `npm whoami` devuelve `E401 Unauthorized`;
+  - por tanto esta terminal no tiene sesión npm válida para publicar `pumuki`.
+- Impacto:
+  - `pumuki@6.3.308` está preparado localmente y validado por dry-run;
+  - `npm latest` sigue en `6.3.307`;
+  - R_GO sigue bloqueado hasta que se publique una versión posterior a `6.3.307` o se autorice explícitamente una instalación temporal por tarball/local path.
+- Acción requerida:
+  - autenticar npm con una cuenta propietaria del paquete `pumuki`;
+  - repetir `npm publish --access public`;
+  - verificar remoto;
+  - repinear R_GO.
+
+
+## 2026-05-20 - Release 6.3.308 publicada
+
+- Estado: ✅ DONE.
+- Branch: bugfix/platform-skills-enforcement-canary.
+- Publicación:
+  - `npm login --auth-type=web` completado;
+  - `npm publish --access public --auth-type=web` completado;
+  - npm devolvió `+ pumuki@6.3.308`.
+- Siguiente paso:
+  - verificar `npm view pumuki version`;
+  - repinear R_GO a `6.3.308` sin recuperar stashes;
+  - validar que PRE_WRITE ya no bloquea por `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` cuando no hay cambios efectivos de test iOS.
+
+
+## 2026-05-20 - R_GO repin 6.3.308 validado parcialmente
+
+- Estado: ✅ FIX VERIFIED para el bug de scope crítico PRE_WRITE.
+- Consumer: `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO`.
+- Repin:
+  - se usó Node `20.20.0` según `.nvmrc` de R_GO;
+  - `npm install -D pumuki@6.3.308` completado;
+  - `node_modules/pumuki/package.json` devuelve `6.3.308`.
+- Validación:
+  - `npx pumuki audit --stage=PRE_WRITE --json` bloquea con 30 findings reales;
+  - `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` ya no aparece;
+  - el bloqueo actual es por reglas de skills concretas iOS/frontend/backend, no por el bug opaco previo.
+- Impacto:
+  - PUMUKI-INC asociado al false positive `critical-test-quality` sin cambios efectivos queda corregido en `6.3.308`;
+  - R_GO no queda libre para commit porque ahora el gate bloquea por violaciones reales de skills, que deben corregirse en el consumer o aislarse por slice.
+

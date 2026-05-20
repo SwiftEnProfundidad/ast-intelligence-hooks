@@ -271,7 +271,49 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
   ['skills.ios.no-task-detached', 'heuristics.ios.task-detached.ast'],
   ['skills.ios.no-unchecked-sendable', 'heuristics.ios.unchecked-sendable.ast'],
   ['skills.ios.no-preconcurrency', 'heuristics.ios.preconcurrency.ast'],
+  [
+    'skills.ios.guideline.ios-concurrency.use-grep-for-swiftstrictconcurrency-or-swiftdefaultactorisolation-in-p',
+    'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
+    'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.validar-configuracio-n-de-concurrencia-swiftstrictconcurrency-swiftdef',
+    'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
+    'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+  ],
   ['skills.ios.no-nonisolated-unsafe', 'heuristics.ios.nonisolated-unsafe.ast'],
+  [
+    'skills.ios.guideline.ios.feature-first-cada-feature-es-un-bounded-context-no-se-acoplan-entre-s',
+    'heuristics.ios.architecture.cross-feature-import.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.las-features-no-se-importan-entre-si',
+    'heuristics.ios.architecture.cross-feature-import.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.shared-kernel-solo-tipos-mi-nimos-compartidos-entre-features',
+    'heuristics.ios.architecture.cross-feature-import.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.clean-por-feature-presentation-application-domain-infrastructure-domai',
+    'heuristics.ios.architecture.layer-direction-violation.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.seguir-clean-architecture-domain-application-infrastructure-presentati',
+    'heuristics.ios.architecture.layer-direction-violation.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.ddd-entidades-value-objects-repositorios-protocolos-eventos-de-dominio',
+    'heuristics.ios.architecture.layer-direction-violation.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.public-api-solo-exponer-lo-necesario-public-internal-private',
+    'heuristics.ios.architecture.excessive-public-api.ast',
+  ],
   ['skills.ios.no-assume-isolated', 'heuristics.ios.assume-isolated.ast'],
   ['skills.ios.no-observable-object', 'heuristics.ios.observable-object.ast'],
   [
@@ -312,6 +354,10 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
     'heuristics.ios.testing.legacy-expectation-description.ast',
   ],
   ['skills.ios.no-mixed-testing-frameworks', 'heuristics.ios.testing.mixed-frameworks.ast'],
+  [
+    'skills.ios.guideline.ios.xcuitest-ui-testing-nativo',
+    'heuristics.ios.testing.third-party-ui-test-framework.ast',
+  ],
   [
     'skills.ios.no-nsmanagedobject-boundary',
     'heuristics.ios.core-data.nsmanagedobject-boundary.ast',

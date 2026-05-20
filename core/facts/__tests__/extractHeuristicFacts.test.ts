@@ -1064,6 +1064,44 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
   );
 });
 
+test('extracts actionable iOS third-party UI test framework heuristic facts', () => {
+  const findings = extractHeuristicFacts({
+    facts: [
+      fileContentFact('apps/ios/Tests/UITests/CheckoutUITests.swift', [
+        'import XCTest',
+        'import EarlGrey',
+        '',
+        'final class CheckoutUITests: XCTestCase {',
+        '  func testCheckout() {',
+        '    EarlGrey.selectElement(with: grey_accessibilityID("pay")).perform(grey_tap())',
+        '  }',
+        '}',
+      ].join('\n')),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = findings.find(
+    (candidate) => candidate.ruleId === 'heuristics.ios.testing.third-party-ui-test-framework.ast'
+  );
+  assert.deepEqual(finding?.lines, [2, 6]);
+  assert.deepEqual(finding?.primary_node, {
+    kind: 'call',
+    name: 'third-party UI test framework node',
+    lines: [2, 6],
+  });
+  assert.deepEqual(finding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: native XCUITest XCUIApplication/XCUIElement flow',
+      lines: [2, 6],
+    },
+  ]);
+  assert.match(finding?.expected_fix ?? '', /native XCUITest/);
+});
+
 test('does not emit Swift Testing migration findings for brownfield XCTest specs with quality helpers', () => {
   const extracted = extractHeuristicFacts({
     facts: [
@@ -2844,4 +2882,92 @@ test('emits actionable iOS task lifecycle metadata for PUMUKI-INC-155', () => {
   assert.deepEqual(finding.lines, [6]);
   assert.equal(finding.primary_node?.name, 'Task launched inside SwiftUI onAppear');
   assert.match(finding.expected_fix ?? '', /\.task/);
+});
+
+test('extracts actionable iOS cross-feature import heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Features/Auth/LoginView.swift',
+        [
+          'import SwiftUI',
+          'import SharedKernel',
+          'import Orders',
+          'struct LoginView: View {',
+          '  let route: OrdersRoute',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { ios: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.architecture.cross-feature-import.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_IOS_ARCHITECTURE_CROSS_FEATURE_IMPORT_AST');
+  assert.deepEqual(finding.lines, [3]);
+  assert.equal(finding.primary_node?.name, 'cross-feature Swift import');
+  assert.match(finding.expected_fix ?? '', /SharedKernel/);
+});
+
+test('extracts actionable iOS layer direction violation heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Features/Orders/Domain/Entities/Order.swift',
+        [
+          'import Foundation',
+          'import SwiftUI',
+          'import CoreData',
+          'struct Order: Sendable {',
+          '  let id: String',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { ios: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.architecture.layer-direction-violation.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_IOS_ARCHITECTURE_LAYER_DIRECTION_VIOLATION_AST');
+  assert.deepEqual(finding.lines, [2, 3]);
+  assert.equal(finding.primary_node?.name, 'forbidden import for Clean Architecture layer');
+  assert.match(finding.expected_fix ?? '', /Infrastructure/);
+});
+
+test('extracts actionable iOS excessive public API heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Features/BuyerCommerce/BuyerShellViewModel.swift',
+        [
+          'import SwiftUI',
+          '',
+          'public final class BuyerShellViewModel {',
+          '  public var selectedTab: Tab = .home',
+          '  public init() {}',
+          '  public func openCheckout() {}',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { ios: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.architecture.excessive-public-api.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_IOS_ARCHITECTURE_EXCESSIVE_PUBLIC_API_AST');
+  assert.deepEqual(finding.lines, [3, 4, 5, 6]);
+  assert.equal(finding.primary_node?.name, 'excessive public/open Swift API surface');
+  assert.match(finding.expected_fix ?? '', /internal by default/);
 });

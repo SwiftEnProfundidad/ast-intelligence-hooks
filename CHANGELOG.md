@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.3.308] - 2026-05-20
+
+- `R_GO`: PRE_WRITE deja de exigir `skills.ios.critical-test-quality` cuando no hay cambios efectivos de test iOS en el scope actual aunque la evidencia previa arrastre `platforms.ios`. Evita el bloqueo falso `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` sobre `.ai_evidence.json` en repos limpios/no-code.
+- iOS AST skills: añadidos detectores nodales con lineas y metadata accionable para `clean architecture layer direction`, `third-party UI test framework` y `excessive public API`.
+- Canary multi-plataforma: endurecido para exigir bloqueo real, diagnostico `violations-detected`, rule id esperado/equivalente y finding asociado al archivo canario.
+
 ## [6.3.301] - 2026-05-19
 
 - `PUMUKI-INC-157`: PRE_WRITE no longer hard-blocks when evidence reports `ai_gate.status=BLOCKED` but exposes no real blocking causes and only non-blocking WARN signals such as worktree hygiene warnings. Explicit AST/skills findings with `blocking=true` still block, even when their inherited severity is WARN.

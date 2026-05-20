@@ -406,6 +406,61 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.architecture.cross-feature-import.ast',
+    description: 'Detects Swift feature modules importing sibling feature modules directly.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.architecture.cross-feature-import.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected a Swift feature importing another feature module directly.',
+      code: 'HEURISTICS_IOS_ARCHITECTURE_CROSS_FEATURE_IMPORT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.architecture.layer-direction-violation.ast',
+    description: 'Detects Swift imports that violate iOS Clean Architecture layer direction.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.architecture.layer-direction-violation.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected an import that violates Clean Architecture layer direction in iOS code.',
+      code: 'HEURISTICS_IOS_ARCHITECTURE_LAYER_DIRECTION_VIOLATION_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.architecture.excessive-public-api.ast',
+    description: 'Detects excessive public/open API surface in iOS app implementation files.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.architecture.excessive-public-api.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected excessive public/open Swift API surface in iOS app code.',
+      code: 'HEURISTICS_IOS_ARCHITECTURE_EXCESSIVE_PUBLIC_API_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.memory.strong-self-escaping-closure.ast',
     description: 'Detects strong self captures in escaping iOS closures.',
     severity: 'WARN',
@@ -874,6 +929,42 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+    description: 'Detects SwiftPM iOS manifests whose default isolation is not MainActor.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Package.swift .defaultIsolation not set to MainActor.',
+      code: 'HEURISTICS_IOS_CONCURRENCY_SWIFTPM_DEFAULT_ISOLATION_NOT_MAINACTOR_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+    description: 'Detects SwiftPM iOS manifests using targeted/minimal StrictConcurrency.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Package.swift StrictConcurrency below complete.',
+      code: 'HEURISTICS_IOS_CONCURRENCY_SWIFTPM_STRICT_CONCURRENCY_BELOW_COMPLETE_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
     description: 'Detects Xcode iOS targets with strict concurrency checking below complete.',
     severity: 'WARN',
@@ -889,6 +980,25 @@ export const iosRules: RuleSet = [
       kind: 'Finding',
       message: 'AST heuristic detected SWIFT_STRICT_CONCURRENCY below complete in an iOS Xcode project.',
       code: 'HEURISTICS_IOS_CONCURRENCY_STRICT_CONCURRENCY_BELOW_COMPLETE_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+    description: 'Detects Xcode iOS targets whose default actor isolation is not MainActor.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected SWIFT_DEFAULT_ACTOR_ISOLATION not set to MainActor in an iOS Xcode project.',
+      code: 'HEURISTICS_IOS_CONCURRENCY_DEFAULT_ACTOR_ISOLATION_NOT_MAINACTOR_AST',
     },
   },
   {
@@ -2192,6 +2302,25 @@ export const iosRules: RuleSet = [
       message:
         'AST heuristic detected Quick/Nimble usage where native Swift Testing remains the preferred baseline.',
       code: 'HEURISTICS_IOS_TESTING_QUICK_NIMBLE_AST',
+    },
+  },
+  {
+    id: 'heuristics.ios.testing.third-party-ui-test-framework.ast',
+    description: 'Detects third-party iOS UI test frameworks where native XCUITest is required.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.testing.third-party-ui-test-framework.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected third-party iOS UI test framework usage; use native XCUITest.',
+      code: 'HEURISTICS_IOS_TESTING_THIRD_PARTY_UI_TEST_FRAMEWORK_AST',
     },
   },
   {

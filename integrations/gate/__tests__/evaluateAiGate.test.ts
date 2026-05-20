@@ -1469,6 +1469,92 @@ test('evaluateAiGate no exige critical-test-quality para staged iOS productivo a
   }
 });
 
+test('evaluateAiGate no exige critical-test-quality en PRE_WRITE sin cambios efectivos', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-ios-clean-scope-'));
+  try {
+    execFileSync('git', ['init'], { cwd: repoRoot, stdio: 'ignore' });
+
+    const base = sampleEvidence();
+    const result = evaluateAiGate(
+      {
+        repoRoot,
+        stage: 'PRE_WRITE',
+      },
+      {
+        now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+        readEvidenceResult: () =>
+          validEvidenceResult({
+            ...base,
+            platforms: {
+              ios: {
+                detected: true,
+                confidence: 'HIGH',
+              },
+            },
+            rulesets: [
+              {
+                platform: 'skills',
+                bundle: 'ios-guidelines@1.0.0',
+                hash: 'skills-ios-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-concurrency-guidelines@1.0.0',
+                hash: 'skills-ios-concurrency-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+                hash: 'skills-ios-swiftui-hash',
+              },
+            ],
+            snapshot: {
+              ...base.snapshot,
+              rules_coverage: {
+                ...base.snapshot.rules_coverage!,
+                active_rule_ids: ['skills.ios.no-force-unwrap'],
+                evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
+                matched_rule_ids: [],
+                unevaluated_rule_ids: [],
+                counts: {
+                  active: 1,
+                  evaluated: 1,
+                  matched: 0,
+                  unevaluated: 0,
+                },
+                coverage_ratio: 1,
+              },
+            },
+          }),
+        captureRepoState: () => ({
+          ...sampleEvidence().repo_state!,
+          repo_root: repoRoot,
+          git: {
+            ...sampleEvidence().repo_state!.git,
+            pending_changes: 0,
+            staged: 0,
+            unstaged: 0,
+          },
+        }),
+      }
+    );
+
+    assert.equal(
+      result.violations.some(
+        (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+      ),
+      false
+    );
+    const iosRequirement = result.skills_contract.requirements.find(
+      (requirement) => requirement.platform === 'ios'
+    );
+    assert.deepEqual(iosRequirement?.required_critical_rule_ids, []);
+    assert.deepEqual(iosRequirement?.missing_critical_rule_ids, []);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test('evaluateAiGate permite PRE_WRITE cuando iOS detectado incluye regla crítica de calidad de tests', () => {
   const base = sampleEvidence();
   const result = evaluateAiGate(

@@ -12,6 +12,7 @@ import {
   collectSwiftMakeSUTWithoutMemoryTrackingLines,
   collectSwiftMixedTestingFrameworkLines,
   collectSwiftQuickNimbleLines,
+  collectSwiftThirdPartyUiTestFrameworkLines,
   collectSwiftWaitForExpectationsLines,
   collectSwiftXCTestAssertionLines,
   collectSwiftXCTUnwrapLines,
@@ -43,8 +44,20 @@ import {
   hasSwiftPackageBranchDependencyUsage,
   collectSwiftPackageToolsVersionBelow62Lines,
   hasSwiftPackageToolsVersionBelow62Usage,
+  collectSwiftPackageDefaultIsolationNotMainActorLines,
+  hasSwiftPackageDefaultIsolationNotMainActorUsage,
+  collectSwiftPackageStrictConcurrencyBelowCompleteLines,
+  hasSwiftPackageStrictConcurrencyBelowCompleteUsage,
+  collectSwiftCrossFeatureImportLines,
+  hasSwiftCrossFeatureImportUsage,
+  collectSwiftExcessivePublicApiLines,
+  hasSwiftExcessivePublicApiUsage,
+  collectSwiftLayerDirectionViolationLines,
+  hasSwiftLayerDirectionViolationUsage,
   collectSwiftStrictConcurrencyBelowCompleteLines,
   hasSwiftStrictConcurrencyBelowCompleteUsage,
+  collectSwiftDefaultActorIsolationNotMainActorLines,
+  hasSwiftDefaultActorIsolationNotMainActorUsage,
   hasSwiftForEachIndicesUsage,
   hasSwiftForEachSelfIdentityUsage,
   collectSwiftForceCastLines,
@@ -144,6 +157,7 @@ import {
   hasSwiftThreadCentricDebuggingUsage,
   hasSwiftProductionTestDoubleUsage,
   hasSwiftQuickNimbleUsage,
+  hasSwiftThirdPartyUiTestFrameworkUsage,
   hasSwiftTestDoubleWithoutProtocolConformanceUsage,
   hasSwiftSheetIsPresentedUsage,
   hasSwiftScrollViewShowsIndicatorsUsage,
@@ -676,6 +690,198 @@ buildSettings = {
   assert.deepEqual(collectSwiftStrictConcurrencyBelowCompleteLines(source), [3, 5]);
   assert.equal(hasSwiftStrictConcurrencyBelowCompleteUsage(safe), false);
   assert.deepEqual(collectSwiftStrictConcurrencyBelowCompleteLines(safe), []);
+});
+
+test('detectores SwiftPM de concurrencia detectan aislamiento y strict concurrency inseguros', () => {
+  const source = `
+let package = Package(
+  name: "App",
+  swiftSettings: [
+    .defaultIsolation(nonisolated),
+    .enableExperimentalFeature("StrictConcurrency=targeted"),
+    .enableUpcomingFeature("StrictConcurrency=minimal")
+  ]
+)
+`;
+  const safe = `
+let package = Package(
+  name: "App",
+  swiftSettings: [
+    .defaultIsolation(MainActor.self),
+    .enableUpcomingFeature("NonisolatedNonsendingByDefault")
+  ]
+)
+let sample = ".defaultIsolation(nonisolated)"
+// .enableExperimentalFeature("StrictConcurrency=targeted")
+`;
+
+  assert.equal(hasSwiftPackageDefaultIsolationNotMainActorUsage(source), true);
+  assert.deepEqual(collectSwiftPackageDefaultIsolationNotMainActorLines(source), [5]);
+  assert.equal(hasSwiftPackageStrictConcurrencyBelowCompleteUsage(source), true);
+  assert.deepEqual(collectSwiftPackageStrictConcurrencyBelowCompleteLines(source), [6, 7]);
+  assert.equal(hasSwiftPackageDefaultIsolationNotMainActorUsage(safe), false);
+  assert.deepEqual(collectSwiftPackageDefaultIsolationNotMainActorLines(safe), []);
+  assert.equal(hasSwiftPackageStrictConcurrencyBelowCompleteUsage(safe), false);
+  assert.deepEqual(collectSwiftPackageStrictConcurrencyBelowCompleteLines(safe), []);
+});
+
+test('hasSwiftCrossFeatureImportUsage detecta imports entre bounded contexts iOS', () => {
+  const source = `
+import SwiftUI
+import SharedKernel
+import Orders
+import BuyerCommerce
+`;
+  const path = 'apps/ios/Presentation/Features/BuyerCommerce/LoginView.swift';
+  const safe = `
+import SwiftUI
+import SharedKernel
+import BuyerCommerce
+// import Orders
+let sample = "import Orders"
+`;
+
+  assert.equal(hasSwiftCrossFeatureImportUsage(source, path), true);
+  assert.deepEqual(collectSwiftCrossFeatureImportLines(source, path), [4]);
+  assert.equal(hasSwiftCrossFeatureImportUsage(safe, path), false);
+  assert.deepEqual(collectSwiftCrossFeatureImportLines(safe, path), []);
+  assert.equal(hasSwiftCrossFeatureImportUsage(source, 'apps/ios/Presentation/LoginView.swift'), false);
+});
+
+test('hasSwiftLayerDirectionViolationUsage detecta imports prohibidos por capa Clean Architecture', () => {
+  const domainSource = `
+import Foundation
+import SwiftUI
+import CoreData
+import CheckoutApplication
+import Combine
+`;
+  const applicationSource = `
+import Foundation
+import UIKit
+import Alamofire
+import AuthInfrastructure
+`;
+  const presentationSource = `
+import SwiftUI
+import CoreData
+import DesignSystem
+import AuthInfrastructure
+`;
+  const safeDomain = `
+import Foundation
+import SharedKernel
+`;
+
+  assert.equal(
+    hasSwiftLayerDirectionViolationUsage(
+      domainSource,
+      'apps/ios/Features/Orders/Domain/Entities/Order.swift'
+    ),
+    true
+  );
+  assert.deepEqual(
+    collectSwiftLayerDirectionViolationLines(
+      domainSource,
+      'apps/ios/Features/Orders/Domain/Entities/Order.swift'
+    ),
+    [3, 4, 5, 6]
+  );
+  assert.deepEqual(
+    collectSwiftLayerDirectionViolationLines(
+      applicationSource,
+      'apps/ios/Features/Orders/Application/UseCases/LoadOrders.swift'
+    ),
+    [3, 4, 5]
+  );
+  assert.deepEqual(
+    collectSwiftLayerDirectionViolationLines(
+      presentationSource,
+      'apps/ios/Features/Orders/Presentation/OrdersView.swift'
+    ),
+    [3, 5]
+  );
+  assert.equal(
+    hasSwiftLayerDirectionViolationUsage(
+      safeDomain,
+      'apps/ios/Features/Orders/Domain/Entities/Order.swift'
+    ),
+    false
+  );
+});
+
+test('hasSwiftExcessivePublicApiUsage detecta public/open excesivo en app iOS', () => {
+  const appSource = `
+import SwiftUI
+
+public final class BuyerShellViewModel {
+  public var selectedTab: Tab = .home
+  public init() {}
+  public func openCheckout() {}
+}
+`;
+  const minimalPublicSource = `
+public struct CheckoutRoute {}
+internal struct CheckoutState {}
+private struct CheckoutReducer {}
+`;
+  const packageSource = `
+public struct PublicSDKSurface {}
+public func makeClient() {}
+public let version = "1"
+`;
+
+  assert.equal(
+    hasSwiftExcessivePublicApiUsage(
+      appSource,
+      'apps/ios/Presentation/Features/BuyerCommerce/BuyerShellViewModel.swift'
+    ),
+    true
+  );
+  assert.deepEqual(
+    collectSwiftExcessivePublicApiLines(
+      appSource,
+      'apps/ios/Presentation/Features/BuyerCommerce/BuyerShellViewModel.swift'
+    ),
+    [4, 5, 6, 7]
+  );
+  assert.equal(
+    hasSwiftExcessivePublicApiUsage(
+      minimalPublicSource,
+      'apps/ios/Presentation/Features/BuyerCommerce/CheckoutRoute.swift'
+    ),
+    false
+  );
+  assert.deepEqual(
+    collectSwiftExcessivePublicApiLines(
+      packageSource,
+      'apps/ios/Sources/PublicSDK/PublicSDK.swift'
+    ),
+    []
+  );
+});
+
+test('hasSwiftDefaultActorIsolationNotMainActorUsage detecta aislamiento por defecto distinto de MainActor', () => {
+  const source = `
+buildSettings = {
+  SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+  OTHER_SWIFT_FLAGS = "$(inherited)";
+  SWIFT_DEFAULT_ACTOR_ISOLATION = SomeCustomActor;
+};
+`;
+  const safe = `
+buildSettings = {
+  SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+  SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor.self;
+  let sample = "SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;"
+  // SWIFT_DEFAULT_ACTOR_ISOLATION = SomeCustomActor;
+};
+`;
+
+  assert.equal(hasSwiftDefaultActorIsolationNotMainActorUsage(source), true);
+  assert.deepEqual(collectSwiftDefaultActorIsolationNotMainActorLines(source), [3, 5]);
+  assert.equal(hasSwiftDefaultActorIsolationNotMainActorUsage(safe), false);
+  assert.deepEqual(collectSwiftDefaultActorIsolationNotMainActorLines(safe), []);
 });
 
 test('hasSwiftNonLazyScrollForEachUsage detecta ScrollView con stack no lazy y preserva LazyVStack', () => {
@@ -2985,6 +3191,51 @@ struct LoginTests {
   assert.deepEqual(collectSwiftQuickNimbleLines(quickSpec), [2, 3, 5, 7, 8, 9, 10]);
   assert.equal(hasSwiftQuickNimbleUsage(swiftTesting), false);
   assert.deepEqual(collectSwiftQuickNimbleLines(swiftTesting), []);
+});
+
+test('hasSwiftThirdPartyUiTestFrameworkUsage detecta frameworks UI test no nativos', () => {
+  const kifSuite = `
+import XCTest
+import KIF
+
+final class CheckoutUITests: XCTestCase {
+  func testCheckout() {
+    tester().tapView(withAccessibilityLabel: "Pay")
+  }
+}
+`;
+  const earlGreySuite = `
+import XCTest
+import EarlGrey
+
+final class LoginUITests: XCTestCase {
+  func testLogin() {
+    EarlGrey.selectElement(with: grey_accessibilityID("login")).perform(grey_tap())
+  }
+}
+`;
+  const nativeXcuiTest = `
+import XCTest
+
+final class LoginUITests: XCTestCase {
+  func testLogin() {
+    let app = XCUIApplication()
+    app.buttons["login"].tap()
+  }
+}
+`;
+  const ignored = `
+let text = "import KIF"
+// EarlGrey.selectElement(with: grey_accessibilityID("login"))
+`;
+
+  assert.equal(hasSwiftThirdPartyUiTestFrameworkUsage(kifSuite), true);
+  assert.deepEqual(collectSwiftThirdPartyUiTestFrameworkLines(kifSuite), [3, 7]);
+  assert.equal(hasSwiftThirdPartyUiTestFrameworkUsage(earlGreySuite), true);
+  assert.deepEqual(collectSwiftThirdPartyUiTestFrameworkLines(earlGreySuite), [3, 7]);
+  assert.equal(hasSwiftThirdPartyUiTestFrameworkUsage(nativeXcuiTest), false);
+  assert.deepEqual(collectSwiftThirdPartyUiTestFrameworkLines(nativeXcuiTest), []);
+  assert.equal(hasSwiftThirdPartyUiTestFrameworkUsage(ignored), false);
 });
 
 test('hasSwiftXCTestAssertionUsage detecta XCTAssert y XCTFail reales', () => {
