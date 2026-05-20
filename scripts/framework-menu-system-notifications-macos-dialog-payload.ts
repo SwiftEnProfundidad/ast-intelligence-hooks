@@ -248,6 +248,7 @@ const formatPlatformName = (platform: string | null): string =>
 const extractSkillsContractPlatform = (message: string): string | null =>
   message.match(/\bplatforms?=([a-z0-9_,.-]+)/i)?.[1]?.split(',')[0]?.trim()
   ?? message.match(/\b(ios|android|frontend|backend)\(missing_critical_rule_ids=/i)?.[1]?.trim()
+  ?? message.match(/\bskills\.(ios|android|frontend|backend)\./i)?.[1]?.trim()
   ?? message.match(/\bfor\s+(ios|android|frontend|backend)\s*:/i)?.[1]?.trim()
   ?? null;
 
@@ -260,6 +261,9 @@ const extractSkillsContractRules = (message: string): string | null => {
 
 const SKILLS_CONTRACT_REMEDIATION =
   'Actualiza o reconcilia el contrato de skills de Pumuki y vuelve a intentar el commit. Si ya estás en la última versión, es un bug del motor de Pumuki y debe corregirse allí antes de cerrar el commit.';
+
+const SKILLS_CONTRACT_DIALOG_REMEDIATION =
+  'Corrige el contrato de skills indicado arriba y vuelve a intentar el commit.';
 
 const WORKTREE_HYGIENE_REMEDIATION =
   'Reduce el worktree pendiente a un slice atómico: stagea solo la tarea activa o guarda el resto en stash nombrado, y reejecuta PRE_WRITE.';
@@ -409,7 +413,7 @@ export const buildBlockedDialogPayload = (params: {
     : hasOnlyBddScenarioMissingCauses(params.event.blockingCauses)
     ? 'Crea el fichero .feature esperado para la slice activa o corrige la referencia de tarea. Después vuelve a intentar el commit.'
     : hasOnlySkillsContractCauses(params.event.blockingCauses)
-    ? SKILLS_CONTRACT_REMEDIATION
+    ? SKILLS_CONTRACT_DIALOG_REMEDIATION
     : params.event.blockingCauses && params.event.blockingCauses.length > 0
     ? 'Corrige las violaciones listadas y vuelve a intentar el commit.'
     : resolveBlockedRemediation(params.event, causeCode);

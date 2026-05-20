@@ -234,12 +234,40 @@ test('buildBlockedDialogPayload explica contrato de skills incompleto sin códig
   assert.match(payload.cause, /bug del motor de Pumuki/);
   assert.equal(
     payload.remediation,
-    'Actualiza o reconcilia el contrato de skills de Pumuki y vuelve a intentar el commit. Si ya estás en la última versión, es un bug del motor de Pumuki y debe corregirse allí antes de cerrar el commit.'
+    'Corrige el contrato de skills indicado arriba y vuelve a intentar el commit.'
   );
   assert.doesNotMatch(payload.cause, /EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING/);
   assert.doesNotMatch(payload.cause, /EVIDENCE_SKILLS_CONTRACT_INCOMPLETE/);
   assert.doesNotMatch(payload.cause, /\.ai_evidence\.json/);
   assert.doesNotMatch(payload.cause, /npx --yes --package/);
+});
+
+test('buildBlockedDialogPayload infiere plataforma desde regla skills si el contrato no trae platforms', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+          ruleId: 'ai_evidence.json',
+          file: '.ai_evidence.json',
+          message:
+            'Pumuki detecta plataforma detectada, pero falta activar enforcement de skills criticas: skills.ios.critical-test-quality.',
+          remediation: 'Actualiza o reconcilia el contrato de skills de Pumuki.',
+        },
+      ],
+    }),
+    repoRoot: '/tmp/R_GO',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'R_GO',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /Plataforma: iOS/);
+  assert.doesNotMatch(payload.cause, /Plataforma: plataforma detectada/);
+  assert.equal(payload.remediation, 'Corrige el contrato de skills indicado arriba y vuelve a intentar el commit.');
 });
 
 test('buildBlockedDialogPayload muestra skills iOS con separador, linea, evidencia y solucion especifica', () => {

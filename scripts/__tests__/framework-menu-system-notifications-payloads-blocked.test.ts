@@ -219,3 +219,29 @@ test('buildGateBlockedPayload resume contrato de skills incompleto en lenguaje d
   assert.doesNotMatch(payload.message, /\.ai_evidence\.json/);
   assert.doesNotMatch(payload.message, /npx --yes --package/);
 });
+
+test('buildGateBlockedPayload infiere plataforma de contrato desde regla skills', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+          ruleId: 'ai_evidence.json',
+          file: '.ai_evidence.json',
+          message:
+            'Pumuki detecta plataforma detectada, pero falta activar enforcement de skills criticas: skills.ios.critical-test-quality.',
+          remediation: 'Actualiza o reconcilia el contrato de skills de Pumuki.',
+        },
+      ],
+    },
+    'R_GO · '
+  );
+
+  assert.match(payload.subtitle ?? '', /Contrato de skills incompleto: iOS/);
+  assert.match(payload.message, /Pumuki detecta iOS/);
+  assert.doesNotMatch(payload.message, /plataforma detectada/);
+});

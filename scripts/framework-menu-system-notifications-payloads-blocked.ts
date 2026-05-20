@@ -67,6 +67,7 @@ const formatPlatformName = (platform: string | null): string =>
 const extractSkillsContractPlatform = (message: string): string | null =>
   message.match(/\bplatforms?=([a-z0-9_,.-]+)/i)?.[1]?.split(',')[0]?.trim()
   ?? message.match(/\b(ios|android|frontend|backend)\(missing_critical_rule_ids=/i)?.[1]?.trim()
+  ?? message.match(/\bskills\.(ios|android|frontend|backend)\./i)?.[1]?.trim()
   ?? message.match(/\bfor\s+(ios|android|frontend|backend)\s*:/i)?.[1]?.trim()
   ?? null;
 
