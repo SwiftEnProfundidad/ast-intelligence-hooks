@@ -84,7 +84,7 @@ test('buildGateBlockedPayload prioriza primera skill con fichero, linea, violaci
     'R_GO · '
   );
 
-  assert.match(payload.subtitle ?? '', /Skill violada: skills\.ios\.prefer-swift-testing/);
+  assert.match(payload.subtitle ?? '', /Skill violada: BuyerCommerceScreensSnapshotTests\.swift:12/);
   assert.match(payload.subtitle ?? '', /BuyerCommerceScreensSnapshotTests\.swift:12/);
   assert.match(payload.message, /Regla: skills\.ios\.prefer-swift-testing/);
   assert.match(payload.message, /Fichero: BuyerCommerceScreensSnapshotTests\.swift:12/);

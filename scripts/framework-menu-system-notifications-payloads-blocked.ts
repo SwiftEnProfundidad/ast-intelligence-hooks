@@ -102,6 +102,9 @@ const buildBlockingCausesSummary = (
   }
   const prefix = isSkillCause(first) ? 'Skill violada' : 'Causa bloqueante';
   const overflow = prioritized.length > 1 ? ` (+${prioritized.length - 1} más)` : '';
+  if (isSkillCause(first)) {
+    return `${prefix}: ${formatCauseLocation(first)} · ${formatCauseRule(first)}${overflow}`;
+  }
   return `${prefix}: ${formatCauseRule(first)} · ${formatCauseLocation(first)}${overflow}`;
 };
 
