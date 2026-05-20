@@ -2572,3 +2572,17 @@ Evidencia:
 Evidencia:
 - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts` -> 132/132
 - `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts` -> 74/74
+
+### 2026-05-20 - INC145 / iOS detector nodal mejorado: logging ad-hoc
+
+- ✅ Convertido `heuristics.ios.logging.adhoc-print.ast` en finding nodal accionable.
+- ✅ Ahora localiza líneas exactas de `print`, `debugPrint`, `dump`, `NSLog` y `os_log` en código iOS productivo.
+- ✅ Añadidos `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para que la notificación indique la llamada concreta y la solución de logger estructurado aprobado.
+- ✅ Mantiene el mapeo existente a `skills.ios.guideline.ios.prohibido-print-y-logs-ad-hoc`.
+- Siguiente foco iOS: continuar con detectores/nodos de seguridad y arquitectura que aún salen sin línea o sin fix específico.
+
+Evidencia:
+- `npx --yes tsx.21.0 --test core/facts/detectors/text/ios.test.ts` -> 132/132
+- `npx --yes tsx.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts` -> 74/74
+- `npm run -s typecheck` -> OK
+- `git diff --check && npm run -s validation:tracking-single-active` -> OK

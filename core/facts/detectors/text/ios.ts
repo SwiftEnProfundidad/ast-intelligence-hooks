@@ -1617,10 +1617,14 @@ export const collectSwiftMagicNumberLayoutLines = (source: string): readonly num
 };
 
 export const hasSwiftAdHocLoggingUsage = (source: string): boolean => {
+  return collectSwiftAdHocLoggingLines(source).length > 0;
+};
+
+export const collectSwiftAdHocLoggingLines = (source: string): readonly number[] => {
   return collectSwiftRegexLines(
     source,
     /\b(?:print|debugPrint|dump|NSLog|os_log)\s*\(/
-  ).length > 0;
+  );
 };
 
 export const hasSwiftSensitiveLoggingUsage = (source: string): boolean => {

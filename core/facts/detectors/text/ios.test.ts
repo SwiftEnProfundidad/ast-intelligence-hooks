@@ -34,6 +34,7 @@ import {
   hasSwiftDummyAwaitUsage,
   hasSwiftDispatchSemaphoreUsage,
   collectSwiftLongAsyncOperationWithoutCancellationCheckLines,
+  collectSwiftAdHocLoggingLines,
   hasSwiftAdHocLoggingUsage,
   hasSwiftAlamofireUsage,
   collectSwiftComposableArchitectureUsageLines,
@@ -1944,7 +1945,9 @@ logger.error("Refresh failed \\(refreshToken)")
 `;
 
   assert.equal(hasSwiftAdHocLoggingUsage(adHoc), true);
+  assert.deepEqual(collectSwiftAdHocLoggingLines(adHoc), [2, 3, 4, 5, 6]);
   assert.equal(hasSwiftAdHocLoggingUsage(structuredSafe), false);
+  assert.deepEqual(collectSwiftAdHocLoggingLines(structuredSafe), []);
   assert.equal(hasSwiftSensitiveLoggingUsage(sensitive), true);
   assert.deepEqual(collectSwiftSensitiveLoggingLines(sensitive), [2, 3]);
   assert.equal(hasSwiftSensitiveLoggingUsage(structuredSafe), false);

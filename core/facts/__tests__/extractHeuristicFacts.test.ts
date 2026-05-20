@@ -587,6 +587,15 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     },
   ]);
   assert.match(dispatchQueueFinding?.expected_fix ?? '', /async\/await/);
+  const adHocLoggingFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.logging.adhoc-print.ast'
+  );
+  assert.deepEqual(adHocLoggingFinding?.primary_node, {
+    kind: 'call',
+    name: 'ad-hoc iOS logging call',
+    lines: adHocLoggingFinding?.lines ?? [],
+  });
+  assert.match(adHocLoggingFinding?.expected_fix ?? '', /structured logger/);
   const sensitiveLoggingFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.logging.sensitive-data.ast'
   );
