@@ -62,6 +62,8 @@ import {
   hasSwiftUpcomingFeatureDisabledUsage,
   collectSwiftUiStateWithoutMainActorLines,
   hasSwiftUiStateWithoutMainActorUsage,
+  collectSwiftSharedMutableStateWithoutActorLines,
+  hasSwiftSharedMutableStateWithoutActorUsage,
   collectSwiftNavigationPathWithoutRestorationLines,
   hasSwiftNavigationPathWithoutRestorationUsage,
   hasSwiftForEachIndicesUsage,
@@ -940,6 +942,42 @@ let sample = "final class FakeViewModel: ObservableObject"
   assert.deepEqual(collectSwiftUiStateWithoutMainActorLines(source), [2]);
   assert.equal(hasSwiftUiStateWithoutMainActorUsage(safe), false);
   assert.deepEqual(collectSwiftUiStateWithoutMainActorLines(safe), []);
+});
+
+test('hasSwiftSharedMutableStateWithoutActorUsage detecta estado compartido mutable sin actor', () => {
+  const source = `
+final class UserSessionManager {
+  private var token: String?
+
+  func update(token: String) {
+    self.token = token
+  }
+}
+`;
+  const safe = `
+actor UserSessionManager {
+  private var token: String?
+
+  func update(token: String) {
+    self.token = token
+  }
+}
+@MainActor
+final class BuyerSessionStore {
+  private var route: String?
+  func update(route: String) { self.route = route }
+}
+final class ValueFormatter {
+  func title() -> String { "OK" }
+}
+let sample = "final class TokenCache { var token: String? }"
+// final class CommentedCache { var value = "" }
+`;
+
+  assert.equal(hasSwiftSharedMutableStateWithoutActorUsage(source), true);
+  assert.deepEqual(collectSwiftSharedMutableStateWithoutActorLines(source), [2]);
+  assert.equal(hasSwiftSharedMutableStateWithoutActorUsage(safe), false);
+  assert.deepEqual(collectSwiftSharedMutableStateWithoutActorLines(safe), []);
 });
 
 test('hasSwiftNavigationPathWithoutRestorationUsage detecta NavigationPath sin restauracion', () => {

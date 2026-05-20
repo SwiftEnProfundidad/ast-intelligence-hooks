@@ -1238,6 +1238,77 @@ export const hasSwiftUiStateWithoutMainActorUsage = (source: string): boolean =>
   return collectSwiftUiStateWithoutMainActorLines(source).length > 0;
 };
 
+const swiftSharedStateOwnerDeclarationPattern =
+  /\b(?:final\s+)?class\s+([A-Za-z_][A-Za-z0-9_]*(?:Cache|Manager|Session|Store|Repository))\b/;
+
+const findSwiftDeclarationBlockEnd = (lines: readonly string[], declarationIndex: number): number => {
+  let depth = 0;
+  let started = false;
+
+  for (let index = declarationIndex; index < lines.length; index += 1) {
+    const line = stripSwiftLineForSemanticScan(lines[index] ?? '');
+    for (const char of line) {
+      if (char === '{') {
+        depth += 1;
+        started = true;
+      } else if (char === '}') {
+        depth -= 1;
+        if (started && depth <= 0) {
+          return index + 1;
+        }
+      }
+    }
+  }
+
+  return Math.min(lines.length, declarationIndex + 80);
+};
+
+const hasSwiftSharedMutableStateBody = (body: string): boolean => {
+  return (
+    /\b(?:private\s+|fileprivate\s+|internal\s+|public\s+|open\s+)?var\s+[A-Za-z_][A-Za-z0-9_]*\b/.test(
+      body
+    ) &&
+    /\bfunc\s+[A-Za-z_][A-Za-z0-9_]*\s*\(/.test(body) &&
+    !/@(?:Observable|Published)\b/.test(body) &&
+    !/\bObservableObject\b/.test(body)
+  );
+};
+
+export const collectSwiftSharedMutableStateWithoutActorLines = (
+  source: string
+): readonly number[] => {
+  const matches: number[] = [];
+  const lines = source.split(/\r?\n/);
+
+  lines.forEach((rawLine, index) => {
+    const line = stripSwiftLineForSemanticScan(rawLine);
+    if (!swiftSharedStateOwnerDeclarationPattern.test(line)) {
+      return;
+    }
+    if (hasSwiftMainActorAnnotationNear(lines, index)) {
+      return;
+    }
+
+    const blockEnd = findSwiftDeclarationBlockEnd(lines, index);
+    const body = lines
+      .slice(index, blockEnd)
+      .map((candidate) => stripSwiftLineForSemanticScan(candidate))
+      .join('\n');
+
+    if (!hasSwiftSharedMutableStateBody(body)) {
+      return;
+    }
+
+    matches.push(index + 1);
+  });
+
+  return sortedUniqueLines(matches);
+};
+
+export const hasSwiftSharedMutableStateWithoutActorUsage = (source: string): boolean => {
+  return collectSwiftSharedMutableStateWithoutActorLines(source).length > 0;
+};
+
 const swiftNavigationPathRestorationPattern =
   /@(?:SceneStorage|AppStorage)\b|\bCodableRepresentation\b|\.codable\b|\b(?:restore|rehydrate|persist|save|load)[A-Za-z0-9_]*(?:Navigation)?Path\b/i;
 

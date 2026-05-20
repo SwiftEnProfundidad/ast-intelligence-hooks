@@ -2395,3 +2395,18 @@ Validación prevista:
 - `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
 - `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
 - `git diff --check`
+
+
+### 2026-05-20 - INC145 / iOS detector nodal nuevo: shared mutable state actor isolation
+
+- ✅ Implementado `heuristics.ios.concurrency.shared-mutable-state-without-actor.ast`.
+- ✅ Detecta clases iOS `Cache`, `Manager`, `Session`, `Store` o `Repository` con estado `var` mutable y métodos, sin `actor` ni `@MainActor`.
+- ✅ Evita duplicar el detector UI: no marca owners con `ObservableObject`, `@Observable` o `@Published`, que quedan cubiertos por `ui-state-without-mainactor`.
+- ✅ Asociado a las skills iOS de actor para estado compartido y sincronización nativa para que no dependan solo de `DispatchQueue`/`DispatchSemaphore`.
+- 🚧 Siguiente foco iOS: continuar cerrando reglas de concurrencia/arquitectura que aún dependan de aliases indirectos.
+
+Validación prevista:
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
+- `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `git diff --check`

@@ -1038,6 +1038,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+    description: 'Detects shared mutable iOS state owners without actor isolation.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected shared mutable iOS state without actor isolation.',
+      code: 'HEURISTICS_IOS_CONCURRENCY_SHARED_MUTABLE_STATE_WITHOUT_ACTOR_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.naming.non-pascal-case-type.ast',
     description: 'Detects Swift type declarations that are not PascalCase.',
     severity: 'WARN',

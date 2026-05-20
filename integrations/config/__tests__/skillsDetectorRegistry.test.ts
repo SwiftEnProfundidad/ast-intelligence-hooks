@@ -888,13 +888,21 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.actor-para-estado-compartido-thread-safe'
     ),
-    ['heuristics.ios.dispatchqueue.ast', 'heuristics.ios.dispatchsemaphore.ast']
+    [
+      'heuristics.ios.dispatchqueue.ast',
+      'heuristics.ios.dispatchsemaphore.ast',
+      'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+    ]
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.sincronizacio-n-nativa-actors-para-estado-compartido-osallocatedunfair'
     ),
-    ['heuristics.ios.dispatchqueue.ast', 'heuristics.ios.dispatchsemaphore.ast']
+    [
+      'heuristics.ios.dispatchqueue.ast',
+      'heuristics.ios.dispatchsemaphore.ast',
+      'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+    ]
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(

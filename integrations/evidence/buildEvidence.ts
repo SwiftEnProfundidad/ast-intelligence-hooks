@@ -269,6 +269,14 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
     'skills.ios.guideline.ios.mainactor-para-co-digo-que-debe-ejecutarse-en-el-hilo-principal',
     'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
   ],
+  [
+    'skills.ios.guideline.ios.actor-para-estado-compartido-thread-safe',
+    'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.sincronizacio-n-nativa-actors-para-estado-compartido-osallocatedunfair',
+    'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+  ],
   ['ios.no-gcd', 'skills.ios.no-dispatchgroup', 'heuristics.ios.dispatchgroup.ast'],
   ['ios.no-gcd', 'skills.ios.no-dispatchsemaphore', 'heuristics.ios.dispatchsemaphore.ast'],
   ['ios.no-gcd', 'skills.ios.no-operation-queue', 'heuristics.ios.operation-queue.ast'],

@@ -69,11 +69,13 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.concurrency.shared-state-actor-boundary', [
       'heuristics.ios.dispatchqueue.ast',
       'heuristics.ios.dispatchsemaphore.ast',
+      'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
     ]),
   'skills.ios.guideline.ios.sincronizacio-n-nativa-actors-para-estado-compartido-osallocatedunfair':
     heuristicDetector('ios.concurrency.shared-state-actor-boundary', [
       'heuristics.ios.dispatchqueue.ast',
       'heuristics.ios.dispatchsemaphore.ast',
+      'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
     ]),
   'skills.ios.no-dispatchgroup': heuristicDetector('ios.dispatchgroup', [
     'heuristics.ios.dispatchgroup.ast',
