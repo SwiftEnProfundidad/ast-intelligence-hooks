@@ -1758,15 +1758,23 @@ export const hasSwiftUnlocalizedDateFormatterUsage = (source: string): boolean =
   return false;
 };
 
+export const collectSwiftAlamofireLines = (source: string): readonly number[] => {
+  return sortedUniqueLines([
+    ...collectSwiftRegexLines(source, /^\s*import\s+Alamofire\b/),
+    ...collectSwiftRegexLines(source, /\b(?:AF|Alamofire)\s*\.\s*request\b/),
+  ]);
+};
+
 export const hasSwiftAlamofireUsage = (source: string): boolean => {
-  return (
-    collectSwiftRegexLines(source, /^\s*import\s+Alamofire\b/).length > 0 ||
-    collectSwiftRegexLines(source, /\b(?:AF|Alamofire)\s*\.\s*request\b/).length > 0
-  );
+  return collectSwiftAlamofireLines(source).length > 0;
+};
+
+export const collectSwiftJSONSerializationLines = (source: string): readonly number[] => {
+  return collectSwiftRegexLines(source, /\bJSONSerialization\s*\./);
 };
 
 export const hasSwiftJSONSerializationUsage = (source: string): boolean => {
-  return collectSwiftRegexLines(source, /\bJSONSerialization\s*\./).length > 0;
+  return collectSwiftJSONSerializationLines(source).length > 0;
 };
 
 export const hasSwiftSensitiveUserDefaultsStorageUsage = (source: string): boolean => {

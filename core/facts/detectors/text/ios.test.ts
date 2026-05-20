@@ -37,6 +37,7 @@ import {
   collectSwiftAdHocLoggingLines,
   hasSwiftAdHocLoggingUsage,
   hasSwiftAlamofireUsage,
+  collectSwiftAlamofireLines,
   collectSwiftComposableArchitectureUsageLines,
   hasSwiftEmptyCatchUsage,
   collectSwiftNSErrorThrowLines,
@@ -182,6 +183,7 @@ import {
   hasSwiftSensitiveUserDefaultsStorageUsage,
   hasSwiftInsecureTransportUsage,
   hasSwiftJSONSerializationUsage,
+  collectSwiftJSONSerializationLines,
   hasSwiftExplicitColorStaticMemberUsage,
   hasSwiftClosureBasedViewBuilderContentUsage,
   collectSwiftForceUnwrapLines,
@@ -2042,8 +2044,12 @@ final class APIClient {
 
   assert.equal(hasSwiftAlamofireUsage(source), true);
   assert.equal(hasSwiftJSONSerializationUsage(source), true);
+  assert.deepEqual(collectSwiftAlamofireLines(source), [2, 6]);
+  assert.deepEqual(collectSwiftJSONSerializationLines(source), [7]);
   assert.equal(hasSwiftAlamofireUsage(ignored), false);
   assert.equal(hasSwiftJSONSerializationUsage(ignored), false);
+  assert.deepEqual(collectSwiftAlamofireLines(ignored), []);
+  assert.deepEqual(collectSwiftJSONSerializationLines(ignored), []);
 });
 
 test('detector iOS de seguridad detecta secretos en UserDefaults y AppStorage', () => {

@@ -134,3 +134,46 @@ final class CartViewModel {
   assert.deepEqual(match.primary_node?.lines, [5]);
   assert.match(match.expected_fix ?? '', /\[weak self\]/i);
 });
+
+test('extractHeuristicFacts emite networking iOS con lineas y remediation accionable', () => {
+  const params: HeuristicExtractionParams = {
+    facts: [
+      {
+        kind: 'FileContent',
+        source: 'repo',
+        path: 'apps/ios/Infrastructure/Networking/BuyerAPIClient.swift',
+        content: `
+import Alamofire
+
+final class BuyerAPIClient {
+  func load() {
+    AF.request("https://api.example.com")
+    let object = try? JSONSerialization.jsonObject(with: Data())
+  }
+}
+`,
+      },
+    ],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+    },
+  };
+
+  const extractedFacts = extractHeuristicFacts(params);
+  const alamofire = extractedFacts.find(
+    (fact) => fact.ruleId === 'heuristics.ios.networking.alamofire.ast'
+  );
+  const jsonSerialization = extractedFacts.find(
+    (fact) => fact.ruleId === 'heuristics.ios.json.jsonserialization.ast'
+  );
+
+  assert.ok(alamofire);
+  assert.deepEqual(alamofire.lines, [2, 6]);
+  assert.deepEqual(alamofire.primary_node?.lines, [2, 6]);
+  assert.match(alamofire.expected_fix ?? '', /URLSession/i);
+
+  assert.ok(jsonSerialization);
+  assert.deepEqual(jsonSerialization.lines, [7]);
+  assert.deepEqual(jsonSerialization.primary_node?.lines, [7]);
+  assert.match(jsonSerialization.expected_fix ?? '', /Codable/i);
+});
