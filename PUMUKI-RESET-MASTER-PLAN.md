@@ -2548,3 +2548,15 @@ Evidencia:
 Evidencia:
 - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-payloads-blocked.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-payload.test.ts` -> 21/21
 - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> 53/53
+
+### 2026-05-20 - INC145 / iOS detector nodal mejorado: secretos en UserDefaults/AppStorage
+
+- ✅ Convertido `heuristics.ios.security.userdefaults-sensitive-data.ast` en finding nodal accionable.
+- ✅ Ahora localiza líneas exactas de `UserDefaults.standard.set(...)` y `@AppStorage(...)` cuando almacenan tokens, passwords, credenciales, bearer/apiKey o sessionId.
+- ✅ Añadidos `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para que la notificación pueda decir qué viola, dónde y cómo corregirlo.
+- ✅ Asociado a skills iOS de Keychain/UserDefaults ya existentes sin crear alias débil nuevo.
+- Siguiente foco iOS: continuar sustituyendo detectores declarativos/aliases por nodos con línea y solución antes de pasar a Android.
+
+Evidencia:
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts` -> 132/132
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts` -> 74/74

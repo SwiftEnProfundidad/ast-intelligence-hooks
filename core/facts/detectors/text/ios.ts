@@ -1700,20 +1700,28 @@ export const hasSwiftJSONSerializationUsage = (source: string): boolean => {
 };
 
 export const hasSwiftSensitiveUserDefaultsStorageUsage = (source: string): boolean => {
-  return source.split(/\r?\n/).some((line) => {
+  return collectSwiftSensitiveUserDefaultsStorageLines(source).length > 0;
+};
+
+export const collectSwiftSensitiveUserDefaultsStorageLines = (source: string): readonly number[] => {
+  const lines: number[] = [];
+  source.split(/\r?\n/).forEach((line, index) => {
     const sanitized = stripSwiftLineForSemanticScan(line);
     const lineWithoutComments = line.replace(/\/\/.*$/, '');
     const hasUserDefaultsWrite = /\bUserDefaults\s*\.\s*standard\s*\.\s*set\s*\(/.test(sanitized);
     const hasAppStorage = /@\s*AppStorage\s*\(/.test(sanitized);
 
     if (!hasUserDefaultsWrite && !hasAppStorage) {
-      return false;
+      return;
     }
 
-    return /\b(?:accessToken|refreshToken|authToken|token|password|secret|credential|authorization|bearer|apiKey|sessionId)\b/i.test(
+    if (/\b(?:accessToken|refreshToken|authToken|token|password|secret|credential|authorization|bearer|apiKey|sessionId)\b/i.test(
       lineWithoutComments
-    );
+    )) {
+      lines.push(index + 1);
+    }
   });
+  return sortedUniqueLines(lines);
 };
 
 export const hasSwiftInsecureTransportUsage = (source: string): boolean => {

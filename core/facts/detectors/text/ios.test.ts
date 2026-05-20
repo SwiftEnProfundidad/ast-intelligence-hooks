@@ -173,6 +173,7 @@ import {
   hasSwiftScrollViewShowsIndicatorsUsage,
   hasSwiftSensitiveLoggingUsage,
   hasSwiftSelfPrintChangesUsage,
+  collectSwiftSensitiveUserDefaultsStorageLines,
   hasSwiftSensitiveUserDefaultsStorageUsage,
   hasSwiftInsecureTransportUsage,
   hasSwiftJSONSerializationUsage,
@@ -2045,7 +2046,9 @@ let text = "UserDefaults.standard.set(accessToken, forKey: \\"accessToken\\")"
 `;
 
   assert.equal(hasSwiftSensitiveUserDefaultsStorageUsage(source), true);
+  assert.deepEqual(collectSwiftSensitiveUserDefaultsStorageLines(source), [2, 3]);
   assert.equal(hasSwiftSensitiveUserDefaultsStorageUsage(ignored), false);
+  assert.deepEqual(collectSwiftSensitiveUserDefaultsStorageLines(ignored), []);
 });
 
 test('detector iOS de seguridad detecta transporte inseguro HTTP y ATS permisivo', () => {
