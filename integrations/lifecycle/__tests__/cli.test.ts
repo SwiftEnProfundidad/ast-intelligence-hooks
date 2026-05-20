@@ -25,6 +25,8 @@ import { createPolicyAsCodeSignature } from '../../policy/policyAsCode';
 import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
 import { openSddSession } from '../../sdd/sessionStore';
 import { resolveMcpAiGateReceiptPath, writeMcpAiGateReceipt } from '../../mcp/aiGateReceipt';
+import { resolvePreWriteLeasePath } from '../preWriteLease';
+import { writeLocalContext } from '../../context/contextGate';
 
 const notificationEnvSnapshot: { prev?: string } = {};
 
@@ -1972,6 +1974,7 @@ test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y perm
     );
 
     process.chdir(repo);
+    writeLocalContext(process.cwd());
     process.stdout.write = captureStdout(printed);
 
     const code = await withSddBypass(() =>
@@ -2106,6 +2109,7 @@ test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP v√
     });
 
     process.chdir(repo);
+    writeLocalContext(process.cwd());
     process.stdout.write = captureStdout(printed);
 
     const code = await withSddBypass(() =>
@@ -2134,6 +2138,7 @@ test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP v√
       'POLICY_AS_CODE_VALID'
     );
     assert.equal(payload.policy_validation?.stages?.CI?.validationCode, 'POLICY_AS_CODE_VALID');
+    assert.equal(existsSync(resolvePreWriteLeasePath(repo)), true);
     } finally {
       process.stdout.write = originalStdoutWrite;
       process.chdir(previousCwd);

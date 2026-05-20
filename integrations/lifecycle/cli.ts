@@ -26,6 +26,7 @@ import { runLifecycleUninstall } from './uninstall';
 import { runLifecycleUpdate } from './update';
 import { runOpenSpecBootstrap } from './openSpecBootstrap';
 import { runLifecycleAdapterInstall, type AdapterAgent } from './adapter';
+import { writePreWriteLease } from './preWriteLease';
 import { createLoopSessionContract, isLoopSessionTransitionAllowed } from './loopSessionContract';
 import {
   createLoopSession,
@@ -1864,6 +1865,7 @@ export type LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate: typeof emitAuditSummaryNotificationFromAiGate;
   emitGateBlockedNotification: typeof emitGateBlockedNotification;
   runPlatformGate: typeof runPlatformGate;
+  writePreWriteLease: typeof writePreWriteLease;
   runLifecycleWatch: typeof runLifecycleWatch;
   collectRemoteCiDiagnostics: typeof collectRemoteCiDiagnostics;
 };
@@ -1872,6 +1874,7 @@ const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate,
   emitGateBlockedNotification,
   runPlatformGate,
+  writePreWriteLease,
   runLifecycleWatch,
   collectRemoteCiDiagnostics,
 };

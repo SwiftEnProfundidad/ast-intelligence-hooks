@@ -21,6 +21,7 @@ import {
   type PreWriteEnforcementResolution,
 } from '../policy/preWriteEnforcement';
 import { readLifecycleExperimentalFeaturesSnapshot } from './experimentalFeaturesSnapshot';
+import { GitService } from '../git/GitService';
 
 import {
   type ParsedArgs,
@@ -207,9 +208,54 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             aiGate: rawPreWriteAiGate ?? aiGate,
           });
           const effectiveAiGate = rawPreWriteAiGate ?? aiGate;
-          const reportedAiGate = effectiveAiGate
+          let reportedAiGate = effectiveAiGate
             ? prioritizePreWriteAiGateViolations(effectiveAiGate, nextAction)
             : null;
+          if (
+            result.stage === 'PRE_WRITE' &&
+            result.decision.allowed &&
+            reportedAiGate?.allowed
+          ) {
+            try {
+              const lease = activeDependencies.writePreWriteLease({
+                repoRoot: process.cwd(),
+                git: new GitService(),
+                allowExistingCodeChanges: true,
+              });
+              if (!lease.valid) {
+                reportedAiGate = {
+                  ...reportedAiGate,
+                  status: 'BLOCKED',
+                  allowed: false,
+                  violations: [
+                    ...reportedAiGate.violations,
+                    {
+                      code: lease.code,
+                      severity: 'ERROR',
+                      message: lease.message,
+                    },
+                  ],
+                };
+              }
+            } catch (error) {
+              reportedAiGate = {
+                ...reportedAiGate,
+                status: 'BLOCKED',
+                allowed: false,
+                violations: [
+                  ...reportedAiGate.violations,
+                  {
+                    code: 'PRE_WRITE_LEASE_WRITE_FAILED',
+                    severity: 'ERROR',
+                    message:
+                      error instanceof Error
+                        ? `PRE_WRITE validation passed but could not write the required lease: ${error.message}`
+                        : 'PRE_WRITE validation passed but could not write the required lease.',
+                  },
+                ],
+              };
+            }
+          }
           const sddExperimentalNextAction =
             !aiGate && result.decision.code === 'SDD_EXPERIMENTAL_DISABLED'
               ? {
