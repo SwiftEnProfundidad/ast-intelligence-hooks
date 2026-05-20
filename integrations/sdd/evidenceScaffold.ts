@@ -39,6 +39,10 @@ export type SddEvidenceScaffoldResult = {
         status: SddEvidenceScaffoldTestStatus;
         timestamp: string;
       };
+      verify: {
+        status: SddEvidenceScaffoldTestStatus;
+        timestamp: string;
+      };
     }>;
     metadata: {
       source: 'pumuki-sdd-evidence';
@@ -223,6 +227,10 @@ export const runSddEvidenceScaffold = (params?: {
           timestamp: generatedAt,
         },
         refactor: {
+          status: testStatus,
+          timestamp: generatedAt,
+        },
+        verify: {
           status: testStatus,
           timestamp: generatedAt,
         },

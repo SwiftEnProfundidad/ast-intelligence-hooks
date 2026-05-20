@@ -154,6 +154,9 @@ export const classifyTddBddScope = (
   }
 
   const reasons: string[] = [];
+  if (changedImplementationPaths.size > 0) {
+    reasons.push('functional.implementation_changed');
+  }
   if (changedImplementationPaths.size > thresholds.maxChangedFiles) {
     reasons.push('complex.changed_files_threshold');
   }
@@ -168,9 +171,9 @@ export const classifyTddBddScope = (
   }
 
   const isNewFeature = addedImplementationPaths.size > 0;
-  const isComplexChange = reasons.length > 0;
+  const isComplexChange = reasons.some((reason) => reason.startsWith('complex.'));
   return {
-    inScope: isNewFeature || isComplexChange,
+    inScope: changedImplementationPaths.size > 0,
     isNewFeature,
     isComplexChange,
     reasons,

@@ -96,15 +96,21 @@ export const enforceTddBddPolicy = (params: {
         public_interface_files: scope.metrics.publicInterfaceFiles,
       },
     },
-    evidence: {
-      path: '',
-      state: 'not_required',
-      slices_total: 0,
-      slices_valid: 0,
-      slices_invalid: 0,
-      integrity_ok: true,
-      errors: [],
-    },
+      evidence: {
+        path: '',
+        state: 'not_required',
+        slices_total: 0,
+        slices_valid: 0,
+        slices_invalid: 0,
+        integrity_ok: true,
+        errors: [],
+        phases: {
+          red: 'missing',
+          green: 'missing',
+          refactor: 'missing',
+          verify: 'missing',
+        },
+      },
     waiver: {
       applied: false,
     },
@@ -163,7 +169,7 @@ export const enforceTddBddPolicy = (params: {
       ruleId: 'generic_evidence_integrity_required',
       code: 'TDD_BDD_EVIDENCE_MISSING',
       message:
-        'TDD/BDD evidence contract is required for new/complex changes and was not found.',
+        'Golden Flow evidence is required for functional code changes and was not found. Required phases: RED failed, GREEN passed, REFACTOR passed, VERIFY passed.',
       filePath: evidenceRead.path,
     });
     return {
@@ -207,6 +213,12 @@ export const enforceTddBddPolicy = (params: {
   const sliceFindings: Finding[] = [];
   const seenSliceIds = new Set<string>();
   let validSlices = 0;
+  const phaseState: NonNullable<TddBddSnapshot['evidence']['phases']> = {
+    red: 'missing',
+    green: 'missing',
+    refactor: 'missing',
+    verify: 'missing',
+  };
 
   if (evidenceRead.evidence.slices.length === 0) {
     sliceFindings.push(
@@ -258,6 +270,7 @@ export const enforceTddBddPolicy = (params: {
     }
 
     if (slice.red.status !== 'failed') {
+      phaseState.red = slice.red.status;
       sliceFindings.push(
         buildFinding({
           ruleId: 'generic_tdd_vertical_required',
@@ -266,8 +279,12 @@ export const enforceTddBddPolicy = (params: {
           filePath: evidenceRead.path,
         })
       );
+    } else {
+      phaseState.red = 'failed';
     }
 
+    phaseState.green = slice.green.status;
+    phaseState.refactor = slice.refactor.status;
     if (slice.green.status !== 'passed' || slice.refactor.status !== 'passed') {
       sliceFindings.push(
         buildFinding({
@@ -279,18 +296,42 @@ export const enforceTddBddPolicy = (params: {
       );
     }
 
+    if (!slice.verify) {
+      sliceFindings.push(
+        buildFinding({
+          ruleId: 'generic_golden_flow_verify_required',
+          code: 'GOLDEN_FLOW_VERIFY_EVIDENCE_MISSING',
+          message: `Slice ${slice.id} must include VERIFY passing evidence after REFACTOR.`,
+          filePath: evidenceRead.path,
+        })
+      );
+    } else {
+      phaseState.verify = slice.verify.status;
+      if (slice.verify.status !== 'passed') {
+        sliceFindings.push(
+          buildFinding({
+            ruleId: 'generic_golden_flow_verify_required',
+            code: 'GOLDEN_FLOW_VERIFY_MUST_PASS',
+            message: `Slice ${slice.id} must finish with VERIFY passing evidence.`,
+            filePath: evidenceRead.path,
+          })
+        );
+      }
+    }
+
     if (
       !isTimelineOrdered([
         slice.red.timestamp,
         slice.green.timestamp,
         slice.refactor.timestamp,
+        slice.verify?.timestamp,
       ])
     ) {
       sliceFindings.push(
         buildFinding({
           ruleId: 'generic_red_green_refactor_enforced',
           code: 'TDD_PHASE_TIMELINE_INVALID',
-          message: `Slice ${slice.id} has invalid RED->GREEN->REFACTOR timestamp ordering.`,
+          message: `Slice ${slice.id} has invalid RED->GREEN->REFACTOR->VERIFY timestamp ordering.`,
           filePath: evidenceRead.path,
         })
       );
@@ -320,6 +361,7 @@ export const enforceTddBddPolicy = (params: {
         slices_invalid: invalidSlices,
         integrity_ok: evidenceRead.integrity.valid,
         errors: sliceFindings.map((finding) => finding.code),
+        phases: phaseState,
       },
       waiver: {
         applied: false,

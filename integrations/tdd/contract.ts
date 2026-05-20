@@ -17,6 +17,7 @@ const tddSliceSchema = z.object({
   red: tddEventSchema,
   green: tddEventSchema,
   refactor: tddEventSchema,
+  verify: tddEventSchema.optional(),
 });
 
 const tddIntegritySchema = z.object({

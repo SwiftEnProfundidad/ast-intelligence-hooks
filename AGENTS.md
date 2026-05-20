@@ -159,6 +159,10 @@ Antes de realizar cualquier accion:
   - crear commits atomicos separados o stashes con nombre explicito antes de continuar,
   - no usar un commit masivo para "limpiar" el estado.
 - Antes de cada commit:
+  - confirmar RED registrado o justificar que es cambio documental puro;
+  - confirmar GREEN con test focal ejecutado;
+  - confirmar REFACTOR acotado y gobernado por las skills aplicables;
+  - confirmar VERIFY con typecheck/compilacion/build aplicable;
   - revisar `git diff --cached --name-status`,
   - confirmar que todos los archivos staged pertenecen a la misma intencion,
   - dejar fuera del stage cualquier archivo no relacionado,
@@ -174,9 +178,28 @@ Antes de realizar cualquier accion:
   - preservar cambios en commit o stash con nombre explicito,
   - y reportar la evidencia.
 
+## Golden Flow TDD / Red-Green-Refactor (flujo principal no negociable)
+- Pumuki es primero un orquestador de flujo seguro de ingenieria: las skills son reglas de calidad dentro de este flujo, no sustituyen el flujo.
+- Todo cambio funcional, bugfix de gate/lifecycle, detector AST/nodal, notificacion, hook, policy o codigo de producto debe seguir obligatoriamente:
+  1. `RED`: crear o actualizar primero un test/regresion que falle por el bug o comportamiento esperado.
+  2. `GREEN`: tocar el minimo codigo de produccion necesario para hacer pasar ese test.
+  3. `REFACTOR`: limpiar solo dentro del alcance de la slice, sin cambiar comportamiento.
+  4. `VERIFY`: ejecutar test focal y compilacion/typecheck/build aplicable.
+  5. `COMMIT ATOMICO`: cerrar una unica intencion funcional o tecnica.
+- La fase `REFACTOR` debe aplicar las skills de plataforma correspondientes:
+  - iOS/Swift/SwiftUI: `ios-enterprise-rules`, `swift-concurrency`, `swiftui-expert-skill`; y `swift-testing-expert`, `core-data-expert` o skills Apple adicionales cuando aplique.
+  - Android: `android-enterprise-rules`.
+  - Frontend: `frontend-enterprise-rules`.
+  - Backend: `backend-enterprise-rules`.
+- Esta prohibido commitear codigo funcional sin test focal ejecutado y verde.
+- Esta prohibido publicar release o repinear consumers si el test focal, typecheck o build aplicable fallan.
+- Si no es tecnicamente posible escribir RED antes de tocar produccion, declarar `STATUS: BLOCKED` o documentar una excepcion explicita y trazable antes de continuar.
+- Cambios documentales puros pueden omitir RED, pero deben mantener diff acotado, trazabilidad y commit atomico.
+
 ## Gate operativo obligatorio (antes de editar codigo)
 - Declarar internamente las skills aplicables y tratarlas como activas durante TODO el turno.
 - Verificar cumplimiento minimo previo:
+  - Golden Flow TDD `RED -> GREEN -> REFACTOR -> VERIFY -> COMMIT ATOMICO` requerido para todo cambio funcional.
   - BDD/TDD requerido por la skill correspondiente.
   - Concurrencia y aislamiento segun `swift-concurrency` cuando haya codigo Swift.
   - Estado/arquitectura/UI segun `swiftui-expert-skill` e `ios-enterprise-rules` cuando aplique iOS/SwiftUI.
