@@ -20,6 +20,7 @@ const buildEvidence = (params: {
   warn?: number;
   info?: number;
   includeEnterpriseSeverity?: boolean;
+  findings?: AiEvidenceV2_1['snapshot']['findings'];
 }): AiEvidenceV2_1 =>
   ({
     version: '2.1',
@@ -27,7 +28,7 @@ const buildEvidence = (params: {
     snapshot: {
       stage: 'PRE_COMMIT',
       outcome: params.totalViolations > 0 ? 'WARN' : 'PASS',
-      findings: [],
+      findings: params.findings ?? [],
     },
     ledger: [],
     platforms: {},
@@ -121,7 +122,7 @@ test('emitAuditSummaryNotificationFromEvidence retorna missing-evidence cuando n
   });
 });
 
-test('emitAuditSummaryNotificationFromEvidence emite notificación en PRE_COMMIT', () => {
+test('emitAuditSummaryNotificationFromEvidence emite gate.blocked accionable si hay causa en evidence', () => {
   const events: unknown[] = [];
   const result = emitAuditSummaryNotificationFromEvidence(
     {
@@ -135,6 +136,18 @@ test('emitAuditSummaryNotificationFromEvidence emite notificación en PRE_COMMIT
           critical: 1,
           high: 2,
           includeEnterpriseSeverity: true,
+          findings: [
+            {
+              ruleId: 'skills.ios.prefer-swift-testing',
+              code: 'SKILLS_IOS_PREFER_SWIFT_TESTING',
+              severity: 'ERROR',
+              file: 'apps/ios/Test.swift',
+              lines: [12],
+              message: 'XCTest usado en test nuevo.',
+              expected_fix: 'Usa Swift Testing.',
+              blocking: true,
+            } as AiEvidenceV2_1['snapshot']['findings'][number],
+          ],
         }),
       emitSystemNotification: ({ event }) => {
         events.push(event);
@@ -145,9 +158,17 @@ test('emitAuditSummaryNotificationFromEvidence emite notificación en PRE_COMMIT
 
   assert.deepEqual(result, { delivered: true, reason: 'delivered' });
   assert.equal(events.length, 1);
-  const firstEvent = events[0] as { kind?: string; totalViolations?: number };
-  assert.equal(firstEvent.kind, 'audit.summary');
+  const firstEvent = events[0] as {
+    kind?: string;
+    totalViolations?: number;
+    blockingCauses?: ReadonlyArray<{ ruleId?: string; file?: string; message?: string; remediation?: string }>;
+  };
+  assert.equal(firstEvent.kind, 'gate.blocked');
   assert.equal(firstEvent.totalViolations, 3);
+  assert.equal(firstEvent.blockingCauses?.[0]?.ruleId, 'skills.ios.prefer-swift-testing');
+  assert.equal(firstEvent.blockingCauses?.[0]?.file, 'apps/ios/Test.swift');
+  assert.match(firstEvent.blockingCauses?.[0]?.message ?? '', /lines=12/);
+  assert.equal(firstEvent.blockingCauses?.[0]?.remediation, 'Usa Swift Testing.');
 });
 
 test('emitAuditSummaryNotificationFromEvidence no emite en CI salvo override explícito', () => {
@@ -193,7 +214,7 @@ test('emitAuditSummaryNotificationFromEvidence no emite en CI salvo override exp
   assert.deepEqual(resultEnabled, { delivered: true, reason: 'delivered' });
 });
 
-test('toAuditSummaryEventFromAiGate mapea ERROR/WARN a CRITICAL/HIGH', () => {
+test('toAuditSummaryEventFromAiGate emite gate.blocked si hay violaciones en AI Gate', () => {
   const event = toAuditSummaryEventFromAiGate({
     aiGateResult: {
       violations: [
@@ -202,14 +223,16 @@ test('toAuditSummaryEventFromAiGate mapea ERROR/WARN a CRITICAL/HIGH', () => {
         { code: 'E2', message: 'error', severity: 'ERROR' },
       ],
     },
+    stage: 'PRE_COMMIT',
   });
-  assert.equal(event.kind, 'audit.summary');
-  if (event.kind !== 'audit.summary') {
-    assert.fail('Expected audit.summary event');
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
   }
   assert.equal(event.totalViolations, 3);
-  assert.equal(event.criticalViolations, 2);
-  assert.equal(event.highViolations, 1);
+  assert.equal(event.stage, 'PRE_COMMIT');
+  assert.equal(event.blockingCauses?.[0]?.code, 'E1');
+  assert.equal(event.blockingCauses?.[0]?.message, 'error');
 });
 
 test('emitAuditSummaryNotificationFromAiGate emite notificación para PRE_WRITE', () => {

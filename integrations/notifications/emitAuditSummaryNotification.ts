@@ -1,5 +1,9 @@
 import type { AiEvidenceV2_1 } from '../evidence/schema';
 import { readEvidence } from '../evidence/readEvidence';
+import {
+  extractEvidenceBlockingCauses,
+  formatEvidenceBlockingCause,
+} from '../evidence/blockingCauses';
 import type { AiGateCheckResult } from '../gate/evaluateAiGate';
 import { appendTrackingActionableContext } from '../git/aiGateRepoPolicyFindings';
 import {
@@ -51,6 +55,13 @@ const withTrackingContext = (params: {
   });
 };
 
+const normalizeNotificationStage = (stage: string): PumukiNotificationStage => {
+  if (stage === 'PRE_WRITE' || stage === 'PRE_COMMIT' || stage === 'PRE_PUSH' || stage === 'CI') {
+    return stage;
+  }
+  return 'PRE_COMMIT';
+};
+
 export const shouldEmitAuditSummaryNotificationForStage = (
   stage: AuditSummaryNotificationStage,
   env: NodeJS.ProcessEnv = process.env
@@ -66,6 +77,25 @@ export const toAuditSummaryEventFromEvidence = (
 ): PumukiCriticalNotificationEvent => {
   const enterpriseSeverity = evidence.severity_metrics.by_enterprise_severity;
   const severity = evidence.severity_metrics.by_severity;
+  const blockingCauses = extractEvidenceBlockingCauses(evidence);
+  if (blockingCauses.length > 0) {
+    const primaryCause = blockingCauses[0]!;
+    return {
+      kind: 'gate.blocked',
+      stage: normalizeNotificationStage(evidence.snapshot.stage),
+      totalViolations: evidence.severity_metrics.total_violations,
+      causeCode: primaryCause.code,
+      causeMessage: formatEvidenceBlockingCause(primaryCause),
+      remediation: primaryCause.remediation ?? 'Corrige la violación indicada y vuelve a intentar el commit.',
+      blockingCauses: blockingCauses.map((cause) => ({
+        code: cause.code,
+        ruleId: cause.ruleId,
+        file: cause.file,
+        message: formatEvidenceBlockingCause(cause),
+        remediation: cause.remediation,
+      })),
+    };
+  }
   return {
     kind: 'audit.summary',
     totalViolations: evidence.severity_metrics.total_violations,
@@ -76,6 +106,7 @@ export const toAuditSummaryEventFromEvidence = (
 
 export const toAuditSummaryEventFromAiGate = (params: {
   aiGateResult: Pick<AiGateCheckResult, 'violations'>;
+  stage?: PumukiNotificationStage;
 }): PumukiCriticalNotificationEvent => {
   const criticalViolations = params.aiGateResult.violations.reduce(
     (total, violation) => (violation.severity === 'ERROR' ? total + 1 : total),
@@ -85,6 +116,23 @@ export const toAuditSummaryEventFromAiGate = (params: {
     (total, violation) => (violation.severity === 'WARN' ? total + 1 : total),
     0
   );
+  if (params.aiGateResult.violations.length > 0) {
+    const primaryViolation = params.aiGateResult.violations[0]!;
+    return {
+      kind: 'gate.blocked',
+      stage: params.stage ?? 'PRE_WRITE',
+      totalViolations: params.aiGateResult.violations.length,
+      causeCode: primaryViolation.code,
+      causeMessage: primaryViolation.message,
+      remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+      blockingCauses: params.aiGateResult.violations.map((violation) => ({
+        code: violation.code,
+        ruleId: violation.code,
+        message: violation.message,
+        remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+      })),
+    };
+  }
   return {
     kind: 'audit.summary',
     totalViolations: params.aiGateResult.violations.length,
@@ -144,6 +192,7 @@ export const emitAuditSummaryNotificationFromAiGate = (
   }
   const event = toAuditSummaryEventFromAiGate({
     aiGateResult: params.aiGateResult,
+    stage: params.stage,
   });
   return activeDependencies.emitSystemNotification({
     event,
