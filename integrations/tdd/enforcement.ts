@@ -19,6 +19,7 @@ const buildFinding = (params: {
   severity?: Finding['severity'];
   filePath?: string;
   source?: string;
+  expected_fix?: string;
 }): Finding => {
   return {
     ruleId: params.ruleId,
@@ -28,6 +29,7 @@ const buildFinding = (params: {
     filePath: params.filePath,
     matchedBy: 'TddBddEnforcer',
     source: params.source ?? 'tdd-bdd-contract',
+    expected_fix: params.expected_fix,
   };
 };
 
@@ -301,8 +303,14 @@ export const enforceTddBddPolicy = (params: {
         buildFinding({
           ruleId: 'generic_golden_flow_verify_required',
           code: 'GOLDEN_FLOW_VERIFY_EVIDENCE_MISSING',
-          message: `Slice ${slice.id} must include VERIFY passing evidence after REFACTOR.`,
+          message:
+            `Slice ${slice.id} is missing final test verification after REFACTOR. ` +
+            `missing=[verify.status=passed] test_ref=${slice.refactor.test_ref ?? slice.green.test_ref ?? 'unregistered'}`,
           filePath: evidenceRead.path,
+          expected_fix:
+            `Si el test/build ya pasó, informa a Pumuki del resultado real con: ` +
+            `npx pumuki sdd evidence --scenario-id=${slice.id} --test-command="<comando XCTest/build ejecutado>" --test-status=passed. ` +
+            `Después haz un commit atómico del slice.`,
         })
       );
     } else {
@@ -310,13 +318,18 @@ export const enforceTddBddPolicy = (params: {
       if (slice.verify.status !== 'passed') {
         sliceFindings.push(
           buildFinding({
-            ruleId: 'generic_golden_flow_verify_required',
-            code: 'GOLDEN_FLOW_VERIFY_MUST_PASS',
-            message: `Slice ${slice.id} must finish with VERIFY passing evidence.`,
-            filePath: evidenceRead.path,
-          })
-        );
-      }
+          ruleId: 'generic_golden_flow_verify_required',
+          code: 'GOLDEN_FLOW_VERIFY_MUST_PASS',
+          message:
+            `Slice ${slice.id} has final test verification but it is not green. ` +
+            `missing=[verify.status=passed] test_ref=${slice.verify.test_ref ?? 'unregistered'}`,
+          filePath: evidenceRead.path,
+          expected_fix:
+            `Corrige el fallo del test/build final y vuelve a informar a Pumuki con ` +
+            `npx pumuki sdd evidence --scenario-id=${slice.id} --test-command="<comando XCTest/build ejecutado>" --test-status=passed.`,
+        })
+      );
+    }
     }
 
     if (

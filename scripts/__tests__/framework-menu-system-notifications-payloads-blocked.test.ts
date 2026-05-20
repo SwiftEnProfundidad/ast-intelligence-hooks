@@ -109,7 +109,8 @@ test('buildGateBlockedPayload resume Golden Flow con solucion especifica', () =>
           ruleId: 'generic_golden_flow_verify_required',
           file: '.pumuki/artifacts/pumuki-evidence-v1.json',
           message: 'missing=[verify.status=passed]',
-          remediation: 'Registra VERIFY passed.',
+          remediation:
+            'Si el test/build ya pasó, informa a Pumuki del resultado real con: npx pumuki sdd evidence --scenario-id=rgo-1900 --test-command="<comando XCTest/build ejecutado>" --test-status=passed. Después haz un commit atómico del slice.',
         },
       ],
     },
@@ -117,9 +118,9 @@ test('buildGateBlockedPayload resume Golden Flow con solucion especifica', () =>
   );
 
   assert.match(payload.subtitle ?? '', /Violación del ciclo TDD/);
-  assert.match(payload.message, /Ejecuta los tests de la implementación/);
+  assert.match(payload.message, /informa a Pumuki del resultado real/);
+  assert.match(payload.message, /pumuki sdd evidence/);
   assert.match(payload.message, /commit atómico/);
-  assert.doesNotMatch(payload.message, /evidencia/);
   assert.doesNotMatch(payload.message, /Corrige las violaciones listadas/);
   assert.doesNotMatch(payload.message, /reejecuta el gate/);
 });

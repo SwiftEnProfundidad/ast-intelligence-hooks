@@ -227,7 +227,7 @@ const formatGoldenFlowMissing = (message: string): string => {
   return missing.toLowerCase();
 };
 
-const formatGoldenFlowRemediation = (message: string): string => {
+const formatGoldenFlowRemediation = (message: string, remediation?: string): string => {
   const missing = normalizeGoldenFlowMissingToken(message);
   if (missing.includes('RED')) {
     return 'Implementa la fase RED antes de continuar. Las fases del ciclo TDD (RED, GREEN, REFACTOR) deben completarse para desbloquear.';
@@ -239,7 +239,7 @@ const formatGoldenFlowRemediation = (message: string): string => {
     return 'Implementa la fase REFACTOR antes de continuar. Limpia la solución manteniendo los tests en verde.';
   }
   if (missing.includes('VERIFY')) {
-    return GOLDEN_FLOW_REMEDIATION;
+    return remediation ? localizeDeveloperText(remediation) : GOLDEN_FLOW_REMEDIATION;
   }
   return 'Completa el ciclo TDD en orden: RED, GREEN, REFACTOR y tests finales en verde antes del commit.';
 };
@@ -299,7 +299,7 @@ const resolveGoldenFlowDialogRemediation = (
   causes: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']
 ): string => {
   const first = causes?.find(isGoldenFlowCause);
-  return first ? formatGoldenFlowRemediation(first.message) : GOLDEN_FLOW_REMEDIATION;
+  return first ? formatGoldenFlowRemediation(first.message, first.remediation) : GOLDEN_FLOW_REMEDIATION;
 };
 
 export const buildBlockedDialogPayload = (params: {

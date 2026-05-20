@@ -308,7 +308,7 @@ test('buildBlockedDialogPayload muestra Golden Flow sin campos tecnicos ni soluc
           message:
             'message=Falta fase VERIFY passed en la evidencia Golden Flow. missing=[verify.status=passed] snippet=RED failed -> GREEN passed -> REFACTOR passed -> VERIFY missing',
           remediation:
-            'Ejecuta test/build/typecheck de verificación, registra VERIFY passed en la evidencia Golden Flow y reejecuta el gate.',
+            'Si el test/build ya pasó, informa a Pumuki del resultado real con: npx pumuki sdd evidence --scenario-id=rgo-1900 --test-command="<comando XCTest/build ejecutado>" --test-status=passed. Después haz un commit atómico del slice.',
         },
       ],
     }),
@@ -323,9 +323,10 @@ test('buildBlockedDialogPayload muestra Golden Flow sin campos tecnicos ni soluc
   assert.match(payload.cause, /Falta: tests finales en verde sin ejecutar antes del commit/);
   assert.equal(
     payload.remediation,
-    'Ejecuta los tests de la implementación. Si están en verde, haz un commit atómico de los cambios.'
+    'Si el test/build ya pasó, informa a Pumuki del resultado real con: npx pumuki sdd evidence --scenario-id=rgo-1900 --test-command="<comando XCTest/build ejecutado>" --test-status=passed. Después haz un commit atómico del slice.'
   );
-  assert.doesNotMatch(payload.remediation, /evidencia/);
+  assert.match(payload.remediation, /informa a Pumuki del resultado real/);
+  assert.match(payload.remediation, /pumuki sdd evidence/);
   assert.doesNotMatch(payload.cause, /Solución:/);
   assert.doesNotMatch(payload.cause, /Esperado:/);
   assert.doesNotMatch(payload.cause, /Falta: Falta:/);

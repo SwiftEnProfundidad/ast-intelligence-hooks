@@ -55,7 +55,9 @@ const formatGoldenFlowBannerRemediation = (cause: BlockedCause): string => {
     return 'Implementa la fase REFACTOR antes de continuar. Limpia la solución manteniendo los tests en verde.';
   }
   if (missing.includes('VERIFY')) {
-    return 'Ejecuta los tests de la implementación. Si están en verde, haz un commit atómico de los cambios.';
+    return cause.remediation
+      ? normalizeNotificationText(cause.remediation)
+      : 'Ejecuta los tests de la implementación. Si están en verde, haz un commit atómico de los cambios.';
   }
   return 'Completa el ciclo TDD en orden: RED, GREEN, REFACTOR y tests finales en verde antes del commit.';
 };
