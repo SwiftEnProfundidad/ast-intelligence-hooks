@@ -55,3 +55,39 @@ test('buildGateBlockedPayload muestra causa y solución coherentes para tracking
   assert.match(payload.message, /tracking/i);
   assert.doesNotMatch(payload.message, /policy reconcile/i);
 });
+
+test('buildGateBlockedPayload prioriza primera skill con fichero, linea, violacion y solucion', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 2,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'SKILLS_IOS_PREFER_SWIFT_TESTING',
+          ruleId: 'skills.ios.prefer-swift-testing',
+          file: 'apps/ios/Tests/Mac/Presentation/Features/BuyerCommerceScreensSnapshotTests.swift',
+          message:
+            'severity=WARN code=SKILLS_IOS_PREFER_SWIFT_TESTING file=apps/ios/Tests/Mac/Presentation/Features/BuyerCommerceScreensSnapshotTests.swift lines=12 message=XCTest - Solo para proyectos legacy o UI tests',
+          remediation: 'Migra el test a Swift Testing o justifica explicitamente la excepcion UI/legacy.',
+        },
+        {
+          code: 'SDD_SESSION_INVALID',
+          ruleId: 'sdd.policy.blocked',
+          file: 'openspec/changes',
+          message: 'La sesión SDD actual no es válida.',
+          remediation: 'Refresca la sesión SDD activa.',
+        },
+      ],
+    },
+    'R_GO · '
+  );
+
+  assert.match(payload.subtitle ?? '', /Skill violada: skills\.ios\.prefer-swift-testing/);
+  assert.match(payload.subtitle ?? '', /BuyerCommerceScreensSnapshotTests\.swift:12/);
+  assert.match(payload.message, /Regla: skills\.ios\.prefer-swift-testing/);
+  assert.match(payload.message, /Fichero: BuyerCommerceScreensSnapshotTests\.swift:12/);
+  assert.match(payload.message, /Viola: XCTest - Solo para proyectos legacy o UI tests/);
+  assert.match(payload.message, /Solución: Migra el test a Swift Testing/);
+});

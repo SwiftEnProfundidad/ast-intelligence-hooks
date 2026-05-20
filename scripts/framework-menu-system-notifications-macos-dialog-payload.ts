@@ -27,7 +27,10 @@ const buildBlockingCausesDetails = (
     ? 'Causas bloqueantes: 1'
     : `Causas bloqueantes: ${total}`;
   return resolvePrioritizedBlockingCauses(causes)
-    .flatMap((cause, index) => formatBlockingCauseForDialog(cause, index))
+    .flatMap((cause, index) => {
+      const formatted = formatBlockingCauseForDialog(cause, index);
+      return index === 0 ? formatted : ['', ...formatted];
+    })
     .reduce((lines, line) => [...lines, line], [header])
     .join('\n');
 };
@@ -51,6 +54,40 @@ const stripTechnicalFieldsFromMessage = (message: string): string => {
     .replace(/\bremediation=/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
+};
+
+const extractFieldFromCauseMessage = (message: string, field: string): string | null => {
+  const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = message.match(new RegExp(`\\b${escapedField}=([^\\n]+?)(?=\\s(?:severity|code|rule|file|lines?|message|remediation|snippet|node|primary_node|missing)=|$)`, 'i'));
+  const value = match?.[1]?.trim();
+  return value && value.length > 0 ? normalizeNotificationText(value) : null;
+};
+
+const extractSnippetFromCauseMessage = (message: string): string | null =>
+  extractFieldFromCauseMessage(message, 'snippet') ??
+  extractFieldFromCauseMessage(message, 'node') ??
+  extractFieldFromCauseMessage(message, 'primary_node');
+
+const extractMissingContractFromCauseMessage = (message: string): string | null => {
+  const missing = extractFieldFromCauseMessage(message, 'missing')?.replace(/\]\]$/u, ']');
+  if (!missing) {
+    return null;
+  }
+  return `Falta: ${missing}`;
+};
+
+const buildEvidenceLine = (
+  cause: NonNullable<Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']>[number]
+): string | null => {
+  const snippet = extractSnippetFromCauseMessage(cause.message);
+  if (snippet) {
+    return `   Evidencia: ${truncateNotificationText(snippet, 160)}`;
+  }
+  const missing = extractMissingContractFromCauseMessage(cause.message);
+  if (missing) {
+    return `   Evidencia: ${truncateNotificationText(missing, 160)}`;
+  }
+  return null;
 };
 
 const formatLocation = (cause: NonNullable<Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']>[number]): string => {
@@ -95,8 +132,9 @@ const formatBlockingCauseForDialog = (
     `${index + 1}. Regla: ${truncateNotificationText(rule, 96)}`,
     `   Fichero: ${truncateNotificationText(formatLocation(cause), 120)}`,
     `   Viola: ${truncateNotificationText(problem, 160)}`,
+    buildEvidenceLine(cause),
     `   Solución: ${truncateNotificationText(remediation, 180)}`,
-  ];
+  ].filter((line): line is string => typeof line === 'string');
 };
 
 const hasOnlyWorktreeHygieneCauses = (

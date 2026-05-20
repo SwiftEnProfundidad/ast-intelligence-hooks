@@ -139,6 +139,46 @@ test('buildBlockedDialogPayload no muestra comandos npx largos en la ventana vis
   assert.doesNotMatch(payload.remediation, /npx --yes --package/);
 });
 
+test('buildBlockedDialogPayload muestra skills iOS con separador, linea, evidencia y solucion especifica', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_COMMIT',
+      totalViolations: 2,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'SKILLS_IOS_PREFER_SWIFT_TESTING',
+          ruleId: 'skills.ios.prefer-swift-testing',
+          file: 'apps/ios/Tests/Mac/Presentation/Features/BuyerCommerceScreensSnapshotTests.swift',
+          message:
+            'severity=WARN code=SKILLS_IOS_PREFER_SWIFT_TESTING file=apps/ios/Tests/Mac/Presentation/Features/BuyerCommerceScreensSnapshotTests.swift lines=12 message=XCTest - Solo para proyectos legacy o UI tests snippet=final class BuyerCommerceScreensSnapshotTests: XCTestCase',
+          remediation: 'Migra el test a Swift Testing o justifica explicitamente la excepcion UI/legacy.',
+        },
+        {
+          code: 'SKILLS_IOS_TEST_QUALITY_INCOMPLETE',
+          ruleId: 'governance.skills.ios-test-quality.incomplete',
+          file: '.ai_evidence.json',
+          message:
+            'iOS test quality enforcement incomplete at PRE_COMMIT: apps/ios/Tests/Mac/Presentation/Features/BuyerCommerceScreensSnapshotTests.swift[missing=[makeSUT(), trackForMemoryLeaks()]]',
+          remediation: 'Añade makeSUT() y trackForMemoryLeaks() al test afectado.',
+        },
+      ],
+    }),
+    repoRoot: '/tmp/R_GO',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'R_GO',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /1\. Regla: skills\.ios\.prefer-swift-testing/);
+  assert.match(payload.cause, /Fichero: apps\/ios\/Tests\/Mac\/Presentation\/Features\/BuyerCommerceScreensSnapshotTests\.swift:12/);
+  assert.match(payload.cause, /Evidencia: final class BuyerCommerceScreensSnapshotTests: XCTestCase/);
+  assert.match(payload.cause, /Solución: Migra el test a Swift Testing/);
+  assert.match(payload.cause, /\n\n2\. Regla: governance\.skills\.ios-test-quality\.incomplete/);
+  assert.match(payload.cause, /Evidencia: Falta: \[makeSUT\(\), trackForMemoryLeaks\(\)\]/);
+  assert.match(payload.cause, /Solución: Añade makeSUT\(\) y trackForMemoryLeaks\(\)/);
+});
+
 test('buildBlockedDialogPayload muestra remediación SDD accionable en vez de repetir pumuki-pre-write', () => {
   const payload = buildBlockedDialogPayload({
     event: blockedEvent({

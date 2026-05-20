@@ -4,7 +4,10 @@ import type {
 } from './framework-menu-system-notifications-types';
 import { resolveBlockedCauseSummary } from './framework-menu-system-notifications-cause';
 import { resolveBlockedRemediation } from './framework-menu-system-notifications-remediation';
-import { truncateNotificationText } from './framework-menu-system-notifications-text';
+import {
+  normalizeNotificationText,
+  truncateNotificationText,
+} from './framework-menu-system-notifications-text';
 
 export {
   resolveBlockedCauseSummary,
@@ -36,6 +39,39 @@ const formatCauseLocation = (cause: BlockedCause): string => {
 };
 
 const formatCauseRule = (cause: BlockedCause): string => cause.ruleId ?? cause.code;
+
+const extractMessageField = (message: string, field: string): string | null => {
+  const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = message.match(new RegExp(`\\b${escapedField}=([^\\n]+?)(?=\\s(?:severity|code|rule|file|lines?|message|remediation|snippet|node|primary_node|missing)=|$)`, 'i'));
+  const value = match?.[1]?.trim();
+  return value && value.length > 0 ? normalizeNotificationText(value) : null;
+};
+
+const stripTechnicalFieldsFromMessage = (message: string): string =>
+  normalizeNotificationText(message)
+    .replace(/\bseverity=[A-Z]+\b/gi, '')
+    .replace(/\bcode=[A-Z0-9_]+\b/gi, '')
+    .replace(/\brule=[^\s]+/gi, '')
+    .replace(/\bfile=[^\s]+/gi, '')
+    .replace(/\blines?=[0-9][0-9,\-\s]*/gi, '')
+    .replace(/\bmessage=/gi, '')
+    .replace(/\bremediation=/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const formatCauseProblem = (cause: BlockedCause): string => {
+  const messageField = extractMessageField(cause.message, 'message');
+  if (messageField) {
+    return messageField;
+  }
+  return stripTechnicalFieldsFromMessage(cause.message) || cause.code;
+};
+
+const formatCauseFix = (cause: BlockedCause): string =>
+  normalizeNotificationText(
+    cause.remediation ??
+    'Corrige la violación indicada con regla, fichero y línea, y vuelve a ejecutar el gate.'
+  );
 
 export const resolvePrioritizedBlockingCauses = (
   causes: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']
@@ -80,10 +116,18 @@ const buildBlockingCausesRemediation = (
   if (!first) {
     return null;
   }
-  const remediation =
-    first.remediation ??
-    'Corrige la violación indicada con regla, fichero y línea, y vuelve a ejecutar el gate.';
-  return `${remediation} Revisa el reporte completo para el resto de causas bloqueantes.`;
+  if (isSkillCause(first)) {
+    return [
+      `Regla: ${formatCauseRule(first)}.`,
+      `Fichero: ${formatCauseLocation(first)}.`,
+      `Viola: ${formatCauseProblem(first)}.`,
+      `Solución: ${formatCauseFix(first)}.`,
+      prioritized.length > 1 ? `Quedan ${prioritized.length - 1} causa(s) más en el reporte completo.` : '',
+    ]
+      .filter((line) => line.length > 0)
+      .join(' ');
+  }
+  return `${formatCauseFix(first)} Revisa el reporte completo para el resto de causas bloqueantes.`;
 };
 
 export const buildGateBlockedPayload = (
