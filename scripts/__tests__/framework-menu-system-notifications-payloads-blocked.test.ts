@@ -178,3 +178,44 @@ test('buildGateBlockedPayload explica BDD feature missing sin usar umbrella EVID
   assert.doesNotMatch(payload.subtitle ?? '', /EVIDENCE_GATE_BLOCKED/);
   assert.doesNotMatch(payload.message, /generic_bdd_feature_required/);
 });
+
+test('buildGateBlockedPayload resume contrato de skills incompleto en lenguaje dev', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 2,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+          ruleId: 'ai_evidence.json',
+          file: '.ai_evidence.json',
+          message:
+            'Detected platforms missing critical skill-rule enforcement in PRE_WRITE: ios(missing_critical_rule_ids=[skills.ios.critical-test-quality]). platforms=ios rules={skills.ios.critical-test-quality}',
+          remediation:
+            'npx --yes --package pumuki@6.3.319 pumuki policy reconcile --strict --json && npx --yes --package pumuki@6.3.319 pumuki sdd validate --stage=PRE_WRITE --json',
+        },
+        {
+          code: 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE',
+          ruleId: 'ai_evidence.json',
+          file: '.ai_evidence.json',
+          message:
+            'Skills contract incomplete for PRE_WRITE: EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING.',
+          remediation:
+            'npx --yes --package pumuki@6.3.319 pumuki policy reconcile --strict --json',
+        },
+      ],
+    },
+    'R_GO · '
+  );
+
+  assert.match(payload.subtitle ?? '', /Contrato de skills incompleto: iOS/);
+  assert.match(payload.message, /Pumuki detecta iOS/);
+  assert.match(payload.message, /skills\.ios\.critical-test-quality/);
+  assert.match(payload.message, /repinea Pumuki/);
+  assert.doesNotMatch(payload.subtitle ?? '', /EVIDENCE_/);
+  assert.doesNotMatch(payload.message, /EVIDENCE_/);
+  assert.doesNotMatch(payload.message, /\.ai_evidence\.json/);
+  assert.doesNotMatch(payload.message, /npx --yes --package/);
+});

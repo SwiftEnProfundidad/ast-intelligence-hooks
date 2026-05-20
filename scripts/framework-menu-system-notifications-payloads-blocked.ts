@@ -47,6 +47,35 @@ const isBddScenarioMissingCause = (cause: BlockedCause): boolean => {
   );
 };
 
+const isSkillsContractCause = (cause: BlockedCause): boolean => {
+  const searchable = `${cause.code} ${cause.ruleId ?? ''} ${cause.message}`.toUpperCase();
+  return (
+    searchable.includes('EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING') ||
+    searchable.includes('EVIDENCE_SKILLS_CONTRACT_INCOMPLETE')
+  );
+};
+
+const formatPlatformName = (platform: string | null): string =>
+  platform
+    ? platform
+      .replace(/\bios\b/giu, 'iOS')
+      .replace(/\bandroid\b/giu, 'Android')
+      .replace(/\bfrontend\b/giu, 'Frontend')
+      .replace(/\bbackend\b/giu, 'Backend')
+    : 'plataforma detectada';
+
+const extractSkillsContractPlatform = (message: string): string | null =>
+  message.match(/\bplatforms?=([a-z0-9_,.-]+)/i)?.[1]?.split(',')[0]?.trim() ?? null;
+
+const extractSkillsContractRules = (message: string): string | null => {
+  const rulesMatch = message.match(/\brules?=\{([^}]+)\}/i)?.[1];
+  const missingMatch = message.match(/\bmissing=\[([^\]]+)\]/i)?.[1];
+  return normalizeNotificationText(rulesMatch ?? missingMatch ?? '');
+};
+
+const SKILLS_CONTRACT_REMEDIATION =
+  'Actualiza o reconcilia el contrato de skills de Pumuki y vuelve a intentar el commit. Si estás en un repo consumidor, repinea Pumuki a una versión que incluya esa regla crítica.';
+
 const extractExpectedBddFeatureFile = (cause: BlockedCause): string => {
   const directFile = cause.file?.endsWith('.feature') ? cause.file : null;
   const fieldMatch = cause.message.match(/\bfile=([^\s]+\.feature)\b/i)?.[1];
@@ -187,6 +216,11 @@ export const resolvePrioritizedBlockingCauses = (
     if (leftBddScenarioMissing !== rightBddScenarioMissing) {
       return leftBddScenarioMissing ? -1 : 1;
     }
+    const leftSkillsContract = isSkillsContractCause(left);
+    const rightSkillsContract = isSkillsContractCause(right);
+    if (leftSkillsContract !== rightSkillsContract) {
+      return leftSkillsContract ? -1 : 1;
+    }
     return 0;
   });
 };
@@ -212,6 +246,10 @@ const buildBlockingCausesSummary = (
   }
   if (isBddScenarioMissingCause(first)) {
     return `BDD sin fichero .feature: ${extractExpectedBddFeatureFile(first)}${overflow}`;
+  }
+  if (isSkillsContractCause(first)) {
+    const platform = formatPlatformName(extractSkillsContractPlatform(first.message));
+    return `Contrato de skills incompleto: ${platform}${overflow}`;
   }
   return `${prefix}: ${formatCauseRule(first)} · ${formatCauseLocation(first)}${overflow}`;
 };
@@ -243,6 +281,11 @@ const buildBlockingCausesRemediation = (
   }
   if (isBddScenarioMissingCause(first)) {
     return `Falta el fichero ${extractExpectedBddFeatureFile(first)}. Crea ese .feature con el escenario de aceptación de la slice, o corrige la referencia de tarea si no corresponde.`;
+  }
+  if (isSkillsContractCause(first)) {
+    const platform = formatPlatformName(extractSkillsContractPlatform(first.message));
+    const rules = extractSkillsContractRules(first.message);
+    return `Pumuki detecta ${platform}, pero falta activar enforcement de skills críticas${rules ? `: ${rules}` : ''}. ${SKILLS_CONTRACT_REMEDIATION}`;
   }
   return `${formatCauseFix(first)} Revisa el reporte completo para el resto de causas bloqueantes.`;
 };

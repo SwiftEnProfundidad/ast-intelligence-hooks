@@ -2475,3 +2475,50 @@ Evidencia:
 - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-cause.test.ts scripts/__tests__/framework-menu-system-notifications-remediation.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-payload.test.ts scripts/__tests__/framework-menu-system-notifications-payloads-blocked.test.ts`
 - `npm run -s typecheck`
 - `git diff --check`
+
+### 2026-05-20 - PUMUKI-INC-172 candidate / notificación skills contract incompleto con códigos internos
+
+- ✅ Detectado en RuralGo: la ventana mostraba `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING`, `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE`, `.ai_evidence.json` y comandos largos de reconcile.
+- ✅ Añadida categoría específica para contrato de skills incompleto en notificación detallada y compacta.
+- ✅ La notificación ahora explica en lenguaje dev: plataforma detectada, skill crítica sin enforcement y solución de reconciliar/repinear Pumuki.
+- ✅ Añadidos tests de regresión para no volver a exponer `EVIDENCE_*`, `.ai_evidence.json` ni comandos `npx --yes --package` en este caso.
+
+Evidencia:
+- ✔ buildBlockedDialogPayload compone título, causa y remediación visibles (2.913542ms)
+✔ buildBlockedDialogPayload muestra cada causa bloqueante con regla, archivo, linea y solución (7.530541ms)
+✔ buildBlockedDialogPayload explica tracking bloqueado con línea accionable (0.611625ms)
+✔ buildBlockedDialogPayload no omite causas bloqueantes aunque haya más de seis (1.177208ms)
+✔ buildBlockedDialogPayload no muestra comandos npx largos en la ventana visual (0.795ms)
+✔ buildBlockedDialogPayload explica BDD feature missing sin mostrar EVIDENCE_GATE_BLOCKED ambiguo (0.551708ms)
+✔ buildBlockedDialogPayload explica contrato de skills incompleto sin códigos EVIDENCE (1.053459ms)
+✔ buildBlockedDialogPayload muestra skills iOS con separador, linea, evidencia y solucion especifica (0.630791ms)
+✔ buildBlockedDialogPayload traduce reglas SwiftUI frecuentes a lenguaje dev y evita spanglish principal (0.810583ms)
+✔ buildBlockedDialogPayload muestra remediación SDD accionable en vez de repetir pumuki-pre-write (0.500667ms)
+✔ buildBlockedDialogPayload muestra aviso de worktree sin git add masivo ni texto de violaciones (0.495ms)
+✔ buildBlockedDialogPayload muestra Golden Flow sin campos tecnicos ni solucion generica (0.546ms)
+✔ buildBlockedDialogPayload explica fase RED del ciclo TDD en lenguaje dev (0.642833ms)
+✔ buildGateBlockedPayload construye payload para gate BLOCK (1.731458ms)
+✔ buildGateBlockedPayload incluye proyecto en subtítulo cuando hay prefijo (0.522417ms)
+✔ buildGateBlockedPayload muestra causa y solución coherentes para tracking bloqueado (1.32025ms)
+✔ buildGateBlockedPayload prioriza primera skill con fichero, linea, violacion y solucion (1.0155ms)
+✔ buildGateBlockedPayload resume Golden Flow con solucion especifica (0.679334ms)
+✔ buildGateBlockedPayload explica RED en lenguaje dev si falta esa fase TDD (0.324916ms)
+✔ buildGateBlockedPayload explica BDD feature missing sin usar umbrella EVIDENCE_GATE_BLOCKED (0.742333ms)
+✔ buildGateBlockedPayload resume contrato de skills incompleto en lenguaje dev (1.831083ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 870.777584 -> 21/21
+-  -> OK
+- [tracking-single-active] file=PUMUKI-RESET-MASTER-PLAN.md
+[tracking-single-active] in_progress_count=1
+[tracking-single-active] OK: exactly one in-progress task in active tracking file(s).
+[self-worktree-hygiene] repo=/Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks
+[self-worktree-hygiene] changed_files=5 max_files=25
+[self-worktree-hygiene] changed_scopes=2 max_scopes=2
+[self-worktree-hygiene] top_scopes=scripts=4, root=1
+[self-worktree-hygiene] OK: worktree within maintainer hygiene limits. -> OK

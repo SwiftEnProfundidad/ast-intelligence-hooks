@@ -216,6 +216,37 @@ const isSkillCause = (
   (cause.ruleId ?? '').startsWith('skills.') ||
   cause.code.startsWith('SKILLS_');
 
+const isSkillsContractCause = (
+  cause: NonNullable<Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']>[number]
+): boolean => {
+  const searchable = `${cause.code} ${cause.ruleId ?? ''} ${cause.message}`.toUpperCase();
+  return (
+    searchable.includes('EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING') ||
+    searchable.includes('EVIDENCE_SKILLS_CONTRACT_INCOMPLETE')
+  );
+};
+
+const formatPlatformName = (platform: string | null): string =>
+  platform
+    ? platform
+      .replace(/\bios\b/giu, 'iOS')
+      .replace(/\bandroid\b/giu, 'Android')
+      .replace(/\bfrontend\b/giu, 'Frontend')
+      .replace(/\bbackend\b/giu, 'Backend')
+    : 'plataforma detectada';
+
+const extractSkillsContractPlatform = (message: string): string | null =>
+  message.match(/\bplatforms?=([a-z0-9_,.-]+)/i)?.[1]?.split(',')[0]?.trim() ?? null;
+
+const extractSkillsContractRules = (message: string): string | null => {
+  const rulesMatch = message.match(/\brules?=\{([^}]+)\}/i)?.[1];
+  const missingMatch = message.match(/\bmissing=\[([^\]]+)\]/i)?.[1];
+  return normalizeNotificationText(rulesMatch ?? missingMatch ?? '');
+};
+
+const SKILLS_CONTRACT_REMEDIATION =
+  'Actualiza o reconcilia el contrato de skills de Pumuki y vuelve a intentar el commit. Si estás en un repo consumidor, repinea Pumuki a una versión que incluya esa regla crítica.';
+
 const WORKTREE_HYGIENE_REMEDIATION =
   'Reduce el worktree pendiente a un slice atómico: stagea solo la tarea activa o guarda el resto en stash nombrado, y reejecuta PRE_WRITE.';
 
@@ -301,6 +332,16 @@ const formatBlockingCauseForDialog = (
       '   Solución: Crea ese .feature con el escenario de aceptación de la slice, o corrige la referencia si el id de tarea no es correcto.',
     ];
   }
+  if (isSkillsContractCause(cause)) {
+    const platform = formatPlatformName(extractSkillsContractPlatform(cause.message));
+    const rules = extractSkillsContractRules(cause.message);
+    return [
+      `${index + 1}. Causa bloqueante: contrato de skills incompleto`,
+      `   Plataforma: ${platform}`,
+      `   Falla: Pumuki detecta ${platform}, pero falta activar enforcement de skills críticas${rules ? `: ${rules}` : ''}.`,
+      `   Solución: ${SKILLS_CONTRACT_REMEDIATION}`,
+    ];
+  }
 
   const causeLabel = isSkillCause(cause) ? 'Regla' : 'Causa bloqueante';
   return [
@@ -327,6 +368,11 @@ const hasOnlyBddScenarioMissingCauses = (
 ): boolean =>
   Boolean(causes?.length) && causes!.every(isBddScenarioMissingCause);
 
+const hasOnlySkillsContractCauses = (
+  causes: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']
+): boolean =>
+  Boolean(causes?.length) && causes!.every(isSkillsContractCause);
+
 const resolveGoldenFlowDialogRemediation = (
   causes: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']
 ): string => {
@@ -348,6 +394,8 @@ export const buildBlockedDialogPayload = (params: {
     ? resolveGoldenFlowDialogRemediation(params.event.blockingCauses)
     : hasOnlyBddScenarioMissingCauses(params.event.blockingCauses)
     ? 'Crea el fichero .feature esperado para la slice activa o corrige la referencia de tarea. Después vuelve a intentar el commit.'
+    : hasOnlySkillsContractCauses(params.event.blockingCauses)
+    ? SKILLS_CONTRACT_REMEDIATION
     : params.event.blockingCauses && params.event.blockingCauses.length > 0
     ? 'Corrige las violaciones listadas y vuelve a intentar el commit.'
     : resolveBlockedRemediation(params.event, causeCode);

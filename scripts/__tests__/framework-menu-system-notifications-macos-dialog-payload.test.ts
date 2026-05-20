@@ -194,6 +194,53 @@ test('buildBlockedDialogPayload explica BDD feature missing sin mostrar EVIDENCE
   assert.doesNotMatch(payload.cause, /generic_bdd_feature_required/);
 });
 
+test('buildBlockedDialogPayload explica contrato de skills incompleto sin códigos EVIDENCE', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_WRITE',
+      totalViolations: 2,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+          ruleId: 'ai_evidence.json',
+          file: '.ai_evidence.json',
+          message:
+            'Detected platforms missing critical skill-rule enforcement in PRE_WRITE: ios(missing_critical_rule_ids=[skills.ios.critical-test-quality]). platforms=ios rules={skills.ios.critical-test-quality}',
+          remediation:
+            'npx --yes --package pumuki@6.3.319 pumuki policy reconcile --strict --json && npx --yes --package pumuki@6.3.319 pumuki sdd validate --stage=PRE_WRITE --json',
+        },
+        {
+          code: 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE',
+          ruleId: 'ai_evidence.json',
+          file: '.ai_evidence.json',
+          message:
+            'Skills contract incomplete for PRE_WRITE: EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING.',
+          remediation:
+            'npx --yes --package pumuki@6.3.319 pumuki policy reconcile --strict --json',
+        },
+      ],
+    }),
+    repoRoot: '/tmp/R_GO',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'R_GO',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /contrato de skills incompleto/);
+  assert.match(payload.cause, /Plataforma: iOS/);
+  assert.match(payload.cause, /skills\.ios\.critical-test-quality/);
+  assert.match(payload.cause, /repinea Pumuki/);
+  assert.equal(
+    payload.remediation,
+    'Actualiza o reconcilia el contrato de skills de Pumuki y vuelve a intentar el commit. Si estás en un repo consumidor, repinea Pumuki a una versión que incluya esa regla crítica.'
+  );
+  assert.doesNotMatch(payload.cause, /EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING/);
+  assert.doesNotMatch(payload.cause, /EVIDENCE_SKILLS_CONTRACT_INCOMPLETE/);
+  assert.doesNotMatch(payload.cause, /\.ai_evidence\.json/);
+  assert.doesNotMatch(payload.cause, /npx --yes --package/);
+});
+
 test('buildBlockedDialogPayload muestra skills iOS con separador, linea, evidencia y solucion especifica', () => {
   const payload = buildBlockedDialogPayload({
     event: blockedEvent({
