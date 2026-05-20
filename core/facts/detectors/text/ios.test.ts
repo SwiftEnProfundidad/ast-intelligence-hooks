@@ -19,6 +19,7 @@ import {
   collectSwiftAnyViewLines,
   collectSwiftAnyTypeErasureLines,
   collectSwiftCallbackStyleSignatureLines,
+  collectSwiftCombineSinkWithoutStoreLines,
   collectSwiftDispatchGroupLines,
   collectSwiftDispatchSemaphoreLines,
   collectSwiftDummyAwaitLines,
@@ -528,7 +529,9 @@ let ignoredAssign = ".assign(to: \\\\Model.title, on: model)"
 `;
 
   assert.equal(hasSwiftCombineSinkWithoutStoreUsage(source), true);
+  assert.deepEqual(collectSwiftCombineSinkWithoutStoreLines(source), [3, 8]);
   assert.equal(hasSwiftCombineSinkWithoutStoreUsage(safe), false);
+  assert.deepEqual(collectSwiftCombineSinkWithoutStoreLines(safe), []);
 });
 
 test('hasSwiftProductionTestDoubleUsage detecta mocks/spies productivos y preserva strings', () => {

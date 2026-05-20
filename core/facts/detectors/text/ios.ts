@@ -129,8 +129,9 @@ export const hasSwiftWarningSuppressionUsage = (source: string): boolean => {
   return collectSwiftWarningSuppressionLines(source).length > 0;
 };
 
-export const hasSwiftCombineSinkWithoutStoreUsage = (source: string): boolean => {
+export const collectSwiftCombineSinkWithoutStoreLines = (source: string): readonly number[] => {
   const lines = source.split(/\r?\n/);
+  const matches: number[] = [];
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = stripSwiftLineForSemanticScan(lines[index] ?? '');
@@ -144,11 +145,15 @@ export const hasSwiftCombineSinkWithoutStoreUsage = (source: string): boolean =>
       .join('\n');
 
     if (!/\.store\s*\(\s*in\s*:\s*&[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(chain)) {
-      return true;
+      matches.push(index + 1);
     }
   }
 
-  return false;
+  return sortedUniqueLines(matches);
+};
+
+export const hasSwiftCombineSinkWithoutStoreUsage = (source: string): boolean => {
+  return collectSwiftCombineSinkWithoutStoreLines(source).length > 0;
 };
 
 export const hasSwiftProductionTestDoubleUsage = (source: string): boolean => {

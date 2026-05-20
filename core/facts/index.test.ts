@@ -177,3 +177,38 @@ final class BuyerAPIClient {
   assert.deepEqual(jsonSerialization.primary_node?.lines, [7]);
   assert.match(jsonSerialization.expected_fix ?? '', /Codable/i);
 });
+
+test('extractHeuristicFacts emite Combine sink iOS con linea y remediation accionable', () => {
+  const params: HeuristicExtractionParams = {
+    facts: [
+      {
+        kind: 'FileContent',
+        source: 'repo',
+        path: 'apps/ios/Presentation/Features/Orders/OrdersViewModel.swift',
+        content: `
+final class OrdersViewModel {
+  func bind() {
+    publisher
+      .sink { value in
+        self.render(value)
+      }
+  }
+}
+`,
+      },
+    ],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+    },
+  };
+
+  const extractedFacts = extractHeuristicFacts(params);
+  const match = extractedFacts.find(
+    (fact) => fact.ruleId === 'heuristics.ios.combine.sink-without-store.ast'
+  );
+
+  assert.ok(match);
+  assert.deepEqual(match.lines, [5]);
+  assert.deepEqual(match.primary_node?.lines, [5]);
+  assert.match(match.expected_fix ?? '', /\.store\(in:/i);
+});
