@@ -641,7 +641,7 @@ const hasTrackForMemoryLeaksPattern = (content: string): boolean =>
 const IOS_CRITICAL_TEST_QUALITY_RULE_ID = 'skills.ios.critical-test-quality';
 
 const hasIosTestQualityScope = (facts: ReadonlyArray<Fact>): boolean =>
-  collectIosTestFileContents(facts).some((testFile) => isXCTestSource(testFile.content));
+  collectIosTestFileContents(facts).length > 0;
 
 const appendUniqueRuleId = (
   ruleIds: ReadonlyArray<string>,

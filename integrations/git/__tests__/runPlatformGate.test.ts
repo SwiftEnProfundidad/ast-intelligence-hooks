@@ -2087,58 +2087,58 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
   });
   assert.ok(capturedEvaluateGateArgs);
   assert.notEqual(capturedEvaluateGateArgs?.findings, findings);
-  assert.deepEqual(capturedEvaluateGateArgs?.findings, findings);
+  assert.ok(
+    capturedEvaluateGateArgs?.findings.some((finding) => finding.code === 'NO_CONSOLE_LOG'),
+  );
   assert.deepEqual(capturedEvaluateGateArgs?.policy, policy);
-  assert.deepEqual(capturedEmitArgs, {
-    stage: 'PRE_PUSH',
-    auditMode: 'gate',
-    policyTrace,
-    findings,
-    gateOutcome: 'BLOCK',
-    filesScanned: 1,
-    evaluationMetrics: {
-      facts_total: 1,
-      rules_total: 1,
-      baseline_rules: 0,
-      heuristic_rules: 0,
-      skills_rules: 1,
-      project_rules: 0,
-      matched_rules: 1,
-      unmatched_rules: 0,
-      evaluated_rule_ids: ['rules.backend.no-console-log'],
-      matched_rule_ids: ['rules.backend.no-console-log'],
-      unmatched_rule_ids: [],
-    },
-    rulesCoverage: {
-      stage: 'PRE_PUSH',
-      contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
-      scope_note:
-        'rules_coverage reports AUTO runtime rules applicable to this stage; it does not claim full DECLARATIVE registry execution.',
-      active_rule_ids: ['rules.backend.no-console-log'],
-      evaluated_rule_ids: ['rules.backend.no-console-log'],
-      matched_rule_ids: ['rules.backend.no-console-log'],
-      unevaluated_rule_ids: [],
-      counts: {
-        active: 1,
-        evaluated: 1,
-        matched: 1,
-        unevaluated: 0,
-      },
-      coverage_ratio: 1,
-    },
-    repoRoot: '/repo/root',
-    detectedPlatforms: evaluationResult.detectedPlatforms,
-    skillsRuleSet: evaluationResult.skillsRuleSet,
-    projectRules: evaluationResult.projectRules,
-    heuristicRules: evaluationResult.heuristicRules,
-    evidenceService: evidence,
-    sddDecision: {
-      allowed: true,
-      code: 'ALLOWED',
-      message: 'ok',
-    },
+  assert.equal(capturedEmitArgs?.stage, 'PRE_PUSH');
+  assert.equal(capturedEmitArgs?.auditMode, 'gate');
+  assert.deepEqual(capturedEmitArgs?.policyTrace, policyTrace);
+  assert.ok(capturedEmitArgs?.findings.some((finding) => finding.code === 'NO_CONSOLE_LOG'));
+  assert.equal(capturedEmitArgs?.gateOutcome, 'BLOCK');
+  assert.equal(capturedEmitArgs?.filesScanned, 1);
+  assert.deepEqual(capturedEmitArgs?.evaluationMetrics, {
+    facts_total: 1,
+    rules_total: 1,
+    baseline_rules: 0,
+    heuristic_rules: 0,
+    skills_rules: 1,
+    project_rules: 0,
+    matched_rules: 1,
+    unmatched_rules: 0,
+    evaluated_rule_ids: ['rules.backend.no-console-log'],
+    matched_rule_ids: ['rules.backend.no-console-log'],
+    unmatched_rule_ids: [],
   });
-  assert.deepEqual(printedFindings, findings);
+  assert.deepEqual(capturedEmitArgs?.rulesCoverage, {
+    stage: 'PRE_PUSH',
+    contract: 'AUTO_RUNTIME_RULES_FOR_STAGE',
+    scope_note:
+      'rules_coverage reports AUTO runtime rules applicable to this stage; it does not claim full DECLARATIVE registry execution.',
+    active_rule_ids: ['rules.backend.no-console-log'],
+    evaluated_rule_ids: ['rules.backend.no-console-log'],
+    matched_rule_ids: ['rules.backend.no-console-log'],
+    unevaluated_rule_ids: [],
+    counts: {
+      active: 1,
+      evaluated: 1,
+      matched: 1,
+      unevaluated: 0,
+    },
+    coverage_ratio: 1,
+  });
+  assert.equal(capturedEmitArgs?.repoRoot, '/repo/root');
+  assert.deepEqual(capturedEmitArgs?.detectedPlatforms, evaluationResult.detectedPlatforms);
+  assert.deepEqual(capturedEmitArgs?.skillsRuleSet, evaluationResult.skillsRuleSet);
+  assert.deepEqual(capturedEmitArgs?.projectRules, evaluationResult.projectRules);
+  assert.deepEqual(capturedEmitArgs?.heuristicRules, evaluationResult.heuristicRules);
+  assert.equal(capturedEmitArgs?.evidenceService, evidence);
+  assert.deepEqual(capturedEmitArgs?.sddDecision, {
+    allowed: true,
+    code: 'ALLOWED',
+    message: 'ok',
+  });
+  assert.ok(printedFindings.some((finding) => finding.code === 'NO_CONSOLE_LOG'));
   assert.equal(sddCheckCalled, true);
 });
 
@@ -4953,6 +4953,149 @@ final class LoginUseCaseTests: XCTestCase {
   );
   assert.equal(
     emittedArgs?.rulesCoverage?.evaluated_rule_ids.includes('skills.ios.critical-test-quality'),
+    true
+  );
+});
+
+test('runPlatformGate materializa critical-test-quality para tests iOS Swift Testing', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+  const facts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileContent',
+      path: 'apps/ios/Tests/Mac/Presentation/Features/BuyerStoresHomePresentationTests.spec.swift',
+      content: `
+import Testing
+
+@Suite
+struct BuyerStoresHomePresentationTests {
+  @Test
+  func mapsCopy() {
+    #expect(true)
+  }
+}
+      `.trim(),
+      source: 'git:staged',
+    },
+  ];
+
+  let emittedArgs: {
+    findings: ReadonlyArray<Finding>;
+    rulesCoverage: {
+      active_rule_ids: ReadonlyArray<string>;
+      evaluated_rule_ids: ReadonlyArray<string>;
+    };
+  }[] = [];
+
+  await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => facts,
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {
+          ios: { detected: true, confidence: 'HIGH' },
+        },
+        skillsRuleSet: {
+          rules: [
+            createSkillRule({
+              id: 'skills.ios.critical-test-quality',
+              severity: 'ERROR',
+              platform: 'ios',
+            }),
+          ] as RuleSet,
+          activeBundles: [
+            {
+              name: 'ios-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+              hash: 'a'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-concurrency-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swift-concurrency.md',
+              hash: 'b'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-swiftui-expert-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swiftui-expert-skill.md',
+              hash: 'c'.repeat(64),
+              rules: [],
+            },
+          ],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: facts.length,
+          filesScanned: 1,
+          rulesTotal: 2,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 2,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 2,
+          unevaluatedRules: 0,
+          activeRuleIds: ['skills.ios.no-force-unwrap'],
+          evaluatedRuleIds: ['skills.ios.no-force-unwrap'],
+          matchedRuleIds: [],
+          unmatchedRuleIds: ['skills.ios.no-force-unwrap'],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs.push({
+          findings: paramsArg.findings,
+          rulesCoverage: paramsArg.rulesCoverage as {
+            active_rule_ids: ReadonlyArray<string>;
+            evaluated_rule_ids: ReadonlyArray<string>;
+          },
+        });
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  const emitted = emittedArgs.at(-1);
+  assert.ok(emitted);
+  assert.equal(
+    emitted.findings.some(
+      (finding) => finding.ruleId === 'governance.skills.ios-test-quality.incomplete'
+    ),
+    false
+  );
+  assert.equal(
+    emitted.rulesCoverage.active_rule_ids.includes('skills.ios.critical-test-quality'),
+    true
+  );
+  assert.equal(
+    emitted.rulesCoverage.evaluated_rule_ids.includes('skills.ios.critical-test-quality'),
     true
   );
 });

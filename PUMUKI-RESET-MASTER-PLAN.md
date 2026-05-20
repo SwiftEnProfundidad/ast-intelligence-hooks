@@ -2605,3 +2605,15 @@ Evidencia:
 - `npx --yes tsx.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts` -> 74/74
 - `npm run -s typecheck` -> OK
 - `git diff --check && npm run -s validation:tracking-single-active` -> OK
+
+### 2026-05-20 - R_GO / PUMUKI-INC critical-test-quality Swift Testing verde
+
+- ✅ Repro externo RuralGo: `pumuki@6.3.330` bloqueaba PRE_WRITE/PRE_COMMIT por `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` con `missing_critical_rule_ids=[skills.ios.critical-test-quality]` aunque el slice iOS tenía test focal Swift Testing verde.
+- ✅ Causa raíz: `runPlatformGate` solo materializaba `skills.ios.critical-test-quality` cuando el test iOS era XCTest; un test ya migrado a Swift Testing quedaba en scope de `evaluateAiGate`, pero fuera de `rules_coverage`.
+- ✅ Fix: cualquier fichero de test iOS en el scope activa la regla crítica `skills.ios.critical-test-quality`; el finding de calidad incompleta sigue limitado a XCTest legacy sin `makeSUT()` / `trackForMemoryLeaks()`.
+- ✅ Regresión: `runPlatformGate materializa critical-test-quality para tests iOS Swift Testing`.
+- Siguiente foco: publicar `pumuki@6.3.332` y repinear RuralGo sin tocar sus cambios funcionales.
+
+Evidencia:
+- `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts` -> 111/111
+- `npm run -s typecheck` -> OK
