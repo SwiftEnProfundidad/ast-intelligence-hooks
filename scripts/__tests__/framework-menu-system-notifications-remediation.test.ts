@@ -111,6 +111,34 @@ test('resolveBlockedRemediation detecta SDD_SESSION_MISSING aunque venga tapado 
   assert.doesNotMatch(result, /pumuki-pre-write/i);
 });
 
+test('resolveBlockedRemediation no muestra git add masivo para aviso de higiene de worktree', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_PREWRITE_WORKTREE_WARN',
+          ruleId: 'ai_gate.repo_policy.EVIDENCE_PREWRITE_WORKTREE_WARN',
+          file: '.ai_evidence.json',
+          message:
+            'PRE_WRITE worktree hygiene warning: pending_changes=20 (warn_threshold=12). Consider smaller staged/unstaged batches.',
+          remediation:
+            'git add -- "apps/ios/Documentation/Features/Authentication.feature" "apps/ios/Domain/Features/BuyerCommerce/BuyerCommerceModels.swift"',
+        },
+      ],
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /slice atómico/i);
+  assert.match(result, /stash nombrado/i);
+  assert.doesNotMatch(result, /git add/i);
+  assert.doesNotMatch(result, /BuyerCommerceModels/i);
+});
+
 test('resolveBlockedRemediation cae a fallback genérico cuando no conoce el bloqueo', () => {
   const result = resolveBlockedRemediation(
     {

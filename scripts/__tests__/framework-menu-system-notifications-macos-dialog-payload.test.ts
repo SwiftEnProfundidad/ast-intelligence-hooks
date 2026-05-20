@@ -162,3 +162,37 @@ test('buildBlockedDialogPayload muestra remediación SDD accionable en vez de re
   assert.doesNotMatch(payload.remediation, /pumuki-pre-write/i);
   assert.doesNotMatch(payload.remediation, /npx --yes --package/i);
 });
+
+test('buildBlockedDialogPayload muestra aviso de worktree sin git add masivo ni texto de violaciones', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_PREWRITE_WORKTREE_WARN',
+          ruleId: 'ai_gate.repo_policy.EVIDENCE_PREWRITE_WORKTREE_WARN',
+          file: '.ai_evidence.json',
+          message:
+            'PRE_WRITE worktree hygiene warning: pending_changes=20 (warn_threshold=12). Consider smaller staged/unstaged batches.',
+          remediation:
+            'git add -- "apps/ios/Documentation/Features/Authentication.feature" "apps/ios/Domain/Features/BuyerCommerce/BuyerCommerceModels.swift"',
+        },
+      ],
+    }),
+    repoRoot: '/tmp/R_GO',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'R_GO',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /Aviso: higiene de worktree PRE_WRITE/);
+  assert.match(payload.cause, /Alcance: repo\/worktree/);
+  assert.match(payload.cause, /pending_changes=20/);
+  assert.match(payload.cause, /slice atómico/);
+  assert.match(payload.remediation, /stash nombrado/);
+  assert.doesNotMatch(payload.cause, /Regla:/);
+  assert.doesNotMatch(payload.cause, /git add --/);
+  assert.doesNotMatch(payload.remediation, /violaciones listadas/);
+});

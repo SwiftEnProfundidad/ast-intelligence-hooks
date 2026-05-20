@@ -33,6 +33,10 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   TRACKING_CANONICAL_SOURCE_CONFLICT: TRACKING_BLOCKED_REMEDIATION,
   ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
     'Ejecuta `pumuki policy reconcile --strict --json` y revalida antes de continuar.',
+  EVIDENCE_PREWRITE_WORKTREE_WARN:
+    'Reduce el worktree pendiente a un slice atómico antes del commit: stagea solo la tarea activa o guarda el resto en stash nombrado, y reejecuta PRE_WRITE.',
+  EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
+    'El worktree supera el límite permitido: divide cambios por scope en commits atómicos o stashes nombrados antes de continuar.',
 };
 
 const BLOCKED_REMEDIATION_MAX_LENGTH_BY_VARIANT: Readonly<Record<BlockedRemediationVariant, number>> = {
@@ -95,6 +99,42 @@ const resolveSddSessionCauseCode = (
   return null;
 };
 
+const resolveWorktreeHygieneCauseCode = (
+  event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>,
+  causeCode: string
+): 'EVIDENCE_PREWRITE_WORKTREE_WARN' | 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT' | null => {
+  if (
+    causeCode === 'EVIDENCE_PREWRITE_WORKTREE_WARN' ||
+    causeCode === 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT'
+  ) {
+    return causeCode;
+  }
+  const searchable = [
+    event.causeMessage,
+    event.remediation,
+    ...(event.blockingCauses ?? []).flatMap((cause) => [
+      cause.code,
+      cause.ruleId,
+      cause.message,
+      cause.remediation,
+    ]),
+  ]
+    .filter((value): value is string => typeof value === 'string')
+    .join(' ')
+    .toLowerCase();
+  if (searchable.includes('evidence_prewrite_worktree_over_limit')) {
+    return 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT';
+  }
+  if (
+    searchable.includes('evidence_prewrite_worktree_warn') ||
+    searchable.includes('worktree hygiene warning') ||
+    searchable.includes('warn_threshold=')
+  ) {
+    return 'EVIDENCE_PREWRITE_WORKTREE_WARN';
+  }
+  return null;
+};
+
 const isGenericPolicyReconcileRemediation = (message: string): boolean => {
   const normalized = message.toLowerCase();
   return normalized.includes('policy reconcile') && normalized.includes('sdd validate');
@@ -150,6 +190,13 @@ export const resolveBlockedRemediation = (
   if (sddSessionCauseCode) {
     return truncateNotificationText(
       resolveFallbackRemediation(sddSessionCauseCode),
+      maxLength
+    );
+  }
+  const worktreeHygieneCauseCode = resolveWorktreeHygieneCauseCode(event, causeCode);
+  if (worktreeHygieneCauseCode) {
+    return truncateNotificationText(
+      resolveFallbackRemediation(worktreeHygieneCauseCode),
       maxLength
     );
   }

@@ -61,15 +61,35 @@ const formatLocation = (cause: NonNullable<Extract<PumukiCriticalNotificationEve
   return line ? `${cause.file}:${line}` : cause.file;
 };
 
+const isWorktreeHygieneCause = (
+  cause: NonNullable<Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']>[number]
+): boolean =>
+  cause.code === 'EVIDENCE_PREWRITE_WORKTREE_WARN' ||
+  cause.code === 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT' ||
+  (cause.ruleId ?? '').includes('EVIDENCE_PREWRITE_WORKTREE');
+
+const WORKTREE_HYGIENE_REMEDIATION =
+  'Reduce el worktree pendiente a un slice atómico: stagea solo la tarea activa o guarda el resto en stash nombrado, y reejecuta PRE_WRITE.';
+
 const formatBlockingCauseForDialog = (
   cause: NonNullable<Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']>[number],
   index: number
 ): readonly string[] => {
   const rule = cause.ruleId ?? cause.code;
   const problem = stripTechnicalFieldsFromMessage(cause.message) || cause.code;
-  const remediation = cause.remediation
+  const remediation = isWorktreeHygieneCause(cause)
+    ? WORKTREE_HYGIENE_REMEDIATION
+    : cause.remediation
     ? normalizeNotificationText(cause.remediation)
     : 'Corrige la violación indicada y vuelve a intentar el commit.';
+  if (isWorktreeHygieneCause(cause)) {
+    return [
+      `${index + 1}. Aviso: higiene de worktree PRE_WRITE`,
+      '   Alcance: repo/worktree',
+      `   Detalle: ${truncateNotificationText(problem, 160)}`,
+      `   Solución: ${truncateNotificationText(WORKTREE_HYGIENE_REMEDIATION, 180)}`,
+    ];
+  }
 
   return [
     `${index + 1}. Regla: ${truncateNotificationText(rule, 96)}`,
@@ -79,6 +99,11 @@ const formatBlockingCauseForDialog = (
   ];
 };
 
+const hasOnlyWorktreeHygieneCauses = (
+  causes: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']
+): boolean =>
+  Boolean(causes?.length) && causes!.every(isWorktreeHygieneCause);
+
 export const buildBlockedDialogPayload = (params: {
   event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>;
   repoRoot: string;
@@ -87,7 +112,9 @@ export const buildBlockedDialogPayload = (params: {
   const causeCode = params.event.causeCode ?? 'GATE_BLOCKED';
   const cause = buildBlockingCausesDetails(params.event.blockingCauses)
     ?? resolveBlockedCauseSummary(params.event, causeCode);
-  const remediation = params.event.blockingCauses && params.event.blockingCauses.length > 0
+  const remediation = hasOnlyWorktreeHygieneCauses(params.event.blockingCauses)
+    ? WORKTREE_HYGIENE_REMEDIATION
+    : params.event.blockingCauses && params.event.blockingCauses.length > 0
     ? 'Corrige las violaciones listadas y vuelve a intentar el commit.'
     : resolveBlockedRemediation(params.event, causeCode);
   const projectLabel = resolveProjectLabel({
