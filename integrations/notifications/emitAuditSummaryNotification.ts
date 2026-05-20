@@ -25,6 +25,14 @@ type AuditSummaryNotificationDependencies = {
   env: NodeJS.ProcessEnv;
 };
 
+type NotificationBlockingCause = {
+  code: string;
+  message: string;
+  ruleId?: string;
+  file?: string;
+  remediation?: string;
+};
+
 const defaultDependencies: AuditSummaryNotificationDependencies = {
   readEvidence,
   emitSystemNotification,
@@ -62,6 +70,38 @@ const normalizeNotificationStage = (stage: string): PumukiNotificationStage => {
   return 'PRE_COMMIT';
 };
 
+const normalizeRuleCode = (ruleId: string): string =>
+  ruleId
+    .replace(/^skills\./u, 'SKILLS_')
+    .replace(/[.-]/gu, '_')
+    .toUpperCase();
+
+const extractNestedSkillCauseFromWrapper = (cause: NotificationBlockingCause): NotificationBlockingCause => {
+  if (cause.ruleId?.startsWith('skills.') || cause.code.startsWith('SKILLS_')) {
+    return cause;
+  }
+  const nested = cause.message.match(/\bBlocking causes:\s*1\)\s*(skills\.[a-z0-9_.-]+)\s+(.+?)$/iu);
+  if (!nested?.[1]) {
+    return cause;
+  }
+  const ruleId = nested[1];
+  const nestedMessage = nested[2]?.trim() || 'Skill violada.';
+  return {
+    ...cause,
+    code: normalizeRuleCode(ruleId),
+    ruleId,
+    message: `rule=${ruleId} message=${nestedMessage}`,
+    remediation:
+      cause.remediation && !/corrige la violaci[oó]n indicada/i.test(cause.remediation)
+        ? cause.remediation
+        : 'Corrige la violación de la skill indicada en el fichero afectado y vuelve a intentar el commit.',
+  };
+};
+
+const normalizeNotificationBlockingCause = (
+  cause: NotificationBlockingCause
+): NotificationBlockingCause => extractNestedSkillCauseFromWrapper(cause);
+
 export const shouldEmitAuditSummaryNotificationForStage = (
   stage: AuditSummaryNotificationStage,
   env: NodeJS.ProcessEnv = process.env
@@ -87,13 +127,15 @@ export const toAuditSummaryEventFromEvidence = (
       causeCode: primaryCause.code,
       causeMessage: formatEvidenceBlockingCause(primaryCause),
       remediation: primaryCause.remediation ?? 'Corrige la violación indicada y vuelve a intentar el commit.',
-      blockingCauses: blockingCauses.map((cause) => ({
-        code: cause.code,
-        ruleId: cause.ruleId,
-        file: cause.file,
-        message: formatEvidenceBlockingCause(cause),
-        remediation: cause.remediation,
-      })),
+      blockingCauses: blockingCauses.map((cause) =>
+        normalizeNotificationBlockingCause({
+          code: cause.code,
+          ruleId: cause.ruleId,
+          file: cause.file,
+          message: formatEvidenceBlockingCause(cause),
+          remediation: cause.remediation,
+        })
+      ),
     };
   }
   return {
@@ -125,12 +167,14 @@ export const toAuditSummaryEventFromAiGate = (params: {
       causeCode: primaryViolation.code,
       causeMessage: primaryViolation.message,
       remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
-      blockingCauses: params.aiGateResult.violations.map((violation) => ({
-        code: violation.code,
-        ruleId: violation.code,
-        message: violation.message,
-        remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
-      })),
+      blockingCauses: params.aiGateResult.violations.map((violation) =>
+        normalizeNotificationBlockingCause({
+          code: violation.code,
+          ruleId: violation.code.startsWith('skills.') ? violation.code : undefined,
+          message: violation.message,
+          remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+        })
+      ),
     };
   }
   return {
@@ -233,7 +277,7 @@ export const emitGateBlockedNotification = (
         causeMessage: params.causeMessage,
       }),
       remediation: params.remediation,
-      blockingCauses: params.blockingCauses,
+      blockingCauses: params.blockingCauses?.map(normalizeNotificationBlockingCause),
     },
     repoRoot: params.repoRoot,
   });

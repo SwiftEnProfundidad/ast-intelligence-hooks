@@ -292,3 +292,39 @@ test('emitGateBlockedNotification añade contexto de tracking al evento emitido'
     rmSync(repoRoot, { recursive: true, force: true });
   }
 });
+
+test('emitGateBlockedNotification materializa skill anidada dentro de EVIDENCE_GATE_BLOCKED', () => {
+  const events: unknown[] = [];
+  const result = emitGateBlockedNotification(
+    {
+      repoRoot: '/tmp/repo',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage: 'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.prefer-swift-testing XCTest - Solo para proyectos legacy o UI tests',
+      remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          message: 'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.prefer-swift-testing XCTest - Solo para proyectos legacy o UI tests',
+          remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+        },
+      ],
+    },
+    {
+      emitSystemNotification: ({ event }) => {
+        events.push(event);
+        return { delivered: true, reason: 'delivered' };
+      },
+    }
+  );
+
+  assert.deepEqual(result, { delivered: true, reason: 'delivered' });
+  const [event] = events as Array<{
+    blockingCauses?: ReadonlyArray<{ code?: string; ruleId?: string; message?: string; remediation?: string }>;
+  }>;
+  assert.equal(event?.blockingCauses?.[0]?.code, 'SKILLS_IOS_PREFER_SWIFT_TESTING');
+  assert.equal(event?.blockingCauses?.[0]?.ruleId, 'skills.ios.prefer-swift-testing');
+  assert.match(event?.blockingCauses?.[0]?.message ?? '', /message=XCTest - Solo para proyectos legacy o UI tests/);
+  assert.doesNotMatch(event?.blockingCauses?.[0]?.remediation ?? '', /violación indicada/);
+});
