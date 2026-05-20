@@ -1501,9 +1501,6 @@ const appendWorktreeHygieneViolations = (
 };
 
 const toPolicyStage = (stage: AiGateStage): SkillsStage => {
-  if (stage === 'PRE_WRITE') {
-    return 'PRE_COMMIT';
-  }
   return stage;
 };
 

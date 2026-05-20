@@ -608,6 +608,23 @@ test('evaluateAiGate permite continuar cuando evidencia está fresca y rama cump
   });
 });
 
+test('evaluateAiGate mantiene PRE_WRITE como stage resuelto real', () => {
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.policy.stage, 'PRE_WRITE');
+  assert.equal(result.policy.resolved_stage, 'PRE_WRITE');
+});
+
 test('evaluateAiGate bloquea PRE_COMMIT cuando la higiene de worktree supera umbral crítico', () => {
   const repoState = sampleEvidence().repo_state!;
   repoState.git.dirty = true;

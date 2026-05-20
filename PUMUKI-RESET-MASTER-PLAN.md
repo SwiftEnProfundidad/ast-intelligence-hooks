@@ -2522,3 +2522,17 @@ Evidencia:
 [self-worktree-hygiene] changed_scopes=2 max_scopes=2
 [self-worktree-hygiene] top_scopes=scripts=4, root=1
 [self-worktree-hygiene] OK: worktree within maintainer hygiene limits. -> OK
+
+### 2026-05-20 - PUMUKI-INC-164 fixed / PRE_WRITE usaba stages de PRE_COMMIT/CI para skills
+
+- ✅ Repro externo RuralGo: `policy reconcile --strict --json` devolvía PASS pero PRE_WRITE seguía bloqueando por `skills.ios.critical-test-quality`.
+- ✅ Causa raíz 1: `evaluateAiGate` resolvía `PRE_WRITE` como `PRE_COMMIT`, generando `stage=PRE_WRITE` con `resolved_stage=PRE_COMMIT`.
+- ✅ Causa raíz 2: `runPlatformGateEvaluation` cargaba reglas de skills de `PRE_WRITE` como `CI`, impidiendo materializar correctamente reglas stage-aware de PRE_WRITE.
+- ✅ Fix: PRE_WRITE conserva su stage real tanto en policy gate como en carga de skills.
+- ✅ Regresión: `evaluateAiGate mantiene PRE_WRITE como stage resuelto real`.
+- ✅ Regresión: `evaluatePlatformGateFindings carga contrato PRE_WRITE de skills en PRE_WRITE`.
+
+Evidencia:
+- `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> 53/53
+- `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> 21/21
+- `npm run -s typecheck` -> OK

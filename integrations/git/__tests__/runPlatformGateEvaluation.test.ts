@@ -182,7 +182,7 @@ test('evaluatePlatformGateFindings normaliza stage STAGED y eleva scope TS a all
   assert.deepEqual(result.findings, findings);
 });
 
-test('evaluatePlatformGateFindings carga contrato completo de skills en PRE_WRITE', () => {
+test('evaluatePlatformGateFindings carga contrato PRE_WRITE de skills en PRE_WRITE', () => {
   const inputFacts: ReadonlyArray<Fact> = [
     {
       kind: 'FileChange',
@@ -224,7 +224,7 @@ test('evaluatePlatformGateFindings carga contrato completo de skills en PRE_WRIT
     }
   );
 
-  assert.equal(capturedSkillsStage, 'CI');
+  assert.equal(capturedSkillsStage, 'PRE_WRITE');
   assert.equal(result.coverage.activeRuleIds.includes('skills.frontend.no-console-log'), true);
   assert.equal(result.coverage.evaluatedRuleIds.includes('skills.frontend.no-console-log'), true);
 });
