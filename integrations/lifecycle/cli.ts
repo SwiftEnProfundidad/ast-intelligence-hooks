@@ -2019,8 +2019,11 @@ export const prioritizePreWriteAiGateViolations = (
     const rightMatches = right.code === nextAction.reason ? 0 : 1;
     return leftMatches - rightMatches;
   });
+  const blocked = violations.some((violation) => violation.severity === 'ERROR');
   return {
     ...aiGate,
+    status: blocked ? 'BLOCKED' : 'ALLOWED',
+    allowed: !blocked,
     violations,
   };
 };

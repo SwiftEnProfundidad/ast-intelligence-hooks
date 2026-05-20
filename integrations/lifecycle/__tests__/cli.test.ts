@@ -48,6 +48,8 @@ test.after(() => {
 
 test('prioritizePreWriteAiGateViolations coloca la causa accionable del next_action primero', () => {
   const aiGate = {
+    status: 'BLOCKED',
+    allowed: false,
     violations: [
       {
         code: 'EVIDENCE_GATE_BLOCKED',
@@ -68,6 +70,8 @@ test('prioritizePreWriteAiGateViolations coloca la causa accionable del next_act
   });
 
   assert.equal(prioritized.violations[0]?.code, 'EVIDENCE_PREWRITE_WORKTREE_WARN');
+  assert.equal(prioritized.status, 'ALLOWED');
+  assert.equal(prioritized.allowed, true);
   assert.equal(
     prioritized.violations.some((violation) => violation.code === 'EVIDENCE_GATE_BLOCKED'),
     false
