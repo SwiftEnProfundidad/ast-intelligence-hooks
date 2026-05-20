@@ -462,6 +462,84 @@ test('evaluateAiGate expone causas accionables para findings WARN bloqueantes', 
   assert.match(violation?.message ?? '', /193,280/);
 });
 
+test('evaluateAiGate no convierte prefer-swift-testing WARN en bloqueo de PRE_WRITE', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          snapshot: {
+            ...base.snapshot,
+            stage: 'PRE_WRITE',
+            outcome: 'BLOCK',
+            findings: [
+              {
+                ruleId: 'skills.ios.prefer-swift-testing',
+                severity: 'WARN',
+                code: 'SKILLS_IOS_PREFER_SWIFT_TESTING',
+                message: 'XCTest - Solo para proyectos legacy o UI tests',
+                file: 'apps/ios/Tests/Mac/Presentation/Features/BuyerSocialAuthAvailabilityTests.spec.swift',
+                lines: 1,
+                blocking: true,
+                expected_fix: 'Mantén XCTest solo en tests legacy o UI tests; migra a Swift Testing si este test no es brownfield.',
+              },
+            ],
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              stage: 'PRE_WRITE',
+              active_rule_ids: ['skills.ios.prefer-swift-testing'],
+              evaluated_rule_ids: ['skills.ios.prefer-swift-testing'],
+              matched_rule_ids: ['skills.ios.prefer-swift-testing'],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 1,
+                evaluated: 1,
+                matched: 1,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+          },
+          ai_gate: {
+            ...base.ai_gate,
+            status: 'BLOCKED',
+            violations: [
+              {
+                ruleId: 'skills.ios.prefer-swift-testing',
+                code: 'SKILLS_IOS_PREFER_SWIFT_TESTING',
+                message: 'XCTest - Solo para proyectos legacy o UI tests',
+                severity: 'WARN',
+                blocking: true,
+              },
+            ],
+          },
+          severity_metrics: {
+            ...base.severity_metrics,
+            gate_status: 'BLOCKED',
+            total_violations: 1,
+            by_severity: {
+              ...base.severity_metrics.by_severity,
+              WARN: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  const violation = result.violations.find((item) => item.code === 'EVIDENCE_GATE_BLOCKED');
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(violation?.severity, 'WARN');
+  assert.match(violation?.message ?? '', /did not expose any blocking cause/);
+});
+
 test('evaluateAiGate no bloquea PRE_WRITE cuando la evidencia bloqueada solo contiene WARN no bloqueantes', () => {
   const base = sampleEvidence();
   const result = evaluateAiGate(
@@ -1381,6 +1459,124 @@ test('evaluateAiGate bloquea PRE_WRITE cuando el slice iOS toca tests y falta re
     assert.deepEqual(iosRequirement?.missing_critical_rule_ids, [
       'skills.ios.critical-test-quality',
     ]);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('evaluateAiGate acepta prefer-swift-testing evaluado como cobertura equivalente de critical-test-quality en XCTest brownfield', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-ios-xctest-brownfield-quality-'));
+  try {
+    execFileSync('git', ['init'], { cwd: repoRoot, stdio: 'ignore' });
+    mkdirSync(join(repoRoot, 'apps/ios/Tests/Mac/Presentation/Features'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'apps/ios/Tests/Mac/Presentation/Features/BuyerSocialAuthAvailabilityTests.spec.swift'),
+      [
+        'import XCTest',
+        'final class BuyerSocialAuthAvailabilityTests: XCTestCase {',
+        '  func test_providerAvailability_isVisible() {}',
+        '}',
+        '',
+      ].join('\n')
+    );
+    execFileSync(
+      'git',
+      ['add', 'apps/ios/Tests/Mac/Presentation/Features/BuyerSocialAuthAvailabilityTests.spec.swift'],
+      { cwd: repoRoot, stdio: 'ignore' }
+    );
+
+    const base = sampleEvidence();
+    const result = evaluateAiGate(
+      {
+        repoRoot,
+        stage: 'PRE_WRITE',
+      },
+      {
+        now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+        readEvidenceResult: () =>
+          validEvidenceResult({
+            ...base,
+            repo_state: {
+              ...base.repo_state!,
+              repo_root: repoRoot,
+            },
+            platforms: {
+              ios: {
+                detected: true,
+                confidence: 'HIGH',
+              },
+            },
+            rulesets: [
+              {
+                platform: 'skills',
+                bundle: 'ios-guidelines@1.0.0',
+                hash: 'skills-ios-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-concurrency-guidelines@1.0.0',
+                hash: 'skills-ios-concurrency-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+                hash: 'skills-ios-swiftui-hash',
+              },
+            ],
+            snapshot: {
+              ...base.snapshot,
+              stage: 'PRE_WRITE',
+              rules_coverage: {
+                ...base.snapshot.rules_coverage!,
+                stage: 'PRE_WRITE',
+                active_rule_ids: [
+                  'skills.ios.no-force-unwrap',
+                  'skills.ios.prefer-swift-testing',
+                ],
+                evaluated_rule_ids: [
+                  'skills.ios.no-force-unwrap',
+                  'skills.ios.prefer-swift-testing',
+                ],
+                matched_rule_ids: ['skills.ios.prefer-swift-testing'],
+                unevaluated_rule_ids: [],
+                counts: {
+                  active: 2,
+                  evaluated: 2,
+                  matched: 1,
+                  unevaluated: 0,
+                },
+                coverage_ratio: 1,
+              },
+            },
+          }),
+        captureRepoState: () => ({
+          ...sampleEvidence().repo_state!,
+          repo_root: repoRoot,
+          git: {
+            ...sampleEvidence().repo_state!.git,
+            pending_changes: 1,
+            staged: 1,
+            unstaged: 0,
+          },
+        }),
+      }
+    );
+
+    assert.equal(result.status, 'ALLOWED');
+    assert.equal(result.allowed, true);
+    assert.equal(
+      result.violations.some(
+        (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+      ),
+      false
+    );
+    const iosRequirement = result.skills_contract.requirements.find(
+      (requirement) => requirement.platform === 'ios'
+    );
+    assert.deepEqual(iosRequirement?.required_critical_rule_ids, [
+      'skills.ios.critical-test-quality',
+    ]);
+    assert.deepEqual(iosRequirement?.missing_critical_rule_ids, []);
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }

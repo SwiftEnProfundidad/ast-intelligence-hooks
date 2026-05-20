@@ -211,6 +211,58 @@ test('enforceTddBddPolicy bloquea cuando scenario_ref no apunta a archivo .featu
   });
 });
 
+test('enforceTddBddPolicy no revalida slices historicas acumuladas si la ultima slice vigente es valida', async () => {
+  await withTempDir('pumuki-tdd-enforce-current-slice-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki', 'artifacts'), { recursive: true });
+    mkdirSync(join(repoRoot, 'features'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'features', 'current.feature'),
+      'Feature: Current slice\n  Scenario: current behavior\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json'),
+      JSON.stringify(
+        {
+          version: '1',
+          generated_at: '2026-02-26T10:00:00.000Z',
+          slices: [
+            {
+              id: 'PUMUKI-INC-059',
+              scenario_ref: 'PUMUKI-INC-059.feature',
+              red: { status: 'failed', timestamp: '2026-02-26T09:00:00.000Z' },
+              green: { status: 'passed', timestamp: '2026-02-26T09:01:00.000Z' },
+              refactor: { status: 'passed', timestamp: '2026-02-26T09:02:00.000Z' },
+              verify: { status: 'passed', timestamp: '2026-02-26T09:03:00.000Z' },
+            },
+            {
+              id: 'PUMUKI-INC-173',
+              scenario_ref: 'features/current.feature:2',
+              red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
+              green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
+              refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
+              verify: { status: 'passed', timestamp: '2026-02-26T10:03:00.000Z' },
+            },
+          ],
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const result = enforceTddBddPolicy({
+      repoRoot,
+      branch: 'bugfix/platform-skills-enforcement-canary',
+      facts: addedFeatureFacts(),
+    });
+
+    assert.equal(result.snapshot.status, 'passed');
+    assert.equal(result.snapshot.evidence.slices_total, 1);
+    assert.equal(result.findings.length, 0);
+  });
+});
+
 test('enforceTddBddPolicy aplica waiver auditable con un aprobador y no bloquea', async () => {
   await withTempDir('pumuki-tdd-enforce-waiver-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.pumuki', 'waivers'), { recursive: true });

@@ -486,6 +486,28 @@ const resolvePreWriteCriticalSkillsRules = (params: {
   return ruleIds;
 };
 
+const hasRuleCoverage = (
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>,
+  ruleId: string
+): boolean =>
+  coverage.active_rule_ids.includes(ruleId) && coverage.evaluated_rule_ids.includes(ruleId);
+
+const hasEquivalentCriticalRuleCoverage = (
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>,
+  ruleId: string
+): boolean => {
+  if (ruleId !== 'skills.ios.critical-test-quality') {
+    return false;
+  }
+  return hasRuleCoverage(coverage, 'skills.ios.prefer-swift-testing');
+};
+
+const hasRequiredCriticalRuleCoverage = (
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>,
+  ruleId: string
+): boolean =>
+  hasRuleCoverage(coverage, ruleId) || hasEquivalentCriticalRuleCoverage(coverage, ruleId);
+
 const isPlatformPath = (platform: PreWriteSkillsPlatform, filePath: string): boolean => {
   const normalized = normalizeChangedPath(filePath).toLowerCase();
   if (platform === 'ios') {
@@ -757,9 +779,7 @@ const collectPreWritePlatformSkillsViolations = (params: {
       continue;
     }
     const missingCriticalRuleIds = requiredCriticalRuleIds.filter((ruleId) => {
-      const hasActive = params.coverage.active_rule_ids.includes(ruleId);
-      const hasEvaluated = params.coverage.evaluated_rule_ids.includes(ruleId);
-      return !hasActive || !hasEvaluated;
+      return !hasRequiredCriticalRuleCoverage(params.coverage, ruleId);
     });
     if (missingCriticalRuleIds.length === 0) {
       continue;
@@ -1051,9 +1071,7 @@ const toSkillsContractAssessment = (params: {
     );
     const missingCriticalRuleIds = coverage
       ? requiredCriticalRuleIds.filter((ruleId) => {
-          const hasActive = coverage.active_rule_ids.includes(ruleId);
-          const hasEvaluated = coverage.evaluated_rule_ids.includes(ruleId);
-          return !hasActive || !hasEvaluated;
+          return !hasRequiredCriticalRuleCoverage(coverage, ruleId);
         })
       : [...requiredCriticalRuleIds];
     const transversalCriticalCovered =

@@ -3,6 +3,7 @@ import { isAbsolute, resolve } from 'node:path';
 import type { Fact } from '../../core/facts/Fact';
 import type { Finding } from '../../core/gate/Finding';
 import { readTddBddEvidence } from './contract';
+import type { TddSlice } from './contract';
 import { classifyTddBddScope } from './scope';
 import type { TddBddSnapshot } from './types';
 import { resolveActiveTddBddWaiver } from './waiver';
@@ -76,6 +77,14 @@ const isTimelineOrdered = (timestamps: ReadonlyArray<string | undefined>): boole
     }
   }
   return true;
+};
+
+const selectEnforcedEvidenceSlices = (slices: ReadonlyArray<TddSlice>): ReadonlyArray<TddSlice> => {
+  if (slices.length <= 1) {
+    return slices;
+  }
+  const latestSlice = slices[slices.length - 1];
+  return latestSlice ? [latestSlice] : [];
 };
 
 export const enforceTddBddPolicy = (params: {
@@ -222,7 +231,9 @@ export const enforceTddBddPolicy = (params: {
     verify: 'missing',
   };
 
-  if (evidenceRead.evidence.slices.length === 0) {
+  const enforcedSlices = selectEnforcedEvidenceSlices(evidenceRead.evidence.slices);
+
+  if (enforcedSlices.length === 0) {
     sliceFindings.push(
       buildFinding({
         ruleId: 'generic_tdd_vertical_required',
@@ -233,7 +244,7 @@ export const enforceTddBddPolicy = (params: {
     );
   }
 
-  for (const slice of evidenceRead.evidence.slices) {
+  for (const slice of enforcedSlices) {
     const sliceErrorsBefore = sliceFindings.length;
 
     if (seenSliceIds.has(slice.id)) {
@@ -355,7 +366,7 @@ export const enforceTddBddPolicy = (params: {
     }
   }
 
-  const invalidSlices = Math.max(0, evidenceRead.evidence.slices.length - validSlices);
+  const invalidSlices = Math.max(0, enforcedSlices.length - validSlices);
   const hasBlockingFindings = sliceFindings.some(
     (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
   );
@@ -369,7 +380,7 @@ export const enforceTddBddPolicy = (params: {
         ...baseSnapshot.evidence,
         state: 'valid',
         version: evidenceRead.evidence.version,
-        slices_total: evidenceRead.evidence.slices.length,
+        slices_total: enforcedSlices.length,
         slices_valid: validSlices,
         slices_invalid: invalidSlices,
         integrity_ok: evidenceRead.integrity.valid,
