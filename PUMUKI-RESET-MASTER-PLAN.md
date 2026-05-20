@@ -2560,3 +2560,15 @@ Evidencia:
 Evidencia:
 - `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts` -> 132/132
 - `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts` -> 74/74
+
+### 2026-05-20 - INC145 / iOS detector nodal mejorado: logging sensible
+
+- ✅ Convertido `heuristics.ios.logging.sensitive-data.ast` en finding nodal accionable.
+- ✅ Ahora localiza líneas exactas de `print`, `debugPrint`, `dump`, `NSLog`, `os_log` y `logger/log.*` cuando registran tokens, passwords, credenciales, emails o userId.
+- ✅ Añadidos `primary_node`, `related_nodes`, `why`, `impact` y `expected_fix` para que la notificación indique el log concreto y la solución de redacción/structured logging seguro.
+- ✅ Mantiene el mapeo existente a `skills.ios.guideline.ios.no-loggear-pii-tokens-emails-ids-sensibles`.
+- Siguiente foco iOS: continuar con detectores/nodos de seguridad y arquitectura que aún salen sin línea o sin fix específico.
+
+Evidencia:
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts` -> 132/132
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts` -> 74/74

@@ -587,6 +587,15 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     },
   ]);
   assert.match(dispatchQueueFinding?.expected_fix ?? '', /async\/await/);
+  const sensitiveLoggingFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.logging.sensitive-data.ast'
+  );
+  assert.deepEqual(sensitiveLoggingFinding?.primary_node, {
+    kind: 'call',
+    name: 'logging call with sensitive data',
+    lines: sensitiveLoggingFinding?.lines ?? [],
+  });
+  assert.match(sensitiveLoggingFinding?.expected_fix ?? '', /redacted/);
   const userDefaultsSensitiveFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.security.userdefaults-sensitive-data.ast'
   );

@@ -1624,7 +1624,12 @@ export const hasSwiftAdHocLoggingUsage = (source: string): boolean => {
 };
 
 export const hasSwiftSensitiveLoggingUsage = (source: string): boolean => {
-  return source.split(/\r?\n/).some((line) => {
+  return collectSwiftSensitiveLoggingLines(source).length > 0;
+};
+
+export const collectSwiftSensitiveLoggingLines = (source: string): readonly number[] => {
+  const lines: number[] = [];
+  source.split(/\r?\n/).forEach((line, index) => {
     const sanitized = stripSwiftLineForSemanticScan(line);
     const lineWithoutComments = line.replace(/\/\/.*$/, '');
     const hasLoggingCall =
@@ -1634,13 +1639,16 @@ export const hasSwiftSensitiveLoggingUsage = (source: string): boolean => {
       );
 
     if (!hasLoggingCall) {
-      return false;
+      return;
     }
 
-    return /\b(?:accessToken|refreshToken|authToken|token|password|secret|credential|authorization|email|userId)\b/i.test(
+    if (/\b(?:accessToken|refreshToken|authToken|token|password|secret|credential|authorization|email|userId)\b/i.test(
       lineWithoutComments
-    );
+    )) {
+      lines.push(index + 1);
+    }
   });
+  return sortedUniqueLines(lines);
 };
 
 export const hasSwiftHardcodedSensitiveStringUsage = (source: string): boolean => {

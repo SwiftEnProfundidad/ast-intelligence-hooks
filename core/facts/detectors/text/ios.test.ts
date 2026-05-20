@@ -171,6 +171,7 @@ import {
   hasSwiftTestDoubleWithoutProtocolConformanceUsage,
   hasSwiftSheetIsPresentedUsage,
   hasSwiftScrollViewShowsIndicatorsUsage,
+  collectSwiftSensitiveLoggingLines,
   hasSwiftSensitiveLoggingUsage,
   hasSwiftSelfPrintChangesUsage,
   collectSwiftSensitiveUserDefaultsStorageLines,
@@ -1945,7 +1946,9 @@ logger.error("Refresh failed \\(refreshToken)")
   assert.equal(hasSwiftAdHocLoggingUsage(adHoc), true);
   assert.equal(hasSwiftAdHocLoggingUsage(structuredSafe), false);
   assert.equal(hasSwiftSensitiveLoggingUsage(sensitive), true);
+  assert.deepEqual(collectSwiftSensitiveLoggingLines(sensitive), [2, 3]);
   assert.equal(hasSwiftSensitiveLoggingUsage(structuredSafe), false);
+  assert.deepEqual(collectSwiftSensitiveLoggingLines(structuredSafe), []);
 });
 
 test('hasSwiftHardcodedSensitiveStringUsage detecta secretos hardcodeados en Swift productivo', () => {
