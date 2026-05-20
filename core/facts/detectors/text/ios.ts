@@ -1498,6 +1498,7 @@ const swiftStrongSelfEscapingClosurePatterns = [
   /\bDispatchQueue\s*\.\s*[A-Za-z0-9_.]+\s*\.\s*async(?:After)?\s*(?:\([^)]*\))?\s*\{/g,
   /\bTimer\s*\.\s*scheduledTimer\s*\([\s\S]{0,320}?\)\s*\{/g,
   /\bNotificationCenter\s*\.\s*default\s*\.\s*addObserver\s*\([\s\S]{0,420}?\busing\s*:\s*\{/g,
+  /\bNotificationCenter\s*\.\s*default\s*\.\s*addObserver\s*\([\s\S]{0,420}?\)\s*\{/g,
   /\.\s*sink\s*\([\s\S]{0,420}?\b(?:receiveValue|receiveCompletion)\s*:\s*\{/g,
   /\.\s*sink\s*\{/g,
   /\.\s*handleEvents\s*\([\s\S]{0,420}?\b(?:receiveOutput|receiveCompletion|receiveCancel)\s*:\s*\{/g,
@@ -1560,6 +1561,44 @@ export const hasSwiftStrongSelfEscapingClosureUsage = (source: string): boolean 
     }
   }
   return false;
+};
+
+const toSwiftLineNumberAtOffset = (source: string, offset: number): number =>
+  source.slice(0, Math.max(0, offset)).split(/\r?\n/).length;
+
+export const collectSwiftStrongSelfEscapingClosureLines = (source: string): readonly number[] => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const lines: number[] = [];
+
+  for (const pattern of swiftStrongSelfEscapingClosurePatterns) {
+    pattern.lastIndex = 0;
+    for (const match of sanitized.matchAll(pattern)) {
+      const matchedSource = match[0] ?? '';
+      const openingBraceOffset = matchedSource.lastIndexOf('{');
+      if (openingBraceOffset < 0 || match.index === undefined) {
+        continue;
+      }
+      const openingBraceIndex = match.index + openingBraceOffset;
+      const closingBraceIndex = findMatchingSwiftBraceIndex(sanitized, openingBraceIndex);
+      if (closingBraceIndex < 0) {
+        continue;
+      }
+      const closureBodyStartIndex = openingBraceIndex + 1;
+      const closureBody = sanitized.slice(closureBodyStartIndex, closingBraceIndex);
+      if (hasWeakOrUnownedSelfCaptureList(closureBody)) {
+        continue;
+      }
+      const strongSelfMatches = closureBody.matchAll(/\bself\s*\./g);
+      for (const strongSelfMatch of strongSelfMatches) {
+        if (strongSelfMatch.index === undefined) {
+          continue;
+        }
+        lines.push(toSwiftLineNumberAtOffset(sanitized, closureBodyStartIndex + strongSelfMatch.index));
+      }
+    }
+  }
+
+  return sortedUniqueLines(lines);
 };
 
 export const hasSwiftCustomSingletonUsage = (source: string): boolean => {

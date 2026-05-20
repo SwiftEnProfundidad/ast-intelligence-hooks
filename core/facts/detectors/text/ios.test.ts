@@ -151,6 +151,7 @@ import {
   collectSwiftOnChangeTaskLines,
   collectSwiftOnChangeReadonlyVarLines,
   collectSwiftStrongDelegateReferenceLines,
+  collectSwiftStrongSelfEscapingClosureLines,
   hasSwiftOnChangeReadonlyVarUsage,
   hasSwiftOnAppearTaskUsage,
   collectSwiftOnAppearTaskLines,
@@ -1681,6 +1682,7 @@ final class CartViewModel {
 `;
 
   assert.equal(hasSwiftStrongSelfEscapingClosureUsage(source), true);
+  assert.deepEqual(collectSwiftStrongSelfEscapingClosureLines(source), [7, 10, 13, 16, 19]);
 });
 
 test('hasSwiftStrongSelfEscapingClosureUsage preserva capture lists weak/unowned e ignora comentarios y strings', () => {
@@ -1703,6 +1705,7 @@ final class CartViewModel {
 `;
 
   assert.equal(hasSwiftStrongSelfEscapingClosureUsage(source), false);
+  assert.deepEqual(collectSwiftStrongSelfEscapingClosureLines(source), []);
 });
 
 test('hasSwiftCustomSingletonUsage detecta singletons propios y excluye usos de singletons del sistema', () => {

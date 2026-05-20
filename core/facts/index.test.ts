@@ -100,3 +100,37 @@ final class SystemPermissionsService {
   assert.deepEqual(match.primary_node?.lines, [3]);
   assert.match(match.expected_fix ?? '', /weak var delegate/i);
 });
+
+test('extractHeuristicFacts emite strong self iOS con linea y remediation accionable', () => {
+  const params: HeuristicExtractionParams = {
+    facts: [
+      {
+        kind: 'FileContent',
+        source: 'repo',
+        path: 'apps/ios/Presentation/Features/Cart/CartViewModel.swift',
+        content: `
+final class CartViewModel {
+  func bind() {
+    Task {
+      await self.reload()
+    }
+  }
+}
+`,
+      },
+    ],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+    },
+  };
+
+  const extractedFacts = extractHeuristicFacts(params);
+  const match = extractedFacts.find(
+    (fact) => fact.ruleId === 'heuristics.ios.memory.strong-self-escaping-closure.ast'
+  );
+
+  assert.ok(match);
+  assert.deepEqual(match.lines, [5]);
+  assert.deepEqual(match.primary_node?.lines, [5]);
+  assert.match(match.expected_fix ?? '', /\[weak self\]/i);
+});

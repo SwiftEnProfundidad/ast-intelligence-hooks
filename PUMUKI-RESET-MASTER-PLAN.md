@@ -1318,6 +1318,7 @@ Snapshot PARITY-IOS-MEMORY-001 (2026-05-13):
 Snapshot PARITY-IOS-MEMORY-002 (2026-05-13):
 - Diagnóstico: la regla iOS de retain cycles seguía cubriendo solo delegates fuertes, pero no capturas fuertes de `self` en closures escapables comunes de Swift production.
 - Implementación: se añade `heuristics.ios.memory.strong-self-escaping-closure.ast` como WARN brownfield-aware para `Task`, `DispatchQueue.async`, `Timer.scheduledTimer`, `NotificationCenter.addObserver`, `Combine.sink` y `handleEvents` cuando capturan `self.` sin capture list `[weak self]` o `[unowned self]`; se enlaza extractor, preset heurístico, registry de skills, normalización markdown y tests dirigidos.
+- Refuerzo 2026-05-20: el finding ya emite líneas exactas de cada `self.` capturado, nodo `escaping closure captures self strongly`, nodo de reemplazo `capture [weak self] or explicit lifetime owner` y solución accionable para añadir capture list explícita o codificar una propiedad de vida deliberada.
 - Alcance explícito: esta slice no intenta demostrar propiedad de ciclo real ni bloquear deuda brownfield; señala ownership no explícito en APIs escapables para remediación progresiva.
 
 Snapshot PARITY-IOS-ARCHITECTURE-001 (2026-05-13):
