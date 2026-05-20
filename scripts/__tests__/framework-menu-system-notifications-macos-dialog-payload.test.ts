@@ -132,7 +132,7 @@ test('buildBlockedDialogPayload no muestra comandos npx largos en la ventana vis
 
   assert.match(payload.cause, /Regla: Dynamic Type/);
   assert.match(payload.cause, /Fichero: apps\/ios\/Presentation\/Views\/RuralGoWordmarkView\.swift:22/);
-  assert.match(payload.cause, /Viola: Dynamic Type - Font scaling automatico/);
+  assert.match(payload.cause, /Falla: Dynamic Type - Font scaling automatico/);
   assert.match(payload.cause, /Solución: Use semantic SwiftUI text styles/);
   assert.equal(payload.remediation, 'Corrige las violaciones listadas y vuelve a intentar el commit.');
   assert.doesNotMatch(payload.cause, /npx --yes --package/);
@@ -177,6 +177,63 @@ test('buildBlockedDialogPayload muestra skills iOS con separador, linea, evidenc
   assert.match(payload.cause, /\n\n2\. Regla: incomplete/);
   assert.match(payload.cause, /Evidencia: Falta: \[makeSUT\(\), trackForMemoryLeaks\(\)\]/);
   assert.match(payload.cause, /Solución: Añade makeSUT\(\) y trackForMemoryLeaks\(\)/);
+});
+
+test('buildBlockedDialogPayload traduce reglas SwiftUI frecuentes a lenguaje dev y evita spanglish principal', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_COMMIT',
+      totalViolations: 4,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'SKILLS_IOS_ACTION_HANDLERS',
+          ruleId: 'skills.ios.guideline.ios-swiftui-expert.action-handlers-should-reference-methods-not-contain-inline-logic',
+          file: 'apps/ios/Presentation/Debug/DebugMenuView.swift',
+          message: 'Action handlers should reference methods, not contain inline logic',
+          remediation: 'Extract the action body to a named method or view model command and reference that method from Button.',
+        },
+        {
+          code: 'SKILLS_IOS_FOREACH_STABLE_ID',
+          ruleId: 'skills.ios.guideline.ios-swiftui-expert.ensure-foreach-uses-stable-identity-see-references-list-patterns-md',
+          file: 'apps/ios/Presentation/Features/BuyerCommerce/BuyerCommerceScreens.swift',
+          message: 'Ensure ForEach uses stable identity (see references/list-patterns.md)',
+          remediation: 'Use Identifiable models or an explicit stable domain identifier such as id: \\.id.',
+        },
+        {
+          code: 'SKILLS_IOS_LAZY_STACK',
+          ruleId: 'skills.ios.guideline.ios-swiftui-expert.use-lazyvstack-lazyhstack-for-large-lists',
+          file: 'apps/ios/Presentation/Features/BuyerCommerce/BuyerCommerceScreens.swift',
+          message: 'LazyVStack/LazyHStack - Para listas grandes',
+          remediation: 'Replace VStack/HStack under ScrollView with LazyVStack/LazyHStack when rendering collection rows.',
+        },
+        {
+          code: 'SKILLS_BACKEND_NO_EMPTY_CATCH',
+          ruleId: 'skills.backend.no-empty-catch',
+          file: 'apps/backend/src/admin/repositories/reporting/notification.repository.ts',
+          message: 'Disallow empty catch blocks in backend runtime code.',
+          remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+        },
+      ],
+    }),
+    repoRoot: '/tmp/R_GO',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'R_GO',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /Regla: handlers SwiftUI sin lógica inline/);
+  assert.match(payload.cause, /Falla: El handler contiene lógica inline/);
+  assert.match(payload.cause, /Solución: Extrae la acción a un método con nombre/);
+  assert.match(payload.cause, /Regla: identidad estable en ForEach/);
+  assert.match(payload.cause, /Solución: Usa modelos Identifiable/);
+  assert.match(payload.cause, /Regla: LazyVStack\/LazyHStack para listas grandes/);
+  assert.match(payload.cause, /Solución: Sustituye VStack\/HStack/);
+  assert.match(payload.cause, /Regla: catch vacío/);
+  assert.match(payload.cause, /Falla: Catch vacío en código backend runtime/);
+  assert.doesNotMatch(payload.cause, /Viola:/);
+  assert.doesNotMatch(payload.cause, /action-handlers-should-reference-methods-not-contain-inline-logic/);
+  assert.doesNotMatch(payload.cause, /ensure-foreach-uses-stable-identity/);
 });
 
 test('buildBlockedDialogPayload muestra remediación SDD accionable en vez de repetir pumuki-pre-write', () => {

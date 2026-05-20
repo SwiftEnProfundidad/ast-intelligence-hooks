@@ -41,8 +41,30 @@ final class DialogAppDelegate: NSObject, NSApplicationDelegate {
 
     let alert = NSAlert()
     alert.messageText = config.title
-    alert.informativeText = "Causa: \(config.cause)\n\nSolución: \(config.remediation)"
+    alert.informativeText = "Revisa el detalle del bloqueo. Puedes seleccionar y copiar el texto."
     alert.alertStyle = .critical
+
+    let details = "Causa:\n\(config.cause)\n\nSolución:\n\(config.remediation)"
+    let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 560, height: 420))
+    scrollView.hasVerticalScroller = true
+    scrollView.hasHorizontalScroller = false
+    scrollView.borderType = .bezelBorder
+
+    let textView = NSTextView(frame: scrollView.contentView.bounds)
+    textView.string = details
+    textView.isEditable = false
+    textView.isSelectable = true
+    textView.drawsBackground = false
+    textView.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+    textView.textContainerInset = NSSize(width: 8, height: 8)
+    textView.textContainer?.widthTracksTextView = true
+    textView.textContainer?.containerSize = NSSize(width: scrollView.contentSize.width, height: CGFloat.greatestFiniteMagnitude)
+    textView.isVerticallyResizable = true
+    textView.isHorizontallyResizable = false
+    textView.autoresizingMask = [.width]
+    scrollView.documentView = textView
+    alert.accessoryView = scrollView
+
     alert.addButton(withTitle: config.keepButton)
     alert.addButton(withTitle: config.muteButton)
     alert.addButton(withTitle: config.disableButton)

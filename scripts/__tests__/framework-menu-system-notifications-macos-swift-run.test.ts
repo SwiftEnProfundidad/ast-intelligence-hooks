@@ -18,6 +18,13 @@ test('resolveSwiftBlockedDialogScriptPath materializa el helper Swift en runtime
   });
 });
 
+test('SWIFT_BLOCKED_DIALOG_SOURCE usa detalle scrollable para muchas causas bloqueantes', () => {
+  assert.match(SWIFT_BLOCKED_DIALOG_SOURCE, /NSScrollView/);
+  assert.match(SWIFT_BLOCKED_DIALOG_SOURCE, /NSTextView/);
+  assert.match(SWIFT_BLOCKED_DIALOG_SOURCE, /alert\.accessoryView = scrollView/);
+  assert.match(SWIFT_BLOCKED_DIALOG_SOURCE, /Puedes seleccionar y copiar el texto/);
+});
+
 test('runBlockedDialogWithSwiftHelper ejecuta swift y devuelve el botón seleccionado', async () => {
   await withTempDir('pumuki-macos-swift-run-', async (repoRoot) => {
     const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];

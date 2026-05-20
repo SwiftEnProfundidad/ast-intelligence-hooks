@@ -60,6 +60,32 @@ const stripTechnicalFieldsFromMessage = (message: string): string => {
     .trim();
 };
 
+const localizeDeveloperText = (value: string): string => {
+  const normalized = normalizeNotificationText(value);
+  const knownTexts: ReadonlyArray<[RegExp, string]> = [
+    [/Disallow empty catch blocks in backend runtime code\./iu, 'Catch vacío en código backend runtime.'],
+    [/Action handlers should reference methods, not contain inline logic/iu, 'El handler contiene lógica inline; debe llamar a un método o comando del view model.'],
+    [/Ensure constant number of views per ForEach element/iu, 'Cada elemento de ForEach debe devolver una estructura de vistas estable.'],
+    [/Ensure ForEach uses stable identity/iu, 'ForEach debe usar una identidad estable.'],
+    [/Prefer modifiers over conditional views for state changes/iu, 'Para cambios de estado, usa modificadores en vez de cambiar la identidad de la vista.'],
+    [/Prefer static member lookup \(\.blue vs Color\.blue\)/iu, 'Usa colores semánticos o static member lookup en SwiftUI.'],
+    [/LazyVStack\/LazyHStack - Para listas grandes/iu, 'Las listas grandes deben renderizarse con LazyVStack o LazyHStack.'],
+    [/navigationDestination \(for:\) - Destinos tipados/iu, 'La navegación debe usar navigationDestination(for:) con destinos tipados.'],
+    [/Extract the action body to a named method or view model command and reference that method from Button\./iu, 'Extrae la acción a un método con nombre o comando del view model y referencia ese método desde Button.'],
+    [/Move branching into a dedicated row view or prefer conditional modifiers\/values that keep a stable view structure per element\./iu, 'Mueve la ramificación a una fila dedicada o usa modificadores condicionales que mantengan estable la estructura de vistas por elemento.'],
+    [/Use Identifiable models or an explicit stable domain identifier such as id: \\.id\./iu, 'Usa modelos Identifiable o un identificador estable del dominio, por ejemplo id: \\.id.'],
+    [/Keep one view instance and move the condition into modifiers, parameters or extracted stable row state\./iu, 'Mantén una única instancia de vista y mueve la condición a modificadores, parámetros o estado estable extraído.'],
+    [/Replace Color\.blue\/Color\.primary\/etc\. with \.blue\/\.primary in SwiftUI style contexts, or use named asset colors such as Color\("BrandPrimary"\) when design tokens are required\./iu, 'Sustituye Color.blue/Color.primary por .blue/.primary en contextos SwiftUI, o usa colores semánticos del design system cuando aplique.'],
+    [/Replace VStack\/HStack under ScrollView with LazyVStack\/LazyHStack when rendering collection rows\./iu, 'Sustituye VStack/HStack dentro de ScrollView por LazyVStack/LazyHStack al renderizar colecciones.'],
+  ];
+  for (const [pattern, replacement] of knownTexts) {
+    if (pattern.test(normalized)) {
+      return replacement;
+    }
+  }
+  return normalized;
+};
+
 const extractFieldFromCauseMessage = (message: string, field: string): string | null => {
   const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const match = message.match(new RegExp(`\\b${escapedField}=([^\\n]+?)(?=\\s(?:severity|code|rule|file|lines?|message|remediation|snippet|node|primary_node|missing)=|$)`, 'i'));
@@ -104,15 +130,22 @@ const formatLocation = (cause: NonNullable<Extract<PumukiCriticalNotificationEve
 
 const humanizeRuleId = (ruleId: string): string => {
   const knownRules: Record<string, string> = {
+    'no-empty-catch': 'catch vacío',
     'prefer-swift-testing': 'Swift Testing',
     'no-xctassert': 'XCTest assertions',
     'no-wait-for-expectations': 'waitForExpectations en XCTest',
     'ios-test-quality': 'calidad de tests iOS',
+    'action-handlers-should-reference-methods-not-contain-inline-logic': 'handlers SwiftUI sin lógica inline',
+    'ensure-constant-number-of-views-per-foreach-element': 'estructura estable en ForEach',
+    'ensure-foreach-uses-stable-identity-see-references-list-patterns-md': 'identidad estable en ForEach',
+    'prefer-modifiers-over-conditional-views-for-state-changes': 'modificadores para cambios de estado',
     'dynamic-type-font-scaling-automatico': 'Dynamic Type',
     'dynamic-type-fuentes-escalables-y-layouts-adaptativos': 'fuentes escalables y layouts adaptativos',
     'use-relative-layout-over-hard-coded-constants': 'layout relativo en vez de constantes fijas',
     'magic-numbers-usar-constantes-con-nombres': 'números mágicos sin constantes con nombre',
     'prefer-static-member-lookup-blue-vs-color-blue': 'colores semánticos en SwiftUI',
+    'use-lazyvstack-lazyhstack-for-large-lists': 'LazyVStack/LazyHStack para listas grandes',
+    'use-navigationdestination-for-type-safe-navigation': 'navigationDestination type-safe',
   };
   const normalized = ruleId
     .replace(/^skills\./u, '')
@@ -218,13 +251,13 @@ const formatBlockingCauseForDialog = (
 ): readonly string[] => {
   const rule = cause.ruleId ?? cause.code;
   const visibleRule = formatVisibleRule(cause);
-  const problem = stripTechnicalFieldsFromMessage(cause.message) || cause.code;
+  const problem = localizeDeveloperText(stripTechnicalFieldsFromMessage(cause.message) || cause.code);
   const remediation = isGoldenFlowCause(cause)
     ? GOLDEN_FLOW_REMEDIATION
     : isWorktreeHygieneCause(cause)
     ? WORKTREE_HYGIENE_REMEDIATION
     : cause.remediation
-    ? normalizeNotificationText(cause.remediation)
+    ? localizeDeveloperText(cause.remediation)
     : 'Corrige la violación indicada y vuelve a intentar el commit.';
   if (isWorktreeHygieneCause(cause)) {
     return [
@@ -246,7 +279,7 @@ const formatBlockingCauseForDialog = (
   return [
     `${index + 1}. ${causeLabel}: ${truncateNotificationText(visibleRule, 96)}`,
     `   Fichero: ${truncateNotificationText(formatLocation(cause), 120)}`,
-    `   Viola: ${truncateNotificationText(problem, 160)}`,
+    `   Falla: ${truncateNotificationText(problem, 160)}`,
     buildEvidenceLine(cause),
     `   Solución: ${truncateNotificationText(remediation, 180)}`,
   ].filter((line): line is string => typeof line === 'string');
