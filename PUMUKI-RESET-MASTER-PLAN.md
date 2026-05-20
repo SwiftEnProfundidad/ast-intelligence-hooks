@@ -2536,3 +2536,15 @@ Evidencia:
 - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> 53/53
 - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> 21/21
 - `npm run -s typecheck` -> OK
+
+### 2026-05-20 - PUMUKI-INC-172 follow-up / skills contract duplicado y sin regla concreta
+
+- ✅ Repro externo RuralGo tras `pumuki@6.3.321`: el bloqueo seguía mostrando dos causas equivalentes de contrato de skills incompleto.
+- ✅ Causa raíz notificación: el parser solo extraía plataforma/reglas desde `platforms=... rules={...}`, pero el mensaje real llegaba como `ios(missing_critical_rule_ids=[skills.ios.critical-test-quality])`.
+- ✅ Fix notificación: extrae `iOS` y `skills.ios.critical-test-quality` desde `missing_critical_rule_ids`, y deja de proponer repin como solución genérica cuando el consumer ya está en latest.
+- ✅ Fix diálogo macOS: si todas las causas son contrato de skills, se coalescen en una sola causa visible para no duplicar el mismo bloqueo.
+- ✅ Fix gate: `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE` ya no se añade como wrapper redundante cuando la causa concreta ya es `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING`.
+
+Evidencia:
+- `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-payloads-blocked.test.ts scripts/__tests__/framework-menu-system-notifications-macos-dialog-payload.test.ts` -> 21/21
+- `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts` -> 53/53
