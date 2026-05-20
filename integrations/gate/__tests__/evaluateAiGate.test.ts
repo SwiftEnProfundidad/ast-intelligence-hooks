@@ -2779,6 +2779,111 @@ test('evaluateAiGate trata PRE_WRITE de tooling puro como no-op aunque existan p
   });
 });
 
+test('evaluateAiGate no activa contrato skills iOS para staged documental BDD bajo apps/ios', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
+    const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-prewrite-ios-docs-'));
+
+    try {
+      execFileSync('git', ['init'], { cwd: tmpRoot, stdio: 'ignore' });
+      mkdirSync(join(tmpRoot, 'apps/ios/Documentation/Features'), { recursive: true });
+      mkdirSync(join(tmpRoot, 'docs/technical/08-validation/refactor'), { recursive: true });
+      writeFileSync(
+        join(tmpRoot, 'apps/ios/Documentation/Features/Authentication.feature'),
+        'Feature: Authentication provider blockers\n'
+      );
+      writeFileSync(join(tmpRoot, 'docs/RURALGO_SEGUIMIENTO.md'), '# Seguimiento\n');
+      writeFileSync(
+        join(tmpRoot, 'docs/technical/08-validation/refactor/pumuki-integration-feedback.md'),
+        '# Pumuki feedback\n'
+      );
+      execFileSync(
+        'git',
+        [
+          'add',
+          'apps/ios/Documentation/Features/Authentication.feature',
+          'docs/RURALGO_SEGUIMIENTO.md',
+          'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
+        ],
+        { cwd: tmpRoot, stdio: 'ignore' }
+      );
+
+      const base = sampleEvidence();
+      const result = evaluateAiGate(
+        {
+          repoRoot: tmpRoot,
+          stage: 'PRE_WRITE',
+        },
+        {
+          now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+          readEvidenceResult: () =>
+            validEvidenceResult({
+              ...base,
+              platforms: {
+                ios: {
+                  detected: true,
+                  confidence: 'HIGH',
+                },
+              },
+              rulesets: [],
+              repo_state: {
+                ...base.repo_state!,
+                repo_root: tmpRoot,
+              },
+              snapshot: {
+                ...base.snapshot,
+                stage: 'PRE_WRITE',
+                rules_coverage: {
+                  ...base.snapshot.rules_coverage!,
+                  stage: 'PRE_WRITE',
+                  active_rule_ids: ['project.rules.audit'],
+                  evaluated_rule_ids: ['project.rules.audit'],
+                  matched_rule_ids: [],
+                  unevaluated_rule_ids: [],
+                  counts: {
+                    active: 1,
+                    evaluated: 1,
+                    matched: 0,
+                    unevaluated: 0,
+                  },
+                  coverage_ratio: 1,
+                },
+              },
+            }),
+          captureRepoState: () => ({
+            ...sampleEvidence().repo_state!,
+            repo_root: tmpRoot,
+            git: {
+              ...sampleEvidence().repo_state!.git,
+              pending_changes: 3,
+              staged: 3,
+              unstaged: 0,
+            },
+          }),
+          loadRequiredSkillsLock: () => sampleMultiPlatformSkillsLock(),
+        }
+      );
+
+      assert.equal(result.status, 'ALLOWED');
+      assert.equal(result.allowed, true);
+      assert.equal(result.skills_contract?.enforced, false);
+      assert.equal(result.skills_contract?.status, 'NOT_APPLICABLE');
+      assert.deepEqual(result.skills_contract?.detected_platforms, []);
+      assert.equal(
+        result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
+        false
+      );
+      assert.equal(
+        result.skills_contract?.violations.some(
+          (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
+        ),
+        false
+      );
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+});
+
 test('evaluateAiGate no bloquea PRE_COMMIT staged no-code por plataformas skills no detectadas', async () => {
   await withSkillsEnforcementEnv('strict', async () => {
     const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-precommit-nocode-'));

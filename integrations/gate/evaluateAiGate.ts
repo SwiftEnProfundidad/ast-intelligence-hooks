@@ -490,14 +490,21 @@ const isPlatformPath = (platform: PreWriteSkillsPlatform, filePath: string): boo
   const normalized = normalizeChangedPath(filePath).toLowerCase();
   if (platform === 'ios') {
     return normalized.endsWith('.swift')
-      || normalized.startsWith('apps/ios/')
-      || normalized.startsWith('ios/');
+      || normalized.endsWith('.m')
+      || normalized.endsWith('.mm')
+      || normalized.endsWith('.h')
+      || normalized.endsWith('.xib')
+      || normalized.endsWith('.storyboard')
+      || normalized.endsWith('.xcstrings')
+      || normalized.endsWith('.plist');
   }
   if (platform === 'android') {
     return normalized.endsWith('.kt')
       || normalized.endsWith('.kts')
-      || normalized.startsWith('apps/android/')
-      || normalized.startsWith('android/');
+      || normalized.endsWith('.java')
+      || normalized.endsWith('.xml')
+      || normalized.endsWith('.gradle')
+      || normalized.endsWith('.gradle.kts');
   }
   if (platform === 'backend') {
     const isTypeScriptOrJavaScript =
@@ -667,6 +674,16 @@ const collectPreWritePlatformSkillsViolations = (params: {
     coverage: params.coverage,
   });
   if (detectedPlatforms.length === 0) {
+    return [];
+  }
+  const effectiveChangedPaths = collectPreWriteEffectiveChangedPaths(params.repoRoot);
+  const isNoCodeEffectiveScope =
+    effectiveChangedPaths.length > 0
+    && !hasEffectiveChangedCodePlatforms({
+      changedPaths: effectiveChangedPaths,
+      requiredPlatforms: detectedPlatforms,
+    });
+  if (isNoCodeEffectiveScope) {
     return [];
   }
 
