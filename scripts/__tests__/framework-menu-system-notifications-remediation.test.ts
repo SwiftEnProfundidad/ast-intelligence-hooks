@@ -124,8 +124,10 @@ test('resolveBlockedRemediation no sustituye SDD_SESSION_MISSING por comando gen
     'SDD_SESSION_MISSING'
   );
 
-  assert.match(result, /sesión SDD del cambio activo/i);
+  assert.match(result, /Abre `openspec\/changes\/`/);
   assert.match(result, /session --open --change=<id>/);
+  assert.match(result, /copia la carpeta de tu tarea/);
+  assert.match(result, /por ejemplo `rgo-1900-35`/);
   assert.match(result, /openspec\/changes/i);
   assert.match(result, /vuelve a intentar el commit/i);
   assert.match(result, /PRE_WRITE automáticamente/i);
@@ -149,7 +151,7 @@ test('resolveBlockedRemediation detecta SDD_SESSION_MISSING aunque venga tapado 
     'EVIDENCE_GATE_BLOCKED'
   );
 
-  assert.match(result, /sesión SDD del cambio activo/i);
+  assert.match(result, /Abre `openspec\/changes\/`/);
   assert.match(result, /vuelve a intentar el commit/i);
   assert.doesNotMatch(result, /reejecuta PRE_WRITE/i);
   assert.doesNotMatch(result, /pumuki-pre-write/i);

@@ -2441,6 +2441,7 @@ Validación prevista:
 
 - ✅ Corregida la remediación de `SDD_SESSION_MISSING` para que no diga `reejecuta PRE_WRITE` como acción manual.
 - ✅ La notificación explica que el dev debe abrir la sesión con `pumuki sdd session --open --change=<id>` y que `<id>` es la carpeta bajo `openspec/changes`.
+- ✅ Reforzada la explicación de `<id>`: abrir `openspec/changes/`, copiar el nombre de la carpeta de la tarea y usarlo como valor de `--change=<id>`.
 - ✅ La notificación indica que después se debe volver a intentar el commit; Pumuki ejecuta PRE_WRITE automáticamente mediante hooks.
 - ✅ Eliminada la frase interna `Agente IA: STOP` de la remediación visible al dev.
 - ✅ Alineada la notificación compacta de skills para usar `Falla` en vez de `Viola` y evitar `vuelve a ejecutar el gate` como lenguaje principal.

@@ -22,7 +22,7 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera la evidencia desde este repositorio y vuelve a validar.',
   PRE_PUSH_UPSTREAM_MISSING: 'Configura upstream con `git push --set-upstream origin <branch>` y repite PRE_PUSH.',
   SDD_SESSION_MISSING:
-    'Abre la sesión SDD del cambio activo: `pumuki sdd session --open --change=<id>`. Sustituye <id> por la carpeta en openspec/changes. Después vuelve a intentar el commit; Pumuki ejecutará PRE_WRITE automáticamente.',
+    'Abre `openspec/changes/` y copia la carpeta de tu tarea, por ejemplo `rgo-1900-35`. Ejecuta `pumuki sdd session --open --change=<id>` usando ese nombre. Después vuelve a intentar el commit; PRE_WRITE automáticamente.',
   SDD_SESSION_INVALID:
     'Refresca la sesión SDD activa: `pumuki sdd session --refresh --ttl-minutes=90`. Después vuelve a intentar el commit; Pumuki ejecutará PRE_WRITE automáticamente.',
   OPENSPEC_MISSING: 'Instala OpenSpec en este repositorio y vuelve a validar el gate.',
