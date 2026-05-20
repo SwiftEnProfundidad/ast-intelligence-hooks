@@ -60,6 +60,8 @@ import {
   hasSwiftDefaultActorIsolationNotMainActorUsage,
   collectSwiftUpcomingFeatureDisabledLines,
   hasSwiftUpcomingFeatureDisabledUsage,
+  collectSwiftNavigationPathWithoutRestorationLines,
+  hasSwiftNavigationPathWithoutRestorationUsage,
   hasSwiftForEachIndicesUsage,
   hasSwiftForEachSelfIdentityUsage,
   collectSwiftForceCastLines,
@@ -908,6 +910,35 @@ buildSettings = {
   assert.deepEqual(collectSwiftUpcomingFeatureDisabledLines(source), [3, 4, 5]);
   assert.equal(hasSwiftUpcomingFeatureDisabledUsage(safe), false);
   assert.deepEqual(collectSwiftUpcomingFeatureDisabledLines(safe), []);
+});
+
+test('hasSwiftNavigationPathWithoutRestorationUsage detecta NavigationPath sin restauracion', () => {
+  const source = `
+struct ShellView: View {
+  @State private var path = NavigationPath()
+
+  var body: some View {
+    NavigationStack(path: $path) { EmptyView() }
+  }
+}
+`;
+  const safe = `
+struct ShellView: View {
+  @SceneStorage("navigation.path") private var encodedPath = Data()
+  @State private var path = NavigationPath()
+
+  func restoreNavigationPath() {
+    _ = path.codable
+  }
+}
+let sample = "NavigationPath()"
+// let ignored = NavigationPath()
+`;
+
+  assert.equal(hasSwiftNavigationPathWithoutRestorationUsage(source), true);
+  assert.deepEqual(collectSwiftNavigationPathWithoutRestorationLines(source), [3]);
+  assert.equal(hasSwiftNavigationPathWithoutRestorationUsage(safe), false);
+  assert.deepEqual(collectSwiftNavigationPathWithoutRestorationLines(safe), []);
 });
 
 test('hasSwiftNonLazyScrollForEachUsage detecta ScrollView con stack no lazy y preserva LazyVStack', () => {

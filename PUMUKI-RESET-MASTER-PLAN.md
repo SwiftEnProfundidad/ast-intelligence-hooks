@@ -2366,3 +2366,17 @@ Validación prevista:
 - `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
 - `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
 
+
+### 2026-05-20 - INC145 / iOS detector nodal nuevo: NavigationPath restoration
+
+- ✅ Implementado `heuristics.ios.navigation.path-without-restoration.ast`.
+- ✅ Detecta `NavigationPath()` sin señales de restauración/persistencia en el archivo.
+- ✅ Considera señales válidas `@SceneStorage`, `@AppStorage`, `NavigationPath.CodableRepresentation`, `.codable` o helpers explícitos restore/persist/load/save de Path.
+- ✅ Asociado a skills iOS de deep links y state restoration para que el bloqueo tenga regla, fichero, línea y solución.
+- 🚧 Siguiente foco iOS: continuar con detectores nodales de arquitectura/testing iOS pendientes antes de pasar a Android.
+
+Validación prevista:
+- `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts`
+- `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts`
+- `npx --yes tsx@4.21.0 --test core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts`
+- `git diff --check`

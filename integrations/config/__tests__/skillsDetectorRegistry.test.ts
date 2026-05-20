@@ -454,6 +454,18 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.deep-links-deben-mapear-a-rutas-del-path'
+    ),
+    ['heuristics.ios.navigation.path-without-restoration.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.state-restoration-rehidratar-path-desde-estado-persistido-si-aplica'
+    ),
+    ['heuristics.ios.navigation.path-without-restoration.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.coordinator-para-navegacio-n-no-acoplamiento-entre-views'
     ),
     ['heuristics.ios.swiftui.untyped-navigation-link-destination.ast']

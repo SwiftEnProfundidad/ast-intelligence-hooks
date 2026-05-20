@@ -1176,6 +1176,29 @@ export const hasSwiftUpcomingFeatureDisabledUsage = (source: string): boolean =>
   return collectSwiftUpcomingFeatureDisabledLines(source).length > 0;
 };
 
+const swiftNavigationPathRestorationPattern =
+  /@(?:SceneStorage|AppStorage)\b|\bCodableRepresentation\b|\.codable\b|\b(?:restore|rehydrate|persist|save|load)[A-Za-z0-9_]*(?:Navigation)?Path\b/i;
+
+export const collectSwiftNavigationPathWithoutRestorationLines = (
+  source: string
+): readonly number[] => {
+  const lines = collectSwiftRegexLines(source, /\bNavigationPath\s*\(/);
+  if (lines.length === 0) {
+    return [];
+  }
+
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  if (swiftNavigationPathRestorationPattern.test(sanitized)) {
+    return [];
+  }
+
+  return sortedUniqueLines(lines);
+};
+
+export const hasSwiftNavigationPathWithoutRestorationUsage = (source: string): boolean => {
+  return collectSwiftNavigationPathWithoutRestorationLines(source).length > 0;
+};
+
 export const hasSwiftOnAppearTaskUsage = (source: string): boolean => {
   return collectSwiftOnAppearTaskLines(source).length > 0;
 };

@@ -609,6 +609,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-navigation-view': heuristicDetector('ios.navigation-view', [
     'heuristics.ios.navigation-view.ast',
   ]),
+  'skills.ios.guideline.ios.deep-links-deben-mapear-a-rutas-del-path':
+    heuristicDetector('ios.navigation.path-restoration', [
+      'heuristics.ios.navigation.path-without-restoration.ast',
+    ]),
+  'skills.ios.guideline.ios.state-restoration-rehidratar-path-desde-estado-persistido-si-aplica':
+    heuristicDetector('ios.navigation.path-restoration', [
+      'heuristics.ios.navigation.path-without-restoration.ast',
+    ]),
   'skills.ios.guideline.ios-swiftui-expert.use-modern-apis-no-deprecated-modifiers-or-patterns-see-references-mod':
     heuristicDetector('ios.swiftui.modern-api-replacements', [
       'heuristics.ios.navigation-view.ast',

@@ -327,6 +327,14 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
     'heuristics.ios.passed-value-state-wrapper.ast',
   ],
   ['skills.ios.no-navigation-view', 'heuristics.ios.navigation-view.ast'],
+  [
+    'skills.ios.guideline.ios.deep-links-deben-mapear-a-rutas-del-path',
+    'heuristics.ios.navigation.path-without-restoration.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.state-restoration-rehidratar-path-desde-estado-persistido-si-aplica',
+    'heuristics.ios.navigation.path-without-restoration.ast',
+  ],
   ['skills.ios.no-foreground-color', 'heuristics.ios.foreground-color.ast'],
   ['skills.ios.no-corner-radius', 'heuristics.ios.corner-radius.ast'],
   ['skills.ios.no-tab-item', 'heuristics.ios.tab-item.ast'],

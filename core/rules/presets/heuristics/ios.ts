@@ -1939,6 +1939,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.navigation.path-without-restoration.ast',
+    description: 'Detects SwiftUI NavigationPath state without an explicit restoration contract.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.navigation.path-without-restoration.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected NavigationPath without an explicit restoration contract.',
+      code: 'HEURISTICS_IOS_NAVIGATION_PATH_WITHOUT_RESTORATION_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.swiftui.untyped-navigation-link-destination.ast',
     description: 'Detects untyped SwiftUI NavigationLink destination usage.',
     severity: 'WARN',

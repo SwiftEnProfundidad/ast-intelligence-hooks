@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 132);
+  assert.equal(iosRules.length, 133);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -112,6 +112,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.accessibility.animation-without-reduce-motion.ast',
     'heuristics.ios.swiftui.inline-action-logic.ast',
     'heuristics.ios.navigation-view.ast',
+    'heuristics.ios.navigation.path-without-restoration.ast',
     'heuristics.ios.swiftui.untyped-navigation-link-destination.ast',
     'heuristics.ios.foreground-color.ast',
     'heuristics.ios.corner-radius.ast',
@@ -249,6 +250,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.accessibility.on-tap-without-button-trait.ast')?.then.code,
     'HEURISTICS_IOS_ACCESSIBILITY_ON_TAP_WITHOUT_BUTTON_TRAIT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.navigation.path-without-restoration.ast')?.then.code,
+    'HEURISTICS_IOS_NAVIGATION_PATH_WITHOUT_RESTORATION_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.swiftui.glasseffectid-without-namespace.ast')?.then.code,
