@@ -74,6 +74,30 @@ test('buildBlockedDialogPayload muestra cada causa bloqueante con regla, archivo
   assert.doesNotMatch(payload.cause, /lines=/);
 });
 
+test('buildBlockedDialogPayload explica tracking bloqueado con línea accionable', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Evidence AI gate status is BLOCKED. active_entries=line_984 tracking_source=PUMUKI-RESET-MASTER-PLAN.md',
+    }),
+    repoRoot: '/tmp/ast-intelligence-hooks',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'ast-intelligence-hooks',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.equal(payload.cause, 'Tracking bloqueado en PUMUKI-RESET-MASTER-PLAN.md, línea 984.');
+  assert.match(payload.remediation, /Abre el MD de tracking PUMUKI-RESET-MASTER-PLAN\.md, línea 984/);
+  assert.match(payload.remediation, /única tarea activa válida/);
+  assert.match(payload.remediation, /vuelve a intentar el commit/);
+  assert.doesNotMatch(payload.cause, /line_984 en/);
+  assert.doesNotMatch(payload.remediation, /PRE_WRITE|gate/i);
+});
+
+
 test('buildBlockedDialogPayload no omite causas bloqueantes aunque haya más de seis', () => {
   const payload = buildBlockedDialogPayload({
     event: blockedEvent({
@@ -137,6 +161,37 @@ test('buildBlockedDialogPayload no muestra comandos npx largos en la ventana vis
   assert.equal(payload.remediation, 'Corrige las violaciones listadas y vuelve a intentar el commit.');
   assert.doesNotMatch(payload.cause, /npx --yes --package/);
   assert.doesNotMatch(payload.remediation, /npx --yes --package/);
+});
+
+test('buildBlockedDialogPayload explica BDD feature missing sin mostrar EVIDENCE_GATE_BLOCKED ambiguo', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          ruleId: 'ai_gate.repo_policy',
+          message:
+            'Evidence AI gate status is BLOCKED. Blocking causes: 1) generic_bdd_feature_required severity=ERROR code=TDD_BDD_SCENARIO_FILE_MISSING file=PARITY-IOS-001.feature message=Slice PARITY-IOS-001 references missing feature file PARITY-IOS-001.feature.',
+          remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+        },
+      ],
+    }),
+    repoRoot: '/tmp/ast-intelligence-hooks',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'ast-intelligence-hooks',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /escenario BDD sin fichero \.feature/);
+  assert.match(payload.cause, /Fichero esperado: PARITY-IOS-001\.feature/);
+  assert.match(payload.cause, /La slice referencia un escenario BDD/);
+  assert.match(payload.cause, /Crea ese \.feature/);
+  assert.match(payload.remediation, /Crea el fichero \.feature esperado/);
+  assert.doesNotMatch(payload.cause, /EVIDENCE_GATE_BLOCKED/);
+  assert.doesNotMatch(payload.cause, /generic_bdd_feature_required/);
 });
 
 test('buildBlockedDialogPayload muestra skills iOS con separador, linea, evidencia y solucion especifica', () => {
@@ -255,7 +310,11 @@ test('buildBlockedDialogPayload muestra remediación SDD accionable en vez de re
   assert.equal(payload.title, '🔴 Pumuki bloqueado · stack-my-architecture');
   assert.equal(payload.cause, 'No hay sesión SDD activa.');
   assert.match(payload.remediation, /session --open --change=<id>/);
-  assert.match(payload.remediation, /Agente IA: STOP/i);
+  assert.match(payload.remediation, /openspec\/changes/i);
+  assert.match(payload.remediation, /vuelve a intentar el commit/i);
+  assert.match(payload.remediation, /PRE_WRITE automáticamente/i);
+  assert.doesNotMatch(payload.remediation, /Agente IA: STOP/i);
+  assert.doesNotMatch(payload.remediation, /reejecuta PRE_WRITE/i);
   assert.doesNotMatch(payload.remediation, /pumuki-pre-write/i);
   assert.doesNotMatch(payload.remediation, /npx --yes --package/i);
 });

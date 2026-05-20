@@ -192,6 +192,24 @@ const isGoldenFlowCause = (
   (cause.ruleId ?? '').startsWith('generic_tdd_') ||
   (cause.ruleId ?? '').startsWith('generic_red_green_refactor');
 
+const isBddScenarioMissingCause = (
+  cause: NonNullable<Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']>[number]
+): boolean => {
+  const searchable = `${cause.code} ${cause.ruleId ?? ''} ${cause.message}`.toLowerCase();
+  return (
+    searchable.includes('tdd_bdd_scenario_file_missing') ||
+    searchable.includes('generic_bdd_feature_required') ||
+    searchable.includes('missing feature file')
+  );
+};
+
+const extractExpectedBddFeatureFile = (cause: NonNullable<Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']>[number]): string => {
+  const directFile = cause.file?.endsWith('.feature') ? cause.file : null;
+  const fileField = extractFieldFromCauseMessage(cause.message, 'file');
+  const missingFeature = cause.message.match(/missing feature file\s+([^\s.]+\.feature|[^\s]+\.feature)/i)?.[1];
+  return directFile ?? fileField ?? missingFeature ?? 'fichero .feature de la slice';
+};
+
 const isSkillCause = (
   cause: NonNullable<Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']>[number]
 ): boolean =>
@@ -274,6 +292,15 @@ const formatBlockingCauseForDialog = (
       `   Falta: ${truncateNotificationText(formatGoldenFlowMissing(cause.message), 120)}`,
     ];
   }
+  if (isBddScenarioMissingCause(cause)) {
+    const expectedFeatureFile = extractExpectedBddFeatureFile(cause);
+    return [
+      `${index + 1}. Causa bloqueante: escenario BDD sin fichero .feature`,
+      `   Fichero esperado: ${truncateNotificationText(expectedFeatureFile, 120)}`,
+      '   Falla: La slice referencia un escenario BDD, pero no existe su fichero .feature.',
+      '   Solución: Crea ese .feature con el escenario de aceptación de la slice, o corrige la referencia si el id de tarea no es correcto.',
+    ];
+  }
 
   const causeLabel = isSkillCause(cause) ? 'Regla' : 'Causa bloqueante';
   return [
@@ -295,6 +322,11 @@ const hasOnlyGoldenFlowCauses = (
 ): boolean =>
   Boolean(causes?.length) && causes!.every(isGoldenFlowCause);
 
+const hasOnlyBddScenarioMissingCauses = (
+  causes: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']
+): boolean =>
+  Boolean(causes?.length) && causes!.every(isBddScenarioMissingCause);
+
 const resolveGoldenFlowDialogRemediation = (
   causes: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']
 ): string => {
@@ -314,6 +346,8 @@ export const buildBlockedDialogPayload = (params: {
     ? WORKTREE_HYGIENE_REMEDIATION
     : hasOnlyGoldenFlowCauses(params.event.blockingCauses)
     ? resolveGoldenFlowDialogRemediation(params.event.blockingCauses)
+    : hasOnlyBddScenarioMissingCauses(params.event.blockingCauses)
+    ? 'Crea el fichero .feature esperado para la slice activa o corrige la referencia de tarea. Después vuelve a intentar el commit.'
     : params.event.blockingCauses && params.event.blockingCauses.length > 0
     ? 'Corrige las violaciones listadas y vuelve a intentar el commit.'
     : resolveBlockedRemediation(params.event, causeCode);

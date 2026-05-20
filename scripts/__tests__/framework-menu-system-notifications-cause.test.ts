@@ -51,6 +51,26 @@ test('resolveBlockedCauseSummary explica bloqueos de tracking enriquecidos', () 
   assert.doesNotMatch(result, /Evidence AI gate status/i);
 });
 
+test('resolveBlockedCauseSummary trata line_ como línea de tracking, no como tarea activa', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Evidence AI gate status is BLOCKED. active_entries=line_984 tracking_source=PUMUKI-RESET-MASTER-PLAN.md',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /tracking bloqueado/i);
+  assert.match(result, /PUMUKI-RESET-MASTER-PLAN\.md/);
+  assert.match(result, /línea 984/i);
+  assert.doesNotMatch(result, /line_984 en/);
+  assert.doesNotMatch(result, /Evidence AI gate status/i);
+});
+
 test('resolveBlockedCauseSummary prioriza gaps críticos de skills sobre tracking enriquecido', () => {
   const result = resolveBlockedCauseSummary(
     {

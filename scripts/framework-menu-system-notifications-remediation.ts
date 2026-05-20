@@ -4,6 +4,7 @@ import {
   truncateNotificationText,
 } from './framework-menu-system-notifications-text';
 import {
+  buildNotificationTrackingRemediation,
   extractNotificationTrackingContext,
   TRACKING_BLOCKED_REMEDIATION,
 } from './framework-menu-system-notifications-tracking';
@@ -21,9 +22,9 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera la evidencia desde este repositorio y vuelve a validar.',
   PRE_PUSH_UPSTREAM_MISSING: 'Configura upstream con `git push --set-upstream origin <branch>` y repite PRE_PUSH.',
   SDD_SESSION_MISSING:
-    'Abre una sesión SDD válida para el change activo (`pumuki sdd session --open --change=<id>`) y reejecuta PRE_WRITE. Agente IA: STOP hasta que exista esa sesión.',
+    'Abre la sesión SDD del cambio activo: `pumuki sdd session --open --change=<id>`. Sustituye <id> por la carpeta en openspec/changes. Después vuelve a intentar el commit; Pumuki ejecutará PRE_WRITE automáticamente.',
   SDD_SESSION_INVALID:
-    'Refresca la sesión SDD activa (`pumuki sdd session --refresh --ttl-minutes=90`) y reejecuta PRE_WRITE. Agente IA: STOP hasta que sea válida.',
+    'Refresca la sesión SDD activa: `pumuki sdd session --refresh --ttl-minutes=90`. Después vuelve a intentar el commit; Pumuki ejecutará PRE_WRITE automáticamente.',
   OPENSPEC_MISSING: 'Instala OpenSpec en este repositorio y vuelve a validar el gate.',
   MCP_ENTERPRISE_RECEIPT_MISSING: 'Genera el receipt enterprise de MCP y vuelve a validar.',
   BACKEND_AVOID_EXPLICIT_ANY: 'Sustituye `any` por tipos concretos en backend y relanza el gate.',
@@ -34,7 +35,7 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
     'Ejecuta `pumuki policy reconcile --strict --json` y revalida antes de continuar.',
   EVIDENCE_PREWRITE_WORKTREE_WARN:
-    'Reduce el worktree pendiente a un slice atómico antes del commit: stagea solo la tarea activa o guarda el resto en stash nombrado, y reejecuta PRE_WRITE.',
+    'Reduce el worktree pendiente a un slice atómico antes del commit: stagea solo la tarea activa o guarda el resto en stash nombrado, y vuelve a intentar el commit.',
   EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
     'El worktree supera el límite permitido: divide cambios por scope en commits atómicos o stashes nombrados antes de continuar.',
 };
@@ -219,8 +220,9 @@ export const resolveBlockedRemediation = (
   const fromEvent = event.remediation
     ? normalizeBlockedRemediation(event.remediation)
     : '';
-  if (extractNotificationTrackingContext(event.causeMessage)) {
-    return truncateNotificationText(TRACKING_BLOCKED_REMEDIATION, maxLength);
+  const trackingContext = extractNotificationTrackingContext(event.causeMessage);
+  if (trackingContext) {
+    return truncateNotificationText(buildNotificationTrackingRemediation(trackingContext), maxLength);
   }
   if (fromEvent.length > 0) {
     if (

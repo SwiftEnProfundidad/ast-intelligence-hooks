@@ -89,7 +89,8 @@ test('buildGateBlockedPayload prioriza primera skill con fichero, linea, violaci
   assert.match(payload.subtitle ?? '', /BuyerCommerceScreensSnapshotTests\.swift:12/);
   assert.match(payload.message, /Regla: Swift Testing/);
   assert.match(payload.message, /Fichero: BuyerCommerceScreensSnapshotTests\.swift:12/);
-  assert.match(payload.message, /Viola: XCTest - Solo para proyectos legacy o UI tests/);
+  assert.match(payload.message, /Falla: XCTest - Solo para proyectos legacy o UI tests/);
+  assert.doesNotMatch(payload.message, /Viola:/);
   assert.match(payload.message, /Solución: Migra el test a Swift Testing/);
   assert.doesNotMatch(payload.message, /skills\.ios\.prefer-swift-testing/);
 });
@@ -149,4 +150,31 @@ test('buildGateBlockedPayload explica RED en lenguaje dev si falta esa fase TDD'
   assert.match(payload.message, /Implementa la fase RED antes de continuar/);
   assert.match(payload.message, /RED, GREEN, REFACTOR/);
   assert.doesNotMatch(payload.message, /evidencia|VERIFY|gate/i);
+});
+
+test('buildGateBlockedPayload explica BDD feature missing sin usar umbrella EVIDENCE_GATE_BLOCKED', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          ruleId: 'ai_gate.repo_policy',
+          message:
+            'Evidence AI gate status is BLOCKED. Blocking causes: 1) generic_bdd_feature_required severity=ERROR code=TDD_BDD_SCENARIO_FILE_MISSING file=PARITY-IOS-001.feature message=Slice PARITY-IOS-001 references missing feature file PARITY-IOS-001.feature.',
+          remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+        },
+      ],
+    },
+    'ast-intelligence-hooks · '
+  );
+
+  assert.match(payload.subtitle ?? '', /BDD sin fichero \.feature: PARITY-IOS-001\.feature/);
+  assert.match(payload.message, /Falta el fichero PARITY-IOS-001\.feature/);
+  assert.match(payload.message, /Crea ese \.feature/);
+  assert.doesNotMatch(payload.subtitle ?? '', /EVIDENCE_GATE_BLOCKED/);
+  assert.doesNotMatch(payload.message, /generic_bdd_feature_required/);
 });

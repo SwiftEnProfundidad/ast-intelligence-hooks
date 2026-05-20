@@ -72,6 +72,44 @@ test('resolveBlockedRemediation no muestra comandos genéricos para el bloqueo u
   assert.doesNotMatch(result, /policy reconcile/i);
 });
 
+test('resolveBlockedRemediation explica tracking bloqueado con fichero y línea cuando existen', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Evidence AI gate status is BLOCKED. active_entries=line_984 tracking_source=PUMUKI-RESET-MASTER-PLAN.md',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /Abre el MD de tracking PUMUKI-RESET-MASTER-PLAN\.md, línea 984/i);
+  assert.match(result, /única tarea activa válida/i);
+  assert.match(result, /estados activos duplicados o inválidos/i);
+  assert.match(result, /vuelve a intentar el commit/i);
+  assert.doesNotMatch(result, /gate/i);
+  assert.doesNotMatch(result, /PRE_WRITE/i);
+});
+
+test('resolveBlockedRemediation conserva explicación genérica si tracking no trae fichero ni línea', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage: 'TRACKING_CANONICAL_IN_PROGRESS_INVALID',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /MD de tracking/i);
+  assert.match(result, /vuelve a intentar el commit/i);
+});
+
+
 test('resolveBlockedRemediation no sustituye SDD_SESSION_MISSING por comando genérico pre-write', () => {
   const result = resolveBlockedRemediation(
     {
@@ -86,9 +124,13 @@ test('resolveBlockedRemediation no sustituye SDD_SESSION_MISSING por comando gen
     'SDD_SESSION_MISSING'
   );
 
-  assert.match(result, /sesión SDD válida/i);
+  assert.match(result, /sesión SDD del cambio activo/i);
   assert.match(result, /session --open --change=<id>/);
-  assert.match(result, /Agente IA: STOP/i);
+  assert.match(result, /openspec\/changes/i);
+  assert.match(result, /vuelve a intentar el commit/i);
+  assert.match(result, /PRE_WRITE automáticamente/i);
+  assert.doesNotMatch(result, /Agente IA: STOP/i);
+  assert.doesNotMatch(result, /reejecuta PRE_WRITE/i);
   assert.doesNotMatch(result, /pumuki-pre-write/i);
   assert.doesNotMatch(result, /npx --yes --package/i);
 });
@@ -107,7 +149,9 @@ test('resolveBlockedRemediation detecta SDD_SESSION_MISSING aunque venga tapado 
     'EVIDENCE_GATE_BLOCKED'
   );
 
-  assert.match(result, /sesión SDD válida/i);
+  assert.match(result, /sesión SDD del cambio activo/i);
+  assert.match(result, /vuelve a intentar el commit/i);
+  assert.doesNotMatch(result, /reejecuta PRE_WRITE/i);
   assert.doesNotMatch(result, /pumuki-pre-write/i);
 });
 

@@ -38,6 +38,23 @@ const isGoldenFlowCause = (cause: BlockedCause): boolean => {
   );
 };
 
+const isBddScenarioMissingCause = (cause: BlockedCause): boolean => {
+  const searchable = `${cause.code} ${cause.ruleId ?? ''} ${cause.message}`.toLowerCase();
+  return (
+    searchable.includes('tdd_bdd_scenario_file_missing') ||
+    searchable.includes('generic_bdd_feature_required') ||
+    searchable.includes('missing feature file')
+  );
+};
+
+const extractExpectedBddFeatureFile = (cause: BlockedCause): string => {
+  const directFile = cause.file?.endsWith('.feature') ? cause.file : null;
+  const fieldMatch = cause.message.match(/\bfile=([^\s]+\.feature)\b/i)?.[1];
+  const missingFeature = cause.message.match(/missing feature file\s+([^\s.]+\.feature|[^\s]+\.feature)/i)?.[1];
+  const raw = directFile ?? fieldMatch ?? missingFeature ?? 'fichero .feature de la slice';
+  return raw.split('/').filter(Boolean).pop() ?? raw;
+};
+
 const normalizeGoldenFlowMissingToken = (message: string): string => {
   const match = message.match(/missing=\[([^\]]+)\]/i);
   return (match?.[1] ?? '').toUpperCase();
@@ -145,7 +162,7 @@ const formatCauseProblem = (cause: BlockedCause): string => {
 const formatCauseFix = (cause: BlockedCause): string =>
   normalizeNotificationText(
     cause.remediation ??
-    'Corrige la violación indicada con regla, fichero y línea, y vuelve a ejecutar el gate.'
+    'Corrige la violación indicada con regla, fichero y línea, y vuelve a intentar el commit.'
   );
 
 export const resolvePrioritizedBlockingCauses = (
@@ -164,6 +181,11 @@ export const resolvePrioritizedBlockingCauses = (
     const rightGoldenFlow = isGoldenFlowCause(right);
     if (leftGoldenFlow !== rightGoldenFlow) {
       return leftGoldenFlow ? -1 : 1;
+    }
+    const leftBddScenarioMissing = isBddScenarioMissingCause(left);
+    const rightBddScenarioMissing = isBddScenarioMissingCause(right);
+    if (leftBddScenarioMissing !== rightBddScenarioMissing) {
+      return leftBddScenarioMissing ? -1 : 1;
     }
     return 0;
   });
@@ -188,6 +210,9 @@ const buildBlockingCausesSummary = (
   if (isGoldenFlowCause(first)) {
     return `Violación del ciclo TDD${overflow}`;
   }
+  if (isBddScenarioMissingCause(first)) {
+    return `BDD sin fichero .feature: ${extractExpectedBddFeatureFile(first)}${overflow}`;
+  }
   return `${prefix}: ${formatCauseRule(first)} · ${formatCauseLocation(first)}${overflow}`;
 };
 
@@ -206,7 +231,7 @@ const buildBlockingCausesRemediation = (
     return [
       `Regla: ${formatVisibleRule(first)}.`,
       `Fichero: ${formatCauseLocation(first)}.`,
-      `Viola: ${formatCauseProblem(first)}.`,
+      `Falla: ${formatCauseProblem(first)}.`,
       `Solución: ${formatCauseFix(first)}.`,
       prioritized.length > 1 ? `Quedan ${prioritized.length - 1} causa(s) más en el reporte completo.` : '',
     ]
@@ -215,6 +240,9 @@ const buildBlockingCausesRemediation = (
   }
   if (isGoldenFlowCause(first)) {
     return formatGoldenFlowBannerRemediation(first);
+  }
+  if (isBddScenarioMissingCause(first)) {
+    return `Falta el fichero ${extractExpectedBddFeatureFile(first)}. Crea ese .feature con el escenario de aceptación de la slice, o corrige la referencia de tarea si no corresponde.`;
   }
   return `${formatCauseFix(first)} Revisa el reporte completo para el resto de causas bloqueantes.`;
 };
