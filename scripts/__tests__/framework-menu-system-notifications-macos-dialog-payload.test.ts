@@ -61,11 +61,11 @@ test('buildBlockedDialogPayload muestra cada causa bloqueante con regla, archivo
     } as NodeJS.ProcessEnv,
   });
 
-  assert.match(payload.cause, /1\. Regla: skills\.ios\.no-foreground-color/);
+  assert.match(payload.cause, /1\. Regla: no foreground color/);
   assert.match(payload.cause, /Fichero: apps\/ios\/HomeView\.swift:22/);
   assert.match(payload.cause, /foregroundColor is not allowed/);
   assert.match(payload.cause, /Solución: Usa tokens semánticos de diseño/);
-  assert.match(payload.cause, /2\. Regla: sdd\.policy\.blocked/);
+  assert.match(payload.cause, /2\. Causa bloqueante: blocked/);
   assert.match(payload.cause, /Fichero: openspec\/changes/);
   assert.equal(payload.remediation, 'Corrige las violaciones listadas y vuelve a intentar el commit.');
   assert.doesNotMatch(payload.cause, /severity=/);
@@ -95,12 +95,12 @@ test('buildBlockedDialogPayload no omite causas bloqueantes aunque haya más de 
   });
 
   assert.match(payload.cause, /Causas bloqueantes: 8/);
-  assert.match(payload.cause, /1\. Regla: skills\.frontend\.rule-1/);
+  assert.match(payload.cause, /1\. Regla: rule 1/);
   assert.match(payload.cause, /Fichero: apps\/web\/src\/File1\.tsx/);
-  assert.match(payload.cause, /6\. Regla: skills\.frontend\.rule-6/);
+  assert.match(payload.cause, /6\. Regla: rule 6/);
   assert.match(payload.cause, /Fichero: apps\/web\/src\/File6\.tsx/);
-  assert.match(payload.cause, /7\. Regla: skills\.frontend\.rule-7/);
-  assert.match(payload.cause, /8\. Regla: skills\.frontend\.rule-8/);
+  assert.match(payload.cause, /7\. Regla: rule 7/);
+  assert.match(payload.cause, /8\. Regla: rule 8/);
   assert.doesNotMatch(payload.cause, /más omitidas|more omitted/i);
 });
 
@@ -130,7 +130,7 @@ test('buildBlockedDialogPayload no muestra comandos npx largos en la ventana vis
     } as NodeJS.ProcessEnv,
   });
 
-  assert.match(payload.cause, /Regla: skills\.ios\.guideline\.ios\.dynamic-type-font-scaling-automatico/);
+  assert.match(payload.cause, /Regla: Dynamic Type/);
   assert.match(payload.cause, /Fichero: apps\/ios\/Presentation\/Views\/RuralGoWordmarkView\.swift:22/);
   assert.match(payload.cause, /Viola: Dynamic Type - Font scaling automatico/);
   assert.match(payload.cause, /Solución: Use semantic SwiftUI text styles/);
@@ -170,11 +170,11 @@ test('buildBlockedDialogPayload muestra skills iOS con separador, linea, evidenc
     } as NodeJS.ProcessEnv,
   });
 
-  assert.match(payload.cause, /1\. Regla: skills\.ios\.prefer-swift-testing/);
+  assert.match(payload.cause, /1\. Regla: Swift Testing/);
   assert.match(payload.cause, /Fichero: apps\/ios\/Tests\/Mac\/Presentation\/Features\/BuyerCommerceScreensSnapshotTests\.swift:12/);
   assert.match(payload.cause, /Evidencia: final class BuyerCommerceScreensSnapshotTests: XCTestCase/);
   assert.match(payload.cause, /Solución: Migra el test a Swift Testing/);
-  assert.match(payload.cause, /\n\n2\. Regla: governance\.skills\.ios-test-quality\.incomplete/);
+  assert.match(payload.cause, /\n\n2\. Regla: incomplete/);
   assert.match(payload.cause, /Evidencia: Falta: \[makeSUT\(\), trackForMemoryLeaks\(\)\]/);
   assert.match(payload.cause, /Solución: Añade makeSUT\(\) y trackForMemoryLeaks\(\)/);
 });
@@ -235,4 +235,77 @@ test('buildBlockedDialogPayload muestra aviso de worktree sin git add masivo ni 
   assert.doesNotMatch(payload.cause, /Regla:/);
   assert.doesNotMatch(payload.cause, /git add --/);
   assert.doesNotMatch(payload.remediation, /violaciones listadas/);
+});
+
+test('buildBlockedDialogPayload muestra Golden Flow sin campos tecnicos ni solucion generica', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'GOLDEN_FLOW_VERIFY_EVIDENCE_MISSING',
+      blockingCauses: [
+        {
+          code: 'GOLDEN_FLOW_VERIFY_EVIDENCE_MISSING',
+          ruleId: 'generic_golden_flow_verify_required',
+          file: '.pumuki/artifacts/pumuki-evidence-v1.json',
+          message:
+            'message=Falta fase VERIFY passed en la evidencia Golden Flow. missing=[verify.status=passed] snippet=RED failed -> GREEN passed -> REFACTOR passed -> VERIFY missing',
+          remediation:
+            'Ejecuta test/build/typecheck de verificación, registra VERIFY passed en la evidencia Golden Flow y reejecuta el gate.',
+        },
+      ],
+    }),
+    repoRoot: '/tmp/ast-intelligence-hooks',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'ast-intelligence-hooks',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /Causa bloqueante: Violación del ciclo TDD/);
+  assert.match(payload.cause, /Registro TDD: \.pumuki\/artifacts\/pumuki-evidence-v1\.json/);
+  assert.match(payload.cause, /Falta: tests finales en verde sin ejecutar antes del commit/);
+  assert.equal(
+    payload.remediation,
+    'Ejecuta los tests de la implementación. Si están en verde, haz un commit atómico de los cambios.'
+  );
+  assert.doesNotMatch(payload.remediation, /evidencia/);
+  assert.doesNotMatch(payload.cause, /Solución:/);
+  assert.doesNotMatch(payload.cause, /Esperado:/);
+  assert.doesNotMatch(payload.cause, /Falta: Falta:/);
+  assert.doesNotMatch(payload.cause, /missing=/);
+  assert.doesNotMatch(payload.cause, /snippet=/);
+  assert.doesNotMatch(payload.remediation, /violaciones listadas/);
+  assert.doesNotMatch(payload.remediation, /reejecuta el gate/);
+});
+
+test('buildBlockedDialogPayload explica fase RED del ciclo TDD en lenguaje dev', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'GOLDEN_FLOW_RED_EVIDENCE_MISSING',
+      blockingCauses: [
+        {
+          code: 'GOLDEN_FLOW_RED_EVIDENCE_MISSING',
+          ruleId: 'generic_golden_flow_red_required',
+          file: '.pumuki/artifacts/pumuki-evidence-v1.json',
+          message: 'missing=[red.status=failed]',
+          remediation: 'Registra RED failed.',
+        },
+      ],
+    }),
+    repoRoot: '/tmp/ast-intelligence-hooks',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'ast-intelligence-hooks',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /Causa bloqueante: Violación del ciclo TDD/);
+  assert.match(payload.cause, /Falta: fase RED del ciclo TDD sin implementar/);
+  assert.equal(
+    payload.remediation,
+    'Implementa la fase RED antes de continuar. Las fases del ciclo TDD (RED, GREEN, REFACTOR) deben completarse para desbloquear.'
+  );
+  assert.doesNotMatch(payload.cause, /Solución:/);
+  assert.doesNotMatch(payload.remediation, /evidencia|VERIFY|gate/i);
 });

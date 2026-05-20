@@ -85,9 +85,67 @@ test('buildGateBlockedPayload prioriza primera skill con fichero, linea, violaci
   );
 
   assert.match(payload.subtitle ?? '', /Skill violada: BuyerCommerceScreensSnapshotTests\.swift:12/);
+  assert.match(payload.subtitle ?? '', /Swift Testing/);
   assert.match(payload.subtitle ?? '', /BuyerCommerceScreensSnapshotTests\.swift:12/);
-  assert.match(payload.message, /Regla: skills\.ios\.prefer-swift-testing/);
+  assert.match(payload.message, /Regla: Swift Testing/);
   assert.match(payload.message, /Fichero: BuyerCommerceScreensSnapshotTests\.swift:12/);
   assert.match(payload.message, /Viola: XCTest - Solo para proyectos legacy o UI tests/);
   assert.match(payload.message, /Solución: Migra el test a Swift Testing/);
+  assert.doesNotMatch(payload.message, /skills\.ios\.prefer-swift-testing/);
+});
+
+test('buildGateBlockedPayload resume Golden Flow con solucion especifica', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'GOLDEN_FLOW_VERIFY_EVIDENCE_MISSING',
+      causeMessage: 'Golden Flow bloqueado.',
+      remediation: 'Corrige la causa bloqueante.',
+      blockingCauses: [
+        {
+          code: 'GOLDEN_FLOW_VERIFY_EVIDENCE_MISSING',
+          ruleId: 'generic_golden_flow_verify_required',
+          file: '.pumuki/artifacts/pumuki-evidence-v1.json',
+          message: 'missing=[verify.status=passed]',
+          remediation: 'Registra VERIFY passed.',
+        },
+      ],
+    },
+    'ast-intelligence-hooks · '
+  );
+
+  assert.match(payload.subtitle ?? '', /Violación del ciclo TDD/);
+  assert.match(payload.message, /Ejecuta los tests de la implementación/);
+  assert.match(payload.message, /commit atómico/);
+  assert.doesNotMatch(payload.message, /evidencia/);
+  assert.doesNotMatch(payload.message, /Corrige las violaciones listadas/);
+  assert.doesNotMatch(payload.message, /reejecuta el gate/);
+});
+
+test('buildGateBlockedPayload explica RED en lenguaje dev si falta esa fase TDD', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'GOLDEN_FLOW_RED_EVIDENCE_MISSING',
+      blockingCauses: [
+        {
+          code: 'GOLDEN_FLOW_RED_EVIDENCE_MISSING',
+          ruleId: 'generic_golden_flow_red_required',
+          file: '.pumuki/artifacts/pumuki-evidence-v1.json',
+          message: 'missing=[red.status=failed]',
+          remediation: 'Registra RED failed.',
+        },
+      ],
+    },
+    'ast-intelligence-hooks · '
+  );
+
+  assert.match(payload.subtitle ?? '', /Violación del ciclo TDD/);
+  assert.match(payload.message, /Implementa la fase RED antes de continuar/);
+  assert.match(payload.message, /RED, GREEN, REFACTOR/);
+  assert.doesNotMatch(payload.message, /evidencia|VERIFY|gate/i);
 });

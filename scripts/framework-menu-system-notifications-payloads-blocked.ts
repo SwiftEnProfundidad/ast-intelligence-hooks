@@ -26,6 +26,40 @@ const isSkillCause = (cause: BlockedCause): boolean => {
   return ruleId.startsWith('skills.') || code.startsWith('SKILLS_');
 };
 
+const isGoldenFlowCause = (cause: BlockedCause): boolean => {
+  const ruleId = cause.ruleId ?? '';
+  const code = cause.code ?? '';
+  return (
+    code.startsWith('GOLDEN_FLOW_') ||
+    code.startsWith('TDD_') ||
+    ruleId.includes('golden_flow') ||
+    ruleId.startsWith('generic_tdd_') ||
+    ruleId.startsWith('generic_red_green_refactor')
+  );
+};
+
+const normalizeGoldenFlowMissingToken = (message: string): string => {
+  const match = message.match(/missing=\[([^\]]+)\]/i);
+  return (match?.[1] ?? '').toUpperCase();
+};
+
+const formatGoldenFlowBannerRemediation = (cause: BlockedCause): string => {
+  const missing = normalizeGoldenFlowMissingToken(cause.message);
+  if (missing.includes('RED')) {
+    return 'Implementa la fase RED antes de continuar. Las fases del ciclo TDD (RED, GREEN, REFACTOR) deben completarse para desbloquear.';
+  }
+  if (missing.includes('GREEN')) {
+    return 'Implementa la fase GREEN antes de continuar. Haz el cambio mínimo para que el test pase y continúa el ciclo TDD.';
+  }
+  if (missing.includes('REFACTOR')) {
+    return 'Implementa la fase REFACTOR antes de continuar. Limpia la solución manteniendo los tests en verde.';
+  }
+  if (missing.includes('VERIFY')) {
+    return 'Ejecuta los tests de la implementación. Si están en verde, haz un commit atómico de los cambios.';
+  }
+  return 'Completa el ciclo TDD en orden: RED, GREEN, REFACTOR y tests finales en verde antes del commit.';
+};
+
 const formatCauseLocation = (cause: BlockedCause): string => {
   if (!cause.file) {
     return 'sin fichero';
@@ -39,6 +73,45 @@ const formatCauseLocation = (cause: BlockedCause): string => {
 };
 
 const formatCauseRule = (cause: BlockedCause): string => cause.ruleId ?? cause.code;
+
+const humanizeRuleId = (ruleId: string): string => {
+  const knownRules: Record<string, string> = {
+    'prefer-swift-testing': 'Swift Testing',
+    'no-xctassert': 'XCTest assertions',
+    'no-wait-for-expectations': 'waitForExpectations en XCTest',
+    'ios-test-quality': 'calidad de tests iOS',
+    'dynamic-type-font-scaling-automatico': 'Dynamic Type',
+    'dynamic-type-fuentes-escalables-y-layouts-adaptativos': 'fuentes escalables y layouts adaptativos',
+    'use-relative-layout-over-hard-coded-constants': 'layout relativo en vez de constantes fijas',
+    'magic-numbers-usar-constantes-con-nombres': 'números mágicos sin constantes con nombre',
+    'prefer-static-member-lookup-blue-vs-color-blue': 'colores semánticos en SwiftUI',
+  };
+  const normalized = ruleId
+    .replace(/^skills\./u, '')
+    .replace(/^governance\./u, '')
+    .replace(/^ai_gate\./u, '')
+    .replace(/_/gu, '-');
+  const parts = normalized.split('.').filter(Boolean);
+  const leaf = parts.at(-1) ?? normalized;
+  if (knownRules[leaf]) {
+    return knownRules[leaf];
+  }
+  return leaf
+    .replace(/-/gu, ' ')
+    .replace(/\bios\b/giu, 'iOS')
+    .replace(/\bui\b/giu, 'UI')
+    .replace(/\bapi\b/giu, 'API')
+    .replace(/\btdd\b/giu, 'TDD')
+    .replace(/\bsdd\b/giu, 'SDD')
+    .replace(/\bguard\b/giu, 'guard')
+    .trim();
+};
+
+const formatVisibleRule = (cause: BlockedCause): string => {
+  const ruleId = formatCauseRule(cause);
+  const readable = humanizeRuleId(ruleId);
+  return readable.length > 0 ? readable : ruleId;
+};
 
 const extractMessageField = (message: string, field: string): string | null => {
   const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -85,6 +158,11 @@ export const resolvePrioritizedBlockingCauses = (
     if (leftSkill !== rightSkill) {
       return leftSkill ? -1 : 1;
     }
+    const leftGoldenFlow = isGoldenFlowCause(left);
+    const rightGoldenFlow = isGoldenFlowCause(right);
+    if (leftGoldenFlow !== rightGoldenFlow) {
+      return leftGoldenFlow ? -1 : 1;
+    }
     return 0;
   });
 };
@@ -103,7 +181,10 @@ const buildBlockingCausesSummary = (
   const prefix = isSkillCause(first) ? 'Skill violada' : 'Causa bloqueante';
   const overflow = prioritized.length > 1 ? ` (+${prioritized.length - 1} más)` : '';
   if (isSkillCause(first)) {
-    return `${prefix}: ${formatCauseLocation(first)} · ${formatCauseRule(first)}${overflow}`;
+    return `${prefix}: ${formatCauseLocation(first)} · ${formatVisibleRule(first)}${overflow}`;
+  }
+  if (isGoldenFlowCause(first)) {
+    return `Violación del ciclo TDD${overflow}`;
   }
   return `${prefix}: ${formatCauseRule(first)} · ${formatCauseLocation(first)}${overflow}`;
 };
@@ -121,7 +202,7 @@ const buildBlockingCausesRemediation = (
   }
   if (isSkillCause(first)) {
     return [
-      `Regla: ${formatCauseRule(first)}.`,
+      `Regla: ${formatVisibleRule(first)}.`,
       `Fichero: ${formatCauseLocation(first)}.`,
       `Viola: ${formatCauseProblem(first)}.`,
       `Solución: ${formatCauseFix(first)}.`,
@@ -129,6 +210,9 @@ const buildBlockingCausesRemediation = (
     ]
       .filter((line) => line.length > 0)
       .join(' ');
+  }
+  if (isGoldenFlowCause(first)) {
+    return formatGoldenFlowBannerRemediation(first);
   }
   return `${formatCauseFix(first)} Revisa el reporte completo para el resto de causas bloqueantes.`;
 };
@@ -140,7 +224,7 @@ export const buildGateBlockedPayload = (
   const causeCode = event.causeCode ?? 'GATE_BLOCKED';
   const causeSummary = truncateNotificationText(
     buildBlockingCausesSummary(event.blockingCauses) ?? resolveBlockedCauseSummary(event, causeCode),
-    72
+    96
   );
   const remediation =
     buildBlockingCausesRemediation(event.blockingCauses) ?? resolveBlockedRemediation(event, causeCode);
