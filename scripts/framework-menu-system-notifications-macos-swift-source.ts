@@ -8,6 +8,7 @@ struct DialogConfig {
   let disableButton: String
   let muteButton: String
   let keepButton: String
+  let timeoutSeconds: Double
 }
 
 func parseArguments() -> DialogConfig {
@@ -18,13 +19,20 @@ func parseArguments() -> DialogConfig {
     }
     return args[index + 1]
   }
+  func readDouble(_ key: String, fallback: Double) -> Double {
+    guard let value = Double(read(key, fallback: String(fallback))), value > 0 else {
+      return fallback
+    }
+    return value
+  }
   return DialogConfig(
     title: read("--title", fallback: "Pumuki bloqueado"),
     cause: read("--cause", fallback: "Bloqueo detectado."),
     remediation: read("--remediation", fallback: "Corrige el bloqueo y vuelve a ejecutar."),
     disableButton: read("--disable-button", fallback: "Desactivar"),
     muteButton: read("--mute-button", fallback: "Silenciar 30 min"),
-    keepButton: read("--keep-button", fallback: "Mantener activas")
+    keepButton: read("--keep-button", fallback: "Mantener activas"),
+    timeoutSeconds: readDouble("--timeout-seconds", fallback: 15)
   )
 }
 
@@ -68,6 +76,13 @@ final class DialogAppDelegate: NSObject, NSApplicationDelegate {
     alert.addButton(withTitle: config.keepButton)
     alert.addButton(withTitle: config.muteButton)
     alert.addButton(withTitle: config.disableButton)
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + config.timeoutSeconds) {
+      if alert.window.isVisible {
+        alert.window.orderOut(nil)
+        NSApp.stopModal(withCode: .alertFirstButtonReturn)
+      }
+    }
 
     let response = alert.runModal()
     let choice: String

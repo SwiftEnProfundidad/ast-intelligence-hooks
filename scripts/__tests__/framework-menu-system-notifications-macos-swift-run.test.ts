@@ -25,6 +25,13 @@ test('SWIFT_BLOCKED_DIALOG_SOURCE usa detalle scrollable para muchas causas bloq
   assert.match(SWIFT_BLOCKED_DIALOG_SOURCE, /Puedes seleccionar y copiar el texto/);
 });
 
+test('SWIFT_BLOCKED_DIALOG_SOURCE cierra el modal al cumplirse el timeout', () => {
+  assert.match(SWIFT_BLOCKED_DIALOG_SOURCE, /timeoutSeconds/);
+  assert.match(SWIFT_BLOCKED_DIALOG_SOURCE, /--timeout-seconds/);
+  assert.match(SWIFT_BLOCKED_DIALOG_SOURCE, /DispatchQueue\.main\.asyncAfter/);
+  assert.match(SWIFT_BLOCKED_DIALOG_SOURCE, /NSApp\.stopModal/);
+});
+
 test('runBlockedDialogWithSwiftHelper ejecuta swift y devuelve el botón seleccionado', async () => {
   await withTempDir('pumuki-macos-swift-run-', async (repoRoot) => {
     const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];
