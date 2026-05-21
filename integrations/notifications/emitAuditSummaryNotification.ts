@@ -76,25 +76,56 @@ const normalizeRuleCode = (ruleId: string): string =>
     .replace(/[.-]/gu, '_')
     .toUpperCase();
 
+const extractMessageField = (message: string, field: string): string | undefined => {
+  const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = message.match(new RegExp(`\\b${escapedField}=([^\\n]+?)(?=\\s(?:severity|code|rule|file|lines?|message|remediation|snippet|node|primary_node|missing)=|\\s\\|\\|\\s\\d+\\)|$)`, 'i'));
+  const value = match?.[1]?.trim();
+  return value && value.length > 0 ? value : undefined;
+};
+
+const extractFirstNestedSkillSegment = (message: string): string =>
+  message
+    .replace(/^.*?\bBlocking causes:\s*1\)\s*/isu, '')
+    .replace(/\s+\|\|\s+\d+\)\s+[\s\S]*$/u, '')
+    .trim();
+
+const normalizeNestedSkillMessage = (params: {
+  ruleId: string;
+  segment: string;
+}): string => {
+  if (/\bmessage=/i.test(params.segment)) {
+    return params.segment;
+  }
+  const withoutRule = params.segment.replace(params.ruleId, '').trim();
+  return `message=${withoutRule || 'Skill violada.'}`;
+};
+
 const extractNestedSkillCauseFromWrapper = (cause: NotificationBlockingCause): NotificationBlockingCause => {
   if (cause.ruleId?.startsWith('skills.') || cause.code.startsWith('SKILLS_')) {
     return cause;
   }
-  const nested = cause.message.match(/\bBlocking causes:\s*1\)\s*(skills\.[a-z0-9_.-]+)\s+(.+?)$/iu);
+  const nested = cause.message.match(/\bBlocking causes:\s*1\)\s*(skills\.[a-z0-9_.-]+)\s+(.+?)$/isu);
   if (!nested?.[1]) {
     return cause;
   }
   const ruleId = nested[1];
-  const nestedMessage = nested[2]?.trim() || 'Skill violada.';
+  const nestedMessage = extractFirstNestedSkillSegment(cause.message) || nested[2]?.trim() || 'Skill violada.';
+  const normalizedNestedMessage = normalizeNestedSkillMessage({
+    ruleId,
+    segment: nestedMessage,
+  });
+  const nestedFile = extractMessageField(normalizedNestedMessage, 'file');
+  const nestedRemediation = extractMessageField(normalizedNestedMessage, 'remediation');
   return {
     ...cause,
     code: normalizeRuleCode(ruleId),
     ruleId,
-    message: `rule=${ruleId} message=${nestedMessage}`,
+    file: nestedFile ?? cause.file,
+    message: `rule=${ruleId} ${normalizedNestedMessage}`,
     remediation:
-      cause.remediation && !/corrige la violaci[oó]n indicada/i.test(cause.remediation)
+      cause.remediation && !/corrige la violaci[oó]n indicada|corrige la causa bloqueante/i.test(cause.remediation)
         ? cause.remediation
-        : 'Corrige la violación de la skill indicada en el fichero afectado y vuelve a intentar el commit.',
+        : nestedRemediation ?? 'Corrige la violación de la skill indicada en el fichero afectado y vuelve a intentar el commit.',
   };
 };
 

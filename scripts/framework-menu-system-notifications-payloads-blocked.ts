@@ -168,7 +168,7 @@ const formatVisibleRule = (cause: BlockedCause): string => {
 
 const extractMessageField = (message: string, field: string): string | null => {
   const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = message.match(new RegExp(`\\b${escapedField}=([^\\n]+?)(?=\\s(?:severity|code|rule|file|lines?|message|remediation|snippet|node|primary_node|missing)=|$)`, 'i'));
+  const match = message.match(new RegExp(`\\b${escapedField}=([^\\n]+?)(?=\\s(?:severity|code|rule|file|lines?|message|remediation|snippet|node|primary_node|missing)=|\\s\\|\\|\\s\\d+\\)|$)`, 'i'));
   const value = match?.[1]?.trim();
   return value && value.length > 0 ? normalizeNotificationText(value) : null;
 };
@@ -208,10 +208,17 @@ const normalizeRuleCode = (ruleId: string): string =>
 const isGenericCauseFix = (value?: string): boolean =>
   !value ||
   /corrige la violaci[oó]n indicada/i.test(value) ||
-  /corrige las violaciones listadas/i.test(value);
+  /corrige las violaciones listadas/i.test(value) ||
+  /corrige la causa bloqueante/i.test(value);
 
 const extractNestedSkillRuleId = (message: string): string | null =>
   message.match(/\b(skills\.[a-z0-9_.-]+)\b/iu)?.[1] ?? null;
+
+const extractFirstNestedSkillSegment = (message: string): string =>
+  message
+    .replace(/^.*?\bBlocking causes:\s*1\)\s*/isu, '')
+    .replace(/\s+\|\|\s+\d+\)\s+[\s\S]*$/u, '')
+    .trim();
 
 const normalizeDisplayCause = (cause: BlockedCause): BlockedCause => {
   if (isSkillCause(cause) || isSkillsContractCause(cause)) {
@@ -221,15 +228,17 @@ const normalizeDisplayCause = (cause: BlockedCause): BlockedCause => {
   if (!nestedSkillRuleId) {
     return cause;
   }
-  const nestedFile = extractMessageField(cause.message, 'file');
-  const nestedRemediation = extractMessageField(cause.message, 'remediation');
+  const nestedSegment = extractFirstNestedSkillSegment(cause.message);
+  const nestedFile = extractMessageField(nestedSegment, 'file');
+  const nestedRemediation = extractMessageField(nestedSegment, 'remediation');
   return {
     ...cause,
     code: normalizeRuleCode(nestedSkillRuleId),
     ruleId: nestedSkillRuleId,
     file: nestedFile ?? cause.file,
+    message: nestedSegment,
     remediation: isGenericCauseFix(cause.remediation)
-      ? nestedRemediation ?? cause.remediation
+      ? nestedRemediation ?? 'Corrige la violación de la skill indicada en el fichero afectado y vuelve a intentar el commit.'
       : cause.remediation,
   };
 };

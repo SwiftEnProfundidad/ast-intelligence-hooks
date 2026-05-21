@@ -277,3 +277,34 @@ test('buildGateBlockedPayload muestra skill concreta aunque venga envuelta en EV
   assert.doesNotMatch(payload.message, /\.ai_evidence\.json/);
   assert.doesNotMatch(payload.message, /Corrige la violación indicada/);
 });
+
+test('buildGateBlockedPayload extrae fichero y mensaje del primer segmento cuando hay varias skills anidadas', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          ruleId: 'ai_gate.repo_policy',
+          file: '.ai_evidence.json',
+          message:
+            'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.backend.no-empty-catch severity=CRITICAL code=SKILLS_SKILLS_BACKEND_NO_EMPTY_CATCH file=apps/backend/src/admin/repositories/reporting/notification.repository.ts lines=63 message=Disallow empty catch blocks in backend runtime code. || 2) skills.ios.guideline.ios-swiftui-expert.use-relative-layout-over-hard-coded-constants severity=WARN file=apps/ios/View.swift lines=22 message=Use relative layout over hard-coded constants remediation=Move layout numbers into named constants.',
+          remediation:
+            'Corrige la causa bloqueante y vuelve a ejecutar: npx --yes --package pumuki@6.3.338 pumuki-pre-write.',
+        },
+      ],
+    },
+    'R_GO · '
+  );
+
+  assert.match(payload.subtitle ?? '', /Skill violada: notification\.repository\.ts:63/);
+  assert.match(payload.subtitle ?? '', /no empty catch/);
+  assert.match(payload.message, /Fichero: notification\.repository\.ts:63/);
+  assert.match(payload.message, /Falla: Disallow empty catch blocks in backend runtime code/);
+  assert.doesNotMatch(payload.message, /\.ai_evidence\.json/);
+  assert.doesNotMatch(payload.message, /severity=CRITICAL/);
+  assert.doesNotMatch(payload.message, /npx --yes --package/);
+});

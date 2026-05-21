@@ -235,6 +235,34 @@ test('toAuditSummaryEventFromAiGate emite gate.blocked si hay violaciones en AI 
   assert.equal(event.blockingCauses?.[0]?.message, 'error');
 });
 
+test('toAuditSummaryEventFromAiGate extrae causa skill anidada con fichero real', () => {
+  const event = toAuditSummaryEventFromAiGate({
+    aiGateResult: {
+      violations: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          severity: 'ERROR',
+          message:
+            'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.backend.no-empty-catch severity=CRITICAL code=SKILLS_SKILLS_BACKEND_NO_EMPTY_CATCH file=apps/backend/src/admin/repositories/reporting/notification.repository.ts lines=63 message=Disallow empty catch blocks in backend runtime code. || 2) skills.ios.guideline.ios-swiftui-expert.use-relative-layout-over-hard-coded-constants severity=WARN file=apps/ios/View.swift lines=22 message=Use relative layout over hard-coded constants',
+        },
+      ],
+    },
+    stage: 'PRE_WRITE',
+  });
+
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
+  }
+  assert.equal(event.blockingCauses?.[0]?.ruleId, 'skills.backend.no-empty-catch');
+  assert.equal(
+    event.blockingCauses?.[0]?.file,
+    'apps/backend/src/admin/repositories/reporting/notification.repository.ts'
+  );
+  assert.match(event.blockingCauses?.[0]?.message ?? '', /message=Disallow empty catch blocks/);
+  assert.doesNotMatch(event.blockingCauses?.[0]?.message ?? '', /2\) skills\.ios/);
+});
+
 test('emitAuditSummaryNotificationFromAiGate emite notificación para PRE_WRITE', () => {
   const events: unknown[] = [];
   const result = emitAuditSummaryNotificationFromAiGate(
