@@ -199,13 +199,48 @@ const formatCauseFix = (cause: BlockedCause): string =>
     'Corrige la violación indicada con regla, fichero y línea, y vuelve a intentar el commit.'
   );
 
+const normalizeRuleCode = (ruleId: string): string =>
+  ruleId
+    .replace(/^skills\./u, 'SKILLS_')
+    .replace(/[.-]/gu, '_')
+    .toUpperCase();
+
+const isGenericCauseFix = (value?: string): boolean =>
+  !value ||
+  /corrige la violaci[oó]n indicada/i.test(value) ||
+  /corrige las violaciones listadas/i.test(value);
+
+const extractNestedSkillRuleId = (message: string): string | null =>
+  message.match(/\b(skills\.[a-z0-9_.-]+)\b/iu)?.[1] ?? null;
+
+const normalizeDisplayCause = (cause: BlockedCause): BlockedCause => {
+  if (isSkillCause(cause) || isSkillsContractCause(cause)) {
+    return cause;
+  }
+  const nestedSkillRuleId = extractNestedSkillRuleId(cause.message);
+  if (!nestedSkillRuleId) {
+    return cause;
+  }
+  const nestedFile = extractMessageField(cause.message, 'file');
+  const nestedRemediation = extractMessageField(cause.message, 'remediation');
+  return {
+    ...cause,
+    code: normalizeRuleCode(nestedSkillRuleId),
+    ruleId: nestedSkillRuleId,
+    file: nestedFile ?? cause.file,
+    remediation: isGenericCauseFix(cause.remediation)
+      ? nestedRemediation ?? cause.remediation
+      : cause.remediation,
+  };
+};
+
 export const resolvePrioritizedBlockingCauses = (
   causes: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']
 ): ReadonlyArray<BlockedCause> => {
   if (!causes || causes.length === 0) {
     return [];
   }
-  return [...causes].sort((left, right) => {
+  return causes.map(normalizeDisplayCause).sort((left, right) => {
     const leftSkill = isSkillCause(left);
     const rightSkill = isSkillCause(right);
     if (leftSkill !== rightSkill) {
