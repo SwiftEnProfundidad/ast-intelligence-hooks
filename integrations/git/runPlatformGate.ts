@@ -648,7 +648,7 @@ const collectIosTestFileContents = (
 };
 
 const isXCTestSource = (content: string): boolean => {
-  return /\bimport\s+XCTest\b/.test(content) || /\bXCTestCase\b/.test(content);
+  return /\bclass\s+\w+\s*:\s*XCTestCase\b/.test(content);
 };
 
 const hasMakeSUTPattern = (content: string): boolean => /\bmakeSUT\s*\(/.test(content);

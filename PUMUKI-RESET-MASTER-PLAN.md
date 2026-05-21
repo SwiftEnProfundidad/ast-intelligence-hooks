@@ -2627,9 +2627,22 @@ Evidencia:
 - ✅ Causa raíz: el fix anterior estaba en `evaluateAiGate`/contrato, pero el motor de `runPlatformGate` seguía heredando `blocking=true` desde el rule engine para una regla de migración preferencial.
 - ✅ Fix: `skills.ios.prefer-swift-testing` con `severity=WARN` se normaliza como advisory (`blocking=false`) antes de calcular la decisión del gate.
 - ✅ Se mantiene bloqueo real de calidad XCTest: si faltan `makeSUT()` o `trackForMemoryLeaks()`, sigue bloqueando `governance.skills.ios-test-quality.incomplete`.
-- 🚧 Siguiente task actual: publicar `pumuki@6.3.334`, repinear RuralGo y cerrar el commit del slice social auth con hooks activos.
+- ✅ Release/repin posterior ejecutado en iteraciones siguientes; RuralGo avanzó hasta destapar un nuevo falso positivo de `critical-test-quality` sobre helpers XCTest.
 
 Evidencia:
 - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> 58/58
 - `npm run typecheck` -> OK
 - `npm test -- integrations/git/__tests__/runPlatformGate.test.ts` -> FAIL preexistente: el script no filtra y ejecuta suite global con fallos no relacionados.
+
+### 2026-05-21 - R_GO / PUMUKI-INC-174 candidate / critical-test-quality no debe marcar helpers XCTest
+
+- ✅ Repro externo RuralGo tras limpiar suites XCTest reales: `IOS_TEST_QUALITY_PATTERN_MISSING_HIGH` seguía bloqueando `apps/ios/Tests/Mac/Network/Helpers/SessionRefreshTestDoubles.swift` y `apps/ios/Tests/Mac/TestSupport.swift`.
+- ✅ Causa raíz: `runPlatformGate` trataba cualquier fichero de test Swift con `import XCTest` o referencias a `XCTestCase` como suite XCTest, aunque fuese helper, spy o extensión de soporte.
+- ✅ Fix: el guard de calidad XCTest solo exige `makeSUT()` y `trackForMemoryLeaks()` cuando el fichero declara una suite real `class ...: XCTestCase`.
+- ✅ Regresión: `runPlatformGate no exige makeSUT en helpers XCTest sin suite XCTestCase`.
+- 🚧 Siguiente task actual: publicar `pumuki@6.3.336`, repinear RuralGo y verificar que desaparece el bloqueo falso de helpers XCTest sin tocar cambios funcionales de RuralGo.
+
+Evidencia:
+- `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> 59/59
+- `npm run -s typecheck` -> OK
+- `npm test -- integrations/git/__tests__/runPlatformGate.test.ts` -> FAIL preexistente: el script no filtra y ejecuta suite global con fallos no relacionados (`stageRunners`, guardrails, notifications), no asociados a esta slice.
