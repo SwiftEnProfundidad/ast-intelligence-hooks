@@ -4,6 +4,10 @@ This file tracks the active deterministic framework line used in this repository
 Canonical release chronology lives in `CHANGELOG.md`.
 This file keeps only the operational highlights and rollout notes that matter while running the framework.
 
+### 2026-05-21 (v6.3.335)
+
+- `R_GO`: `skills.ios.no-wait-for-expectations` deja de marcar llamadas de dominio como `await waiter.wait(for:)`. La regla conserva bloqueo para `wait(for:)` XCTest libre, `self.wait(for:)`, `waitForExpectations`, `XCTWaiter.wait(for:)` y `waitForExistence`, pero no confunde helpers propios de la app con APIs legacy de XCTest.
+
 ### 2026-05-18 (v6.3.277)
 
 - `PUMUKI-INC-146`: PRE_WRITE uses staged paths as the effective slice for `skills.ios.critical-test-quality` when staged files exist. Unstaged Swift tests no longer contaminate a staged production-only iOS commit, but staged Swift tests still require the critical test-quality rule and remain fail-closed.

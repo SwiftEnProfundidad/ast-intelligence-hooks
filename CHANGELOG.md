@@ -1,5 +1,9 @@
 # Changelog
 
+## [6.3.335] - 2026-05-21
+
+- `R_GO`: `skills.ios.no-wait-for-expectations` no longer reports domain helper calls such as `await waiter.wait(for:)` as XCTest legacy waits. The detector still reports free `wait(for:)`, `self.wait(for:)`, `waitForExpectations`, `XCTWaiter.wait(for:)` and `waitForExistence`.
+
 ## [6.3.308] - 2026-05-20
 
 - `R_GO`: PRE_WRITE deja de exigir `skills.ios.critical-test-quality` cuando no hay cambios efectivos de test iOS en el scope actual aunque la evidencia previa arrastre `platforms.ios`. Evita el bloqueo falso `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` sobre `.ai_evidence.json` en repos limpios/no-code.
