@@ -3517,6 +3517,27 @@ final class BuyerCommerceUISmokeTests: XCTestCase {
   assert.deepEqual(collectSwiftWaitForExpectationsLines(uiWait), []);
 });
 
+test('hasSwiftWaitForExpectationsUsage no confunde metodos de dominio llamados wait', () => {
+  const domainWait = `
+import Presentation
+import XCTest
+
+@MainActor
+final class SplashDelayWaiterTests: XCTestCase {
+  func test_wait_returns() async {
+    let waiter = SplashDelayWaiter()
+
+    await waiter.wait(for: .milliseconds(1))
+
+    XCTAssertTrue(true)
+  }
+}
+`;
+
+  assert.equal(hasSwiftWaitForExpectationsUsage(domainWait), false);
+  assert.deepEqual(collectSwiftWaitForExpectationsLines(domainWait), []);
+});
+
 test('hasSwiftLegacyExpectationDescriptionUsage detecta expectation(description:) sin flujo moderno', () => {
   const legacyExpectation = `
 let expectation = expectation(description: "Done")

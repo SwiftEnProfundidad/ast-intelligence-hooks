@@ -3143,7 +3143,8 @@ export const collectSwiftWaitForExpectationsLines = (source: string): readonly n
   }
 
   return sortedUniqueLines([
-    ...collectSwiftRegexLines(source, /\b(?:self\s*\.\s*)?wait\s*\(\s*for\s*:/),
+    ...collectSwiftRegexLines(source, /\bself\s*\.\s*wait\s*\(\s*for\s*:/),
+    ...collectSwiftRegexLines(source, /(?<![.\w])wait\s*\(\s*for\s*:/),
     ...collectSwiftRegexLines(source, /\bwaitForExpectations\s*\(/),
     ...collectSwiftRegexLines(source, /\bXCTWaiter\s*\.\s*wait\s*\(\s*for\s*:/),
     ...collectSwiftRegexLines(source, /\bwaitForExistence\s*\(/),
