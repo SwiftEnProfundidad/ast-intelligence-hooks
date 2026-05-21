@@ -269,6 +269,24 @@ const normalizeScopedRuleEngineFindings = (params: {
   });
 };
 
+const normalizeNonBlockingSwiftTestingMigrationWarnings = (
+  findings: ReadonlyArray<Finding>
+): ReadonlyArray<Finding> => findings.map((finding) => {
+  if (
+    finding.ruleId !== 'skills.ios.prefer-swift-testing' ||
+    finding.severity !== 'WARN'
+  ) {
+    return finding;
+  }
+  return {
+    ...finding,
+    blocking: false,
+    expected_fix:
+      finding.expected_fix ??
+      'Mantén XCTest en suites legacy, UI o brownfield. Planifica una migración a Swift Testing en una slice dedicada si el repo lo decide.',
+  };
+});
+
 const buildDefaultMemoryShadowRecommendation = (params: {
   findings: ReadonlyArray<Finding>;
   tddBddSnapshot?: TddBddSnapshot;
@@ -1196,7 +1214,10 @@ export async function runPlatformGate(params: {
     stage: params.policy.stage,
     changedLinesByPath: stagedChangedLinesByPath,
   });
-  const findings = [...aiGateRepoPolicyFindings, ...scopedRuleEngineFindings];
+  const findings = normalizeNonBlockingSwiftTestingMigrationWarnings([
+    ...aiGateRepoPolicyFindings,
+    ...scopedRuleEngineFindings,
+  ]);
   const evaluationMetrics: SnapshotEvaluationMetrics = coverage
     ? {
       facts_total: coverage.factsTotal,

@@ -2619,3 +2619,16 @@ Evidencia:
 Evidencia:
 - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts` -> 111/111
 - `npm run -s typecheck` -> OK
+
+### 2026-05-21 - PUMUKI-INC-173 follow-up / prefer-swift-testing WARN no bloquea XCTest brownfield
+
+- ✅ Repro externo RuralGo tras `pumuki@6.3.333`: `Skills contract: PASS platforms=ios`, pero `runPlatformGate` seguía devolviendo `snapshot_outcome=BLOCK` por `skills.ios.prefer-swift-testing severity=WARN` sobre `BuyerSocialAuthAvailabilityTests.spec.swift`.
+- ✅ Causa raíz: el fix anterior estaba en `evaluateAiGate`/contrato, pero el motor de `runPlatformGate` seguía heredando `blocking=true` desde el rule engine para una regla de migración preferencial.
+- ✅ Fix: `skills.ios.prefer-swift-testing` con `severity=WARN` se normaliza como advisory (`blocking=false`) antes de calcular la decisión del gate.
+- ✅ Se mantiene bloqueo real de calidad XCTest: si faltan `makeSUT()` o `trackForMemoryLeaks()`, sigue bloqueando `governance.skills.ios-test-quality.incomplete`.
+- 🚧 Siguiente task actual: publicar `pumuki@6.3.334`, repinear RuralGo y cerrar el commit del slice social auth con hooks activos.
+
+Evidencia:
+- `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> 58/58
+- `npm run typecheck` -> OK
+- `npm test -- integrations/git/__tests__/runPlatformGate.test.ts` -> FAIL preexistente: el script no filtra y ejecuta suite global con fallos no relacionados.

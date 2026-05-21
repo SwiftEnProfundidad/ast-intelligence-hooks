@@ -4957,6 +4957,127 @@ final class LoginUseCaseTests: XCTestCase {
   );
 });
 
+test('runPlatformGate trata prefer-swift-testing WARN como advisory en XCTest brownfield', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_WRITE',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+  const facts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileContent',
+      path: 'apps/ios/Tests/Mac/Presentation/Features/BuyerSocialAuthAvailabilityTests.spec.swift',
+      content: `
+import XCTest
+
+final class BuyerSocialAuthAvailabilityTests: XCTestCase {
+  func test_actions_withGoogleConfiguration_showGoogleAndApple() {
+    let (sut, _) = makeSUT()
+    trackForMemoryLeaks(sut)
+    XCTAssertTrue(true)
+  }
+
+  private func makeSUT() -> (AnyObject, AnyObject) {
+    return (NSObject(), NSObject())
+  }
+}
+      `.trim(),
+      source: 'git:staged',
+    },
+  ];
+
+  let emitted:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'PASS' | 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      resolveFactsForGateScope: async () => facts,
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {
+          ios: { detected: true, confidence: 'HIGH' },
+        },
+        skillsRuleSet: {
+          rules: [
+            createSkillRule({
+              id: 'skills.ios.prefer-swift-testing',
+              severity: 'WARN',
+              platform: 'ios',
+            }),
+          ] as RuleSet,
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: true,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: facts.length,
+          filesScanned: 1,
+          rulesTotal: 1,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 1,
+          projectRules: 0,
+          matchedRules: 1,
+          unmatchedRules: 0,
+          unevaluatedRules: 0,
+          activeRuleIds: ['skills.ios.prefer-swift-testing'],
+          evaluatedRuleIds: ['skills.ios.prefer-swift-testing'],
+          matchedRuleIds: ['skills.ios.prefer-swift-testing'],
+          unmatchedRuleIds: [],
+          unevaluatedRuleIds: [],
+        },
+        findings: [
+          {
+            ruleId: 'skills.ios.prefer-swift-testing',
+            severity: 'WARN',
+            code: 'SKILLS_IOS_PREFER_SWIFT_TESTING',
+            message: 'XCTest - Solo para proyectos legacy o UI tests',
+            filePath:
+              'apps/ios/Tests/Mac/Presentation/Features/BuyerSocialAuthAvailabilityTests.spec.swift',
+            lines: 1,
+            matchedBy: 'Heuristic',
+            source: 'heuristic',
+            blocking: true,
+          },
+        ],
+      }),
+      evaluateGate: (findingsArg) => evaluateGateFromFindings(findingsArg, policy),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emitted = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emitted?.gateOutcome, 'WARN');
+  const finding = emitted?.findings.find(
+    (entry) => entry.ruleId === 'skills.ios.prefer-swift-testing'
+  );
+  assert.ok(finding);
+  assert.equal(finding.blocking, false);
+  assert.match(finding.expected_fix ?? '', /XCTest en suites legacy/i);
+});
+
 test('runPlatformGate materializa critical-test-quality para tests iOS Swift Testing', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_COMMIT',
