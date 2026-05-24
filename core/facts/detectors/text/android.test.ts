@@ -12,6 +12,7 @@ import {
   hasKotlinGlobalScopeUsage,
   hasKotlinGodActivityUsage,
   hasKotlinHardcodedBackgroundDispatcherUsage,
+  hasKotlinApplicationOnCreateHeavyInitializationUsage,
   hasKotlinIncompleteMaterialThemeUsage,
   hasKotlinJUnit4Usage,
   hasKotlinHardcodedUiStringUsage,
@@ -183,6 +184,39 @@ class MainActivity : ComponentActivity() {
 }
 `;
   assert.equal(hasKotlinGodActivityUsage(source), false);
+});
+
+test('hasKotlinApplicationOnCreateHeavyInitializationUsage detecta inicializacion pesada en Application.onCreate', () => {
+  const source = `
+class RuralGoApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+    FirebaseApp.initializeApp(this)
+    WorkManager.initialize(this, configuration)
+    Room.databaseBuilder(this, AppDatabase::class.java, "app.db").build()
+  }
+}
+`;
+  assert.equal(hasKotlinApplicationOnCreateHeavyInitializationUsage(source), true);
+});
+
+test('hasKotlinApplicationOnCreateHeavyInitializationUsage permite Application delgada e Initializer dedicado', () => {
+  const thinApplication = `
+class RuralGoApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+  }
+}
+`;
+  const startupInitializer = `
+class AnalyticsInitializer : Initializer<FirebaseApp> {
+  override fun create(context: Context): FirebaseApp {
+    return FirebaseApp.initializeApp(context)!!
+  }
+}
+`;
+  assert.equal(hasKotlinApplicationOnCreateHeavyInitializationUsage(thinApplication), false);
+  assert.equal(hasKotlinApplicationOnCreateHeavyInitializationUsage(startupInitializer), false);
 });
 
 test('hasKotlinNonLazyScrollableCollectionUsage detecta Column scrollable con iteracion de coleccion', () => {

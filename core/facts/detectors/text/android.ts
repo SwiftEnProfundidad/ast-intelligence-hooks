@@ -465,6 +465,39 @@ export const hasKotlinGodActivityUsage = (source: string): boolean => {
   });
 };
 
+export const hasKotlinApplicationOnCreateHeavyInitializationUsage = (source: string): boolean => {
+  const lines = source.split(/\r?\n/);
+  const declarations = parseKotlinTypeDeclarations(source);
+
+  return declarations.some((declaration) => {
+    const isApplication = declaration.conformances.some((conformance) =>
+      conformance === 'Application'
+    );
+    if (!isApplication) {
+      return false;
+    }
+
+    const body = lines
+      .slice(declaration.bodyStartLine - 1, declaration.bodyEndLine)
+      .map((line) => stripKotlinLineForSemanticScan(line))
+      .filter((line) => !line.trimStart().startsWith('import '))
+      .join('\n');
+
+    const onCreateMatch = /\boverride\s+fun\s+onCreate\s*\([^)]*\)\s*\{/g.exec(body);
+    if (!onCreateMatch) {
+      return false;
+    }
+
+    const openBraceIndex = body.indexOf('{', onCreateMatch.index);
+    const onCreateBody = extractBalancedBlockSegment(body, openBraceIndex);
+    if (!onCreateBody) {
+      return false;
+    }
+
+    return /\b(?:FirebaseApp|WorkManager|Room|Retrofit|OkHttpClient|Glide|Coil|Timber)\s*(?:\.|Builder\s*\(|\()/.test(onCreateBody);
+  });
+};
+
 export const hasKotlinNonLazyScrollableCollectionUsage = (source: string): boolean => {
   const sanitizedSource = source
     .split(/\r?\n/)

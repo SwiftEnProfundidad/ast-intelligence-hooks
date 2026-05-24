@@ -156,6 +156,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.startup.application-oncreate-heavy-init.ast',
+    description:
+      'Detects heavy library initialization inside Android Application.onCreate where AndroidX Startup Initializer or lazy feature initialization should be used.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.startup.application-oncreate-heavy-init.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected heavy initialization inside Application.onCreate.',
+      code: 'HEURISTICS_ANDROID_STARTUP_APPLICATION_ONCREATE_HEAVY_INIT_AST',
+    },
+  },
+  {
     id: 'heuristics.android.compose.non-lazy-scrollable-collection.ast',
     description:
       'Detects scrollable Column/Row collection rendering where LazyColumn or LazyRow should be used for virtualization.',

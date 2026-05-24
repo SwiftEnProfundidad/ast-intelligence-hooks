@@ -117,6 +117,34 @@ test('detects backend string literal unions that should be enums', () => {
   assert.deepEqual(fact.lines, [1]);
 });
 
+test('detects Android heavy Application.onCreate startup initialization', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/java/com/ruralgo/RuralGoApplication.kt',
+        [
+          'class RuralGoApplication : Application() {',
+          '  override fun onCreate() {',
+          '    super.onCreate()',
+          '    FirebaseApp.initializeApp(this)',
+          '    WorkManager.initialize(this, configuration)',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const ruleIds = toRuleIds(evaluateRules(astHeuristicsRuleSet, extracted));
+  assert.equal(
+    ruleIds.includes('heuristics.android.startup.application-oncreate-heavy-init.ast'),
+    true
+  );
+});
+
 test('detects frontend sensitive token in URL heuristic in production path', () => {
   const extracted = extractHeuristicFacts({
     facts: [

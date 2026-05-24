@@ -1304,6 +1304,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'android.architecture.god-activity',
     ['heuristics.android.architecture.god-activity.ast']
   ),
+  'skills.android.guideline.android.app-startup-androidx-startup-para-lazy-init': heuristicDetector(
+    'android.startup.application-oncreate-heavy-init',
+    ['heuristics.android.startup.application-oncreate-heavy-init.ast']
+  ),
   'skills.android.guideline.android.lazycolumn-lazyrow-virtualizacio-n-de-listas': heuristicDetector(
     'android.compose.lazy-collection',
     ['heuristics.android.compose.non-lazy-scrollable-collection.ast']

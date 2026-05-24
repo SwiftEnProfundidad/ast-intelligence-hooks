@@ -3,7 +3,7 @@ import test from 'node:test';
 import { androidRules } from './android';
 
 test('androidRules define reglas heurísticas locked para plataforma android', () => {
-  assert.equal(androidRules.length, 38);
+  assert.equal(androidRules.length, 39);
 
   const ids = androidRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -15,6 +15,7 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
     'heuristics.android.flow.sharedflow-used-as-state.ast',
     'heuristics.android.concurrency.asynctask.ast',
     'heuristics.android.architecture.god-activity.ast',
+    'heuristics.android.startup.application-oncreate-heavy-init.ast',
     'heuristics.android.compose.non-lazy-scrollable-collection.ast',
     'heuristics.android.compose.unstable-launched-effect-key.ast',
     'heuristics.android.compose.launched-effect-busy-loop.ast',
@@ -89,6 +90,10 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
   assert.equal(
     byId.get('heuristics.android.architecture.god-activity.ast')?.then.code,
     'HEURISTICS_ANDROID_ARCHITECTURE_GOD_ACTIVITY_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.startup.application-oncreate-heavy-init.ast')?.then.code,
+    'HEURISTICS_ANDROID_STARTUP_APPLICATION_ONCREATE_HEAVY_INIT_AST'
   );
   assert.equal(
     byId.get('heuristics.android.compose.non-lazy-scrollable-collection.ast')?.then.code,
