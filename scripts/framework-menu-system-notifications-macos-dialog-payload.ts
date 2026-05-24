@@ -1,5 +1,6 @@
 import type { PumukiCriticalNotificationEvent } from './framework-menu-system-notifications-types';
 import {
+  resolveDisplayBlockingCausesForEvent,
   resolvePrioritizedBlockingCauses,
   resolveBlockedCauseSummary,
   resolveBlockedRemediation,
@@ -332,7 +333,10 @@ const formatBlockingCauseForDialog = (
 ): readonly string[] => {
   const rule = cause.ruleId ?? cause.code;
   const visibleRule = formatVisibleRule(cause);
-  const problem = localizeDeveloperText(stripTechnicalFieldsFromMessage(cause.message) || cause.code);
+  const problem = localizeDeveloperText(
+    extractFieldFromCauseMessage(cause.message, 'message') ??
+    (stripTechnicalFieldsFromMessage(cause.message) || cause.code)
+  );
   const remediation = isGoldenFlowCause(cause)
     ? GOLDEN_FLOW_REMEDIATION
     : isWorktreeHygieneCause(cause)
@@ -418,17 +422,18 @@ export const buildBlockedDialogPayload = (params: {
   env: NodeJS.ProcessEnv;
 }): BlockedDialogPayload => {
   const causeCode = params.event.causeCode ?? 'GATE_BLOCKED';
-  const cause = buildBlockingCausesDetails(params.event.blockingCauses)
+  const displayBlockingCauses = resolveDisplayBlockingCausesForEvent(params.event);
+  const cause = buildBlockingCausesDetails(displayBlockingCauses)
     ?? resolveBlockedCauseSummary(params.event, causeCode);
-  const remediation = hasOnlyWorktreeHygieneCauses(params.event.blockingCauses)
+  const remediation = hasOnlyWorktreeHygieneCauses(displayBlockingCauses)
     ? WORKTREE_HYGIENE_REMEDIATION
-    : hasOnlyGoldenFlowCauses(params.event.blockingCauses)
-    ? resolveGoldenFlowDialogRemediation(params.event.blockingCauses)
-    : hasOnlyBddScenarioMissingCauses(params.event.blockingCauses)
+    : hasOnlyGoldenFlowCauses(displayBlockingCauses)
+    ? resolveGoldenFlowDialogRemediation(displayBlockingCauses)
+    : hasOnlyBddScenarioMissingCauses(displayBlockingCauses)
     ? 'Crea el fichero .feature esperado para la slice activa o corrige la referencia de tarea. Después vuelve a intentar el commit.'
-    : hasOnlySkillsContractCauses(params.event.blockingCauses)
+    : hasOnlySkillsContractCauses(displayBlockingCauses)
     ? SKILLS_CONTRACT_DIALOG_REMEDIATION
-    : params.event.blockingCauses && params.event.blockingCauses.length > 0
+    : displayBlockingCauses.length > 0
     ? 'Corrige las violaciones listadas y vuelve a intentar el commit.'
     : resolveBlockedRemediation(params.event, causeCode);
   const projectLabel = resolveProjectLabel({

@@ -278,6 +278,30 @@ test('buildGateBlockedPayload muestra skill concreta aunque venga envuelta en EV
   assert.doesNotMatch(payload.message, /Corrige la violación indicada/);
 });
 
+test('buildGateBlockedPayload muestra skill concreta desde causeMessage legacy sin blockingCauses', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.prefer-swift-testing severity=ERROR file=apps/ios/Tests/Mac/Presentation/Features/BuyerAppViewModelVisibleCopyTests.spec.swift lines=9 message=XCTest - Solo para proyectos legacy o UI tests remediation=Migra este test a Swift Testing o justifica la excepción legacy.',
+      remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+    },
+    'R_GO · '
+  );
+
+  assert.match(payload.subtitle ?? '', /Skill violada: BuyerAppViewModelVisibleCopyTests\.spec\.swift:9/);
+  assert.match(payload.subtitle ?? '', /Swift Testing/);
+  assert.match(payload.message, /Regla: Swift Testing/);
+  assert.match(payload.message, /Fichero: BuyerAppViewModelVisibleCopyTests\.spec\.swift:9/);
+  assert.match(payload.message, /Falla: XCTest - Solo para proyectos legacy o UI tests/);
+  assert.match(payload.message, /Migra este test a Swift Testing/);
+  assert.doesNotMatch(payload.subtitle ?? '', /EVIDENCE_GATE_BLOCKED/);
+  assert.doesNotMatch(payload.message, /Corrige la violación indicada/);
+});
+
 test('buildGateBlockedPayload traduce Dynamic Type a lenguaje dev en banner', () => {
   const payload = buildGateBlockedPayload(
     {

@@ -275,6 +275,25 @@ const normalizeDisplayCause = (cause: BlockedCause): BlockedCause => {
   };
 };
 
+export const resolveDisplayBlockingCausesForEvent = (
+  event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>
+): ReadonlyArray<BlockedCause> => {
+  if (event.blockingCauses && event.blockingCauses.length > 0) {
+    return event.blockingCauses;
+  }
+  if (!event.causeMessage || !/\bBlocking causes:\s*1\)\s*skills\./iu.test(event.causeMessage)) {
+    return [];
+  }
+  return [
+    {
+      code: event.causeCode ?? 'EVIDENCE_GATE_BLOCKED',
+      ruleId: 'ai_gate.repo_policy',
+      message: event.causeMessage,
+      remediation: event.remediation,
+    },
+  ];
+};
+
 export const resolvePrioritizedBlockingCauses = (
   causes: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']
 ): ReadonlyArray<BlockedCause> => {
@@ -376,12 +395,13 @@ export const buildGateBlockedPayload = (
   projectPrefix: string
 ): SystemNotificationPayload => {
   const causeCode = event.causeCode ?? 'GATE_BLOCKED';
+  const displayBlockingCauses = resolveDisplayBlockingCausesForEvent(event);
   const causeSummary = truncateNotificationText(
-    buildBlockingCausesSummary(event.blockingCauses) ?? resolveBlockedCauseSummary(event, causeCode),
+    buildBlockingCausesSummary(displayBlockingCauses) ?? resolveBlockedCauseSummary(event, causeCode),
     96
   );
   const remediation =
-    buildBlockingCausesRemediation(event.blockingCauses) ?? resolveBlockedRemediation(event, causeCode);
+    buildBlockingCausesRemediation(displayBlockingCauses) ?? resolveBlockedRemediation(event, causeCode);
   return {
     title: '🔴 Pumuki bloqueado',
     subtitle: `${projectPrefix}${event.stage} · ${causeSummary}`,

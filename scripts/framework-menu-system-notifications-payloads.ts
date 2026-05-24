@@ -27,6 +27,7 @@ export {
 } from './framework-menu-system-notifications-payloads-audit';
 export {
   buildGateBlockedPayload,
+  resolveDisplayBlockingCausesForEvent,
   resolvePrioritizedBlockingCauses,
 } from './framework-menu-system-notifications-payloads-blocked';
 export {

@@ -222,6 +222,31 @@ test('buildBlockedDialogPayload explica BDD feature missing sin mostrar EVIDENCE
   assert.doesNotMatch(payload.cause, /generic_bdd_feature_required/);
 });
 
+test('buildBlockedDialogPayload muestra skill concreta desde causeMessage legacy sin blockingCauses', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.prefer-swift-testing severity=ERROR file=apps/ios/Tests/Mac/Presentation/Features/BuyerAppViewModelVisibleCopyTests.spec.swift lines=9 message=XCTest - Solo para proyectos legacy o UI tests remediation=Migra este test a Swift Testing o justifica la excepción legacy.',
+      remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+    }),
+    repoRoot: '/tmp/R_GO',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'R_GO',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /Regla: Swift Testing/);
+  assert.match(payload.cause, /Fichero: apps\/ios\/Tests\/Mac\/Presentation\/Features\/BuyerAppViewModelVisibleCopyTests\.spec\.swift:9/);
+  assert.match(payload.cause, /Falla: XCTest - Solo para proyectos legacy o UI tests/);
+  assert.match(payload.cause, /Solución: Migra este test a Swift Testing/);
+  assert.equal(payload.remediation, 'Corrige las violaciones listadas y vuelve a intentar el commit.');
+  assert.doesNotMatch(payload.cause, /EVIDENCE_GATE_BLOCKED/);
+  assert.doesNotMatch(payload.cause, /Corrige la violación indicada/);
+});
+
 test('buildBlockedDialogPayload explica contrato de skills incompleto sin códigos EVIDENCE', () => {
   const payload = buildBlockedDialogPayload({
     event: blockedEvent({
