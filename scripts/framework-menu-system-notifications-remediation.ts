@@ -8,6 +8,7 @@ import {
   extractNotificationTrackingContext,
   TRACKING_BLOCKED_REMEDIATION,
 } from './framework-menu-system-notifications-tracking';
+import { buildLegacySkillCauseRemediation } from './framework-menu-system-notifications-legacy-skill-cause';
 
 type BlockedRemediationVariant = 'banner' | 'dialog';
 
@@ -223,6 +224,10 @@ export const resolveBlockedRemediation = (
   const trackingContext = extractNotificationTrackingContext(event.causeMessage);
   if (trackingContext) {
     return truncateNotificationText(buildNotificationTrackingRemediation(trackingContext), maxLength);
+  }
+  const legacySkillCauseRemediation = buildLegacySkillCauseRemediation(event.causeMessage);
+  if (legacySkillCauseRemediation) {
+    return truncateNotificationText(legacySkillCauseRemediation, maxLength);
   }
   if (fromEvent.length > 0) {
     if (

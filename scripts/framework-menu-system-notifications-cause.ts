@@ -7,6 +7,7 @@ import {
   buildNotificationTrackingCauseSummary,
   extractNotificationTrackingContext,
 } from './framework-menu-system-notifications-tracking';
+import { buildLegacySkillCauseSummary } from './framework-menu-system-notifications-legacy-skill-cause';
 
 const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_GATE_BLOCKED: 'El gate de evidencia/gobernanza está bloqueado.',
@@ -169,6 +170,10 @@ export const resolveBlockedCauseSummary = (
   const blockedCausesSummary = buildBlockedCausesSummary(event);
   if (blockedCausesSummary) {
     return truncateNotificationText(blockedCausesSummary, 72);
+  }
+  const legacySkillCauseSummary = buildLegacySkillCauseSummary(event.causeMessage);
+  if (legacySkillCauseSummary) {
+    return legacySkillCauseSummary;
   }
   const trackingContext = extractNotificationTrackingContext(event.causeMessage);
   const priorityCode = resolvePriorityCauseFromMessage(event.causeMessage);

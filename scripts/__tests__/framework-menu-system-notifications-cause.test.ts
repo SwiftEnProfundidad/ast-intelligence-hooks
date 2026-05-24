@@ -224,3 +224,24 @@ test('resolveBlockedCauseSummary cuenta todas las causas restantes aunque priori
   assert.match(result, /\(\+3 más\)/);
   assert.doesNotMatch(result, /\(\+1 más\)/);
 });
+
+test('resolveBlockedCauseSummary explica causeMessage legacy de skill sin blockingCauses', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.prefer-swift-testing severity=ERROR file=apps/ios/Tests/Mac/Presentation/Features/BuyerAppViewModelVisibleCopyTests.spec.swift lines=9 message=XCTest - Solo para proyectos legacy o UI tests remediation=Migra este test a Swift Testing o justifica la excepción legacy.',
+      remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /Skill violada/i);
+  assert.match(result, /BuyerAppViewModelVisibleCopyTests\.spec\.swift:9/);
+  assert.match(result, /Swift Testing/);
+  assert.doesNotMatch(result, /EVIDENCE_GATE_BLOCKED/);
+  assert.doesNotMatch(result, /gate de evidencia/i);
+});

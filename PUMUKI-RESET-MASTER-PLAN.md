@@ -2673,3 +2673,7 @@ Evidencia:
 - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> 59/59
 - `npm run -s typecheck` -> OK
 - `npm test -- integrations/git/__tests__/runPlatformGate.test.ts` -> FAIL preexistente: el script no filtra y ejecuta suite global con fallos no relacionados (`stageRunners`, guardrails, notifications), no asociados a esta slice.
+
+### 2026-05-24 · PUMUKI-GAP-144 / PUMUKI-INC-145 · resolvers legacy de skills en notificaciones
+
+- [✅] - `PUMUKI-GAP-144 / PUMUKI-INC-145` / `INC145-F3` resolvers reutilizables sin degradación genérica: `resolveBlockedCauseSummary` y `resolveBlockedRemediation` reconocen `causeMessage` legacy con `Blocking causes: 1) skills.*`, mostrando skill, fichero, línea, fallo y solución en lenguaje dev aunque el evento no traiga `blockingCauses`. RED: `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-cause.test.ts scripts/__tests__/framework-menu-system-notifications-remediation.test.ts --test-name-pattern "causeMessage legacy"` falló por copy genérico. GREEN: el mismo comando pasa con `25/25` tests.

@@ -228,3 +228,26 @@ test('resolveBlockedRemediation compacta el banner sin cortar palabras por la mi
   assert.ok(result.length <= 120);
   assert.doesNotMatch(result, /sesió…|correc…|ram…/i);
 });
+
+test('resolveBlockedRemediation explica causeMessage legacy de skill sin jerga Pumuki', () => {
+  const result = resolveBlockedRemediation(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.prefer-swift-testing severity=ERROR file=apps/ios/Tests/Mac/Presentation/Features/BuyerAppViewModelVisibleCopyTests.spec.swift lines=9 message=XCTest - Solo para proyectos legacy o UI tests remediation=Migra este test a Swift Testing o justifica la excepción legacy.',
+      remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /Regla: Swift Testing/);
+  assert.match(result, /Fichero: BuyerAppViewModelVisibleCopyTests\.spec\.swift:9/);
+  assert.match(result, /XCTest - Solo para proyectos legacy o UI tests/);
+  assert.match(result, /Migra este test a Swift Testing/);
+  assert.doesNotMatch(result, /Corrige la violación indicada/);
+  assert.doesNotMatch(result, /npx --yes/);
+  assert.doesNotMatch(result, /EVIDENCE_GATE_BLOCKED/);
+});
