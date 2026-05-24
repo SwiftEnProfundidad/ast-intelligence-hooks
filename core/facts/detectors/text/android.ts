@@ -1407,3 +1407,25 @@ export const findKotlinLiskovSubstitutionMatch = (
 
   return undefined;
 };
+
+const legacyFingerprintApiPattern =
+  /\b(?:android\.hardware\.fingerprint\.)?FingerprintManager(?:Compat)?\b/;
+
+export const hasAndroidLegacyFingerprintApiUsage = (source: string): boolean =>
+  scanCodeLikeSource(source, ({ source: scannedSource, index }) => {
+    const match = scannedSource.slice(index).match(legacyFingerprintApiPattern);
+    return match?.index === 0;
+  });
+
+export const collectAndroidLegacyFingerprintApiLines = (
+  source: string
+): readonly number[] => {
+  const lines: number[] = [];
+  source.split(/\r?\n/).forEach((line, index) => {
+    const sanitized = stripKotlinLineForSemanticScan(line);
+    if (legacyFingerprintApiPattern.test(sanitized)) {
+      lines.push(index + 1);
+    }
+  });
+  return sortedUniqueLines(lines);
+};

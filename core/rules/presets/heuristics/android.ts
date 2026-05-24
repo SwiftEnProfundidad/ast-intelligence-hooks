@@ -116,6 +116,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.security.legacy-fingerprint-api.ast',
+    description:
+      'Detects legacy FingerprintManager API usage where androidx.biometric.BiometricPrompt is the supported baseline.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.security.legacy-fingerprint-api.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected legacy FingerprintManager API usage; use androidx.biometric.BiometricPrompt.',
+      code: 'HEURISTICS_ANDROID_SECURITY_LEGACY_FINGERPRINT_API_AST',
+    },
+  },
+  {
     id: 'heuristics.android.concurrency.asynctask.ast',
     description:
       'Detects deprecated AsyncTask usage in Android production code where coroutines should be used.',

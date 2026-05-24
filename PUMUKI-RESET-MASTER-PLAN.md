@@ -2677,3 +2677,9 @@ Evidencia:
 ### 2026-05-24 · PUMUKI-GAP-144 / PUMUKI-INC-145 · resolvers legacy de skills en notificaciones
 
 - [✅] - `PUMUKI-GAP-144 / PUMUKI-INC-145` / `INC145-F3` resolvers reutilizables sin degradación genérica: `resolveBlockedCauseSummary` y `resolveBlockedRemediation` reconocen `causeMessage` legacy con `Blocking causes: 1) skills.*`, mostrando skill, fichero, línea, fallo y solución en lenguaje dev aunque el evento no traiga `blockingCauses`. RED: `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications-cause.test.ts scripts/__tests__/framework-menu-system-notifications-remediation.test.ts --test-name-pattern "causeMessage legacy"` falló por copy genérico. GREEN: el mismo comando pasa con `25/25` tests.
+
+### 2026-05-24 - PUMUKI-GAP-144 / PUMUKI-INC-145 - Android biometric legacy API detector
+
+- [✅] `skills.android.guideline.android.biometric-auth-biometricprompt-api` deja de estar en `REQUIERE_ESTUDIO` y queda enlazada a `heuristics.android.security.legacy-fingerprint-api.ast`.
+- [✅] Criterio de cierre: detectar uso productivo de `FingerprintManager` / `FingerprintManagerCompat` en Android y exigir migración a `androidx.biometric.BiometricPrompt`; no inferir ausencia global de biometría.
+- [✅] Evidencia: RED falló por detector inexistente; GREEN focal `android.test.ts --test-name-pattern "LegacyFingerprint|BiometricPrompt"` pasó `73/73`; suite integrada extracción/reglas/registry pasó `154/154`; `typecheck`, `skills:compile`, `skills:lock:check`, `skills:classify`, `git diff --check` y `validation:tracking-single-active` pasaron.

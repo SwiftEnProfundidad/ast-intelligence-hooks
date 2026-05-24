@@ -1578,6 +1578,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.biometric-auth-biometricprompt-api'
+    ),
+    ['heuristics.android.security.legacy-fingerprint-api.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.android.guideline.android.viewmodelscope-scope-de-viewmodel-cancelado-automa-ticamente'
     ),
     ['heuristics.android.coroutines.manual-scope-in-viewmodel.ast']

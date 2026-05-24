@@ -1431,6 +1431,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'android.flow.state-exposure',
     ['heuristics.android.flow.livedata-state-exposure.ast']
   ),
+  'skills.android.guideline.android.biometric-auth-biometricprompt-api': heuristicDetector(
+    'android.security.biometric-prompt',
+    ['heuristics.android.security.legacy-fingerprint-api.ast']
+  ),
   'skills.android.guideline.android.statein-convertir-cold-flow-a-hot-stateflow': heuristicDetector(
     'android.flow.viewmodel-flow-without-statein',
     ['heuristics.android.flow.viewmodel-flow-without-statein.ast']

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { androidRules } from './android';
 
 test('androidRules define reglas heurísticas locked para plataforma android', () => {
-  assert.equal(androidRules.length, 39);
+  assert.equal(androidRules.length, 40);
 
   const ids = androidRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -13,6 +13,7 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
     'heuristics.android.flow.livedata-state-exposure.ast',
     'heuristics.android.flow.viewmodel-flow-without-statein.ast',
     'heuristics.android.flow.sharedflow-used-as-state.ast',
+    'heuristics.android.security.legacy-fingerprint-api.ast',
     'heuristics.android.concurrency.asynctask.ast',
     'heuristics.android.architecture.god-activity.ast',
     'heuristics.android.startup.application-oncreate-heavy-init.ast',
@@ -82,6 +83,10 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
   assert.equal(
     byId.get('heuristics.android.flow.sharedflow-used-as-state.ast')?.then.code,
     'HEURISTICS_ANDROID_FLOW_SHAREDFLOW_USED_AS_STATE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.security.legacy-fingerprint-api.ast')?.then.code,
+    'HEURISTICS_ANDROID_SECURITY_LEGACY_FINGERPRINT_API_AST'
   );
   assert.equal(
     byId.get('heuristics.android.concurrency.asynctask.ast')?.then.code,

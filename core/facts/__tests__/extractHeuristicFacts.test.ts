@@ -3036,3 +3036,33 @@ test('extracts actionable iOS excessive public API heuristic facts', () => {
   assert.equal(finding.primary_node?.name, 'excessive public/open Swift API surface');
   assert.match(finding.expected_fix ?? '', /internal by default/);
 });
+
+test('detects Android legacy FingerprintManager biometric API with line metadata', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/auth/LegacyBiometricAuth.kt',
+        [
+          'import android.hardware.fingerprint.FingerprintManager',
+          '',
+          'class LegacyBiometricAuth(private val fingerprintManager: FingerprintManager) {',
+          '  fun authenticate(callback: FingerprintManager.AuthenticationCallback) {',
+          '    fingerprintManager.authenticate(null, null, 0, callback, null)',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  const finding = findings.find(
+    (candidate) => candidate.ruleId === 'heuristics.android.security.legacy-fingerprint-api.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.lines, [1, 3, 4]);
+});
