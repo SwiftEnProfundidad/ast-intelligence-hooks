@@ -18,6 +18,28 @@ const formatTopFiles = (topFiles: ReadonlyArray<{ file: string; count: number }>
     .join(', ')}`;
 };
 
+const formatPlatforms = (
+  platformRows: FrameworkMenuEvidenceSummary['platformAuditRows']
+): string => {
+  if (!platformRows || platformRows.length === 0) {
+    return 'Platforms: none';
+  }
+  return `Platforms: ${platformRows
+    .map((entry) => `${entry.platform}=${entry.violations}`)
+    .join(', ')}`;
+};
+
+const formatTopFindings = (
+  topFindings: FrameworkMenuEvidenceSummary['topFindings']
+): string => {
+  if (topFindings.length === 0) {
+    return 'Top findings: none';
+  }
+  return `Top findings: ${topFindings
+    .map((entry) => `[${entry.severity}] ${entry.ruleId} -> ${entry.file}:${entry.line}`)
+    .join('; ')}`;
+};
+
 export const formatEvidenceSummaryForMenu = (
   summary: FrameworkMenuEvidenceSummary
 ): string => {
@@ -45,5 +67,7 @@ export const formatEvidenceSummaryForMenu = (
     `Severities (enterprise): critical=${byEnterpriseSeverity.CRITICAL} high=${byEnterpriseSeverity.HIGH} medium=${byEnterpriseSeverity.MEDIUM} low=${byEnterpriseSeverity.LOW}`,
     `Severities (legacy): critical=${summary.bySeverity.CRITICAL} error=${summary.bySeverity.ERROR} warn=${summary.bySeverity.WARN} info=${summary.bySeverity.INFO}`,
     formatTopFiles(summary.topFiles),
+    formatPlatforms(summary.platformAuditRows),
+    formatTopFindings(summary.topFindings),
   ].join('\n');
 };

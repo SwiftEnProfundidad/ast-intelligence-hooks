@@ -1806,6 +1806,7 @@ Snapshot PUMUKI-INC-132 (2026-05-13):
 - [✅] Hard-stop PRE_WRITE con lease fail-closed publicado y revalidado hasta `pumuki@6.3.277` para el bug de scope iOS/RuralGo.
 - [✅] Notificaciones bloqueantes agregadas por causa real y con separación legible entre violaciones.
 - [✅] Contexto local obligatorio `.pumuki/context/context.json` integrado como contrato fail-closed cuando falta/no aplica.
+- [✅] `INC145-F3` micro-slice menú/evidencia: `formatEvidenceSummaryForMenu` ya no pierde plataformas ni top findings al renderizar el resumen operativo. El bloque de menú muestra `Platforms: ...` y `Top findings: ...` usando el mismo summary normalizado que alimenta audit/legacy menu, reduciendo drift visible entre menú, evidencia y hook.
 - [✅] Auditoría histórica contrastada contra RuralGo: replay legacy `552` vs auditoría externa `4380` violaciones aproximadas; gap de cobertura confirmado.
 - [✅] Inventario contractual de skills establecido: `752` reglas totales (`ios=307`, `android=206`, `backend=143`, `frontend=96`).
 - [✅] Clasificación viva actual tras la última micro-slice validada: `AST_IMPLEMENTED=319`, `IMPLEMENTAR_DETECTOR=0`, `REQUIERE_ESTUDIO=408`, `NO_ES_REGLA_DE_CODIGO=25`.
@@ -1888,6 +1889,9 @@ Snapshot PUMUKI-INC-132 (2026-05-13):
 
 **Última validación registrada (`✅`)**
 
+- [✅] `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-evidence-summary-format.test.ts scripts/__tests__/framework-menu-evidence-summary-read.test.ts` -> `7/7 OK`.
+- [✅] `npm run -s typecheck` -> OK.
+- [✅] `git diff --check && npm run -s validation:tracking-single-active` -> OK.
 - [✅] `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsDetectorRegistry.test.ts integrations/config/__tests__/skillsRuleClassification.test.ts` -> `4/4 OK`.
 - [✅] `npm run -s typecheck` -> OK.
 - [✅] `npx --yes tsx@4.21.0 --test core/facts/detectors/text/ios.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/rules/presets/heuristics/ios.test.ts integrations/config/__tests__/skillsDetectorRegistry.test.ts integrations/config/__tests__/skillsRuleClassification.test.ts` -> `159/159 OK`.
