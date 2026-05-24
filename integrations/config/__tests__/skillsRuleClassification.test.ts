@@ -189,18 +189,57 @@ test('classifySkillsRules no exige detector AST para reglas iOS de proceso y val
       evaluationMode: 'DECLARATIVE',
       origin: 'core',
     },
+    {
+      id: 'skills.ios.guideline.ios-concurrency.use-grep-for-swiftupcomingfeature-to-find-enabled-upcoming-features',
+      description: 'Use grep for SWIFT_UPCOMING_FEATURE to find enabled upcoming features',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-concurrency-guidelines',
+      sourcePath: 'vendor/skills/swift-concurrency/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios-concurrency.then-use-references-sendable-md-and-references-threading-md-especially',
+      description: 'Then use references/sendable.md and references/threading.md especially',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-concurrency-guidelines',
+      sourcePath: 'vendor/skills/swift-concurrency/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios-concurrency.async-sequences-md-asyncsequence-asyncstream-when-to-use-vs-regular-as',
+      description: 'async-sequences.md AsyncSequence AsyncStream when to use vs regular async sequences',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-concurrency-guidelines',
+      sourcePath: 'vendor/skills/swift-concurrency/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
   ]));
 
-  assert.equal(summary.total, 5);
+  assert.equal(summary.total, 8);
   assert.deepEqual(summary.byStatus, {
     AST_IMPLEMENTED: 0,
     IMPLEMENTAR_DETECTOR: 0,
     REQUIERE_ESTUDIO: 0,
-    NO_ES_REGLA_DE_CODIGO: 5,
+    NO_ES_REGLA_DE_CODIGO: 8,
   });
   assert.deepEqual(
     summary.rules.map((rule) => rule.status),
     [
+      'NO_ES_REGLA_DE_CODIGO',
+      'NO_ES_REGLA_DE_CODIGO',
+      'NO_ES_REGLA_DE_CODIGO',
       'NO_ES_REGLA_DE_CODIGO',
       'NO_ES_REGLA_DE_CODIGO',
       'NO_ES_REGLA_DE_CODIGO',
