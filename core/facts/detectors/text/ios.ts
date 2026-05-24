@@ -854,14 +854,35 @@ export const hasSwiftLargeViewBuilderFunctionUsage = (source: string): boolean =
   return collectSwiftLargeViewBuilderFunctionLines(source).length > 0;
 };
 
-export const hasSwiftUiInlineActionLogicUsage = (source: string): boolean => {
-  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
-  const inlineButtonActionPattern =
-    /\bButton\s*\{[\s\S]{0,900}\b(?:if|guard|switch|for|while|Task)\b[\s\S]{0,900}\}\s*label\s*:/;
-  const inlineActionParameterPattern =
-    /\bButton\s*\([^)]*\baction\s*:\s*\{[\s\S]{0,900}\b(?:if|guard|switch|for|while|Task)\b[\s\S]{0,900}\}/;
+const swiftInlineActionLogicPattern = /\b(?:if|guard|switch|for|while|Task)\b/;
 
-  return inlineButtonActionPattern.test(swiftSource) || inlineActionParameterPattern.test(swiftSource);
+const swiftSnippetContainsInlineActionLogic = (snippet: string): boolean => {
+  return swiftInlineActionLogicPattern.test(snippet);
+};
+
+export const collectSwiftUiInlineActionLogicLines = (source: string): readonly number[] => {
+  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
+  const matches: number[] = [];
+  const inlineButtonActionPattern =
+    /\bButton\s*\{(?<body>[\s\S]{0,900}?)\}\s*label\s*:/g;
+  const inlineActionParameterPattern =
+    /\bButton\s*\([^)]*\baction\s*:\s*\{(?<body>[\s\S]{0,900}?)\}/g;
+
+  for (const pattern of [inlineButtonActionPattern, inlineActionParameterPattern]) {
+    for (const match of swiftSource.matchAll(pattern)) {
+      const body = match.groups?.body ?? '';
+      if (!swiftSnippetContainsInlineActionLogic(body)) {
+        continue;
+      }
+      matches.push(getLineNumberAtIndex(swiftSource, match.index ?? 0));
+    }
+  }
+
+  return sortedUniqueLines(matches);
+};
+
+export const hasSwiftUiInlineActionLogicUsage = (source: string): boolean => {
+  return collectSwiftUiInlineActionLogicLines(source).length > 0;
 };
 
 export const collectSwiftAnimationWithoutReduceMotionLines = (source: string): readonly number[] => {
@@ -878,13 +899,6 @@ export const collectSwiftAnimationWithoutReduceMotionLines = (source: string): r
 
 export const hasSwiftAnimationWithoutReduceMotionUsage = (source: string): boolean => {
   return collectSwiftAnimationWithoutReduceMotionLines(source).length > 0;
-};
-
-export const collectSwiftUiInlineActionLogicLines = (source: string): readonly number[] => {
-  if (!hasSwiftUiInlineActionLogicUsage(source)) {
-    return [];
-  }
-  return collectSwiftRegexLines(source, /\bButton\s*(?:\(|\{)/);
 };
 
 export const hasSwiftDispatchQueueUsage = (source: string): boolean => {

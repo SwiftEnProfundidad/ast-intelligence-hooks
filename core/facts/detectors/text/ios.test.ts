@@ -1306,6 +1306,10 @@ struct CheckoutView: View {
   @State private var isLoading = false
 
   var body: some View {
+    Button(action: navigateBack) {
+      Image(systemName: "chevron.left")
+    }
+
     Button {
       if isLoading {
         return
@@ -1332,9 +1336,45 @@ struct CheckoutView: View {
 `;
 
   assert.equal(hasSwiftUiInlineActionLogicUsage(source), true);
-  assert.deepEqual(collectSwiftUiInlineActionLogicLines(source), [6]);
+  assert.deepEqual(collectSwiftUiInlineActionLogicLines(source), [10]);
   assert.equal(hasSwiftUiInlineActionLogicUsage(safe), false);
   assert.deepEqual(collectSwiftUiInlineActionLogicLines(safe), []);
+});
+
+test('hasSwiftUiInlineActionLogicUsage preserva varios Button(action: metodo) aunque exista otro Button inline', () => {
+  const source = `
+struct ProductDetailScreen: View {
+  var body: some View {
+    VStack {
+      Button(action: navigateBackFromProductDetail) {
+        Image(systemName: "chevron.left")
+      }
+      Button(action: toggleFavoriteProduct) {
+        Image(systemName: "heart")
+      }
+      Button(action: decrementQuantity) {
+        Text("-")
+      }
+      Button(action: incrementQuantity) {
+        Text("+")
+      }
+      Button(action: addProductToCartAndNavigate) {
+        Text("Add")
+      }
+      Button {
+        if isLoading {
+          return
+        }
+      } label: {
+        Text("Retry")
+      }
+    }
+  }
+}
+`;
+
+  assert.equal(hasSwiftUiInlineActionLogicUsage(source), true);
+  assert.deepEqual(collectSwiftUiInlineActionLogicLines(source), [20]);
 });
 
 test('hasSwiftAnimationWithoutReduceMotionUsage detecta animaciones sin preferencia reduce motion', () => {
