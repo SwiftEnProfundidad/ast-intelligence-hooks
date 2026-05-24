@@ -4,6 +4,7 @@ import { captureRepoState } from '../evidence/repoState';
 import type { RepoState } from '../evidence/schema';
 import {
   extractEvidenceBlockingCauses,
+  type EvidenceBlockingCause,
   formatEvidenceBlockingCause,
 } from '../evidence/blockingCauses';
 import { resolvePolicyForStage } from './stagePolicies';
@@ -31,6 +32,11 @@ export type AiGateViolation = {
   code: string;
   message: string;
   severity: 'ERROR' | 'WARN';
+  ruleId?: string;
+  file?: string;
+  line?: number;
+  lines?: readonly number[];
+  remediation?: string;
 };
 
 type PreWriteWorktreeHygienePolicy = {
@@ -196,6 +202,50 @@ const toWarnViolation = (code: string, message: string): AiGateViolation => ({
   code,
   severity: 'WARN',
   message,
+});
+
+const normalizeEvidenceCauseLines = (
+  lines: EvidenceBlockingCause['lines']
+): Pick<AiGateViolation, 'line' | 'lines'> => {
+  if (typeof lines === 'number' && Number.isFinite(lines) && lines > 0) {
+    return { line: Math.floor(lines) };
+  }
+  if (Array.isArray(lines)) {
+    const normalized = Array.from(
+      new Set(
+        lines
+          .filter((line): line is number => typeof line === 'number' && Number.isFinite(line) && line > 0)
+          .map((line) => Math.floor(line))
+      )
+    ).sort((left, right) => left - right);
+    return normalized.length > 0 ? { lines: normalized } : {};
+  }
+  if (typeof lines === 'string') {
+    const normalized = Array.from(
+      new Set(
+        lines
+          .split(',')
+          .map((line) => Number.parseInt(line.trim(), 10))
+          .filter((line) => Number.isFinite(line) && line > 0)
+      )
+    ).sort((left, right) => left - right);
+    return normalized.length > 0 ? { lines: normalized } : {};
+  }
+  return {};
+};
+
+const toEvidenceGateBlockedViolation = (
+  severity: AiGateViolation['severity'],
+  message: string,
+  cause?: EvidenceBlockingCause
+): AiGateViolation => ({
+  code: 'EVIDENCE_GATE_BLOCKED',
+  severity,
+  message,
+  ruleId: cause?.ruleId,
+  file: cause?.file,
+  remediation: cause?.remediation,
+  ...normalizeEvidenceCauseLines(cause?.lines),
 });
 
 const toSkillsViolation = (
@@ -1327,6 +1377,7 @@ const collectEvidenceViolations = (
   }
 
   if (result.evidence.ai_gate.status === 'BLOCKED') {
+    const blockingCause = extractEvidenceBlockingCauses(result.evidence)[0];
     const gateBlockedMessage = buildEvidenceGateBlockedMessage(result);
     violations.push(
       !hasEvidenceBlockingCause(result) && ageSeconds <= maxAgeSeconds
@@ -1339,7 +1390,7 @@ const collectEvidenceViolations = (
             'EVIDENCE_GATE_BLOCKED',
             `${gateBlockedMessage} Advisory because the current slice only contains documentation/render/tooling artifacts and evidence is fresh.`
           )
-        : toErrorViolation('EVIDENCE_GATE_BLOCKED', gateBlockedMessage)
+        : toEvidenceGateBlockedViolation('ERROR', gateBlockedMessage, blockingCause)
     );
   }
 

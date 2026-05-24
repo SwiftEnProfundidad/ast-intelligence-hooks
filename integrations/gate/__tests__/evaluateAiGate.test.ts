@@ -405,6 +405,15 @@ test('evaluateAiGate expone causas accionables cuando la evidencia está bloquea
   assert.match(violation?.message ?? '', /skills\.ios\.no-foreach-indices/);
   assert.match(violation?.message ?? '', /BuyerOnboardingView\.swift/);
   assert.match(violation?.message ?? '', /Use stable Identifiable data/);
+  assert.equal(
+    (violation as { ruleId?: string } | undefined)?.ruleId,
+    'skills.ios.no-foreach-indices'
+  );
+  assert.equal(
+    (violation as { file?: string } | undefined)?.file,
+    'apps/ios/Presentation/Features/BuyerOnboardingView.swift'
+  );
+  assert.equal((violation as { line?: number } | undefined)?.line, 42);
 });
 
 test('evaluateAiGate expone causas accionables para findings WARN bloqueantes', () => {
@@ -460,6 +469,7 @@ test('evaluateAiGate expone causas accionables para findings WARN bloqueantes', 
   assert.match(violation?.message ?? '', /skills\.ios\.guideline\.ios\.magic-numbers/);
   assert.match(violation?.message ?? '', /BuyerShellView\.swift/);
   assert.match(violation?.message ?? '', /193,280/);
+  assert.deepEqual((violation as { lines?: readonly number[] } | undefined)?.lines, [193, 280]);
 });
 
 test('evaluateAiGate no convierte prefer-swift-testing WARN en bloqueo de PRE_WRITE', () => {
