@@ -209,3 +209,90 @@ test('classifySkillsRules no exige detector AST para reglas iOS de proceso y val
     ]
   );
 });
+
+test('classifySkillsRules no exige detector AST para reglas Android de proceso y validacion operativa', () => {
+  const summary = classifySkillsRules(buildLock([
+    {
+      id: 'skills.android.guideline.android.aaa-pattern-arrange-act-assert',
+      description: 'AAA pattern Arrange Act Assert',
+      severity: 'WARN',
+      platform: 'android',
+      sourceSkill: 'android-guidelines',
+      sourcePath: 'vendor/skills/android-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.android.guideline.android.androidtest-instrumented-tests-device-emulator',
+      description: 'androidTest instrumented tests device emulator',
+      severity: 'WARN',
+      platform: 'android',
+      sourceSkill: 'android-guidelines',
+      sourcePath: 'vendor/skills/android-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.android.guideline.android.baseline-profiles-optimizacio-n-de-startup',
+      description: 'Baseline Profiles optimizacion de startup',
+      severity: 'WARN',
+      platform: 'android',
+      sourceSkill: 'android-guidelines',
+      sourcePath: 'vendor/skills/android-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+  ]));
+
+  assert.equal(summary.total, 3);
+  assert.deepEqual(summary.byStatus, {
+    AST_IMPLEMENTED: 0,
+    IMPLEMENTAR_DETECTOR: 0,
+    REQUIERE_ESTUDIO: 0,
+    NO_ES_REGLA_DE_CODIGO: 3,
+  });
+});
+
+test('classifySkillsRules no degrada reglas Android de leaks de codigo a proceso operativo', () => {
+  const summary = classifySkillsRules(buildLock([
+    {
+      id: 'skills.android.guideline.android.context-leaks-no-referencias-a-activity-en-objetos-long-lived',
+      description: 'Context leaks no referencias a Activity en objetos long lived',
+      severity: 'WARN',
+      platform: 'android',
+      sourceSkill: 'android-guidelines',
+      sourcePath: 'vendor/skills/android-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.android.guideline.android.leakcanary-deteccio-n-de-memory-leaks',
+      description: 'LeakCanary deteccion de memory leaks',
+      severity: 'WARN',
+      platform: 'android',
+      sourceSkill: 'android-guidelines',
+      sourcePath: 'vendor/skills/android-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+  ]));
+
+  assert.equal(
+    summary.rules.find((rule) => rule.ruleId.includes('context-leaks'))?.status,
+    'REQUIERE_ESTUDIO'
+  );
+  assert.equal(
+    summary.rules.find((rule) => rule.ruleId.includes('leakcanary'))?.status,
+    'NO_ES_REGLA_DE_CODIGO'
+  );
+});
