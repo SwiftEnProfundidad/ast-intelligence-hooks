@@ -263,6 +263,78 @@ test('toAuditSummaryEventFromAiGate extrae causa skill anidada con fichero real'
   assert.doesNotMatch(event.blockingCauses?.[0]?.message ?? '', /2\) skills\.ios/);
 });
 
+test('toAuditSummaryEventFromAiGate materializa lineas estructuradas de skill anidada', () => {
+  const event = toAuditSummaryEventFromAiGate({
+    aiGateResult: {
+      violations: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          severity: 'ERROR',
+          message:
+            'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.guideline.ios.dynamic-type-font-scaling-automatico severity=WARN code=SKILLS_IOS_DYNAMIC_TYPE file=apps/ios/Presentation/Views/OnboardingCarouselView.swift lines=42,77 message=Dynamic Type - Font scaling automatico remediation=Usa estilos semánticos de SwiftUI.',
+        },
+      ],
+    },
+    stage: 'PRE_WRITE',
+  });
+
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
+  }
+  assert.deepEqual(event.blockingCauses?.[0]?.lines, [42, 77]);
+});
+
+test('toAuditSummaryEventFromEvidence conserva lineas estructuradas de snapshot findings', () => {
+  const evidence: Parameters<typeof toAuditSummaryEventFromEvidence>[0] = {
+    version: '2.1',
+    timestamp: '2026-05-24T10:00:00.000Z',
+    snapshot: {
+      stage: 'PRE_COMMIT',
+      outcome: 'BLOCK',
+      findings: [
+        {
+          ruleId: 'skills.frontend.no-empty-catch',
+          severity: 'ERROR',
+          code: 'SKILLS_FRONTEND_NO_EMPTY_CATCH',
+          message: 'Catch vacío en frontend.',
+          file: 'apps/frontend/src/repository.ts',
+          lines: [12, 18],
+          blocking: true,
+          expected_fix: 'Gestiona el error o propágalo.',
+        },
+      ],
+    },
+    ai_gate: {
+      status: 'BLOCKED',
+      violations: [],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'BLOCKED',
+      total_violations: 1,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 1,
+        WARN: 0,
+        INFO: 0,
+      },
+    },
+    ledger: [],
+    platforms: {},
+    rulesets: [],
+    human_intent: null,
+  };
+
+  const event = toAuditSummaryEventFromEvidence(evidence);
+
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
+  }
+  assert.deepEqual(event.blockingCauses?.[0]?.lines, [12, 18]);
+});
+
 test('emitAuditSummaryNotificationFromAiGate emite notificación para PRE_WRITE', () => {
   const events: unknown[] = [];
   const result = emitAuditSummaryNotificationFromAiGate(

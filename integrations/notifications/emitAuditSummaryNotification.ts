@@ -30,6 +30,8 @@ type NotificationBlockingCause = {
   message: string;
   ruleId?: string;
   file?: string;
+  line?: number;
+  lines?: ReadonlyArray<number>;
   remediation?: string;
 };
 
@@ -83,6 +85,48 @@ const extractMessageField = (message: string, field: string): string | undefined
   return value && value.length > 0 ? value : undefined;
 };
 
+const normalizeEvidenceLinesForNotification = (
+  lines: unknown
+): Pick<NotificationBlockingCause, 'line' | 'lines'> => {
+  if (typeof lines === 'number' && Number.isFinite(lines) && lines > 0) {
+    return {
+      line: Math.floor(lines),
+    };
+  }
+  if (Array.isArray(lines)) {
+    const normalized = Array.from(
+      new Set(
+        lines
+          .filter((line): line is number => typeof line === 'number' && Number.isFinite(line) && line > 0)
+          .map((line) => Math.floor(line))
+      )
+    ).sort((left, right) => left - right);
+    return normalized.length > 0 ? { lines: normalized } : {};
+  }
+  if (typeof lines === 'string') {
+    const normalized = Array.from(
+      new Set(
+        lines
+          .split(',')
+          .map((line) => Number.parseInt(line.trim(), 10))
+          .filter((line) => Number.isFinite(line) && line > 0)
+      )
+    ).sort((left, right) => left - right);
+    return normalized.length > 0 ? { lines: normalized } : {};
+  }
+  return {};
+};
+
+const extractStructuredLinesFromMessage = (
+  message: string
+): Pick<NotificationBlockingCause, 'line' | 'lines'> => {
+  const raw = message.match(/\blines?=([0-9][0-9,\-\s]*)\b/i)?.[1];
+  if (!raw) {
+    return {};
+  }
+  return normalizeEvidenceLinesForNotification(raw);
+};
+
 const extractFirstNestedSkillSegment = (message: string): string =>
   message
     .replace(/^.*?\bBlocking causes:\s*1\)\s*/isu, '')
@@ -121,6 +165,11 @@ const extractNestedSkillCauseFromWrapper = (cause: NotificationBlockingCause): N
     code: normalizeRuleCode(ruleId),
     ruleId,
     file: nestedFile ?? cause.file,
+    ...(
+      cause.line || cause.lines
+        ? {}
+        : extractStructuredLinesFromMessage(normalizedNestedMessage)
+    ),
     message: `rule=${ruleId} ${normalizedNestedMessage}`,
     remediation:
       cause.remediation && !/corrige la violaci[oó]n indicada|corrige la causa bloqueante/i.test(cause.remediation)
@@ -163,6 +212,7 @@ export const toAuditSummaryEventFromEvidence = (
           code: cause.code,
           ruleId: cause.ruleId,
           file: cause.file,
+          ...normalizeEvidenceLinesForNotification(cause.lines),
           message: formatEvidenceBlockingCause(cause),
           remediation: cause.remediation,
         })
@@ -204,6 +254,7 @@ export const toAuditSummaryEventFromAiGate = (params: {
           ruleId: violation.code.startsWith('skills.') ? violation.code : undefined,
           message: violation.message,
           remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+          ...extractStructuredLinesFromMessage(violation.message),
         })
       ),
     };
