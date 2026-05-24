@@ -34,16 +34,19 @@ const toFindingBlockingCause = (finding: SnapshotFinding): EvidenceBlockingCause
 
 const toViolationBlockingCause = (
   violation: CompatibilityViolation
-): EvidenceBlockingCause => ({
-  ruleId: violation.ruleId,
-  code: violation.code,
-  severity: resolveViolationSeverity(violation),
-  message: violation.message,
-  file: violation.file,
-  lines: violation.lines,
-  remediation: violation.expected_fix,
-  source: 'ai_gate.violations',
-});
+): EvidenceBlockingCause => {
+  const withStructuredRemediation = violation as CompatibilityViolation & { remediation?: string };
+  return {
+    ruleId: violation.ruleId,
+    code: violation.code,
+    severity: resolveViolationSeverity(violation),
+    message: violation.message,
+    file: violation.file,
+    lines: violation.lines,
+    remediation: violation.expected_fix ?? withStructuredRemediation.remediation,
+    source: 'ai_gate.violations',
+  };
+};
 
 const resolveViolationSeverity = (violation: CompatibilityViolation): string => {
   const withLegacySeverity = violation as CompatibilityViolation & { severity?: string };

@@ -369,6 +369,37 @@ test('toAuditSummaryEventFromEvidence conserva lineas estructuradas de snapshot 
   assert.deepEqual(event.blockingCauses?.[0]?.lines, [12, 18]);
 });
 
+test('toAuditSummaryEventFromEvidence usa violaciones AI Gate como fallback bloqueante accionable', () => {
+  const evidence = buildEvidence({
+    totalViolations: 1,
+    critical: 0,
+    high: 1,
+    findings: [],
+  });
+  evidence.ai_gate.violations = [
+    {
+      code: 'SKILLS_IOS_NO_FOREGROUND_COLOR',
+      severity: 'ERROR',
+      message: 'foregroundColor is not allowed.',
+      ruleId: 'skills.ios.no-foreground-color',
+      file: 'apps/ios/HomeView.swift',
+      lines: [22],
+      remediation: 'Usa tokens semánticos de diseño.',
+    },
+  ];
+
+  const event = toAuditSummaryEventFromEvidence(evidence);
+
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
+  }
+  assert.equal(event.blockingCauses?.[0]?.ruleId, 'skills.ios.no-foreground-color');
+  assert.equal(event.blockingCauses?.[0]?.file, 'apps/ios/HomeView.swift');
+  assert.deepEqual(event.blockingCauses?.[0]?.lines, [22]);
+  assert.equal(event.blockingCauses?.[0]?.remediation, 'Usa tokens semánticos de diseño.');
+});
+
 test('emitAuditSummaryNotificationFromAiGate emite notificación para PRE_WRITE', () => {
   const events: unknown[] = [];
   const result = emitAuditSummaryNotificationFromAiGate(
