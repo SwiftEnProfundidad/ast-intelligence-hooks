@@ -156,11 +156,13 @@ test('buildBlockedDialogPayload no muestra comandos npx largos en la ventana vis
 
   assert.match(payload.cause, /Regla: Dynamic Type/);
   assert.match(payload.cause, /Fichero: apps\/ios\/Presentation\/Views\/RuralGoWordmarkView\.swift:22/);
-  assert.match(payload.cause, /Falla: Dynamic Type - Font scaling automatico/);
-  assert.match(payload.cause, /Solución: Use semantic SwiftUI text styles/);
+  assert.match(payload.cause, /Falla: Dynamic Type: tamaño de fuente fijo sin escala dinámica/);
+  assert.match(payload.cause, /Solución: Usa estilos semánticos de SwiftUI/);
   assert.equal(payload.remediation, 'Corrige las violaciones listadas y vuelve a intentar el commit.');
   assert.doesNotMatch(payload.cause, /npx --yes --package/);
   assert.doesNotMatch(payload.remediation, /npx --yes --package/);
+  assert.doesNotMatch(payload.cause, /Use semantic SwiftUI/i);
+  assert.doesNotMatch(payload.cause, /Font scaling automatico/i);
 });
 
 test('buildBlockedDialogPayload explica BDD feature missing sin mostrar EVIDENCE_GATE_BLOCKED ambiguo', () => {

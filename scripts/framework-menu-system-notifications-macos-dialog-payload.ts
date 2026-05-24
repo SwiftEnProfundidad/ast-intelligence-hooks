@@ -73,6 +73,9 @@ const stripTechnicalFieldsFromMessage = (message: string): string => {
 const localizeDeveloperText = (value: string): string => {
   const normalized = normalizeNotificationText(value);
   const knownTexts: ReadonlyArray<[RegExp, string]> = [
+    [/Dynamic Type - Font scaling autom[aá]tico/iu, 'Dynamic Type: tamaño de fuente fijo sin escala dinámica.'],
+    [/Dynamic Type - fuentes escalables y layouts adaptativos/iu, 'Dynamic Type: fuente fija o layout no preparado para tamaños de texto del sistema.'],
+    [/Use semantic SwiftUI text styles such as \.headline\/\.body, Font\.TextStyle, or UIFontMetrics\/scaled metrics when a custom size is required\./iu, 'Usa estilos semánticos de SwiftUI como .headline o .body. Si necesitas un tamaño custom, escálalo con Font.TextStyle o UIFontMetrics.'],
     [/Disallow empty catch blocks in backend runtime code\./iu, 'Catch vacío en código backend runtime.'],
     [/Action handlers should reference methods, not contain inline logic/iu, 'El handler contiene lógica inline; debe llamar a un método o comando del view model.'],
     [/Ensure constant number of views per ForEach element/iu, 'Cada elemento de ForEach debe devolver una estructura de vistas estable.'],

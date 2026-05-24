@@ -134,6 +134,7 @@ const humanizeRuleId = (ruleId: string): string => {
     'no-wait-for-expectations': 'waitForExpectations en XCTest',
     'ios-test-quality': 'calidad de tests iOS',
     'dynamic-type-font-scaling-automatico': 'Dynamic Type',
+    'dynamic-type-font-scaling-automa-tico': 'Dynamic Type',
     'dynamic-type-fuentes-escalables-y-layouts-adaptativos': 'fuentes escalables y layouts adaptativos',
     'use-relative-layout-over-hard-coded-constants': 'layout relativo en vez de constantes fijas',
     'magic-numbers-usar-constantes-con-nombres': 'números mágicos sin constantes con nombre',
@@ -146,10 +147,15 @@ const humanizeRuleId = (ruleId: string): string => {
     .replace(/_/gu, '-');
   const parts = normalized.split('.').filter(Boolean);
   const leaf = parts.at(-1) ?? normalized;
-  if (knownRules[leaf]) {
-    return knownRules[leaf];
+  const compactLeaf = leaf.replace(/-+/gu, '-');
+  const accentlessLeaf = compactLeaf.normalize('NFD').replace(/[\u0300-\u036f]/gu, '');
+  if (knownRules[compactLeaf]) {
+    return knownRules[compactLeaf];
   }
-  return leaf
+  if (knownRules[accentlessLeaf]) {
+    return knownRules[accentlessLeaf];
+  }
+  return compactLeaf
     .replace(/-/gu, ' ')
     .replace(/\bios\b/giu, 'iOS')
     .replace(/\bui\b/giu, 'UI')
@@ -158,6 +164,21 @@ const humanizeRuleId = (ruleId: string): string => {
     .replace(/\bsdd\b/giu, 'SDD')
     .replace(/\bguard\b/giu, 'guard')
     .trim();
+};
+
+const localizeDeveloperText = (value: string): string => {
+  const normalized = normalizeNotificationText(value);
+  const knownTexts: ReadonlyArray<[RegExp, string]> = [
+    [/Dynamic Type - Font scaling autom[aá]tico/iu, 'Dynamic Type: tamaño de fuente fijo sin escala dinámica.'],
+    [/Dynamic Type - fuentes escalables y layouts adaptativos/iu, 'Dynamic Type: fuente fija o layout no preparado para tamaños de texto del sistema.'],
+    [/Use semantic SwiftUI text styles such as \.headline\/\.body, Font\.TextStyle, or UIFontMetrics\/scaled metrics when a custom size is required\./iu, 'Usa estilos semánticos de SwiftUI como .headline o .body. Si necesitas un tamaño custom, escálalo con Font.TextStyle o UIFontMetrics.'],
+  ];
+  for (const [pattern, replacement] of knownTexts) {
+    if (pattern.test(normalized)) {
+      return replacement;
+    }
+  }
+  return normalized;
 };
 
 const formatVisibleRule = (cause: BlockedCause): string => {
@@ -188,13 +209,13 @@ const stripTechnicalFieldsFromMessage = (message: string): string =>
 const formatCauseProblem = (cause: BlockedCause): string => {
   const messageField = extractMessageField(cause.message, 'message');
   if (messageField) {
-    return messageField;
+    return localizeDeveloperText(messageField);
   }
-  return stripTechnicalFieldsFromMessage(cause.message) || cause.code;
+  return localizeDeveloperText(stripTechnicalFieldsFromMessage(cause.message) || cause.code);
 };
 
 const formatCauseFix = (cause: BlockedCause): string =>
-  normalizeNotificationText(
+  localizeDeveloperText(
     cause.remediation ??
     'Corrige la violación indicada con regla, fichero y línea, y vuelve a intentar el commit.'
   );

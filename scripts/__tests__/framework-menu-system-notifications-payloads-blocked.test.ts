@@ -278,6 +278,36 @@ test('buildGateBlockedPayload muestra skill concreta aunque venga envuelta en EV
   assert.doesNotMatch(payload.message, /Corrige la violación indicada/);
 });
 
+test('buildGateBlockedPayload traduce Dynamic Type a lenguaje dev en banner', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          ruleId: 'ai_gate.repo_policy',
+          file: '.ai_evidence.json',
+          message:
+            'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.guideline.ios.dynamic-type-font-scaling-automa-tico severity=WARN code=SKILLS_SKILLS_IOS_GUIDELINE_IOS_DYNAMIC_TYPE_FONT_SCALING_AUTOMA_TICO file=apps/ios/Presentation/Views/OnboardingCarouselView.swift lines=50,163 message=Dynamic Type - Font scaling automático remediation=Use semantic SwiftUI text styles such as .headline/.body, Font.TextStyle, or UIFontMetrics/scaled metrics when a custom size is required.',
+          remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+        },
+      ],
+    },
+    'R_GO · '
+  );
+
+  assert.match(payload.subtitle ?? '', /Skill violada: OnboardingCarouselView\.swift:50,163/);
+  assert.match(payload.subtitle ?? '', /Dynamic Type/);
+  assert.match(payload.message, /Regla: Dynamic Type/);
+  assert.match(payload.message, /Falla: Dynamic Type: tamaño de fuente fijo sin escala dinámica/);
+  assert.match(payload.message, /Solución: Usa estilos semánticos de SwiftUI/);
+  assert.doesNotMatch(payload.message, /dynamic type font scaling automa tico/i);
+  assert.doesNotMatch(payload.message, /Use semantic SwiftUI/i);
+});
+
 test('buildGateBlockedPayload extrae fichero y mensaje del primer segmento cuando hay varias skills anidadas', () => {
   const payload = buildGateBlockedPayload(
     {
