@@ -89,7 +89,16 @@ const toPlatformMap = (
 ): Map<string, number> =>
   new Map((summary.platformAuditRows ?? []).map((row) => [row.platform, row.violations]));
 
-const buildConsumerRuntimeEvidenceDriftLines = (
+const formatSummaryFinding = (
+  finding: FrameworkMenuEvidenceSummary['topFindings'][number] | undefined
+): string => {
+  if (!finding) {
+    return 'none';
+  }
+  return `[${finding.severity}] ${finding.ruleId} -> ${finding.file}:${finding.line}`;
+};
+
+export const buildConsumerRuntimeEvidenceDriftLines = (
   gateSummary: FrameworkMenuEvidenceSummary,
   canonicalSummary: FrameworkMenuEvidenceSummary
 ): string[] => {
@@ -126,6 +135,18 @@ const buildConsumerRuntimeEvidenceDriftLines = (
     const evidenceValue = evidencePlatforms.get(platform) ?? 0;
     if (gateValue !== evidenceValue) {
       drifts.push(`platform.${platform} gate=${gateValue} evidence=${evidenceValue}`);
+    }
+  }
+
+  const topFindingCount = Math.max(
+    gateSummary.topFindings.length,
+    canonicalSummary.topFindings.length
+  );
+  for (let index = 0; index < topFindingCount; index += 1) {
+    const gateFinding = formatSummaryFinding(gateSummary.topFindings[index]);
+    const evidenceFinding = formatSummaryFinding(canonicalSummary.topFindings[index]);
+    if (gateFinding !== evidenceFinding) {
+      drifts.push(`topFinding.${index} gate=${gateFinding} evidence=${evidenceFinding}`);
     }
   }
 
