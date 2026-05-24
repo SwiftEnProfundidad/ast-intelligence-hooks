@@ -335,3 +335,23 @@ test('classifySkillsRules no degrada reglas Android de leaks de codigo a proceso
     'NO_ES_REGLA_DE_CODIGO'
   );
 });
+
+test('classifySkillsRules no exige detector AST para reglas Android de CI y pipelines', () => {
+  const summary = classifySkillsRules(buildLock([
+    {
+      id: 'skills.android.guideline.android.github-actions-gitlab-ci-pipelines',
+      description: 'GitHub Actions / GitLab CI pipelines',
+      severity: 'WARN',
+      platform: 'android',
+      sourceSkill: 'android-guidelines',
+      sourcePath: 'vendor/skills/android-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+  ]));
+
+  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, 1);
+  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
+});
