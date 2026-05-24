@@ -127,6 +127,19 @@ const extractStructuredLinesFromMessage = (
   return normalizeEvidenceLinesForNotification(raw);
 };
 
+const normalizeViolationLinesForNotification = (violation: {
+  line?: number;
+  lines?: ReadonlyArray<number>;
+  message: string;
+}): Pick<NotificationBlockingCause, 'line' | 'lines'> => {
+  const structuredLines = normalizeEvidenceLinesForNotification(
+    violation.lines && violation.lines.length > 0 ? violation.lines : violation.line
+  );
+  return structuredLines.line || structuredLines.lines
+    ? structuredLines
+    : extractStructuredLinesFromMessage(violation.message);
+};
+
 const extractFirstNestedSkillSegment = (message: string): string =>
   message
     .replace(/^.*?\bBlocking causes:\s*1\)\s*/isu, '')
@@ -251,10 +264,11 @@ export const toAuditSummaryEventFromAiGate = (params: {
       blockingCauses: params.aiGateResult.violations.map((violation) =>
         normalizeNotificationBlockingCause({
           code: violation.code,
-          ruleId: violation.code.startsWith('skills.') ? violation.code : undefined,
+          ruleId: violation.ruleId ?? (violation.code.startsWith('skills.') ? violation.code : undefined),
+          file: violation.file,
           message: violation.message,
-          remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
-          ...extractStructuredLinesFromMessage(violation.message),
+          remediation: violation.remediation ?? 'Corrige la violación indicada y vuelve a intentar el commit.',
+          ...normalizeViolationLinesForNotification(violation),
         })
       ),
     };

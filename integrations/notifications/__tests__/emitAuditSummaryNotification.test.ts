@@ -285,6 +285,40 @@ test('toAuditSummaryEventFromAiGate materializa lineas estructuradas de skill an
   assert.deepEqual(event.blockingCauses?.[0]?.lines, [42, 77]);
 });
 
+test('toAuditSummaryEventFromAiGate conserva causa estructurada producida por evaluateAiGate', () => {
+  const event = toAuditSummaryEventFromAiGate({
+    aiGateResult: {
+      violations: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          severity: 'ERROR',
+          message: 'Evidence AI gate status is BLOCKED.',
+          ruleId: 'skills.ios.guideline.ios.dynamic-type-font-scaling-automatico',
+          file: 'apps/ios/Presentation/Views/OnboardingCarouselView.swift',
+          lines: [42, 77],
+          remediation: 'Usa estilos semánticos de SwiftUI.',
+        },
+      ],
+    },
+    stage: 'PRE_WRITE',
+  });
+
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
+  }
+  assert.equal(
+    event.blockingCauses?.[0]?.ruleId,
+    'skills.ios.guideline.ios.dynamic-type-font-scaling-automatico'
+  );
+  assert.equal(
+    event.blockingCauses?.[0]?.file,
+    'apps/ios/Presentation/Views/OnboardingCarouselView.swift'
+  );
+  assert.deepEqual(event.blockingCauses?.[0]?.lines, [42, 77]);
+  assert.equal(event.blockingCauses?.[0]?.remediation, 'Usa estilos semánticos de SwiftUI.');
+});
+
 test('toAuditSummaryEventFromEvidence conserva lineas estructuradas de snapshot findings', () => {
   const evidence: Parameters<typeof toAuditSummaryEventFromEvidence>[0] = {
     version: '2.1',
