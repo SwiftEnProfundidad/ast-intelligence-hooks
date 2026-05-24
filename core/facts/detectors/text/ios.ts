@@ -1718,18 +1718,26 @@ export const collectSwiftSensitiveLoggingLines = (source: string): readonly numb
   return sortedUniqueLines(lines);
 };
 
-export const hasSwiftHardcodedSensitiveStringUsage = (source: string): boolean => {
-  return collectSwiftRegexLines(
-    source,
-    /\b(?:(?:private|fileprivate|internal|public|open|static|class|final|lazy)\s+)*(?:let|var)\s+(?=[A-Za-z_])[A-Za-z0-9_]*(?:token|secret|password|apikey|clientsecret|privatekey|sessionid)[A-Za-z0-9_]*\s*(?::\s*String\s*)?=\s*""/i
-  ).length > 0;
-};
+const swiftHardcodedSensitiveStringPattern =
+  /\b(?:(?:private|fileprivate|internal|public|open|static|class|final|lazy)\s+)*(?:let|var)\s+(?=[A-Za-z_])[A-Za-z0-9_]*(?:token|secret|password|apikey|clientsecret|privatekey|sessionid)[A-Za-z0-9_]*\s*(?::\s*String\s*)?=\s*"((?:\\.|[^"\\])*)"/i;
 
 export const collectSwiftHardcodedSensitiveStringLines = (source: string): readonly number[] => {
-  return collectSwiftRegexLines(
-    source,
-    /\b(?:(?:private|fileprivate|internal|public|open|static|class|final|lazy)\s+)*(?:let|var)\s+(?=[A-Za-z_])[A-Za-z0-9_]*(?:token|secret|password|apikey|clientsecret|privatekey|sessionid)[A-Za-z0-9_]*\s*(?::\s*String\s*)?=\s*""/i
-  );
+  const matches: number[] = [];
+
+  source.split(/\r?\n/).forEach((rawLine, index) => {
+    const line = rawLine.replace(/\/\/.*$/, '');
+    const match = swiftHardcodedSensitiveStringPattern.exec(line);
+    const literalValue = match?.[1] ?? '';
+    if (literalValue.length > 0) {
+      matches.push(index + 1);
+    }
+  });
+
+  return matches;
+};
+
+export const hasSwiftHardcodedSensitiveStringUsage = (source: string): boolean => {
+  return collectSwiftHardcodedSensitiveStringLines(source).length > 0;
 };
 
 export const hasSwiftUnlocalizedDateFormatterUsage = (source: string): boolean => {

@@ -1980,11 +1980,20 @@ final class Credentials {
   // let apiKey = "sk_live_123456789"
 }
 `;
+  const emptyFormDefaults = `
+@MainActor
+public final class BuyerAppViewModel {
+  public var authEmail: String = ""
+  public var authPassword: String = ""
+}
+`;
 
   assert.equal(hasSwiftHardcodedSensitiveStringUsage(source), true);
   assert.deepEqual(collectSwiftHardcodedSensitiveStringLines(source), [3, 4]);
   assert.equal(hasSwiftHardcodedSensitiveStringUsage(safe), false);
   assert.deepEqual(collectSwiftHardcodedSensitiveStringLines(safe), []);
+  assert.equal(hasSwiftHardcodedSensitiveStringUsage(emptyFormDefaults), false);
+  assert.deepEqual(collectSwiftHardcodedSensitiveStringLines(emptyFormDefaults), []);
 });
 
 test('hasSwiftUnlocalizedDateFormatterUsage detecta dateFormat fijo sin locale explicito', () => {
