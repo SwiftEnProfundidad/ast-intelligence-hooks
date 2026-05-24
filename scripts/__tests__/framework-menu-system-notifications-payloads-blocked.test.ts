@@ -338,3 +338,28 @@ test('buildGateBlockedPayload extrae fichero y mensaje del primer segmento cuand
   assert.doesNotMatch(payload.message, /severity=CRITICAL/);
   assert.doesNotMatch(payload.message, /npx --yes --package/);
 });
+
+test('buildGateBlockedPayload usa line estructurado aunque el mensaje no incluya lines=', () => {
+  const payload = buildGateBlockedPayload(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'SKILLS_IOS_EXAMPLE',
+          ruleId: 'skills.ios.example-rule',
+          file: 'apps/ios/Example.swift',
+          line: 42,
+          message: 'Example rule failed.',
+          remediation: 'Corrige Example.swift.',
+        },
+      ],
+    },
+    'R_GO · '
+  );
+
+  assert.match(payload.subtitle ?? '', /Example\.swift:42/);
+  assert.match(payload.message, /Fichero: Example\.swift:42/);
+});

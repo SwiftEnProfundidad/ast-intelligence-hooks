@@ -137,6 +137,17 @@ const formatLocation = (cause: NonNullable<Extract<PumukiCriticalNotificationEve
   if (!cause.file) {
     return 'sin fichero';
   }
+  if (typeof cause.line === 'number' && Number.isFinite(cause.line) && cause.line > 0) {
+    return `${cause.file}:${Math.floor(cause.line)}`;
+  }
+  if (Array.isArray(cause.lines)) {
+    const lines = cause.lines
+      .filter((line) => Number.isFinite(line) && line > 0)
+      .map((line) => Math.floor(line));
+    if (lines.length > 0) {
+      return `${cause.file}:${lines.join(',')}`;
+    }
+  }
   const line = extractLineFromCauseMessage(cause.message);
   return line ? `${cause.file}:${line}` : cause.file;
 };

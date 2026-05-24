@@ -74,6 +74,32 @@ test('buildBlockedDialogPayload muestra cada causa bloqueante con regla, archivo
   assert.doesNotMatch(payload.cause, /lines=/);
 });
 
+test('buildBlockedDialogPayload usa line estructurado aunque el mensaje no incluya lines=', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'SKILLS_IOS_EXAMPLE',
+          ruleId: 'skills.ios.example-rule',
+          file: 'apps/ios/Example.swift',
+          line: 42,
+          message: 'Example rule failed.',
+          remediation: 'Corrige Example.swift.',
+        },
+      ],
+    }),
+    repoRoot: '/tmp/R_GO',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'R_GO',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /Fichero: apps\/ios\/Example\.swift:42/);
+});
+
 test('buildBlockedDialogPayload explica tracking bloqueado con línea accionable', () => {
   const payload = buildBlockedDialogPayload({
     event: blockedEvent({

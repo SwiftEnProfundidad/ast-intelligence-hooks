@@ -118,6 +118,17 @@ const formatCauseLocation = (cause: BlockedCause): string => {
     return 'sin fichero';
   }
   const baseFile = cause.file.split('/').filter(Boolean).pop() ?? cause.file;
+  if (typeof cause.line === 'number' && Number.isFinite(cause.line) && cause.line > 0) {
+    return `${baseFile}:${Math.floor(cause.line)}`;
+  }
+  if (Array.isArray(cause.lines)) {
+    const lines = cause.lines
+      .filter((line) => Number.isFinite(line) && line > 0)
+      .map((line) => Math.floor(line));
+    if (lines.length > 0) {
+      return `${baseFile}:${lines.join(',')}`;
+    }
+  }
   const lineMatch = cause.message.match(/\blines?=([0-9][0-9,\-\s]*)\b/i);
   if (!lineMatch?.[1]) {
     return baseFile;
