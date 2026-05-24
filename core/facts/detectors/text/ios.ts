@@ -660,24 +660,99 @@ export const collectSwiftNonLazyScrollForEachLines = (source: string): readonly 
   ]);
 };
 
-export const hasSwiftUiForEachConditionalViewCountUsage = (source: string): boolean => {
-  const swiftSource = sanitizeSwiftSourceForMultilineRegex(source);
-  const conditionalForEachPattern =
-    /\bForEach\s*\([^)]*\)\s*\{[\s\S]{0,1600}\b(?:if|switch)\b[\s\S]{0,1600}\}/;
+const findMatchingSwiftParen = (source: string, openParenIndex: number): number => {
+  let depth = 0;
+  for (let index = openParenIndex; index < source.length; index += 1) {
+    const current = source[index];
+    if (current === '(') {
+      depth += 1;
+    } else if (current === ')') {
+      depth -= 1;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+  return -1;
+};
 
-  return conditionalForEachPattern.test(swiftSource);
+const getLineNumberAtIndex = (source: string, targetIndex: number): number => {
+  let lineNumber = 1;
+  for (let index = 0; index < targetIndex && index < source.length; index += 1) {
+    if (source[index] === '\n') {
+      lineNumber += 1;
+    }
+  }
+  return lineNumber;
+};
+
+const collectSwiftUiForEachDirectConditionalLines = (source: string): readonly number[] => {
+  const sanitized = sanitizeSwiftSourceForMultilineRegex(source);
+  const lines: number[] = [];
+  const forEachPattern = /\bForEach\s*\(/g;
+
+  for (const match of sanitized.matchAll(forEachPattern)) {
+    const matchIndex = match.index ?? 0;
+    const openParenIndex = sanitized.indexOf('(', matchIndex);
+    if (openParenIndex < 0) {
+      continue;
+    }
+
+    const closeParenIndex = findMatchingSwiftParen(sanitized, openParenIndex);
+    if (closeParenIndex < 0) {
+      continue;
+    }
+
+    const openBraceIndex = sanitized.indexOf('{', closeParenIndex);
+    if (openBraceIndex < 0) {
+      continue;
+    }
+
+    const closeBraceIndex = findMatchingSwiftBrace(sanitized, openBraceIndex);
+    if (closeBraceIndex < 0) {
+      continue;
+    }
+
+    const body = sanitized.slice(openBraceIndex + 1, closeBraceIndex);
+    let depth = 0;
+    let hasDirectConditional = false;
+    const conditionalPattern = /\b(?:if|switch)\b/g;
+
+    for (const conditionalMatch of body.matchAll(conditionalPattern)) {
+      const conditionalIndex = conditionalMatch.index ?? 0;
+      for (let index = 0; index < conditionalIndex; index += 1) {
+        const current = body[index];
+        if (current === '{') {
+          depth += 1;
+        } else if (current === '}') {
+          depth = Math.max(0, depth - 1);
+        }
+      }
+      if (depth === 0) {
+        lines.push(getLineNumberAtIndex(sanitized, matchIndex));
+        lines.push(getLineNumberAtIndex(sanitized, openBraceIndex + 1 + conditionalIndex));
+        hasDirectConditional = true;
+        break;
+      }
+      depth = 0;
+    }
+
+    if (!hasDirectConditional) {
+      continue;
+    }
+  }
+
+  return sortedUniqueLines(lines);
+};
+
+export const hasSwiftUiForEachConditionalViewCountUsage = (source: string): boolean => {
+  return collectSwiftUiForEachDirectConditionalLines(source).length > 0;
 };
 
 export const collectSwiftUiForEachConditionalViewCountLines = (
   source: string
 ): readonly number[] => {
-  if (!hasSwiftUiForEachConditionalViewCountUsage(source)) {
-    return [];
-  }
-  return sortedUniqueLines([
-    ...collectSwiftRegexLines(source, /\bForEach\s*\(/),
-    ...collectSwiftRegexLines(source, /\b(?:if|switch)\b/),
-  ]);
+  return collectSwiftUiForEachDirectConditionalLines(source);
 };
 
 export const hasSwiftViewBodyObjectCreationUsage = (source: string): boolean => {

@@ -1129,6 +1129,53 @@ struct FeedView: View {
   assert.equal(hasSwiftUiForEachConditionalViewCountUsage(safe), false);
 });
 
+test('hasSwiftUiForEachConditionalViewCountUsage preserva filas ForEach extraidas con branching interno', () => {
+  const source = `
+struct OnboardingCarouselView: View {
+  let pages: [OnboardingPage]
+  let indicators: [OnboardingIndicator]
+
+  var body: some View {
+    LazyVStack {
+      ForEach(pages) { page in
+        OnboardingPageView(page: page)
+      }
+      LazyHStack {
+        ForEach(indicators) { indicator in
+          OnboardingPageIndicatorView(indicator: indicator)
+        }
+      }
+    }
+  }
+}
+
+private struct OnboardingPageView: View {
+  let page: OnboardingPage
+
+  var body: some View {
+    switch page.kind {
+    case .hero:
+      OnboardingHeroStepView(page: page)
+    case .feature:
+      OnboardingFeatureStepView(page: page)
+    }
+  }
+}
+
+private struct OnboardingPageIndicatorView: View {
+  let indicator: OnboardingIndicator
+
+  var body: some View {
+    Capsule()
+      .fill(indicator.isSelected ? Color.primary : Color.secondary)
+  }
+}
+`;
+
+  assert.equal(hasSwiftUiForEachConditionalViewCountUsage(source), false);
+  assert.deepEqual(collectSwiftUiForEachConditionalViewCountLines(source), []);
+});
+
 test('hasSwiftViewBodyObjectCreationUsage detecta formatter creado en body y preserva dependencia externa', () => {
   const source = `
 struct PriceView: View {
@@ -2781,7 +2828,7 @@ struct StoresView: View {
   assert.deepEqual(collectSwiftNonLazyScrollForEachLines(source), [4, 6, 11]);
   assert.deepEqual(collectSwiftForEachIndicesLines(source), [6]);
   assert.deepEqual(collectSwiftForEachSelfIdentityLines(source), [6]);
-  assert.deepEqual(collectSwiftUiForEachConditionalViewCountLines(source), [6, 7, 11, 14, 20]);
+  assert.deepEqual(collectSwiftUiForEachConditionalViewCountLines(source), [6, 7]);
   assert.deepEqual(collectSwiftInlineForEachTransformLines(source), [11]);
   assert.deepEqual(collectSwiftUiConditionalSameViewIdentityLines(source), [7, 14, 20]);
   assert.deepEqual(collectSwiftUiInlineActionLogicLines(source), [19]);
