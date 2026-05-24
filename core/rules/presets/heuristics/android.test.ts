@@ -3,7 +3,7 @@ import test from 'node:test';
 import { androidRules } from './android';
 
 test('androidRules define reglas heurísticas locked para plataforma android', () => {
-  assert.equal(androidRules.length, 41);
+  assert.equal(androidRules.length, 42);
 
   const ids = androidRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -15,6 +15,7 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
     'heuristics.android.flow.sharedflow-used-as-state.ast',
     'heuristics.android.security.legacy-fingerprint-api.ast',
     'heuristics.android.architecture.custom-singleton-object.ast',
+    'heuristics.android.di.hilt-injection-without-entrypoint.ast',
     'heuristics.android.concurrency.asynctask.ast',
     'heuristics.android.architecture.god-activity.ast',
     'heuristics.android.startup.application-oncreate-heavy-init.ast',
@@ -92,6 +93,10 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
   assert.equal(
     byId.get('heuristics.android.architecture.custom-singleton-object.ast')?.then.code,
     'HEURISTICS_ANDROID_ARCHITECTURE_CUSTOM_SINGLETON_OBJECT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.di.hilt-injection-without-entrypoint.ast')?.then.code,
+    'HEURISTICS_ANDROID_DI_HILT_INJECTION_WITHOUT_ENTRYPOINT_AST'
   );
   assert.equal(
     byId.get('heuristics.android.concurrency.asynctask.ast')?.then.code,

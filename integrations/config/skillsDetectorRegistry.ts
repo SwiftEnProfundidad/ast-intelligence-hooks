@@ -1443,6 +1443,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'android.architecture.custom-singleton-object',
     ['heuristics.android.architecture.custom-singleton-object.ast']
   ),
+  'skills.android.guideline.android.androidentrypoint-activity-fragment-viewmodel':
+    heuristicDetector('android.di.hilt-injection-without-entrypoint', [
+      'heuristics.android.di.hilt-injection-without-entrypoint.ast',
+    ]),
   'skills.android.guideline.android.statein-convertir-cold-flow-a-hot-stateflow': heuristicDetector(
     'android.flow.viewmodel-flow-without-statein',
     ['heuristics.android.flow.viewmodel-flow-without-statein.ast']

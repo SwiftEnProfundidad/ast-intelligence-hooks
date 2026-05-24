@@ -8,6 +8,7 @@ import {
   findKotlinPresentationSrpMatch,
   hasAndroidAsyncTaskUsage,
   hasAndroidCustomSingletonObjectUsage,
+  hasAndroidHiltInjectionWithoutEntryPointUsage,
   hasAndroidLegacyFingerprintApiUsage,
   hasKotlinCoroutineTryCatchUsage,
   hasKotlinDispatcherMainBoundaryLeakUsage,
@@ -1305,4 +1306,29 @@ object CheckoutModule {
 
   assert.equal(hasAndroidCustomSingletonObjectUsage(singletonSource), true);
   assert.equal(hasAndroidCustomSingletonObjectUsage(safeSource), false);
+});
+
+test('hasAndroidHiltInjectionWithoutEntryPointUsage detecta Activity o Fragment con inyección Hilt sin AndroidEntryPoint', () => {
+  const missingEntryPoint = `
+class CheckoutActivity : AppCompatActivity() {
+  @Inject lateinit var analytics: CheckoutAnalytics
+}
+
+class StoresFragment : Fragment() {
+  @Inject lateinit var repository: StoresRepository
+}
+`;
+  const validEntryPoint = `
+@AndroidEntryPoint
+class CheckoutActivity : AppCompatActivity() {
+  @Inject lateinit var analytics: CheckoutAnalytics
+}
+
+class CheckoutViewModel @Inject constructor(
+  private val repository: CheckoutRepository
+) : ViewModel()
+`;
+
+  assert.equal(hasAndroidHiltInjectionWithoutEntryPointUsage(missingEntryPoint), true);
+  assert.equal(hasAndroidHiltInjectionWithoutEntryPointUsage(validEntryPoint), false);
 });

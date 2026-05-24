@@ -1594,6 +1594,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.androidentrypoint-activity-fragment-viewmodel'
+    ),
+    ['heuristics.android.di.hilt-injection-without-entrypoint.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.android.guideline.android.viewmodelscope-scope-de-viewmodel-cancelado-automa-ticamente'
     ),
     ['heuristics.android.coroutines.manual-scope-in-viewmodel.ast']

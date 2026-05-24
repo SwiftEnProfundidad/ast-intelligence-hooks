@@ -156,6 +156,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.di.hilt-injection-without-entrypoint.ast',
+    description:
+      'Detects Activity or Fragment Hilt field injection without @AndroidEntryPoint.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.di.hilt-injection-without-entrypoint.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Hilt field injection in Activity/Fragment without @AndroidEntryPoint.',
+      code: 'HEURISTICS_ANDROID_DI_HILT_INJECTION_WITHOUT_ENTRYPOINT_AST',
+    },
+  },
+  {
     id: 'heuristics.android.concurrency.asynctask.ast',
     description:
       'Detects deprecated AsyncTask usage in Android production code where coroutines should be used.',

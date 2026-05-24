@@ -2689,3 +2689,9 @@ Evidencia:
 - [✅] `skills.android.guideline.android.no-singleton-usar-inyeccio-n-de-dependencias-hilt-dagger` y `skills.android.guideline.android.singletons-everywhere-usar-hilt-di` dejan de estar en `REQUIERE_ESTUDIO` y quedan enlazadas a `heuristics.android.architecture.custom-singleton-object.ast`.
 - [✅] Criterio de cierre: detectar singletons Kotlin propios de arquitectura (`object *Repository`, `*Service`, `*Manager`, `*Client`, `*Store`, `*DataSource`, etc.) en production Android y exigir Hilt/Dagger; preservar objetos seguros de rutas/constantes/UI y módulos Hilt.
 - [✅] Evidencia: RED falló por detector/regla/mapping inexistentes; GREEN integrado pasó `151/151`; `typecheck`, `skills:compile`, `skills:lock:check`, `skills:classify`, `git diff --check` y `validation:tracking-single-active` pasaron. Clasificación: `AST_IMPLEMENTED=360`, `REQUIERE_ESTUDIO=347`.
+
+### 2026-05-24 - PUMUKI-GAP-144 / PUMUKI-INC-145 - Android Hilt entrypoint detector
+
+- [✅] `skills.android.guideline.android.androidentrypoint-activity-fragment-viewmodel` deja de estar en `REQUIERE_ESTUDIO` y queda enlazada a `heuristics.android.di.hilt-injection-without-entrypoint.ast`.
+- [✅] Criterio de cierre: detectar `Activity`/`Fragment` Android con `@Inject lateinit var` sin `@AndroidEntryPoint`; no inferir globalmente que toda Activity/Fragment deba tener Hilt si no usa inyección de campo.
+- [✅] Evidencia: RED falló por detector/regla/mapping inexistentes; GREEN integrado pasó `153/153`; `typecheck`, `skills:compile`, `skills:lock:check`, `skills:classify`, `git diff --check` y `validation:tracking-single-active` pasaron. Clasificación: `AST_IMPLEMENTED=361`, `REQUIERE_ESTUDIO=346`.

@@ -3098,3 +3098,35 @@ test('detects Android custom singleton objects with line metadata', () => {
   assert.deepEqual(finding?.lines, [3]);
   assert.match(finding?.expected_fix ?? '', /Hilt|inyecci/i);
 });
+
+test('detects Android Hilt injection without AndroidEntryPoint with line metadata', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/checkout/CheckoutActivity.kt',
+        [
+          'import javax.inject.Inject',
+          '',
+          'class CheckoutActivity : AppCompatActivity() {',
+          '  @Inject lateinit var analytics: CheckoutAnalytics',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), [
+    'heuristics.android.di.hilt-injection-without-entrypoint.ast',
+  ]);
+  const finding = findings.find(
+    (candidate) =>
+      candidate.ruleId === 'heuristics.android.di.hilt-injection-without-entrypoint.ast'
+  );
+  assert.deepEqual(finding?.lines, [3, 4]);
+  assert.match(finding?.expected_fix ?? '', /@AndroidEntryPoint/);
+});

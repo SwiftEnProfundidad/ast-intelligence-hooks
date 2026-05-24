@@ -175,6 +175,51 @@ export const collectAndroidCustomSingletonObjectLines = (source: string): readon
 export const hasAndroidCustomSingletonObjectUsage = (source: string): boolean =>
   collectAndroidCustomSingletonObjectLines(source).length > 0;
 
+export const collectAndroidHiltInjectionWithoutEntryPointLines = (
+  source: string
+): readonly number[] => {
+  const lines = source.split(/\r?\n/);
+  const matches: number[] = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const sanitized = stripKotlinLineForSemanticScan(lines[index] ?? '');
+    const classMatch = sanitized.match(
+      /^\s*(?:class|open\s+class)\s+([A-Za-z_][A-Za-z0-9_]*)\b[^{]*(?:Activity|Fragment)\s*\(/
+    );
+    if (!classMatch) {
+      continue;
+    }
+
+    const annotationContext = lines
+      .slice(Math.max(0, index - 4), index)
+      .map((line) => stripKotlinLineForSemanticScan(line))
+      .join('\n');
+    if (/@AndroidEntryPoint\b/.test(annotationContext)) {
+      continue;
+    }
+
+    const classStartLine = index + 1;
+    let braceDepth =
+      countTokenOccurrences(sanitized, '{') - countTokenOccurrences(sanitized, '}');
+    for (let cursor = index + 1; cursor < lines.length; cursor += 1) {
+      const candidate = stripKotlinLineForSemanticScan(lines[cursor] ?? '');
+      if (/@Inject\b\s+lateinit\s+var\b/.test(candidate)) {
+        matches.push(classStartLine, cursor + 1);
+      }
+      braceDepth += countTokenOccurrences(candidate, '{');
+      braceDepth -= countTokenOccurrences(candidate, '}');
+      if (braceDepth <= 0) {
+        break;
+      }
+    }
+  }
+
+  return sortedUniqueLines(matches);
+};
+
+export const hasAndroidHiltInjectionWithoutEntryPointUsage = (source: string): boolean =>
+  collectAndroidHiltInjectionWithoutEntryPointLines(source).length > 0;
+
 const countTokenOccurrences = (line: string, token: string): number => {
   return line.split(token).length - 1;
 };
