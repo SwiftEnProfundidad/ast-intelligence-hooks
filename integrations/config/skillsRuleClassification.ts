@@ -53,6 +53,16 @@ const NON_CODE_RULE_PATTERNS: ReadonlyArray<RegExp> = [
   /\bdocumentacion\b/,
   /\breadme\b/,
   /\bci\/cd\b/,
+  /\bcoverage\b/,
+  /\bfast tests?\b/,
+  /\bunitarios\b/,
+  /\binstruments\b/,
+  /\btime profiler\b/,
+  /\ballocations\b/,
+  /\bleaks\b/,
+  /\btestflight\b/,
+  /\bfastlane\b/,
+  /\bdeployments?\b/,
 ];
 
 const CODE_RULE_WITH_DIRECT_DETECTOR_PATTERNS: ReadonlyArray<RegExp> = [

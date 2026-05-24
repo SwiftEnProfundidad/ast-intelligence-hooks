@@ -126,3 +126,86 @@ test('classifySkillsRules separa AST, detector pendiente, estudio y no codigo', 
     'NO_ES_REGLA_DE_CODIGO'
   );
 });
+
+test('classifySkillsRules no exige detector AST para reglas iOS de proceso y validacion operativa', () => {
+  const summary = classifySkillsRules(buildLock([
+    {
+      id: 'skills.ios.guideline.ios.coverage-80-objetivo-95-en-lo-gica-cri-tica',
+      description: 'Coverage 80%, objetivo 95% en lógica crítica',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-guidelines',
+      sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios.fast-tests-10ms-unitarios',
+      description: 'Fast tests <10ms unitarios',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-guidelines',
+      sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios.instruments-time-profiler-allocations-leaks',
+      description: 'Instruments Time Profiler, Allocations, Leaks',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-guidelines',
+      sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios.testflight-beta-distribution',
+      description: 'TestFlight beta distribution',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-guidelines',
+      sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios.fastlane-automatizacio-n-de-builds-tests-deployments',
+      description: 'Fastlane automatización de builds, tests y deployments',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-guidelines',
+      sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+  ]));
+
+  assert.equal(summary.total, 5);
+  assert.deepEqual(summary.byStatus, {
+    AST_IMPLEMENTED: 0,
+    IMPLEMENTAR_DETECTOR: 0,
+    REQUIERE_ESTUDIO: 0,
+    NO_ES_REGLA_DE_CODIGO: 5,
+  });
+  assert.deepEqual(
+    summary.rules.map((rule) => rule.status),
+    [
+      'NO_ES_REGLA_DE_CODIGO',
+      'NO_ES_REGLA_DE_CODIGO',
+      'NO_ES_REGLA_DE_CODIGO',
+      'NO_ES_REGLA_DE_CODIGO',
+      'NO_ES_REGLA_DE_CODIGO',
+    ]
+  );
+});
