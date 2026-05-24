@@ -1584,6 +1584,16 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.no-singleton-usar-inyeccio-n-de-dependencias-hilt-dagger'
+    ),
+    ['heuristics.android.architecture.custom-singleton-object.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.android.guideline.android.singletons-everywhere-usar-hilt-di'),
+    ['heuristics.android.architecture.custom-singleton-object.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.android.guideline.android.viewmodelscope-scope-de-viewmodel-cancelado-automa-ticamente'
     ),
     ['heuristics.android.coroutines.manual-scope-in-viewmodel.ast']

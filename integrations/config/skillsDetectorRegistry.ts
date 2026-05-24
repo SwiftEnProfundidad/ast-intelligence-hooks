@@ -1435,6 +1435,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'android.security.biometric-prompt',
     ['heuristics.android.security.legacy-fingerprint-api.ast']
   ),
+  'skills.android.guideline.android.no-singleton-usar-inyeccio-n-de-dependencias-hilt-dagger':
+    heuristicDetector('android.architecture.custom-singleton-object', [
+      'heuristics.android.architecture.custom-singleton-object.ast',
+    ]),
+  'skills.android.guideline.android.singletons-everywhere-usar-hilt-di': heuristicDetector(
+    'android.architecture.custom-singleton-object',
+    ['heuristics.android.architecture.custom-singleton-object.ast']
+  ),
   'skills.android.guideline.android.statein-convertir-cold-flow-a-hot-stateflow': heuristicDetector(
     'android.flow.viewmodel-flow-without-statein',
     ['heuristics.android.flow.viewmodel-flow-without-statein.ast']

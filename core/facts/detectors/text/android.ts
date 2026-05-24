@@ -130,6 +130,51 @@ const sortedUniqueLines = (lines: ReadonlyArray<number>): readonly number[] => {
     .sort((left, right) => left - right);
 };
 
+const androidCustomSingletonObjectNamePattern =
+  /(?:Repository|Service|Manager|Client|Store|DataSource|Gateway|Controller|Coordinator)$/;
+
+const androidSafeObjectNamePattern =
+  /(?:Route|Routes|Screen|Screens|Destination|Destinations|Module|Modules|Constants|Config|Keys|Theme|Colors|Typography)$/;
+
+const isAndroidHiltModuleObjectContext = (
+  lines: readonly string[],
+  index: number
+): boolean => {
+  const context = lines
+    .slice(Math.max(0, index - 4), index)
+    .map((line) => stripKotlinLineForSemanticScan(line))
+    .join('\n');
+  return /@(?:Module|InstallIn|Provides|Binds)\b/.test(context);
+};
+
+export const collectAndroidCustomSingletonObjectLines = (source: string): readonly number[] => {
+  const lines = source.split(/\r?\n/);
+  const matches: number[] = [];
+
+  lines.forEach((line, index) => {
+    const sanitized = stripKotlinLineForSemanticScan(line);
+    if (sanitized.trimStart().startsWith('import ')) {
+      return;
+    }
+    const objectMatch = sanitized.match(/^\s*object\s+([A-Za-z_][A-Za-z0-9_]*)\b/);
+    const objectName = objectMatch?.[1];
+    if (!objectName) {
+      return;
+    }
+    if (androidSafeObjectNamePattern.test(objectName) || isAndroidHiltModuleObjectContext(lines, index)) {
+      return;
+    }
+    if (androidCustomSingletonObjectNamePattern.test(objectName)) {
+      matches.push(index + 1);
+    }
+  });
+
+  return sortedUniqueLines(matches);
+};
+
+export const hasAndroidCustomSingletonObjectUsage = (source: string): boolean =>
+  collectAndroidCustomSingletonObjectLines(source).length > 0;
+
 const countTokenOccurrences = (line: string, token: string): number => {
   return line.split(token).length - 1;
 };

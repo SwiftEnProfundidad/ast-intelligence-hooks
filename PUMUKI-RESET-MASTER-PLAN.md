@@ -2683,3 +2683,9 @@ Evidencia:
 - [✅] `skills.android.guideline.android.biometric-auth-biometricprompt-api` deja de estar en `REQUIERE_ESTUDIO` y queda enlazada a `heuristics.android.security.legacy-fingerprint-api.ast`.
 - [✅] Criterio de cierre: detectar uso productivo de `FingerprintManager` / `FingerprintManagerCompat` en Android y exigir migración a `androidx.biometric.BiometricPrompt`; no inferir ausencia global de biometría.
 - [✅] Evidencia: RED falló por detector inexistente; GREEN focal `android.test.ts --test-name-pattern "LegacyFingerprint|BiometricPrompt"` pasó `73/73`; suite integrada extracción/reglas/registry pasó `154/154`; `typecheck`, `skills:compile`, `skills:lock:check`, `skills:classify`, `git diff --check` y `validation:tracking-single-active` pasaron.
+
+### 2026-05-24 - PUMUKI-GAP-144 / PUMUKI-INC-145 - Android custom singleton object detector
+
+- [✅] `skills.android.guideline.android.no-singleton-usar-inyeccio-n-de-dependencias-hilt-dagger` y `skills.android.guideline.android.singletons-everywhere-usar-hilt-di` dejan de estar en `REQUIERE_ESTUDIO` y quedan enlazadas a `heuristics.android.architecture.custom-singleton-object.ast`.
+- [✅] Criterio de cierre: detectar singletons Kotlin propios de arquitectura (`object *Repository`, `*Service`, `*Manager`, `*Client`, `*Store`, `*DataSource`, etc.) en production Android y exigir Hilt/Dagger; preservar objetos seguros de rutas/constantes/UI y módulos Hilt.
+- [✅] Evidencia: RED falló por detector/regla/mapping inexistentes; GREEN integrado pasó `151/151`; `typecheck`, `skills:compile`, `skills:lock:check`, `skills:classify`, `git diff --check` y `validation:tracking-single-active` pasaron. Clasificación: `AST_IMPLEMENTED=360`, `REQUIERE_ESTUDIO=347`.

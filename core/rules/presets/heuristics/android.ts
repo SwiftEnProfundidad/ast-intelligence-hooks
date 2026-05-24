@@ -136,6 +136,26 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.architecture.custom-singleton-object.ast',
+    description:
+      'Detects custom Kotlin object singletons in Android production code where Hilt/Dagger dependency injection is expected.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.architecture.custom-singleton-object.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a custom Kotlin object singleton in Android production code; use Hilt/Dagger dependency injection.',
+      code: 'HEURISTICS_ANDROID_ARCHITECTURE_CUSTOM_SINGLETON_OBJECT_AST',
+    },
+  },
+  {
     id: 'heuristics.android.concurrency.asynctask.ast',
     description:
       'Detects deprecated AsyncTask usage in Android production code where coroutines should be used.',

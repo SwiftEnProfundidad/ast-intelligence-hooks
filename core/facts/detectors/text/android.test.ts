@@ -7,6 +7,7 @@ import {
   findKotlinOpenClosedWhenMatch,
   findKotlinPresentationSrpMatch,
   hasAndroidAsyncTaskUsage,
+  hasAndroidCustomSingletonObjectUsage,
   hasAndroidLegacyFingerprintApiUsage,
   hasKotlinCoroutineTryCatchUsage,
   hasKotlinDispatcherMainBoundaryLeakUsage,
@@ -1277,4 +1278,31 @@ val sample = "FingerprintManagerCompat"
   assert.equal(hasAndroidLegacyFingerprintApiUsage(legacyManager), true);
   assert.equal(hasAndroidLegacyFingerprintApiUsage(legacyCompat), true);
   assert.equal(hasAndroidLegacyFingerprintApiUsage(modern), false);
+});
+
+test('hasAndroidCustomSingletonObjectUsage detecta singletons Kotlin propios y preserva objetos seguros', () => {
+  const singletonSource = `
+object CheckoutRepository {
+  fun loadCheckout() = Unit
+}
+
+object SessionManager {
+  fun clear() = Unit
+}
+`;
+  const safeSource = `
+object CheckoutRoute {
+  const val PATH = "checkout"
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+object CheckoutModule {
+  @Provides
+  fun provideRepository(): CheckoutRepository = CheckoutRepository()
+}
+`;
+
+  assert.equal(hasAndroidCustomSingletonObjectUsage(singletonSource), true);
+  assert.equal(hasAndroidCustomSingletonObjectUsage(safeSource), false);
 });

@@ -3066,3 +3066,35 @@ test('detects Android legacy FingerprintManager biometric API with line metadata
   assert.ok(finding);
   assert.deepEqual(finding.lines, [1, 3, 4]);
 });
+
+test('detects Android custom singleton objects with line metadata', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/checkout/CheckoutRepository.kt',
+        [
+          'package com.acme.checkout',
+          '',
+          'object CheckoutRepository {',
+          '  fun loadCheckout() = Unit',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), [
+    'heuristics.android.architecture.custom-singleton-object.ast',
+  ]);
+  const finding = findings.find(
+    (candidate) =>
+      candidate.ruleId === 'heuristics.android.architecture.custom-singleton-object.ast'
+  );
+  assert.deepEqual(finding?.lines, [3]);
+  assert.match(finding?.expected_fix ?? '', /Hilt|inyecci/i);
+});
