@@ -98,6 +98,18 @@ const formatSummaryFinding = (
   return `[${finding.severity}] ${finding.ruleId} -> ${finding.file}:${finding.line}`;
 };
 
+const normalizeBlockedCauseLine = (cause: { line?: number; lines?: ReadonlyArray<number> }): number => {
+  if (typeof cause.line === 'number' && Number.isFinite(cause.line) && cause.line > 0) {
+    return Math.floor(cause.line);
+  }
+  const lines = Array.isArray(cause.lines)
+    ? cause.lines
+      .filter((line) => Number.isFinite(line) && line > 0)
+      .map((line) => Math.floor(line))
+    : [];
+  return lines.length > 0 ? Math.min(...lines) : 1;
+};
+
 export const buildConsumerRuntimeEvidenceDriftLines = (
   gateSummary: FrameworkMenuEvidenceSummary,
   canonicalSummary: FrameworkMenuEvidenceSummary
@@ -194,7 +206,7 @@ export const buildConsumerRuntimeBlockedSummary = (
           severity: 'HIGH' as const,
           ruleId: cause.ruleId ?? cause.code,
           file: cause.file ?? 'PROJECT_ROOT',
-          line: 1,
+          line: normalizeBlockedCauseLine(cause),
         }))
       : [
           {

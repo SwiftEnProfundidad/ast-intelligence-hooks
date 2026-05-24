@@ -4,7 +4,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
-import { renderConsumerRuntimeSummary } from '../framework-menu-consumer-runtime-audit';
+import {
+  buildConsumerRuntimeBlockedSummary,
+  renderConsumerRuntimeSummary,
+} from '../framework-menu-consumer-runtime-audit';
 
 test('renderConsumerRuntimeSummary denuncia drift de regla fichero y linea aunque coincidan totales', () => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-menu-drift-'));
@@ -90,4 +93,38 @@ test('renderConsumerRuntimeSummary denuncia drift de regla fichero y linea aunqu
     rendered,
     /topFinding\.0[\s\S]*gate\.rule -> apps\/ios\/Gate\.swift:7[\s\S]*canonical\.rule -> apps\/ios\/Canonical\.swift:22/
   );
+});
+
+test('buildConsumerRuntimeBlockedSummary conserva la linea real de la causa bloqueante', () => {
+  const summary = buildConsumerRuntimeBlockedSummary({
+    stage: 'PRE_COMMIT',
+    totalViolations: 1,
+    causeCode: 'EVIDENCE_GATE_BLOCKED',
+    causeMessage: 'Gate blocked',
+    remediation: 'Corrige la causa bloqueante.',
+    blockingCauses: [
+      {
+        code: 'SKILL_RULE_BLOCKED',
+        ruleId: 'skills.ios.example',
+        file: 'apps/ios/Example.swift',
+        line: 42,
+        message: 'SwiftUI rule blocked',
+      },
+    ],
+  });
+
+  assert.deepEqual(summary.topFindings, [
+    {
+      severity: 'HIGH',
+      ruleId: 'skills.ios.example',
+      file: 'apps/ios/Example.swift',
+      line: 42,
+    },
+  ]);
+  assert.deepEqual(summary.topFileLocations, [
+    {
+      file: 'apps/ios/Example.swift',
+      line: 42,
+    },
+  ]);
 });
