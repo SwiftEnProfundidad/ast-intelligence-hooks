@@ -228,6 +228,7 @@ const normalizeScopedRuleEngineFindings = (params: {
   scope: GateScope;
   stage: GatePolicy['stage'];
   changedLinesByPath: ReadonlyMap<string, ReadonlySet<number>>;
+  stagedPaths: ReadonlyArray<string>;
 }): ReadonlyArray<Finding> => {
   if (
     (params.scope.kind !== 'staged' && params.scope.kind !== 'repoAndStaged') ||
@@ -236,10 +237,17 @@ const normalizeScopedRuleEngineFindings = (params: {
     return params.findings;
   }
 
+  const stagedPathSet = new Set(params.stagedPaths.map(toNormalizedPath));
   return params.findings.map((finding) => {
     if (!isAstRuleFinding(finding)) {
       return finding;
     }
+    const outsideStagedFileSet =
+      params.scope.kind === 'staged' &&
+      params.stagedPaths.length > 0 &&
+      typeof finding.filePath === 'string' &&
+      finding.filePath.length > 0 &&
+      !stagedPathSet.has(toNormalizedPath(finding.filePath));
     const outsideChangedLines = isFindingOutsideChangedLines(
       finding,
       params.changedLinesByPath
@@ -248,7 +256,7 @@ const normalizeScopedRuleEngineFindings = (params: {
       finding,
       params.changedLinesByPath
     );
-    if (!outsideChangedLines && !tooBroadForDiffBlock) {
+    if (!outsideStagedFileSet && !outsideChangedLines && !tooBroadForDiffBlock) {
       return finding;
     }
     return {
@@ -257,12 +265,16 @@ const normalizeScopedRuleEngineFindings = (params: {
       severity: 'INFO',
       message:
         `${finding.message} ` +
-        (tooBroadForDiffBlock
-          ? 'Finding is file-level/broad and cannot prove the violation was introduced by the staged diff; tracked as advisory for this atomic slice.'
-          : 'Baseline brownfield outside the staged diff; tracked as advisory for this atomic slice.'),
+        (outsideStagedFileSet
+          ? 'Baseline brownfield outside the staged file set; tracked as advisory for this atomic slice.'
+          : tooBroadForDiffBlock
+            ? 'Finding is file-level/broad and cannot prove the violation was introduced by the staged diff; tracked as advisory for this atomic slice.'
+            : 'Baseline brownfield outside the staged diff; tracked as advisory for this atomic slice.'),
       expected_fix:
         finding.expected_fix ??
-        (tooBroadForDiffBlock
+        (outsideStagedFileSet
+          ? 'Plan a dedicated brownfield remediation slice for the non-staged file, or include it explicitly in the atomic commit.'
+          : tooBroadForDiffBlock
           ? 'Emit a precise AST/nodal finding with line-level evidence for the changed node, or plan a dedicated brownfield remediation slice for this file-level debt.'
           : 'Plan a dedicated brownfield remediation slice for this pre-existing finding.'),
     };
@@ -1213,6 +1225,7 @@ export async function runPlatformGate(params: {
     scope: params.scope,
     stage: params.policy.stage,
     changedLinesByPath: stagedChangedLinesByPath,
+    stagedPaths,
   });
   const findings = normalizeNonBlockingSwiftTestingMigrationWarnings([
     ...aiGateRepoPolicyFindings,

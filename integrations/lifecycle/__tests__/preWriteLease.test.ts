@@ -121,6 +121,36 @@ test('readPreWriteLeaseStatus invalida lease de diff validado si cambia el slice
   }
 });
 
+test('readPreWriteLeaseStatus acepta lease de diff validado aunque HEAD haya cambiado', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-prewrite-lease-validated-diff-head-'));
+  try {
+    const result = writePreWriteLease({
+      repoRoot,
+      git: createGitStub({
+        head: 'old-head',
+        dirtyPaths: ['apps/ios/Presentation/Views/LoginView.swift'],
+      }),
+      now: new Date('2026-05-18T10:00:00.000Z'),
+      allowExistingCodeChanges: true,
+    });
+    assert.equal(result.valid, true);
+    assert.equal(result.lease?.validation_mode, 'validated-diff');
+
+    const status = readPreWriteLeaseStatus({
+      repoRoot,
+      git: createGitStub({
+        head: 'new-head',
+        dirtyPaths: ['apps/ios/Presentation/Views/LoginView.swift'],
+      }),
+      now: new Date('2026-05-18T10:10:00.000Z'),
+    });
+    assert.equal(status.valid, true);
+    assert.equal(status.code, 'PRE_WRITE_LEASE_VALID');
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test('readPreWriteLeaseStatus invalida lease emitido con HEAD distinto', () => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-prewrite-lease-head-'));
   try {

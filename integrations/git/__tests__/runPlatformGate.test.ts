@@ -609,6 +609,151 @@ test('runPlatformGate degrada findings AST brownfield fuera de las lineas staged
   assert.match(emittedFindings[0]?.message ?? '', /outside the staged diff/);
 });
 
+test('runPlatformGate degrada findings AST de ficheros no staged en PRE_COMMIT scoped', async () => {
+  await withTempDir('pumuki-run-platform-gate-non-staged-brownfield-', async (repoRoot) => {
+    const policy: GatePolicy = {
+      stage: 'PRE_COMMIT',
+      blockOnOrAbove: 'WARN',
+      warnOnOrAbove: 'WARN',
+    };
+    const git: IGitService = {
+      ...buildGitStub(repoRoot),
+      runGit: (args: ReadonlyArray<string>) => {
+        const joined = args.join(' ');
+        if (joined === 'diff --name-only') {
+          return '';
+        }
+        if (joined === 'diff --cached --name-only') {
+          return 'apps/ios/Presentation/Views/LoginView.swift\n';
+        }
+        if (joined === 'ls-files --others --exclude-standard') {
+          return '';
+        }
+        if (joined === 'diff --cached --unified=0 --no-ext-diff') {
+          return [
+            'diff --git a/apps/ios/Presentation/Views/LoginView.swift b/apps/ios/Presentation/Views/LoginView.swift',
+            '--- a/apps/ios/Presentation/Views/LoginView.swift',
+            '+++ b/apps/ios/Presentation/Views/LoginView.swift',
+            '@@ -20,0 +20,1 @@',
+            '+Text(BuyerCommerceCopy.loginTitle)',
+          ].join('\n');
+        }
+        if (joined === 'rev-parse HEAD') {
+          return 'abc123\n';
+        }
+        if (joined === 'rev-parse --abbrev-ref HEAD') {
+          return 'feature/rgo-1900-02-checkout-pixel-perfect\n';
+        }
+        return '';
+      },
+    };
+    const lease = writePreWriteLease({
+      repoRoot,
+      git,
+      allowExistingCodeChanges: true,
+    });
+    assert.equal(lease.valid, true);
+
+    const finding: Finding = {
+      ruleId: 'skills.ios.guideline.ios-swiftui-expert.ensure-foreach-uses-stable-identity',
+      severity: 'WARN',
+      code: 'SKILLS_IOS_SWIFTUI_STABLE_IDENTITY',
+      message: 'ForEach must use stable identity',
+      filePath: 'apps/ios/Presentation/Features/BuyerCommerce/BuyerCommerceScreens.swift',
+      lines: [214, 225],
+      matchedBy: 'Heuristic',
+      source: 'skills-ir|heuristic',
+    };
+    let emittedFindings: ReadonlyArray<Finding> = [];
+    let emittedOutcome: string | undefined;
+
+    const result = await runPlatformGate({
+      policy,
+      scope: { kind: 'staged' },
+      silent: true,
+      services: {
+        git,
+        evidence: buildEvidenceStub(),
+      },
+      dependencies: {
+        resolveFactsForGateScope: async () => [
+          {
+            kind: 'FileContent',
+            path: 'apps/ios/Presentation/Views/LoginView.swift',
+            content: 'Text(BuyerCommerceCopy.loginTitle)',
+            source: 'test',
+          },
+        ],
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: {
+            ios: { detected: true, confidence: 'HIGH' },
+          },
+          skillsRuleSet: {
+            rules: [
+              createSkillRule({
+                id: finding.ruleId,
+                severity: 'WARN',
+                platform: 'ios',
+              }),
+            ] as RuleSet,
+            activeBundles: [
+              { name: 'ios-guidelines', version: '1.0.0', source: 'test', hash: 'a'.repeat(64), rules: [] },
+              { name: 'ios-concurrency-guidelines', version: '1.0.0', source: 'test', hash: 'b'.repeat(64), rules: [] },
+              { name: 'ios-swiftui-expert-guidelines', version: '1.0.0', source: 'test', hash: 'c'.repeat(64), rules: [] },
+              { name: 'ios-swift-testing-guidelines', version: '1.0.0', source: 'test', hash: 'd'.repeat(64), rules: [] },
+              { name: 'ios-core-data-guidelines', version: '1.0.0', source: 'test', hash: 'e'.repeat(64), rules: [] },
+            ],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: 1,
+            filesScanned: 1,
+            rulesTotal: 1,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 1,
+            projectRules: 0,
+            matchedRules: 1,
+            unmatchedRules: 0,
+            unevaluatedRules: 0,
+            activeRuleIds: [finding.ruleId],
+            evaluatedRuleIds: [finding.ruleId],
+            matchedRuleIds: [finding.ruleId],
+            unmatchedRuleIds: [],
+            unevaluatedRuleIds: [],
+          },
+          findings: [finding],
+        }),
+        evaluateGate: (findingsArg) => evaluateGateFromFindings(findingsArg, policy),
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedFindings = paramsArg.findings;
+          emittedOutcome = paramsArg.gateOutcome;
+        },
+        printGateFindings: () => {},
+        enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+        evaluateSddForStage: () => ({
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        }),
+        resolveActiveGateWaiver: () => ({
+          kind: 'none',
+          path: '.pumuki/waivers/gate.json',
+        }),
+      },
+    });
+
+    assert.equal(result, 0);
+    assert.equal(emittedOutcome, 'PASS');
+    assert.equal(emittedFindings[0]?.blocking, false);
+    assert.equal(emittedFindings[0]?.severity, 'INFO');
+    assert.match(emittedFindings[0]?.message ?? '', /outside the staged file set/);
+  });
+});
+
 test('runPlatformGate mantiene bloqueo AST cuando una linea del finding intersecta el diff staged', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_WRITE',

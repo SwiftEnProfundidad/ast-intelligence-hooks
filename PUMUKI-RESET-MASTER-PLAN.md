@@ -4,6 +4,8 @@
 
 Este documento es la **única fuente viva** de seguimiento interno del monorepo `ast-intelligence-hooks` (ver `AGENTS.md`). No sustituye el registro estructurado en el consumidor: `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
 
+- [✅] - `R_GO` / `PUMUKI-INC-174` follow-up / lease `validated-diff` y deuda brownfield fuera del staged diff: RuralGo reporta que PRE_COMMIT invalida un PRE_WRITE permitido por `PRE_WRITE_LEASE_HEAD_MISMATCH` cuando el HEAD cambia aunque el diff validado sigue siendo el mismo, y despues bloquea por findings SwiftUI brownfield de ficheros no incluidos en el commit atomico. Fix 2026-05-24: `readPreWriteLeaseStatus` acepta leases `validated-diff` aunque cambie HEAD si el conjunto de rutas de codigo validado no cambia; `runPlatformGate` degrada a advisory findings AST/skills de ficheros no staged en PRE_COMMIT scoped, preservando bloqueo para findings dentro del staged file set o del diff. Validacion focal: `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/preWriteLease.test.ts integrations/git/__tests__/runPlatformGate.test.ts --test-name-pattern "preWriteLease|validated-diff|ficheros no staged|fuera de las lineas staged|PRE_WRITE emitio lease"` -> `67/67` OK; `npm run -s typecheck` -> OK.
+
 ## Registro reciente de incidencias externas
 
 - [✅] - `PUMUKI-GAP-144 / PUMUKI-INC-145` / clasificacion de reglas iOS de proceso fuera del runtime AST: se evita exigir detectores pobres para reglas sin nodo de codigo fiable (`coverage`, `fast tests`, `Instruments`, `TestFlight`, `Fastlane`, `deployments`). Criterio: estas reglas siguen siendo contrato operativo/validacion, pero no pertenecen al runtime AST de findings por archivo/linea. Validacion focal: `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsRuleClassification.test.ts` -> `2/2` OK; inventario `npm run -s skills:classify` -> `AST_IMPLEMENTED=356`, `IMPLEMENTAR_DETECTOR=0`, `REQUIERE_ESTUDIO=360`, `NO_ES_REGLA_DE_CODIGO=36`.
@@ -2653,7 +2655,7 @@ Evidencia:
 - ✅ Causa raíz: `runPlatformGate` trataba cualquier fichero de test Swift con `import XCTest` o referencias a `XCTestCase` como suite XCTest, aunque fuese helper, spy o extensión de soporte.
 - ✅ Fix: el guard de calidad XCTest solo exige `makeSUT()` y `trackForMemoryLeaks()` cuando el fichero declara una suite real `class ...: XCTestCase`.
 - ✅ Regresión: `runPlatformGate no exige makeSUT en helpers XCTest sin suite XCTestCase`.
-- 🚧 Siguiente task actual: publicar `pumuki@6.3.336`, repinear RuralGo y verificar que desaparece el bloqueo falso de helpers XCTest sin tocar cambios funcionales de RuralGo.
+- ✅ Task actual cerrada: `R_GO / PUMUKI-INC-174` queda corregido en motor para lease `validated-diff` y findings brownfield fuera de staged file set. Siguiente paso operativo: validar tracking, commitear atomicamente, publicar release patch y repinear solo si el usuario lo solicita explicitamente.
 
 Evidencia:
 - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> 59/59

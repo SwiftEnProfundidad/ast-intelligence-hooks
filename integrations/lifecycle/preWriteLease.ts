@@ -169,17 +169,6 @@ export const readPreWriteLeaseStatus = (params: {
     };
   }
 
-  if (lease.head !== resolveHead(params)) {
-    return {
-      valid: false,
-      code: 'PRE_WRITE_LEASE_HEAD_MISMATCH',
-      path,
-      lease,
-      changedCodePaths,
-      message: 'PRE_WRITE lease was issued for a different HEAD.',
-    };
-  }
-
   if (Date.parse(lease.expires_at) <= (params.now ?? new Date()).getTime()) {
     return {
       valid: false,
@@ -215,6 +204,17 @@ export const readPreWriteLeaseStatus = (params: {
       path,
       lease,
       changedCodePaths,
+    };
+  }
+
+  if (lease.head !== resolveHead(params)) {
+    return {
+      valid: false,
+      code: 'PRE_WRITE_LEASE_HEAD_MISMATCH',
+      path,
+      lease,
+      changedCodePaths,
+      message: 'PRE_WRITE lease was issued for a different HEAD.',
     };
   }
 
