@@ -1214,6 +1214,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.request-response-interceptors-logging-auth-tokens'
+    ),
+    ['heuristics.ios.logging.sensitive-data.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.obfuscation-strings-sensibles-en-co-digo'
     ),
     ['heuristics.ios.security.hardcoded-sensitive-string.ast']
