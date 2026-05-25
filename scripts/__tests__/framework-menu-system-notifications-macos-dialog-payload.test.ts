@@ -74,6 +74,36 @@ test('buildBlockedDialogPayload muestra cada causa bloqueante con regla, archivo
   assert.doesNotMatch(payload.cause, /lines=/);
 });
 
+test('buildBlockedDialogPayload explica prefer-swift-testing en lenguaje dev concreto', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'SKILLS_IOS_PREFER_SWIFT_TESTING',
+          ruleId: 'skills.ios.prefer-swift-testing',
+          file: 'apps/ios/Tests/Mac/Presentation/Features/BuyerVisibleCopyTests.spec.swift',
+          line: 12,
+          message: 'XCTest - Solo para proyectos legacy o UI tests',
+          remediation: 'Migra este test a Swift Testing o documenta que es XCTest legacy permitido.',
+        },
+      ],
+    }),
+    repoRoot: '/tmp/R_GO',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'R_GO',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /1\. Regla: Test XCTest legacy/);
+  assert.match(payload.cause, /Fichero: apps\/ios\/Tests\/Mac\/Presentation\/Features\/BuyerVisibleCopyTests\.spec\.swift:12/);
+  assert.match(payload.cause, /Falla: XCTest - Solo para proyectos legacy o UI tests/);
+  assert.match(payload.cause, /Solución: Migra este test a Swift Testing/);
+  assert.doesNotMatch(payload.cause, /Regla: Swift Testing/);
+});
+
 test('buildBlockedDialogPayload usa line estructurado aunque el mensaje no incluya lines=', () => {
   const payload = buildBlockedDialogPayload({
     event: blockedEvent({
@@ -238,7 +268,7 @@ test('buildBlockedDialogPayload muestra skill concreta desde causeMessage legacy
     } as NodeJS.ProcessEnv,
   });
 
-  assert.match(payload.cause, /Regla: Swift Testing/);
+  assert.match(payload.cause, /Regla: Test XCTest legacy/);
   assert.match(payload.cause, /Fichero: apps\/ios\/Tests\/Mac\/Presentation\/Features\/BuyerAppViewModelVisibleCopyTests\.spec\.swift:9/);
   assert.match(payload.cause, /Falla: XCTest - Solo para proyectos legacy o UI tests/);
   assert.match(payload.cause, /Solución: Migra este test a Swift Testing/);
@@ -354,7 +384,7 @@ test('buildBlockedDialogPayload muestra skills iOS con separador, linea, evidenc
     } as NodeJS.ProcessEnv,
   });
 
-  assert.match(payload.cause, /1\. Regla: Swift Testing/);
+  assert.match(payload.cause, /1\. Regla: Test XCTest legacy/);
   assert.match(payload.cause, /Fichero: apps\/ios\/Tests\/Mac\/Presentation\/Features\/BuyerCommerceScreensSnapshotTests\.swift:12/);
   assert.match(payload.cause, /Evidencia: final class BuyerCommerceScreensSnapshotTests: XCTestCase/);
   assert.match(payload.cause, /Solución: Migra el test a Swift Testing/);

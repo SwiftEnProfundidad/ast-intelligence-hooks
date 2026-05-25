@@ -140,9 +140,10 @@ const formatCauseRule = (cause: BlockedCause): string => cause.ruleId ?? cause.c
 
 const humanizeRuleId = (ruleId: string): string => {
   const knownRules: Record<string, string> = {
-    'prefer-swift-testing': 'Swift Testing',
-    'no-xctassert': 'XCTest assertions',
-    'no-wait-for-expectations': 'waitForExpectations en XCTest',
+    'prefer-swift-testing': 'Test XCTest legacy',
+    'no-xctassert': 'Assertions XCTest en Swift Testing',
+    'no-xctunwrap': 'XCTUnwrap en Swift Testing',
+    'no-wait-for-expectations': 'waitForExpectations legacy',
     'ios-test-quality': 'calidad de tests iOS',
     'dynamic-type-font-scaling-automatico': 'Dynamic Type',
     'dynamic-type-font-scaling-automa-tico': 'Dynamic Type',

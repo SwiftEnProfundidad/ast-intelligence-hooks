@@ -85,9 +85,9 @@ test('buildGateBlockedPayload prioriza primera skill con fichero, linea, violaci
   );
 
   assert.match(payload.subtitle ?? '', /Skill violada: BuyerCommerceScreensSnapshotTests\.swift:12/);
-  assert.match(payload.subtitle ?? '', /Swift Testing/);
+  assert.match(payload.subtitle ?? '', /Test XCTest legacy/);
   assert.match(payload.subtitle ?? '', /BuyerCommerceScreensSnapshotTests\.swift:12/);
-  assert.match(payload.message, /Regla: Swift Testing/);
+  assert.match(payload.message, /Regla: Test XCTest legacy/);
   assert.match(payload.message, /Fichero: BuyerCommerceScreensSnapshotTests\.swift:12/);
   assert.match(payload.message, /Falla: XCTest - Solo para proyectos legacy o UI tests/);
   assert.doesNotMatch(payload.message, /Viola:/);
@@ -268,8 +268,8 @@ test('buildGateBlockedPayload muestra skill concreta aunque venga envuelta en EV
   );
 
   assert.match(payload.subtitle ?? '', /Skill violada: BuyerAppViewModelVisibleCopyTests\.spec\.swift:9/);
-  assert.match(payload.subtitle ?? '', /Swift Testing/);
-  assert.match(payload.message, /Regla: Swift Testing/);
+  assert.match(payload.subtitle ?? '', /Test XCTest legacy/);
+  assert.match(payload.message, /Regla: Test XCTest legacy/);
   assert.match(payload.message, /Fichero: BuyerAppViewModelVisibleCopyTests\.spec\.swift:9/);
   assert.match(payload.message, /Falla: XCTest - Solo para proyectos legacy o UI tests/);
   assert.match(payload.message, /Migra este test a Swift Testing/);
@@ -293,8 +293,8 @@ test('buildGateBlockedPayload muestra skill concreta desde causeMessage legacy s
   );
 
   assert.match(payload.subtitle ?? '', /Skill violada: BuyerAppViewModelVisibleCopyTests\.spec\.swift:9/);
-  assert.match(payload.subtitle ?? '', /Swift Testing/);
-  assert.match(payload.message, /Regla: Swift Testing/);
+  assert.match(payload.subtitle ?? '', /Test XCTest legacy/);
+  assert.match(payload.message, /Regla: Test XCTest legacy/);
   assert.match(payload.message, /Fichero: BuyerAppViewModelVisibleCopyTests\.spec\.swift:9/);
   assert.match(payload.message, /Falla: XCTest - Solo para proyectos legacy o UI tests/);
   assert.match(payload.message, /Migra este test a Swift Testing/);

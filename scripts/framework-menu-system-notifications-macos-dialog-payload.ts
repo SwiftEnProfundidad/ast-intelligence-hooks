@@ -156,9 +156,10 @@ const formatLocation = (cause: NonNullable<Extract<PumukiCriticalNotificationEve
 const humanizeRuleId = (ruleId: string): string => {
   const knownRules: Record<string, string> = {
     'no-empty-catch': 'catch vacío',
-    'prefer-swift-testing': 'Swift Testing',
-    'no-xctassert': 'XCTest assertions',
-    'no-wait-for-expectations': 'waitForExpectations en XCTest',
+    'prefer-swift-testing': 'Test XCTest legacy',
+    'no-xctassert': 'Assertions XCTest en Swift Testing',
+    'no-xctunwrap': 'XCTUnwrap en Swift Testing',
+    'no-wait-for-expectations': 'waitForExpectations legacy',
     'ios-test-quality': 'calidad de tests iOS',
     'action-handlers-should-reference-methods-not-contain-inline-logic': 'handlers SwiftUI sin lógica inline',
     'ensure-constant-number-of-views-per-foreach-element': 'estructura estable en ForEach',

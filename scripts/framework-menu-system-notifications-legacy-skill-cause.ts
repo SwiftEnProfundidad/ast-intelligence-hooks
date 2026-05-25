@@ -13,10 +13,10 @@ type LegacySkillCause = {
 const FIELD_NAMES = ['severity', 'file', 'line', 'lines', 'message', 'remediation'] as const;
 
 const RULE_LABELS: Readonly<Record<string, string>> = {
-  'skills.ios.prefer-swift-testing': 'Swift Testing',
-  'skills.ios.no-wait-for-expectations': 'Swift Testing async',
-  'skills.ios.no-xctassert': 'Swift Testing',
-  'skills.ios.no-xctunwrap': 'Swift Testing',
+  'skills.ios.prefer-swift-testing': 'Test XCTest legacy',
+  'skills.ios.no-wait-for-expectations': 'waitForExpectations legacy',
+  'skills.ios.no-xctassert': 'Assertions XCTest en Swift Testing',
+  'skills.ios.no-xctunwrap': 'XCTUnwrap en Swift Testing',
   'skills.backend.no-empty-catch': 'Backend: no empty catch',
 };
 
