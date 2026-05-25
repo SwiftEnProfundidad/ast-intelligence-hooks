@@ -85,6 +85,20 @@ const NON_CODE_RULE_PATTERNS: ReadonlyArray<RegExp> = [
   /\bfeature[-\s]modules?.*\bpackages?\b/,
   /\bun[-\s]target\b.*\bplataforma\b/,
   /\btestability\b.*\bpackage\b.*\btests?\b/,
+  /\bbiometric[-\s]auth\b/,
+  /\blocalauthentication\b/,
+  /\bcompartir[-\s]dtos\b/,
+  /\bcodegen\b/,
+  /\bquicktype\b/,
+  /\bopenapi\b/,
+  /\bfilemanager\b/,
+  /\bicloud[-\s]sync\b/,
+  /\bcloudkit\b/,
+  /\bjailbreak[-\s]detection\b/,
+  /\bnetwork[-\s]reachability\b/,
+  /\boffline[-\s]first\b/,
+  /\bretry[-\s]logic\b/,
+  /\bsecure[-\s]enclave\b/,
 ];
 
 const CODE_RULE_WITH_DIRECT_DETECTOR_PATTERNS: ReadonlyArray<RegExp> = [

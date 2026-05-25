@@ -426,3 +426,38 @@ test('classifySkillsRules no exige detector runtime para reglas iOS de arquitect
     rules.map(() => 'NO_ES_REGLA_DE_CODIGO')
   );
 });
+
+test('classifySkillsRules no exige detector runtime para capacidades iOS opcionales o de integracion', () => {
+  const rules = [
+    'skills.ios.guideline.ios.biometric-auth-face-id-touch-id-localauthentication',
+    'skills.ios.guideline.ios.compartir-dtos-con-backend-typescript-swift-codegen-quicktype-openapi',
+    'skills.ios.guideline.ios.filemanager-archivos-ima-genes-documents',
+    'skills.ios.guideline.ios.icloud-sync-entre-dispositivos-nsubiquitouskeyvaluestore-cloudkit',
+    'skills.ios.guideline.ios.jailbreak-detection-opcional-para-apps-cri-ticas',
+    'skills.ios.guideline.ios.network-reachability-detectar-conectividad',
+    'skills.ios.guideline.ios.offline-first-opcional-sync-con-swiftdata',
+    'skills.ios.guideline.ios.retry-logic-para-requests-fallidos',
+    'skills.ios.guideline.ios.secure-enclave-para-keys-criptogra-ficas',
+  ];
+
+  const summary = classifySkillsRules(buildLock(rules.map((id) => ({
+    id,
+    description: id,
+    severity: 'WARN',
+    platform: 'ios',
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+    confidence: 'MEDIUM',
+    locked: true,
+    evaluationMode: 'DECLARATIVE',
+    origin: 'core',
+  }))));
+
+  assert.equal(summary.total, rules.length);
+  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, rules.length);
+  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
+  assert.deepEqual(
+    summary.rules.map((rule) => rule.status),
+    rules.map(() => 'NO_ES_REGLA_DE_CODIGO')
+  );
+});
