@@ -269,6 +269,24 @@ const IOS_POSITIVE_CODE_GUIDANCE_PATTERNS: ReadonlyArray<RegExp> = [
   /\bviper\b.*\boverkill\b/,
 ];
 
+const IOS_AUDITED_POSITIVE_LANGUAGE_GUIDANCE_PATTERNS: ReadonlyArray<RegExp> = [
+  /\bcopy[-\s]on[-\s]write\b/,
+  /\bequatable[-\s]hashable\b/,
+  /\bnil[-\s]coalescing\b/,
+  /\boperators[-\s]map[-\s]filter[-\s]flatmap\b/,
+  /\boptional[-\s]chaining\b/,
+  /\bresult[-\s]builders?\b/,
+];
+
+const isAuditedIosPositiveLanguageGuidance = (rule: SkillsCompiledRule): boolean => {
+  if (rule.platform !== 'ios') {
+    return false;
+  }
+
+  const haystack = normalizeText(`${rule.id} ${rule.description} ${rule.sourceSkill}`);
+  return IOS_AUDITED_POSITIVE_LANGUAGE_GUIDANCE_PATTERNS.some((pattern) => pattern.test(haystack));
+};
+
 const requiresIosPositiveCodeGuidanceAudit = (rule: SkillsCompiledRule): boolean => {
   if (rule.platform !== 'ios') {
     return false;
@@ -360,6 +378,21 @@ const classifyRule = (rule: SkillsCompiledRule): ClassifiedSkillsRule => {
       status: 'REQUIERE_ESTUDIO',
       reason:
         'Rule has code relevance, but the AST/nodal signal needs explicit design before implementation to avoid poor umbrella detectors.',
+      astNodeIds,
+    };
+  }
+
+  if (isAuditedIosPositiveLanguageGuidance(rule)) {
+    return {
+      ruleId: rule.id,
+      platform: rule.platform,
+      sourceSkill: rule.sourceSkill,
+      sourcePath: rule.sourcePath,
+      evaluationMode,
+      severity: rule.severity,
+      status: 'NO_ES_REGLA_DE_CODIGO',
+      reason:
+        'Audited iOS positive language guidance; absence is not a safe runtime violation and related negative patterns must be enforced by specific detectors.',
       astNodeIds,
     };
   }

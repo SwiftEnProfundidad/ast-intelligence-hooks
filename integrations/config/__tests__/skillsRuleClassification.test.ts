@@ -512,7 +512,7 @@ test('classifySkillsRules no exige detector runtime para capacidades iOS opciona
   );
 });
 
-test('classifySkillsRules mantiene recomendaciones positivas de lenguaje iOS en estudio', () => {
+test('classifySkillsRules audita recomendaciones positivas de lenguaje iOS sin violacion por ausencia', () => {
   const rules = [
     'skills.ios.guideline.ios.asyncsequence-y-asyncstream-para-flujos-de-datos',
     'skills.ios.guideline.ios.copy-on-write-para-structs-grandes-array-dictionary-ya-lo-hacen',
@@ -538,11 +538,21 @@ test('classifySkillsRules mantiene recomendaciones positivas de lenguaje iOS en 
   }))));
 
   assert.equal(summary.total, rules.length);
-  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, 0);
-  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, rules.length);
+  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, 6);
+  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 2);
+  assert.equal(
+    summary.rules.find((rule) => rule.ruleId.includes('asyncsequence-y-asyncstream'))?.status,
+    'REQUIERE_ESTUDIO'
+  );
+  assert.equal(
+    summary.rules.find((rule) => rule.ruleId.includes('numberformatter'))?.status,
+    'REQUIERE_ESTUDIO'
+  );
   assert.deepEqual(
-    summary.rules.map((rule) => rule.status),
-    rules.map(() => 'REQUIERE_ESTUDIO')
+    summary.rules
+      .filter((rule) => !rule.ruleId.includes('asyncsequence-y-asyncstream') && !rule.ruleId.includes('numberformatter'))
+      .map((rule) => rule.status),
+    Array.from({ length: 6 }, () => 'NO_ES_REGLA_DE_CODIGO')
   );
 });
 
