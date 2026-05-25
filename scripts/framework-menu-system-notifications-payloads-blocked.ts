@@ -139,6 +139,9 @@ const formatCauseLocation = (cause: BlockedCause): string => {
 const formatCauseRule = (cause: BlockedCause): string => cause.ruleId ?? cause.code;
 
 const humanizeRuleId = (ruleId: string): string => {
+  if (ruleId === 'governance.skills.ios-test-quality.incomplete') {
+    return 'Calidad de tests iOS incompleta';
+  }
   const knownRules: Record<string, string> = {
     'prefer-swift-testing': 'Test XCTest legacy',
     'no-xctassert': 'Assertions XCTest en Swift Testing',

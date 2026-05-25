@@ -388,7 +388,7 @@ test('buildBlockedDialogPayload muestra skills iOS con separador, linea, evidenc
   assert.match(payload.cause, /Fichero: apps\/ios\/Tests\/Mac\/Presentation\/Features\/BuyerCommerceScreensSnapshotTests\.swift:12/);
   assert.match(payload.cause, /Evidencia: final class BuyerCommerceScreensSnapshotTests: XCTestCase/);
   assert.match(payload.cause, /Solución: Migra el test a Swift Testing/);
-  assert.match(payload.cause, /\n\n2\. Regla: incomplete/);
+  assert.match(payload.cause, /\n\n2\. Regla: Calidad de tests iOS incompleta/);
   assert.match(payload.cause, /Evidencia: Falta: \[makeSUT\(\), trackForMemoryLeaks\(\)\]/);
   assert.match(payload.cause, /Solución: Añade makeSUT\(\) y trackForMemoryLeaks\(\)/);
 });
@@ -584,4 +584,31 @@ test('buildBlockedDialogPayload explica fase RED del ciclo TDD en lenguaje dev',
   );
   assert.doesNotMatch(payload.cause, /Solución:/);
   assert.doesNotMatch(payload.remediation, /evidencia|VERIFY|gate/i);
+});
+
+test('buildBlockedDialogPayload nombra governance ios-test-quality sin etiqueta incomplete', () => {
+  const payload = buildBlockedDialogPayload({
+    event: blockedEvent({
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      blockingCauses: [
+        {
+          code: 'GOVERNANCE_SKILLS_IOS_TEST_QUALITY_INCOMPLETE',
+          ruleId: 'governance.skills.ios-test-quality.incomplete',
+          file: '.ai_evidence.json',
+          message:
+            'iOS test quality enforcement incomplete at PRE_COMMIT: apps/ios/Tests/Mac/Presentation/Features/BuyerCommerceScreensSnapshotTests.swift[missing=[makeSUT(), trackForMemoryLeaks()]]',
+          remediation: 'Añade makeSUT() y trackForMemoryLeaks() al test afectado.',
+        },
+      ],
+    }),
+    repoRoot: '/tmp/R_GO',
+    env: {
+      PUMUKI_PROJECT_LABEL: 'R_GO',
+    } as NodeJS.ProcessEnv,
+  });
+
+  assert.match(payload.cause, /1\. Regla: Calidad de tests iOS incompleta/);
+  assert.doesNotMatch(payload.cause, /1\. Regla: incomplete/);
 });

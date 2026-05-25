@@ -154,6 +154,9 @@ const formatLocation = (cause: NonNullable<Extract<PumukiCriticalNotificationEve
 };
 
 const humanizeRuleId = (ruleId: string): string => {
+  if (ruleId === 'governance.skills.ios-test-quality.incomplete') {
+    return 'Calidad de tests iOS incompleta';
+  }
   const knownRules: Record<string, string> = {
     'no-empty-catch': 'catch vacío',
     'prefer-swift-testing': 'Test XCTest legacy',
@@ -240,7 +243,9 @@ const isSkillCause = (
   cause: NonNullable<Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']>[number]
 ): boolean =>
   (cause.ruleId ?? '').startsWith('skills.') ||
-  cause.code.startsWith('SKILLS_');
+  (cause.ruleId ?? '').startsWith('governance.skills.') ||
+  cause.code.startsWith('SKILLS_') ||
+  cause.code.startsWith('GOVERNANCE_SKILLS_');
 
 const isSkillsContractCause = (
   cause: NonNullable<Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']>[number]
