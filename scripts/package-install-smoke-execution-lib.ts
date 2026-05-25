@@ -1,5 +1,8 @@
 import type { SmokeMode } from './package-install-smoke-contract';
-import { runDefaultSmokeGateSteps } from './package-install-smoke-execution-steps-lib';
+import {
+  runDefaultSmokeGateSteps,
+  runSmokeGoldenFlowEvidenceStep,
+} from './package-install-smoke-execution-steps-lib';
 import {
   assertLifecycleStatusMatchesSnapshot,
   captureLifecycleStatusSnapshot,
@@ -41,6 +44,7 @@ export const runPackageInstallSmoke = (mode: SmokeMode): void => {
     runLifecycleInstallStep(workspace);
     runLifecyclePreWriteStep(workspace);
     writeStagedPayload(workspace, mode);
+    runSmokeGoldenFlowEvidenceStep(workspace);
 
     const lifecycleStatusSnapshot = captureLifecycleStatusSnapshot(workspace);
 
