@@ -134,6 +134,7 @@ const NON_CODE_RULE_PATTERNS: ReadonlyArray<RegExp> = [
   /\bviewmodifiers?[-\s]nativos?\b/,
   /\bviewthatfits\b/,
   /\bviper\b.*\boverkill\b/,
+  /\bdeinit\b.*\bverificar\b/,
 ];
 
 const CODE_RULE_WITH_DIRECT_DETECTOR_PATTERNS: ReadonlyArray<RegExp> = [

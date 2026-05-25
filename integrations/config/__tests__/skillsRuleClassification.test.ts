@@ -546,3 +546,26 @@ test('classifySkillsRules no exige detector runtime para recomendaciones iOS de 
     rules.map(() => 'NO_ES_REGLA_DE_CODIGO')
   );
 });
+
+test('classifySkillsRules no exige detector runtime para verificacion lifecycle de deinit', () => {
+  const rules = [
+    'skills.ios.guideline.ios.deinit-verificar-que-se-llama-cuando-debiera',
+  ];
+
+  const summary = classifySkillsRules(buildLock(rules.map((id) => ({
+    id,
+    description: id,
+    severity: 'WARN',
+    platform: 'ios',
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+    confidence: 'MEDIUM',
+    locked: true,
+    evaluationMode: 'DECLARATIVE',
+    origin: 'core',
+  }))));
+
+  assert.equal(summary.total, rules.length);
+  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, rules.length);
+  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
+});
