@@ -331,7 +331,7 @@ test('classifySkillsRules mantiene reglas iOS code-like en estudio en vez de cer
   assert.deepEqual(
     summary.rules.map((rule) => [rule.ruleId, rule.status]),
     [
-      ['skills.ios.guideline.ios.asyncsequence-y-asyncstream-para-flujos-de-datos', 'REQUIERE_ESTUDIO'],
+      ['skills.ios.guideline.ios.asyncsequence-y-asyncstream-para-flujos-de-datos', 'NO_ES_REGLA_DE_CODIGO'],
       ['skills.ios.guideline.ios.if-let-para-unwrap-opcional-usado-una-vez', 'NO_ES_REGLA_DE_CODIGO'],
       ['skills.ios.guideline.ios.viewthatfits-para-layouts-adaptativos', 'NO_ES_REGLA_DE_CODIGO'],
     ]
@@ -522,6 +522,7 @@ test('classifySkillsRules audita recomendaciones positivas de lenguaje iOS sin v
     'skills.ios.guideline.ios.operators-map-filter-flatmap-combinelatest-merge',
     'skills.ios.guideline.ios.optional-chaining-cadenas-de-opcionales',
     'skills.ios.guideline.ios.result-builders-para-dsls-swiftui-ya-lo-usa',
+    'skills.ios.guideline.ios.publishers-asyncsequence-para-async-combine-para-streams-complejos',
   ];
 
   const summary = classifySkillsRules(buildLock(rules.map((id) => ({
@@ -538,21 +539,11 @@ test('classifySkillsRules audita recomendaciones positivas de lenguaje iOS sin v
   }))));
 
   assert.equal(summary.total, rules.length);
-  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, 6);
-  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 2);
-  assert.equal(
-    summary.rules.find((rule) => rule.ruleId.includes('asyncsequence-y-asyncstream'))?.status,
-    'REQUIERE_ESTUDIO'
-  );
-  assert.equal(
-    summary.rules.find((rule) => rule.ruleId.includes('numberformatter'))?.status,
-    'REQUIERE_ESTUDIO'
-  );
+  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, rules.length);
+  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
   assert.deepEqual(
-    summary.rules
-      .filter((rule) => !rule.ruleId.includes('asyncsequence-y-asyncstream') && !rule.ruleId.includes('numberformatter'))
-      .map((rule) => rule.status),
-    Array.from({ length: 6 }, () => 'NO_ES_REGLA_DE_CODIGO')
+    summary.rules.map((rule) => rule.status),
+    rules.map(() => 'NO_ES_REGLA_DE_CODIGO')
   );
 });
 

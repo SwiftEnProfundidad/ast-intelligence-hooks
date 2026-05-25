@@ -270,11 +270,15 @@ const IOS_POSITIVE_CODE_GUIDANCE_PATTERNS: ReadonlyArray<RegExp> = [
 ];
 
 const IOS_AUDITED_POSITIVE_LANGUAGE_GUIDANCE_PATTERNS: ReadonlyArray<RegExp> = [
+  /\basyncsequence\b/,
+  /\basyncstream\b/,
   /\bcopy[-\s]on[-\s]write\b/,
   /\bequatable[-\s]hashable\b/,
   /\bnil[-\s]coalescing\b/,
+  /\bnumberformatter\b/,
   /\boperators[-\s]map[-\s]filter[-\s]flatmap\b/,
   /\boptional[-\s]chaining\b/,
+  /\bpublishers[-\s]asyncsequence\b/,
   /\bresult[-\s]builders?\b/,
 ];
 
