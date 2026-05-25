@@ -764,6 +764,13 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
     json: true,
     sddCommand: 'status',
   });
+  assert.deepEqual(parseLifecycleCliArgs(['sdd', 'guard', '--stage=PRE_WRITE', '--json']), {
+    command: 'sdd',
+    purgeArtifacts: false,
+    json: true,
+    sddCommand: 'guard',
+    sddStage: 'PRE_WRITE',
+  });
   assert.deepEqual(parseLifecycleCliArgs(['sdd', 'validate', '--stage=ci']), {
     command: 'sdd',
     purgeArtifacts: false,
@@ -2329,6 +2336,41 @@ test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy d
       rmSync(repo, { recursive: true, force: true });
     }
   });
+});
+
+test('runLifecycleCli sdd guard PRE_WRITE bloquea ediciones de codigo sin lease valido', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write;
+  const swiftPath = join(repo, 'apps/ios/Presentation/AuthView.swift');
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-agent-guard']);
+    mkdirSync(dirname(swiftPath), { recursive: true });
+    writeFileSync(swiftPath, 'struct AuthView {}\n', 'utf8');
+    runGit(repo, ['add', 'apps/ios/Presentation/AuthView.swift']);
+    runGit(repo, ['commit', '-m', 'test: add swift fixture']);
+    writeFileSync(swiftPath, 'struct AuthView { let title: String }\n', 'utf8');
+
+    process.chdir(repo);
+    process.stdout.write = captureStdout(printed);
+
+    const code = await runLifecycleCli(['sdd', 'guard', '--stage=PRE_WRITE', '--json']);
+
+    assert.equal(code, 1);
+    const payload = JSON.parse(printed.join(''));
+    assert.equal(payload.allowed, false);
+    assert.equal(payload.stage, 'PRE_WRITE');
+    assert.equal(payload.code, 'PRE_WRITE_AGENT_GUARD_CODE_CHANGED_WITHOUT_LEASE');
+    assert.deepEqual(payload.changedCodePaths, ['apps/ios/Presentation/AuthView.swift']);
+    assert.match(payload.message, /AI agent instruction: STOP/);
+    assert.match(payload.expected_fix, /npx pumuki-pre-write/);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
 });
 
 test('runLifecycleCli sdd validate PRE_WRITE auto-bootstrap de OpenSpec y habilita flujo determinista', async () => {

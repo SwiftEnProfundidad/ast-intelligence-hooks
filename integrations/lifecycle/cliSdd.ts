@@ -22,6 +22,7 @@ import {
 } from '../policy/preWriteEnforcement';
 import { readLifecycleExperimentalFeaturesSnapshot } from './experimentalFeaturesSnapshot';
 import { GitService } from '../git/GitService';
+import { evaluatePreWriteAgentGuard } from './preWriteLease';
 
 import {
   type ParsedArgs,
@@ -67,6 +68,39 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             }
           }
           return 0;
+        }
+        if (parsed.sddCommand === 'guard') {
+          const requestedStage = parsed.sddStage ?? 'PRE_WRITE';
+          if (requestedStage !== 'PRE_WRITE') {
+            if (parsed.json) {
+              writeInfo(JSON.stringify({
+                allowed: false,
+                stage: requestedStage,
+                code: 'PRE_WRITE_AGENT_GUARD_UNSUPPORTED_STAGE',
+                message: 'Agent pre-write guard only supports PRE_WRITE.',
+              }, null, 2));
+            } else {
+              writeInfo('[pumuki][sdd] guard allowed=no code=PRE_WRITE_AGENT_GUARD_UNSUPPORTED_STAGE');
+              writeInfo('[pumuki][sdd] Agent pre-write guard only supports PRE_WRITE.');
+            }
+            return 1;
+          }
+          const guard = evaluatePreWriteAgentGuard({
+            repoRoot: process.cwd(),
+            git: new GitService(),
+          });
+          if (parsed.json) {
+            writeInfo(JSON.stringify(guard, null, 2));
+          } else {
+            writeInfo(
+              `[pumuki][sdd] guard stage=PRE_WRITE allowed=${guard.allowed ? 'yes' : 'no'} code=${guard.code}`
+            );
+            writeInfo(`[pumuki][sdd] ${guard.message}`);
+            if (!guard.allowed) {
+              writeInfo(`[pumuki][sdd] solution: ${guard.expected_fix}`);
+            }
+          }
+          return guard.allowed ? 0 : 1;
         }
         if (parsed.sddCommand === 'validate') {
           const requestedStage = parsed.sddStage ?? 'PRE_COMMIT';

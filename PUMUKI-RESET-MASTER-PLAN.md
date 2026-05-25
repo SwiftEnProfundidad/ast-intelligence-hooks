@@ -1947,7 +1947,7 @@ Snapshot PUMUKI-INC-132 (2026-05-13):
 - Si se cierra una micro-slice, actualizar primero `Checks cerrados`, luego `En construccion inmediata`, luego `Última validación registrada`.
 - No crear MDs paralelos para este frente; este panel dentro de `PUMUKI-RESET-MASTER-PLAN.md` es la fuente viva del estado.
 
-- `PUMUKI-GAP-144` sigue abierto como gap de plataforma: PRE_WRITE debe actuar como hard stop efectivo antes de editar, con contexto local obligatorio aplicado y notificacion/instruccion inequívoca para usuario y agente IA.
+- `PUMUKI-GAP-144` queda cubierto a nivel de motor por `pumuki sdd guard --stage=PRE_WRITE`, que bloquea ediciones de codigo sin lease PRE_WRITE valido; queda pendiente publicacion y repin consumer para cierre operativo total.
 - `PUMUKI-INC-145` sigue siendo el paraguas operativo activo: restaurar paridad hard AST Intelligence del Pumuki antiguo con el Pumuki moderno, sin perder SDD, gobernanza, contexto local, ai_evidence, ai_gate, MCP, install, hooks y release.
 
 ### Invariantes no negociables para las siguientes iteraciones
@@ -2710,3 +2710,10 @@ Evidencia:
 - [✅] `skills.android.guideline.android.androidentrypoint-activity-fragment-viewmodel` deja de estar en `REQUIERE_ESTUDIO` y queda enlazada a `heuristics.android.di.hilt-injection-without-entrypoint.ast`.
 - [✅] Criterio de cierre: detectar `Activity`/`Fragment` Android con `@Inject lateinit var` sin `@AndroidEntryPoint`; no inferir globalmente que toda Activity/Fragment deba tener Hilt si no usa inyección de campo.
 - [✅] Evidencia: RED falló por detector/regla/mapping inexistentes; GREEN integrado pasó `153/153`; `typecheck`, `skills:compile`, `skills:lock:check`, `skills:classify`, `git diff --check` y `validation:tracking-single-active` pasaron. Clasificación: `AST_IMPLEMENTED=361`, `REQUIERE_ESTUDIO=346`.
+
+### 2026-05-25 - PUMUKI-GAP-144 - Agent PRE_WRITE guard CLI
+
+- [✅] `PUMUKI-GAP-144` añade `pumuki sdd guard --stage=PRE_WRITE [--json]` como barrera verificable para agentes antes de editar codigo.
+- [✅] Criterio de cierre: si no hay lease PRE_WRITE valido, o si ya existen cambios de codigo sin lease previo, el comando devuelve exit `1`, `allowed=false`, codigo accionable y mensaje `AI agent instruction: STOP`; con lease valido devuelve exit `0`.
+- [✅] RED/GREEN/VERIFY: `node --import tsx --test --test-name-pattern "evaluatePreWriteAgentGuard" integrations/lifecycle/__tests__/preWriteLease.test.ts` -> `3/3` OK; `node --import tsx --test --test-name-pattern "runLifecycleCli sdd guard PRE_WRITE" integrations/lifecycle/__tests__/cli.test.ts` -> `1/1` OK; `npm run -s typecheck` -> OK; `git diff --check` -> OK.
+- [⏳] Pendiente operativo: publicar release y repinear consumer activo para que RuralGo pueda consumir el guard.
