@@ -569,3 +569,35 @@ test('classifySkillsRules no exige detector runtime para verificacion lifecycle 
   assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, rules.length);
   assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
 });
+
+test('classifySkillsRules no exige detector runtime para setup Android de proyecto e integraciones', () => {
+  const rules = [
+    'skills.android.guideline.android.analytics-firebase-analytics-o-custom',
+    'skills.android.guideline.android.app-module-composicio-n-final',
+    'skills.android.guideline.android.build-types-debug-release-staging',
+    'skills.android.guideline.android.build-variants-combinacio-n-de-build-type-flavor',
+    'skills.android.guideline.android.buildconfig-constantes-en-tiempo-de-compilacio-n',
+    'skills.android.guideline.android.buildsrc-para-lo-gica-compartida-de-build',
+    'skills.android.guideline.android.core-modules-core-network-core-database-core-ui',
+    'skills.android.guideline.android.compose-bom-androidx-compose-compose-bom',
+    'skills.android.guideline.android.crashlytics-firebase-para-crash-reporting',
+    'skills.android.guideline.android.database-database-class-abstracta',
+  ];
+
+  const summary = classifySkillsRules(buildLock(rules.map((id) => ({
+    id,
+    description: id,
+    severity: 'WARN',
+    platform: 'android',
+    sourceSkill: 'android-guidelines',
+    sourcePath: 'vendor/skills/android-enterprise-rules/SKILL.md',
+    confidence: 'MEDIUM',
+    locked: true,
+    evaluationMode: 'DECLARATIVE',
+    origin: 'core',
+  }))));
+
+  assert.equal(summary.total, rules.length);
+  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, rules.length);
+  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
+});
