@@ -1146,6 +1146,24 @@ export const iosRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.security.urlsession-trust-bypass.ast',
+    description: 'Detects URLSessionDelegate trust challenge handlers that accept server trust without validation.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.security.urlsession-trust-bypass.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected URLSession trust challenge bypass in iOS production code.',
+      code: 'HEURISTICS_IOS_SECURITY_URLSESSION_TRUST_BYPASS_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.localization.localizable-strings.ast',
     description: 'Detects legacy Localizable.strings files where String Catalogs are the preferred iOS baseline.',
     severity: 'WARN',

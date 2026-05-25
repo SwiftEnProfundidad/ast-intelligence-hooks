@@ -304,6 +304,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.security.insecure-transport',
     ['heuristics.ios.security.insecure-transport.ast']
   ),
+  'skills.ios.guideline.ios.ssl-pinning-para-apps-con-alta-seguridad': heuristicDetector(
+    'ios.security.urlsession-trust-bypass',
+    ['heuristics.ios.security.urlsession-trust-bypass.ast']
+  ),
+  'skills.ios.guideline.ios.ssl-pinning-prevenir-man-in-the-middle': heuristicDetector(
+    'ios.security.urlsession-trust-bypass',
+    ['heuristics.ios.security.urlsession-trust-bypass.ast']
+  ),
   'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs':
     heuristicDetector('ios.localization.localizable-strings', [
       'heuristics.ios.localization.localizable-strings.ast',

@@ -1940,6 +1940,27 @@ export const collectSwiftInsecureTransportLines = (source: string): readonly num
   return sortedUniqueLines(result);
 };
 
+export const collectSwiftUrlSessionTrustBypassLines = (source: string): readonly number[] => {
+  const result: number[] = [];
+
+  source.split(/\r?\n/).forEach((line, index) => {
+    const sanitized = stripSwiftLineForSemanticScan(line);
+    if (
+      /completionHandler\s*\(\s*\.useCredential\s*,\s*URLCredential\s*\(\s*trust\s*:/.test(
+        sanitized
+      )
+    ) {
+      result.push(index + 1);
+    }
+  });
+
+  return sortedUniqueLines(result);
+};
+
+export const hasSwiftUrlSessionTrustBypassUsage = (source: string): boolean => {
+  return collectSwiftUrlSessionTrustBypassLines(source).length > 0;
+};
+
 const swiftUiLiteralTextPatterns = [
   /\b(?:Text|Button|Label|TextField|SecureField)\s*\(\s*"((?:\\.|[^"\\])*)"/,
   /\.navigationTitle\s*\(\s*"((?:\\.|[^"\\])*)"/,

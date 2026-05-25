@@ -1258,6 +1258,14 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ),
     ['heuristics.ios.security.insecure-transport.ast']
   );
+  for (const sslPinningRuleId of [
+    'skills.ios.guideline.ios.ssl-pinning-para-apps-con-alta-seguridad',
+    'skills.ios.guideline.ios.ssl-pinning-prevenir-man-in-the-middle',
+  ]) {
+    assert.deepEqual(resolveMappedHeuristicRuleIds(sslPinningRuleId), [
+      'heuristics.ios.security.urlsession-trust-bypass.ast',
+    ]);
+  }
   assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui'),
     ['heuristics.ios.localization.hardcoded-ui-string.ast']

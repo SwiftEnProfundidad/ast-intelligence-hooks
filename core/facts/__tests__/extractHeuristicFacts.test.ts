@@ -3130,3 +3130,29 @@ test('detects Android Hilt injection without AndroidEntryPoint with line metadat
   assert.deepEqual(finding?.lines, [3, 4]);
   assert.match(finding?.expected_fix ?? '', /@AndroidEntryPoint/);
 });
+
+test('detects iOS URLSession trust bypass heuristic', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Infrastructure/Networking/InsecureSessionDelegate.swift',
+        [
+          'final class InsecureSessionDelegate: NSObject, URLSessionDelegate {',
+          '  func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {',
+          '    completionHandler(.useCredential, URLCredential(trust: challenge.protectionSpace.serverTrust!))',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const fact = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.security.urlsession-trust-bypass.ast'
+  );
+  assert.ok(fact);
+  assert.deepEqual(fact.lines, [3]);
+});

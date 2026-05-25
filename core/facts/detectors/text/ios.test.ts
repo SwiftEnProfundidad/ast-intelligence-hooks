@@ -180,9 +180,11 @@ import {
   hasSwiftSensitiveLoggingUsage,
   hasSwiftSelfPrintChangesUsage,
   collectSwiftInsecureTransportLines,
+  collectSwiftUrlSessionTrustBypassLines,
   collectSwiftSensitiveUserDefaultsStorageLines,
   hasSwiftSensitiveUserDefaultsStorageUsage,
   hasSwiftInsecureTransportUsage,
+  hasSwiftUrlSessionTrustBypassUsage,
   hasSwiftJSONSerializationUsage,
   collectSwiftJSONSerializationLines,
   hasSwiftExplicitColorStaticMemberUsage,
@@ -227,6 +229,41 @@ let value = loadUser()!
 `;
   assert.equal(hasSwiftForceUnwrap(source), true);
   assert.deepEqual(collectSwiftForceUnwrapLines(source), [2, 3]);
+});
+
+test('hasSwiftUrlSessionTrustBypassUsage detecta delegate que acepta cualquier certificado', () => {
+  const source = `
+final class InsecureDelegate: NSObject, URLSessionDelegate {
+  func urlSession(
+    _ session: URLSession,
+    didReceive challenge: URLAuthenticationChallenge,
+    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+  ) {
+    completionHandler(.useCredential, URLCredential(trust: challenge.protectionSpace.serverTrust!))
+  }
+}
+`;
+
+  assert.equal(hasSwiftUrlSessionTrustBypassUsage(source), true);
+  assert.deepEqual(collectSwiftUrlSessionTrustBypassLines(source), [8]);
+});
+
+test('hasSwiftUrlSessionTrustBypassUsage preserva cancelacion o manejo por defecto del challenge TLS', () => {
+  const source = `
+final class SecureDelegate: NSObject, URLSessionDelegate {
+  func urlSession(
+    _ session: URLSession,
+    didReceive challenge: URLAuthenticationChallenge,
+    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+  ) {
+    completionHandler(.performDefaultHandling, nil)
+    completionHandler(.cancelAuthenticationChallenge, nil)
+  }
+}
+`;
+
+  assert.equal(hasSwiftUrlSessionTrustBypassUsage(source), false);
+  assert.deepEqual(collectSwiftUrlSessionTrustBypassLines(source), []);
 });
 
 test('hasSwiftForceUnwrap excluye type annotations, force cast y operadores', () => {
