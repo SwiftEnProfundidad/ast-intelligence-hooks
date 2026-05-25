@@ -79,6 +79,12 @@ const NON_CODE_RULE_PATTERNS: ReadonlyArray<RegExp> = [
   /\bxcode\b.*\bversion\b/,
   /\bxcodebuild\b/,
   /\bvoiceover\b.*\b(test|screen reader)\b/,
+  /\bmeasure[-\s]twice\b/,
+  /\bspm[-\s]swift[-\s]package[-\s]manager\b/,
+  /\blocal[-\s]packages?\b/,
+  /\bfeature[-\s]modules?.*\bpackages?\b/,
+  /\bun[-\s]target\b.*\bplataforma\b/,
+  /\btestability\b.*\bpackage\b.*\btests?\b/,
 ];
 
 const CODE_RULE_WITH_DIRECT_DETECTOR_PATTERNS: ReadonlyArray<RegExp> = [

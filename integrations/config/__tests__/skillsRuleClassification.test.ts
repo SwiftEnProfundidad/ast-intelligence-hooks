@@ -394,3 +394,35 @@ test('classifySkillsRules no exige detector AST para reglas Android de CI y pipe
   assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, 1);
   assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
 });
+
+test('classifySkillsRules no exige detector runtime para reglas iOS de arquitectura de proyecto', () => {
+  const rules = [
+    'skills.ios.guideline.ios.measure-twice-cut-once-planificar-arquitectura-dependencias-y-flujo-de',
+    'skills.ios.guideline.ios.spm-swift-package-manager-para-modularizacio-n-interna',
+    'skills.ios.guideline.ios.local-packages-para-features-grandes',
+    'skills.ios.guideline.ios.feature-modules-orders-users-auth-como-packages',
+    'skills.ios.guideline.ios.un-target-por-plataforma-cuando-sea-necesario',
+    'skills.ios.guideline.ios.testability-cada-package-con-sus-tests',
+  ];
+
+  const summary = classifySkillsRules(buildLock(rules.map((id) => ({
+    id,
+    description: id,
+    severity: 'WARN',
+    platform: 'ios',
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+    confidence: 'MEDIUM',
+    locked: true,
+    evaluationMode: 'DECLARATIVE',
+    origin: 'core',
+  }))));
+
+  assert.equal(summary.total, rules.length);
+  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, rules.length);
+  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
+  assert.deepEqual(
+    summary.rules.map((rule) => rule.status),
+    rules.map(() => 'NO_ES_REGLA_DE_CODIGO')
+  );
+});
