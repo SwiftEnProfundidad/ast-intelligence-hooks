@@ -76,6 +76,9 @@ const NON_CODE_RULE_PATTERNS: ReadonlyArray<RegExp> = [
   /\btestflight\b/,
   /\bfastlane\b/,
   /\bdeployments?\b/,
+  /\bxcode\b.*\bversion\b/,
+  /\bxcodebuild\b/,
+  /\bvoiceover\b.*\b(test|screen reader)\b/,
 ];
 
 const CODE_RULE_WITH_DIRECT_DETECTOR_PATTERNS: ReadonlyArray<RegExp> = [

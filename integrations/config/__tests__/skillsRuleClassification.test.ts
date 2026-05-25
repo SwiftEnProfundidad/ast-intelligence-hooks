@@ -225,18 +225,57 @@ test('classifySkillsRules no exige detector AST para reglas iOS de proceso y val
       evaluationMode: 'DECLARATIVE',
       origin: 'core',
     },
+    {
+      id: 'skills.ios.guideline.ios.xcode-usar-la-u-ltima-versio-n-estable-disponible',
+      description: 'Xcode usar la última versión estable disponible',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-guidelines',
+      sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios.xcodebuild-cli-para-builds',
+      description: 'xcodebuild CLI para builds',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-guidelines',
+      sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios.voiceover-testear-con-screen-reader',
+      description: 'VoiceOver testear con screen reader',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-guidelines',
+      sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
   ]));
 
-  assert.equal(summary.total, 8);
+  assert.equal(summary.total, 11);
   assert.deepEqual(summary.byStatus, {
     AST_IMPLEMENTED: 0,
     IMPLEMENTAR_DETECTOR: 0,
     REQUIERE_ESTUDIO: 0,
-    NO_ES_REGLA_DE_CODIGO: 8,
+    NO_ES_REGLA_DE_CODIGO: 11,
   });
   assert.deepEqual(
     summary.rules.map((rule) => rule.status),
     [
+      'NO_ES_REGLA_DE_CODIGO',
+      'NO_ES_REGLA_DE_CODIGO',
+      'NO_ES_REGLA_DE_CODIGO',
       'NO_ES_REGLA_DE_CODIGO',
       'NO_ES_REGLA_DE_CODIGO',
       'NO_ES_REGLA_DE_CODIGO',
