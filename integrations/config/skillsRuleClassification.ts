@@ -278,6 +278,31 @@ const IOS_AUDITED_POSITIVE_LANGUAGE_GUIDANCE_PATTERNS: ReadonlyArray<RegExp> = [
   /\bresult[-\s]builders?\b/,
 ];
 
+const IOS_AUDITED_POSITIVE_ARCHITECTURE_STYLE_GUIDANCE_PATTERNS: ReadonlyArray<RegExp> = [
+  /\bcustom[-\s]view[-\s]modifiers?\b.*\breutilizar\b/,
+  /\bdeclarativo\b.*\bui\b/,
+  /\bequatable[-\s]views?\b/,
+  /\bextensions?\b.*\bagrupar\b.*\bfuncionalidad\b/,
+  /\bfactory[-\s]pattern\b/,
+  /\bif[-\s]let\b.*\bunwrap\b/,
+  /\binmutabilidad\b.*\blet\b.*\bvar\b/,
+  /\bmark\b.*\borganizar\b.*\bco[-\s]?digo\b/,
+  /\bmemoization\b/,
+  /\bmvvm\b.*\b(viewmodel|swiftui|combine)\b/,
+  /\bpage[-\s]object[-\s]pattern\b/,
+  /\bpreferencekeys?\b/,
+  /\bpreferences\b.*\bchild[-\s]parent\b/,
+  /\bprotocol[-\s]extensions?\b/,
+  /\bprotocols[-\s]over[-\s]inheritance\b/,
+  /\bpublished\b.*\bviewmodels?\b.*\bbinding\b/,
+  /\bstruct\b.*\bclass\b.*\bidentity\b/,
+  /\buse[-\s]cases?\b.*\b[A-Za-z0-9_]*usecase\b/,
+  /\bviewmodels?[-\s]por[-\s]pantalla\b/,
+  /\bviewmodifiers?[-\s]nativos?\b/,
+  /\bviewthatfits\b/,
+  /\bviper\b.*\boverkill\b/,
+];
+
 const isAuditedIosPositiveLanguageGuidance = (rule: SkillsCompiledRule): boolean => {
   if (rule.platform !== 'ios') {
     return false;
@@ -285,6 +310,15 @@ const isAuditedIosPositiveLanguageGuidance = (rule: SkillsCompiledRule): boolean
 
   const haystack = normalizeText(`${rule.id} ${rule.description} ${rule.sourceSkill}`);
   return IOS_AUDITED_POSITIVE_LANGUAGE_GUIDANCE_PATTERNS.some((pattern) => pattern.test(haystack));
+};
+
+const isAuditedIosPositiveArchitectureStyleGuidance = (rule: SkillsCompiledRule): boolean => {
+  if (rule.platform !== 'ios') {
+    return false;
+  }
+
+  const haystack = normalizeText(`${rule.id} ${rule.description} ${rule.sourceSkill}`);
+  return IOS_AUDITED_POSITIVE_ARCHITECTURE_STYLE_GUIDANCE_PATTERNS.some((pattern) => pattern.test(haystack));
 };
 
 const requiresIosPositiveCodeGuidanceAudit = (rule: SkillsCompiledRule): boolean => {
@@ -382,7 +416,7 @@ const classifyRule = (rule: SkillsCompiledRule): ClassifiedSkillsRule => {
     };
   }
 
-  if (isAuditedIosPositiveLanguageGuidance(rule)) {
+  if (isAuditedIosPositiveLanguageGuidance(rule) || isAuditedIosPositiveArchitectureStyleGuidance(rule)) {
     return {
       ruleId: rule.id,
       platform: rule.platform,
@@ -392,7 +426,7 @@ const classifyRule = (rule: SkillsCompiledRule): ClassifiedSkillsRule => {
       severity: rule.severity,
       status: 'NO_ES_REGLA_DE_CODIGO',
       reason:
-        'Audited iOS positive language guidance; absence is not a safe runtime violation and related negative patterns must be enforced by specific detectors.',
+        'Audited iOS positive guidance; absence is not a safe runtime violation and related negative patterns must be enforced by specific detectors.',
       astNodeIds,
     };
   }
