@@ -288,6 +288,56 @@ test('classifySkillsRules no exige detector AST para reglas iOS de proceso y val
   );
 });
 
+test('classifySkillsRules mantiene reglas iOS code-like en estudio en vez de cerrarlas como no codigo', () => {
+  const summary = classifySkillsRules(buildLock([
+    {
+      id: 'skills.ios.guideline.ios.asyncsequence-y-asyncstream-para-flujos-de-datos',
+      description: 'AsyncSequence y AsyncStream para flujos de datos',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-guidelines',
+      sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios.if-let-para-unwrap-opcional-usado-una-vez',
+      description: 'if-let para unwrap opcional usado una vez',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-guidelines',
+      sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios.viewthatfits-para-layouts-adaptativos',
+      description: 'ViewThatFits para layouts adaptativos',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-guidelines',
+      sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+  ]));
+
+  assert.deepEqual(
+    summary.rules.map((rule) => [rule.ruleId, rule.status]),
+    [
+      ['skills.ios.guideline.ios.asyncsequence-y-asyncstream-para-flujos-de-datos', 'REQUIERE_ESTUDIO'],
+      ['skills.ios.guideline.ios.if-let-para-unwrap-opcional-usado-una-vez', 'REQUIERE_ESTUDIO'],
+      ['skills.ios.guideline.ios.viewthatfits-para-layouts-adaptativos', 'REQUIERE_ESTUDIO'],
+    ]
+  );
+});
+
 test('classifySkillsRules no exige detector AST para reglas Android de proceso y validacion operativa', () => {
   const summary = classifySkillsRules(buildLock([
     {
@@ -462,7 +512,7 @@ test('classifySkillsRules no exige detector runtime para capacidades iOS opciona
   );
 });
 
-test('classifySkillsRules no exige detector runtime para recomendaciones positivas de lenguaje iOS', () => {
+test('classifySkillsRules mantiene recomendaciones positivas de lenguaje iOS en estudio', () => {
   const rules = [
     'skills.ios.guideline.ios.asyncsequence-y-asyncstream-para-flujos-de-datos',
     'skills.ios.guideline.ios.copy-on-write-para-structs-grandes-array-dictionary-ya-lo-hacen',
@@ -488,15 +538,15 @@ test('classifySkillsRules no exige detector runtime para recomendaciones positiv
   }))));
 
   assert.equal(summary.total, rules.length);
-  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, rules.length);
-  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
+  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, 0);
+  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, rules.length);
   assert.deepEqual(
     summary.rules.map((rule) => rule.status),
-    rules.map(() => 'NO_ES_REGLA_DE_CODIGO')
+    rules.map(() => 'REQUIERE_ESTUDIO')
   );
 });
 
-test('classifySkillsRules no exige detector runtime para recomendaciones iOS de arquitectura y estilo positivo', () => {
+test('classifySkillsRules mantiene recomendaciones iOS code-like de arquitectura y estilo en estudio', () => {
   const rules = [
     'skills.ios.guideline.ios-swift-testing.keep-tests-isolated-expressive-and-aligned-with-swift-concurrency',
     'skills.ios.guideline.ios-swiftui-expert.use-native-glasseffect-glasseffectcontainer-and-glass-button-styles',
@@ -539,11 +589,23 @@ test('classifySkillsRules no exige detector runtime para recomendaciones iOS de 
   }))));
 
   assert.equal(summary.total, rules.length);
-  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, rules.length);
-  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
-  assert.deepEqual(
-    summary.rules.map((rule) => rule.status),
-    rules.map(() => 'NO_ES_REGLA_DE_CODIGO')
+  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, 2);
+  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, rules.length - 2);
+  assert.equal(
+    summary.rules.find((rule) => rule.ruleId.includes('keep-tests-isolated'))?.status,
+    'NO_ES_REGLA_DE_CODIGO'
+  );
+  assert.equal(
+    summary.rules.find((rule) => rule.ruleId.includes('use-native-glasseffect'))?.status,
+    'NO_ES_REGLA_DE_CODIGO'
+  );
+  assert.equal(
+    summary.rules.find((rule) => rule.ruleId.includes('if-let-para-unwrap'))?.status,
+    'REQUIERE_ESTUDIO'
+  );
+  assert.equal(
+    summary.rules.find((rule) => rule.ruleId.includes('viewthatfits'))?.status,
+    'REQUIERE_ESTUDIO'
   );
 });
 

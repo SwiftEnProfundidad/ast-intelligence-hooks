@@ -235,6 +235,53 @@ const STUDY_BEFORE_DETECTOR_RULE_IDS = new Set<string>([
 const requiresStudyBeforeDetector = (rule: SkillsCompiledRule): boolean =>
   STUDY_BEFORE_DETECTOR_RULE_IDS.has(rule.id);
 
+const IOS_POSITIVE_CODE_GUIDANCE_PATTERNS: ReadonlyArray<RegExp> = [
+  /\basyncsequence\b/,
+  /\basyncstream\b/,
+  /\bcopy[-\s]on[-\s]write\b/,
+  /\bequatable[-\s]hashable\b/,
+  /\bnil[-\s]coalescing\b/,
+  /\bnumberformatter\b/,
+  /\boperators[-\s]map[-\s]filter[-\s]flatmap\b/,
+  /\boptional[-\s]chaining\b/,
+  /\bresult[-\s]builders?\b/,
+  /\bcustom[-\s]view[-\s]modifiers?\b.*\breutilizar\b/,
+  /\bdeclarativo\b.*\bui\b/,
+  /\bequatable[-\s]views?\b/,
+  /\bextensions?\b.*\bagrupar\b.*\bfuncionalidad\b/,
+  /\bfactory[-\s]pattern\b/,
+  /\bif[-\s]let\b.*\bunwrap\b/,
+  /\binmutabilidad\b.*\blet\b.*\bvar\b/,
+  /\bmark\b.*\borganizar\b.*\bco[-\s]?digo\b/,
+  /\bmemoization\b/,
+  /\bmvvm\b.*\b(viewmodel|swiftui|combine)\b/,
+  /\bpage[-\s]object[-\s]pattern\b/,
+  /\bpreferencekeys?\b/,
+  /\bpreferences\b.*\bchild[-\s]parent\b/,
+  /\bprotocol[-\s]extensions?\b/,
+  /\bprotocols[-\s]over[-\s]inheritance\b/,
+  /\bpublished\b.*\bviewmodels?\b.*\bbinding\b/,
+  /\bstruct\b.*\bclass\b.*\bidentity\b/,
+  /\buse[-\s]cases?\b.*\b[A-Za-z0-9_]*usecase\b/,
+  /\bviewmodels?[-\s]por[-\s]pantalla\b/,
+  /\bviewmodifiers?[-\s]nativos?\b/,
+  /\bviewthatfits\b/,
+  /\bviper\b.*\boverkill\b/,
+];
+
+const requiresIosPositiveCodeGuidanceAudit = (rule: SkillsCompiledRule): boolean => {
+  if (rule.platform !== 'ios') {
+    return false;
+  }
+
+  if (normalizeText(rule.id).includes('-md-')) {
+    return false;
+  }
+
+  const haystack = normalizeText(`${rule.id} ${rule.description} ${rule.sourceSkill}`);
+  return IOS_POSITIVE_CODE_GUIDANCE_PATTERNS.some((pattern) => pattern.test(haystack));
+};
+
 const isNonCodeRule = (rule: SkillsCompiledRule): boolean => {
   const haystack = normalizeText(`${rule.id} ${rule.description} ${rule.sourceSkill}`);
   return NON_CODE_RULE_PATTERNS.some((pattern) => pattern.test(haystack));
@@ -313,6 +360,21 @@ const classifyRule = (rule: SkillsCompiledRule): ClassifiedSkillsRule => {
       status: 'REQUIERE_ESTUDIO',
       reason:
         'Rule has code relevance, but the AST/nodal signal needs explicit design before implementation to avoid poor umbrella detectors.',
+      astNodeIds,
+    };
+  }
+
+  if (requiresIosPositiveCodeGuidanceAudit(rule)) {
+    return {
+      ruleId: rule.id,
+      platform: rule.platform,
+      sourceSkill: rule.sourceSkill,
+      sourcePath: rule.sourcePath,
+      evaluationMode,
+      severity: rule.severity,
+      status: 'REQUIERE_ESTUDIO',
+      reason:
+        'iOS positive code guidance needs explicit audit before classifying it as non-runtime or implementing a detector.',
       astNodeIds,
     };
   }
