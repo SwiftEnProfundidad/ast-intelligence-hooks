@@ -99,6 +99,15 @@ const NON_CODE_RULE_PATTERNS: ReadonlyArray<RegExp> = [
   /\boffline[-\s]first\b/,
   /\bretry[-\s]logic\b/,
   /\bsecure[-\s]enclave\b/,
+  /\basyncsequence\b/,
+  /\basyncstream\b/,
+  /\bcopy[-\s]on[-\s]write\b/,
+  /\bequatable[-\s]hashable\b/,
+  /\bnil[-\s]coalescing\b/,
+  /\bnumberformatter\b/,
+  /\boperators[-\s]map[-\s]filter[-\s]flatmap\b/,
+  /\boptional[-\s]chaining\b/,
+  /\bresult[-\s]builders?\b/,
 ];
 
 const CODE_RULE_WITH_DIRECT_DETECTOR_PATTERNS: ReadonlyArray<RegExp> = [

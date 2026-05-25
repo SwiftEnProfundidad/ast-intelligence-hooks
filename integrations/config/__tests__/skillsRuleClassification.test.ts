@@ -461,3 +461,37 @@ test('classifySkillsRules no exige detector runtime para capacidades iOS opciona
     rules.map(() => 'NO_ES_REGLA_DE_CODIGO')
   );
 });
+
+test('classifySkillsRules no exige detector runtime para recomendaciones positivas de lenguaje iOS', () => {
+  const rules = [
+    'skills.ios.guideline.ios.asyncsequence-y-asyncstream-para-flujos-de-datos',
+    'skills.ios.guideline.ios.copy-on-write-para-structs-grandes-array-dictionary-ya-lo-hacen',
+    'skills.ios.guideline.ios.equatable-hashable-implementar-para-comparacio-n-y-colecciones',
+    'skills.ios.guideline.ios.nil-coalescing-valores-por-defecto',
+    'skills.ios.guideline.ios.numberformatter-formateo-de-nu-meros-monedas',
+    'skills.ios.guideline.ios.operators-map-filter-flatmap-combinelatest-merge',
+    'skills.ios.guideline.ios.optional-chaining-cadenas-de-opcionales',
+    'skills.ios.guideline.ios.result-builders-para-dsls-swiftui-ya-lo-usa',
+  ];
+
+  const summary = classifySkillsRules(buildLock(rules.map((id) => ({
+    id,
+    description: id,
+    severity: 'WARN',
+    platform: 'ios',
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+    confidence: 'MEDIUM',
+    locked: true,
+    evaluationMode: 'DECLARATIVE',
+    origin: 'core',
+  }))));
+
+  assert.equal(summary.total, rules.length);
+  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, rules.length);
+  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
+  assert.deepEqual(
+    summary.rules.map((rule) => rule.status),
+    rules.map(() => 'NO_ES_REGLA_DE_CODIGO')
+  );
+});
