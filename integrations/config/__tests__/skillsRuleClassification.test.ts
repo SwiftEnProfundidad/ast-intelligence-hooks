@@ -601,3 +601,83 @@ test('classifySkillsRules no exige detector runtime para setup Android de proyec
   assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, rules.length);
   assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
 });
+
+test('classifySkillsRules trata instrucciones meta iOS con detector como no runtime', () => {
+  const summary = classifySkillsRules(buildLock([
+    {
+      id: 'skills.ios.guideline.ios-concurrency.use-grep-for-swiftstrictconcurrency-or-swiftdefaultactorisolation-in-p',
+      description: 'Use grep for SwiftStrictConcurrency or SwiftDefaultActorIsolation in project settings',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-concurrency-guidelines',
+      sourcePath: 'vendor/skills/swift-concurrency/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios-concurrency.use-read-on-package-swift-for-swiftpm-settings-tools-version-strict-co',
+      description: 'Use read on Package.swift for SwiftPM settings, tools version and strict concurrency',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-concurrency-guidelines',
+      sourcePath: 'vendor/skills/swift-concurrency/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios-concurrency.use-references-linting-md-for-rule-intent-and-preferred-fixes-avoid-du',
+      description: 'Use references/linting.md for rule intent and preferred fixes',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-concurrency-guidelines',
+      sourcePath: 'vendor/skills/swift-concurrency/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+    {
+      id: 'skills.ios.guideline.ios-concurrency.use-references-threading-md-to-avoid-thread-centric-debugging-and-rely',
+      description: 'Use references/threading.md to avoid thread-centric debugging and rely on structured concurrency',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-concurrency-guidelines',
+      sourcePath: 'vendor/skills/swift-concurrency/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+  ]));
+
+  assert.equal(summary.total, 4);
+  assert.deepEqual(summary.byStatus, {
+    AST_IMPLEMENTED: 0,
+    IMPLEMENTAR_DETECTOR: 0,
+    REQUIERE_ESTUDIO: 0,
+    NO_ES_REGLA_DE_CODIGO: 4,
+  });
+});
+
+test('classifySkillsRules trata referencias documentales SwiftUI como no runtime aunque tengan detector', () => {
+  const summary = classifySkillsRules(buildLock([
+    {
+      id: 'skills.ios.guideline.ios-swiftui-expert.references-state-management-md-property-wrappers-and-data-flow-prefer-',
+      description: 'References state-management.md property wrappers and data flow preferences',
+      severity: 'WARN',
+      platform: 'ios',
+      sourceSkill: 'ios-swiftui-expert-guidelines',
+      sourcePath: 'vendor/skills/swiftui-expert-skill/SKILL.md',
+      confidence: 'MEDIUM',
+      locked: true,
+      evaluationMode: 'DECLARATIVE',
+      origin: 'core',
+    },
+  ]));
+
+  assert.equal(summary.rules[0]?.status, 'NO_ES_REGLA_DE_CODIGO');
+});

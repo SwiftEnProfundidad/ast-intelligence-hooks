@@ -240,6 +240,17 @@ const isNonCodeRule = (rule: SkillsCompiledRule): boolean => {
   return NON_CODE_RULE_PATTERNS.some((pattern) => pattern.test(haystack));
 };
 
+const isMetaInstructionRule = (rule: SkillsCompiledRule): boolean => {
+  const normalizedId = normalizeText(rule.id);
+  return (
+    normalizedId.includes('.use-grep-for-') ||
+    normalizedId.includes('.use-read-on-') ||
+    normalizedId.includes('.use-references-') ||
+    normalizedId.includes('.references-') ||
+    normalizedId.includes('.then-use-references-')
+  );
+};
+
 const hasDirectCodeDetectorCandidate = (rule: SkillsCompiledRule): boolean => {
   const haystack = normalizeText(`${rule.id} ${rule.description} ${rule.sourceSkill}`);
   return CODE_RULE_WITH_DIRECT_DETECTOR_PATTERNS.some((pattern) => pattern.test(haystack));
@@ -248,6 +259,20 @@ const hasDirectCodeDetectorCandidate = (rule: SkillsCompiledRule): boolean => {
 const classifyRule = (rule: SkillsCompiledRule): ClassifiedSkillsRule => {
   const evaluationMode = rule.evaluationMode ?? 'AUTO';
   const astNodeIds = resolveMappedHeuristicRuleIdsForCompiledRule(rule);
+
+  if (isMetaInstructionRule(rule)) {
+    return {
+      ruleId: rule.id,
+      platform: rule.platform,
+      sourceSkill: rule.sourceSkill,
+      sourcePath: rule.sourcePath,
+      evaluationMode,
+      severity: rule.severity,
+      status: 'NO_ES_REGLA_DE_CODIGO',
+      reason: 'Instruccion meta de uso de tooling o referencias; no debe emitirse como finding runtime.',
+      astNodeIds,
+    };
+  }
 
   if (astNodeIds.length > 0) {
     return {
