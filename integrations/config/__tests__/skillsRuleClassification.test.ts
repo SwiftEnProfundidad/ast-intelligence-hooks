@@ -495,3 +495,54 @@ test('classifySkillsRules no exige detector runtime para recomendaciones positiv
     rules.map(() => 'NO_ES_REGLA_DE_CODIGO')
   );
 });
+
+test('classifySkillsRules no exige detector runtime para recomendaciones iOS de arquitectura y estilo positivo', () => {
+  const rules = [
+    'skills.ios.guideline.ios-swift-testing.keep-tests-isolated-expressive-and-aligned-with-swift-concurrency',
+    'skills.ios.guideline.ios-swiftui-expert.use-native-glasseffect-glasseffectcontainer-and-glass-button-styles',
+    'skills.ios.guideline.ios.custom-view-modifiers-reutilizar-estilos',
+    'skills.ios.guideline.ios.declarativo-describe-el-ui-no-co-mo-construirlo',
+    'skills.ios.guideline.ios.equatable-views-para-optimizar-renders',
+    'skills.ios.guideline.ios.extensions-agrupar-por-funcionalidad-archivos-separados',
+    'skills.ios.guideline.ios.factory-pattern-para-crear-dependencias-complejas',
+    'skills.ios.guideline.ios.if-let-para-unwrap-opcional-usado-una-vez',
+    'skills.ios.guideline.ios.inmutabilidad-let-var-siempre-que-sea-posible',
+    'skills.ios.guideline.ios.mark-organizar-co-digo-dentro-de-archivos',
+    'skills.ios.guideline.ios.memoization-cachear-ca-lculos-costosos',
+    'skills.ios.guideline.ios.mvvm-model-view-viewmodel-binding-con-combine',
+    'skills.ios.guideline.ios.mvvm-model-view-viewmodel-preferido-con-swiftui',
+    'skills.ios.guideline.ios.page-object-pattern-encapsular-lo-gica-de-ui-en-objetos',
+    'skills.ios.guideline.ios.preferencekeys-para-comunicacio-n-child-parent',
+    'skills.ios.guideline.ios.preferences-comunicacio-n-child-parent',
+    'skills.ios.guideline.ios.protocol-extensions-default-implementations',
+    'skills.ios.guideline.ios.protocols-over-inheritance-composicio-n-de-comportamiento',
+    'skills.ios.guideline.ios.published-en-viewmodels-para-binding-con-views',
+    'skills.ios.guideline.ios.struct-por-defecto-class-solo-cuando-necesites-identity-o-herencia',
+    'skills.ios.guideline.ios.use-cases-createorderusecase-updateorderstatususecase',
+    'skills.ios.guideline.ios.viewmodels-por-pantalla-orderslistviewmodel-orderdetailviewmodel',
+    'skills.ios.guideline.ios.viewmodifiers-nativos-primero-antes-de-crear-custom-viewmodifiers',
+    'skills.ios.guideline.ios.viewthatfits-para-layouts-adaptativos',
+    'skills.ios.guideline.ios.viper-solo-si-el-equipo-lo-conoce-bien-overkill-para-apps-pequen-as',
+  ];
+
+  const summary = classifySkillsRules(buildLock(rules.map((id) => ({
+    id,
+    description: id,
+    severity: 'WARN',
+    platform: 'ios',
+    sourceSkill: 'ios-guidelines',
+    sourcePath: 'vendor/skills/ios-enterprise-rules/SKILL.md',
+    confidence: 'MEDIUM',
+    locked: true,
+    evaluationMode: 'DECLARATIVE',
+    origin: 'core',
+  }))));
+
+  assert.equal(summary.total, rules.length);
+  assert.equal(summary.byStatus.NO_ES_REGLA_DE_CODIGO, rules.length);
+  assert.equal(summary.byStatus.REQUIERE_ESTUDIO, 0);
+  assert.deepEqual(
+    summary.rules.map((rule) => rule.status),
+    rules.map(() => 'NO_ES_REGLA_DE_CODIGO')
+  );
+});
