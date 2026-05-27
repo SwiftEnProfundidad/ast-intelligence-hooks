@@ -63,9 +63,9 @@
   <text class="t" x="1148" y="548">MCP, adapters</text>
   <text class="t" x="1148" y="576">Telemetry, diagnostics</text>
 
-  <path class="arrow" d="M 1270 364 C 1270 420 800 420 800 460" />
-  <path class="arrow" d="M 920 364 C 920 425 315 425 315 460" />
-  <path class="arrow" d="M 1270 364 C 1270 420 1285 420 1285 460" />
+  <path class="arrow" d="M 920 364 L 920 414 L 315 414 L 315 460" />
+  <path class="arrow" d="M 1270 364 L 1270 414 L 800 414 L 800 460" />
+  <path class="arrow" d="M 1270 364 L 1285 414 L 1285 460" />
 
   <text class="muted" x="90" y="660">Baseline is IDE-agnostic. Client-specific adapters are opt-in.</text>
 </svg>

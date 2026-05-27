@@ -125,12 +125,22 @@ Install Pumuki in a consumer repository:
 
 ```bash
 npm install --save-exact pumuki
-npx --yes pumuki bootstrap --enterprise --agent=codex
+npx --yes pumuki bootstrap --enterprise
 npx --yes pumuki status --json
 npx --yes pumuki doctor --deep --json
 ```
 
-Open a governed SDD change session:
+After bootstrap, the normal developer path is intentionally small:
+
+```bash
+git add <files>
+git commit
+git push
+```
+
+Managed hooks run the required Pumuki lifecycle automatically. Teams only reach for explicit commands when they need setup, diagnostics, CI wiring, SDD evidence, MCP servers or operational recovery.
+
+Open a governed SDD change session when the repository requires explicit SDD/OpenSpec control:
 
 ```bash
 npx --yes pumuki sdd status
@@ -138,16 +148,7 @@ npx --yes pumuki sdd session --open --change=<change-id>
 npx --yes pumuki sdd validate --stage=PRE_COMMIT --json
 ```
 
-Run local gates:
-
-```bash
-npx --yes --package pumuki@latest pumuki-pre-write
-npx --yes --package pumuki@latest pumuki-pre-commit
-npx --yes --package pumuki@latest pumuki-pre-push
-npx --yes --package pumuki@latest pumuki-ci
-```
-
-Run a full tracked-repository audit:
+Run a full tracked-repository audit only for diagnostics or governance reporting:
 
 ```bash
 npx --yes pumuki audit --json
@@ -162,7 +163,7 @@ Recommended enterprise path:
 
 ```bash
 npm install --save-exact pumuki
-npx --yes pumuki bootstrap --enterprise --agent=codex
+npx --yes pumuki bootstrap --enterprise
 ```
 
 What the bootstrap path does:
@@ -182,7 +183,7 @@ Useful postinstall controls:
 |---|---|
 | `PUMUKI_SKIP_POSTINSTALL=1` | Disable postinstall bootstrap. |
 | `PUMUKI_POSTINSTALL_WITH_MCP=1` | Include MCP wiring during postinstall. |
-| `PUMUKI_POSTINSTALL_MCP_AGENT=repo|cursor|claude|codex` | Select adapter/client wiring for postinstall. |
+| `PUMUKI_POSTINSTALL_MCP_AGENT=<agent>` | Select optional adapter/client wiring for postinstall. |
 | `PUMUKI_SKIP_CHAINED_PRE_WRITE=1` | Skip chained `PRE_WRITE` inside managed hooks. |
 
 ### Framework Repository
@@ -221,7 +222,12 @@ If `status` or `doctor` reports version drift, use the `alignmentCommand` printe
 
 ## Command Reference
 
-The main lifecycle binary is `pumuki`.
+The main lifecycle binary is `pumuki`. This section is an operator reference, not the expected daily developer workflow. The intended enterprise path is progressive disclosure:
+
+1. `bootstrap` once per repository.
+2. work through normal Git operations.
+3. let managed hooks, CI and policy decide automatically.
+4. use explicit commands only for diagnostics, evidence, adapters, SDD operations or automation.
 
 ```text
 pumuki --version | -v
@@ -431,11 +437,11 @@ Adapter scaffolding:
 
 ```bash
 npx --yes pumuki adapter install --agent=repo --dry-run --json
-npx --yes pumuki adapter install --agent=codex --json
+npx --yes pumuki adapter install --agent=<agent> --json
 npx --yes pumuki adapter install --agent=cursor --dry-run --json
 ```
 
-Supported adapter targets include `repo`, `codex`, `claude`, `cursor`, `windsurf` and `opencode`.
+Supported adapter targets include `repo`, `cursor`, `claude`, `codex`, `windsurf` and `opencode`. These are opt-in client adapters; the managed Git hooks, gates, lifecycle, evidence and `.pumuki/adapter.json` baseline remain AI-agent, CLI and IDE agnostic.
 
 References:
 
