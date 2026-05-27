@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { mock, test } from 'node:test';
 import { emitSystemNotification } from '../framework-menu-system-notifications-lib';
 import type { PumukiCriticalNotificationEvent } from '../framework-menu-system-notifications-types';
@@ -8,6 +10,15 @@ const envForDefaultNotificationBehavior = (): NodeJS.ProcessEnv => {
   const next = { ...process.env };
   delete next.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS;
   return next;
+};
+
+const enableBlockedDialogForTest = (repoRoot: string): void => {
+  mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+  writeFileSync(
+    join(repoRoot, '.pumuki', 'system-notifications.json'),
+    `${JSON.stringify({ enabled: true, channel: 'macos', blockedDialogEnabled: true }, null, 2)}\n`,
+    'utf8'
+  );
 };
 
 test('emitSystemNotification usa stderr fallback en linux por defecto', (t) => {
@@ -116,6 +127,7 @@ test('emitSystemNotification mantiene la fachada pública y entrega por macOS cu
 
 test('emitSystemNotification desactiva notificaciones desde el diálogo y bloquea emisiones posteriores', async () => {
   await withTempDir('pumuki-system-notifications-disable-e2e-', async (repoRoot) => {
+    enableBlockedDialogForTest(repoRoot);
     const baseNowMs = Date.parse('2026-03-04T12:00:00.000Z');
     const event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }> = {
       kind: 'gate.blocked',
@@ -158,6 +170,7 @@ test('emitSystemNotification desactiva notificaciones desde el diálogo y bloque
 
 test('emitSystemNotification silencia 30 min desde el diálogo y vuelve a permitir notificaciones al expirar', async () => {
   await withTempDir('pumuki-system-notifications-mute-e2e-', async (repoRoot) => {
+    enableBlockedDialogForTest(repoRoot);
     const baseNowMs = Date.parse('2026-03-04T12:00:00.000Z');
     const event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }> = {
       kind: 'gate.blocked',

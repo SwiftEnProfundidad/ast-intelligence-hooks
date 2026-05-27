@@ -15,7 +15,7 @@ test('buildSystemNotificationsConfigFromSelection construye config macOS habilit
   assert.deepEqual(buildSystemNotificationsConfigFromSelection(true), {
     enabled: true,
     channel: 'macos',
-    blockedDialogEnabled: true,
+    blockedDialogEnabled: false,
   });
   assert.deepEqual(buildSystemNotificationsConfigFromSelection(false), {
     enabled: false,
@@ -41,7 +41,7 @@ test('normalizeSystemNotificationsConfig conserva muteUntil y blockedDialogEnabl
   );
 });
 
-test('normalizeSystemNotificationsConfig hereda dialog cuando falta blockedDialogEnabled', () => {
+test('normalizeSystemNotificationsConfig no activa dialog cuando falta blockedDialogEnabled', () => {
   assert.deepEqual(
     normalizeSystemNotificationsConfig({
       enabled: true,
@@ -50,7 +50,7 @@ test('normalizeSystemNotificationsConfig hereda dialog cuando falta blockedDialo
     {
       enabled: true,
       channel: 'macos',
-      blockedDialogEnabled: true,
+      blockedDialogEnabled: false,
     }
   );
   assert.deepEqual(
@@ -73,7 +73,7 @@ test('readSystemNotificationsConfig habilita notificaciones por defecto cuando n
     assert.deepEqual(config, {
       enabled: true,
       channel: 'macos',
-      blockedDialogEnabled: true,
+      blockedDialogEnabled: false,
     });
   });
 });
@@ -103,7 +103,7 @@ test('readSystemNotificationsConfig conserva muteUntil cuando existe', async () 
     assert.equal(config.enabled, true);
     assert.equal(config.channel, 'macos');
     assert.equal(config.muteUntil, muteUntil);
-    assert.equal(config.blockedDialogEnabled, true);
+    assert.equal(config.blockedDialogEnabled, false);
   });
 });
 
