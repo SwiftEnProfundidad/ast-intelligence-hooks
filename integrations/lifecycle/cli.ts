@@ -26,6 +26,7 @@ import { runLifecycleUninstall } from './uninstall';
 import { runLifecycleUpdate } from './update';
 import { runOpenSpecBootstrap } from './openSpecBootstrap';
 import { runLifecycleAdapterInstall, type AdapterAgent } from './adapter';
+import { writePreWriteLease } from './preWriteLease';
 import { createLoopSessionContract, isLoopSessionTransitionAllowed } from './loopSessionContract';
 import {
   createLoopSession,
@@ -103,6 +104,7 @@ type LifecycleCommand =
 type SddCommand =
   | 'status'
   | 'validate'
+  | 'guard'
   | 'session'
   | 'sync-docs'
   | 'learn'
@@ -218,6 +220,7 @@ Pumuki lifecycle commands:
   pumuki context repair [--json]
   pumuki sdd status [--json]
   pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]
+  pumuki sdd guard [--stage=PRE_WRITE] [--json]
   pumuki sdd session --open --change=<change-id|auto> [--ttl-minutes=<n>] [--json]
   pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]
   pumuki sdd session --close [--json]
@@ -997,6 +1000,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
     if (
       subcommandRaw !== 'status' &&
       subcommandRaw !== 'validate' &&
+      subcommandRaw !== 'guard' &&
       subcommandRaw !== 'session' &&
       subcommandRaw !== 'sync-docs' &&
       subcommandRaw !== 'sync' &&
@@ -1038,7 +1042,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         throw new Error(`--dry-run is only supported with "pumuki sdd sync-docs", "pumuki sdd learn", "pumuki sdd auto-sync", "pumuki sdd evidence" or "pumuki sdd state-sync".\n\n${HELP_TEXT}`);
       }
       if (arg.startsWith('--stage=')) {
-        if (sddCommand === 'validate') {
+        if (sddCommand === 'validate' || sddCommand === 'guard') {
           sddStage = parseSddStage(arg.slice('--stage='.length));
           continue;
         }
@@ -1054,7 +1058,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
           sddAutoSyncStage = parseSddStage(arg.slice('--stage='.length));
           continue;
         }
-        throw new Error(`--stage is only supported with "pumuki sdd validate", "pumuki sdd sync-docs", "pumuki sdd learn" or "pumuki sdd auto-sync".\n\n${HELP_TEXT}`);
+        throw new Error(`--stage is only supported with "pumuki sdd validate", "pumuki sdd guard", "pumuki sdd sync-docs", "pumuki sdd learn" or "pumuki sdd auto-sync".\n\n${HELP_TEXT}`);
       }
       if (arg.startsWith('--status=')) {
         if (sddCommand !== 'state-sync') {
@@ -1269,6 +1273,15 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         json,
         sddCommand,
         sddStage: sddStage ?? 'PRE_COMMIT',
+      };
+    }
+    if (sddCommand === 'guard') {
+      return {
+        command: commandRaw,
+        purgeArtifacts: false,
+        json,
+        sddCommand,
+        sddStage: sddStage ?? 'PRE_WRITE',
       };
     }
     if (sddCommand === 'sync-docs') {
@@ -1864,6 +1877,7 @@ export type LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate: typeof emitAuditSummaryNotificationFromAiGate;
   emitGateBlockedNotification: typeof emitGateBlockedNotification;
   runPlatformGate: typeof runPlatformGate;
+  writePreWriteLease: typeof writePreWriteLease;
   runLifecycleWatch: typeof runLifecycleWatch;
   collectRemoteCiDiagnostics: typeof collectRemoteCiDiagnostics;
 };
@@ -1872,6 +1886,7 @@ const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate,
   emitGateBlockedNotification,
   runPlatformGate,
+  writePreWriteLease,
   runLifecycleWatch,
   collectRemoteCiDiagnostics,
 };
@@ -2019,8 +2034,11 @@ export const prioritizePreWriteAiGateViolations = (
     const rightMatches = right.code === nextAction.reason ? 0 : 1;
     return leftMatches - rightMatches;
   });
+  const blocked = violations.some((violation) => violation.severity === 'ERROR');
   return {
     ...aiGate,
+    status: blocked ? 'BLOCKED' : 'ALLOWED',
+    allowed: !blocked,
     violations,
   };
 };

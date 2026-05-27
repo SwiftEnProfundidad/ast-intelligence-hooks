@@ -35,11 +35,17 @@ test('formatEvidenceSummaryForMenu renderiza bloque operativo', () => {
       { severity: 'CRITICAL', ruleId: 'rule.a', file: 'apps/backend/src/a.ts', line: 7 },
       { severity: 'HIGH', ruleId: 'rule.b', file: 'apps/ios/App/B.swift', line: 14 },
     ],
+    platformAuditRows: [
+      { platform: 'Backend', violations: 2 },
+      { platform: 'iOS', violations: 1 },
+    ],
   });
 
   assert.match(rendered, /Evidence: status=ok stage=CI outcome=BLOCKED findings=3/);
   assert.match(rendered, /Severities \(enterprise\): critical=1 high=1 medium=1 low=0/);
   assert.match(rendered, /Top files: apps\/backend\/src\/a\.ts \(2\), apps\/ios\/App\/B\.swift \(1\)/);
+  assert.match(rendered, /Platforms: Backend=2, iOS=1/);
+  assert.match(rendered, /Top findings: \[CRITICAL\] rule\.a -> apps\/backend\/src\/a\.ts:7; \[HIGH\] rule\.b -> apps\/ios\/App\/B\.swift:14/);
 });
 
 test('formatEvidenceSummaryForMenu en missing da instruccion accionable', () => {

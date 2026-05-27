@@ -1,7 +1,7 @@
 {
   "name": "pumuki",
-  "version": "6.3.307",
-  "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
+  "version": "6.3.378",
+  "description": "Enterprise governance framework for AI-assisted software delivery with Git hooks, SDD/OpenSpec, AST intelligence, evidence, MCP and multi-platform rule enforcement.",
   "main": "index.js",
   "bin": {
     "pumuki": "bin/pumuki.js",
@@ -184,7 +184,14 @@
     "kotlin",
     "react",
     "nextjs",
-    "nestjs"
+    "nestjs",
+    "ai-governance",
+    "ai-assisted-development",
+    "software-delivery",
+    "sdd",
+    "openspec",
+    "mcp",
+    "evidence"
   ],
   "author": {
     "name": "Juan Carlos Merlos Albarracín",

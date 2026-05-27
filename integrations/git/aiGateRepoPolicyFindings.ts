@@ -93,7 +93,7 @@ export const appendTrackingActionableContext = (params: {
   return params.message;
 };
 
-const toRepoPolicyFinding = (params: {
+export const toRepoPolicyFinding = (params: {
   code: string;
   message: string;
   severity: 'ERROR' | 'WARN';
@@ -104,6 +104,7 @@ const toRepoPolicyFinding = (params: {
   message: params.message,
   matchedBy: 'RepoPolicy',
   source: 'ai_gate:repo_policy',
+  ...(params.code === 'EVIDENCE_PREWRITE_WORKTREE_WARN' ? { blocking: false } : {}),
 });
 
 export const collectAiGateRepoPolicyFindings = (params: {

@@ -14,6 +14,13 @@ export type EvidenceBlockingCause = {
 const isBlockingSeverity = (severity: string): boolean =>
   severity.toUpperCase() === 'CRITICAL' || severity.toUpperCase() === 'ERROR';
 
+const isNonBlockingSwiftTestingMigrationWarning = (params: {
+  ruleId?: string;
+  severity: string;
+}): boolean =>
+  params.ruleId === 'skills.ios.prefer-swift-testing'
+  && params.severity.toUpperCase() === 'WARN';
+
 const toFindingBlockingCause = (finding: SnapshotFinding): EvidenceBlockingCause => ({
   ruleId: finding.ruleId,
   code: finding.code,
@@ -27,16 +34,19 @@ const toFindingBlockingCause = (finding: SnapshotFinding): EvidenceBlockingCause
 
 const toViolationBlockingCause = (
   violation: CompatibilityViolation
-): EvidenceBlockingCause => ({
-  ruleId: violation.ruleId,
-  code: violation.code,
-  severity: resolveViolationSeverity(violation),
-  message: violation.message,
-  file: violation.file,
-  lines: violation.lines,
-  remediation: violation.expected_fix,
-  source: 'ai_gate.violations',
-});
+): EvidenceBlockingCause => {
+  const withStructuredRemediation = violation as CompatibilityViolation & { remediation?: string };
+  return {
+    ruleId: violation.ruleId,
+    code: violation.code,
+    severity: resolveViolationSeverity(violation),
+    message: violation.message,
+    file: violation.file,
+    lines: violation.lines,
+    remediation: violation.expected_fix ?? withStructuredRemediation.remediation,
+    source: 'ai_gate.violations',
+  };
+};
 
 const resolveViolationSeverity = (violation: CompatibilityViolation): string => {
   const withLegacySeverity = violation as CompatibilityViolation & { severity?: string };
@@ -56,7 +66,14 @@ export const extractEvidenceBlockingCauses = (
 
   for (const finding of evidence.snapshot.findings) {
     const explicitlyBlocking = finding.blocking === true;
-    if (finding.blocking === false || (!explicitlyBlocking && !isBlockingSeverity(finding.severity))) {
+    if (
+      finding.blocking === false
+      || isNonBlockingSwiftTestingMigrationWarning({
+        ruleId: finding.ruleId,
+        severity: finding.severity,
+      })
+      || (!explicitlyBlocking && !isBlockingSeverity(finding.severity))
+    ) {
       continue;
     }
     const cause = toFindingBlockingCause(finding);
@@ -69,9 +86,14 @@ export const extractEvidenceBlockingCauses = (
 
   for (const violation of evidence.ai_gate.violations) {
     const explicitlyBlocking = violation.blocking === true;
+    const severity = resolveViolationSeverity(violation);
     if (
       violation.blocking === false ||
-      (!explicitlyBlocking && !isBlockingSeverity(resolveViolationSeverity(violation)))
+      isNonBlockingSwiftTestingMigrationWarning({
+        ruleId: violation.ruleId,
+        severity,
+      }) ||
+      (!explicitlyBlocking && !isBlockingSeverity(severity))
     ) {
       continue;
     }

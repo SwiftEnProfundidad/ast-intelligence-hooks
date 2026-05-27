@@ -3,7 +3,7 @@ import test from 'node:test';
 import { androidRules } from './android';
 
 test('androidRules define reglas heurísticas locked para plataforma android', () => {
-  assert.equal(androidRules.length, 38);
+  assert.equal(androidRules.length, 42);
 
   const ids = androidRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -13,8 +13,12 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
     'heuristics.android.flow.livedata-state-exposure.ast',
     'heuristics.android.flow.viewmodel-flow-without-statein.ast',
     'heuristics.android.flow.sharedflow-used-as-state.ast',
+    'heuristics.android.security.legacy-fingerprint-api.ast',
+    'heuristics.android.architecture.custom-singleton-object.ast',
+    'heuristics.android.di.hilt-injection-without-entrypoint.ast',
     'heuristics.android.concurrency.asynctask.ast',
     'heuristics.android.architecture.god-activity.ast',
+    'heuristics.android.startup.application-oncreate-heavy-init.ast',
     'heuristics.android.compose.non-lazy-scrollable-collection.ast',
     'heuristics.android.compose.unstable-launched-effect-key.ast',
     'heuristics.android.compose.launched-effect-busy-loop.ast',
@@ -83,12 +87,28 @@ test('androidRules define reglas heurísticas locked para plataforma android', (
     'HEURISTICS_ANDROID_FLOW_SHAREDFLOW_USED_AS_STATE_AST'
   );
   assert.equal(
+    byId.get('heuristics.android.security.legacy-fingerprint-api.ast')?.then.code,
+    'HEURISTICS_ANDROID_SECURITY_LEGACY_FINGERPRINT_API_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.architecture.custom-singleton-object.ast')?.then.code,
+    'HEURISTICS_ANDROID_ARCHITECTURE_CUSTOM_SINGLETON_OBJECT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.di.hilt-injection-without-entrypoint.ast')?.then.code,
+    'HEURISTICS_ANDROID_DI_HILT_INJECTION_WITHOUT_ENTRYPOINT_AST'
+  );
+  assert.equal(
     byId.get('heuristics.android.concurrency.asynctask.ast')?.then.code,
     'HEURISTICS_ANDROID_CONCURRENCY_ASYNCTASK_AST'
   );
   assert.equal(
     byId.get('heuristics.android.architecture.god-activity.ast')?.then.code,
     'HEURISTICS_ANDROID_ARCHITECTURE_GOD_ACTIVITY_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.android.startup.application-oncreate-heavy-init.ast')?.then.code,
+    'HEURISTICS_ANDROID_STARTUP_APPLICATION_ONCREATE_HEAVY_INIT_AST'
   );
   assert.equal(
     byId.get('heuristics.android.compose.non-lazy-scrollable-collection.ast')?.then.code,

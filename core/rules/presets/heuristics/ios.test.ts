@@ -3,7 +3,7 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 124);
+  assert.equal(iosRules.length, 137);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -29,6 +29,9 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.swiftui.onchange-task.ast',
     'heuristics.ios.swiftui.onchange-readonly-var.ast',
     'heuristics.ios.memory.strong-delegate.ast',
+    'heuristics.ios.architecture.cross-feature-import.ast',
+    'heuristics.ios.architecture.layer-direction-violation.ast',
+    'heuristics.ios.architecture.excessive-public-api.ast',
     'heuristics.ios.memory.strong-self-escaping-closure.ast',
     'heuristics.ios.memory.unowned-self-capture.ast',
     'heuristics.ios.memory.manual-management.ast',
@@ -54,11 +57,19 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.dependencies.carthage.ast',
     'heuristics.ios.dependencies.swiftpm-branch-dependency.ast',
     'heuristics.ios.dependencies.swift-tools-version-below-6-2.ast',
+    'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
     'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
+    'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
+    'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+    'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+    'heuristics.ios.concurrency.mainactor-run-patch.ast',
     'heuristics.ios.naming.non-pascal-case-type.ast',
     'heuristics.ios.uikit.cell-without-reuse.ast',
     'heuristics.ios.security.userdefaults-sensitive-data.ast',
     'heuristics.ios.security.insecure-transport.ast',
+    'heuristics.ios.security.urlsession-trust-bypass.ast',
     'heuristics.ios.localization.localizable-strings.ast',
     'heuristics.ios.interface-builder.storyboard-xib.ast',
     'heuristics.ios.localization.hardcoded-ui-string.ast',
@@ -105,6 +116,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.accessibility.animation-without-reduce-motion.ast',
     'heuristics.ios.swiftui.inline-action-logic.ast',
     'heuristics.ios.navigation-view.ast',
+    'heuristics.ios.navigation.path-without-restoration.ast',
     'heuristics.ios.swiftui.untyped-navigation-link-destination.ast',
     'heuristics.ios.foreground-color.ast',
     'heuristics.ios.corner-radius.ast',
@@ -126,6 +138,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.testing.legacy-expectation-description.ast',
     'heuristics.ios.testing.mixed-frameworks.ast',
     'heuristics.ios.testing.quick-nimble.ast',
+    'heuristics.ios.testing.third-party-ui-test-framework.ast',
     'heuristics.ios.core-data.nsmanagedobject-boundary.ast',
     'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
     'heuristics.ios.core-data.layer-leak.ast',
@@ -179,8 +192,48 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'HEURISTICS_IOS_DEPENDENCIES_SWIFT_TOOLS_VERSION_BELOW_6_2_AST'
   );
   assert.equal(
+    byId.get('heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_SWIFTPM_DEFAULT_ISOLATION_NOT_MAINACTOR_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_SWIFTPM_STRICT_CONCURRENCY_BELOW_COMPLETE_AST'
+  );
+  assert.equal(
     byId.get('heuristics.ios.concurrency.strict-concurrency-below-complete.ast')?.then.code,
     'HEURISTICS_IOS_CONCURRENCY_STRICT_CONCURRENCY_BELOW_COMPLETE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_DEFAULT_ACTOR_ISOLATION_NOT_MAINACTOR_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.upcoming-feature-disabled.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_UPCOMING_FEATURE_DISABLED_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.ui-state-without-mainactor.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_UI_STATE_WITHOUT_MAINACTOR_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.shared-mutable-state-without-actor.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_SHARED_MUTABLE_STATE_WITHOUT_ACTOR_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.mainactor-run-patch.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_MAINACTOR_RUN_PATCH_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.architecture.cross-feature-import.ast')?.then.code,
+    'HEURISTICS_IOS_ARCHITECTURE_CROSS_FEATURE_IMPORT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.architecture.layer-direction-violation.ast')?.then.code,
+    'HEURISTICS_IOS_ARCHITECTURE_LAYER_DIRECTION_VIOLATION_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.architecture.excessive-public-api.ast')?.then.code,
+    'HEURISTICS_IOS_ARCHITECTURE_EXCESSIVE_PUBLIC_API_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.naming.non-pascal-case-type.ast')?.then.code,
@@ -213,6 +266,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.accessibility.on-tap-without-button-trait.ast')?.then.code,
     'HEURISTICS_IOS_ACCESSIBILITY_ON_TAP_WITHOUT_BUTTON_TRAIT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.navigation.path-without-restoration.ast')?.then.code,
+    'HEURISTICS_IOS_NAVIGATION_PATH_WITHOUT_RESTORATION_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.swiftui.glasseffectid-without-namespace.ast')?.then.code,
@@ -257,6 +314,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.architecture.tca-composable-architecture.ast')?.then.code,
     'HEURISTICS_IOS_ARCHITECTURE_TCA_COMPOSABLE_ARCHITECTURE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.testing.third-party-ui-test-framework.ast')?.then.code,
+    'HEURISTICS_IOS_TESTING_THIRD_PARTY_UI_TEST_FRAMEWORK_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.json.jsonserialization.ast')?.then.code,

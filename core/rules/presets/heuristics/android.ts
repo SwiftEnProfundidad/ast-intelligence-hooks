@@ -116,6 +116,66 @@ export const androidRules: RuleSet = [
     },
   },
   {
+    id: 'heuristics.android.security.legacy-fingerprint-api.ast',
+    description:
+      'Detects legacy FingerprintManager API usage where androidx.biometric.BiometricPrompt is the supported baseline.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.security.legacy-fingerprint-api.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected legacy FingerprintManager API usage; use androidx.biometric.BiometricPrompt.',
+      code: 'HEURISTICS_ANDROID_SECURITY_LEGACY_FINGERPRINT_API_AST',
+    },
+  },
+  {
+    id: 'heuristics.android.architecture.custom-singleton-object.ast',
+    description:
+      'Detects custom Kotlin object singletons in Android production code where Hilt/Dagger dependency injection is expected.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.architecture.custom-singleton-object.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected a custom Kotlin object singleton in Android production code; use Hilt/Dagger dependency injection.',
+      code: 'HEURISTICS_ANDROID_ARCHITECTURE_CUSTOM_SINGLETON_OBJECT_AST',
+    },
+  },
+  {
+    id: 'heuristics.android.di.hilt-injection-without-entrypoint.ast',
+    description:
+      'Detects Activity or Fragment Hilt field injection without @AndroidEntryPoint.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.di.hilt-injection-without-entrypoint.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected Hilt field injection in Activity/Fragment without @AndroidEntryPoint.',
+      code: 'HEURISTICS_ANDROID_DI_HILT_INJECTION_WITHOUT_ENTRYPOINT_AST',
+    },
+  },
+  {
     id: 'heuristics.android.concurrency.asynctask.ast',
     description:
       'Detects deprecated AsyncTask usage in Android production code where coroutines should be used.',
@@ -153,6 +213,26 @@ export const androidRules: RuleSet = [
       message:
         'AST heuristic detected an Android Activity mixing UI entrypoint with product responsibilities.',
       code: 'HEURISTICS_ANDROID_ARCHITECTURE_GOD_ACTIVITY_AST',
+    },
+  },
+  {
+    id: 'heuristics.android.startup.application-oncreate-heavy-init.ast',
+    description:
+      'Detects heavy library initialization inside Android Application.onCreate where AndroidX Startup Initializer or lazy feature initialization should be used.',
+    severity: 'WARN',
+    platform: 'android',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.android.startup.application-oncreate-heavy-init.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected heavy initialization inside Application.onCreate.',
+      code: 'HEURISTICS_ANDROID_STARTUP_APPLICATION_ONCREATE_HEAVY_INIT_AST',
     },
   },
   {

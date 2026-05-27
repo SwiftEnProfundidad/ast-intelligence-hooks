@@ -130,6 +130,96 @@ const sortedUniqueLines = (lines: ReadonlyArray<number>): readonly number[] => {
     .sort((left, right) => left - right);
 };
 
+const androidCustomSingletonObjectNamePattern =
+  /(?:Repository|Service|Manager|Client|Store|DataSource|Gateway|Controller|Coordinator)$/;
+
+const androidSafeObjectNamePattern =
+  /(?:Route|Routes|Screen|Screens|Destination|Destinations|Module|Modules|Constants|Config|Keys|Theme|Colors|Typography)$/;
+
+const isAndroidHiltModuleObjectContext = (
+  lines: readonly string[],
+  index: number
+): boolean => {
+  const context = lines
+    .slice(Math.max(0, index - 4), index)
+    .map((line) => stripKotlinLineForSemanticScan(line))
+    .join('\n');
+  return /@(?:Module|InstallIn|Provides|Binds)\b/.test(context);
+};
+
+export const collectAndroidCustomSingletonObjectLines = (source: string): readonly number[] => {
+  const lines = source.split(/\r?\n/);
+  const matches: number[] = [];
+
+  lines.forEach((line, index) => {
+    const sanitized = stripKotlinLineForSemanticScan(line);
+    if (sanitized.trimStart().startsWith('import ')) {
+      return;
+    }
+    const objectMatch = sanitized.match(/^\s*object\s+([A-Za-z_][A-Za-z0-9_]*)\b/);
+    const objectName = objectMatch?.[1];
+    if (!objectName) {
+      return;
+    }
+    if (androidSafeObjectNamePattern.test(objectName) || isAndroidHiltModuleObjectContext(lines, index)) {
+      return;
+    }
+    if (androidCustomSingletonObjectNamePattern.test(objectName)) {
+      matches.push(index + 1);
+    }
+  });
+
+  return sortedUniqueLines(matches);
+};
+
+export const hasAndroidCustomSingletonObjectUsage = (source: string): boolean =>
+  collectAndroidCustomSingletonObjectLines(source).length > 0;
+
+export const collectAndroidHiltInjectionWithoutEntryPointLines = (
+  source: string
+): readonly number[] => {
+  const lines = source.split(/\r?\n/);
+  const matches: number[] = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const sanitized = stripKotlinLineForSemanticScan(lines[index] ?? '');
+    const classMatch = sanitized.match(
+      /^\s*(?:class|open\s+class)\s+([A-Za-z_][A-Za-z0-9_]*)\b[^{]*(?:Activity|Fragment)\s*\(/
+    );
+    if (!classMatch) {
+      continue;
+    }
+
+    const annotationContext = lines
+      .slice(Math.max(0, index - 4), index)
+      .map((line) => stripKotlinLineForSemanticScan(line))
+      .join('\n');
+    if (/@AndroidEntryPoint\b/.test(annotationContext)) {
+      continue;
+    }
+
+    const classStartLine = index + 1;
+    let braceDepth =
+      countTokenOccurrences(sanitized, '{') - countTokenOccurrences(sanitized, '}');
+    for (let cursor = index + 1; cursor < lines.length; cursor += 1) {
+      const candidate = stripKotlinLineForSemanticScan(lines[cursor] ?? '');
+      if (/@Inject\b\s+lateinit\s+var\b/.test(candidate)) {
+        matches.push(classStartLine, cursor + 1);
+      }
+      braceDepth += countTokenOccurrences(candidate, '{');
+      braceDepth -= countTokenOccurrences(candidate, '}');
+      if (braceDepth <= 0) {
+        break;
+      }
+    }
+  }
+
+  return sortedUniqueLines(matches);
+};
+
+export const hasAndroidHiltInjectionWithoutEntryPointUsage = (source: string): boolean =>
+  collectAndroidHiltInjectionWithoutEntryPointLines(source).length > 0;
+
 const countTokenOccurrences = (line: string, token: string): number => {
   return line.split(token).length - 1;
 };
@@ -462,6 +552,39 @@ export const hasKotlinGodActivityUsage = (source: string): boolean => {
       (hasUiEntrypoint && functionCount >= 8) ||
       activityBodyLines >= 140
     );
+  });
+};
+
+export const hasKotlinApplicationOnCreateHeavyInitializationUsage = (source: string): boolean => {
+  const lines = source.split(/\r?\n/);
+  const declarations = parseKotlinTypeDeclarations(source);
+
+  return declarations.some((declaration) => {
+    const isApplication = declaration.conformances.some((conformance) =>
+      conformance === 'Application'
+    );
+    if (!isApplication) {
+      return false;
+    }
+
+    const body = lines
+      .slice(declaration.bodyStartLine - 1, declaration.bodyEndLine)
+      .map((line) => stripKotlinLineForSemanticScan(line))
+      .filter((line) => !line.trimStart().startsWith('import '))
+      .join('\n');
+
+    const onCreateMatch = /\boverride\s+fun\s+onCreate\s*\([^)]*\)\s*\{/g.exec(body);
+    if (!onCreateMatch) {
+      return false;
+    }
+
+    const openBraceIndex = body.indexOf('{', onCreateMatch.index);
+    const onCreateBody = extractBalancedBlockSegment(body, openBraceIndex);
+    if (!onCreateBody) {
+      return false;
+    }
+
+    return /\b(?:FirebaseApp|WorkManager|Room|Retrofit|OkHttpClient|Glide|Coil|Timber)\s*(?:\.|Builder\s*\(|\()/.test(onCreateBody);
   });
 };
 
@@ -1373,4 +1496,26 @@ export const findKotlinLiskovSubstitutionMatch = (
   }
 
   return undefined;
+};
+
+const legacyFingerprintApiPattern =
+  /\b(?:android\.hardware\.fingerprint\.)?FingerprintManager(?:Compat)?\b/;
+
+export const hasAndroidLegacyFingerprintApiUsage = (source: string): boolean =>
+  scanCodeLikeSource(source, ({ source: scannedSource, index }) => {
+    const match = scannedSource.slice(index).match(legacyFingerprintApiPattern);
+    return match?.index === 0;
+  });
+
+export const collectAndroidLegacyFingerprintApiLines = (
+  source: string
+): readonly number[] => {
+  const lines: number[] = [];
+  source.split(/\r?\n/).forEach((line, index) => {
+    const sanitized = stripKotlinLineForSemanticScan(line);
+    if (legacyFingerprintApiPattern.test(sanitized)) {
+      lines.push(index + 1);
+    }
+  });
+  return sortedUniqueLines(lines);
 };

@@ -7,11 +7,15 @@ import {
   findKotlinOpenClosedWhenMatch,
   findKotlinPresentationSrpMatch,
   hasAndroidAsyncTaskUsage,
+  hasAndroidCustomSingletonObjectUsage,
+  hasAndroidHiltInjectionWithoutEntryPointUsage,
+  hasAndroidLegacyFingerprintApiUsage,
   hasKotlinCoroutineTryCatchUsage,
   hasKotlinDispatcherMainBoundaryLeakUsage,
   hasKotlinGlobalScopeUsage,
   hasKotlinGodActivityUsage,
   hasKotlinHardcodedBackgroundDispatcherUsage,
+  hasKotlinApplicationOnCreateHeavyInitializationUsage,
   hasKotlinIncompleteMaterialThemeUsage,
   hasKotlinJUnit4Usage,
   hasKotlinHardcodedUiStringUsage,
@@ -183,6 +187,39 @@ class MainActivity : ComponentActivity() {
 }
 `;
   assert.equal(hasKotlinGodActivityUsage(source), false);
+});
+
+test('hasKotlinApplicationOnCreateHeavyInitializationUsage detecta inicializacion pesada en Application.onCreate', () => {
+  const source = `
+class RuralGoApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+    FirebaseApp.initializeApp(this)
+    WorkManager.initialize(this, configuration)
+    Room.databaseBuilder(this, AppDatabase::class.java, "app.db").build()
+  }
+}
+`;
+  assert.equal(hasKotlinApplicationOnCreateHeavyInitializationUsage(source), true);
+});
+
+test('hasKotlinApplicationOnCreateHeavyInitializationUsage permite Application delgada e Initializer dedicado', () => {
+  const thinApplication = `
+class RuralGoApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+  }
+}
+`;
+  const startupInitializer = `
+class AnalyticsInitializer : Initializer<FirebaseApp> {
+  override fun create(context: Context): FirebaseApp {
+    return FirebaseApp.initializeApp(context)!!
+  }
+}
+`;
+  assert.equal(hasKotlinApplicationOnCreateHeavyInitializationUsage(thinApplication), false);
+  assert.equal(hasKotlinApplicationOnCreateHeavyInitializationUsage(startupInitializer), false);
 });
 
 test('hasKotlinNonLazyScrollableCollectionUsage detecta Column scrollable con iteracion de coleccion', () => {
@@ -1208,4 +1245,90 @@ class PumukiLspAndroidCanaryPremiumDiscountPolicy : PumukiLspAndroidCanaryDiscou
   assert.match(match.why, /LSP/i);
   assert.match(match.impact, /sustituci|regresion|crash/i);
   assert.match(match.expected_fix, /contrato base|estrategia|subtipo/i);
+});
+
+test('hasAndroidLegacyFingerprintApiUsage detecta APIs biométricas legacy y preserva BiometricPrompt', () => {
+  const legacyManager = `
+import android.hardware.fingerprint.FingerprintManager
+
+class LegacyBiometricAuth(private val fingerprintManager: FingerprintManager) {
+  fun authenticate(callback: FingerprintManager.AuthenticationCallback) {
+    fingerprintManager.authenticate(null, null, 0, callback, null)
+  }
+}
+`;
+  const legacyCompat = `
+class LegacyCompatAuth(private val fingerprintManager: FingerprintManagerCompat) {
+  fun authenticate(callback: FingerprintManagerCompat.AuthenticationCallback) {
+    fingerprintManager.authenticate(null, 0, null, callback, null)
+  }
+}
+`;
+  const modern = `
+import androidx.biometric.BiometricPrompt
+
+class ModernBiometricAuth(private val biometricPrompt: BiometricPrompt) {
+  fun authenticate(promptInfo: BiometricPrompt.PromptInfo) {
+    biometricPrompt.authenticate(promptInfo)
+  }
+}
+// FingerprintManager should not match inside comments
+val sample = "FingerprintManagerCompat"
+`;
+
+  assert.equal(hasAndroidLegacyFingerprintApiUsage(legacyManager), true);
+  assert.equal(hasAndroidLegacyFingerprintApiUsage(legacyCompat), true);
+  assert.equal(hasAndroidLegacyFingerprintApiUsage(modern), false);
+});
+
+test('hasAndroidCustomSingletonObjectUsage detecta singletons Kotlin propios y preserva objetos seguros', () => {
+  const singletonSource = `
+object CheckoutRepository {
+  fun loadCheckout() = Unit
+}
+
+object SessionManager {
+  fun clear() = Unit
+}
+`;
+  const safeSource = `
+object CheckoutRoute {
+  const val PATH = "checkout"
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+object CheckoutModule {
+  @Provides
+  fun provideRepository(): CheckoutRepository = CheckoutRepository()
+}
+`;
+
+  assert.equal(hasAndroidCustomSingletonObjectUsage(singletonSource), true);
+  assert.equal(hasAndroidCustomSingletonObjectUsage(safeSource), false);
+});
+
+test('hasAndroidHiltInjectionWithoutEntryPointUsage detecta Activity o Fragment con inyección Hilt sin AndroidEntryPoint', () => {
+  const missingEntryPoint = `
+class CheckoutActivity : AppCompatActivity() {
+  @Inject lateinit var analytics: CheckoutAnalytics
+}
+
+class StoresFragment : Fragment() {
+  @Inject lateinit var repository: StoresRepository
+}
+`;
+  const validEntryPoint = `
+@AndroidEntryPoint
+class CheckoutActivity : AppCompatActivity() {
+  @Inject lateinit var analytics: CheckoutAnalytics
+}
+
+class CheckoutViewModel @Inject constructor(
+  private val repository: CheckoutRepository
+) : ViewModel()
+`;
+
+  assert.equal(hasAndroidHiltInjectionWithoutEntryPointUsage(missingEntryPoint), true);
+  assert.equal(hasAndroidHiltInjectionWithoutEntryPointUsage(validEntryPoint), false);
 });

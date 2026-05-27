@@ -1,7 +1,15 @@
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { SmokeExpectation } from './package-install-smoke-contract';
+import {
+  assertNoFatalOutput,
+  assertSuccess,
+  runCommand,
+} from './package-install-smoke-runner-common';
 import { runGateStep, type SmokeGateStep } from './package-install-smoke-gate-lib';
 import { resolveConsumerPumukiCommand } from './package-install-smoke-command-resolution-lib';
 import type { SmokeWorkspace } from './package-install-smoke-workspace-contract';
+import { pushCommandLog } from './package-install-smoke-workspace-lib';
 
 export type SmokeStepResult = {
   label: SmokeGateStep['label'];
@@ -62,3 +70,54 @@ export const runDefaultSmokeGateSteps = (params: {
       exitCode: result.exitCode,
     };
   });
+
+export const runSmokeGoldenFlowEvidenceStep = (workspace: SmokeWorkspace): void => {
+  writeFileSync(
+    join(workspace.consumerRepo, 'package-smoke-minimal.feature'),
+    [
+      'Feature: Package smoke minimal',
+      '',
+      '  Scenario: package smoke minimal',
+      '    Given a minimal package consumer',
+      '    When Pumuki gates run',
+      '    Then the package smoke passes',
+      '',
+    ].join('\n'),
+    'utf8'
+  );
+  const addFeatureResult = runCommand({
+    cwd: workspace.consumerRepo,
+    executable: 'git',
+    args: ['add', 'package-smoke-minimal.feature'],
+  });
+  pushCommandLog(workspace.commandLog, addFeatureResult);
+  assertSuccess(addFeatureResult, 'git add package smoke feature');
+
+  const resolvedCommand = resolveConsumerPumukiCommand({
+    consumerRepo: workspace.consumerRepo,
+    binary: 'pumuki',
+    args: [
+      'sdd',
+      'evidence',
+      '--scenario-id=package-smoke-minimal',
+      '--test-command=package-smoke-minimal',
+      '--test-status=passed',
+      '--json',
+    ],
+  });
+  const result = runCommand({
+    cwd: workspace.consumerRepo,
+    executable: resolvedCommand.executable,
+    args: resolvedCommand.args,
+    env: {
+      PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS: '1',
+      PUMUKI_SYSTEM_NOTIFICATIONS: '0',
+      PUMUKI_NOTIFICATIONS: '0',
+      PUMUKI_SDD_BYPASS: '1',
+    },
+  });
+
+  pushCommandLog(workspace.commandLog, result);
+  assertNoFatalOutput(result, 'pumuki-sdd-evidence');
+  assertSuccess(result, 'pumuki-sdd-evidence');
+};

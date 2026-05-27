@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  evaluatePreWriteAgentGuard,
   readPreWriteLeaseStatus,
   resolvePreWriteLeasePath,
   toPreWriteEnforcementGapFinding,
@@ -121,6 +122,36 @@ test('readPreWriteLeaseStatus invalida lease de diff validado si cambia el slice
   }
 });
 
+test('readPreWriteLeaseStatus acepta lease de diff validado aunque HEAD haya cambiado', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-prewrite-lease-validated-diff-head-'));
+  try {
+    const result = writePreWriteLease({
+      repoRoot,
+      git: createGitStub({
+        head: 'old-head',
+        dirtyPaths: ['apps/ios/Presentation/Views/LoginView.swift'],
+      }),
+      now: new Date('2026-05-18T10:00:00.000Z'),
+      allowExistingCodeChanges: true,
+    });
+    assert.equal(result.valid, true);
+    assert.equal(result.lease?.validation_mode, 'validated-diff');
+
+    const status = readPreWriteLeaseStatus({
+      repoRoot,
+      git: createGitStub({
+        head: 'new-head',
+        dirtyPaths: ['apps/ios/Presentation/Views/LoginView.swift'],
+      }),
+      now: new Date('2026-05-18T10:10:00.000Z'),
+    });
+    assert.equal(status.valid, true);
+    assert.equal(status.code, 'PRE_WRITE_LEASE_VALID');
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test('readPreWriteLeaseStatus invalida lease emitido con HEAD distinto', () => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-prewrite-lease-head-'));
   try {
@@ -173,4 +204,62 @@ test('toPreWriteEnforcementGapFinding emite instrucciones separadas para usuario
   assert.match(finding.message, /User action: run `npx pumuki-pre-write`/);
   assert.match(finding.message, /AI agent instruction: STOP/);
   assert.match(finding.expected_fix ?? '', /do not apply patches or write files/);
+});
+
+test('evaluatePreWriteAgentGuard bloquea al agente antes de editar si no existe lease valido', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-prewrite-agent-guard-missing-'));
+  try {
+    const guard = evaluatePreWriteAgentGuard({
+      repoRoot,
+      git: createGitStub({ dirtyPaths: [] }),
+      now: new Date('2026-05-25T08:00:00.000Z'),
+    });
+
+    assert.equal(guard.allowed, false);
+    assert.equal(guard.code, 'PRE_WRITE_AGENT_GUARD_LEASE_MISSING');
+    assert.match(guard.message, /AI agent instruction: STOP/);
+    assert.match(guard.expected_fix, /run `npx pumuki-pre-write` before editing code/);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('evaluatePreWriteAgentGuard bloquea cambios de codigo sin lease previo valido', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-prewrite-agent-guard-dirty-'));
+  try {
+    const guard = evaluatePreWriteAgentGuard({
+      repoRoot,
+      git: createGitStub({ dirtyPaths: ['apps/ios/Presentation/AuthView.swift'] }),
+      now: new Date('2026-05-25T08:00:00.000Z'),
+    });
+
+    assert.equal(guard.allowed, false);
+    assert.equal(guard.code, 'PRE_WRITE_AGENT_GUARD_CODE_CHANGED_WITHOUT_LEASE');
+    assert.deepEqual(guard.changedCodePaths, ['apps/ios/Presentation/AuthView.swift']);
+    assert.match(guard.message, /do not apply patches or write files/);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('evaluatePreWriteAgentGuard permite editar cuando existe lease PRE_WRITE valido', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-prewrite-agent-guard-valid-'));
+  try {
+    writePreWriteLease({
+      repoRoot,
+      git: createGitStub({ dirtyPaths: [] }),
+      now: new Date('2026-05-25T08:00:00.000Z'),
+    });
+
+    const guard = evaluatePreWriteAgentGuard({
+      repoRoot,
+      git: createGitStub({ dirtyPaths: [] }),
+      now: new Date('2026-05-25T08:10:00.000Z'),
+    });
+
+    assert.equal(guard.allowed, true);
+    assert.equal(guard.code, 'PRE_WRITE_AGENT_GUARD_ALLOWED');
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
 });

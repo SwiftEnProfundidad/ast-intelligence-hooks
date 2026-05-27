@@ -321,6 +321,30 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
       'heuristics.ios.solid.lsp.narrowed-precondition.ast',
     ]
   );
+  for (const ruleId of [
+    'skills.ios.guideline.ios.feature-first-cada-feature-es-un-bounded-context-no-se-acoplan-entre-s',
+    'skills.ios.guideline.ios.las-features-no-se-importan-entre-si',
+    'skills.ios.guideline.ios.shared-kernel-solo-tipos-mi-nimos-compartidos-entre-features',
+  ]) {
+    assert.deepEqual(resolveMappedHeuristicRuleIds(ruleId), [
+      'heuristics.ios.architecture.cross-feature-import.ast',
+    ]);
+  }
+  for (const ruleId of [
+    'skills.ios.guideline.ios.clean-por-feature-presentation-application-domain-infrastructure-domai',
+    'skills.ios.guideline.ios.seguir-clean-architecture-domain-application-infrastructure-presentati',
+    'skills.ios.guideline.ios.ddd-entidades-value-objects-repositorios-protocolos-eventos-de-dominio',
+  ]) {
+    assert.deepEqual(resolveMappedHeuristicRuleIds(ruleId), [
+      'heuristics.ios.architecture.layer-direction-violation.ast',
+    ]);
+  }
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.public-api-solo-exponer-lo-necesario-public-internal-private'
+    ),
+    ['heuristics.ios.architecture.excessive-public-api.ast']
+  );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.testability-inyectar-protocols-no-tipos-concretos'
@@ -390,6 +414,15 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.mainactor-para-co-digo-que-debe-ejecutarse-en-el-hilo-principal'
+    ),
+    [
+      'heuristics.ios.dispatchqueue.ast',
+      'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+    ]
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios-concurrency.use-references-linting-md-for-rule-intent-and-preferred-fixes-avoid-du'
     ),
     ['heuristics.ios.concurrency.dummy-await.ast']
@@ -427,6 +460,18 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
       'skills.ios.guideline.ios-swiftui-expert.use-navigationdestination-for-for-type-safe-navigation'
     ),
     ['heuristics.ios.swiftui.untyped-navigation-link-destination.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.deep-links-deben-mapear-a-rutas-del-path'
+    ),
+    ['heuristics.ios.navigation.path-without-restoration.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.state-restoration-rehidratar-path-desde-estado-persistido-si-aplica'
+    ),
+    ['heuristics.ios.navigation.path-without-restoration.ast']
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
@@ -692,6 +737,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.composicio-n-de-views-views-pequen-os-reutilizables'
+    ),
+    ['heuristics.ios.swiftui.large-viewbuilder-function.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios-swiftui-expert.use-glasseffectid-with-namespace-for-morphing-transitions'
     ),
     ['heuristics.ios.swiftui.glasseffectid-without-namespace.ast']
@@ -781,6 +832,7 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
       'heuristics.ios.dependencies.carthage.ast',
       'heuristics.ios.architecture.swinject.ast',
       'heuristics.ios.architecture.tca-composable-architecture.ast',
+      'heuristics.ios.testing.third-party-ui-test-framework.ast',
     ]
   );
   assert.deepEqual(
@@ -791,6 +843,7 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
       'heuristics.ios.dependencies.carthage.ast',
       'heuristics.ios.architecture.swinject.ast',
       'heuristics.ios.architecture.tca-composable-architecture.ast',
+      'heuristics.ios.testing.third-party-ui-test-framework.ast',
     ]
   );
   assert.deepEqual(
@@ -835,13 +888,30 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.actor-para-estado-compartido-thread-safe'
     ),
-    ['heuristics.ios.dispatchqueue.ast', 'heuristics.ios.dispatchsemaphore.ast']
+    [
+      'heuristics.ios.dispatchqueue.ast',
+      'heuristics.ios.dispatchsemaphore.ast',
+      'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+    ]
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.sincronizacio-n-nativa-actors-para-estado-compartido-osallocatedunfair'
+    ),
+    [
+      'heuristics.ios.dispatchqueue.ast',
+      'heuristics.ios.dispatchsemaphore.ast',
+      'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+    ]
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.mainactor-para-co-digo-que-debe-ejecutarse-en-el-hilo-principal'
     ),
-    ['heuristics.ios.dispatchqueue.ast']
+    [
+      'heuristics.ios.dispatchqueue.ast',
+      'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+    ]
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.taskgroup-para-operaciones-paralelas'),
@@ -964,15 +1034,49 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-concurrency.use-read-on-package-swift-for-swiftpm-settings-tools-version-strict-co'
+    ),
+    [
+      'heuristics.ios.dependencies.swift-tools-version-below-6-2.ast',
+      'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+    ]
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.strict-concurrency-checking-activar-en-complete'
     ),
     ['heuristics.ios.concurrency.strict-concurrency-below-complete.ast']
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios-concurrency.use-grep-for-swiftstrictconcurrency-or-swiftdefaultactorisolation-in-p'
+    ),
+    [
+      'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
+      'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
+      'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+    ]
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.validar-configuracio-n-de-concurrencia-swiftstrictconcurrency-swiftdef'
+    ),
+    [
+      'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
+      'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
+      'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+    ]
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.no-usar-mainactor-como-parche-justificar-el-aislamiento'
     ),
-    ['heuristics.ios.assume-isolated.ast']
+    ['heuristics.ios.assume-isolated.ast', 'heuristics.ios.concurrency.mainactor-run-patch.ast']
   );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-async-without-await'), [
     'heuristics.ios.concurrency.async-without-await.ast',
@@ -1110,6 +1214,12 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(
+      'skills.ios.guideline.ios.request-response-interceptors-logging-auth-tokens'
+    ),
+    ['heuristics.ios.logging.sensitive-data.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
       'skills.ios.guideline.ios.obfuscation-strings-sensibles-en-co-digo'
     ),
     ['heuristics.ios.security.hardcoded-sensitive-string.ast']
@@ -1154,6 +1264,14 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ),
     ['heuristics.ios.security.insecure-transport.ast']
   );
+  for (const sslPinningRuleId of [
+    'skills.ios.guideline.ios.ssl-pinning-para-apps-con-alta-seguridad',
+    'skills.ios.guideline.ios.ssl-pinning-prevenir-man-in-the-middle',
+  ]) {
+    assert.deepEqual(resolveMappedHeuristicRuleIds(sslPinningRuleId), [
+      'heuristics.ios.security.urlsession-trust-bypass.ast',
+    ]);
+  }
   assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.cero-strings-hardcodeadas-en-ui'),
     ['heuristics.ios.localization.hardcoded-ui-string.ast']
@@ -1195,6 +1313,13 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
   assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.traits-accessibilityaddtraits-isbutton'),
     ['heuristics.ios.accessibility.on-tap-without-button-trait.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.voiceover-labels-hints-traits'),
+    [
+      'heuristics.ios.accessibility.icon-only-control-label.ast',
+      'heuristics.ios.accessibility.on-tap-without-button-trait.ast',
+    ]
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.bindable-para-bindings-con-observable'),
@@ -1362,6 +1487,10 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
     ),
     ['heuristics.ios.testing.quick-nimble.ast']
   );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.ios.guideline.ios.xcuitest-ui-testing-nativo'),
+    ['heuristics.ios.testing.third-party-ui-test-framework.ast']
+  );
   assert.deepEqual(resolveMappedHeuristicRuleIds('skills.ios.no-nsmanagedobject-async-boundary'), [
     'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
   ]);
@@ -1460,6 +1589,28 @@ test('resuelve detectores heuristics para reglas canonicales backend/frontend/io
       'skills.android.guideline.android.stateflow-sharedflow-para-exponer-estado-del-viewmodel'
     ),
     ['heuristics.android.flow.livedata-state-exposure.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.biometric-auth-biometricprompt-api'
+    ),
+    ['heuristics.android.security.legacy-fingerprint-api.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.no-singleton-usar-inyeccio-n-de-dependencias-hilt-dagger'
+    ),
+    ['heuristics.android.architecture.custom-singleton-object.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds('skills.android.guideline.android.singletons-everywhere-usar-hilt-di'),
+    ['heuristics.android.architecture.custom-singleton-object.ast']
+  );
+  assert.deepEqual(
+    resolveMappedHeuristicRuleIds(
+      'skills.android.guideline.android.androidentrypoint-activity-fragment-viewmodel'
+    ),
+    ['heuristics.android.di.hilt-injection-without-entrypoint.ast']
   );
   assert.deepEqual(
     resolveMappedHeuristicRuleIds(

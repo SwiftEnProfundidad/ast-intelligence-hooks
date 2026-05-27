@@ -89,7 +89,28 @@ const toPlatformMap = (
 ): Map<string, number> =>
   new Map((summary.platformAuditRows ?? []).map((row) => [row.platform, row.violations]));
 
-const buildConsumerRuntimeEvidenceDriftLines = (
+const formatSummaryFinding = (
+  finding: FrameworkMenuEvidenceSummary['topFindings'][number] | undefined
+): string => {
+  if (!finding) {
+    return 'none';
+  }
+  return `[${finding.severity}] ${finding.ruleId} -> ${finding.file}:${finding.line}`;
+};
+
+const normalizeBlockedCauseLine = (cause: { line?: number; lines?: ReadonlyArray<number> }): number => {
+  if (typeof cause.line === 'number' && Number.isFinite(cause.line) && cause.line > 0) {
+    return Math.floor(cause.line);
+  }
+  const lines = Array.isArray(cause.lines)
+    ? cause.lines
+      .filter((line) => Number.isFinite(line) && line > 0)
+      .map((line) => Math.floor(line))
+    : [];
+  return lines.length > 0 ? Math.min(...lines) : 1;
+};
+
+export const buildConsumerRuntimeEvidenceDriftLines = (
   gateSummary: FrameworkMenuEvidenceSummary,
   canonicalSummary: FrameworkMenuEvidenceSummary
 ): string[] => {
@@ -126,6 +147,18 @@ const buildConsumerRuntimeEvidenceDriftLines = (
     const evidenceValue = evidencePlatforms.get(platform) ?? 0;
     if (gateValue !== evidenceValue) {
       drifts.push(`platform.${platform} gate=${gateValue} evidence=${evidenceValue}`);
+    }
+  }
+
+  const topFindingCount = Math.max(
+    gateSummary.topFindings.length,
+    canonicalSummary.topFindings.length
+  );
+  for (let index = 0; index < topFindingCount; index += 1) {
+    const gateFinding = formatSummaryFinding(gateSummary.topFindings[index]);
+    const evidenceFinding = formatSummaryFinding(canonicalSummary.topFindings[index]);
+    if (gateFinding !== evidenceFinding) {
+      drifts.push(`topFinding.${index} gate=${gateFinding} evidence=${evidenceFinding}`);
     }
   }
 
@@ -173,7 +206,7 @@ export const buildConsumerRuntimeBlockedSummary = (
           severity: 'HIGH' as const,
           ruleId: cause.ruleId ?? cause.code,
           file: cause.file ?? 'PROJECT_ROOT',
-          line: 1,
+          line: normalizeBlockedCauseLine(cause),
         }))
       : [
           {

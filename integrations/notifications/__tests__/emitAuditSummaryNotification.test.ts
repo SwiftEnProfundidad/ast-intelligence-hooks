@@ -20,6 +20,7 @@ const buildEvidence = (params: {
   warn?: number;
   info?: number;
   includeEnterpriseSeverity?: boolean;
+  findings?: AiEvidenceV2_1['snapshot']['findings'];
 }): AiEvidenceV2_1 =>
   ({
     version: '2.1',
@@ -27,7 +28,7 @@ const buildEvidence = (params: {
     snapshot: {
       stage: 'PRE_COMMIT',
       outcome: params.totalViolations > 0 ? 'WARN' : 'PASS',
-      findings: [],
+      findings: params.findings ?? [],
     },
     ledger: [],
     platforms: {},
@@ -121,7 +122,7 @@ test('emitAuditSummaryNotificationFromEvidence retorna missing-evidence cuando n
   });
 });
 
-test('emitAuditSummaryNotificationFromEvidence emite notificación en PRE_COMMIT', () => {
+test('emitAuditSummaryNotificationFromEvidence emite gate.blocked accionable si hay causa en evidence', () => {
   const events: unknown[] = [];
   const result = emitAuditSummaryNotificationFromEvidence(
     {
@@ -135,6 +136,18 @@ test('emitAuditSummaryNotificationFromEvidence emite notificación en PRE_COMMIT
           critical: 1,
           high: 2,
           includeEnterpriseSeverity: true,
+          findings: [
+            {
+              ruleId: 'skills.ios.prefer-swift-testing',
+              code: 'SKILLS_IOS_PREFER_SWIFT_TESTING',
+              severity: 'ERROR',
+              file: 'apps/ios/Test.swift',
+              lines: [12],
+              message: 'XCTest usado en test nuevo.',
+              expected_fix: 'Usa Swift Testing.',
+              blocking: true,
+            } as AiEvidenceV2_1['snapshot']['findings'][number],
+          ],
         }),
       emitSystemNotification: ({ event }) => {
         events.push(event);
@@ -145,9 +158,17 @@ test('emitAuditSummaryNotificationFromEvidence emite notificación en PRE_COMMIT
 
   assert.deepEqual(result, { delivered: true, reason: 'delivered' });
   assert.equal(events.length, 1);
-  const firstEvent = events[0] as { kind?: string; totalViolations?: number };
-  assert.equal(firstEvent.kind, 'audit.summary');
+  const firstEvent = events[0] as {
+    kind?: string;
+    totalViolations?: number;
+    blockingCauses?: ReadonlyArray<{ ruleId?: string; file?: string; message?: string; remediation?: string }>;
+  };
+  assert.equal(firstEvent.kind, 'gate.blocked');
   assert.equal(firstEvent.totalViolations, 3);
+  assert.equal(firstEvent.blockingCauses?.[0]?.ruleId, 'skills.ios.prefer-swift-testing');
+  assert.equal(firstEvent.blockingCauses?.[0]?.file, 'apps/ios/Test.swift');
+  assert.match(firstEvent.blockingCauses?.[0]?.message ?? '', /lines=12/);
+  assert.equal(firstEvent.blockingCauses?.[0]?.remediation, 'Usa Swift Testing.');
 });
 
 test('emitAuditSummaryNotificationFromEvidence no emite en CI salvo override explícito', () => {
@@ -193,7 +214,7 @@ test('emitAuditSummaryNotificationFromEvidence no emite en CI salvo override exp
   assert.deepEqual(resultEnabled, { delivered: true, reason: 'delivered' });
 });
 
-test('toAuditSummaryEventFromAiGate mapea ERROR/WARN a CRITICAL/HIGH', () => {
+test('toAuditSummaryEventFromAiGate emite gate.blocked si hay violaciones en AI Gate', () => {
   const event = toAuditSummaryEventFromAiGate({
     aiGateResult: {
       violations: [
@@ -202,14 +223,181 @@ test('toAuditSummaryEventFromAiGate mapea ERROR/WARN a CRITICAL/HIGH', () => {
         { code: 'E2', message: 'error', severity: 'ERROR' },
       ],
     },
+    stage: 'PRE_COMMIT',
   });
-  assert.equal(event.kind, 'audit.summary');
-  if (event.kind !== 'audit.summary') {
-    assert.fail('Expected audit.summary event');
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
   }
   assert.equal(event.totalViolations, 3);
-  assert.equal(event.criticalViolations, 2);
-  assert.equal(event.highViolations, 1);
+  assert.equal(event.stage, 'PRE_COMMIT');
+  assert.equal(event.blockingCauses?.[0]?.code, 'E1');
+  assert.equal(event.blockingCauses?.[0]?.message, 'error');
+});
+
+test('toAuditSummaryEventFromAiGate extrae causa skill anidada con fichero real', () => {
+  const event = toAuditSummaryEventFromAiGate({
+    aiGateResult: {
+      violations: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          severity: 'ERROR',
+          message:
+            'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.backend.no-empty-catch severity=CRITICAL code=SKILLS_SKILLS_BACKEND_NO_EMPTY_CATCH file=apps/backend/src/admin/repositories/reporting/notification.repository.ts lines=63 message=Disallow empty catch blocks in backend runtime code. || 2) skills.ios.guideline.ios-swiftui-expert.use-relative-layout-over-hard-coded-constants severity=WARN file=apps/ios/View.swift lines=22 message=Use relative layout over hard-coded constants',
+        },
+      ],
+    },
+    stage: 'PRE_WRITE',
+  });
+
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
+  }
+  assert.equal(event.blockingCauses?.[0]?.ruleId, 'skills.backend.no-empty-catch');
+  assert.equal(
+    event.blockingCauses?.[0]?.file,
+    'apps/backend/src/admin/repositories/reporting/notification.repository.ts'
+  );
+  assert.match(event.blockingCauses?.[0]?.message ?? '', /message=Disallow empty catch blocks/);
+  assert.doesNotMatch(event.blockingCauses?.[0]?.message ?? '', /2\) skills\.ios/);
+});
+
+test('toAuditSummaryEventFromAiGate materializa lineas estructuradas de skill anidada', () => {
+  const event = toAuditSummaryEventFromAiGate({
+    aiGateResult: {
+      violations: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          severity: 'ERROR',
+          message:
+            'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.guideline.ios.dynamic-type-font-scaling-automatico severity=WARN code=SKILLS_IOS_DYNAMIC_TYPE file=apps/ios/Presentation/Views/OnboardingCarouselView.swift lines=42,77 message=Dynamic Type - Font scaling automatico remediation=Usa estilos semánticos de SwiftUI.',
+        },
+      ],
+    },
+    stage: 'PRE_WRITE',
+  });
+
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
+  }
+  assert.deepEqual(event.blockingCauses?.[0]?.lines, [42, 77]);
+});
+
+test('toAuditSummaryEventFromAiGate conserva causa estructurada producida por evaluateAiGate', () => {
+  const event = toAuditSummaryEventFromAiGate({
+    aiGateResult: {
+      violations: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          severity: 'ERROR',
+          message: 'Evidence AI gate status is BLOCKED.',
+          ruleId: 'skills.ios.guideline.ios.dynamic-type-font-scaling-automatico',
+          file: 'apps/ios/Presentation/Views/OnboardingCarouselView.swift',
+          lines: [42, 77],
+          remediation: 'Usa estilos semánticos de SwiftUI.',
+        },
+      ],
+    },
+    stage: 'PRE_WRITE',
+  });
+
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
+  }
+  assert.equal(
+    event.blockingCauses?.[0]?.ruleId,
+    'skills.ios.guideline.ios.dynamic-type-font-scaling-automatico'
+  );
+  assert.equal(
+    event.blockingCauses?.[0]?.file,
+    'apps/ios/Presentation/Views/OnboardingCarouselView.swift'
+  );
+  assert.deepEqual(event.blockingCauses?.[0]?.lines, [42, 77]);
+  assert.equal(event.blockingCauses?.[0]?.remediation, 'Usa estilos semánticos de SwiftUI.');
+});
+
+test('toAuditSummaryEventFromEvidence conserva lineas estructuradas de snapshot findings', () => {
+  const evidence: Parameters<typeof toAuditSummaryEventFromEvidence>[0] = {
+    version: '2.1',
+    timestamp: '2026-05-24T10:00:00.000Z',
+    snapshot: {
+      stage: 'PRE_COMMIT',
+      outcome: 'BLOCK',
+      findings: [
+        {
+          ruleId: 'skills.frontend.no-empty-catch',
+          severity: 'ERROR',
+          code: 'SKILLS_FRONTEND_NO_EMPTY_CATCH',
+          message: 'Catch vacío en frontend.',
+          file: 'apps/frontend/src/repository.ts',
+          lines: [12, 18],
+          blocking: true,
+          expected_fix: 'Gestiona el error o propágalo.',
+        },
+      ],
+    },
+    ai_gate: {
+      status: 'BLOCKED',
+      violations: [],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'BLOCKED',
+      total_violations: 1,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 1,
+        WARN: 0,
+        INFO: 0,
+      },
+    },
+    ledger: [],
+    platforms: {},
+    rulesets: [],
+    human_intent: null,
+  };
+
+  const event = toAuditSummaryEventFromEvidence(evidence);
+
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
+  }
+  assert.deepEqual(event.blockingCauses?.[0]?.lines, [12, 18]);
+});
+
+test('toAuditSummaryEventFromEvidence usa violaciones AI Gate como fallback bloqueante accionable', () => {
+  const evidence = buildEvidence({
+    totalViolations: 1,
+    critical: 0,
+    high: 1,
+    findings: [],
+  });
+  evidence.ai_gate.violations = [
+    {
+      code: 'SKILLS_IOS_NO_FOREGROUND_COLOR',
+      severity: 'ERROR',
+      message: 'foregroundColor is not allowed.',
+      ruleId: 'skills.ios.no-foreground-color',
+      file: 'apps/ios/HomeView.swift',
+      lines: [22],
+      remediation: 'Usa tokens semánticos de diseño.',
+    },
+  ];
+
+  const event = toAuditSummaryEventFromEvidence(evidence);
+
+  assert.equal(event.kind, 'gate.blocked');
+  if (event.kind !== 'gate.blocked') {
+    assert.fail('Expected gate.blocked event');
+  }
+  assert.equal(event.blockingCauses?.[0]?.ruleId, 'skills.ios.no-foreground-color');
+  assert.equal(event.blockingCauses?.[0]?.file, 'apps/ios/HomeView.swift');
+  assert.deepEqual(event.blockingCauses?.[0]?.lines, [22]);
+  assert.equal(event.blockingCauses?.[0]?.remediation, 'Usa tokens semánticos de diseño.');
 });
 
 test('emitAuditSummaryNotificationFromAiGate emite notificación para PRE_WRITE', () => {
@@ -268,4 +456,40 @@ test('emitGateBlockedNotification añade contexto de tracking al evento emitido'
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }
+});
+
+test('emitGateBlockedNotification materializa skill anidada dentro de EVIDENCE_GATE_BLOCKED', () => {
+  const events: unknown[] = [];
+  const result = emitGateBlockedNotification(
+    {
+      repoRoot: '/tmp/repo',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage: 'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.prefer-swift-testing XCTest - Solo para proyectos legacy o UI tests',
+      remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+      blockingCauses: [
+        {
+          code: 'EVIDENCE_GATE_BLOCKED',
+          message: 'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.prefer-swift-testing XCTest - Solo para proyectos legacy o UI tests',
+          remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+        },
+      ],
+    },
+    {
+      emitSystemNotification: ({ event }) => {
+        events.push(event);
+        return { delivered: true, reason: 'delivered' };
+      },
+    }
+  );
+
+  assert.deepEqual(result, { delivered: true, reason: 'delivered' });
+  const [event] = events as Array<{
+    blockingCauses?: ReadonlyArray<{ code?: string; ruleId?: string; message?: string; remediation?: string }>;
+  }>;
+  assert.equal(event?.blockingCauses?.[0]?.code, 'SKILLS_IOS_PREFER_SWIFT_TESTING');
+  assert.equal(event?.blockingCauses?.[0]?.ruleId, 'skills.ios.prefer-swift-testing');
+  assert.match(event?.blockingCauses?.[0]?.message ?? '', /message=XCTest - Solo para proyectos legacy o UI tests/);
+  assert.doesNotMatch(event?.blockingCauses?.[0]?.remediation ?? '', /violación indicada/);
 });

@@ -21,6 +21,8 @@ import {
   type PreWriteEnforcementResolution,
 } from '../policy/preWriteEnforcement';
 import { readLifecycleExperimentalFeaturesSnapshot } from './experimentalFeaturesSnapshot';
+import { GitService } from '../git/GitService';
+import { evaluatePreWriteAgentGuard } from './preWriteLease';
 
 import {
   type ParsedArgs,
@@ -66,6 +68,39 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             }
           }
           return 0;
+        }
+        if (parsed.sddCommand === 'guard') {
+          const requestedStage = parsed.sddStage ?? 'PRE_WRITE';
+          if (requestedStage !== 'PRE_WRITE') {
+            if (parsed.json) {
+              writeInfo(JSON.stringify({
+                allowed: false,
+                stage: requestedStage,
+                code: 'PRE_WRITE_AGENT_GUARD_UNSUPPORTED_STAGE',
+                message: 'Agent pre-write guard only supports PRE_WRITE.',
+              }, null, 2));
+            } else {
+              writeInfo('[pumuki][sdd] guard allowed=no code=PRE_WRITE_AGENT_GUARD_UNSUPPORTED_STAGE');
+              writeInfo('[pumuki][sdd] Agent pre-write guard only supports PRE_WRITE.');
+            }
+            return 1;
+          }
+          const guard = evaluatePreWriteAgentGuard({
+            repoRoot: process.cwd(),
+            git: new GitService(),
+          });
+          if (parsed.json) {
+            writeInfo(JSON.stringify(guard, null, 2));
+          } else {
+            writeInfo(
+              `[pumuki][sdd] guard stage=PRE_WRITE allowed=${guard.allowed ? 'yes' : 'no'} code=${guard.code}`
+            );
+            writeInfo(`[pumuki][sdd] ${guard.message}`);
+            if (!guard.allowed) {
+              writeInfo(`[pumuki][sdd] solution: ${guard.expected_fix}`);
+            }
+          }
+          return guard.allowed ? 0 : 1;
         }
         if (parsed.sddCommand === 'validate') {
           const requestedStage = parsed.sddStage ?? 'PRE_COMMIT';
@@ -207,9 +242,54 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             aiGate: rawPreWriteAiGate ?? aiGate,
           });
           const effectiveAiGate = rawPreWriteAiGate ?? aiGate;
-          const reportedAiGate = effectiveAiGate
+          let reportedAiGate = effectiveAiGate
             ? prioritizePreWriteAiGateViolations(effectiveAiGate, nextAction)
             : null;
+          if (
+            result.stage === 'PRE_WRITE' &&
+            result.decision.allowed &&
+            reportedAiGate?.allowed
+          ) {
+            try {
+              const lease = activeDependencies.writePreWriteLease({
+                repoRoot: process.cwd(),
+                git: new GitService(),
+                allowExistingCodeChanges: true,
+              });
+              if (!lease.valid) {
+                reportedAiGate = {
+                  ...reportedAiGate,
+                  status: 'BLOCKED',
+                  allowed: false,
+                  violations: [
+                    ...reportedAiGate.violations,
+                    {
+                      code: lease.code,
+                      severity: 'ERROR',
+                      message: lease.message,
+                    },
+                  ],
+                };
+              }
+            } catch (error) {
+              reportedAiGate = {
+                ...reportedAiGate,
+                status: 'BLOCKED',
+                allowed: false,
+                violations: [
+                  ...reportedAiGate.violations,
+                  {
+                    code: 'PRE_WRITE_LEASE_WRITE_FAILED',
+                    severity: 'ERROR',
+                    message:
+                      error instanceof Error
+                        ? `PRE_WRITE validation passed but could not write the required lease: ${error.message}`
+                        : 'PRE_WRITE validation passed but could not write the required lease.',
+                  },
+                ],
+              };
+            }
+          }
           const sddExperimentalNextAction =
             !aiGate && result.decision.code === 'SDD_EXPERIMENTAL_DISABLED'
               ? {

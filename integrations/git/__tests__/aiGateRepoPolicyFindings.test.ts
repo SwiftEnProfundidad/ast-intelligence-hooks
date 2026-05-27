@@ -6,6 +6,7 @@ import test from 'node:test';
 import {
   appendTrackingActionableContext,
   collectTrackingActiveEntriesFromMarkdown,
+  toRepoPolicyFinding,
 } from '../aiGateRepoPolicyFindings';
 
 test('collectTrackingActiveEntriesFromMarkdown detecta filas activas de backlog tabular', () => {
@@ -92,4 +93,24 @@ test('appendTrackingActionableContext prioriza docs/RURALGO_SEGUIMIENTO.md cuand
 
   assert.match(message, /active_entries=RGO-1900-01@L5, RGO-1900-02@L6/i);
   assert.match(message, /tracking_source=docs\/RURALGO_SEGUIMIENTO\.md/i);
+});
+
+test('toRepoPolicyFinding deja EVIDENCE_PREWRITE_WORKTREE_WARN como advisory no bloqueante', () => {
+  const worktreeWarn = toRepoPolicyFinding({
+    code: 'EVIDENCE_PREWRITE_WORKTREE_WARN',
+    severity: 'WARN',
+    message:
+      'PRE_WRITE worktree hygiene warning: pending_changes=20 (warn_threshold=12). Consider smaller staged/unstaged batches.',
+  });
+  const worktreeOverLimit = toRepoPolicyFinding({
+    code: 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT',
+    severity: 'ERROR',
+    message:
+      'PRE_WRITE worktree hygiene exceeded: pending_changes=25 (block_threshold=24). Split worktree into atomic slices.',
+  });
+
+  assert.equal(worktreeWarn.severity, 'WARN');
+  assert.equal(worktreeWarn.blocking, false);
+  assert.equal(worktreeOverLimit.severity, 'ERROR');
+  assert.equal(worktreeOverLimit.blocking, undefined);
 });

@@ -51,6 +51,26 @@ test('resolveBlockedCauseSummary explica bloqueos de tracking enriquecidos', () 
   assert.doesNotMatch(result, /Evidence AI gate status/i);
 });
 
+test('resolveBlockedCauseSummary trata line_ como línea de tracking, no como tarea activa', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_WRITE',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Evidence AI gate status is BLOCKED. active_entries=line_984 tracking_source=PUMUKI-RESET-MASTER-PLAN.md',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /tracking bloqueado/i);
+  assert.match(result, /PUMUKI-RESET-MASTER-PLAN\.md/);
+  assert.match(result, /línea 984/i);
+  assert.doesNotMatch(result, /line_984 en/);
+  assert.doesNotMatch(result, /Evidence AI gate status/i);
+});
+
 test('resolveBlockedCauseSummary prioriza gaps críticos de skills sobre tracking enriquecido', () => {
   const result = resolveBlockedCauseSummary(
     {
@@ -203,4 +223,25 @@ test('resolveBlockedCauseSummary cuenta todas las causas restantes aunque priori
   assert.match(result, /skills\.backend\.no-console-log/);
   assert.match(result, /\(\+3 más\)/);
   assert.doesNotMatch(result, /\(\+1 más\)/);
+});
+
+test('resolveBlockedCauseSummary explica causeMessage legacy de skill sin blockingCauses', () => {
+  const result = resolveBlockedCauseSummary(
+    {
+      kind: 'gate.blocked',
+      stage: 'PRE_COMMIT',
+      totalViolations: 1,
+      causeCode: 'EVIDENCE_GATE_BLOCKED',
+      causeMessage:
+        'Evidence AI gate status is BLOCKED. Blocking causes: 1) skills.ios.prefer-swift-testing severity=ERROR file=apps/ios/Tests/Mac/Presentation/Features/BuyerAppViewModelVisibleCopyTests.spec.swift lines=9 message=XCTest - Solo para proyectos legacy o UI tests remediation=Migra este test a Swift Testing o justifica la excepción legacy.',
+      remediation: 'Corrige la violación indicada y vuelve a intentar el commit.',
+    },
+    'EVIDENCE_GATE_BLOCKED'
+  );
+
+  assert.match(result, /Skill violada/i);
+  assert.match(result, /BuyerAppViewModelVisibleCopyTests\.spec\.swift:9/);
+  assert.match(result, /Swift Testing/);
+  assert.doesNotMatch(result, /EVIDENCE_GATE_BLOCKED/);
+  assert.doesNotMatch(result, /gate de evidencia/i);
 });

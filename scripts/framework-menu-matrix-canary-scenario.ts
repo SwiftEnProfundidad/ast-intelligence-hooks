@@ -39,6 +39,7 @@ export const resolveConsumerMenuCanaryScenario = (params?: {
       platform,
       option: stage === 'PRE_COMMIT' ? '1' : '2',
       expectedRuleId: 'skills.ios.no-force-unwrap',
+      equivalentRuleIds: ['ios.no-force-unwrap'],
       canaryRelativePath: `apps/ios/App/__pumuki_matrix_canary_ios_${suffix}.swift`,
       canarySource: [
         'import Foundation',
@@ -78,11 +79,12 @@ export const resolveConsumerMenuCanaryScenario = (params?: {
     platform: 'backend',
     option: stage === 'PRE_COMMIT' ? '1' : '2',
     expectedRuleId: 'skills.backend.no-empty-catch',
+    equivalentRuleIds: ['common.error.empty_catch', 'heuristics.ts.empty-catch.ast'],
     canaryRelativePath: `apps/backend/src/__pumuki_matrix_canary_backend_${suffix}.ts`,
     canarySource: [
       'export const __pumukiMatrixCanaryBackend = (): void => {',
       '  try {',
-      "    throw new Error('pumuki-matrix-canary')",
+      '    void 0;',
       '  } catch {}',
       '};',
       '',

@@ -8,24 +8,24 @@ export const buildAuditSummaryPayload = (
 ): SystemNotificationPayload => {
   if (event.criticalViolations > 0) {
     return {
-      title: 'AST Audit Blocked',
-      message: `🔴 ${event.criticalViolations} CRITICAL, ${event.highViolations} HIGH violations`,
+      title: 'Pumuki audit: resumen',
+      message: `Hay ${event.criticalViolations} críticas y ${event.highViolations} high. Abre el bloqueo detallado para ver regla, fichero y solución.`,
     };
   }
   if (event.highViolations > 0) {
     return {
-      title: 'AST Audit Blocked',
-      message: `🟡 ${event.highViolations} HIGH violations found`,
+      title: 'Pumuki audit: resumen',
+      message: `Hay ${event.highViolations} high. Abre el bloqueo detallado para ver regla, fichero y solución.`,
     };
   }
   if (event.totalViolations > 0) {
     return {
-      title: 'AST Audit Blocked',
-      message: `🔴 ${event.totalViolations} violations block the gate`,
+      title: 'Pumuki audit: resumen',
+      message: `Hay ${event.totalViolations} violaciones. Abre el bloqueo detallado para ver regla, fichero y solución.`,
     };
   }
   return {
-    title: 'AST Audit Complete',
-    message: '✅ No violations found',
+    title: 'Pumuki audit: OK',
+    message: 'No se han detectado violaciones.',
   };
 };

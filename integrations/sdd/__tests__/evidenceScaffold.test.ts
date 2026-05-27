@@ -132,6 +132,7 @@ test('runSddEvidenceScaffold dry-run devuelve payload y no escribe artefacto', a
     assert.equal(result.artifact.slices[0]?.red.status, 'failed');
     assert.equal(result.artifact.slices[0]?.green.status, 'passed');
     assert.equal(result.artifact.slices[0]?.refactor.status, 'passed');
+    assert.equal(result.artifact.slices[0]?.verify.status, 'passed');
     assert.equal(result.artifact.ai_evidence.status, 'valid');
     assert.equal(
       existsSync(join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json')),
@@ -165,6 +166,7 @@ test('runSddEvidenceScaffold aplica artefacto cuando dry-run=false', async () =>
         scenario_ref?: string;
         green?: { status?: string };
         refactor?: { status?: string };
+        verify?: { status?: string };
       }>;
       scenario_id?: string;
       test_run?: { status?: string; output_path?: string | null };
@@ -173,6 +175,7 @@ test('runSddEvidenceScaffold aplica artefacto cuando dry-run=false', async () =>
     assert.equal(artifact.slices?.[0]?.scenario_ref, 'BDD-001.feature');
     assert.equal(artifact.slices?.[0]?.green?.status, 'failed');
     assert.equal(artifact.slices?.[0]?.refactor?.status, 'failed');
+    assert.equal(artifact.slices?.[0]?.verify?.status, 'failed');
     assert.equal(artifact.scenario_id, 'BDD-001');
     assert.equal(artifact.test_run?.status, 'failed');
     assert.equal(artifact.test_run?.output_path, '.audit-reports/bdd-001.txt');

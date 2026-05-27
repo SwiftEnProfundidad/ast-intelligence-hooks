@@ -98,9 +98,21 @@ const PRE_WRITE_FUNCTIONAL_EXTENSIONS = [
   '.kts',
 ] as const;
 
+const PRE_WRITE_RUNTIME_ARTIFACT_PATHS = new Set<string>([
+  '.ai_evidence.json',
+  '.AI_EVIDENCE.json',
+  '.pumuki/artifacts/mcp-ai-gate-receipt.json',
+  '.pumuki/prewrite-lease.json',
+]);
+
 const isFunctionalPath = (filePath: string): boolean => {
   const normalized = filePath.trim().toLowerCase();
   return PRE_WRITE_FUNCTIONAL_EXTENSIONS.some((extension) => normalized.endsWith(extension));
+};
+
+const isRuntimeArtifactPath = (filePath: string): boolean => {
+  const normalized = filePath.trim().replace(/\\/g, '/');
+  return PRE_WRITE_RUNTIME_ARTIFACT_PATHS.has(normalized);
 };
 
 const collectStagedPaths = (repoRoot: string): ReadonlyArray<string> | null => {
@@ -127,7 +139,13 @@ const resolvePreWriteRefreshScope = (aiGate: ReturnType<typeof evaluateAiGate>):
   if (stagedPaths === null || stagedPaths.some(isFunctionalPath)) {
     return { kind: 'staged' };
   }
-  return { kind: 'workingTree' };
+  if (stagedPaths.length === 0) {
+    return { kind: 'workingTree' };
+  }
+  if (stagedPaths.length > 0 && stagedPaths.every(isRuntimeArtifactPath)) {
+    return { kind: 'workingTree' };
+  }
+  return { kind: 'staged' };
 };
 
 export const buildPreWriteAutomationTrace = async (params: {

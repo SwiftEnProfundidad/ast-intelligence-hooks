@@ -5,6 +5,8 @@ export type PumukiBlockedNotificationCause = {
   message: string;
   ruleId?: string;
   file?: string;
+  line?: number;
+  lines?: ReadonlyArray<number>;
   remediation?: string;
 };
 

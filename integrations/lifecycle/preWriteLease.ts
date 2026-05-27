@@ -50,6 +50,24 @@ export type PreWriteLeaseWriteResult = {
   changedCodePaths: string[];
 };
 
+export type PreWriteAgentGuardResult = {
+  allowed: boolean;
+  stage: 'PRE_WRITE';
+  code:
+    | 'PRE_WRITE_AGENT_GUARD_ALLOWED'
+    | 'PRE_WRITE_AGENT_GUARD_LEASE_MISSING'
+    | 'PRE_WRITE_AGENT_GUARD_LEASE_INVALID'
+    | 'PRE_WRITE_AGENT_GUARD_LEASE_EXPIRED'
+    | 'PRE_WRITE_AGENT_GUARD_LEASE_HEAD_MISMATCH'
+    | 'PRE_WRITE_AGENT_GUARD_LEASE_DIRTY_AT_ISSUE'
+    | 'PRE_WRITE_AGENT_GUARD_CODE_CHANGED_WITHOUT_LEASE';
+  message: string;
+  expected_fix: string;
+  path: string;
+  changedCodePaths: string[];
+  lease_status: PreWriteLeaseStatus;
+};
+
 const PRE_WRITE_LEASE_TTL_MS = 4 * 60 * 60 * 1000;
 
 export const resolvePreWriteLeasePath = (repoRoot: string): string =>
@@ -169,17 +187,6 @@ export const readPreWriteLeaseStatus = (params: {
     };
   }
 
-  if (lease.head !== resolveHead(params)) {
-    return {
-      valid: false,
-      code: 'PRE_WRITE_LEASE_HEAD_MISMATCH',
-      path,
-      lease,
-      changedCodePaths,
-      message: 'PRE_WRITE lease was issued for a different HEAD.',
-    };
-  }
-
   if (Date.parse(lease.expires_at) <= (params.now ?? new Date()).getTime()) {
     return {
       valid: false,
@@ -215,6 +222,17 @@ export const readPreWriteLeaseStatus = (params: {
       path,
       lease,
       changedCodePaths,
+    };
+  }
+
+  if (lease.head !== resolveHead(params)) {
+    return {
+      valid: false,
+      code: 'PRE_WRITE_LEASE_HEAD_MISMATCH',
+      path,
+      lease,
+      changedCodePaths,
+      message: 'PRE_WRITE lease was issued for a different HEAD.',
     };
   }
 
@@ -284,6 +302,48 @@ export const writePreWriteLease = (params: {
         ? 'PRE_WRITE lease written for validated code diff.'
         : 'PRE_WRITE lease written for clean code state.',
     lease,
+  };
+};
+
+export const evaluatePreWriteAgentGuard = (params: {
+  repoRoot: string;
+  git: Pick<IGitService, 'runGit'>;
+  now?: Date;
+}): PreWriteAgentGuardResult => {
+  const leaseStatus = readPreWriteLeaseStatus(params);
+  if (leaseStatus.valid) {
+    return {
+      allowed: true,
+      stage: 'PRE_WRITE',
+      code: 'PRE_WRITE_AGENT_GUARD_ALLOWED',
+      message: 'PRE_WRITE agent guard passed. A valid PRE_WRITE lease exists for this repo and diff.',
+      expected_fix: 'Continue with the current slice; keep edits inside the validated scope.',
+      path: leaseStatus.path,
+      changedCodePaths: leaseStatus.changedCodePaths,
+      lease_status: leaseStatus,
+    };
+  }
+
+  const hasCodeChanges = leaseStatus.changedCodePaths.length > 0;
+  const code = hasCodeChanges
+    ? 'PRE_WRITE_AGENT_GUARD_CODE_CHANGED_WITHOUT_LEASE'
+    : (`PRE_WRITE_AGENT_GUARD_${leaseStatus.code.replace('PRE_WRITE_', '')}` as PreWriteAgentGuardResult['code']);
+  const changedDetails = hasCodeChanges
+    ? ` Code changes already exist: ${leaseStatus.changedCodePaths.join(', ')}.`
+    : '';
+
+  return {
+    allowed: false,
+    stage: 'PRE_WRITE',
+    code,
+    message:
+      `AI agent instruction: STOP; do not apply patches or write files until PRE_WRITE is valid. ` +
+      `${leaseStatus.message}${changedDetails}`,
+    expected_fix:
+      'run `npx pumuki-pre-write` before editing code. If code changes already exist, stop and ask whether to validate the current diff, stash it, or restart from a clean PRE_WRITE lease.',
+    path: leaseStatus.path,
+    changedCodePaths: leaseStatus.changedCodePaths,
+    lease_status: leaseStatus,
   };
 };
 

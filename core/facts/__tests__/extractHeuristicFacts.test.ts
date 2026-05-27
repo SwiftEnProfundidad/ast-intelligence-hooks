@@ -117,6 +117,34 @@ test('detects backend string literal unions that should be enums', () => {
   assert.deepEqual(fact.lines, [1]);
 });
 
+test('detects Android heavy Application.onCreate startup initialization', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/java/com/ruralgo/RuralGoApplication.kt',
+        [
+          'class RuralGoApplication : Application() {',
+          '  override fun onCreate() {',
+          '    super.onCreate()',
+          '    FirebaseApp.initializeApp(this)',
+          '    WorkManager.initialize(this, configuration)',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const ruleIds = toRuleIds(evaluateRules(astHeuristicsRuleSet, extracted));
+  assert.equal(
+    ruleIds.includes('heuristics.android.startup.application-oncreate-heavy-init.ast'),
+    true
+  );
+});
+
 test('detects frontend sensitive token in URL heuristic in production path', () => {
   const extracted = extractHeuristicFacts({
     facts: [
@@ -459,11 +487,12 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.assume-isolated.ast',
     'heuristics.ios.callback-style.ast',
     'heuristics.ios.combine.sink-without-store.ast',
-    'heuristics.ios.concurrency.async-without-await.ast',
-    'heuristics.ios.concurrency.dummy-await.ast',
-    'heuristics.ios.concurrency.long-task-without-cancellation-check.ast',
-    'heuristics.ios.concurrency.thread-centric-debugging.ast',
-    'heuristics.ios.contains-user-filter.ast',
+      'heuristics.ios.concurrency.async-without-await.ast',
+      'heuristics.ios.concurrency.dummy-await.ast',
+      'heuristics.ios.concurrency.long-task-without-cancellation-check.ast',
+      'heuristics.ios.concurrency.thread-centric-debugging.ast',
+      'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+      'heuristics.ios.contains-user-filter.ast',
     'heuristics.ios.corner-radius.ast',
     'heuristics.ios.dependencies.carthage.ast',
     'heuristics.ios.dependencies.cocoapods.ast',
@@ -586,6 +615,42 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     },
   ]);
   assert.match(dispatchQueueFinding?.expected_fix ?? '', /async\/await/);
+  const adHocLoggingFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.logging.adhoc-print.ast'
+  );
+  assert.deepEqual(adHocLoggingFinding?.primary_node, {
+    kind: 'call',
+    name: 'ad-hoc iOS logging call',
+    lines: adHocLoggingFinding?.lines ?? [],
+  });
+  assert.match(adHocLoggingFinding?.expected_fix ?? '', /structured logger/);
+  const sensitiveLoggingFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.logging.sensitive-data.ast'
+  );
+  assert.deepEqual(sensitiveLoggingFinding?.primary_node, {
+    kind: 'call',
+    name: 'logging call with sensitive data',
+    lines: sensitiveLoggingFinding?.lines ?? [],
+  });
+  assert.match(sensitiveLoggingFinding?.expected_fix ?? '', /redacted/);
+  const userDefaultsSensitiveFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.security.userdefaults-sensitive-data.ast'
+  );
+  assert.deepEqual(userDefaultsSensitiveFinding?.primary_node, {
+    kind: 'call',
+    name: 'sensitive UserDefaults/AppStorage storage',
+    lines: userDefaultsSensitiveFinding?.lines ?? [],
+  });
+  assert.match(userDefaultsSensitiveFinding?.expected_fix ?? '', /Keychain/);
+  const insecureTransportFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.security.insecure-transport.ast'
+  );
+  assert.deepEqual(insecureTransportFinding?.primary_node, {
+    kind: 'property',
+    name: 'ATS NSAllowsArbitraryLoads enabled',
+    lines: insecureTransportFinding?.lines ?? [],
+  });
+  assert.match(insecureTransportFinding?.expected_fix ?? '', /ATS enabled/);
   const dispatchSemaphoreFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.dispatchsemaphore.ast'
   );
@@ -1062,6 +1127,44 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
     findings.some((finding) => finding.ruleId === 'heuristics.ios.core-data.nsmanagedobject-state-leak.ast'),
     true
   );
+});
+
+test('extracts actionable iOS third-party UI test framework heuristic facts', () => {
+  const findings = extractHeuristicFacts({
+    facts: [
+      fileContentFact('apps/ios/Tests/UITests/CheckoutUITests.swift', [
+        'import XCTest',
+        'import EarlGrey',
+        '',
+        'final class CheckoutUITests: XCTestCase {',
+        '  func testCheckout() {',
+        '    EarlGrey.selectElement(with: grey_accessibilityID("pay")).perform(grey_tap())',
+        '  }',
+        '}',
+      ].join('\n')),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = findings.find(
+    (candidate) => candidate.ruleId === 'heuristics.ios.testing.third-party-ui-test-framework.ast'
+  );
+  assert.deepEqual(finding?.lines, [2, 6]);
+  assert.deepEqual(finding?.primary_node, {
+    kind: 'call',
+    name: 'third-party UI test framework node',
+    lines: [2, 6],
+  });
+  assert.deepEqual(finding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: native XCUITest XCUIApplication/XCUIElement flow',
+      lines: [2, 6],
+    },
+  ]);
+  assert.match(finding?.expected_fix ?? '', /native XCUITest/);
 });
 
 test('does not emit Swift Testing migration findings for brownfield XCTest specs with quality helpers', () => {
@@ -2844,4 +2947,212 @@ test('emits actionable iOS task lifecycle metadata for PUMUKI-INC-155', () => {
   assert.deepEqual(finding.lines, [6]);
   assert.equal(finding.primary_node?.name, 'Task launched inside SwiftUI onAppear');
   assert.match(finding.expected_fix ?? '', /\.task/);
+});
+
+test('extracts actionable iOS cross-feature import heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Features/Auth/LoginView.swift',
+        [
+          'import SwiftUI',
+          'import SharedKernel',
+          'import Orders',
+          'struct LoginView: View {',
+          '  let route: OrdersRoute',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { ios: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.architecture.cross-feature-import.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_IOS_ARCHITECTURE_CROSS_FEATURE_IMPORT_AST');
+  assert.deepEqual(finding.lines, [3]);
+  assert.equal(finding.primary_node?.name, 'cross-feature Swift import');
+  assert.match(finding.expected_fix ?? '', /SharedKernel/);
+});
+
+test('extracts actionable iOS layer direction violation heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Features/Orders/Domain/Entities/Order.swift',
+        [
+          'import Foundation',
+          'import SwiftUI',
+          'import CoreData',
+          'struct Order: Sendable {',
+          '  let id: String',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { ios: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.architecture.layer-direction-violation.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_IOS_ARCHITECTURE_LAYER_DIRECTION_VIOLATION_AST');
+  assert.deepEqual(finding.lines, [2, 3]);
+  assert.equal(finding.primary_node?.name, 'forbidden import for Clean Architecture layer');
+  assert.match(finding.expected_fix ?? '', /Infrastructure/);
+});
+
+test('extracts actionable iOS excessive public API heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Features/BuyerCommerce/BuyerShellViewModel.swift',
+        [
+          'import SwiftUI',
+          '',
+          'public final class BuyerShellViewModel {',
+          '  public var selectedTab: Tab = .home',
+          '  public init() {}',
+          '  public func openCheckout() {}',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { ios: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.architecture.excessive-public-api.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_IOS_ARCHITECTURE_EXCESSIVE_PUBLIC_API_AST');
+  assert.deepEqual(finding.lines, [3, 4, 5, 6]);
+  assert.equal(finding.primary_node?.name, 'excessive public/open Swift API surface');
+  assert.match(finding.expected_fix ?? '', /internal by default/);
+});
+
+test('detects Android legacy FingerprintManager biometric API with line metadata', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/auth/LegacyBiometricAuth.kt',
+        [
+          'import android.hardware.fingerprint.FingerprintManager',
+          '',
+          'class LegacyBiometricAuth(private val fingerprintManager: FingerprintManager) {',
+          '  fun authenticate(callback: FingerprintManager.AuthenticationCallback) {',
+          '    fingerprintManager.authenticate(null, null, 0, callback, null)',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  const finding = findings.find(
+    (candidate) => candidate.ruleId === 'heuristics.android.security.legacy-fingerprint-api.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.lines, [1, 3, 4]);
+});
+
+test('detects Android custom singleton objects with line metadata', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/checkout/CheckoutRepository.kt',
+        [
+          'package com.acme.checkout',
+          '',
+          'object CheckoutRepository {',
+          '  fun loadCheckout() = Unit',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), [
+    'heuristics.android.architecture.custom-singleton-object.ast',
+  ]);
+  const finding = findings.find(
+    (candidate) =>
+      candidate.ruleId === 'heuristics.android.architecture.custom-singleton-object.ast'
+  );
+  assert.deepEqual(finding?.lines, [3]);
+  assert.match(finding?.expected_fix ?? '', /Hilt|inyecci/i);
+});
+
+test('detects Android Hilt injection without AndroidEntryPoint with line metadata', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/checkout/CheckoutActivity.kt',
+        [
+          'import javax.inject.Inject',
+          '',
+          'class CheckoutActivity : AppCompatActivity() {',
+          '  @Inject lateinit var analytics: CheckoutAnalytics',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), [
+    'heuristics.android.di.hilt-injection-without-entrypoint.ast',
+  ]);
+  const finding = findings.find(
+    (candidate) =>
+      candidate.ruleId === 'heuristics.android.di.hilt-injection-without-entrypoint.ast'
+  );
+  assert.deepEqual(finding?.lines, [3, 4]);
+  assert.match(finding?.expected_fix ?? '', /@AndroidEntryPoint/);
+});
+
+test('detects iOS URLSession trust bypass heuristic', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Infrastructure/Networking/InsecureSessionDelegate.swift',
+        [
+          'final class InsecureSessionDelegate: NSObject, URLSessionDelegate {',
+          '  func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {',
+          '    completionHandler(.useCredential, URLCredential(trust: challenge.protectionSpace.serverTrust!))',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const fact = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.security.urlsession-trust-bypass.ast'
+  );
+  assert.ok(fact);
+  assert.deepEqual(fact.lines, [3]);
 });

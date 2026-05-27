@@ -11,7 +11,11 @@ import {
   runWorkingTreePrePushGateSilent,
 } from './framework-menu-gate-lib';
 import { readMatrixOptionReport, type MatrixOptionId } from './framework-menu-matrix-evidence-lib';
-import { extractRuleIdsFromEvidence } from './framework-menu-matrix-canary-evidence';
+import {
+  extractRuleIdsFromEvidence,
+  extractRuleMatchesFromEvidence,
+  type CanaryEvidenceRuleMatch,
+} from './framework-menu-matrix-canary-evidence';
 import { resolveConsumerMenuCanaryScenario } from './framework-menu-matrix-canary-scenario';
 import type {
   ConsumerMenuCanaryPlatform,
@@ -102,6 +106,10 @@ export const runConsumerMenuCanary = async (params?: {
     runGate?: (option: MatrixOptionId) => Promise<void>;
     readOptionReport?: typeof readMatrixOptionReport;
     extractRuleIds?: (repoRoot: string) => string[];
+    extractRuleMatches?: (
+      repoRoot: string,
+      scenario: ReturnType<typeof resolveConsumerMenuCanaryScenario>
+    ) => CanaryEvidenceRuleMatch[];
   };
 }): Promise<ConsumerMenuCanaryResult> => {
   const previousCwd = cwd();
@@ -116,6 +124,7 @@ export const runConsumerMenuCanary = async (params?: {
   const runGate = dependencies?.runGate ?? runGateByOption;
   const readOptionReport = dependencies?.readOptionReport ?? readMatrixOptionReport;
   const extractRuleIds = dependencies?.extractRuleIds ?? extractRuleIdsFromEvidence;
+  const extractRuleMatches = dependencies?.extractRuleMatches ?? extractRuleMatchesFromEvidence;
 
   chdir(repoRoot);
   try {
@@ -132,11 +141,25 @@ export const runConsumerMenuCanary = async (params?: {
     await runGate(scenario.option);
     const optionReport = readOptionReport(repoRoot, scenario.option);
     const ruleIds = extractRuleIds(repoRoot);
+    const expectedRuleIds = [scenario.expectedRuleId, ...(scenario.equivalentRuleIds ?? [])];
+    const ruleMatches = extractRuleMatches(repoRoot, scenario);
+    const canaryRuleMatched = ruleMatches.some((match) =>
+      expectedRuleIds.includes(match.ruleId)
+        && match.filePath.replaceAll('\\', '/').endsWith(canaryRelativePath)
+    );
+    const blocked = optionReport.outcome === 'BLOCK' && optionReport.diagnosis === 'violations-detected';
 
     return {
       option: scenario.option,
       detected:
-        optionReport.totalViolations > 0 && ruleIds.includes(scenario.expectedRuleId),
+        blocked
+        && optionReport.totalViolations > 0
+        && expectedRuleIds.some((ruleId) => ruleIds.includes(ruleId))
+        && canaryRuleMatched,
+      outcome: optionReport.outcome,
+      diagnosis: optionReport.diagnosis,
+      canaryRelativePath,
+      canaryRuleMatched,
       totalViolations: optionReport.totalViolations,
       filesScanned: optionReport.filesScanned,
       ruleIds,

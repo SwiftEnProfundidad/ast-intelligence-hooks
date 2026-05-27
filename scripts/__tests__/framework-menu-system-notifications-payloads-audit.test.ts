@@ -10,8 +10,9 @@ test('buildAuditSummaryPayload informa bloqueo para audit summary con violacione
     highViolations: 4,
   });
 
-  assert.equal(payload.title, 'AST Audit Blocked');
-  assert.match(payload.message, /3 CRITICAL, 4 HIGH/i);
+  assert.equal(payload.title, 'Pumuki audit: resumen');
+  assert.match(payload.message, /3 críticas y 4 high/i);
+  assert.match(payload.message, /regla, fichero y solución/i);
 });
 
 test('buildAuditSummaryPayload informa bloqueo aunque las violaciones no sean high critical', () => {
@@ -22,8 +23,9 @@ test('buildAuditSummaryPayload informa bloqueo aunque las violaciones no sean hi
     highViolations: 0,
   });
 
-  assert.equal(payload.title, 'AST Audit Blocked');
-  assert.match(payload.message, /2 violations block the gate/i);
+  assert.equal(payload.title, 'Pumuki audit: resumen');
+  assert.match(payload.message, /2 violaciones/i);
+  assert.match(payload.message, /regla, fichero y solución/i);
 });
 
 test('buildAuditSummaryPayload informa pass cuando no hay violaciones', () => {
@@ -34,6 +36,6 @@ test('buildAuditSummaryPayload informa pass cuando no hay violaciones', () => {
     highViolations: 0,
   });
 
-  assert.equal(payload.title, 'AST Audit Complete');
-  assert.match(payload.message, /No violations found/i);
+  assert.equal(payload.title, 'Pumuki audit: OK');
+  assert.match(payload.message, /No se han detectado violaciones/i);
 });

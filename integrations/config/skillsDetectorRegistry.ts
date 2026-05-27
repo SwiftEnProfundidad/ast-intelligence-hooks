@@ -63,11 +63,19 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.guideline.ios.mainactor-para-co-digo-que-debe-ejecutarse-en-el-hilo-principal':
     heuristicDetector('ios.concurrency.mainactor-dispatchqueue', [
       'heuristics.ios.dispatchqueue.ast',
+      'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
     ]),
   'skills.ios.guideline.ios.actor-para-estado-compartido-thread-safe':
     heuristicDetector('ios.concurrency.shared-state-actor-boundary', [
       'heuristics.ios.dispatchqueue.ast',
       'heuristics.ios.dispatchsemaphore.ast',
+      'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+    ]),
+  'skills.ios.guideline.ios.sincronizacio-n-nativa-actors-para-estado-compartido-osallocatedunfair':
+    heuristicDetector('ios.concurrency.shared-state-actor-boundary', [
+      'heuristics.ios.dispatchqueue.ast',
+      'heuristics.ios.dispatchsemaphore.ast',
+      'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
     ]),
   'skills.ios.no-dispatchgroup': heuristicDetector('ios.dispatchgroup', [
     'heuristics.ios.dispatchgroup.ast',
@@ -228,6 +236,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.logging.sensitive-data',
     ['heuristics.ios.logging.sensitive-data.ast']
   ),
+  'skills.ios.guideline.ios.request-response-interceptors-logging-auth-tokens': heuristicDetector(
+    'ios.logging.sensitive-data',
+    ['heuristics.ios.logging.sensitive-data.ast']
+  ),
   'skills.ios.guideline.ios.obfuscation-strings-sensibles-en-co-digo': heuristicDetector(
     'ios.security.hardcoded-sensitive-string',
     ['heuristics.ios.security.hardcoded-sensitive-string.ast']
@@ -267,6 +279,7 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
       'heuristics.ios.dependencies.carthage.ast',
       'heuristics.ios.architecture.swinject.ast',
       'heuristics.ios.architecture.tca-composable-architecture.ast',
+      'heuristics.ios.testing.third-party-ui-test-framework.ast',
     ]),
   'skills.ios.guideline.ios.libreri-as-de-terceros-usar-apis-nativas': heuristicDetector(
     'ios.dependencies.third-party-native-baseline',
@@ -276,6 +289,7 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
       'heuristics.ios.dependencies.carthage.ast',
       'heuristics.ios.architecture.swinject.ast',
       'heuristics.ios.architecture.tca-composable-architecture.ast',
+      'heuristics.ios.testing.third-party-ui-test-framework.ast',
     ]
   ),
   'skills.ios.guideline.ios.keychain-passwords-tokens-no-userdefaults': heuristicDetector(
@@ -293,6 +307,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.guideline.ios.app-transport-security-ats-https-por-defecto': heuristicDetector(
     'ios.security.insecure-transport',
     ['heuristics.ios.security.insecure-transport.ast']
+  ),
+  'skills.ios.guideline.ios.ssl-pinning-para-apps-con-alta-seguridad': heuristicDetector(
+    'ios.security.urlsession-trust-bypass',
+    ['heuristics.ios.security.urlsession-trust-bypass.ast']
+  ),
+  'skills.ios.guideline.ios.ssl-pinning-prevenir-man-in-the-middle': heuristicDetector(
+    'ios.security.urlsession-trust-bypass',
+    ['heuristics.ios.security.urlsession-trust-bypass.ast']
   ),
   'skills.ios.guideline.ios.localizable-strings-deprecado-usar-string-catalogs':
     heuristicDetector('ios.localization.localizable-strings', [
@@ -391,6 +413,13 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'ios.accessibility.on-tap-without-button-trait',
     ['heuristics.ios.accessibility.on-tap-without-button-trait.ast']
   ),
+  'skills.ios.guideline.ios.voiceover-labels-hints-traits': heuristicDetector(
+    'ios.accessibility.voiceover-labels-traits',
+    [
+      'heuristics.ios.accessibility.icon-only-control-label.ast',
+      'heuristics.ios.accessibility.on-tap-without-button-trait.ast',
+    ]
+  ),
   'skills.ios.guideline.ios-swiftui-expert.use-interactive-only-for-tappable-focusable-elements':
     heuristicDetector('ios.swiftui.glass-interactive-static-element', [
       'heuristics.ios.swiftui.glass-interactive-static-element.ast',
@@ -439,9 +468,31 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     heuristicDetector('ios.dependencies.swift-tools-version', [
       'heuristics.ios.dependencies.swift-tools-version-below-6-2.ast',
     ]),
+  'skills.ios.guideline.ios-concurrency.use-read-on-package-swift-for-swiftpm-settings-tools-version-strict-co':
+    heuristicDetector('ios.dependencies.swift-tools-version', [
+      'heuristics.ios.dependencies.swift-tools-version-below-6-2.ast',
+      'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+    ]),
   'skills.ios.guideline.ios.strict-concurrency-checking-activar-en-complete':
     heuristicDetector('ios.concurrency.strict-concurrency-below-complete', [
       'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
+    ]),
+  'skills.ios.guideline.ios-concurrency.use-grep-for-swiftstrictconcurrency-or-swiftdefaultactorisolation-in-p':
+    heuristicDetector('ios.concurrency.project-settings', [
+      'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
+      'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
+      'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+    ]),
+  'skills.ios.guideline.ios.validar-configuracio-n-de-concurrencia-swiftstrictconcurrency-swiftdef':
+    heuristicDetector('ios.concurrency.project-settings', [
+      'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
+      'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
+      'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+      'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
     ]),
   'skills.ios.guideline.ios.file-naming-pascalcase-para-tipos': heuristicDetector(
     'ios.naming.non-pascal-case-type',
@@ -485,7 +536,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'heuristics.ios.assume-isolated.ast',
   ]),
   'skills.ios.guideline.ios.no-usar-mainactor-como-parche-justificar-el-aislamiento':
-    heuristicDetector('ios.assume-isolated', ['heuristics.ios.assume-isolated.ast']),
+    heuristicDetector('ios.assume-isolated', [
+      'heuristics.ios.assume-isolated.ast',
+      'heuristics.ios.concurrency.mainactor-run-patch.ast',
+    ]),
   'skills.ios.no-observable-object': heuristicDetector('ios.observable-object', [
     'heuristics.ios.observable-object.ast',
   ]),
@@ -573,6 +627,14 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.no-navigation-view': heuristicDetector('ios.navigation-view', [
     'heuristics.ios.navigation-view.ast',
   ]),
+  'skills.ios.guideline.ios.deep-links-deben-mapear-a-rutas-del-path':
+    heuristicDetector('ios.navigation.path-restoration', [
+      'heuristics.ios.navigation.path-without-restoration.ast',
+    ]),
+  'skills.ios.guideline.ios.state-restoration-rehidratar-path-desde-estado-persistido-si-aplica':
+    heuristicDetector('ios.navigation.path-restoration', [
+      'heuristics.ios.navigation.path-without-restoration.ast',
+    ]),
   'skills.ios.guideline.ios-swiftui-expert.use-modern-apis-no-deprecated-modifiers-or-patterns-see-references-mod':
     heuristicDetector('ios.swiftui.modern-api-replacements', [
       'heuristics.ios.navigation-view.ast',
@@ -667,6 +729,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
       'heuristics.ios.swiftui.closure-based-viewbuilder-content.ast',
     ]),
   'skills.ios.guideline.ios-swiftui-expert.use-viewbuilder-functions-only-for-small-simple-sections':
+    heuristicDetector('ios.swiftui.large-viewbuilder-function', [
+      'heuristics.ios.swiftui.large-viewbuilder-function.ast',
+    ]),
+  'skills.ios.guideline.ios.composicio-n-de-views-views-pequen-os-reutilizables':
     heuristicDetector('ios.swiftui.large-viewbuilder-function', [
       'heuristics.ios.swiftui.large-viewbuilder-function.ast',
     ]),
@@ -798,6 +864,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.ios.guideline.ios.quick-nimble-prohibido-usar-swift-testing-nativo': heuristicDetector(
     'ios.testing.quick-nimble',
     ['heuristics.ios.testing.quick-nimble.ast']
+  ),
+  'skills.ios.guideline.ios.xcuitest-ui-testing-nativo': heuristicDetector(
+    'ios.testing.third-party-ui-test-framework',
+    ['heuristics.ios.testing.third-party-ui-test-framework.ast']
   ),
   'skills.ios.no-nsmanagedobject-boundary': heuristicDetector(
     'ios.core-data.nsmanagedobject-boundary',
@@ -1174,6 +1244,34 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
       'heuristics.ios.solid.lsp.narrowed-precondition.ast',
     ]
   ),
+  'skills.ios.guideline.ios.feature-first-cada-feature-es-un-bounded-context-no-se-acoplan-entre-s':
+    heuristicDetector('ios.architecture.cross-feature-import', [
+      'heuristics.ios.architecture.cross-feature-import.ast',
+    ]),
+  'skills.ios.guideline.ios.las-features-no-se-importan-entre-si':
+    heuristicDetector('ios.architecture.cross-feature-import', [
+      'heuristics.ios.architecture.cross-feature-import.ast',
+    ]),
+  'skills.ios.guideline.ios.shared-kernel-solo-tipos-mi-nimos-compartidos-entre-features':
+    heuristicDetector('ios.architecture.cross-feature-import', [
+      'heuristics.ios.architecture.cross-feature-import.ast',
+    ]),
+  'skills.ios.guideline.ios.clean-por-feature-presentation-application-domain-infrastructure-domai':
+    heuristicDetector('ios.architecture.layer-direction', [
+      'heuristics.ios.architecture.layer-direction-violation.ast',
+    ]),
+  'skills.ios.guideline.ios.seguir-clean-architecture-domain-application-infrastructure-presentati':
+    heuristicDetector('ios.architecture.layer-direction', [
+      'heuristics.ios.architecture.layer-direction-violation.ast',
+    ]),
+  'skills.ios.guideline.ios.ddd-entidades-value-objects-repositorios-protocolos-eventos-de-dominio':
+    heuristicDetector('ios.architecture.layer-direction', [
+      'heuristics.ios.architecture.layer-direction-violation.ast',
+    ]),
+  'skills.ios.guideline.ios.public-api-solo-exponer-lo-necesario-public-internal-private':
+    heuristicDetector('ios.architecture.excessive-public-api', [
+      'heuristics.ios.architecture.excessive-public-api.ast',
+    ]),
   'skills.ios.guideline.ios.testability-inyectar-protocols-no-tipos-concretos':
     heuristicDetector('ios.testability.protocol-boundaries', [
       'heuristics.ios.solid.dip.concrete-framework-dependency.ast',
@@ -1217,6 +1315,10 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
   'skills.android.guideline.android.god-activities-single-activity-composables': heuristicDetector(
     'android.architecture.god-activity',
     ['heuristics.android.architecture.god-activity.ast']
+  ),
+  'skills.android.guideline.android.app-startup-androidx-startup-para-lazy-init': heuristicDetector(
+    'android.startup.application-oncreate-heavy-init',
+    ['heuristics.android.startup.application-oncreate-heavy-init.ast']
   ),
   'skills.android.guideline.android.lazycolumn-lazyrow-virtualizacio-n-de-listas': heuristicDetector(
     'android.compose.lazy-collection',
@@ -1341,6 +1443,22 @@ const registryByRuleId: Record<string, SkillsDetectorBinding> = {
     'android.flow.state-exposure',
     ['heuristics.android.flow.livedata-state-exposure.ast']
   ),
+  'skills.android.guideline.android.biometric-auth-biometricprompt-api': heuristicDetector(
+    'android.security.biometric-prompt',
+    ['heuristics.android.security.legacy-fingerprint-api.ast']
+  ),
+  'skills.android.guideline.android.no-singleton-usar-inyeccio-n-de-dependencias-hilt-dagger':
+    heuristicDetector('android.architecture.custom-singleton-object', [
+      'heuristics.android.architecture.custom-singleton-object.ast',
+    ]),
+  'skills.android.guideline.android.singletons-everywhere-usar-hilt-di': heuristicDetector(
+    'android.architecture.custom-singleton-object',
+    ['heuristics.android.architecture.custom-singleton-object.ast']
+  ),
+  'skills.android.guideline.android.androidentrypoint-activity-fragment-viewmodel':
+    heuristicDetector('android.di.hilt-injection-without-entrypoint', [
+      'heuristics.android.di.hilt-injection-without-entrypoint.ast',
+    ]),
   'skills.android.guideline.android.statein-convertir-cold-flow-a-hot-stateflow': heuristicDetector(
     'android.flow.viewmodel-flow-without-statein',
     ['heuristics.android.flow.viewmodel-flow-without-statein.ast']
