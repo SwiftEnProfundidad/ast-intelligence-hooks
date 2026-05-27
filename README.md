@@ -429,6 +429,7 @@ Screenshots from the consumer menu:
 | Consumer menu | Blocked pre-flight | Final summary |
 |---|---|---|
 | ![Consumer menu](assets/readme/menu-option1/01-menu-consumer-v2.png) | ![Pre-flight block](assets/readme/menu-option1/02-option1-preflight-block.png) | ![Final block](assets/readme/menu-option1/03-option1-final-summary-block.png) |
+| ![Pre-flight pass](assets/readme/menu-option1/04-option1-preflight-pass.png) | ![Final pass](assets/readme/menu-option1/05-option1-final-summary-pass.png) | ![Menu after pass](assets/readme/menu-option1/06-menu-after-run-pass.png) |
 
 Notification channels include terminal output, stderr mirrors for relevant blocking events and optional system notifications. Blocking messages are expected to explain:
 
