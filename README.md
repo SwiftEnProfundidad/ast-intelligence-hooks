@@ -1,390 +1,612 @@
 # Pumuki
 
-<img src="assets/logo.png" alt="Pumuki" width="100%" />
+<p align="center">
+  <img src="assets/logo_banner.png" alt="Pumuki" width="100%" />
+</p>
 
-[![npm version](https://img.shields.io/npm/v/pumuki?color=1d4ed8)](https://www.npmjs.com/package/pumuki)
-[![CI](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-MIT-16a34a)](LICENSE)
+<p align="center">
+  <a href="https://www.npmjs.com/package/pumuki"><img src="https://img.shields.io/npm/v/pumuki?color=1d4ed8" alt="npm version" /></a>
+  <a href="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml"><img src="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <img src="https://img.shields.io/node/v/pumuki" alt="Node.js version" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a" alt="License: MIT" /></a>
+</p>
 
-Enterprise governance framework for AI-assisted software delivery.
+Pumuki is an enterprise governance framework for AI-assisted software delivery.
 
-Pumuki gives engineering teams one deterministic execution model across local development, hooks, and CI:
+It turns repository rules, SDD/OpenSpec workflow, Git hooks, AST intelligence, skills contracts, evidence, notifications, an interactive menu and optional MCP servers into one deterministic delivery contract:
 
-`Facts -> Rules -> Gate -> .ai_evidence.json (v2.1)`
+```text
+Facts -> Rules -> Gate -> Evidence
+```
 
-## Qué NO es Pumuki
+Pumuki is built for teams that need AI agents and humans to follow the same engineering law: know the active change, evaluate the real diff, block unsafe delivery, explain the reason in developer language, and leave auditable evidence.
 
-- **No** es el producto de negocio de tu repositorio (la app, el marketplace, el servicio que entregas a usuarios): es **gobernanza y contrato de entrega** sobre el código.
-- **No** sustituye tests de dominio, contratos de API ni E2E: el gate ayuda a **cumplir políticas y evidencias**; la calidad funcional la define tu equipo con pruebas y criterios de aceptación.
-- **No** garantiza por sí solo “un producto excelente”: sin reglas de equipo, revisión humana y criterios claros, solo obtienes **cumplimiento de lo que configuraste**.
+Current maturity: **advanced beta**. The framework is already useful for governed internal adoption and consumer-repository rollout, but the project is still evolving quickly.
 
-## Who This README Is For
+## Contents
 
-| Profile | Use this path first |
+- [Why Pumuki Exists](#why-pumuki-exists)
+- [What Pumuki Does](#what-pumuki-does)
+- [Architecture](#architecture)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Uninstallation and Upgrade](#uninstallation-and-upgrade)
+- [Command Reference](#command-reference)
+- [Git Hooks and CI](#git-hooks-and-ci)
+- [SDD and OpenSpec](#sdd-and-openspec)
+- [Session Continuity and AI Window Handoff](#session-continuity-and-ai-window-handoff)
+- [AST Intelligence and Rule Packs](#ast-intelligence-and-rule-packs)
+- [Evidence](#evidence)
+- [Menu and Notifications](#menu-and-notifications)
+- [MCP and Agent Adapters](#mcp-and-agent-adapters)
+- [Enterprise Operations](#enterprise-operations)
+- [Adoption Models](#adoption-models)
+- [Troubleshooting](#troubleshooting)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Why Pumuki Exists
+
+AI-assisted development increases delivery speed, but it also increases the risk of ungoverned changes: skipped tests, missing specs, vague evidence, mixed commits, stale repo context, unsafe hooks, and rules that live only in documentation.
+
+Pumuki makes those rules executable.
+
+It is designed to answer operational questions before a change enters the repository:
+
+| Question | Pumuki answer |
 |---|---|
-| Consumer repository team | [5-Minute Quick Start (Consumer)](#5-minute-quick-start-consumer) |
-| Framework maintainers (this repo) | [Framework Maintainer Flow](#framework-maintainer-flow-this-repo) |
-| Platform/architecture owners | [Enterprise Operations Baseline](#enterprise-operations-baseline) |
+| What is being changed? | Git scope, SDD context and repository facts. |
+| Which rules apply? | Platform rule packs, skills contracts, policy-as-code and project overrides. |
+| Can this change proceed? | Deterministic gate decision per stage. |
+| Why was it blocked? | Developer-facing cause, file, rule and remediation. |
+| What evidence remains? | `.ai_evidence.json` v2.1 plus optional MCP/telemetry access. |
 
-## Rutas de adopción
+Pumuki does not replace product tests, code review, domain acceptance criteria or security review. It enforces the delivery contract around them.
 
-Elige un perfil y profundiza en los enlaces; **no** repite aquí reglas largas (skills, GitFlow, políticas) — están en `AGENTS.md` y en la documentación enlazada.
+## What Pumuki Does
 
-| Perfil | Qué instalar / arrancar | Stages habituales | Opcional típico |
-|--------|-------------------------|-------------------|-----------------|
-| **Mínimo** | `npm install --save-exact pumuki` (en repos Git el `postinstall` ejecuta baseline `pumuki install`; `--with-mcp --agent=repo` es opt-in con `PUMUKI_POSTINSTALL_WITH_MCP=1` o `PUMUKI_POSTINSTALL_MCP_AGENT=repo`). | Hooks Git: **PRE_COMMIT**, **PRE_PUSH**; cadena **PRE_WRITE** cuando el hook lo encadena (según versión y config). | Evidencia [`.ai_evidence.json` v2.1](docs/mcp/ai-evidence-v2.1-contract.md); reglas core embebidas. |
-| **Estándar** | Lo anterior + flujo **OpenSpec/SDD** bajo `openspec/` según tu política. | Lo anterior + validación SDD por stage (`pumuki sdd validate --stage=…`). | Sesiones SDD, cambios versionados bajo `openspec/changes/`. |
-| **Enterprise completo** | `pumuki bootstrap --enterprise` (o equivalente documentado) + `skills.lock.json` / reglas custom / [policy-as-code](docs/product/CONFIGURATION.md) donde aplique. | Lo anterior + **CI** (`pumuki-ci`) y comprobaciones de alineación (`doctor`, parity). | [Skills / MCP](docs/mcp/mcp-servers-overview.md), `pumuki doctor --parity`, notificaciones, [hard mode](docs/product/CONFIGURATION.md). |
+Pumuki provides a governed delivery surface for modern repositories:
 
-Referencias canónicas (profundizar aquí): [Instalación](docs/product/INSTALLATION.md), [Uso y gates](docs/product/USAGE.md), [Configuración](docs/product/CONFIGURATION.md), [AGENTS.md](AGENTS.md) (contrato agentes/skills/GitFlow en repos que lo adopten), [índice de documentación](docs/README.md).
+| Capability | What it provides |
+|---|---|
+| Git lifecycle | Managed `pre-commit` and `pre-push` hooks, with chained `PRE_WRITE` by default. |
+| Stage gates | `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` and `CI` policies with deterministic semantics. |
+| Full audit | `pumuki audit` for tracked-repository evaluation outside a hook. |
+| SDD/OpenSpec | Change sessions, validation, evidence sync and state sync. |
+| Session continuity | Repo-owned context, SDD state, evidence and MCP resources so a new AI window can resume from facts instead of chat memory. |
+| AST intelligence | Rule-backed findings for iOS, Android, backend, frontend and generic TypeScript patterns. |
+| Skills contracts | Compiled rules from enterprise skills, with coverage checks and missing-detector protection. |
+| Evidence | Stable `.ai_evidence.json` v2.1 snapshots for auditability and automation. |
+| Developer UX | Interactive menu, clear blocking messages, terminal output and system notifications. |
+| MCP | Optional evidence and enterprise MCP servers over HTTP or stdio. |
+| Adapters | Provider-agnostic adapter scaffolding for Codex, Claude, Cursor, Windsurf and Opencode. |
+| Policy-as-code | Optional signed stage-policy contract under `.pumuki/policy-as-code.json`. |
+| Telemetry | Optional JSONL and OTLP export for enterprise observability. |
+| Brownfield control | Scope-aware gates that avoid blocking a slice for unrelated historical debt. |
 
-Formación opcional (curso **Pumuki** dentro del hub *Stack My Architecture*): [https://stack-my-architecture-hub.vercel.app/pumuki/](https://stack-my-architecture-hub.vercel.app/pumuki/) · seguimiento de la iniciativa en [docs/tracking/plan-curso-pumuki-stack-my-architecture.md](docs/tracking/plan-curso-pumuki-stack-my-architecture.md).
+## Architecture
 
-## Comandos esenciales
+<p align="center">
+  <img src="assets/readme/pumuki-governance-flow.svg" alt="Pumuki governance flow" width="100%" />
+</p>
 
-Cinco entradas que cubren el 80 % del día a día en un consumidor; el detalle está en los enlaces.
+Pumuki keeps product decisions deterministic by separating domain logic from integrations:
 
-1. **`npx pumuki doctor --json`** — Versión efectiva, drift, lifecycle, parity y avisos (p. ej. `pathExecutionHazard`). Detalle: [API_REFERENCE](docs/product/API_REFERENCE.md), [USAGE](docs/product/USAGE.md).
-2. **`npx pumuki status --json`** — Estado resumido del menú/lifecycle y alineación de versión. Detalle: [USAGE](docs/product/USAGE.md).
-3. **`npx pumuki install`** (o deja que el `postinstall` lo ejecute en Git) — Hooks y lifecycle en el repo. Detalle: [INSTALLATION](docs/product/INSTALLATION.md).
-4. **Gates locales** — `npx pumuki-pre-write`, `npx pumuki-pre-commit` (y `pumuki-pre-push` cuando toque push). Detalle: [USAGE](docs/product/USAGE.md), [Troubleshooting (USAGE)](docs/product/USAGE.md#troubleshooting).
-5. **SDD por stage (enterprise)** — `npx pumuki sdd validate --stage=PRE_COMMIT` (u otro stage). Detalle: [USAGE](docs/product/USAGE.md), [INSTALLATION](docs/product/INSTALLATION.md#troubleshooting) si falla el bootstrap.
+| Layer | Responsibility |
+|---|---|
+| `core/*` | Facts, rules, rule presets and gate decision model. |
+| `integrations/*` | Git scopes, stage policies, evidence, SDD, MCP, notifications and lifecycle adapters. |
+| `bin/*` | Public CLI binaries published by npm. |
+| `docs/*` | Product documentation, operation guides, MCP contracts and rule-pack references. |
+| `vendor/skills/*` | Vendored enterprise skill contracts consumed by the rules compiler. |
 
-**Desarrollo en este repo (sin depender de GitHub Actions):** barra mínima antes de merge o publicar — `npm run -s validation:local-merge-bar` (`typecheck` + smoke de superficie CLI + `npm test`). Detalle del smoke: [docs/validation/README.md](docs/validation/README.md).
+Core pipeline:
 
-Si algo bloquea o el mensaje no es claro: [Troubleshooting](#troubleshooting) (más abajo en este README), [USAGE § Troubleshooting](docs/product/USAGE.md#troubleshooting) y [GitHub Issues](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues).
+```text
+Git scope / repo state
+  -> fact extraction
+  -> platform detection
+  -> rule-pack and skills loading
+  -> stage policy evaluation
+  -> gate decision
+  -> evidence, notification and optional MCP/telemetry output
+```
 
-## 5-Minute Quick Start (Consumer)
+Pumuki is IDE-agnostic at baseline. Git hooks, gates, lifecycle, evidence and policy enforcement do not require Cursor, Codex, Claude or any other IDE. IDE/client files are opt-in adapter output.
+
+## Quick Start
 
 Prerequisites:
 
-- Node.js `>= 18`
-- npm `>= 9`
+- Node.js `>=18`
+- npm `>=9`
 - Git repository
 
-Install and bootstrap:
+Install Pumuki in a consumer repository:
 
 ```bash
 npm install --save-exact pumuki
-npx --yes pumuki bootstrap --enterprise --agent=codex
-npx --yes pumuki status
-npx --yes pumuki doctor --json
-```
-
-Desde **6.3.63**, `npm install` en la raíz de un repo **Git** dispara un `postinstall` que ejecuta baseline **`pumuki install`** (hooks `pre-commit` / `pre-push`, lifecycle, merge de **`.pumuki/adapter.json`** con comandos MCP stdio, sin rutas de IDE salvo opt-in). El wiring MCP no va activado por defecto; para activarlo en postinstall usa `PUMUKI_POSTINSTALL_WITH_MCP=1` o `PUMUKI_POSTINSTALL_MCP_AGENT=repo/cursor/claude/codex`. **Pumuki no depende de ningún IDE** para el baseline. Opt-out del postinstall: `PUMUKI_SKIP_POSTINSTALL=1`. Ficheros de IDE en postinstall: `PUMUKI_POSTINSTALL_MCP_AGENT=cursor|claude|codex` o comando manual / `bootstrap`. Desde **6.3.68**, cada hook gestionado ejecuta **`pumuki-pre-write` antes** de `pumuki-pre-commit` / `pumuki-pre-push` (stage **PRE_WRITE** vía Git). Saltar solo PRE_WRITE en hooks: `PUMUKI_SKIP_CHAINED_PRE_WRITE=1`. Desde **6.3.69**, esos mismos hooks aplican también **git-flow en ramas protegidas** (`GITFLOW_PROTECTED_BRANCH`) e **higiene de worktree** (`PUMUKI_PREWRITE_WORKTREE_*` / códigos `EVIDENCE_PREWRITE_WORKTREE_*`) cuando la evidencia es válida; el **modal macOS** de bloqueo (Desactivar / Silenciar 30 min / Mantener activas) queda **activo por defecto** si las notificaciones están habilitadas (`"blockedDialogEnabled": false` o `PUMUKI_MACOS_BLOCKED_DIALOG=0` para apagarlo). Desactivar el postinstall: `PUMUKI_SKIP_POSTINSTALL=1`. En CI suele saltarse solo (`CI=true`). En **6.3.64+**, las notificaciones del sistema en plataformas sin banner nativo se reflejan en **stderr** por defecto (`PUMUKI_DISABLE_STDERR_NOTIFICATIONS=1` para silenciarlas). En **6.3.69+**, un `gate.blocked` en macOS también deja una copia en **stderr** por defecto (`PUMUKI_DISABLE_GATE_BLOCKED_STDERR_MIRROR=1` para desactivar solo eso). Desde **6.3.70**, si **`.ai_evidence.json` está versionado** y **PRE_PUSH** no bloquea, ese archivo **no se reescribe** en el push (compatibilidad con **pre-commit** como hook de **pre-push**); para forzar escritura: `PUMUKI_PRE_PUSH_ALWAYS_WRITE_TRACKED_EVIDENCE=1`. Con modal de bloqueo activo, el panel interactivo prioriza foco/clics y se evita el banner duplicado.
-
-Fallback (equivalent in pasos separados):
-
-```bash
-npx --yes pumuki install --with-mcp --agent=codex
+npx --yes pumuki bootstrap --enterprise
+npx --yes pumuki status --json
 npx --yes pumuki doctor --deep --json
 ```
 
-OpenSpec/SDD baseline:
+After bootstrap, the normal developer path is intentionally small:
+
+```bash
+git add <files>
+git commit
+git push
+```
+
+Managed hooks run the required Pumuki lifecycle automatically. Teams only reach for explicit commands when they need setup, diagnostics, CI wiring, SDD evidence, MCP servers or operational recovery.
+
+Open a governed SDD change session when the repository requires explicit SDD/OpenSpec control:
 
 ```bash
 npx --yes pumuki sdd status
-mkdir -p openspec/changes/<change-id>
 npx --yes pumuki sdd session --open --change=<change-id>
-npx --yes pumuki sdd validate --stage=PRE_COMMIT
+npx --yes pumuki sdd validate --stage=PRE_COMMIT --json
 ```
 
-Optional loop runner session (local, deterministic):
+Run a full tracked-repository audit only for diagnostics or governance reporting:
 
 ```bash
-npx --yes pumuki loop run --objective="stabilize gate before commit" --max-attempts=3 --json
-npx --yes pumuki loop list --json
+npx --yes pumuki audit --json
+npx --yes pumuki audit --stage=CI --engine --json
 ```
 
-Run local gates:
+## Installation
+
+### Consumer Repository
+
+Recommended enterprise path:
 
 ```bash
-npx --yes --package pumuki@latest pumuki-pre-write
-npx --yes --package pumuki@latest pumuki-pre-commit
+npm install --save-exact pumuki
+npx --yes pumuki bootstrap --enterprise
 ```
 
-Run push/CI gates (requires proper git context):
+What the bootstrap path does:
+
+- installs managed Git hooks;
+- configures lifecycle state;
+- creates `.pumuki/adapter.json` when missing;
+- prepares OpenSpec/SDD baseline where applicable;
+- initializes evidence when missing;
+- runs deep diagnostics.
+
+The package `postinstall` runs a baseline `pumuki install` in Git repositories unless disabled. That baseline is IDE-agnostic: hooks, lifecycle and `.pumuki/adapter.json` are the default product surface.
+
+Useful postinstall controls:
+
+| Variable | Effect |
+|---|---|
+| `PUMUKI_SKIP_POSTINSTALL=1` | Disable postinstall bootstrap. |
+| `PUMUKI_POSTINSTALL_WITH_MCP=1` | Include MCP wiring during postinstall. |
+| `PUMUKI_POSTINSTALL_MCP_AGENT=<agent>` | Select optional adapter/client wiring for postinstall. |
+| `PUMUKI_SKIP_CHAINED_PRE_WRITE=1` | Skip chained `PRE_WRITE` inside managed hooks. |
+
+### Framework Repository
+
+For maintainers of this repository:
 
 ```bash
-git push --set-upstream origin <branch>
-npx --yes --package pumuki@latest pumuki-pre-push
+git clone https://github.com/SwiftEnProfundidad/ast-intelligence-hooks.git
+cd ast-intelligence-hooks
+npm ci
+npm run -s typecheck
+npm run -s test:deterministic
+```
+
+## Uninstallation and Upgrade
+
+Plain npm removal only removes the dependency. It does not remove managed lifecycle state.
+
+| Goal | Command |
+|---|---|
+| Remove managed hooks and purge runtime artifacts | `npx --yes pumuki uninstall --purge-artifacts` |
+| Remove lifecycle and dependency from package manifests | `npx --yes pumuki remove` |
+| Update to latest package and reapply hooks | `npx --yes pumuki update --latest` |
+| Standard npm dependency removal only | `npm uninstall pumuki` |
+
+Recommended upgrade check:
+
+```bash
+npm install --save-exact pumuki@latest
+npx --yes pumuki status --json
+npx --yes pumuki doctor --deep --json
+npx --yes pumuki policy reconcile --strict --json
+```
+
+If `status` or `doctor` reports version drift, use the `alignmentCommand` printed in the JSON payload.
+
+## Command Reference
+
+The main lifecycle binary is `pumuki`. This section is an operator reference, not the expected daily developer workflow. The intended enterprise path is progressive disclosure:
+
+1. `bootstrap` once per repository.
+2. work through normal Git operations.
+3. let managed hooks, CI and policy decide automatically.
+4. use explicit commands only for diagnostics, evidence, adapters, SDD operations or automation.
+
+```text
+pumuki --version | -v
+pumuki bootstrap [--enterprise] [--agent=<name>] [--json]
+pumuki install [--with-mcp] [--agent=<name>]
+pumuki uninstall [--purge-artifacts]
+pumuki remove
+pumuki update [--latest|--spec=<package-spec>]
+pumuki doctor [--remote-checks] [--deep] [--parity] [--json]
+pumuki audit [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--engine] [--json]
+pumuki status [--json] [--remote-checks]
+pumuki menu
+pumuki watch [--stage=<stage>] [--scope=<scope>] [--once] [--json]
+pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]
+pumuki adapter install --agent=<name> [--dry-run] [--json]
+pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json]
+pumuki analytics hotspots diagnose [--json]
+pumuki policy reconcile [--strict] [--apply] [--json]
+pumuki context init|status|repair [--json]
+pumuki sdd status|validate|session|sync-docs|sync|learn|auto-sync|evidence|state-sync
+```
+
+Published binaries:
+
+| Binary | Purpose |
+|---|---|
+| `pumuki` | Main lifecycle CLI. |
+| `pumuki-framework`, `pumuki-ast-hooks`, `ast-hooks` | Interactive framework/menu entrypoints. |
+| `pumuki-pre-write` | PRE_WRITE gate and SDD policy surface. |
+| `pumuki-pre-commit` | PRE_COMMIT hook runner. |
+| `pumuki-pre-push` | PRE_PUSH hook runner. |
+| `pumuki-ci` | CI gate runner. |
+| `pumuki-mcp-evidence` | Evidence MCP HTTP server. |
+| `pumuki-mcp-enterprise` | Enterprise MCP HTTP server. |
+| `pumuki-mcp-evidence-stdio` | Evidence MCP stdio bridge. |
+| `pumuki-mcp-enterprise-stdio` | Enterprise MCP stdio bridge. |
+
+Detailed command documentation:
+
+- [Installation Guide](docs/product/INSTALLATION.md)
+- [Usage Guide](docs/product/USAGE.md)
+- [API Reference](docs/product/API_REFERENCE.md)
+- [Operator Playbook](PUMUKI.md)
+
+## Git Hooks and CI
+
+Pumuki evaluates different scopes per stage:
+
+| Stage | Typical trigger | Scope | Purpose |
+|---|---|---|---|
+| `PRE_WRITE` | Before hook execution or explicit guard | Active write/session context | Prevent unmanaged agent work and invalid SDD state. |
+| `PRE_COMMIT` | `pre-commit` | `git diff --cached` | Protect the atomic commit. |
+| `PRE_PUSH` | `pre-push` | `upstream..HEAD` | Protect outgoing branch range. |
+| `CI` | CI job | CI base range | Repeat the same governance outside the laptop. |
+| `audit` | Manual CLI | Git tracked files | Diagnose the full tracked repository. |
+
+Managed `pre-commit` and `pre-push` hooks run `pumuki-pre-write` first by default, then the stage runner. Use `PUMUKI_SKIP_CHAINED_PRE_WRITE=1` only for explicit operational exceptions.
+
+CI entrypoint:
+
+```bash
 npx --yes --package pumuki@latest pumuki-ci
 ```
 
-Expected behavior:
-
-- `PRE_WRITE` and `PRE_COMMIT`: should pass when SDD session is valid and rules are satisfied.
-- `PRE_PUSH`: blocks if branch has no upstream tracking reference.
-- `CI`: requires a valid diff range context (not `HEAD..HEAD` with ambiguous range).
-
-Version drift quick check:
-
-- `status --json` and `doctor --json` expose `version.effective`, `version.runtime`, `version.consumerInstalled`, `version.lifecycleInstalled`, `version.driftWarning`, `version.alignmentCommand`, `version.pathExecutionHazard`, `version.pathExecutionWarning`, and `version.pathExecutionWorkaroundCommand`.
-- If `driftWarning` is not `null`, prefer the exact command already exposed in `version.alignmentCommand`.
-- If `pathExecutionHazard` is `true`, avoid `npx/npm exec` for the install step and use the safe local workaround reported by Pumuki, for example:
+When GitHub Actions quota or remote CI is not available, this repository uses local validation as the operational merge bar:
 
 ```bash
-node ./node_modules/pumuki/bin/pumuki.js install
+npm run -s validation:local-merge-bar
 ```
 
-## Why Pumuki
+## SDD and OpenSpec
 
-Modern teams need fast feedback with strict governance. Pumuki combines:
+Pumuki supports a mandatory SDD/OpenSpec delivery workflow for enterprise repositories.
 
-- Deterministic enforcement per stage (`PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`).
-- A single evidence contract (`.ai_evidence.json`, v2.1) for auditability and automation.
-- Multi-platform governance (iOS, Android, Backend, Frontend).
-- Unified skills engine with deterministic precedence (`core -> repo -> custom`).
-- Mandatory OpenSpec/SDD checks for enterprise change control.
-- Unified CLI plus optional MCP servers for agent-driven workflows.
-
-## Enterprise Execution Model
-
-Each execution follows the same pipeline:
-
-1. Facts extraction from staged/range/repo scope.
-2. Rule evaluation by platform and stage policy.
-3. Gate decision (`PASS`, `WARN`, `BLOCK`) with deterministic thresholds.
-4. Evidence emission (`.ai_evidence.json`) with findings, metadata, and coverage telemetry.
-
-Rules resolution order:
-
-1. Core rules (embedded package snapshot).
-2. Repo rules (`skills.lock.json`), optional.
-3. Custom rules (`.pumuki/custom-rules.json`), optional.
-
-Conflict policy:
-
-- `custom > repo > core` (last writer wins by `ruleId`).
-- Platform rules activate only for detected platforms.
-- `generic/text` rules remain available as cross-platform governance guards.
-
-Rule modes:
-
-- `AUTO`: mapped to deterministic detectors/heuristics.
-- `DECLARATIVE`: valid only when explicitly declared in lock/custom payload (no silent fallback for rules extracted from skills markdown).
-
-## Core Capabilities
-
-1. Deterministic stage gates with consistent exit semantics.
-2. Evidence v2.1 with rules coverage enforcement and stable ordering.
-3. Unified skills rules engine (core + repo + custom).
-4. Unified AI gate behavior across CLI and MCP surfaces.
-5. Mandatory OpenSpec/SDD policy checks.
-6. Interactive menu UX (consumer + advanced modes).
-7. Hard mode policy hardening (`.pumuki/hard-mode.json` + env overrides).
-8. Lifecycle commands for install/update/diagnostics/teardown.
-9. Provider-agnostic adapter scaffolding (`codex`, `claude`, `cursor`, `windsurf`, `opencode`).
-10. Optional MCP servers for evidence and enterprise context.
-
-## Policy-as-Code (Enterprise)
-
-Pumuki supports a signed and versioned stage-policy contract at:
-
-- `.pumuki/policy-as-code.json`
-
-Minimal contract:
-
-```json
-{
-  "version": "1.0",
-  "source": "default",
-  "expires_at": "2026-12-31T23:59:59.000Z",
-  "signatures": {
-    "PRE_COMMIT": "<sha256-hex>",
-    "PRE_PUSH": "<sha256-hex>",
-    "CI": "<sha256-hex>"
-  }
-}
-```
-
-Runtime behavior:
-
-- If the contract is missing, Pumuki computes deterministic local metadata and still emits `policy_version`, `policy_signature`, and `policy_source`.
-- If present, the contract is validated against active runtime policy for source/stage/signature.
-- Validation states are emitted as `valid`, `invalid`, `expired`, or `unknown-source`.
-- `PUMUKI_POLICY_STRICT=1` turns non-valid states into blocking findings (`governance.policy-as-code.invalid`).
-
-Operational fallback:
-
-- Keep strict mode disabled while bootstrapping a repo without a canonical contract.
-- Enable strict mode once contract generation/signatures are part of your baseline pipeline.
-
-## Telemetry Export (Enterprise)
-
-Pumuki can export structured gate telemetry with a stable event schema (`telemetry_event_v1`) for SIEM/observability pipelines.
-
-Default behavior remains unchanged: telemetry export is disabled unless explicitly configured.
-
-Enable one or both outputs:
-
-- `PUMUKI_TELEMETRY_JSONL_PATH`: local JSONL target (absolute or repo-relative path)
-- `PUMUKI_TELEMETRY_OTEL_ENDPOINT`: OTLP HTTP logs endpoint (`/v1/logs`)
-- `PUMUKI_TELEMETRY_OTEL_SERVICE_NAME`: optional OTel service name (default: `pumuki`)
-- `PUMUKI_TELEMETRY_OTEL_TIMEOUT_MS`: optional OTel timeout in ms (default: `1500`)
-
-Example:
+Common commands:
 
 ```bash
-export PUMUKI_TELEMETRY_JSONL_PATH=".pumuki/artifacts/gate-telemetry.jsonl"
-export PUMUKI_TELEMETRY_OTEL_ENDPOINT="https://otel.example/v1/logs"
-export PUMUKI_TELEMETRY_OTEL_SERVICE_NAME="pumuki-enterprise"
-npx --yes --package pumuki@latest pumuki-pre-commit
+npx --yes pumuki sdd status --json
+npx --yes pumuki sdd session --open --change=<change-id> --json
+npx --yes pumuki sdd session --refresh --ttl-minutes=90 --json
+npx --yes pumuki sdd validate --stage=PRE_WRITE --json
+npx --yes pumuki sdd evidence --scenario-id=<id> --test-command='<command>' --test-status=passed --json
+npx --yes pumuki sdd state-sync --scenario-id=<id> --status=done --dry-run --json
 ```
 
-Each event captures deterministic stage/outcome/policy/repo context per gate execution.
+Stage aliases:
 
-## Framework Maintainer Flow (This Repo)
+| Alias | Stage |
+|---|---|
+| `RED` | `PRE_WRITE` |
+| `GREEN` | `PRE_COMMIT` |
+| `REFACTOR` | `PRE_PUSH` |
+| `CLOSE` | `CI` |
 
-Use this only when working in the Pumuki framework repository itself:
+OpenSpec is resolved from the checked repository, not from a random global binary on `PATH`. Install or bootstrap Pumuki inside the repository so local and CI behavior match.
+
+## Session Continuity and AI Window Handoff
+
+Pumuki is designed for AI-assisted work where the chat window, IDE session or CLI agent can change before the repository work is finished.
+
+It does not claim to preserve private conversational memory from a vendor window. Instead, it externalizes the operational context that matters into repository-owned, auditable state:
+
+| Context surface | What it preserves |
+|---|---|
+| `.pumuki/context/context.json` | Local context contract for the repository and the instruction that an AI agent must stop if the context cannot be read or validated. |
+| `pumuki context init|status|repair` | Initialize, validate or repair the local context gate before edits, audits, commits or pushes. |
+| SDD/OpenSpec session state | Active change id, session validity and stage validation through `pumuki sdd status`, `session` and `validate`. |
+| `.ai_evidence.json` v2.1 | Last gate snapshot, findings, platform detection, rule provenance, severity breakdown and operational hints. |
+| Managed hooks and receipts | PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI decisions, MCP receipt freshness and evidence age. |
+| MCP resources | Provider-agnostic resources such as `context://active`, `sdd://status`, `sdd://active-change`, `gitflow://state` and `evidence://status`. |
+
+This makes a new AI window resumable from facts:
+
+```bash
+npx --yes pumuki status --json
+npx --yes pumuki context status --json
+npx --yes pumuki sdd status --json
+npx --yes pumuki doctor --deep --json
+```
+
+For MCP-capable clients, the same pattern is available through read-only context resources and evidence endpoints before an agent edits files. The expected agent behavior is conservative: if context, evidence or SDD state is missing or invalid, the agent should downgrade to diagnosis and report a blocker instead of mutating production code.
+
+In practice, Pumuki turns "remember what we were doing" into a repository contract: current branch, lifecycle health, active SDD change, latest evidence, blocking findings, remediation and policy provenance are recoverable without trusting the transient memory of one AI session.
+
+## AST Intelligence and Rule Packs
+
+Pumuki detects active platforms and loads rule packs for the real repository shape:
+
+| Platform | Coverage area |
+|---|---|
+| iOS | Swift, SwiftUI, Swift Testing, concurrency, architecture and security patterns. |
+| Android | Kotlin, Compose, DI, lifecycle, architecture and Android-specific risk patterns. |
+| Backend | TypeScript/NestJS, DTO validation, controllers, DI, error handling, persistence and security patterns. |
+| Frontend | TypeScript/React/Next.js, JSX accessibility, API routes, UI safety and browser risk patterns. |
+| Generic | Cross-platform TypeScript, process, filesystem, dynamic code execution and security signals. |
+
+Current baseline families:
+
+- `iosEnterpriseRuleSet`
+- `backendRuleSet`
+- `frontendRuleSet`
+- `androidRuleSet`
+- `astHeuristicsRuleSet`
+- compiled skills bundles from `skills.lock.json`
+
+Rule-pack documentation:
+
+- [Rule Packs Overview](docs/rule-packs/README.md)
+- [iOS Rule Pack](docs/rule-packs/ios.md)
+- [Android Rule Pack](docs/rule-packs/android.md)
+- [Backend Rule Pack](docs/rule-packs/backend.md)
+- [Frontend Rule Pack](docs/rule-packs/frontend.md)
+- [AST Heuristics Rule Pack](docs/rule-packs/heuristics.md)
+
+AST intelligence is not a promise that every guideline can be enforced as code. Pumuki distinguishes runtime-code rules, process rules, positive recommendations and rules that still require study, so the gate does not create false confidence.
+
+## Evidence
+
+Pumuki writes deterministic evidence to `.ai_evidence.json` using the v2.1 contract.
+
+Evidence can include:
+
+- stage and policy metadata;
+- gate outcome;
+- findings and blocking causes;
+- loaded rulesets and content hashes;
+- detected platforms;
+- skills coverage;
+- SDD/OpenSpec state;
+- operational hints;
+- ledger and snapshot metadata.
+
+Reference:
+
+- [AI Evidence v2.1 Contract](docs/mcp/ai-evidence-v2.1-contract.md)
+- [Evidence API](docs/product/API_REFERENCE.md#evidence-api)
+
+## Menu and Notifications
+
+Pumuki includes an interactive menu for local developer operation.
+
+Framework repository:
 
 ```bash
 npm run framework:menu
-PUMUKI_MENU_UI_V2=1 npm run framework:menu
 PUMUKI_MENU_MODE=advanced npm run framework:menu
 ```
 
-Skills engine operations:
+Consumer repository:
 
 ```bash
-npm run skills:compile
-npm run skills:lock:check
-npm run skills:import:custom
-npm run skills:import:custom -- --source <absolute-path-to-SKILL.md> --source <second-absolute-path-to-SKILL.md>
+npx --yes --package pumuki@latest pumuki-framework
+```
+
+Screenshots from the consumer menu:
+
+| Consumer menu | Blocked pre-flight | Final summary |
+|---|---|---|
+| ![Consumer menu](assets/readme/menu-option1/01-menu-consumer-v2.png) | ![Pre-flight block](assets/readme/menu-option1/02-option1-preflight-block.png) | ![Final block](assets/readme/menu-option1/03-option1-final-summary-block.png) |
+
+Notification channels include terminal output, stderr mirrors for relevant blocking events and optional system notifications. Blocking messages are expected to explain:
+
+1. blocking cause;
+2. concrete rule or skill;
+3. file and line when available;
+4. missing condition;
+5. direct remediation.
+
+Extended walkthrough:
+
+- [Framework Menu Consumer Walkthrough](docs/operations/framework-menu-consumer-walkthrough.md)
+
+## MCP and Agent Adapters
+
+MCP is optional. Git hooks and gates do not depend on MCP.
+
+Pumuki publishes two MCP server families:
+
+| Server | Purpose |
+|---|---|
+| `pumuki-mcp-evidence` | Read-only evidence context over HTTP. |
+| `pumuki-mcp-enterprise` | Enterprise repository state, resources and safe tools over HTTP. |
+| `pumuki-mcp-evidence-stdio` | Evidence resources over MCP stdio. |
+| `pumuki-mcp-enterprise-stdio` | Enterprise resources/tools over MCP stdio. |
+
+The enterprise server exposes repository-state resources used for session continuity, including `context://active`, `gitflow://state`, `sdd://status`, `sdd://active-change` and `evidence://status`. The evidence server exposes compact and paginated evidence views so agents can load only the facts they need before acting.
+
+Consumer quick start:
+
+```bash
+npx --yes --package pumuki@latest pumuki-mcp-evidence
+npx --yes --package pumuki@latest pumuki-mcp-enterprise
+npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio
 ```
 
 Adapter scaffolding:
 
 ```bash
-npx --yes pumuki adapter install --agent=codex --dry-run
-npx --yes pumuki adapter install --agent=cursor
-npm run adapter:install -- --agent=claude
+npx --yes pumuki adapter install --agent=repo --dry-run --json
+npx --yes pumuki adapter install --agent=<agent> --json
+npx --yes pumuki adapter install --agent=cursor --dry-run --json
 ```
 
-Operational matrix/canary:
+Supported adapter targets include `repo`, `cursor`, `claude`, `codex`, `windsurf` and `opencode`. These are opt-in client adapters; the managed Git hooks, gates, lifecycle, evidence and `.pumuki/adapter.json` baseline remain AI-agent, CLI and IDE agnostic.
 
-```bash
-node --import tsx -e "const mod = await import('./scripts/framework-menu-matrix-runner-lib.ts'); const report = await mod.default.runConsumerMenuMatrix({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
-node --import tsx -e "const mod = await import('./scripts/framework-menu-matrix-canary-lib.ts'); const report = await mod.default.runConsumerMenuCanary({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
-```
+References:
 
-Legacy parity report (strict comparator):
+- [MCP Servers](docs/mcp/mcp-servers-overview.md)
+- [Evidence Context Server](docs/mcp/evidence-context-server.md)
+- [Agent Context Consumption](docs/mcp/agent-context-consumption.md)
 
-```bash
-node --import tsx scripts/build-legacy-parity-report.ts --legacy=<legacy-evidence-path> --enterprise=<enterprise-evidence-path> --out=<output-path>
-```
+## Enterprise Operations
 
-## Command Paths
+Pumuki includes enterprise-oriented controls for teams that need governed rollout across multiple repositories.
 
-Use these docs instead of treating `README.md` as the full command manual:
+| Area | Capability |
+|---|---|
+| Policy-as-code | `.pumuki/policy-as-code.json` with stage signatures and strict validation. |
+| Telemetry | Optional JSONL and OTLP export for gate telemetry. |
+| Version drift | `status` and `doctor` expose effective/runtime/lifecycle/package alignment. |
+| Adapter health | Deep diagnostics for hook and MCP wiring. |
+| Worktree hygiene | Guardrails for pending changes and atomic delivery. |
+| Consumer rollout | Package smoke, installed-bin smoke and consumer support tooling. |
+| Operations policy | SLO/SLA, severity model, incident response and rollback expectations. |
 
-- Installation and bootstrap:
-  - `docs/product/INSTALLATION.md`
-- Daily usage, gates, menu, lifecycle, SDD and troubleshooting:
-  - `docs/product/USAGE.md`
-- Operator-focused short playbook:
-  - `PUMUKI.md`
-- Validation runbooks and framework-only diagnostics:
-  - `docs/validation/README.md`
+Operational references:
 
-## Menu Walkthrough and Screenshots
+- [Configuration](docs/product/CONFIGURATION.md)
+- [Production Operations Policy](docs/operations/production-operations-policy.md)
+- [Validation Runbooks](docs/validation/README.md)
+- [Release Notes](docs/operations/RELEASE_NOTES.md)
+- [Changelog](CHANGELOG.md)
 
-### Capture 1 — Consumer Menu (v2)
+## Adoption Models
 
-![Consumer Menu v2](assets/readme/menu-option1/01-menu-consumer-v2.png)
+| Context | Recommended path |
+|---|---|
+| Greenfield repository | Install Pumuki early, enable SDD/OpenSpec, commit through hooks from day one. |
+| Brownfield repository | Start with scoped hooks and audits; fix active-slice debt before historical debt. |
+| AI-enabled team | Treat `AGENTS.md` and skills as the human contract, and Pumuki as executable enforcement. |
+| Multi-platform monorepo | Pin platforms when needed and let rule packs activate by detected scope. |
+| Enterprise rollout | Pilot in one consumer, validate `doctor/status/hooks`, then repin controlled repositories. |
 
-### Capture 2 — Option 1 Pre-flight (BLOCK context)
+Suggested rollout checklist:
 
-![Option 1 Pre-flight Block](assets/readme/menu-option1/02-option1-preflight-block.png)
-
-### Capture 3 — Option 1 Final Summary (BLOCK)
-
-![Option 1 Final Summary Block](assets/readme/menu-option1/03-option1-final-summary-block.png)
-
-### Capture 4 — Option 1 Pre-flight (PASS scenario)
-
-![Option 1 Pre-flight Pass Scenario](assets/readme/menu-option1/04-option1-preflight-pass.png)
-
-### Capture 5 — Option 1 Final Summary (PASS)
-
-![Option 1 Final Summary Pass](assets/readme/menu-option1/05-option1-final-summary-pass.png)
-
-### Capture 6 — Menu Status After PASS Run
-
-![Menu After Pass Run](assets/readme/menu-option1/06-menu-after-run-pass.png)
-
-Extended annotated walkthrough:
-
-- `docs/operations/framework-menu-consumer-walkthrough.md`
-
-## Enterprise Operations Baseline
-
-Pumuki production SaaS operation baseline is defined in:
-
-- `docs/operations/production-operations-policy.md`
-
-Highlights:
-
-- Minimum SLO/SLA targets for ingestion availability, latency, freshness, and isolation.
-- Severity model (`SEV1/SEV2/SEV3`) with response and RCA expectations.
-- Mandatory controls for tenant/repo isolation, auth policy, idempotency, and auditing.
-- Go-live checklist and rollback requirements.
+1. Install exact package version.
+2. Run `pumuki bootstrap --enterprise`.
+3. Verify `status` and `doctor`.
+4. Open an SDD session for a real change.
+5. Run `PRE_WRITE` and `PRE_COMMIT`.
+6. Validate menu and notification output.
+7. Add CI gate when the local contract is stable.
+8. Document local exceptions in the consumer repository.
 
 ## Troubleshooting
 
-- `OpenSpec change "<id>" not found`: ensure `openspec/changes/<id>` exists before opening session.
-- `SDD_SESSION_MISSING`: open and validate session first.
-- `pre-push blocked: branch has no upstream`: run `git push --set-upstream origin <branch>`.
-- `Missing required argument --repo` / `--repo-path`: pass required flags for validation scripts.
-- Legacy parity report usage requires `--legacy=<path>` and `--enterprise=<path>` (equals form).
-- If menu v2 rendering fails, Pumuki falls back to classic UI.
+| Symptom | Likely cause | Action |
+|---|---|---|
+| `SDD_SESSION_MISSING` | No active SDD session. | Run `pumuki sdd session --open --change=<change-id>`. |
+| `SDD_SESSION_INVALID` | Session does not match current change or expired. | Run `pumuki sdd session --refresh --ttl-minutes=90`. |
+| `OPENSPEC_MISSING` | Repo-local OpenSpec binary is missing. | Run `pumuki bootstrap --enterprise` or install the required package in the repo. |
+| PRE_PUSH blocks due to missing upstream | Branch has no tracking ref. | Run `git push --set-upstream origin <branch>`. |
+| Version drift in `doctor` | Package/runtime/lifecycle versions differ. | Use the printed `alignmentCommand`. |
+| Hook blocks unrelated brownfield debt | Scope classification may be wrong. | Capture command, staged files and JSON output; open an issue. |
+| `.ai_evidence.json` changes during docs-only work | Evidence refresh behavior is active. | Review the diff and stage only when the evidence belongs to the slice. |
+| MCP port conflict | Another instance is running. | Use `PUMUKI_ENTERPRISE_MCP_PORT=0` for dynamic port allocation. |
 
-## Documentation Index
+Bug report template:
 
-- Installation: `docs/product/INSTALLATION.md`
-- Usage: `docs/product/USAGE.md`
-- Backlog tooling quick nav (incluye snippet terminal): `docs/product/USAGE.md#backlog-tooling`
-- Backlog reasons shared module: `docs/product/USAGE.md#backlog-reasons`
-- Testing: `docs/product/TESTING.md`
-- API reference: `docs/product/API_REFERENCE.md`
-- Architecture: `docs/product/ARCHITECTURE.md`
-- Configuration: `docs/product/CONFIGURATION.md`
-- Code standards: `docs/governance/CODE_STANDARDS.md`
-- Branch protection: `docs/governance/BRANCH_PROTECTION_GUIDE.md`
-- MCP servers: `docs/mcp/mcp-servers-overview.md`
-- MCP evidence server: `docs/mcp/evidence-context-server.md`
-- MCP consumption: `docs/mcp/agent-context-consumption.md`
-- Evidence schema v2.1: `docs/mcp/ai-evidence-v2.1-contract.md`
-- Operations policy (SLA/SLO): `docs/operations/production-operations-policy.md`
-- Release notes: `docs/operations/RELEASE_NOTES.md`
-- Changelog: `CHANGELOG.md`
+```text
+Repository:
+Branch:
+Pumuki version:
+Command:
+Expected result:
+Actual result:
+Staged files:
+Relevant output:
+Evidence file present:
+```
 
-## Collaboration
+## Documentation
 
-Contributions are welcome. For high-quality collaboration:
+Start here:
 
-1. Read `docs/governance/CONTRIBUTING.md` and `docs/governance/CODE_STANDARDS.md`.
-2. Create a dedicated branch per change.
-3. Keep scope focused and include deterministic evidence when relevant.
-4. Before opening a PR, run at least:
-   - `npm run typecheck`
-   - `npm run -s test:backlog-tooling`
-   - `npm run test:operational-memory`
-   - `npm run test:saas-ingestion`
-5. Open a PR with clear problem statement, approach, and validation evidence.
+- [Operator Playbook](PUMUKI.md)
+- [Documentation Index](docs/README.md)
+- [Installation](docs/product/INSTALLATION.md)
+- [Usage](docs/product/USAGE.md)
+- [Architecture](docs/product/ARCHITECTURE.md)
+- [Configuration](docs/product/CONFIGURATION.md)
+- [API Reference](docs/product/API_REFERENCE.md)
+- [Testing](docs/product/TESTING.md)
+- [MCP Servers](docs/mcp/mcp-servers-overview.md)
+- [Rule Packs](docs/rule-packs/README.md)
+- [Governance Standards](docs/governance/CODE_STANDARDS.md)
+- [Contributing](docs/governance/CONTRIBUTING.md)
+
+Optional training hub:
+
+- [Pumuki course in Stack My Architecture](https://stack-my-architecture-hub.vercel.app/pumuki/)
+
+## Contributing
+
+For high-quality contributions:
+
+1. Read [Contributing](docs/governance/CONTRIBUTING.md) and [Code Standards](docs/governance/CODE_STANDARDS.md).
+2. Work on a dedicated branch.
+3. Keep each change atomic.
+4. Add focused regression coverage for behavior changes.
+5. Run the relevant local validation commands.
+6. Open a PR with problem, approach and evidence.
+
+Maintainer validation commands:
+
+```bash
+npm run -s typecheck
+npm run -s test:deterministic
+npm run -s validation:package-manifest
+npm run -s smoke:pumuki-surface
+```
+
+For release-grade validation in this repository:
+
+```bash
+npm run -s validation:local-merge-bar
+npm publish --dry-run --access public
+```
+
+Publishing to npm is a separate release operation and may require registry auth/MFA handling.
 
 ## Support and Security
 
-- Functional/usage issues: open a GitHub issue with reproducible steps.
-- Enterprise diagnostics: include generated reports from `.audit-reports` when applicable.
-- Security-sensitive findings: use GitHub Security Advisories for coordinated disclosure.
+- Functional issues: use [GitHub Issues](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues).
+- Security-sensitive issues: use GitHub Security Advisories or coordinated private disclosure.
+- Enterprise diagnostics: attach command output and evidence excerpts, but never include secrets.
 
 ## License
 
-MIT. See `LICENSE`.
-
-## If Pumuki Helped You
-
-If this project was useful for your team, please consider leaving a GitHub star:
-
-[Star Pumuki on GitHub](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks)
+MIT. See [LICENSE](LICENSE).
