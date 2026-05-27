@@ -34,6 +34,7 @@ Current maturity: **advanced beta**. The framework is already useful for governe
 - [Command Reference](#command-reference)
 - [Git Hooks and CI](#git-hooks-and-ci)
 - [SDD and OpenSpec](#sdd-and-openspec)
+- [Session Continuity and AI Window Handoff](#session-continuity-and-ai-window-handoff)
 - [AST Intelligence and Rule Packs](#ast-intelligence-and-rule-packs)
 - [Evidence](#evidence)
 - [Menu and Notifications](#menu-and-notifications)
@@ -73,6 +74,7 @@ Pumuki provides a governed delivery surface for modern repositories:
 | Stage gates | `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH` and `CI` policies with deterministic semantics. |
 | Full audit | `pumuki audit` for tracked-repository evaluation outside a hook. |
 | SDD/OpenSpec | Change sessions, validation, evidence sync and state sync. |
+| Session continuity | Repo-owned context, SDD state, evidence and MCP resources so a new AI window can resume from facts instead of chat memory. |
 | AST intelligence | Rule-backed findings for iOS, Android, backend, frontend and generic TypeScript patterns. |
 | Skills contracts | Compiled rules from enterprise skills, with coverage checks and missing-detector protection. |
 | Evidence | Stable `.ai_evidence.json` v2.1 snapshots for auditability and automation. |
@@ -324,6 +326,34 @@ Stage aliases:
 
 OpenSpec is resolved from the checked repository, not from a random global binary on `PATH`. Install or bootstrap Pumuki inside the repository so local and CI behavior match.
 
+## Session Continuity and AI Window Handoff
+
+Pumuki is designed for AI-assisted work where the chat window, IDE session or CLI agent can change before the repository work is finished.
+
+It does not claim to preserve private conversational memory from a vendor window. Instead, it externalizes the operational context that matters into repository-owned, auditable state:
+
+| Context surface | What it preserves |
+|---|---|
+| `.pumuki/context/context.json` | Local context contract for the repository and the instruction that an AI agent must stop if the context cannot be read or validated. |
+| `pumuki context init|status|repair` | Initialize, validate or repair the local context gate before edits, audits, commits or pushes. |
+| SDD/OpenSpec session state | Active change id, session validity and stage validation through `pumuki sdd status`, `session` and `validate`. |
+| `.ai_evidence.json` v2.1 | Last gate snapshot, findings, platform detection, rule provenance, severity breakdown and operational hints. |
+| Managed hooks and receipts | PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI decisions, MCP receipt freshness and evidence age. |
+| MCP resources | Provider-agnostic resources such as `context://active`, `sdd://status`, `sdd://active-change`, `gitflow://state` and `evidence://status`. |
+
+This makes a new AI window resumable from facts:
+
+```bash
+npx --yes pumuki status --json
+npx --yes pumuki context status --json
+npx --yes pumuki sdd status --json
+npx --yes pumuki doctor --deep --json
+```
+
+For MCP-capable clients, the same pattern is available through read-only context resources and evidence endpoints before an agent edits files. The expected agent behavior is conservative: if context, evidence or SDD state is missing or invalid, the agent should downgrade to diagnosis and report a blocker instead of mutating production code.
+
+In practice, Pumuki turns "remember what we were doing" into a repository contract: current branch, lifecycle health, active SDD change, latest evidence, blocking findings, remediation and policy provenance are recoverable without trusting the transient memory of one AI session.
+
 ## AST Intelligence and Rule Packs
 
 Pumuki detects active platforms and loads rule packs for the real repository shape:
@@ -424,6 +454,8 @@ Pumuki publishes two MCP server families:
 | `pumuki-mcp-enterprise` | Enterprise repository state, resources and safe tools over HTTP. |
 | `pumuki-mcp-evidence-stdio` | Evidence resources over MCP stdio. |
 | `pumuki-mcp-enterprise-stdio` | Enterprise resources/tools over MCP stdio. |
+
+The enterprise server exposes repository-state resources used for session continuity, including `context://active`, `gitflow://state`, `sdd://status`, `sdd://active-change` and `evidence://status`. The evidence server exposes compact and paginated evidence views so agents can load only the facts they need before acting.
 
 Consumer quick start:
 
