@@ -1,6 +1,6 @@
 {
   "name": "pumuki",
-  "version": "6.3.377",
+  "version": "6.3.378",
   "description": "Enterprise governance framework for AI-assisted software delivery with Git hooks, SDD/OpenSpec, AST intelligence, evidence, MCP and multi-platform rule enforcement.",
   "main": "index.js",
   "bin": {
