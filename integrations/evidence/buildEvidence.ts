@@ -265,13 +265,73 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
     'heuristics.ios.callback-style.ast',
   ],
   ['ios.no-gcd', 'skills.ios.no-dispatchqueue', 'heuristics.ios.dispatchqueue.ast'],
+  [
+    'skills.ios.guideline.ios.mainactor-para-co-digo-que-debe-ejecutarse-en-el-hilo-principal',
+    'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.actor-para-estado-compartido-thread-safe',
+    'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.sincronizacio-n-nativa-actors-para-estado-compartido-osallocatedunfair',
+    'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+  ],
   ['ios.no-gcd', 'skills.ios.no-dispatchgroup', 'heuristics.ios.dispatchgroup.ast'],
   ['ios.no-gcd', 'skills.ios.no-dispatchsemaphore', 'heuristics.ios.dispatchsemaphore.ast'],
   ['ios.no-gcd', 'skills.ios.no-operation-queue', 'heuristics.ios.operation-queue.ast'],
   ['skills.ios.no-task-detached', 'heuristics.ios.task-detached.ast'],
   ['skills.ios.no-unchecked-sendable', 'heuristics.ios.unchecked-sendable.ast'],
   ['skills.ios.no-preconcurrency', 'heuristics.ios.preconcurrency.ast'],
+  [
+    'skills.ios.guideline.ios.no-usar-mainactor-como-parche-justificar-el-aislamiento',
+    'heuristics.ios.concurrency.mainactor-run-patch.ast',
+  ],
+  [
+    'skills.ios.guideline.ios-concurrency.use-grep-for-swiftstrictconcurrency-or-swiftdefaultactorisolation-in-p',
+    'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
+    'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
+    'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.validar-configuracio-n-de-concurrencia-swiftstrictconcurrency-swiftdef',
+    'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
+    'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
+    'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+  ],
   ['skills.ios.no-nonisolated-unsafe', 'heuristics.ios.nonisolated-unsafe.ast'],
+  [
+    'skills.ios.guideline.ios.feature-first-cada-feature-es-un-bounded-context-no-se-acoplan-entre-s',
+    'heuristics.ios.architecture.cross-feature-import.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.las-features-no-se-importan-entre-si',
+    'heuristics.ios.architecture.cross-feature-import.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.shared-kernel-solo-tipos-mi-nimos-compartidos-entre-features',
+    'heuristics.ios.architecture.cross-feature-import.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.clean-por-feature-presentation-application-domain-infrastructure-domai',
+    'heuristics.ios.architecture.layer-direction-violation.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.seguir-clean-architecture-domain-application-infrastructure-presentati',
+    'heuristics.ios.architecture.layer-direction-violation.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.ddd-entidades-value-objects-repositorios-protocolos-eventos-de-dominio',
+    'heuristics.ios.architecture.layer-direction-violation.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.public-api-solo-exponer-lo-necesario-public-internal-private',
+    'heuristics.ios.architecture.excessive-public-api.ast',
+  ],
   ['skills.ios.no-assume-isolated', 'heuristics.ios.assume-isolated.ast'],
   ['skills.ios.no-observable-object', 'heuristics.ios.observable-object.ast'],
   [
@@ -283,6 +343,14 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
     'heuristics.ios.passed-value-state-wrapper.ast',
   ],
   ['skills.ios.no-navigation-view', 'heuristics.ios.navigation-view.ast'],
+  [
+    'skills.ios.guideline.ios.deep-links-deben-mapear-a-rutas-del-path',
+    'heuristics.ios.navigation.path-without-restoration.ast',
+  ],
+  [
+    'skills.ios.guideline.ios.state-restoration-rehidratar-path-desde-estado-persistido-si-aplica',
+    'heuristics.ios.navigation.path-without-restoration.ast',
+  ],
   ['skills.ios.no-foreground-color', 'heuristics.ios.foreground-color.ast'],
   ['skills.ios.no-corner-radius', 'heuristics.ios.corner-radius.ast'],
   ['skills.ios.no-tab-item', 'heuristics.ios.tab-item.ast'],
@@ -312,6 +380,10 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
     'heuristics.ios.testing.legacy-expectation-description.ast',
   ],
   ['skills.ios.no-mixed-testing-frameworks', 'heuristics.ios.testing.mixed-frameworks.ast'],
+  [
+    'skills.ios.guideline.ios.xcuitest-ui-testing-nativo',
+    'heuristics.ios.testing.third-party-ui-test-framework.ast',
+  ],
   [
     'skills.ios.no-nsmanagedobject-boundary',
     'heuristics.ios.core-data.nsmanagedobject-boundary.ast',

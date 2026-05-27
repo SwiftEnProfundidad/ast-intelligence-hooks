@@ -6,10 +6,13 @@ import test from 'node:test';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 import {
   __testables,
+  buildMenuGateParams,
   runRepoAndStagedPrePushGateSilent,
   runRepoGateSilent,
   runWorkingTreePrePushGateSilent,
 } from '../framework-menu-gate-lib';
+
+process.env.PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS = '1';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
   execFileSync('git', args, { cwd, encoding: 'utf8' });
@@ -143,4 +146,48 @@ test('runRepoAndStagedPrePushGateSilent usa el stage runner canónico de PRE_PUS
 
   assert.equal(runPrePushStageCalls, 1);
   assert.equal(runPlatformGateCalls, 0);
+});
+
+test('runMenuAuditGateWithBlocked devuelve la causa bloqueante emitida por runPlatformGate', async () => {
+  const result = await __testables.runMenuAuditGateWithBlocked(
+    buildMenuGateParams({
+      stage: 'PRE_COMMIT',
+      scope: { kind: 'repo' },
+    }),
+    {
+      runPrePushStage: async () => 0,
+      runPlatformGate: async (params) => {
+        params.dependencies?.notifyGateBlocked?.({
+          stage: 'PRE_COMMIT',
+          totalViolations: 2,
+          causeCode: 'SKILLS_BACKEND_NO_SOLID_VIOLATIONS',
+          causeMessage: 'SOLID rule violated.',
+          remediation: 'Split responsibilities and re-run the gate.',
+          blockingCauses: [
+            {
+              code: 'NO_SOLID',
+              ruleId: 'skills.backend.no-solid-violations',
+              message: 'Backend SOLID violation.',
+              file: 'apps/backend/src/service.ts',
+              remediation: 'Split service responsibilities.',
+            },
+            {
+              code: 'NO_CONSOLE',
+              ruleId: 'skills.frontend.no-console-log',
+              message: 'Console log violation.',
+              file: 'apps/web/src/App.tsx',
+              remediation: 'Remove console.log.',
+            },
+          ],
+        });
+        return 1;
+      },
+    }
+  );
+
+  assert.equal(result?.blocked?.stage, 'PRE_COMMIT');
+  assert.equal(result?.blocked?.totalViolations, 2);
+  assert.equal(result?.blocked?.causeCode, 'SKILLS_BACKEND_NO_SOLID_VIOLATIONS');
+  assert.equal(result?.blocked?.blockingCauses?.length, 2);
+  assert.equal(result?.blocked?.blockingCauses?.[1]?.file, 'apps/web/src/App.tsx');
 });

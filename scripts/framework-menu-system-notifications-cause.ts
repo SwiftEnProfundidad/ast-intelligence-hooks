@@ -7,6 +7,7 @@ import {
   buildNotificationTrackingCauseSummary,
   extractNotificationTrackingContext,
 } from './framework-menu-system-notifications-tracking';
+import { buildLegacySkillCauseSummary } from './framework-menu-system-notifications-legacy-skill-cause';
 
 const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_GATE_BLOCKED: 'El gate de evidencia/gobernanza está bloqueado.',
@@ -34,6 +35,10 @@ const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
     'Falta enforcement crítico de skills para la plataforma detectada.',
   EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
     'El contrato de skills está incompleto para este stage.',
+  CONTEXT_NOT_APPLIED:
+    'Contexto local obligatorio no aplicado.',
+  CONTEXT_INVALID:
+    'Contexto local obligatorio inválido.',
 };
 
 const ENGLISH_CAUSE_HINTS = [
@@ -68,6 +73,55 @@ const resolvePriorityCauseFromMessage = (message?: string): string | null => {
     return null;
   }
   return PRIORITY_CODES_FROM_MESSAGE.find((code) => message.includes(code)) ?? null;
+};
+
+const isCauseCodePriorityOverTracking = (causeCode: string): boolean =>
+  causeCode === 'CONTEXT_NOT_APPLIED' || causeCode === 'CONTEXT_INVALID';
+
+const isAstBlockedCauseCode = (causeCode: string): boolean => {
+  const normalized = causeCode.toLowerCase();
+  return (
+    normalized.startsWith('skills_') ||
+    normalized.startsWith('skills.') ||
+    normalized.startsWith('heuristics_') ||
+    normalized.startsWith('heuristics.') ||
+    normalized.includes('_ast') ||
+    normalized.includes('solid') ||
+    normalized.includes('no_') ||
+    normalized.includes('avoid_')
+  );
+};
+
+const isAstBlockedCause = (
+  cause: NonNullable<Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>['blockingCauses']>[number]
+): boolean => {
+  const ruleId = cause.ruleId?.toLowerCase() ?? '';
+  const code = cause.code.toLowerCase();
+  return (
+    ruleId.startsWith('skills.') ||
+    ruleId.startsWith('heuristics.') ||
+    isAstBlockedCauseCode(code)
+  );
+};
+
+const buildBlockedCausesSummary = (
+  event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>
+): string | null => {
+  const causes = event.blockingCauses ?? [];
+  if (causes.length === 0) {
+    return null;
+  }
+  const astCauses = causes.filter(isAstBlockedCause);
+  const selectedCauses = astCauses.length > 0 ? astCauses : causes;
+  const first = selectedCauses[0];
+  if (!first) {
+    return null;
+  }
+  const file = first.file ? ` en ${first.file}` : '';
+  const rule = first.ruleId ?? first.code;
+  const remainingCauses = Math.max(0, causes.length - 1);
+  const suffix = remainingCauses > 0 ? ` (+${remainingCauses} más)` : '';
+  return `Violación ${rule}${file}${suffix}.`;
 };
 
 const buildGenericSpanishBlockedCauseSummary = (
@@ -113,15 +167,26 @@ export const resolveBlockedCauseSummary = (
   event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>,
   causeCode: string
 ): string => {
+  const blockedCausesSummary = buildBlockedCausesSummary(event);
+  if (blockedCausesSummary) {
+    return truncateNotificationText(blockedCausesSummary, 72);
+  }
+  const legacySkillCauseSummary = buildLegacySkillCauseSummary(event.causeMessage);
+  if (legacySkillCauseSummary) {
+    return legacySkillCauseSummary;
+  }
   const trackingContext = extractNotificationTrackingContext(event.causeMessage);
   const priorityCode = resolvePriorityCauseFromMessage(event.causeMessage);
   if (priorityCode) {
     return BLOCKED_CAUSE_SUMMARY_BY_CODE[priorityCode];
   }
+  const mapped = BLOCKED_CAUSE_SUMMARY_BY_CODE[causeCode];
+  if (mapped && isCauseCodePriorityOverTracking(causeCode)) {
+    return mapped;
+  }
   if (trackingContext) {
     return buildNotificationTrackingCauseSummary(trackingContext);
   }
-  const mapped = BLOCKED_CAUSE_SUMMARY_BY_CODE[causeCode];
   if (mapped) {
     return mapped;
   }

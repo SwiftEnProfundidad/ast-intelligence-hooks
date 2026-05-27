@@ -150,6 +150,17 @@ const writeBlockedEvidence = (params: {
   });
   evidence.snapshot.stage = params.stage;
   evidence.snapshot.outcome = 'BLOCK';
+  evidence.snapshot.findings = [
+    {
+      ruleId: 'skills.ios.no-force-unwrap',
+      severity: 'ERROR',
+      code: 'NO_FORCE_UNWRAP',
+      message: 'Force unwrap is not allowed.',
+      file: 'apps/ios/App/Feature.swift',
+      lines: [12],
+      expected_fix: 'Use guard let or optional binding.',
+    },
+  ];
   evidence.ai_gate.status = 'BLOCKED';
   evidence.severity_metrics = {
     gate_status: 'BLOCKED',
@@ -317,6 +328,10 @@ test('runLifecycleDoctor itemiza el tracking canónico cuando governance está b
       report.issues.find((issue) => issue.message.includes('Governance is blocked'))?.message ?? '',
       /active_entries=PUMUKI-INC-078@L3, PUMUKI-INC-079@L4/i
     );
+    const issue = report.issues.find((entry) => entry.message.includes('Governance is blocked'));
+    assert.match(issue?.message ?? '', /skills\.ios\.no-force-unwrap/i);
+    assert.equal(issue?.blockingCauses?.length, 1);
+    assert.equal(issue?.blockingCauses?.[0]?.file, 'apps/ios/App/Feature.swift');
   });
 });
 
@@ -411,6 +426,38 @@ test('runLifecycleDoctor queda limpio cuando estado y hooks son consistentes', a
     });
 
     assert.deepEqual(report.issues, []);
+    assert.equal(doctorHasBlockingIssues(report), false);
+  });
+});
+
+test('runLifecycleDoctor expone warning cuando las notificaciones estan desactivadas', async () => {
+  await withTempDir('pumuki-doctor-notifications-disabled-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'system-notifications.json'),
+      JSON.stringify({ enabled: false, channel: 'macos', blockedDialogEnabled: true }, null, 2),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: '6.3.11',
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+    });
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.notifications.enabled, false);
+    assert.equal(report.notifications.deliverable, false);
+    assert.equal(report.notifications.disabledReason, 'disabled');
+    assert.match(
+      report.issues.map((issue) => issue.message).join('\n'),
+      /System notifications are not deliverable/
+    );
     assert.equal(doctorHasBlockingIssues(report), false);
   });
 });
@@ -611,6 +658,13 @@ test('runLifecycleDoctor --deep marca policy-drift por fallback default como fai
             pre_push: { command: 'npx --yes --package pumuki@latest pumuki-pre-push' },
             ci: { command: 'npx --yes --package pumuki@latest pumuki-ci' },
           },
+          enforcement: {
+            pre_write: {
+              required_before_edit: true,
+              command: 'npx --yes --package pumuki@latest pumuki-pre-write',
+              agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
+            },
+          },
           mcp: {
             enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
             evidence: { command: 'npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio' },
@@ -689,6 +743,12 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
             pre_push: { command: 'npx --yes --package pumuki@latest pumuki-pre-push' },
             ci: { command: 'npx --yes --package pumuki@latest pumuki-ci' },
           },
+          enforcement: {
+            pre_write: {
+              required_before_edit: true,
+              agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
+            },
+          },
           mcp: {
             enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
             evidence: { command: 'npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio' },
@@ -760,6 +820,18 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
     assert.equal(report.policyValidation.stages.PRE_COMMIT.source, 'skills.policy');
     assert.equal(report.policyValidation.stages.PRE_PUSH.source, 'skills.policy');
     assert.equal(report.deep?.checks.every((check) => check.status === 'pass'), true);
+    const adapterCheck = report.deep?.checks.find((check) => check.id === 'adapter-wiring');
+    assert.ok(adapterCheck);
+    assert.match(adapterCheck.message, /PRE_WRITE hard-stop is required before editing/);
+    assert.equal(adapterCheck.metadata?.pre_write_required_before_edit, true);
+    assert.equal(
+      adapterCheck.metadata?.pre_write_command,
+      'npx --yes --package pumuki@latest pumuki-pre-write'
+    );
+    assert.match(
+      String(adapterCheck.metadata?.pre_write_agent_instruction ?? ''),
+      /STOP before editing files/
+    );
     assert.equal(report.deep?.contract.overall, 'compatible');
     assert.equal(report.deep?.blocking, false);
     assert.equal(doctorHasBlockingIssues(report), false);
@@ -781,6 +853,12 @@ test('runLifecycleDoctor --deep marca warning cuando adapter wiring usa comandos
             pre_commit: { command: 'npx --yes pumuki-pre-commit' },
             pre_push: { command: 'npx --yes pumuki-pre-push' },
             ci: { command: 'npx --yes pumuki-ci' },
+          },
+          enforcement: {
+            pre_write: {
+              required_before_edit: true,
+              agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
+            },
           },
           mcp: {
             enterprise: { command: 'npx --yes pumuki-mcp-enterprise-stdio' },
@@ -876,6 +954,12 @@ test('runLifecycleDoctor --deep marca warning cuando adapter wiring muta PATH', 
             pre_push: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-pre-push' },
             ci: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-ci' },
           },
+          enforcement: {
+            pre_write: {
+              required_before_edit: true,
+              agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
+            },
+          },
           mcp: {
             enterprise: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
             evidence: { command: 'PATH="$HOME/.nvm/bin:$PATH" npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio' },
@@ -969,6 +1053,12 @@ test('runLifecycleDoctor --deep marca incompatibilidad cuando OpenSpec es requer
             pre_commit: { command: 'npx --yes --package pumuki@latest pumuki-pre-commit' },
             pre_push: { command: 'npx --yes --package pumuki@latest pumuki-pre-push' },
             ci: { command: 'npx --yes --package pumuki@latest pumuki-ci' },
+          },
+          enforcement: {
+            pre_write: {
+              required_before_edit: true,
+              agent_instruction: 'STOP before editing files unless pumuki-pre-write has produced a valid PRE_WRITE lease.',
+            },
           },
           mcp: {
             enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },

@@ -21,6 +21,12 @@ export type TddBddSnapshot = {
     slices_invalid: number;
     integrity_ok: boolean;
     errors: string[];
+    phases?: {
+      red: 'missing' | 'passed' | 'failed';
+      green: 'missing' | 'passed' | 'failed';
+      refactor: 'missing' | 'passed' | 'failed';
+      verify: 'missing' | 'passed' | 'failed';
+    };
   };
   waiver: {
     applied: boolean;

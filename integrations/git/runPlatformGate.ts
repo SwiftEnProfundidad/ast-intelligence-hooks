@@ -32,13 +32,18 @@ import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { createEmptySnapshotRulesCoverage } from '../evidence/rulesCoverage';
 import { enforceTddBddPolicy } from '../tdd/enforcement';
 import type { TddBddSnapshot } from '../tdd/types';
-import { resolveSkillsEnforcement } from '../policy/skillsEnforcement';
 import { applyTddBddEnforcement } from '../policy/tddBddEnforcement';
 import { collectAiGateRepoPolicyFindings } from './aiGateRepoPolicyFindings';
 import {
   filterFactsByPathPrefixes,
   resolveGateScopePathPrefixesFromEnv,
 } from './filterFactsByPathPrefixes';
+import {
+  readPreWriteLeaseStatus,
+  toPreWriteEnforcementGapFinding,
+} from '../lifecycle/preWriteLease';
+import { evaluateContextGate, type ContextGateResult } from '../context/contextGate';
+import { emitGateBlockedNotification } from '../notifications/emitAuditSummaryNotification';
 
 export type OperationalMemoryShadowRecommendation = {
   recommendedOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
@@ -73,6 +78,8 @@ export type GateDependencies = {
     stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
     branch: string | null;
   }) => GateWaiverResult;
+  evaluateContextGate: typeof evaluateContextGate;
+  notifyGateBlocked: typeof emitGateBlockedNotification;
 };
 
 const defaultServices: GateServices = {
@@ -101,25 +108,196 @@ const hasActionableFindingLocation = (finding: Finding): boolean => {
   );
 };
 
+const normalizeFindingLines = (lines: Finding['lines']): ReadonlyArray<number> => {
+  if (typeof lines === 'number') {
+    return Number.isFinite(lines) && lines > 0 ? [Math.trunc(lines)] : [];
+  }
+  if (Array.isArray(lines)) {
+    return [...new Set(lines.filter((line) => Number.isFinite(line) && line > 0).map((line) => Math.trunc(line)))].sort(
+      (left, right) => left - right
+    );
+  }
+  if (typeof lines === 'string') {
+    return [...new Set(
+      lines
+        .split(/[^0-9]+/)
+        .map((line) => Number.parseInt(line, 10))
+        .filter((line) => Number.isFinite(line) && line > 0)
+    )].sort((left, right) => left - right);
+  }
+  return [];
+};
+
+const parseChangedLinesByPathFromUnifiedDiff = (diff: string): Map<string, Set<number>> => {
+  const changedLinesByPath = new Map<string, Set<number>>();
+  let currentPath: string | undefined;
+
+  for (const rawLine of diff.split('\n')) {
+    if (rawLine.startsWith('+++ b/')) {
+      const nextPath = rawLine.slice('+++ b/'.length).trim();
+      currentPath = nextPath.length > 0 && nextPath !== '/dev/null' ? toNormalizedPath(nextPath) : undefined;
+      if (currentPath && !changedLinesByPath.has(currentPath)) {
+        changedLinesByPath.set(currentPath, new Set<number>());
+      }
+      continue;
+    }
+
+    if (!currentPath || !rawLine.startsWith('@@')) {
+      continue;
+    }
+
+    const hunkMatch = rawLine.match(/\+(\d+)(?:,(\d+))?/);
+    if (!hunkMatch) {
+      continue;
+    }
+    const startLine = Number.parseInt(hunkMatch[1] ?? '', 10);
+    const lineCount = hunkMatch[2] === undefined ? 1 : Number.parseInt(hunkMatch[2], 10);
+    if (!Number.isFinite(startLine) || startLine <= 0 || !Number.isFinite(lineCount)) {
+      continue;
+    }
+    const changedLines = changedLinesByPath.get(currentPath) ?? new Set<number>();
+    for (let offset = 0; offset < Math.max(0, lineCount); offset += 1) {
+      changedLines.add(startLine + offset);
+    }
+    changedLinesByPath.set(currentPath, changedLines);
+  }
+
+  return changedLinesByPath;
+};
+
+const collectStagedChangedLinesByPath = (
+  git: IGitService,
+  repoRoot: string
+): Map<string, Set<number>> => {
+  try {
+    return parseChangedLinesByPathFromUnifiedDiff(
+      git.runGit(['diff', '--cached', '--unified=0', '--no-ext-diff'], repoRoot)
+    );
+  } catch {
+    return new Map<string, Set<number>>();
+  }
+};
+
+const isFindingOutsideChangedLines = (
+  finding: Finding,
+  changedLinesByPath: ReadonlyMap<string, ReadonlySet<number>>
+): boolean => {
+  if (!finding.filePath) {
+    return false;
+  }
+  const changedLines = changedLinesByPath.get(toNormalizedPath(finding.filePath));
+  if (!changedLines || changedLines.size === 0) {
+    return false;
+  }
+  const findingLines = normalizeFindingLines(finding.lines);
+  if (findingLines.length === 0) {
+    return false;
+  }
+  return findingLines.every((line) => !changedLines.has(line));
+};
+
+const BROAD_BROWNFIELD_FINDING_LINES_THRESHOLD = 20;
+
+const isBroadFileLevelFinding = (finding: Finding): boolean => {
+  const findingLines = normalizeFindingLines(finding.lines);
+  if (findingLines.length <= BROAD_BROWNFIELD_FINDING_LINES_THRESHOLD) {
+    return false;
+  }
+  const nodeLines = [
+    ...normalizeFindingLines(finding.primary_node?.lines),
+    ...(finding.related_nodes ?? []).flatMap((node) => normalizeFindingLines(node.lines)),
+  ];
+  const hasPreciseNode =
+    nodeLines.length > 0 && nodeLines.length <= BROAD_BROWNFIELD_FINDING_LINES_THRESHOLD;
+  return !hasPreciseNode;
+};
+
+const isFindingTooBroadForStagedDiffBlock = (
+  finding: Finding,
+  changedLinesByPath: ReadonlyMap<string, ReadonlySet<number>>
+): boolean => {
+  if (!finding.filePath || !isBroadFileLevelFinding(finding)) {
+    return false;
+  }
+  const changedLines = changedLinesByPath.get(toNormalizedPath(finding.filePath));
+  return typeof changedLines !== 'undefined' && changedLines.size > 0;
+};
+
 const normalizeScopedRuleEngineFindings = (params: {
   findings: ReadonlyArray<Finding>;
   scope: GateScope;
+  stage: GatePolicy['stage'];
+  changedLinesByPath: ReadonlyMap<string, ReadonlySet<number>>;
+  stagedPaths: ReadonlyArray<string>;
 }): ReadonlyArray<Finding> => {
-  if (params.scope.kind !== 'staged' && params.scope.kind !== 'range') {
+  if (
+    (params.scope.kind !== 'staged' && params.scope.kind !== 'repoAndStaged') ||
+    (params.stage !== 'PRE_WRITE' && params.stage !== 'PRE_COMMIT')
+  ) {
     return params.findings;
   }
 
-  return params.findings.filter((finding) => {
-    if (
-      !finding.filePath ||
-      hasActionableFindingLocation(finding) ||
-      (!finding.ruleId.startsWith('skills.') && !finding.ruleId.startsWith('heuristics.'))
-    ) {
-      return true;
+  const stagedPathSet = new Set(params.stagedPaths.map(toNormalizedPath));
+  return params.findings.map((finding) => {
+    if (!isAstRuleFinding(finding)) {
+      return finding;
     }
-    return false;
+    const outsideStagedFileSet =
+      params.scope.kind === 'staged' &&
+      params.stagedPaths.length > 0 &&
+      typeof finding.filePath === 'string' &&
+      finding.filePath.length > 0 &&
+      !stagedPathSet.has(toNormalizedPath(finding.filePath));
+    const outsideChangedLines = isFindingOutsideChangedLines(
+      finding,
+      params.changedLinesByPath
+    );
+    const tooBroadForDiffBlock = isFindingTooBroadForStagedDiffBlock(
+      finding,
+      params.changedLinesByPath
+    );
+    if (!outsideStagedFileSet && !outsideChangedLines && !tooBroadForDiffBlock) {
+      return finding;
+    }
+    return {
+      ...finding,
+      blocking: false,
+      severity: 'INFO',
+      message:
+        `${finding.message} ` +
+        (outsideStagedFileSet
+          ? 'Baseline brownfield outside the staged file set; tracked as advisory for this atomic slice.'
+          : tooBroadForDiffBlock
+            ? 'Finding is file-level/broad and cannot prove the violation was introduced by the staged diff; tracked as advisory for this atomic slice.'
+            : 'Baseline brownfield outside the staged diff; tracked as advisory for this atomic slice.'),
+      expected_fix:
+        finding.expected_fix ??
+        (outsideStagedFileSet
+          ? 'Plan a dedicated brownfield remediation slice for the non-staged file, or include it explicitly in the atomic commit.'
+          : tooBroadForDiffBlock
+          ? 'Emit a precise AST/nodal finding with line-level evidence for the changed node, or plan a dedicated brownfield remediation slice for this file-level debt.'
+          : 'Plan a dedicated brownfield remediation slice for this pre-existing finding.'),
+    };
   });
 };
+
+const normalizeNonBlockingSwiftTestingMigrationWarnings = (
+  findings: ReadonlyArray<Finding>
+): ReadonlyArray<Finding> => findings.map((finding) => {
+  if (
+    finding.ruleId !== 'skills.ios.prefer-swift-testing' ||
+    finding.severity !== 'WARN'
+  ) {
+    return finding;
+  }
+  return {
+    ...finding,
+    blocking: false,
+    expected_fix:
+      finding.expected_fix ??
+      'Mantén XCTest en suites legacy, UI o brownfield. Planifica una migración a Swift Testing en una slice dedicada si el repo lo decide.',
+  };
+});
 
 const buildDefaultMemoryShadowRecommendation = (params: {
   findings: ReadonlyArray<Finding>;
@@ -195,6 +373,8 @@ const defaultDependencies: GateDependencies = {
       stage,
       branch,
     }),
+  evaluateContextGate,
+  notifyGateBlocked: emitGateBlockedNotification,
 };
 
 const readSymbolicBranchRef = (git: IGitService, repoRoot: string): string | null => {
@@ -280,6 +460,37 @@ const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
     filePath: '.ai_evidence.json',
     matchedBy: 'SkillsDetectorMappingGuard',
     source: 'skills-detector-mapping',
+  };
+};
+
+const toSkillsDeclarativeRulesClassificationFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  declarativeRuleIds: ReadonlyArray<string>;
+  facts: ReadonlyArray<Fact>;
+}): Finding | undefined => {
+  if (process.env.PUMUKI_ENFORCE_DECLARATIVE_RULE_CLASSIFICATION !== '1') {
+    return undefined;
+  }
+  if (params.declarativeRuleIds.length === 0) {
+    return undefined;
+  }
+  if (collectObservedCodePathsFromFacts(params.facts).length === 0) {
+    return undefined;
+  }
+
+  const sampleRuleIds = [...params.declarativeRuleIds].sort().slice(0, 12).join(', ');
+
+  return {
+    ruleId: 'governance.skills.declarative-rules.classification-required',
+    severity: 'ERROR',
+    code: 'SKILLS_DECLARATIVE_RULES_CLASSIFICATION_REQUIRED',
+    message:
+      `Skills declarative rules require AST/nodal classification at ${params.stage}: ` +
+      `total=${params.declarativeRuleIds.length} sample_rule_ids=[${sampleRuleIds}]. ` +
+      'Classify every rule as IMPLEMENTAR_DETECTOR, REQUIERE_ESTUDIO, or NO_ES_REGLA_DE_CODIGO; code skills cannot remain as hidden declarative/advisory rules.',
+    filePath: 'skills.lock.json',
+    matchedBy: 'SkillsDeclarativeRulesClassificationGuard',
+    source: 'skills-declarative-rules-classification',
   };
 };
 
@@ -449,13 +660,28 @@ const collectIosTestFileContents = (
 };
 
 const isXCTestSource = (content: string): boolean => {
-  return /\bimport\s+XCTest\b/.test(content) || /\bXCTestCase\b/.test(content);
+  return /\bclass\s+\w+\s*:\s*XCTestCase\b/.test(content);
 };
 
 const hasMakeSUTPattern = (content: string): boolean => /\bmakeSUT\s*\(/.test(content);
 
 const hasTrackForMemoryLeaksPattern = (content: string): boolean =>
   /\btrackForMemoryLeaks\s*\(/.test(content);
+
+const IOS_CRITICAL_TEST_QUALITY_RULE_ID = 'skills.ios.critical-test-quality';
+
+const hasIosTestQualityScope = (facts: ReadonlyArray<Fact>): boolean =>
+  collectIosTestFileContents(facts).length > 0;
+
+const appendUniqueRuleId = (
+  ruleIds: ReadonlyArray<string>,
+  ruleId: string
+): readonly string[] => {
+  if (ruleIds.includes(ruleId)) {
+    return [...ruleIds];
+  }
+  return [...ruleIds, ruleId].sort((left, right) => left.localeCompare(right));
+};
 
 const toIosTestsQualityBlockingFinding = (params: {
   stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
@@ -801,7 +1027,54 @@ const shouldBlockFromFinding = (finding: Finding | undefined): boolean => {
   if (!finding) {
     return false;
   }
-  return finding.severity === 'ERROR' || finding.severity === 'CRITICAL';
+  return finding.blocking !== false;
+};
+
+const isAstRuleFinding = (finding: Finding): boolean => {
+  const ruleId = finding.ruleId.toLowerCase();
+  const source = finding.source?.toLowerCase() ?? '';
+  const matchedBy = finding.matchedBy?.toLowerCase() ?? '';
+  if (ruleId.startsWith('governance.')) {
+    return false;
+  }
+  return (
+    ruleId.startsWith('skills.') ||
+    ruleId.startsWith('heuristics.') ||
+    source.includes('heuristic') ||
+    matchedBy.includes('heuristic') ||
+    matchedBy.includes('ast')
+  );
+};
+
+const resolvePrimaryBlockingFinding = (
+  findings: ReadonlyArray<Finding>
+): Finding | undefined => (
+  findings.find(
+    (finding) =>
+      shouldBlockFromFinding(finding) &&
+      isAstRuleFinding(finding) &&
+      finding.severity === 'CRITICAL'
+  ) ??
+  findings.find(
+    (finding) =>
+      shouldBlockFromFinding(finding) &&
+      isAstRuleFinding(finding) &&
+      finding.severity === 'ERROR'
+  ) ??
+  findings.find((finding) => shouldBlockFromFinding(finding) && isAstRuleFinding(finding)) ??
+  findings.find((finding) => shouldBlockFromFinding(finding) && finding.severity === 'CRITICAL') ??
+  findings.find((finding) => shouldBlockFromFinding(finding) && finding.severity === 'ERROR') ??
+  findings.find((finding) => shouldBlockFromFinding(finding)) ??
+  findings[0]
+);
+
+const resolveBlockingNotificationFindings = (
+  findings: ReadonlyArray<Finding>
+): ReadonlyArray<Finding> => {
+  const blockingFindings = findings.filter((finding) => shouldBlockFromFinding(finding));
+  const astFindings = blockingFindings.filter(isAstRuleFinding);
+  const nonAstFindings = blockingFindings.filter((finding) => !isAstRuleFinding(finding));
+  return [...astFindings, ...nonAstFindings];
 };
 
 const applySkillsFindingEnforcement = (
@@ -810,36 +1083,7 @@ const applySkillsFindingEnforcement = (
   if (!finding) {
     return undefined;
   }
-  const skillsEnforcement = resolveSkillsEnforcement();
-  if (skillsEnforcement.blocking) {
-    return finding;
-  }
-  return {
-    ...finding,
-    severity: 'WARN',
-  };
-};
-
-const toSoftPreCommitSkillsFinding = (params: {
-  finding: Finding | undefined;
-  enabled: boolean;
-  observedCodePaths: ReadonlyArray<string>;
-}): Finding | undefined => {
-  if (!params.finding) {
-    return undefined;
-  }
-  if (!params.enabled || !shouldBlockFromFinding(params.finding)) {
-    return params.finding;
-  }
-  return {
-    ...params.finding,
-    severity: 'WARN',
-    code: `${params.finding.code}_SOFT_PRECOMMIT`,
-    message:
-      `${params.finding.message} ` +
-      `Soft-enforced at PRE_COMMIT for low-risk scope (observed_code_paths=${params.observedCodePaths.length}). ` +
-      'Strict enforcement remains active at PRE_PUSH/CI.',
-  };
+  return finding;
 };
 
 export async function runPlatformGate(params: {
@@ -862,6 +1106,11 @@ export async function runPlatformGate(params: {
   const repoRoot = git.resolveRepoRoot();
   const auditMode = params.auditMode ?? 'gate';
   const shouldShortCircuitSdd = params.sddShortCircuit ?? false;
+  const contextGate: ContextGateResult = dependencies.evaluateContextGate({
+    repoRoot,
+    stage: params.policy.stage,
+  });
+  const contextBlockingFinding = contextGate.finding;
   let sddDecision:
     | Pick<SddDecision, 'allowed' | 'code' | 'message'>
     | undefined;
@@ -922,6 +1171,7 @@ export async function runPlatformGate(params: {
     gateScopePathPrefixes
   );
   const stagedPaths = collectStagedPaths(git, repoRoot);
+  const stagedChangedLinesByPath = collectStagedChangedLinesByPath(git, repoRoot);
   const factsForPlatformEvaluation = shouldAugmentStagedSkillsContractFactsWithRepoFacts({
     scope: params.scope,
     facts,
@@ -939,6 +1189,18 @@ export async function runPlatformGate(params: {
     : facts;
   const filesScanned = countScannedFilesFromFacts(factsForPlatformEvaluation);
   const observedCodePaths = collectObservedCodePathsFromFacts(facts);
+  const preWriteLeaseFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toPreWriteEnforcementGapFinding({
+          stage: params.policy.stage,
+          status: readPreWriteLeaseStatus({
+            repoRoot,
+            git,
+          }),
+        })
+      : undefined;
 
   const platformEvaluation = dependencies.evaluatePlatformGateFindings({
     facts: factsForPlatformEvaluation,
@@ -961,8 +1223,14 @@ export async function runPlatformGate(params: {
   const scopedRuleEngineFindings = normalizeScopedRuleEngineFindings({
     findings: ruleEngineFindings,
     scope: params.scope,
+    stage: params.policy.stage,
+    changedLinesByPath: stagedChangedLinesByPath,
+    stagedPaths,
   });
-  const findings = [...aiGateRepoPolicyFindings, ...scopedRuleEngineFindings];
+  const findings = normalizeNonBlockingSwiftTestingMigrationWarnings([
+    ...aiGateRepoPolicyFindings,
+    ...scopedRuleEngineFindings,
+  ]);
   const evaluationMetrics: SnapshotEvaluationMetrics = coverage
     ? {
       facts_total: coverage.factsTotal,
@@ -997,6 +1265,16 @@ export async function runPlatformGate(params: {
         stage: params.policy.stage,
         unsupportedAutoRuleIds: skillsRuleSet.unsupportedAutoRuleIds ?? [],
       })
+      : undefined;
+  const declarativeRulesClassificationFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toSkillsDeclarativeRulesClassificationFinding({
+          stage: params.policy.stage,
+          declarativeRuleIds: skillsRuleSet.registryCoverage?.declarativeRuleIds ?? [],
+          facts: factsForPlatformEvaluation,
+        })
       : undefined;
   const effectiveUnsupportedSkillsMappingInput = applySkillsFindingEnforcement(
     unsupportedSkillsMappingFinding
@@ -1114,14 +1392,22 @@ export async function runPlatformGate(params: {
     }
   }
   const degradedModeBlocks = params.policyTrace?.degraded?.action === 'block';
+  const coverageActiveRuleIds =
+    coverage && hasIosTestQualityScope(facts)
+      ? appendUniqueRuleId(coverage.activeRuleIds, IOS_CRITICAL_TEST_QUALITY_RULE_ID)
+      : coverage?.activeRuleIds;
+  const coverageEvaluatedRuleIds =
+    coverage && hasIosTestQualityScope(facts)
+      ? appendUniqueRuleId(coverage.evaluatedRuleIds, IOS_CRITICAL_TEST_QUALITY_RULE_ID)
+      : coverage?.evaluatedRuleIds;
   const rulesCoverage = coverage
     ? {
       stage: params.policy.stage,
       contract: skillsRuleSet.registryCoverage?.contract ?? 'AUTO_RUNTIME_RULES_FOR_STAGE',
       scope_note:
         'rules_coverage reports AUTO runtime rules applicable to this stage; it does not claim full DECLARATIVE registry execution.',
-      active_rule_ids: [...coverage.activeRuleIds],
-      evaluated_rule_ids: [...coverage.evaluatedRuleIds],
+      active_rule_ids: [...(coverageActiveRuleIds ?? coverage.activeRuleIds)],
+      evaluated_rule_ids: [...(coverageEvaluatedRuleIds ?? coverage.evaluatedRuleIds)],
       matched_rule_ids: [...coverage.matchedRuleIds],
       unevaluated_rule_ids: [...coverage.unevaluatedRuleIds],
       ...(skillsRuleSet.registryCoverage
@@ -1141,8 +1427,8 @@ export async function runPlatformGate(params: {
         }
         : {}),
       counts: {
-        active: coverage.activeRuleIds.length,
-        evaluated: coverage.evaluatedRuleIds.length,
+        active: (coverageActiveRuleIds ?? coverage.activeRuleIds).length,
+        evaluated: (coverageEvaluatedRuleIds ?? coverage.evaluatedRuleIds).length,
         matched: coverage.matchedRuleIds.length,
         unevaluated: coverage.unevaluatedRuleIds.length,
         ...(skillsRuleSet.registryCoverage
@@ -1162,9 +1448,14 @@ export async function runPlatformGate(params: {
           : {}),
       },
       coverage_ratio:
-        coverage.activeRuleIds.length === 0
+        (coverageActiveRuleIds ?? coverage.activeRuleIds).length === 0
           ? 1
-          : Number((coverage.evaluatedRuleIds.length / coverage.activeRuleIds.length).toFixed(6)),
+          : Number(
+              (
+                (coverageEvaluatedRuleIds ?? coverage.evaluatedRuleIds).length /
+                (coverageActiveRuleIds ?? coverage.activeRuleIds).length
+              ).toFixed(6)
+            ),
     }
     : createEmptySnapshotRulesCoverage(params.policy.stage);
   const brownfieldHotspotFindings = dependencies.evaluateBrownfieldHotspotFindings({
@@ -1184,48 +1475,18 @@ export async function runPlatformGate(params: {
     ? tddBddEvaluation.snapshot
     : undefined;
   const hasTddBddBlockingFinding = tddBddEvaluation.findings.some(
-    (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
+    (finding) => shouldBlockFromFinding(finding)
   );
   const hasNativeBlockingFinding = findings.some(
-    (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
+    (finding) => shouldBlockFromFinding(finding)
   );
-  const preCommitSoftSkillsEnabled = process.env.PUMUKI_PRE_COMMIT_SOFT_SKILLS !== '0';
-  const lowRiskPreCommitWindow = observedCodePaths.length > 0 && observedCodePaths.length <= 3;
-  const shouldSoftEnforceSkillsFindings =
-    params.policy.stage === 'PRE_COMMIT'
-    && preCommitSoftSkillsEnabled
-    && lowRiskPreCommitWindow
-    && !sddBlockingFinding
-    && !degradedModeBlocks
-    && !shouldBlockFromFinding(policyAsCodeBlockingFinding)
-    && !shouldBlockFromFinding(coverageBlockingFinding)
-    && !shouldBlockFromFinding(activeRulesEmptyForCodeChangesFinding)
-    && !shouldBlockFromFinding(effectiveIosTestsQualityFinding)
-    && !shouldBlockFromFinding(astIntelligenceDualFinding)
-    && !hasTddBddBlockingFinding
-    && !hasNativeBlockingFinding;
-  const effectiveUnsupportedSkillsMappingFinding = toSoftPreCommitSkillsFinding({
-    finding: effectiveUnsupportedSkillsMappingInput,
-    enabled: shouldSoftEnforceSkillsFindings,
-    observedCodePaths,
-  });
-  const effectivePlatformSkillsCoverageFinding = toSoftPreCommitSkillsFinding({
-    finding: effectivePlatformSkillsCoverageInput,
-    enabled: shouldSoftEnforceSkillsFindings,
-    observedCodePaths,
-  });
-  const effectiveCrossPlatformCriticalFinding = toSoftPreCommitSkillsFinding({
-    finding: effectiveCrossPlatformCriticalInput,
-    enabled: shouldSoftEnforceSkillsFindings,
-    observedCodePaths,
-  });
-  const effectiveSkillsScopeComplianceFinding = toSoftPreCommitSkillsFinding({
-    finding: effectiveSkillsScopeComplianceInput,
-    enabled: shouldSoftEnforceSkillsFindings,
-    observedCodePaths,
-  });
+  const effectiveUnsupportedSkillsMappingFinding = effectiveUnsupportedSkillsMappingInput;
+  const effectivePlatformSkillsCoverageFinding = effectivePlatformSkillsCoverageInput;
+  const effectiveCrossPlatformCriticalFinding = effectiveCrossPlatformCriticalInput;
+  const effectiveSkillsScopeComplianceFinding = effectiveSkillsScopeComplianceInput;
   const effectiveFindings = sddBlockingFinding
     ? [
+      ...(contextBlockingFinding ? [contextBlockingFinding] : []),
       sddBlockingFinding,
       ...(degradedModeFinding ? [degradedModeFinding] : []),
       ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
@@ -1237,23 +1498,29 @@ export async function runPlatformGate(params: {
       ...(effectiveIosTestsQualityFinding ? [effectiveIosTestsQualityFinding] : []),
       ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
+      ...(declarativeRulesClassificationFinding ? [declarativeRulesClassificationFinding] : []),
       ...brownfieldHotspotFindings,
       ...tddBddEvaluation.findings,
       ...findings,
+      ...(preWriteLeaseFinding ? [preWriteLeaseFinding] : []),
     ]
     : effectiveUnsupportedSkillsMappingFinding
       || effectivePlatformSkillsCoverageFinding
       || effectiveCrossPlatformCriticalFinding
       || effectiveSkillsScopeComplianceFinding
+      || preWriteLeaseFinding
       || activeRulesEmptyForCodeChangesFinding
       || effectiveIosTestsQualityFinding
       || astIntelligenceDualFinding
       || coverageBlockingFinding
+      || declarativeRulesClassificationFinding
       || brownfieldHotspotFindings.length > 0
       || policyAsCodeBlockingFinding
+      || contextBlockingFinding
       || degradedModeFinding
       || tddBddEvaluation.findings.length > 0
       ? [
+        ...(contextBlockingFinding ? [contextBlockingFinding] : []),
         ...(degradedModeFinding ? [degradedModeFinding] : []),
         ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
         ...(effectiveUnsupportedSkillsMappingFinding ? [effectiveUnsupportedSkillsMappingFinding] : []),
@@ -1264,9 +1531,11 @@ export async function runPlatformGate(params: {
         ...(effectiveIosTestsQualityFinding ? [effectiveIosTestsQualityFinding] : []),
         ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
+        ...(declarativeRulesClassificationFinding ? [declarativeRulesClassificationFinding] : []),
         ...brownfieldHotspotFindings,
         ...tddBddEvaluation.findings,
         ...findings,
+        ...(preWriteLeaseFinding ? [preWriteLeaseFinding] : []),
       ]
       : brownfieldHotspotFindings.length > 0
         ? [...brownfieldHotspotFindings, ...findings]
@@ -1283,7 +1552,9 @@ export async function runPlatformGate(params: {
   );
   const baseGateOutcome =
     sddBlockingFinding ||
+    shouldBlockFromFinding(contextBlockingFinding) ||
     degradedModeBlocks ||
+    shouldBlockFromFinding(preWriteLeaseFinding) ||
     shouldBlockFromFinding(policyAsCodeBlockingFinding) ||
     shouldBlockFromFinding(effectiveUnsupportedSkillsMappingFinding) ||
     shouldBlockFromFinding(effectivePlatformSkillsCoverageFinding) ||
@@ -1293,6 +1564,7 @@ export async function runPlatformGate(params: {
     shouldBlockFromFinding(effectiveIosTestsQualityFinding) ||
     hasAstIntelligenceBlockingFinding ||
     shouldBlockFromFinding(coverageBlockingFinding) ||
+    shouldBlockFromFinding(declarativeRulesClassificationFinding) ||
     brownfieldHotspotFindings.some((finding) => shouldBlockFromFinding(finding)) ||
     hasTddBddBlockingFinding
       ? 'BLOCK'
@@ -1410,6 +1682,52 @@ export async function runPlatformGate(params: {
   });
 
   if (gateOutcome === 'BLOCK') {
+    const notificationFindings = resolveBlockingNotificationFindings(findingsWithWaiver);
+    const primaryBlockingFinding =
+      notificationFindings[0] ?? resolvePrimaryBlockingFinding(findingsWithWaiver);
+    if (
+      primaryBlockingFinding &&
+      (
+        params.policy.stage === 'PRE_COMMIT' ||
+        params.policy.stage === 'PRE_PUSH' ||
+        params.policy.stage === 'CI'
+      )
+    ) {
+      const notificationResult = dependencies.notifyGateBlocked({
+        repoRoot,
+        stage: params.policy.stage,
+        totalViolations: findingsWithWaiver.length,
+        causeCode: primaryBlockingFinding.code ?? primaryBlockingFinding.ruleId,
+        causeMessage: primaryBlockingFinding.message,
+        remediation:
+          primaryBlockingFinding.expected_fix ??
+          'Corrige la causa bloqueante y reejecuta el gate.',
+        blockingCauses: notificationFindings.map((finding) => ({
+          code: finding.code ?? finding.ruleId,
+          message: finding.message,
+          ruleId: finding.ruleId,
+          file: finding.filePath,
+          remediation: finding.expected_fix,
+        })),
+      });
+      process.stderr.write(
+        `[pumuki][blocked] code=${primaryBlockingFinding.code ?? primaryBlockingFinding.ruleId} ` +
+        `stage=${params.policy.stage} reason=${primaryBlockingFinding.message}\n`
+      );
+      for (const finding of notificationFindings) {
+        process.stderr.write(
+          `[pumuki][blocked-cause] code=${finding.code ?? finding.ruleId}` +
+          ` rule=${finding.ruleId}` +
+          ` file=${finding.filePath ?? 'n/a'}` +
+          ` reason=${finding.message}` +
+          ` fix=${finding.expected_fix ?? 'Corrige la causa bloqueante y reejecuta el gate.'}\n`
+        );
+      }
+      process.stderr.write(
+        `[pumuki][notification] delivered=${notificationResult.delivered ? 'yes' : 'no'} ` +
+        `reason=${notificationResult.reason}\n`
+      );
+    }
     if (params.silent !== true) {
     dependencies.printGateFindings(findingsWithWaiver);
     }

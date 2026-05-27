@@ -70,3 +70,145 @@ test('facts barrel expone extractHeuristicFacts y permite retorno vacio sin plat
 
   assert.deepEqual(extractedFacts, []);
 });
+
+test('extractHeuristicFacts emite strong delegate iOS con linea y remediation accionable', () => {
+  const params: HeuristicExtractionParams = {
+    facts: [
+      {
+        kind: 'FileContent',
+        source: 'repo',
+        path: 'apps/ios/Infrastructure/Permissions/SystemPermissionsService.swift',
+        content: `
+final class SystemPermissionsService {
+  var delegate: PermissionsServiceDelegate?
+}
+`,
+      },
+    ],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+    },
+  };
+
+  const extractedFacts = extractHeuristicFacts(params);
+  const match = extractedFacts.find(
+    (fact) => fact.ruleId === 'heuristics.ios.memory.strong-delegate.ast'
+  );
+
+  assert.ok(match);
+  assert.deepEqual(match.lines, [3]);
+  assert.deepEqual(match.primary_node?.lines, [3]);
+  assert.match(match.expected_fix ?? '', /weak var delegate/i);
+});
+
+test('extractHeuristicFacts emite strong self iOS con linea y remediation accionable', () => {
+  const params: HeuristicExtractionParams = {
+    facts: [
+      {
+        kind: 'FileContent',
+        source: 'repo',
+        path: 'apps/ios/Presentation/Features/Cart/CartViewModel.swift',
+        content: `
+final class CartViewModel {
+  func bind() {
+    Task {
+      await self.reload()
+    }
+  }
+}
+`,
+      },
+    ],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+    },
+  };
+
+  const extractedFacts = extractHeuristicFacts(params);
+  const match = extractedFacts.find(
+    (fact) => fact.ruleId === 'heuristics.ios.memory.strong-self-escaping-closure.ast'
+  );
+
+  assert.ok(match);
+  assert.deepEqual(match.lines, [5]);
+  assert.deepEqual(match.primary_node?.lines, [5]);
+  assert.match(match.expected_fix ?? '', /\[weak self\]/i);
+});
+
+test('extractHeuristicFacts emite networking iOS con lineas y remediation accionable', () => {
+  const params: HeuristicExtractionParams = {
+    facts: [
+      {
+        kind: 'FileContent',
+        source: 'repo',
+        path: 'apps/ios/Infrastructure/Networking/BuyerAPIClient.swift',
+        content: `
+import Alamofire
+
+final class BuyerAPIClient {
+  func load() {
+    AF.request("https://api.example.com")
+    let object = try? JSONSerialization.jsonObject(with: Data())
+  }
+}
+`,
+      },
+    ],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+    },
+  };
+
+  const extractedFacts = extractHeuristicFacts(params);
+  const alamofire = extractedFacts.find(
+    (fact) => fact.ruleId === 'heuristics.ios.networking.alamofire.ast'
+  );
+  const jsonSerialization = extractedFacts.find(
+    (fact) => fact.ruleId === 'heuristics.ios.json.jsonserialization.ast'
+  );
+
+  assert.ok(alamofire);
+  assert.deepEqual(alamofire.lines, [2, 6]);
+  assert.deepEqual(alamofire.primary_node?.lines, [2, 6]);
+  assert.match(alamofire.expected_fix ?? '', /URLSession/i);
+
+  assert.ok(jsonSerialization);
+  assert.deepEqual(jsonSerialization.lines, [7]);
+  assert.deepEqual(jsonSerialization.primary_node?.lines, [7]);
+  assert.match(jsonSerialization.expected_fix ?? '', /Codable/i);
+});
+
+test('extractHeuristicFacts emite Combine sink iOS con linea y remediation accionable', () => {
+  const params: HeuristicExtractionParams = {
+    facts: [
+      {
+        kind: 'FileContent',
+        source: 'repo',
+        path: 'apps/ios/Presentation/Features/Orders/OrdersViewModel.swift',
+        content: `
+final class OrdersViewModel {
+  func bind() {
+    publisher
+      .sink { value in
+        self.render(value)
+      }
+  }
+}
+`,
+      },
+    ],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+    },
+  };
+
+  const extractedFacts = extractHeuristicFacts(params);
+  const match = extractedFacts.find(
+    (fact) => fact.ruleId === 'heuristics.ios.combine.sink-without-store.ast'
+  );
+
+  assert.ok(match);
+  assert.deepEqual(match.lines, [5]);
+  assert.deepEqual(match.primary_node?.lines, [5]);
+  assert.match(match.expected_fix ?? '', /\.store\(in:/i);
+});

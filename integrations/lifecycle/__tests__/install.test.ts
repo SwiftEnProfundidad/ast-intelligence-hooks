@@ -214,6 +214,13 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
     });
     assert.deepEqual(evidence.snapshot?.findings, []);
     assert.equal(realpathSync(evidence.repo_state?.repo_root ?? ''), realpathSync(repo));
+    assert.equal(result.notifications.enabled, true);
+    assert.equal(existsSync(join(repo, '.pumuki', 'system-notifications.json')), true);
+    const notificationConfig = JSON.parse(
+      readFileSync(join(repo, '.pumuki', 'system-notifications.json'), 'utf8')
+    ) as { enabled?: boolean; blockedDialogEnabled?: boolean };
+    assert.equal(notificationConfig.enabled, true);
+    assert.equal(notificationConfig.blockedDialogEnabled, true);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
@@ -258,6 +265,44 @@ test('runLifecycleInstall bloquea cuando hay node_modules trackeado y no persist
       readLocalConfig(repo, PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts),
       undefined
     );
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleInstall activa notificaciones antes de reportar bloqueo de seguridad', () => {
+  const repo = createGitRepo();
+  const notifications: Array<{ causeCode: string }> = [];
+  try {
+    mkdirSync(join(repo, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repo, '.pumuki', 'system-notifications.json'),
+      JSON.stringify({ enabled: false, channel: 'macos', blockedDialogEnabled: false }, null, 2),
+      'utf8'
+    );
+    const trackedFile = join(repo, 'node_modules', 'tracked.txt');
+    mkdirSync(join(repo, 'node_modules'), { recursive: true });
+    writeFileSync(trackedFile, 'tracked\n', 'utf8');
+    runGit(repo, ['add', '-f', 'node_modules/tracked.txt']);
+    runGit(repo, ['commit', '-m', 'test: tracked node_modules']);
+
+    assert.throws(
+      () => runLifecycleInstall({
+        cwd: repo,
+        notifyGateBlocked: (params) => {
+          notifications.push({ causeCode: params.causeCode });
+          return { delivered: true, reason: 'delivered' };
+        },
+      }),
+      /Blocking notification delivered/i
+    );
+
+    const notificationConfig = JSON.parse(
+      readFileSync(join(repo, '.pumuki', 'system-notifications.json'), 'utf8')
+    ) as { enabled?: boolean; blockedDialogEnabled?: boolean };
+    assert.equal(notificationConfig.enabled, true);
+    assert.equal(notificationConfig.blockedDialogEnabled, true);
+    assert.deepEqual(notifications, [{ causeCode: 'LIFECYCLE_INSTALL_SAFETY_BLOCKED' }]);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

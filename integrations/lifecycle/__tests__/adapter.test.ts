@@ -42,7 +42,12 @@ test('runLifecycleAdapterInstall genera scaffolding para repo (solo .pumuki/adap
     assert.equal(result.changedFiles.includes('.pumuki/adapter.json'), true);
     const payload = JSON.parse(
       readFileSync(join(repo, '.pumuki', 'adapter.json'), 'utf8')
-    ) as { mcp?: { enterprise?: { command?: string } } };
+    ) as {
+      enforcement?: { pre_write?: { required_before_edit?: boolean; agent_instruction?: string } };
+      mcp?: { enterprise?: { command?: string } };
+    };
+    assert.equal(payload.enforcement?.pre_write?.required_before_edit, true);
+    assert.match(payload.enforcement?.pre_write?.agent_instruction ?? '', /STOP before editing files/);
     assert.match(payload.mcp?.enterprise?.command ?? '', /pumuki-mcp-enterprise/);
   } finally {
     rmSync(repo, { recursive: true, force: true });
@@ -65,9 +70,11 @@ test('runLifecycleAdapterInstall repo fusiona adapter.json sin borrar claves pro
     assert.equal(result.changedFiles.includes('.pumuki/adapter.json'), true);
     const payload = JSON.parse(readFileSync(join(repo, '.pumuki', 'adapter.json'), 'utf8')) as {
       customOwnedByConsumer?: { note?: string };
+      enforcement?: { pre_write?: { required_before_edit?: boolean } };
       mcp?: { enterprise?: { command?: string } };
     };
     assert.equal(payload.customOwnedByConsumer?.note, 'keep');
+    assert.equal(payload.enforcement?.pre_write?.required_before_edit, true);
     assert.match(payload.mcp?.enterprise?.command ?? '', /pumuki-mcp-enterprise/);
   } finally {
     rmSync(repo, { recursive: true, force: true });
@@ -87,9 +94,12 @@ test('runLifecycleAdapterInstall genera scaffolding para codex', () => {
     const codexConfig = join(repo, '.pumuki', 'adapter.json');
     assert.equal(existsSync(codexConfig), true);
     const payload = JSON.parse(readFileSync(codexConfig, 'utf8')) as {
+      enforcement?: { pre_write?: { required_before_edit?: boolean; agent_instruction?: string } };
       hooks?: { pre_write?: { command?: string } };
       mcp?: { enterprise?: { command?: string }; evidence?: { command?: string } };
     };
+    assert.equal(payload.enforcement?.pre_write?.required_before_edit, true);
+    assert.match(payload.enforcement?.pre_write?.agent_instruction ?? '', /STOP before editing files/);
     assert.equal(
       payload.hooks?.pre_write?.command,
       'npx --yes --package pumuki@latest pumuki-pre-write'
@@ -130,8 +140,10 @@ test('runLifecycleAdapterInstall genera scaffolding para cursor', () => {
     const adapterPath = join(repo, '.pumuki', 'adapter.json');
     assert.equal(existsSync(adapterPath), true);
     const adapterPayload = JSON.parse(readFileSync(adapterPath, 'utf8')) as {
+      enforcement?: { pre_write?: { required_before_edit?: boolean } };
       hooks?: { pre_write?: { command?: string } };
     };
+    assert.equal(adapterPayload.enforcement?.pre_write?.required_before_edit, true);
     assert.equal(
       adapterPayload.hooks?.pre_write?.command?.includes('pumuki-pre-write'),
       true

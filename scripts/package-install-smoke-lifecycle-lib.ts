@@ -38,12 +38,55 @@ export const runLifecycleInstallStep = (workspace: SmokeWorkspace): void => {
     executable: command.executable,
     args: command.args,
     env: {
+      PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS: '1',
+      PUMUKI_SYSTEM_NOTIFICATIONS: '0',
+      PUMUKI_NOTIFICATIONS: '0',
       PUMUKI_SKIP_OPENSPEC_BOOTSTRAP: '1',
     },
   });
   pushCommandLog(workspace.commandLog, result);
   assertNoFatalOutput(result, 'pumuki lifecycle install');
   assertSuccess(result, 'pumuki lifecycle install');
+};
+
+export const runLifecyclePreWriteStep = (workspace: SmokeWorkspace): void => {
+  const contextCommand = resolveConsumerPumukiCommand({
+    consumerRepo: workspace.consumerRepo,
+    binary: 'pumuki',
+    args: ['context', 'init'],
+  });
+  const contextResult = runCommand({
+    cwd: workspace.consumerRepo,
+    executable: contextCommand.executable,
+    args: contextCommand.args,
+    env: {
+      PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS: '1',
+      PUMUKI_SYSTEM_NOTIFICATIONS: '0',
+      PUMUKI_NOTIFICATIONS: '0',
+    },
+  });
+  pushCommandLog(workspace.commandLog, contextResult);
+  assertNoFatalOutput(contextResult, 'pumuki context init');
+  assertSuccess(contextResult, 'pumuki context init');
+
+  const command = resolveConsumerPumukiCommand({
+    consumerRepo: workspace.consumerRepo,
+    binary: 'pumuki-pre-write',
+  });
+  const result = runCommand({
+    cwd: workspace.consumerRepo,
+    executable: command.executable,
+    args: command.args,
+    env: {
+      PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS: '1',
+      PUMUKI_SYSTEM_NOTIFICATIONS: '0',
+      PUMUKI_NOTIFICATIONS: '0',
+      PUMUKI_SDD_BYPASS: '1',
+    },
+  });
+  pushCommandLog(workspace.commandLog, result);
+  assertNoFatalOutput(result, 'pumuki lifecycle pre-write');
+  assertSuccess(result, 'pumuki lifecycle pre-write');
 };
 
 export const runLifecycleUninstallStep = (workspace: SmokeWorkspace): void => {
@@ -56,6 +99,11 @@ export const runLifecycleUninstallStep = (workspace: SmokeWorkspace): void => {
     cwd: workspace.consumerRepo,
     executable: command.executable,
     args: command.args,
+    env: {
+      PUMUKI_DISABLE_SYSTEM_NOTIFICATIONS: '1',
+      PUMUKI_SYSTEM_NOTIFICATIONS: '0',
+      PUMUKI_NOTIFICATIONS: '0',
+    },
   });
   pushCommandLog(workspace.commandLog, result);
   assertNoFatalOutput(result, 'pumuki lifecycle uninstall');

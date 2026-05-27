@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { installPumukiHooks } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
-import { doctorHasBlockingIssues, runLifecycleDoctor } from './doctor';
+import { runLifecycleDoctor } from './doctor';
 import { runOpenSpecBootstrap, type OpenSpecBootstrapResult } from './openSpecBootstrap';
 import { LifecycleNpmService, type ILifecycleNpmService } from './npmService';
 import { getCurrentPumukiVersion } from './packageInfo';
@@ -15,6 +15,11 @@ import { ensureRuntimeArtifactsIgnored } from './artifacts';
 import { runLifecycleAdapterInstall } from './adapter';
 import { runPolicyReconcile } from './policyReconcile';
 import { emitGateBlockedNotification } from '../notifications/emitAuditSummaryNotification';
+import { persistSystemNotificationsConfig } from '../../scripts/framework-menu-system-notifications-config';
+import {
+  readLifecycleNotificationStatus,
+  type LifecycleNotificationStatus,
+} from './notificationStatus';
 
 export type LifecycleInstallResult = {
   repoRoot: string;
@@ -22,6 +27,7 @@ export type LifecycleInstallResult = {
   changedHooks: ReadonlyArray<string>;
   openSpecBootstrap?: OpenSpecBootstrapResult;
   degradedDoctorBypass?: boolean;
+  notifications: LifecycleNotificationStatus;
 };
 
 const shouldBootstrapEvidence = (repoRoot: string): boolean =>
@@ -99,6 +105,14 @@ const materializeStrictPolicyAsCode = (repoRoot: string): void => {
   }
 };
 
+const isPreWriteEnforcementGapIssue = (message: string): boolean =>
+  message.startsWith('ENFORCEMENT_GAP: PRE_WRITE hard-stop lease is not valid');
+
+const ensureInstallNotificationsEnabled = (repoRoot: string): LifecycleNotificationStatus => {
+  persistSystemNotificationsConfig(repoRoot, true);
+  return readLifecycleNotificationStatus({ repoRoot });
+};
+
 export const runLifecycleInstall = (params?: {
   cwd?: string;
   git?: ILifecycleGitService;
@@ -114,8 +128,14 @@ export const runLifecycleInstall = (params?: {
     cwd: params?.cwd,
     git,
   });
+  const notifications = ensureInstallNotificationsEnabled(report.repoRoot);
+  const installBlockingIssues = report.issues.filter(
+    (issue) => issue.severity === 'error' && !isPreWriteEnforcementGapIssue(issue.message)
+  );
+  const hasInstallBlockingIssues =
+    installBlockingIssues.length > 0 || report.deep?.blocking === true;
 
-  if (doctorHasBlockingIssues(report)) {
+  if (hasInstallBlockingIssues) {
     if (bestEffortAfterDoctorBlock) {
       const version = getCurrentPumukiVersion();
       const priorArtifacts = readOpenSpecManagedArtifacts(git, report.repoRoot);
@@ -133,10 +153,11 @@ export const runLifecycleInstall = (params?: {
         changedHooks,
         openSpecBootstrap: undefined,
         degradedDoctorBypass: true,
+        notifications,
       };
     }
-    const renderedIssues = report.issues.map((issue) => `- [${issue.severity}] ${issue.message}`).join('\n');
-    const firstIssue = report.issues[0];
+    const renderedIssues = installBlockingIssues.map((issue) => `- [${issue.severity}] ${issue.message}`).join('\n');
+    const firstIssue = installBlockingIssues[0];
     const notificationResult = (params?.notifyGateBlocked ?? emitGateBlockedNotification)({
       repoRoot: report.repoRoot,
       stage: 'PRE_COMMIT',
@@ -185,5 +206,6 @@ export const runLifecycleInstall = (params?: {
     version,
     changedHooks,
     openSpecBootstrap,
+    notifications,
   };
 };

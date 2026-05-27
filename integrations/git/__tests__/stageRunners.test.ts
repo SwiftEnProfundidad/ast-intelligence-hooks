@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { runCiStage, runPreCommitStage, runPrePushStage } from '../stageRunners';
+import { writePreWriteLease } from '../../lifecycle/preWriteLease';
 import {
   runGit,
   withGithubBaseRef,
@@ -187,7 +188,18 @@ const writeSkillsPolicy = (
   );
 };
 
+const issuePreWriteLease = (repoRoot: string): void => {
+  const result = writePreWriteLease({
+    repoRoot,
+    git: {
+      runGit: (args, cwd) => runGit(cwd, args),
+    },
+  });
+  assert.equal(result.valid, true);
+};
+
 const stageBackendFile = (repoRoot: string): void => {
+  issuePreWriteLease(repoRoot);
   const backendDir = join(repoRoot, 'apps', 'backend', 'src');
   mkdirSync(backendDir, { recursive: true });
   writeFileSync(join(backendDir, 'service.ts'), 'export const value: number = 1;\n', 'utf8');
@@ -195,6 +207,7 @@ const stageBackendFile = (repoRoot: string): void => {
 };
 
 const stageBackendExplicitAnyFile = (repoRoot: string): void => {
+  issuePreWriteLease(repoRoot);
   const backendDir = join(repoRoot, 'apps', 'backend', 'src');
   mkdirSync(backendDir, { recursive: true });
   writeFileSync(join(backendDir, 'service.ts'), 'export const value: any = 1;\n', 'utf8');
@@ -299,6 +312,24 @@ test('runPreCommitStage keeps default policy thresholds when skills policy is ab
       false
     );
     assertPolicyTrace(evidence, 'gate-policy.default.PRE_COMMIT');
+  });
+});
+
+test('runPreCommitStage evalua el gate principal con scope staged', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    let capturedScope: unknown;
+
+    const exitCode = await runPreCommitStage({
+      resolveRepoRoot: () => repoRoot,
+      runPlatformGate: async (params) => {
+        capturedScope = params.scope;
+        return 0;
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(capturedScope, { kind: 'staged' });
   });
 });
 
@@ -647,13 +678,15 @@ test('runPrePushStage usa el rango exacto del stdin cuando se empuja un commit c
         };
       },
       runPlatformGate: async (params) => {
-        if (params.scope.kind === 'range') {
-          capturedScopes.push({
-            kind: params.scope.kind,
-            fromRef: params.scope.fromRef,
-            toRef: params.scope.toRef,
-          });
-        }
+        capturedScopes.push({
+          kind: params.scope.kind,
+          ...(params.scope.kind === 'range'
+            ? {
+              fromRef: params.scope.fromRef,
+              toRef: params.scope.toRef,
+            }
+            : {}),
+        });
         return 0;
       },
       resolveRepoRoot: () => repoRoot,
@@ -661,7 +694,7 @@ test('runPrePushStage usa el rango exacto del stdin cuando se empuja un commit c
 
     assert.equal(exitCode, 0);
     assert.deepEqual(capturedAtomicityArgs, [{ fromRef: remoteOid, toRef: pushedCommitOid }]);
-    assert.deepEqual(capturedScopes, [{ kind: 'range', fromRef: remoteOid, toRef: pushedCommitOid }]);
+    assert.deepEqual(capturedScopes, [{ kind: 'repoAndStaged' }]);
   });
 });
 
@@ -1092,6 +1125,7 @@ test('runPreCommitStage no deja drift de working tree en .ai_evidence.json cuand
     runGit(repoRoot, ['add', '-f', '.ai_evidence.json']);
     runGit(repoRoot, ['commit', '-m', 'chore: track ai evidence fixture']);
 
+    issuePreWriteLease(repoRoot);
     writeFileSync(join(repoRoot, 'apps/backend/src/service.ts'), 'export const value: number = 2;\n', 'utf8');
     runGit(repoRoot, ['add', 'apps/backend/src/service.ts']);
 

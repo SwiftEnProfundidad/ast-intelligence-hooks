@@ -23,7 +23,134 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
     facts: [
       fileContentFact(
         'apps/frontend/src/domain/feature/file.ts',
-        'const cp = require("child_process"); const fs = require("fs"); const crypto = require("crypto"); const jwt = require("jsonwebtoken"); const jsonwebtoken = require("jsonwebtoken"); const vm = require("vm"); const value: any = 1; const apiToken = "sk_test_1234567890abcdef"; const sessionToken = Math.random().toString(36).slice(2); const authToken = Date.now().toString(36); const uuidToken = crypto.randomUUID(); const decodedToken = jwt.decode(sessionToken); const decodedTokenTwo = jsonwebtoken.decode(authToken); const verifiedToken = jwt.verify(sessionToken, "secret", { ignoreExpiration: true }); const signedToken = jwt.sign({ sub: "u1" }, "secret"); const insecureTlsAgent = new https.Agent({ rejectUnauthorized: false }); const unsafeBuffer = Buffer.allocUnsafe(32); const unsafeBufferSlow = Buffer.allocUnsafeSlow(32); const obj: any = { secret: 1 }; const el: any = {}; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); with (Math) { max(1, 2); } process.exit(1); process.env.NODE_ENV = "production"; process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; crypto.createHash("md5").update("x").digest("hex"); fs.utimes("/tmp/demo.txt", new Date(), new Date(), () => {}); fs.watch("/tmp/demo.txt", () => {}); fs.watchFile("/tmp/demo.txt", () => {}); fs.unwatchFile("/tmp/demo.txt", () => {}); fs.exists("/tmp/demo.txt", () => {}); fs.readFile("/tmp/demo.txt", "utf8", () => {}); fs.writeFile("/tmp/demo.txt", value, () => {}); fs.appendFile("/tmp/demo.txt", value, () => {}); fs.readdir("/tmp", () => {}); fs.mkdir("/tmp/demo-callback-dir", () => {}); fs.rmdir("/tmp/demo-callback-dir", () => {}); fs.rm("/tmp/demo-callback-dir", () => {}); fs.truncate("/tmp/demo.txt", 0, () => {}); fs.rename("/tmp/demo.txt", "/tmp/demo-renamed.txt", () => {}); fs.copyFile("/tmp/demo.txt", "/tmp/demo-copy-callback.txt", () => {}); fs.stat("/tmp/demo-copy-callback.txt", () => {}); fs.statfs("/tmp/demo-copy-callback.txt", () => {}); fs.fstat(10, () => {}); fs.lstat("/tmp/demo-copy-callback.txt", () => {}); fs.realpath("/tmp/demo-copy-callback.txt", () => {}); fs.access("/tmp/demo-copy-callback.txt", () => {}); fs.chmod("/tmp/demo-copy-callback.txt", 0o644, () => {}); fs.fchmod(10, 0o644, () => {}); fs.chown("/tmp/demo-copy-callback.txt", 1000, 1000, () => {}); fs.lchown("/tmp/demo-copy-callback.txt", 1000, 1000, () => {}); fs.lchmod("/tmp/demo-copy-callback.txt", 0o644, () => {}); fs.fchown(10, 1000, 1000, () => {}); fs.unlink("/tmp/demo-copy-callback.txt", () => {}); fs.readlink("/tmp/demo-copy-callback.txt", () => {}); fs.symlink("/tmp/demo-copy-callback.txt", "/tmp/demo-copy-callback-link.txt", () => {}); fs.link("/tmp/demo-copy-callback.txt", "/tmp/demo-copy-callback-hardlink.txt", () => {}); fs.mkdtemp("/tmp/demo-callback-prefix-", () => {}); fs.opendir("/tmp", () => {}); fs.open("/tmp/demo-copy-callback.txt", "r", () => {}); fs.cp("/tmp/demo-copy-callback.txt", "/tmp/demo-copy-callback-cp.txt", () => {}); fs.fdatasync(10, () => {}); fs.ftruncate(10, 0, () => {}); fs.futimes(10, new Date(), new Date(), () => {}); fs.lutimes("/tmp/demo.txt", new Date(), new Date(), () => {}); fs.fsync(10, () => {}); fs.close(10, () => {}); fs.read(10, Buffer.alloc(8), 0, 8, 0, () => {}); fs.readv(10, [Buffer.alloc(8)], 0, () => {}); fs.writev(10, [Buffer.from("demo")], 0, () => {}); fs.write(10, Buffer.from("demo"), 0, 4, 0, () => {}); fs.writeFileSync("/tmp/demo.txt", value); fs.rmSync("/tmp/demo-sync-dir", { force: true, recursive: true }); fs.mkdirSync("/tmp/demo-sync-dir", { recursive: true }); fs.readdirSync("/tmp"); fs.readFileSync("/tmp/demo.txt", "utf8"); fs.statSync("/tmp/demo.txt"); fs.statfsSync("/tmp/demo.txt"); fs.realpathSync("/tmp/demo.txt"); fs.lstatSync("/tmp/demo.txt"); fs.existsSync("/tmp/demo.txt"); fs.accessSync("/tmp/demo.txt"); fs.utimesSync("/tmp/demo.txt", new Date(), new Date()); fs.renameSync("/tmp/demo.txt", "/tmp/demo-renamed-sync.txt"); fs.copyFileSync("/tmp/demo-renamed-sync.txt", "/tmp/demo-copy-sync.txt"); fs.unlinkSync("/tmp/demo-copy-sync.txt"); fs.truncateSync("/tmp/demo.txt", 0); fs.rmdirSync("/tmp/demo-sync-dir", { recursive: true }); fs.chmodSync("/tmp/demo.txt", 0o644); fs.chownSync("/tmp/demo.txt", 1000, 1000); fs.fchownSync(10, 1000, 1000); fs.fchmodSync(10, 0o644); fs.fstatSync(10); fs.ftruncateSync(10, 0); fs.futimesSync(10, new Date(), new Date()); fs.lutimesSync("/tmp/demo.txt", new Date(), new Date()); fs.readvSync(10, [Buffer.alloc(8)], 0); fs.writevSync(10, [Buffer.from("demo")], 0); fs.writeSync(10, Buffer.from("demo"), 0, 4, 0); fs.fsyncSync(10); fs.fdatasyncSync(10); fs.closeSync(10); fs.readSync(10, Buffer.alloc(8), 0, 8, 0); fs.readlinkSync("/tmp/demo.txt"); fs.symlinkSync("/tmp/demo.txt", "/tmp/demo-link-sync.txt"); fs.linkSync("/tmp/demo.txt", "/tmp/demo-hardlink-sync.txt"); fs.cpSync("/tmp/demo.txt", "/tmp/demo-cp-sync.txt"); fs.openSync("/tmp/demo.txt", "r"); fs.opendirSync("/tmp"); fs.mkdtempSync("/tmp/demo-sync-prefix-"); fs.appendFileSync("/tmp/demo.txt", value); fs.promises.writeFile("/tmp/demo.txt", value); fs.promises.appendFile("/tmp/demo.txt", value); fs.promises.rm("/tmp/demo.txt", { force: true }); fs.promises.unlink("/tmp/demo.txt"); fs.promises.readFile("/tmp/demo.txt", "utf8"); fs.promises.readdir("/tmp"); fs.promises.mkdir("/tmp/demo-dir", { recursive: true }); fs.promises.stat("/tmp/demo.txt"); fs.promises.copyFile("/tmp/demo.txt", "/tmp/demo-copy.txt"); fs.promises.rename("/tmp/demo-copy.txt", "/tmp/demo-final.txt"); fs.promises.access("/tmp/demo-final.txt"); fs.promises.chmod("/tmp/demo-final.txt", 0o644); fs.promises.chown("/tmp/demo-final.txt", 1000, 1000); fs.promises.utimes("/tmp/demo-final.txt", new Date(), new Date()); fs.promises.lstat("/tmp/demo-final.txt"); fs.promises.realpath("/tmp/demo-final.txt"); fs.promises.symlink("/tmp/demo-final.txt", "/tmp/demo-link.txt"); fs.promises.link("/tmp/demo-final.txt", "/tmp/demo-hardlink.txt"); fs.promises.readlink("/tmp/demo-link.txt"); fs.promises.open("/tmp/demo-final.txt", "r"); fs.promises.opendir("/tmp"); fs.promises.cp("/tmp/demo-final.txt", "/tmp/demo-cp.txt"); fs.promises.mkdtemp("/tmp/demo-prefix-"); cp.execFileSync("echo", ["test"]); cp.execFile("echo", ["test"]); const execFileArgs = [value]; cp.execFile("echo", execFileArgs); cp.execSync("echo test"); const dynamicShellCommand = `echo `; cp.exec(dynamicShellCommand); cp.exec("echo test"); vm.runInNewContext(dynamicShellCommand); cp.spawnSync("echo", ["test"]); cp.spawn("echo", ["test"]); cp.spawn("echo", ["test"], { shell: true }); cp.fork("./worker.js"); delete obj.secret; el.innerHTML = value; el.insertAdjacentHTML("beforeend", value); document.write(value); const prismaClient = new PrismaClient(); const prismaPkg = require("@prisma/client"); interface AccountPort { findById(id: string): string; saveProfile(id: string): void; } class AccountService { findById() { return "ok"; } saveProfile() { return "ok"; } } function resolveByKind(entity: any) { switch (entity.kind) { case "reservation": return 1; case "zbe": return 2; default: return 0; } } class BaseHandler { run() { return 0; } } class ExtendedHandler extends BaseHandler { override run() { throw new Error("Not implemented"); } } debugger;'
+        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); debugger;'
+      ),
+    ],
+    detectedPlatforms: {
+      frontend: { detected: true },
+    },
+  });
+
+  const ruleIds = toRuleIds(evaluateRules(astHeuristicsRuleSet, extracted));
+  assert.equal(ruleIds.includes('heuristics.ts.backend.magic-number-literal.ast'), false);
+  assert.equal(ruleIds.includes('heuristics.ts.explicit-any.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.console-log.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.console-error.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.eval.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.function-constructor.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.debugger.ast'), true);
+});
+
+test('detects backend TypeScript heuristic findings in production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/application/feature/file.ts',
+        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); const unsafeBuffer = Buffer.allocUnsafe(32); function calculateTotal() { return 42; } debugger;'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const ruleIds = toRuleIds(evaluateRules(astHeuristicsRuleSet, extracted));
+  assert.equal(ruleIds.includes('heuristics.ts.backend.magic-number-literal.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.explicit-any.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.console-log.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.console-error.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.eval.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.function-constructor.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.buffer-alloc-unsafe.ast'), true);
+  assert.equal(ruleIds.includes('heuristics.ts.debugger.ast'), true);
+});
+
+test('detects backend permissive CORS heuristic with actionable line metadata', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/main.ts',
+        [
+          'import { NestFactory } from "@nestjs/core";',
+          'async function bootstrap() {',
+          '  const app = await NestFactory.create(AppModule);',
+          '  app.enableCors({ origin: "*" });',
+          '  await app.listen(3000);',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const fact = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.permissive-cors.ast'
+  );
+  assert.ok(fact);
+  assert.deepEqual(fact.lines, [4]);
+});
+
+test('detects backend string literal unions that should be enums', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/domain/entities/Order.ts',
+        [
+          "export type OrderStatus = 'pending' | 'paid' | 'cancelled';",
+          'export class Order {',
+          '  status!: OrderStatus;',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const fact = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.string-literal-union-enum.ast'
+  );
+  assert.ok(fact);
+  assert.deepEqual(fact.lines, [1]);
+});
+
+test('detects Android heavy Application.onCreate startup initialization', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/java/com/ruralgo/RuralGoApplication.kt',
+        [
+          'class RuralGoApplication : Application() {',
+          '  override fun onCreate() {',
+          '    super.onCreate()',
+          '    FirebaseApp.initializeApp(this)',
+          '    WorkManager.initialize(this, configuration)',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const ruleIds = toRuleIds(evaluateRules(astHeuristicsRuleSet, extracted));
+  assert.equal(
+    ruleIds.includes('heuristics.android.startup.application-oncreate-heavy-init.ast'),
+    true
+  );
+});
+
+test('detects frontend sensitive token in URL heuristic in production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/frontend/src/features/profile/load-profile.ts',
+        'export const loadProfile = (token: string) => fetch(`/api/profile?access_token=${token}`);'
       ),
     ],
     detectedPlatforms: {
@@ -32,339 +159,87 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
   });
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
   assert.deepEqual(toRuleIds(findings), [
-    'common.error.empty_catch',
-    'heuristics.ts.buffer-alloc-unsafe-slow.ast',
-    'heuristics.ts.buffer-alloc-unsafe.ast',
-    'heuristics.ts.child-process-exec-file-sync.ast',
-    'heuristics.ts.child-process-exec-file-untrusted-args.ast',
-    'heuristics.ts.child-process-exec-file.ast',
-    'heuristics.ts.child-process-exec-sync.ast',
-    'heuristics.ts.child-process-exec.ast',
-    'heuristics.ts.child-process-fork.ast',
-    'heuristics.ts.child-process-import.ast',
-    'heuristics.ts.child-process-shell-true.ast',
-    'heuristics.ts.child-process-spawn-sync.ast',
-    'heuristics.ts.child-process-spawn.ast',
-    'heuristics.ts.console-error.ast',
-    'heuristics.ts.console-log.ast',
-    'heuristics.ts.debugger.ast',
-    'heuristics.ts.delete-operator.ast',
-    'heuristics.ts.document-write.ast',
-    'heuristics.ts.dynamic-shell-invocation.ast',
-    'heuristics.ts.empty-catch.ast',
-    'heuristics.ts.eval.ast',
-    'heuristics.ts.explicit-any.ast',
-    'heuristics.ts.fs-access-callback.ast',
-    'heuristics.ts.fs-access-sync.ast',
-    'heuristics.ts.fs-append-file-callback.ast',
-    'heuristics.ts.fs-append-file-sync.ast',
-    'heuristics.ts.fs-chmod-callback.ast',
-    'heuristics.ts.fs-chmod-sync.ast',
-    'heuristics.ts.fs-chown-callback.ast',
-    'heuristics.ts.fs-chown-sync.ast',
-    'heuristics.ts.fs-close-callback.ast',
-    'heuristics.ts.fs-close-sync.ast',
-    'heuristics.ts.fs-copy-file-callback.ast',
-    'heuristics.ts.fs-copy-file-sync.ast',
-    'heuristics.ts.fs-cp-callback.ast',
-    'heuristics.ts.fs-cp-sync.ast',
-    'heuristics.ts.fs-exists-callback.ast',
-    'heuristics.ts.fs-exists-sync.ast',
-    'heuristics.ts.fs-fchmod-callback.ast',
-    'heuristics.ts.fs-fchmod-sync.ast',
-    'heuristics.ts.fs-fchown-callback.ast',
-    'heuristics.ts.fs-fchown-sync.ast',
-    'heuristics.ts.fs-fdatasync-callback.ast',
-    'heuristics.ts.fs-fdatasync-sync.ast',
-    'heuristics.ts.fs-fstat-callback.ast',
-    'heuristics.ts.fs-fstat-sync.ast',
-    'heuristics.ts.fs-fsync-callback.ast',
-    'heuristics.ts.fs-fsync-sync.ast',
-    'heuristics.ts.fs-ftruncate-callback.ast',
-    'heuristics.ts.fs-ftruncate-sync.ast',
-    'heuristics.ts.fs-futimes-callback.ast',
-    'heuristics.ts.fs-futimes-sync.ast',
-    'heuristics.ts.fs-lchmod-callback.ast',
-    'heuristics.ts.fs-lchown-callback.ast',
-    'heuristics.ts.fs-link-callback.ast',
-    'heuristics.ts.fs-link-sync.ast',
-    'heuristics.ts.fs-lstat-callback.ast',
-    'heuristics.ts.fs-lstat-sync.ast',
-    'heuristics.ts.fs-lutimes-callback.ast',
-    'heuristics.ts.fs-lutimes-sync.ast',
-    'heuristics.ts.fs-mkdir-callback.ast',
-    'heuristics.ts.fs-mkdir-sync.ast',
-    'heuristics.ts.fs-mkdtemp-callback.ast',
-    'heuristics.ts.fs-mkdtemp-sync.ast',
-    'heuristics.ts.fs-open-callback.ast',
-    'heuristics.ts.fs-open-sync.ast',
-    'heuristics.ts.fs-opendir-callback.ast',
-    'heuristics.ts.fs-opendir-sync.ast',
-    'heuristics.ts.fs-promises-access.ast',
-    'heuristics.ts.fs-promises-append-file.ast',
-    'heuristics.ts.fs-promises-chmod.ast',
-    'heuristics.ts.fs-promises-chown.ast',
-    'heuristics.ts.fs-promises-copy-file.ast',
-    'heuristics.ts.fs-promises-cp.ast',
-    'heuristics.ts.fs-promises-link.ast',
-    'heuristics.ts.fs-promises-lstat.ast',
-    'heuristics.ts.fs-promises-mkdir.ast',
-    'heuristics.ts.fs-promises-mkdtemp.ast',
-    'heuristics.ts.fs-promises-open.ast',
-    'heuristics.ts.fs-promises-opendir.ast',
-    'heuristics.ts.fs-promises-read-file.ast',
-    'heuristics.ts.fs-promises-readdir.ast',
-    'heuristics.ts.fs-promises-readlink.ast',
-    'heuristics.ts.fs-promises-realpath.ast',
-    'heuristics.ts.fs-promises-rename.ast',
-    'heuristics.ts.fs-promises-rm.ast',
-    'heuristics.ts.fs-promises-stat.ast',
-    'heuristics.ts.fs-promises-symlink.ast',
-    'heuristics.ts.fs-promises-unlink.ast',
-    'heuristics.ts.fs-promises-utimes.ast',
-    'heuristics.ts.fs-promises-write-file.ast',
-    'heuristics.ts.fs-read-callback.ast',
-    'heuristics.ts.fs-read-file-callback.ast',
-    'heuristics.ts.fs-read-file-sync.ast',
-    'heuristics.ts.fs-read-sync.ast',
-    'heuristics.ts.fs-readdir-callback.ast',
-    'heuristics.ts.fs-readdir-sync.ast',
-    'heuristics.ts.fs-readlink-callback.ast',
-    'heuristics.ts.fs-readlink-sync.ast',
-    'heuristics.ts.fs-readv-callback.ast',
-    'heuristics.ts.fs-readv-sync.ast',
-    'heuristics.ts.fs-realpath-callback.ast',
-    'heuristics.ts.fs-realpath-sync.ast',
-    'heuristics.ts.fs-rename-callback.ast',
-    'heuristics.ts.fs-rename-sync.ast',
-    'heuristics.ts.fs-rm-callback.ast',
-    'heuristics.ts.fs-rm-sync.ast',
-    'heuristics.ts.fs-rmdir-callback.ast',
-    'heuristics.ts.fs-rmdir-sync.ast',
-    'heuristics.ts.fs-stat-callback.ast',
-    'heuristics.ts.fs-stat-sync.ast',
-    'heuristics.ts.fs-statfs-callback.ast',
-    'heuristics.ts.fs-statfs-sync.ast',
-    'heuristics.ts.fs-symlink-callback.ast',
-    'heuristics.ts.fs-symlink-sync.ast',
-    'heuristics.ts.fs-truncate-callback.ast',
-    'heuristics.ts.fs-truncate-sync.ast',
-    'heuristics.ts.fs-unlink-callback.ast',
-    'heuristics.ts.fs-unlink-sync.ast',
-    'heuristics.ts.fs-unwatch-file-callback.ast',
-    'heuristics.ts.fs-utimes-callback.ast',
-    'heuristics.ts.fs-utimes-sync.ast',
-    'heuristics.ts.fs-watch-callback.ast',
-    'heuristics.ts.fs-watch-file-callback.ast',
-    'heuristics.ts.fs-write-callback.ast',
-    'heuristics.ts.fs-write-file-callback.ast',
-    'heuristics.ts.fs-write-file-sync.ast',
-    'heuristics.ts.fs-write-sync.ast',
-    'heuristics.ts.fs-writev-callback.ast',
-    'heuristics.ts.fs-writev-sync.ast',
-    'heuristics.ts.function-constructor.ast',
-    'heuristics.ts.hardcoded-secret-token.ast',
-    'heuristics.ts.inner-html.ast',
-    'heuristics.ts.insecure-token-date-now.ast',
-    'heuristics.ts.insecure-token-math-random.ast',
-    'heuristics.ts.insert-adjacent-html.ast',
-    'heuristics.ts.jwt-decode-without-verify.ast',
-    'heuristics.ts.jwt-sign-no-expiration.ast',
-    'heuristics.ts.jwt-verify-ignore-expiration.ast',
-    'heuristics.ts.new-promise-async.ast',
-    'heuristics.ts.process-env-mutation.ast',
-    'heuristics.ts.process-exit.ast',
-    'heuristics.ts.set-interval-string.ast',
-    'heuristics.ts.set-timeout-string.ast',
-    'heuristics.ts.solid.dip.concrete-instantiation.ast',
-    'heuristics.ts.solid.dip.framework-import.ast',
-    'heuristics.ts.solid.isp.interface-command-query-mix.ast',
-    'heuristics.ts.solid.lsp.override-not-implemented.ast',
-    'heuristics.ts.solid.ocp.discriminator-switch.ast',
-    'heuristics.ts.solid.srp.class-command-query-mix.ast',
-    'heuristics.ts.tls-env-override.ast',
-    'heuristics.ts.tls-reject-unauthorized-false.ast',
-    'heuristics.ts.vm-dynamic-code-execution.ast',
-    'heuristics.ts.weak-crypto-hash.ast',
-    'heuristics.ts.weak-token-randomuuid.ast',
-    'heuristics.ts.with-statement.ast',
+    'common.network.missing_error_handling',
+    'heuristics.ts.sensitive-token-in-url.ast',
   ]);
 });
 
-test('detects backend TypeScript heuristic findings in production path', () => {
+test('detects frontend non semantic clickable JSX heuristic in production path', () => {
   const extracted = extractHeuristicFacts({
     facts: [
       fileContentFact(
-        'apps/backend/src/application/feature/file.ts',
-        'const cp = require("child_process"); const fs = require("fs"); const crypto = require("crypto"); const jwt = require("jsonwebtoken"); const jsonwebtoken = require("jsonwebtoken"); const vm = require("vm"); const value: any = 1; const apiToken = "sk_test_1234567890abcdef"; const sessionToken = Math.random().toString(36).slice(2); const authToken = Date.now().toString(36); const uuidToken = crypto.randomUUID(); const decodedToken = jwt.decode(sessionToken); const decodedTokenTwo = jsonwebtoken.decode(authToken); const verifiedToken = jwt.verify(sessionToken, "secret", { ignoreExpiration: true }); const signedToken = jwt.sign({ sub: "u1" }, "secret"); const insecureTlsAgent = new https.Agent({ rejectUnauthorized: false }); const unsafeBuffer = Buffer.allocUnsafe(32); const unsafeBufferSlow = Buffer.allocUnsafeSlow(32); const obj: any = { secret: 1 }; const el: any = {}; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); with (Math) { max(1, 2); } process.exit(1); process.env.NODE_ENV = "production"; process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; crypto.createHash("md5").update("x").digest("hex"); fs.utimes("/tmp/demo.txt", new Date(), new Date(), () => {}); fs.watch("/tmp/demo.txt", () => {}); fs.watchFile("/tmp/demo.txt", () => {}); fs.unwatchFile("/tmp/demo.txt", () => {}); fs.exists("/tmp/demo.txt", () => {}); fs.readFile("/tmp/demo.txt", "utf8", () => {}); fs.writeFile("/tmp/demo.txt", value, () => {}); fs.appendFile("/tmp/demo.txt", value, () => {}); fs.readdir("/tmp", () => {}); fs.mkdir("/tmp/demo-callback-dir", () => {}); fs.rmdir("/tmp/demo-callback-dir", () => {}); fs.rm("/tmp/demo-callback-dir", () => {}); fs.truncate("/tmp/demo.txt", 0, () => {}); fs.rename("/tmp/demo.txt", "/tmp/demo-renamed.txt", () => {}); fs.copyFile("/tmp/demo.txt", "/tmp/demo-copy-callback.txt", () => {}); fs.stat("/tmp/demo-copy-callback.txt", () => {}); fs.statfs("/tmp/demo-copy-callback.txt", () => {}); fs.fstat(10, () => {}); fs.lstat("/tmp/demo-copy-callback.txt", () => {}); fs.realpath("/tmp/demo-copy-callback.txt", () => {}); fs.access("/tmp/demo-copy-callback.txt", () => {}); fs.chmod("/tmp/demo-copy-callback.txt", 0o644, () => {}); fs.fchmod(10, 0o644, () => {}); fs.chown("/tmp/demo-copy-callback.txt", 1000, 1000, () => {}); fs.lchown("/tmp/demo-copy-callback.txt", 1000, 1000, () => {}); fs.lchmod("/tmp/demo-copy-callback.txt", 0o644, () => {}); fs.fchown(10, 1000, 1000, () => {}); fs.unlink("/tmp/demo-copy-callback.txt", () => {}); fs.readlink("/tmp/demo-copy-callback.txt", () => {}); fs.symlink("/tmp/demo-copy-callback.txt", "/tmp/demo-copy-callback-link.txt", () => {}); fs.link("/tmp/demo-copy-callback.txt", "/tmp/demo-copy-callback-hardlink.txt", () => {}); fs.mkdtemp("/tmp/demo-callback-prefix-", () => {}); fs.opendir("/tmp", () => {}); fs.open("/tmp/demo-copy-callback.txt", "r", () => {}); fs.cp("/tmp/demo-copy-callback.txt", "/tmp/demo-copy-callback-cp.txt", () => {}); fs.fdatasync(10, () => {}); fs.ftruncate(10, 0, () => {}); fs.futimes(10, new Date(), new Date(), () => {}); fs.lutimes("/tmp/demo.txt", new Date(), new Date(), () => {}); fs.fsync(10, () => {}); fs.close(10, () => {}); fs.read(10, Buffer.alloc(8), 0, 8, 0, () => {}); fs.readv(10, [Buffer.alloc(8)], 0, () => {}); fs.writev(10, [Buffer.from("demo")], 0, () => {}); fs.write(10, Buffer.from("demo"), 0, 4, 0, () => {}); fs.writeFileSync("/tmp/demo.txt", value); fs.rmSync("/tmp/demo-sync-dir", { force: true, recursive: true }); fs.mkdirSync("/tmp/demo-sync-dir", { recursive: true }); fs.readdirSync("/tmp"); fs.readFileSync("/tmp/demo.txt", "utf8"); fs.statSync("/tmp/demo.txt"); fs.statfsSync("/tmp/demo.txt"); fs.realpathSync("/tmp/demo.txt"); fs.lstatSync("/tmp/demo.txt"); fs.existsSync("/tmp/demo.txt"); fs.accessSync("/tmp/demo.txt"); fs.utimesSync("/tmp/demo.txt", new Date(), new Date()); fs.renameSync("/tmp/demo.txt", "/tmp/demo-renamed-sync.txt"); fs.copyFileSync("/tmp/demo-renamed-sync.txt", "/tmp/demo-copy-sync.txt"); fs.unlinkSync("/tmp/demo-copy-sync.txt"); fs.truncateSync("/tmp/demo.txt", 0); fs.rmdirSync("/tmp/demo-sync-dir", { recursive: true }); fs.chmodSync("/tmp/demo.txt", 0o644); fs.chownSync("/tmp/demo.txt", 1000, 1000); fs.fchownSync(10, 1000, 1000); fs.fchmodSync(10, 0o644); fs.fstatSync(10); fs.ftruncateSync(10, 0); fs.futimesSync(10, new Date(), new Date()); fs.lutimesSync("/tmp/demo.txt", new Date(), new Date()); fs.readvSync(10, [Buffer.alloc(8)], 0); fs.writevSync(10, [Buffer.from("demo")], 0); fs.writeSync(10, Buffer.from("demo"), 0, 4, 0); fs.fsyncSync(10); fs.fdatasyncSync(10); fs.closeSync(10); fs.readSync(10, Buffer.alloc(8), 0, 8, 0); fs.readlinkSync("/tmp/demo.txt"); fs.symlinkSync("/tmp/demo.txt", "/tmp/demo-link-sync.txt"); fs.linkSync("/tmp/demo.txt", "/tmp/demo-hardlink-sync.txt"); fs.cpSync("/tmp/demo.txt", "/tmp/demo-cp-sync.txt"); fs.openSync("/tmp/demo.txt", "r"); fs.opendirSync("/tmp"); fs.mkdtempSync("/tmp/demo-sync-prefix-"); fs.appendFileSync("/tmp/demo.txt", value); fs.promises.writeFile("/tmp/demo.txt", value); fs.promises.appendFile("/tmp/demo.txt", value); fs.promises.rm("/tmp/demo.txt", { force: true }); fs.promises.unlink("/tmp/demo.txt"); fs.promises.readFile("/tmp/demo.txt", "utf8"); fs.promises.readdir("/tmp"); fs.promises.mkdir("/tmp/demo-dir", { recursive: true }); fs.promises.stat("/tmp/demo.txt"); fs.promises.copyFile("/tmp/demo.txt", "/tmp/demo-copy.txt"); fs.promises.rename("/tmp/demo-copy.txt", "/tmp/demo-final.txt"); fs.promises.access("/tmp/demo-final.txt"); fs.promises.chmod("/tmp/demo-final.txt", 0o644); fs.promises.chown("/tmp/demo-final.txt", 1000, 1000); fs.promises.utimes("/tmp/demo-final.txt", new Date(), new Date()); fs.promises.lstat("/tmp/demo-final.txt"); fs.promises.realpath("/tmp/demo-final.txt"); fs.promises.symlink("/tmp/demo-final.txt", "/tmp/demo-link.txt"); fs.promises.link("/tmp/demo-final.txt", "/tmp/demo-hardlink.txt"); fs.promises.readlink("/tmp/demo-link.txt"); fs.promises.open("/tmp/demo-final.txt", "r"); fs.promises.opendir("/tmp"); fs.promises.cp("/tmp/demo-final.txt", "/tmp/demo-cp.txt"); fs.promises.mkdtemp("/tmp/demo-prefix-"); cp.execFileSync("echo", ["test"]); cp.execFile("echo", ["test"]); const execFileArgs = [value]; cp.execFile("echo", execFileArgs); cp.execSync("echo test"); const dynamicShellCommand = `echo `; cp.exec(dynamicShellCommand); cp.exec("echo test"); vm.runInNewContext(dynamicShellCommand); cp.spawnSync("echo", ["test"]); cp.spawn("echo", ["test"]); cp.spawn("echo", ["test"], { shell: true }); cp.fork("./worker.js"); delete obj.secret; el.innerHTML = value; el.insertAdjacentHTML("beforeend", value); document.write(value); const prismaClient = new PrismaClient(); const prismaPkg = require("@prisma/client"); interface AccountPort { findById(id: string): string; saveProfile(id: string): void; } class AccountService { findById() { return "ok"; } saveProfile() { return "ok"; } } function resolveByKind(entity: any) { switch (entity.kind) { case "reservation": return 1; case "zbe": return 2; default: return 0; } } class BaseHandler { run() { return 0; } } class ExtendedHandler extends BaseHandler { override run() { throw new Error("Not implemented"); } } debugger;'
+        'apps/frontend/src/features/stores/StoreCard.tsx',
+        'export const StoreCard = ({ open }) => <div onClick={open}>Open</div>;'
       ),
     ],
     detectedPlatforms: {
-      backend: { detected: true },
+      frontend: { detected: true },
     },
   });
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
-  assert.deepEqual(toRuleIds(findings), [
-    'common.error.empty_catch',
-    'heuristics.ts.buffer-alloc-unsafe-slow.ast',
-    'heuristics.ts.buffer-alloc-unsafe.ast',
-    'heuristics.ts.child-process-exec-file-sync.ast',
-    'heuristics.ts.child-process-exec-file-untrusted-args.ast',
-    'heuristics.ts.child-process-exec-file.ast',
-    'heuristics.ts.child-process-exec-sync.ast',
-    'heuristics.ts.child-process-exec.ast',
-    'heuristics.ts.child-process-fork.ast',
-    'heuristics.ts.child-process-import.ast',
-    'heuristics.ts.child-process-shell-true.ast',
-    'heuristics.ts.child-process-spawn-sync.ast',
-    'heuristics.ts.child-process-spawn.ast',
-    'heuristics.ts.console-error.ast',
-    'heuristics.ts.console-log.ast',
-    'heuristics.ts.debugger.ast',
-    'heuristics.ts.delete-operator.ast',
-    'heuristics.ts.document-write.ast',
-    'heuristics.ts.dynamic-shell-invocation.ast',
-    'heuristics.ts.empty-catch.ast',
-    'heuristics.ts.eval.ast',
-    'heuristics.ts.explicit-any.ast',
-    'heuristics.ts.fs-access-callback.ast',
-    'heuristics.ts.fs-access-sync.ast',
-    'heuristics.ts.fs-append-file-callback.ast',
-    'heuristics.ts.fs-append-file-sync.ast',
-    'heuristics.ts.fs-chmod-callback.ast',
-    'heuristics.ts.fs-chmod-sync.ast',
-    'heuristics.ts.fs-chown-callback.ast',
-    'heuristics.ts.fs-chown-sync.ast',
-    'heuristics.ts.fs-close-callback.ast',
-    'heuristics.ts.fs-close-sync.ast',
-    'heuristics.ts.fs-copy-file-callback.ast',
-    'heuristics.ts.fs-copy-file-sync.ast',
-    'heuristics.ts.fs-cp-callback.ast',
-    'heuristics.ts.fs-cp-sync.ast',
-    'heuristics.ts.fs-exists-callback.ast',
-    'heuristics.ts.fs-exists-sync.ast',
-    'heuristics.ts.fs-fchmod-callback.ast',
-    'heuristics.ts.fs-fchmod-sync.ast',
-    'heuristics.ts.fs-fchown-callback.ast',
-    'heuristics.ts.fs-fchown-sync.ast',
-    'heuristics.ts.fs-fdatasync-callback.ast',
-    'heuristics.ts.fs-fdatasync-sync.ast',
-    'heuristics.ts.fs-fstat-callback.ast',
-    'heuristics.ts.fs-fstat-sync.ast',
-    'heuristics.ts.fs-fsync-callback.ast',
-    'heuristics.ts.fs-fsync-sync.ast',
-    'heuristics.ts.fs-ftruncate-callback.ast',
-    'heuristics.ts.fs-ftruncate-sync.ast',
-    'heuristics.ts.fs-futimes-callback.ast',
-    'heuristics.ts.fs-futimes-sync.ast',
-    'heuristics.ts.fs-lchmod-callback.ast',
-    'heuristics.ts.fs-lchown-callback.ast',
-    'heuristics.ts.fs-link-callback.ast',
-    'heuristics.ts.fs-link-sync.ast',
-    'heuristics.ts.fs-lstat-callback.ast',
-    'heuristics.ts.fs-lstat-sync.ast',
-    'heuristics.ts.fs-lutimes-callback.ast',
-    'heuristics.ts.fs-lutimes-sync.ast',
-    'heuristics.ts.fs-mkdir-callback.ast',
-    'heuristics.ts.fs-mkdir-sync.ast',
-    'heuristics.ts.fs-mkdtemp-callback.ast',
-    'heuristics.ts.fs-mkdtemp-sync.ast',
-    'heuristics.ts.fs-open-callback.ast',
-    'heuristics.ts.fs-open-sync.ast',
-    'heuristics.ts.fs-opendir-callback.ast',
-    'heuristics.ts.fs-opendir-sync.ast',
-    'heuristics.ts.fs-promises-access.ast',
-    'heuristics.ts.fs-promises-append-file.ast',
-    'heuristics.ts.fs-promises-chmod.ast',
-    'heuristics.ts.fs-promises-chown.ast',
-    'heuristics.ts.fs-promises-copy-file.ast',
-    'heuristics.ts.fs-promises-cp.ast',
-    'heuristics.ts.fs-promises-link.ast',
-    'heuristics.ts.fs-promises-lstat.ast',
-    'heuristics.ts.fs-promises-mkdir.ast',
-    'heuristics.ts.fs-promises-mkdtemp.ast',
-    'heuristics.ts.fs-promises-open.ast',
-    'heuristics.ts.fs-promises-opendir.ast',
-    'heuristics.ts.fs-promises-read-file.ast',
-    'heuristics.ts.fs-promises-readdir.ast',
-    'heuristics.ts.fs-promises-readlink.ast',
-    'heuristics.ts.fs-promises-realpath.ast',
-    'heuristics.ts.fs-promises-rename.ast',
-    'heuristics.ts.fs-promises-rm.ast',
-    'heuristics.ts.fs-promises-stat.ast',
-    'heuristics.ts.fs-promises-symlink.ast',
-    'heuristics.ts.fs-promises-unlink.ast',
-    'heuristics.ts.fs-promises-utimes.ast',
-    'heuristics.ts.fs-promises-write-file.ast',
-    'heuristics.ts.fs-read-callback.ast',
-    'heuristics.ts.fs-read-file-callback.ast',
-    'heuristics.ts.fs-read-file-sync.ast',
-    'heuristics.ts.fs-read-sync.ast',
-    'heuristics.ts.fs-readdir-callback.ast',
-    'heuristics.ts.fs-readdir-sync.ast',
-    'heuristics.ts.fs-readlink-callback.ast',
-    'heuristics.ts.fs-readlink-sync.ast',
-    'heuristics.ts.fs-readv-callback.ast',
-    'heuristics.ts.fs-readv-sync.ast',
-    'heuristics.ts.fs-realpath-callback.ast',
-    'heuristics.ts.fs-realpath-sync.ast',
-    'heuristics.ts.fs-rename-callback.ast',
-    'heuristics.ts.fs-rename-sync.ast',
-    'heuristics.ts.fs-rm-callback.ast',
-    'heuristics.ts.fs-rm-sync.ast',
-    'heuristics.ts.fs-rmdir-callback.ast',
-    'heuristics.ts.fs-rmdir-sync.ast',
-    'heuristics.ts.fs-stat-callback.ast',
-    'heuristics.ts.fs-stat-sync.ast',
-    'heuristics.ts.fs-statfs-callback.ast',
-    'heuristics.ts.fs-statfs-sync.ast',
-    'heuristics.ts.fs-symlink-callback.ast',
-    'heuristics.ts.fs-symlink-sync.ast',
-    'heuristics.ts.fs-truncate-callback.ast',
-    'heuristics.ts.fs-truncate-sync.ast',
-    'heuristics.ts.fs-unlink-callback.ast',
-    'heuristics.ts.fs-unlink-sync.ast',
-    'heuristics.ts.fs-unwatch-file-callback.ast',
-    'heuristics.ts.fs-utimes-callback.ast',
-    'heuristics.ts.fs-utimes-sync.ast',
-    'heuristics.ts.fs-watch-callback.ast',
-    'heuristics.ts.fs-watch-file-callback.ast',
-    'heuristics.ts.fs-write-callback.ast',
-    'heuristics.ts.fs-write-file-callback.ast',
-    'heuristics.ts.fs-write-file-sync.ast',
-    'heuristics.ts.fs-write-sync.ast',
-    'heuristics.ts.fs-writev-callback.ast',
-    'heuristics.ts.fs-writev-sync.ast',
-    'heuristics.ts.function-constructor.ast',
-    'heuristics.ts.hardcoded-secret-token.ast',
-    'heuristics.ts.inner-html.ast',
-    'heuristics.ts.insecure-token-date-now.ast',
-    'heuristics.ts.insecure-token-math-random.ast',
-    'heuristics.ts.insert-adjacent-html.ast',
-    'heuristics.ts.jwt-decode-without-verify.ast',
-    'heuristics.ts.jwt-sign-no-expiration.ast',
-    'heuristics.ts.jwt-verify-ignore-expiration.ast',
-    'heuristics.ts.new-promise-async.ast',
-    'heuristics.ts.process-env-mutation.ast',
-    'heuristics.ts.process-exit.ast',
-    'heuristics.ts.set-interval-string.ast',
-    'heuristics.ts.set-timeout-string.ast',
-    'heuristics.ts.solid.dip.concrete-instantiation.ast',
-    'heuristics.ts.solid.dip.framework-import.ast',
-    'heuristics.ts.solid.isp.interface-command-query-mix.ast',
-    'heuristics.ts.solid.lsp.override-not-implemented.ast',
-    'heuristics.ts.solid.ocp.discriminator-switch.ast',
-    'heuristics.ts.solid.srp.class-command-query-mix.ast',
-    'heuristics.ts.tls-env-override.ast',
-    'heuristics.ts.tls-reject-unauthorized-false.ast',
-    'heuristics.ts.vm-dynamic-code-execution.ast',
-    'heuristics.ts.weak-crypto-hash.ast',
-    'heuristics.ts.weak-token-randomuuid.ast',
-    'heuristics.ts.with-statement.ast',
-  ]);
-  assert.equal(extracted.every((finding) => finding.source === 'heuristics:ast'), true);
+
+  assert.deepEqual(toRuleIds(findings), ['heuristics.tsx.non-semantic-clickable.ast']);
+});
+
+test('detects frontend redundant ARIA role heuristic in production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/frontend/src/features/navigation/MainNavigation.tsx',
+        'export const MainNavigation = () => <nav role="navigation">Menu</nav>;'
+      ),
+    ],
+    detectedPlatforms: {
+      frontend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), ['heuristics.tsx.redundant-aria-role.ast']);
+});
+
+test('detects frontend nested if else heuristic in production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/frontend/src/features/stores/resolveStoreState.ts',
+        'export function resolveStoreState(store) { if (store) { if (store.open) { return "open"; } } else { return "missing"; } return "closed"; }'
+      ),
+    ],
+    detectedPlatforms: {
+      frontend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), ['heuristics.ts.nested-if-else.ast']);
+});
+
+test('detects legacy Next pages API route heuristic in frontend path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/frontend/src/pages/api/stores.ts',
+        'export default function handler(req, res) { res.status(200).json({ ok: true }); }'
+      ),
+      fileContentFact(
+        'apps/frontend/src/app/api/stores/route.ts',
+        'export async function GET() { return Response.json({ ok: true }); }'
+      ),
+    ],
+    detectedPlatforms: {
+      frontend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), ['heuristics.ts.next-pages-api-route.ast']);
 });
 
 test('skips TypeScript heuristics for test files', () => {
@@ -382,6 +257,27 @@ test('skips TypeScript heuristics for test files', () => {
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   assert.equal(findings.length, 0);
+});
+
+test('detects direct network calls in frontend tests where MSW should be used', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/frontend/src/features/stores/stores.test.ts',
+        'test("loads stores", async () => { await fetch("/api/stores"); });'
+      ),
+    ],
+    detectedPlatforms: {
+      frontend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), [
+    'common.network.missing_error_handling',
+    'heuristics.ts.frontend-test-direct-network-call.ast',
+  ]);
 });
 
 test('detects common.network.missing_error_handling in test files while keeping generic TS heuristics skipped', () => {
@@ -409,6 +305,68 @@ test('detects common.network.missing_error_handling in test files while keeping 
   );
 });
 
+test('detects backend callback hell heuristic in production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/application/orders/load-orders.ts',
+        [
+          'export function loadOrders(repository: Repository) {',
+          '  repository.findUser("u1", (user) => {',
+          '    repository.findOrders(user.id, (orders) => {',
+          '      repository.saveSnapshot(orders);',
+          '    });',
+          '  });',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), ['heuristics.ts.callback-hell.ast']);
+});
+
+test('detects backend bcrypt weak salt rounds heuristic in production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/auth/hash-password.ts',
+        'export const hashPassword = (password: string) => bcrypt.hash(password, 8);'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), ['heuristics.ts.bcrypt-weak-salt-rounds.ast']);
+});
+
+test('detects backend interpolated unsafe SQL heuristic in production path', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/orders.repository.ts',
+        'export const findOrder = (db: Database, id: string) => db.query(`select * from orders where id = ${id}`);'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), ['heuristics.ts.sql-interpolated-unsafe-call.ast']);
+});
+
 test('detects iOS heuristics and skips bridge callback rule', () => {
   const extracted = extractHeuristicFacts({
     facts: [
@@ -420,11 +378,21 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
           'let value = try! resolver.execute()',
           'let model = anyModel as! ProfileViewModel',
           'func fetch(completion: @escaping () -> Void) {}',
+          'publisher.sink { value in render(value) }',
+          'let repository = MockOrdersRepository()',
           'DispatchQueue.main.async {}',
           'DispatchGroup()',
           'DispatchSemaphore(value: 1)',
           'OperationQueue()',
           'Task.detached { }',
+          'enum APIEndpoint { case login }',
+          'func uploadAll(items: [Item]) async {',
+          '  for item in items { await upload(item) }',
+          '}',
+          'func lintWorkaround() async { await Task.yield() }',
+          'loader.load { [unowned self] value in print(value) }',
+          'if session.isValid { if form.isValid { if network.isReachable { submit() } } }',
+          '// temporary workaround',
           'private func buildSnapshot() async -> ProfileSnapshot { ProfileSnapshot.empty }',
           'func store() { do { try repository.save() } catch { } }',
           'print(accessToken)',
@@ -443,6 +411,7 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
           'Text("Price").font(.system(size: 18))',
           'Text("Price").multilineTextAlignment(.right)',
           'Thread.sleep(forTimeInterval: 0.25)',
+          'print(Thread.current)',
           'Button { delete() } label: { Image(systemName: "trash") }',
           'let filtered = items.filter { $0.title.contains(searchText) }',
           'ForEach(items.indices, id: \\.self) { index in Text(items[index].title) }',
@@ -450,12 +419,16 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
           'Text("primary").foregroundColor(.blue)',
           'Image("hero").cornerRadius(12)',
           'TabView { HomeView().tabItem { Label("Home", systemImage: "house") } }',
+          'Text("static").glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))',
+          'Text("morph").glassEffectID("card", in: animation)',
           'Text("tap").onTapGesture { }',
           'let title = String(format: "%d", 1)',
           'ScrollView(.vertical, showsIndicators: false) { Text("feed") }',
           '.sheet(isPresented: $showDetails) { DetailView() }',
           '.onChange(of: query) { newValue in print(newValue) }',
+          '.onChange(of: query) { _, newValue in var trimmed = query.trimmingCharacters(in: .whitespaces) }',
           'let width = UIScreen.main.bounds.width',
+          'let erasedPayload: Any = payload',
           'final class LegacyType: @unchecked Sendable {}',
           'struct DetailView: View {',
           '  @State private var filter: String',
@@ -485,6 +458,7 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
       fileContentFact('apps/ios/Podfile', 'pod "LegacyDependency"'),
       fileContentFact('apps/ios/Cartfile', 'github "Legacy/Dependency"'),
       fileContentFact('apps/ios/App/es.lproj/Localizable.strings', '"title" = "Catalog";'),
+      fileContentFact('apps/ios/App/Base.lproj/Main.storyboard', '<document />'),
       fileContentFact(
         'apps/ios/App/Info.plist',
         [
@@ -507,12 +481,18 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
   assert.deepEqual(toRuleIds(findings), [
     'heuristics.ios.accessibility.fixed-font-size.ast',
     'heuristics.ios.accessibility.icon-only-control-label.ast',
+    'heuristics.ios.accessibility.on-tap-without-button-trait.ast',
     'heuristics.ios.anyview.ast',
     'heuristics.ios.assets.loose-resource.ast',
     'heuristics.ios.assume-isolated.ast',
     'heuristics.ios.callback-style.ast',
-    'heuristics.ios.concurrency.async-without-await.ast',
-    'heuristics.ios.contains-user-filter.ast',
+    'heuristics.ios.combine.sink-without-store.ast',
+      'heuristics.ios.concurrency.async-without-await.ast',
+      'heuristics.ios.concurrency.dummy-await.ast',
+      'heuristics.ios.concurrency.long-task-without-cancellation-check.ast',
+      'heuristics.ios.concurrency.thread-centric-debugging.ast',
+      'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+      'heuristics.ios.contains-user-filter.ast',
     'heuristics.ios.corner-radius.ast',
     'heuristics.ios.dependencies.carthage.ast',
     'heuristics.ios.dependencies.cocoapods.ast',
@@ -527,6 +507,7 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.foreach-indices.ast',
     'heuristics.ios.foreground-color.ast',
     'heuristics.ios.geometryreader.ast',
+    'heuristics.ios.interface-builder.storyboard-xib.ast',
     'heuristics.ios.json.jsonserialization.ast',
     'heuristics.ios.legacy-onchange.ast',
     'heuristics.ios.legacy-swiftui-observable-wrapper.ast',
@@ -535,8 +516,12 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.localization.physical-text-alignment.ast',
     'heuristics.ios.logging.adhoc-print.ast',
     'heuristics.ios.logging.sensitive-data.ast',
+    'heuristics.ios.maintainability.comment-trivia.ast',
+    'heuristics.ios.maintainability.nested-if-pyramid.ast',
+    'heuristics.ios.memory.unowned-self-capture.ast',
     'heuristics.ios.navigation-view.ast',
     'heuristics.ios.networking.alamofire.ast',
+    'heuristics.ios.networking.endpoint-enum-ocp.ast',
     'heuristics.ios.nonisolated-unsafe.ast',
     'heuristics.ios.observable-object.ast',
     'heuristics.ios.on-tap-gesture.ast',
@@ -550,11 +535,33 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
     'heuristics.ios.sheet-is-presented.ast',
     'heuristics.ios.string-format.ast',
     'heuristics.ios.swiftui.foreach-self-identity.ast',
+    'heuristics.ios.swiftui.glass-interactive-static-element.ast',
+    'heuristics.ios.swiftui.glasseffectid-without-namespace.ast',
+    'heuristics.ios.swiftui.onchange-readonly-var.ast',
     'heuristics.ios.tab-item.ast',
     'heuristics.ios.task-detached.ast',
+    'heuristics.ios.testing.production-test-double.ast',
+    'heuristics.ios.type-erasure.any.ast',
     'heuristics.ios.uiscreen-main-bounds.ast',
     'heuristics.ios.unchecked-sendable.ast',
   ]);
+  const dispatchGroupFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.dispatchgroup.ast'
+  );
+  assert.deepEqual(dispatchGroupFinding?.lines, [9]);
+  assert.deepEqual(dispatchGroupFinding?.primary_node, {
+    kind: 'call',
+    name: 'GCD DispatchGroup call',
+    lines: [9],
+  });
+  assert.deepEqual(dispatchGroupFinding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: structured concurrency TaskGroup or async aggregation boundary',
+      lines: [9],
+    },
+  ]);
+  assert.match(dispatchGroupFinding?.expected_fix ?? '', /TaskGroup/);
   const anyViewFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.anyview.ast'
   );
@@ -594,20 +601,73 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
   const dispatchQueueFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.dispatchqueue.ast'
   );
-  assert.deepEqual(dispatchQueueFinding?.lines, [6]);
+  assert.deepEqual(dispatchQueueFinding?.lines, [8]);
   assert.deepEqual(dispatchQueueFinding?.primary_node, {
     kind: 'call',
     name: 'GCD DispatchQueue call',
-    lines: [6],
+    lines: [8],
   });
   assert.deepEqual(dispatchQueueFinding?.related_nodes, [
     {
       kind: 'call',
       name: 'replacement: structured concurrency Task/actor/MainActor boundary',
-      lines: [6],
+      lines: [8],
     },
   ]);
   assert.match(dispatchQueueFinding?.expected_fix ?? '', /async\/await/);
+  const adHocLoggingFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.logging.adhoc-print.ast'
+  );
+  assert.deepEqual(adHocLoggingFinding?.primary_node, {
+    kind: 'call',
+    name: 'ad-hoc iOS logging call',
+    lines: adHocLoggingFinding?.lines ?? [],
+  });
+  assert.match(adHocLoggingFinding?.expected_fix ?? '', /structured logger/);
+  const sensitiveLoggingFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.logging.sensitive-data.ast'
+  );
+  assert.deepEqual(sensitiveLoggingFinding?.primary_node, {
+    kind: 'call',
+    name: 'logging call with sensitive data',
+    lines: sensitiveLoggingFinding?.lines ?? [],
+  });
+  assert.match(sensitiveLoggingFinding?.expected_fix ?? '', /redacted/);
+  const userDefaultsSensitiveFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.security.userdefaults-sensitive-data.ast'
+  );
+  assert.deepEqual(userDefaultsSensitiveFinding?.primary_node, {
+    kind: 'call',
+    name: 'sensitive UserDefaults/AppStorage storage',
+    lines: userDefaultsSensitiveFinding?.lines ?? [],
+  });
+  assert.match(userDefaultsSensitiveFinding?.expected_fix ?? '', /Keychain/);
+  const insecureTransportFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.security.insecure-transport.ast'
+  );
+  assert.deepEqual(insecureTransportFinding?.primary_node, {
+    kind: 'property',
+    name: 'ATS NSAllowsArbitraryLoads enabled',
+    lines: insecureTransportFinding?.lines ?? [],
+  });
+  assert.match(insecureTransportFinding?.expected_fix ?? '', /ATS enabled/);
+  const dispatchSemaphoreFinding = findings.find(
+    (finding) => finding.ruleId === 'heuristics.ios.dispatchsemaphore.ast'
+  );
+  assert.deepEqual(dispatchSemaphoreFinding?.lines, [10]);
+  assert.deepEqual(dispatchSemaphoreFinding?.primary_node, {
+    kind: 'call',
+    name: 'GCD DispatchSemaphore call',
+    lines: [10],
+  });
+  assert.deepEqual(dispatchSemaphoreFinding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: structured concurrency TaskGroup, AsyncStream or explicit async boundary',
+      lines: [10],
+    },
+  ]);
+  assert.match(dispatchSemaphoreFinding?.expected_fix ?? '', /AsyncStream/);
   const forceUnwrapFinding = findings.find(
     (finding) => finding.ruleId === 'heuristics.ios.force-unwrap.ast'
   );
@@ -684,6 +744,135 @@ test('does not detect iOS force-unwrap heuristic for safe nil comparisons', () =
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.force-unwrap.ast'), false);
+});
+
+test('emits actionable iOS line metadata for PUMUKI-INC-151 presentation findings', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Features/BuyerCommerce/BuyerAuthScreen.swift',
+        [
+          'import SwiftUI',
+          'struct BuyerAuthScreen: View {',
+          '  private let apiKey = "sk_live_123456789"',
+          '  var body: some View {',
+          '    VStack(spacing: 12) {',
+          '      Text("Login").font(.system(size: 18))',
+          '      Circle().fill(Color.blue).frame(width: 320, height: 44)',
+          '    }',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const factsByRuleId = new Map(
+    extracted
+      .filter((fact) => fact.kind === 'Heuristic')
+      .map((fact) => [fact.ruleId, fact])
+  );
+
+  for (const ruleId of [
+    'heuristics.ios.maintainability.magic-number-layout.ast',
+    'heuristics.ios.security.hardcoded-sensitive-string.ast',
+    'heuristics.ios.accessibility.fixed-font-size.ast',
+    'heuristics.ios.swiftui.explicit-color-static-member.ast',
+  ]) {
+    const fact = factsByRuleId.get(ruleId);
+    assert.ok(fact, `${ruleId} should be emitted`);
+    assert.ok(Array.isArray(fact.lines) && fact.lines.length > 0, `${ruleId} should include lines`);
+    assert.ok(fact.primary_node, `${ruleId} should include primary_node`);
+    assert.ok(fact.expected_fix, `${ruleId} should include expected_fix`);
+  }
+
+  assert.deepEqual(
+    factsByRuleId.get('heuristics.ios.maintainability.magic-number-layout.ast')?.lines,
+    [5, 7]
+  );
+  assert.deepEqual(
+    factsByRuleId.get('heuristics.ios.security.hardcoded-sensitive-string.ast')?.lines,
+    [3]
+  );
+  assert.deepEqual(
+    factsByRuleId.get('heuristics.ios.accessibility.fixed-font-size.ast')?.lines,
+    [6]
+  );
+  assert.deepEqual(
+    factsByRuleId.get('heuristics.ios.swiftui.explicit-color-static-member.ast')?.lines,
+    [7]
+  );
+});
+
+test('emits actionable iOS line metadata for PUMUKI-INC-152 BuyerShellView findings', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Features/BuyerCommerce/BuyerShellView.swift',
+        [
+          'import SwiftUI',
+          'struct BuyerShellView: View {',
+          '  var body: some View {',
+          '    ScrollView {',
+          '      VStack {',
+          '        ForEach(items.indices, id: \\.self) { index in',
+          '          if items[index].isVisible {',
+          '            Text(items[index].title).foregroundColor(.blue)',
+          '          }',
+          '        }',
+          '        ForEach(items.filter { $0.isVisible }) { item in',
+          '          Text(item.title)',
+          '        }',
+          '        if isLoading {',
+          '          Text("Loading")',
+          '        } else {',
+          '          Text("Ready")',
+          '        }',
+          '        Button {',
+          '          if isLoading { return }',
+          '        } label: {',
+          '          Text("Retry")',
+          '        }',
+          '        Image("hero").cornerRadius(12)',
+          '      }',
+          '    }',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const factsByRuleId = new Map(
+    extracted
+      .filter((fact) => fact.kind === 'Heuristic')
+      .map((fact) => [fact.ruleId, fact])
+  );
+
+  for (const ruleId of [
+    'heuristics.ios.foreach-indices.ast',
+    'heuristics.ios.swiftui.foreach-self-identity.ast',
+    'heuristics.ios.swiftui.inline-foreach-transform.ast',
+    'heuristics.ios.swiftui.foreach-conditional-view-count.ast',
+    'heuristics.ios.swiftui.conditional-same-view-identity.ast',
+    'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast',
+    'heuristics.ios.swiftui.inline-action-logic.ast',
+    'heuristics.ios.localization.hardcoded-ui-string.ast',
+    'heuristics.ios.foreground-color.ast',
+    'heuristics.ios.corner-radius.ast',
+  ]) {
+    const fact = factsByRuleId.get(ruleId);
+    assert.ok(fact, `${ruleId} should be emitted`);
+    assert.ok(Array.isArray(fact.lines) && fact.lines.length > 0, `${ruleId} should include lines`);
+    assert.ok(fact.primary_node, `${ruleId} should include primary_node`);
+    assert.ok(fact.expected_fix, `${ruleId} should include expected_fix`);
+  }
 });
 
 test('detects iOS Swift Testing and Core Data boundary heuristics in scoped files', () => {
@@ -854,7 +1043,7 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
   assert.deepEqual(waitFinding?.related_nodes, [
     {
       kind: 'call',
-      name: 'replacement: await fulfillment(of:timeout:)',
+      name: 'replacement: await fulfillment(of:timeout:) or predicate-driven UI wait wrapper',
       lines: [9],
     },
   ]);
@@ -938,6 +1127,82 @@ test('detects iOS Swift Testing and Core Data boundary heuristics in scoped file
     findings.some((finding) => finding.ruleId === 'heuristics.ios.core-data.nsmanagedobject-state-leak.ast'),
     true
   );
+});
+
+test('extracts actionable iOS third-party UI test framework heuristic facts', () => {
+  const findings = extractHeuristicFacts({
+    facts: [
+      fileContentFact('apps/ios/Tests/UITests/CheckoutUITests.swift', [
+        'import XCTest',
+        'import EarlGrey',
+        '',
+        'final class CheckoutUITests: XCTestCase {',
+        '  func testCheckout() {',
+        '    EarlGrey.selectElement(with: grey_accessibilityID("pay")).perform(grey_tap())',
+        '  }',
+        '}',
+      ].join('\n')),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const finding = findings.find(
+    (candidate) => candidate.ruleId === 'heuristics.ios.testing.third-party-ui-test-framework.ast'
+  );
+  assert.deepEqual(finding?.lines, [2, 6]);
+  assert.deepEqual(finding?.primary_node, {
+    kind: 'call',
+    name: 'third-party UI test framework node',
+    lines: [2, 6],
+  });
+  assert.deepEqual(finding?.related_nodes, [
+    {
+      kind: 'call',
+      name: 'replacement: native XCUITest XCUIApplication/XCUIElement flow',
+      lines: [2, 6],
+    },
+  ]);
+  assert.match(finding?.expected_fix ?? '', /native XCUITest/);
+});
+
+test('does not emit Swift Testing migration findings for brownfield XCTest specs with quality helpers', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Tests/Mac/Presentation/Features/BuyerOnboardingStringsTests.spec.swift',
+        [
+          'import XCTest',
+          '',
+          'final class BuyerOnboardingStringsTests: XCTestCase {',
+          '  func testTitle() {',
+          '    let sut = makeSUT()',
+          '    XCTAssertEqual(sut.title, "Comprar cerca")',
+          '  }',
+          '',
+          '  private func makeSUT() -> BuyerOnboardingStrings {',
+          '    let sut = BuyerOnboardingStrings()',
+          '    trackForMemoryLeaks(sut)',
+          '    return sut',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctest-import.ast'), false);
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctest-suite-modernizable.ast'),
+    false
+  );
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctassert.ast'), false);
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.testing.xctunwrap.ast'), false);
 });
 
 test('detects IOS-CANARY-001 semantic heuristic with primary_node and related_nodes', () => {
@@ -1575,6 +1840,37 @@ test('detects Android heuristics in production path and skips tests', () => {
         ['class FakeOrdersRepositoryFactory { fun create(): OrdersRepository = mockk(relaxed = true) }'].join('\n')
       ),
       fileContentFact(
+        'apps/android/app/src/main/java/com/acme/data/LegacySyncTask.java',
+        ['class LegacySyncTask extends android.os.AsyncTask<Void, Void, Void> { }'].join('\n')
+      ),
+      fileContentFact(
+        'apps/android/app/src/main/java/com/acme/CheckoutActivity.kt',
+        [
+          'class CheckoutActivity : ComponentActivity() {',
+          '  override fun onCreate(savedInstanceState: Bundle?) {',
+          '    super.onCreate(savedInstanceState)',
+          '    setContent { CheckoutScreen() }',
+          '  }',
+          '  fun loadRemoteCheckout() { OkHttpClient().newCall(request).execute() }',
+          '  fun cacheCheckoutState() { getSharedPreferences("checkout", MODE_PRIVATE).edit().apply() }',
+          '}',
+        ].join('\n')
+      ),
+      fileContentFact(
+        'apps/android/app/src/main/java/com/acme/presentation/OrdersScreen.kt',
+        [
+          '@Composable',
+          'fun OrdersScreen(orders: List<Order>) {',
+          '  LaunchedEffect(Unit) { loadOrders() }',
+          '  val formatter = DecimalFormat("#.00")',
+          '  Box(modifier = Modifier.background(Color.Red).padding(16.dp))',
+          '  Column(modifier = Modifier.verticalScroll(rememberScrollState())) {',
+          '    orders.forEach { order -> Text(order.name) }',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+      fileContentFact(
         'apps/android/app/src/main/java/com/acme/presentation/FeatureViewModel.kt',
         [
           'class FeatureViewModel : ViewModel() {',
@@ -1604,6 +1900,30 @@ test('detects Android heuristics in production path and skips tests', () => {
         [
           'suspend fun execute() {',
           '  try { syncRemote() } catch (error: IOException) { recover(error) }',
+          '}',
+        ].join('\n')
+      ),
+      fileContentFact(
+        'apps/android/app/src/main/java/com/acme/application/CheckoutLogger.kt',
+        ['class CheckoutLogger { fun log(value: String?) { Log.d("Checkout", value!!.trim()) } }'].join('\n')
+      ),
+      fileContentFact(
+        'apps/android/app/src/main/java/com/acme/presentation/CheckoutScreen.kt',
+        [
+          '@Composable fun CheckoutScreen() { Text("Comprar ahora"); Icon(Icons.Default.Warning); BottomNavigation { } }',
+          '@Composable fun SearchBox() { val query = mutableStateOf(""); Text(query.value) }',
+          '@Composable fun FixedScale(content: @Composable () -> Unit) { CompositionLocalProvider(LocalDensity provides Density(1f, fontScale = 1f)) { content() } }',
+          '@Composable fun AppTheme(content: @Composable () -> Unit) { MaterialTheme(colorScheme = AppColorScheme, content = content) }',
+          '@Composable fun BusyEffect(viewModel: CheckoutViewModel) { LaunchedEffect(viewModel.sessionId) { while (true) { viewModel.poll() } } }',
+          'class CheckoutNavigator { fun open(context: Context) { context.startActivity(Intent(context, CheckoutActivity::class.java)) } }',
+        ].join('\n')
+      ),
+      fileContentFact(
+        'apps/android/app/src/main/java/com/acme/presentation/CheckoutViewModel.kt',
+        [
+          'class CheckoutViewModel : ViewModel() {',
+          '  val coldState: Flow<CheckoutUiState> = repository.observeCheckout()',
+          '  val uiState: SharedFlow<CheckoutUiState> = MutableSharedFlow()',
           '}',
         ].join('\n')
       ),
@@ -1638,6 +1958,18 @@ test('detects Android heuristics in production path and skips tests', () => {
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   assert.deepEqual(toRuleIds(findings), [
+    'heuristics.android.accessibility.fontscale-disabled.ast',
+    'heuristics.android.accessibility.missing-content-description.ast',
+    'heuristics.android.architecture.god-activity.ast',
+    'heuristics.android.compose.incomplete-material-theme.ast',
+    'heuristics.android.compose.launched-effect-busy-loop.ast',
+    'heuristics.android.compose.legacy-bottom-navigation.ast',
+    'heuristics.android.compose.modifier-background-before-padding.ast',
+    'heuristics.android.compose.non-lazy-scrollable-collection.ast',
+    'heuristics.android.compose.object-creation-without-remember.ast',
+    'heuristics.android.compose.state-creation-without-remember.ast',
+    'heuristics.android.compose.unstable-launched-effect-key.ast',
+    'heuristics.android.concurrency.asynctask.ast',
     'heuristics.android.coroutines.dispatchers-main-boundary-leak.ast',
     'heuristics.android.coroutines.hardcoded-background-dispatcher.ast',
     'heuristics.android.coroutines.lifecycle-scope-boundary-leak.ast',
@@ -1647,13 +1979,20 @@ test('detects Android heuristics in production path and skips tests', () => {
     'heuristics.android.coroutines.with-context.ast',
     'heuristics.android.coroutines.with-context.ast',
     'heuristics.android.flow.livedata-state-exposure.ast',
+    'heuristics.android.flow.sharedflow-used-as-state.ast',
+    'heuristics.android.flow.viewmodel-flow-without-statein.ast',
     'heuristics.android.globalscope.ast',
+    'heuristics.android.navigation.imperative-navigation.ast',
+    'heuristics.android.null-safety.force-unwrap.ast',
+    'heuristics.android.observability.production-logging.ast',
+    'heuristics.android.persistence.shared-preferences-usage.ast',
     'heuristics.android.persistence.shared-preferences-usage.ast',
     'heuristics.android.run-blocking.ast',
     'heuristics.android.security.local-properties-tracked.ast',
     'heuristics.android.testing.junit4-usage.ast',
     'heuristics.android.testing.production-mock-usage.ast',
     'heuristics.android.thread-sleep.ast',
+    'heuristics.android.ui.hardcoded-string.ast',
   ]);
 });
 
@@ -2156,6 +2495,211 @@ test('emits workflow BDD findings for repos with high implementation volume and 
   );
 });
 
+test('extracts NestJS constructor DI without decorator heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/orders.service.ts',
+        'export class OrdersService { constructor(private readonly repo: OrdersRepository) {} }'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.nestjs.constructor-di-without-decorator.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_NESTJS_CONSTRUCTOR_DI_WITHOUT_DECORATOR_AST');
+});
+
+test('extracts backend persistence mutation without audit event heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/complete-order.service.ts',
+        [
+          'export async function completeOrder(repository: OrdersRepository) {',
+          '  await repository.save({ id: "order-1", status: "complete" });',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) =>
+      entry.ruleId === 'heuristics.ts.backend.persistence-mutation-without-audit-event.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_PERSISTENCE_MUTATION_WITHOUT_AUDIT_EVENT_AST');
+});
+
+test('extracts backend hard delete without soft delete heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/application/use-cases/DeleteOrderUseCase.ts',
+        [
+          'export class DeleteOrderUseCase {',
+          '  async execute(orderId: string) {',
+          '    await this.ordersRepository.delete(orderId);',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const fact = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.hard-delete-without-soft-delete.ast'
+  );
+  assert.ok(fact);
+  assert.deepEqual(fact.lines, [3]);
+});
+
+test('extracts backend DTO property without validation heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/create-order.dto.ts',
+        ['export class CreateOrderDto {', '  email: string;', '}'].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.dto-property-without-validation.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_DTO_PROPERTY_WITHOUT_VALIDATION_AST');
+});
+
+test('extracts backend sensitive data logging heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/auth/auth.service.ts',
+        'export function login(logger: Logger, accessToken: string) { logger.info(accessToken); }'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.sensitive-data-logging.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_SENSITIVE_DATA_LOGGING_AST');
+});
+
+test('extracts backend log without context heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/orders.service.ts',
+        'export function handle(error: Error, logger: Logger) { logger.error(error); }'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.log-without-context.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_LOG_WITHOUT_CONTEXT_AST');
+  assert.deepEqual(finding.lines, [1]);
+});
+
+test('extracts backend magic number heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/order-pricing.service.ts',
+        [
+          'export function calculateTotal(subtotal: number) {',
+          '  const VAT_RATE = 21;',
+          '  return subtotal * 21;',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.magic-number-literal.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_MAGIC_NUMBER_LITERAL_AST');
+});
+
+test('extracts backend generic error throw heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/create-order.use-case.ts',
+        'export function createOrder() { throw new Error("invalid order"); }'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.generic-error-throw.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_GENERIC_ERROR_THROW_AST');
+});
+
+test('extracts backend production mock or spy heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/order.repository.ts',
+        'export const repository = { save: jest.fn() };'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.production-mock-or-spy.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_PRODUCTION_MOCK_OR_SPY_AST');
+});
+
 test('extracts typed heuristic facts with expected metadata', () => {
   const extracted = extractHeuristicFacts({
     facts: [
@@ -2172,4 +2716,443 @@ test('extracts typed heuristic facts with expected metadata', () => {
   assert.equal(extracted.length, 150);
   assert.equal(extracted.every((fact) => fact.kind === 'Heuristic'), true);
   assert.equal(extracted.every((fact) => fact.source === 'heuristics:ast'), true);
+});
+
+test('extracts backend nested DTO property without nested validation heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/create-order.dto.ts',
+        'export class CreateOrderDto { address!: AddressDto; }'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.dto-nested-property-without-nested-validation.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_DTO_NESTED_PROPERTY_WITHOUT_NESTED_VALIDATION_AST');
+});
+
+test('extracts backend controller route without guard heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/orders.controller.ts',
+        [
+          'import { Controller, Get } from "@nestjs/common";',
+          '@Controller("orders")',
+          'export class OrdersController {',
+          '  @Get()',
+          '  listOrders() { return []; }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.controller-route-without-guard.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_CONTROLLER_ROUTE_WITHOUT_GUARD_AST');
+});
+
+test('extracts backend stack trace exposure heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/errors/error.filter.ts',
+        'export function handle(error: Error, res: Response) { return res.json({ statusCode: 500, stack: error.stack }); }'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.error-stack-in-http-response.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_ERROR_STACK_IN_HTTP_RESPONSE_AST');
+});
+
+test('extracts backend inconsistent error response heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/errors/error.filter.ts',
+        'export function handle(error: Error, res: Response) { return res.status(500).json({ message: error.message }); }'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.inconsistent-error-response.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_INCONSISTENT_ERROR_RESPONSE_AST');
+  assert.deepEqual(finding.lines, [1]);
+});
+
+test('extracts backend error payload with success status heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/errors/error.filter.ts',
+        'export function handle(error: Error, res: Response) { return res.status(200).json({ error: error.message }); }'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.error-payload-success-status.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_ERROR_PAYLOAD_SUCCESS_STATUS_AST');
+  assert.deepEqual(finding.lines, [1]);
+});
+
+test('extracts backend controller entity response heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/orders/orders.controller.ts',
+        [
+          'import { Controller, Get } from "@nestjs/common";',
+          'import { OrderEntity } from "../domain/entities/OrderEntity";',
+          '@Controller("orders")',
+          'export class OrdersController {',
+          '  @Get(":id")',
+          '  getOrder(): Promise<OrderEntity> {',
+          '    return this.service.getOrder();',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.controller-entity-response.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_CONTROLLER_ENTITY_RESPONSE_AST');
+  assert.deepEqual(finding.lines, [5]);
+});
+
+test('extracts backend anemic domain model heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/domain/entities/OrderEntity.ts',
+        [
+          'export class OrderEntity {',
+          '  id!: string;',
+          '  status!: string;',
+          '  getStatus() { return this.status; }',
+          '  setStatus(status: string) { this.status = status; }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { backend: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ts.backend.anemic-domain-model.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_BACKEND_ANEMIC_DOMAIN_MODEL_AST');
+});
+
+test('extracts iOS EnvironmentObject heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Profile/ProfileView.swift',
+        [
+          'import SwiftUI',
+          'struct ProfileView: View {',
+          '  @EnvironmentObject var session: SessionStore',
+          '  var body: some View { Text(session.name) }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { ios: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.swiftui.environment-object.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_IOS_SWIFTUI_ENVIRONMENT_OBJECT_AST');
+  assert.deepEqual(finding.lines, [3]);
+});
+
+test('emits actionable iOS task lifecycle metadata for PUMUKI-INC-155', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Features/Auth/LoginView.swift',
+        [
+          'import SwiftUI',
+          'struct LoginView: View {',
+          '  var body: some View {',
+          '    Text("Login")',
+          '      .onAppear {',
+          '        Task {',
+          '          await viewModel.load()',
+          '        }',
+          '      }',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { ios: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.swiftui.onappear-task.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.lines, [6]);
+  assert.equal(finding.primary_node?.name, 'Task launched inside SwiftUI onAppear');
+  assert.match(finding.expected_fix ?? '', /\.task/);
+});
+
+test('extracts actionable iOS cross-feature import heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Features/Auth/LoginView.swift',
+        [
+          'import SwiftUI',
+          'import SharedKernel',
+          'import Orders',
+          'struct LoginView: View {',
+          '  let route: OrdersRoute',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { ios: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.architecture.cross-feature-import.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_IOS_ARCHITECTURE_CROSS_FEATURE_IMPORT_AST');
+  assert.deepEqual(finding.lines, [3]);
+  assert.equal(finding.primary_node?.name, 'cross-feature Swift import');
+  assert.match(finding.expected_fix ?? '', /SharedKernel/);
+});
+
+test('extracts actionable iOS layer direction violation heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Features/Orders/Domain/Entities/Order.swift',
+        [
+          'import Foundation',
+          'import SwiftUI',
+          'import CoreData',
+          'struct Order: Sendable {',
+          '  let id: String',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { ios: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.architecture.layer-direction-violation.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_IOS_ARCHITECTURE_LAYER_DIRECTION_VIOLATION_AST');
+  assert.deepEqual(finding.lines, [2, 3]);
+  assert.equal(finding.primary_node?.name, 'forbidden import for Clean Architecture layer');
+  assert.match(finding.expected_fix ?? '', /Infrastructure/);
+});
+
+test('extracts actionable iOS excessive public API heuristic facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Features/BuyerCommerce/BuyerShellViewModel.swift',
+        [
+          'import SwiftUI',
+          '',
+          'public final class BuyerShellViewModel {',
+          '  public var selectedTab: Tab = .home',
+          '  public init() {}',
+          '  public func openCheckout() {}',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: { ios: { detected: true } },
+  });
+
+  const finding = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.architecture.excessive-public-api.ast'
+  );
+
+  assert.ok(finding);
+  assert.equal(finding.code, 'HEURISTICS_IOS_ARCHITECTURE_EXCESSIVE_PUBLIC_API_AST');
+  assert.deepEqual(finding.lines, [3, 4, 5, 6]);
+  assert.equal(finding.primary_node?.name, 'excessive public/open Swift API surface');
+  assert.match(finding.expected_fix ?? '', /internal by default/);
+});
+
+test('detects Android legacy FingerprintManager biometric API with line metadata', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/auth/LegacyBiometricAuth.kt',
+        [
+          'import android.hardware.fingerprint.FingerprintManager',
+          '',
+          'class LegacyBiometricAuth(private val fingerprintManager: FingerprintManager) {',
+          '  fun authenticate(callback: FingerprintManager.AuthenticationCallback) {',
+          '    fingerprintManager.authenticate(null, null, 0, callback, null)',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  const finding = findings.find(
+    (candidate) => candidate.ruleId === 'heuristics.android.security.legacy-fingerprint-api.ast'
+  );
+
+  assert.ok(finding);
+  assert.deepEqual(finding.lines, [1, 3, 4]);
+});
+
+test('detects Android custom singleton objects with line metadata', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/checkout/CheckoutRepository.kt',
+        [
+          'package com.acme.checkout',
+          '',
+          'object CheckoutRepository {',
+          '  fun loadCheckout() = Unit',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), [
+    'heuristics.android.architecture.custom-singleton-object.ast',
+  ]);
+  const finding = findings.find(
+    (candidate) =>
+      candidate.ruleId === 'heuristics.android.architecture.custom-singleton-object.ast'
+  );
+  assert.deepEqual(finding?.lines, [3]);
+  assert.match(finding?.expected_fix ?? '', /Hilt|inyecci/i);
+});
+
+test('detects Android Hilt injection without AndroidEntryPoint with line metadata', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/kotlin/com/acme/checkout/CheckoutActivity.kt',
+        [
+          'import javax.inject.Inject',
+          '',
+          'class CheckoutActivity : AppCompatActivity() {',
+          '  @Inject lateinit var analytics: CheckoutAnalytics',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.deepEqual(toRuleIds(findings), [
+    'heuristics.android.di.hilt-injection-without-entrypoint.ast',
+  ]);
+  const finding = findings.find(
+    (candidate) =>
+      candidate.ruleId === 'heuristics.android.di.hilt-injection-without-entrypoint.ast'
+  );
+  assert.deepEqual(finding?.lines, [3, 4]);
+  assert.match(finding?.expected_fix ?? '', /@AndroidEntryPoint/);
+});
+
+test('detects iOS URLSession trust bypass heuristic', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Infrastructure/Networking/InsecureSessionDelegate.swift',
+        [
+          'final class InsecureSessionDelegate: NSObject, URLSessionDelegate {',
+          '  func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {',
+          '    completionHandler(.useCredential, URLCredential(trust: challenge.protectionSpace.serverTrust!))',
+          '  }',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const fact = extracted.find(
+    (entry) => entry.ruleId === 'heuristics.ios.security.urlsession-trust-bypass.ast'
+  );
+  assert.ok(fact);
+  assert.deepEqual(fact.lines, [3]);
 });

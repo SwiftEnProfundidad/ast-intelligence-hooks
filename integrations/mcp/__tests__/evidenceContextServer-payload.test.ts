@@ -86,6 +86,8 @@ test('returns summary payload from dedicated summary endpoint', async () => {
           findings_by_platform?: Record<string, number>;
           highest_severity?: string | null;
           blocking_findings_count?: number;
+          blocking_causes_count?: number;
+          blocking_causes?: Array<{ ruleId: string; file?: string; message: string }>;
         };
         ledger_count?: number;
         ledger_files_count?: number;
@@ -251,6 +253,9 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.deepEqual(summary.snapshot?.findings_by_platform, { backend: 1 });
       assert.equal(summary.snapshot?.highest_severity, 'ERROR');
       assert.equal(summary.snapshot?.blocking_findings_count, 1);
+      assert.equal(summary.snapshot?.blocking_causes_count, 1);
+      assert.equal(summary.snapshot?.blocking_causes?.[0]?.ruleId, 'backend.avoid-explicit-any');
+      assert.equal(summary.snapshot?.blocking_causes?.[0]?.file, 'apps/backend/src/main.ts');
       assert.equal(summary.ledger_count, 2);
       assert.equal(summary.ledger_files_count, 2);
       assert.equal(summary.ledger_rules_count, 2);

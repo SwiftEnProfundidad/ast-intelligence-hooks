@@ -4,9 +4,11 @@ import {
   truncateNotificationText,
 } from './framework-menu-system-notifications-text';
 import {
+  buildNotificationTrackingRemediation,
   extractNotificationTrackingContext,
   TRACKING_BLOCKED_REMEDIATION,
 } from './framework-menu-system-notifications-tracking';
+import { buildLegacySkillCauseRemediation } from './framework-menu-system-notifications-legacy-skill-cause';
 
 type BlockedRemediationVariant = 'banner' | 'dialog';
 
@@ -20,8 +22,10 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_BRANCH_MISMATCH: 'La evidencia no corresponde a esta rama. Regenera el receipt/evidencia y vuelve a validar.',
   EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera la evidencia desde este repositorio y vuelve a validar.',
   PRE_PUSH_UPSTREAM_MISSING: 'Configura upstream con `git push --set-upstream origin <branch>` y repite PRE_PUSH.',
-  SDD_SESSION_MISSING: 'Abre la sesión SDD del change activo y repite la validación.',
-  SDD_SESSION_INVALID: 'Refresca la sesión SDD activa y vuelve a validar esta fase.',
+  SDD_SESSION_MISSING:
+    'Abre `openspec/changes/` y copia la carpeta de tu tarea, por ejemplo `rgo-1900-35`. Ejecuta `pumuki sdd session --open --change=<id>` usando ese nombre. Después vuelve a intentar el commit; PRE_WRITE automáticamente.',
+  SDD_SESSION_INVALID:
+    'Refresca la sesión SDD activa: `pumuki sdd session --refresh --ttl-minutes=90`. Después vuelve a intentar el commit; Pumuki ejecutará PRE_WRITE automáticamente.',
   OPENSPEC_MISSING: 'Instala OpenSpec en este repositorio y vuelve a validar el gate.',
   MCP_ENTERPRISE_RECEIPT_MISSING: 'Genera el receipt enterprise de MCP y vuelve a validar.',
   BACKEND_AVOID_EXPLICIT_ANY: 'Sustituye `any` por tipos concretos en backend y relanza el gate.',
@@ -31,6 +35,10 @@ const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
   TRACKING_CANONICAL_SOURCE_CONFLICT: TRACKING_BLOCKED_REMEDIATION,
   ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH:
     'Ejecuta `pumuki policy reconcile --strict --json` y revalida antes de continuar.',
+  EVIDENCE_PREWRITE_WORKTREE_WARN:
+    'Reduce el worktree pendiente a un slice atómico antes del commit: stagea solo la tarea activa o guarda el resto en stash nombrado, y vuelve a intentar el commit.',
+  EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT:
+    'El worktree supera el límite permitido: divide cambios por scope en commits atómicos o stashes nombrados antes de continuar.',
 };
 
 const BLOCKED_REMEDIATION_MAX_LENGTH_BY_VARIANT: Readonly<Record<BlockedRemediationVariant, number>> = {
@@ -41,6 +49,9 @@ const BLOCKED_REMEDIATION_MAX_LENGTH_BY_VARIANT: Readonly<Record<BlockedRemediat
 const GENERIC_BLOCKED_REMEDIATION =
   'Corrige el bloqueo indicado y vuelve a ejecutar el comando.';
 
+const buildMultipleCausesRemediation = (count: number): string =>
+  `Corrige las ${count} causas bloqueantes listadas arriba, empezando por violaciones AST/skills de codigo cuando existan, y vuelve a ejecutar el gate.`;
+
 const normalizeBlockedRemediation = (value: string): string =>
   normalizeNotificationText(value)
     .replace(/^cómo solucionarlo:\s*/i, '')
@@ -50,6 +61,81 @@ const normalizeBlockedRemediation = (value: string): string =>
 
 const resolveFallbackRemediation = (causeCode: string): string =>
   BLOCKED_REMEDIATION_BY_CODE[causeCode] ?? GENERIC_BLOCKED_REMEDIATION;
+
+const resolveSddSessionCauseCode = (
+  event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>,
+  causeCode: string
+): 'SDD_SESSION_MISSING' | 'SDD_SESSION_INVALID' | null => {
+  if (causeCode === 'SDD_SESSION_MISSING' || causeCode === 'SDD_SESSION_INVALID') {
+    return causeCode;
+  }
+  const searchable = [
+    event.causeMessage,
+    event.remediation,
+    ...(event.blockingCauses ?? []).flatMap((cause) => [
+      cause.code,
+      cause.ruleId,
+      cause.message,
+      cause.remediation,
+    ]),
+  ]
+    .filter((value): value is string => typeof value === 'string')
+    .join(' ')
+    .toLowerCase();
+  if (
+    searchable.includes('sdd_session_missing') ||
+    searchable.includes('no hay sesión sdd activa') ||
+    searchable.includes('no hay sesion sdd activa') ||
+    searchable.includes('no active sdd session')
+  ) {
+    return 'SDD_SESSION_MISSING';
+  }
+  if (
+    searchable.includes('sdd_session_invalid') ||
+    searchable.includes('sesión sdd actual no es válida') ||
+    searchable.includes('sesion sdd actual no es valida') ||
+    searchable.includes('invalid sdd session')
+  ) {
+    return 'SDD_SESSION_INVALID';
+  }
+  return null;
+};
+
+const resolveWorktreeHygieneCauseCode = (
+  event: Extract<PumukiCriticalNotificationEvent, { kind: 'gate.blocked' }>,
+  causeCode: string
+): 'EVIDENCE_PREWRITE_WORKTREE_WARN' | 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT' | null => {
+  if (
+    causeCode === 'EVIDENCE_PREWRITE_WORKTREE_WARN' ||
+    causeCode === 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT'
+  ) {
+    return causeCode;
+  }
+  const searchable = [
+    event.causeMessage,
+    event.remediation,
+    ...(event.blockingCauses ?? []).flatMap((cause) => [
+      cause.code,
+      cause.ruleId,
+      cause.message,
+      cause.remediation,
+    ]),
+  ]
+    .filter((value): value is string => typeof value === 'string')
+    .join(' ')
+    .toLowerCase();
+  if (searchable.includes('evidence_prewrite_worktree_over_limit')) {
+    return 'EVIDENCE_PREWRITE_WORKTREE_OVER_LIMIT';
+  }
+  if (
+    searchable.includes('evidence_prewrite_worktree_warn') ||
+    searchable.includes('worktree hygiene warning') ||
+    searchable.includes('warn_threshold=')
+  ) {
+    return 'EVIDENCE_PREWRITE_WORKTREE_WARN';
+  }
+  return null;
+};
 
 const isGenericPolicyReconcileRemediation = (message: string): boolean => {
   const normalized = message.toLowerCase();
@@ -102,11 +188,46 @@ export const resolveBlockedRemediation = (
 ): string => {
   const variant = options?.variant ?? 'dialog';
   const maxLength = BLOCKED_REMEDIATION_MAX_LENGTH_BY_VARIANT[variant];
+  const sddSessionCauseCode = resolveSddSessionCauseCode(event, causeCode);
+  if (sddSessionCauseCode) {
+    return truncateNotificationText(
+      resolveFallbackRemediation(sddSessionCauseCode),
+      maxLength
+    );
+  }
+  const worktreeHygieneCauseCode = resolveWorktreeHygieneCauseCode(event, causeCode);
+  if (worktreeHygieneCauseCode) {
+    return truncateNotificationText(
+      resolveFallbackRemediation(worktreeHygieneCauseCode),
+      maxLength
+    );
+  }
+  const blockingCausesCount = event.blockingCauses?.length ?? 0;
+  if (blockingCausesCount > 1) {
+    return truncateNotificationText(
+      buildMultipleCausesRemediation(blockingCausesCount),
+      maxLength
+    );
+  }
+  const firstCauseWithRemediation = event.blockingCauses?.find(
+    (cause) => cause.remediation && cause.remediation.trim().length > 0
+  );
+  if (firstCauseWithRemediation?.remediation) {
+    return truncateNotificationText(
+      normalizeBlockedRemediation(firstCauseWithRemediation.remediation),
+      maxLength
+    );
+  }
   const fromEvent = event.remediation
     ? normalizeBlockedRemediation(event.remediation)
     : '';
-  if (extractNotificationTrackingContext(event.causeMessage)) {
-    return truncateNotificationText(TRACKING_BLOCKED_REMEDIATION, maxLength);
+  const trackingContext = extractNotificationTrackingContext(event.causeMessage);
+  if (trackingContext) {
+    return truncateNotificationText(buildNotificationTrackingRemediation(trackingContext), maxLength);
+  }
+  const legacySkillCauseRemediation = buildLegacySkillCauseRemediation(event.causeMessage);
+  if (legacySkillCauseRemediation) {
+    return truncateNotificationText(legacySkillCauseRemediation, maxLength);
   }
   if (fromEvent.length > 0) {
     if (

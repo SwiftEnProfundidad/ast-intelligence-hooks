@@ -346,6 +346,275 @@ test('evaluateAiGate bloquea cuando evidencia válida ya está BLOCKED', () => {
   assert.equal(result.status, 'BLOCKED');
   assert.equal(result.allowed, false);
   assert.equal(result.violations.some((item) => item.code === 'EVIDENCE_GATE_BLOCKED'), true);
+  assert.match(
+    result.violations.find((item) => item.code === 'EVIDENCE_GATE_BLOCKED')?.message ?? '',
+    /backend\.avoid-explicit-any.*apps\/backend\/src\/service\.ts/
+  );
+});
+
+test('evaluateAiGate expone causas accionables cuando la evidencia está bloqueada por snapshot findings', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          snapshot: {
+            ...base.snapshot,
+            outcome: 'BLOCK',
+            findings: [
+              {
+                ruleId: 'skills.ios.no-foreach-indices',
+                severity: 'ERROR',
+                code: 'HEURISTICS_IOS_SWIFTUI_FOREACH_INDICES_AST',
+                message: 'ForEach over indices is not allowed in SwiftUI production code.',
+                file: 'apps/ios/Presentation/Features/BuyerOnboardingView.swift',
+                lines: 42,
+                blocking: true,
+                expected_fix: 'Use stable Identifiable data or ForEach(items, id: \\.id).',
+              },
+            ],
+          },
+          ai_gate: {
+            ...base.ai_gate,
+            status: 'BLOCKED',
+            violations: [],
+          },
+          severity_metrics: {
+            ...base.severity_metrics,
+            gate_status: 'BLOCKED',
+            total_violations: 1,
+            by_severity: {
+              ...base.severity_metrics.by_severity,
+              ERROR: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  const violation = result.violations.find((item) => item.code === 'EVIDENCE_GATE_BLOCKED');
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
+  assert.match(violation?.message ?? '', /skills\.ios\.no-foreach-indices/);
+  assert.match(violation?.message ?? '', /BuyerOnboardingView\.swift/);
+  assert.match(violation?.message ?? '', /Use stable Identifiable data/);
+  assert.equal(
+    (violation as { ruleId?: string } | undefined)?.ruleId,
+    'skills.ios.no-foreach-indices'
+  );
+  assert.equal(
+    (violation as { file?: string } | undefined)?.file,
+    'apps/ios/Presentation/Features/BuyerOnboardingView.swift'
+  );
+  assert.equal((violation as { line?: number } | undefined)?.line, 42);
+});
+
+test('evaluateAiGate expone causas accionables para findings WARN bloqueantes', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          snapshot: {
+            ...base.snapshot,
+            outcome: 'BLOCK',
+            findings: [
+              {
+                ruleId: 'skills.ios.guideline.ios.magic-numbers-usar-constantes-con-nombres',
+                severity: 'WARN',
+                code: 'SKILLS_IOS_MAGIC_NUMBERS',
+                message: 'Magic numbers - Usar constantes con nombres',
+                file: 'apps/ios/Presentation/Features/BuyerCommerce/BuyerShellView.swift',
+                lines: [193, 280],
+                blocking: true,
+                expected_fix: 'Extrae constantes con nombre para las métricas de layout.',
+              },
+            ],
+          },
+          ai_gate: {
+            ...base.ai_gate,
+            status: 'BLOCKED',
+            violations: [],
+          },
+          severity_metrics: {
+            ...base.severity_metrics,
+            gate_status: 'BLOCKED',
+            total_violations: 1,
+            by_severity: {
+              ...base.severity_metrics.by_severity,
+              WARN: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  const violation = result.violations.find((item) => item.code === 'EVIDENCE_GATE_BLOCKED');
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
+  assert.match(violation?.message ?? '', /skills\.ios\.guideline\.ios\.magic-numbers/);
+  assert.match(violation?.message ?? '', /BuyerShellView\.swift/);
+  assert.match(violation?.message ?? '', /193,280/);
+  assert.deepEqual((violation as { lines?: readonly number[] } | undefined)?.lines, [193, 280]);
+});
+
+test('evaluateAiGate no convierte prefer-swift-testing WARN en bloqueo de PRE_WRITE', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          snapshot: {
+            ...base.snapshot,
+            stage: 'PRE_WRITE',
+            outcome: 'BLOCK',
+            findings: [
+              {
+                ruleId: 'skills.ios.prefer-swift-testing',
+                severity: 'WARN',
+                code: 'SKILLS_IOS_PREFER_SWIFT_TESTING',
+                message: 'XCTest - Solo para proyectos legacy o UI tests',
+                file: 'apps/ios/Tests/Mac/Presentation/Features/BuyerSocialAuthAvailabilityTests.spec.swift',
+                lines: 1,
+                blocking: true,
+                expected_fix: 'Mantén XCTest solo en tests legacy o UI tests; migra a Swift Testing si este test no es brownfield.',
+              },
+            ],
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              stage: 'PRE_WRITE',
+              active_rule_ids: ['skills.ios.prefer-swift-testing'],
+              evaluated_rule_ids: ['skills.ios.prefer-swift-testing'],
+              matched_rule_ids: ['skills.ios.prefer-swift-testing'],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 1,
+                evaluated: 1,
+                matched: 1,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+          },
+          ai_gate: {
+            ...base.ai_gate,
+            status: 'BLOCKED',
+            violations: [
+              {
+                ruleId: 'skills.ios.prefer-swift-testing',
+                code: 'SKILLS_IOS_PREFER_SWIFT_TESTING',
+                message: 'XCTest - Solo para proyectos legacy o UI tests',
+                severity: 'WARN',
+                blocking: true,
+              },
+            ],
+          },
+          severity_metrics: {
+            ...base.severity_metrics,
+            gate_status: 'BLOCKED',
+            total_violations: 1,
+            by_severity: {
+              ...base.severity_metrics.by_severity,
+              WARN: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  const violation = result.violations.find((item) => item.code === 'EVIDENCE_GATE_BLOCKED');
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(violation?.severity, 'WARN');
+  assert.match(violation?.message ?? '', /did not expose any blocking cause/);
+});
+
+test('evaluateAiGate no bloquea PRE_WRITE cuando la evidencia bloqueada solo contiene WARN no bloqueantes', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+      preWriteWorktreeHygiene: {
+        enabled: false,
+      },
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          snapshot: {
+            ...base.snapshot,
+            stage: 'PRE_WRITE',
+            outcome: 'BLOCK',
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              stage: 'PRE_WRITE',
+            },
+          },
+          ai_gate: {
+            ...base.ai_gate,
+            status: 'BLOCKED',
+            violations: [
+              {
+                ruleId: 'ai_gate.repo_policy.EVIDENCE_PREWRITE_WORKTREE_WARN',
+                code: 'EVIDENCE_PREWRITE_WORKTREE_WARN',
+                message: 'PRE_WRITE worktree hygiene warning.',
+                severity: 'WARN',
+                blocking: false,
+              },
+            ],
+          },
+          rulesets: [
+            {
+              id: 'skills.backend',
+              platform: 'skills',
+              bundle: 'backend-guidelines',
+              version: '1.0.0',
+            },
+          ],
+          severity_metrics: {
+            ...base.severity_metrics,
+            gate_status: 'BLOCKED',
+            total_violations: 1,
+            by_severity: {
+              ...base.severity_metrics.by_severity,
+              WARN: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+      loadRequiredSkillsLock: () => sampleBackendSkillsLock(),
+    }
+  );
+
+  const violation = result.violations.find((item) => item.code === 'EVIDENCE_GATE_BLOCKED');
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(violation?.severity, 'WARN');
+  assert.match(violation?.message ?? '', /did not expose any blocking cause/);
 });
 
 test('evaluateAiGate normaliza package_version/lifecycle_version cuando captureRepoState llega desalineado', () => {
@@ -425,6 +694,23 @@ test('evaluateAiGate permite continuar cuando evidencia está fresca y rama cump
     digest: 'sha256:abc123',
     generated_at: '2026-02-20T12:00:00.000Z',
   });
+});
+
+test('evaluateAiGate mantiene PRE_WRITE como stage resuelto real', () => {
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.policy.stage, 'PRE_WRITE');
+  assert.equal(result.policy.resolved_stage, 'PRE_WRITE');
 });
 
 test('evaluateAiGate bloquea PRE_COMMIT cuando la higiene de worktree supera umbral crítico', () => {
@@ -689,7 +975,7 @@ test('evaluateAiGate bloquea PRE_WRITE ante incoherencias múltiples de evidenci
   assert.equal(codes.has('EVIDENCE_TIMESTAMP_FUTURE'), true);
 });
 
-test('evaluateAiGate mantiene PRE_WRITE en advisory cuando falta cobertura de prefijos skills por plataforma detectada', () => {
+test('evaluateAiGate bloquea PRE_WRITE cuando falta cobertura de prefijos skills por plataforma detectada', () => {
   const base = sampleEvidence();
   const result = evaluateAiGate(
     {
@@ -736,13 +1022,13 @@ test('evaluateAiGate mantiene PRE_WRITE en advisory cuando falta cobertura de pr
     }
   );
 
-  assert.equal(result.status, 'ALLOWED');
-  assert.equal(result.allowed, true);
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
   const violation = result.violations.find(
     (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
   );
   assert.ok(violation);
-  assert.equal(violation.severity, 'WARN');
+  assert.equal(violation.severity, 'ERROR');
 });
 
 test('evaluateAiGate bloquea PRE_WRITE cuando active_rule_ids está vacío con plataforma de código detectada', () => {
@@ -887,7 +1173,7 @@ test('evaluateAiGate bloquea PRE_WRITE cuando active_rule_ids está vacío y la 
   assert.match(violation?.message ?? '', /inferred code platforms=\[backend\]/i);
 });
 
-test('evaluateAiGate mantiene PRE_WRITE en advisory cuando faltan bundles skills requeridos por plataforma detectada', () => {
+test('evaluateAiGate bloquea PRE_WRITE cuando faltan bundles skills requeridos por plataforma detectada', () => {
   const base = sampleEvidence();
   const result = evaluateAiGate(
     {
@@ -928,13 +1214,13 @@ test('evaluateAiGate mantiene PRE_WRITE en advisory cuando faltan bundles skills
     }
   );
 
-  assert.equal(result.status, 'ALLOWED');
-  assert.equal(result.allowed, true);
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
   const violation = result.violations.find(
     (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING'
   );
   assert.ok(violation);
-  assert.equal(violation.severity, 'WARN');
+  assert.equal(violation.severity, 'ERROR');
 });
 
 test('evaluateAiGate permite PRE_WRITE con plataformas detectadas cuando skills están completas', () => {
@@ -1078,8 +1364,418 @@ test('evaluateAiGate no bloquea PRE_WRITE de iOS productivo por regla crítica d
     result.violations.some(
       (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
     ),
-    true
+    false
   );
+  const iosRequirement = result.skills_contract.requirements.find(
+    (requirement) => requirement.platform === 'ios'
+  );
+  assert.deepEqual(iosRequirement?.required_critical_rule_ids, []);
+  assert.deepEqual(iosRequirement?.missing_critical_rule_ids, []);
+});
+
+test('evaluateAiGate bloquea PRE_WRITE cuando el slice iOS toca tests y falta regla crítica de calidad', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-ios-test-quality-'));
+  try {
+    execFileSync('git', ['init'], { cwd: repoRoot, stdio: 'ignore' });
+    mkdirSync(join(repoRoot, 'apps/ios/Tests/Presentation'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'apps/ios/Tests/Presentation/SplashViewTests.swift'),
+      'import XCTest\nfinal class SplashViewTests: XCTestCase {}\n'
+    );
+
+    const base = sampleEvidence();
+    const result = evaluateAiGate(
+      {
+        repoRoot,
+        stage: 'PRE_WRITE',
+      },
+      {
+        now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+        readEvidenceResult: () =>
+          validEvidenceResult({
+            ...base,
+            repo_state: {
+              ...base.repo_state!,
+              repo_root: repoRoot,
+            },
+            platforms: {
+              ios: {
+                detected: true,
+                confidence: 'HIGH',
+              },
+            },
+            rulesets: [
+              {
+                platform: 'skills',
+                bundle: 'ios-guidelines@1.0.0',
+                hash: 'skills-ios-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-concurrency-guidelines@1.0.0',
+                hash: 'skills-ios-concurrency-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+                hash: 'skills-ios-swiftui-hash',
+              },
+            ],
+            snapshot: {
+              ...base.snapshot,
+              rules_coverage: {
+                ...base.snapshot.rules_coverage!,
+                active_rule_ids: ['skills.ios.no-force-unwrap'],
+                evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
+                matched_rule_ids: [],
+                unevaluated_rule_ids: [],
+                counts: {
+                  active: 1,
+                  evaluated: 1,
+                  matched: 0,
+                  unevaluated: 0,
+                },
+                coverage_ratio: 1,
+              },
+            },
+          }),
+        captureRepoState: () => ({
+          ...sampleEvidence().repo_state!,
+          repo_root: repoRoot,
+          git: {
+            ...sampleEvidence().repo_state!.git,
+            pending_changes: 1,
+            staged: 1,
+            unstaged: 0,
+          },
+        }),
+      }
+    );
+
+    assert.equal(result.status, 'BLOCKED');
+    assert.equal(result.allowed, false);
+    assert.equal(
+      result.violations.some(
+        (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+      ),
+      true
+    );
+    const iosRequirement = result.skills_contract.requirements.find(
+      (requirement) => requirement.platform === 'ios'
+    );
+    assert.deepEqual(iosRequirement?.required_critical_rule_ids, [
+      'skills.ios.critical-test-quality',
+    ]);
+    assert.deepEqual(iosRequirement?.missing_critical_rule_ids, [
+      'skills.ios.critical-test-quality',
+    ]);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('evaluateAiGate acepta prefer-swift-testing evaluado como cobertura equivalente de critical-test-quality en XCTest brownfield', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-ios-xctest-brownfield-quality-'));
+  try {
+    execFileSync('git', ['init'], { cwd: repoRoot, stdio: 'ignore' });
+    mkdirSync(join(repoRoot, 'apps/ios/Tests/Mac/Presentation/Features'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'apps/ios/Tests/Mac/Presentation/Features/BuyerSocialAuthAvailabilityTests.spec.swift'),
+      [
+        'import XCTest',
+        'final class BuyerSocialAuthAvailabilityTests: XCTestCase {',
+        '  func test_providerAvailability_isVisible() {}',
+        '}',
+        '',
+      ].join('\n')
+    );
+    execFileSync(
+      'git',
+      ['add', 'apps/ios/Tests/Mac/Presentation/Features/BuyerSocialAuthAvailabilityTests.spec.swift'],
+      { cwd: repoRoot, stdio: 'ignore' }
+    );
+
+    const base = sampleEvidence();
+    const result = evaluateAiGate(
+      {
+        repoRoot,
+        stage: 'PRE_WRITE',
+      },
+      {
+        now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+        readEvidenceResult: () =>
+          validEvidenceResult({
+            ...base,
+            repo_state: {
+              ...base.repo_state!,
+              repo_root: repoRoot,
+            },
+            platforms: {
+              ios: {
+                detected: true,
+                confidence: 'HIGH',
+              },
+            },
+            rulesets: [
+              {
+                platform: 'skills',
+                bundle: 'ios-guidelines@1.0.0',
+                hash: 'skills-ios-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-concurrency-guidelines@1.0.0',
+                hash: 'skills-ios-concurrency-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+                hash: 'skills-ios-swiftui-hash',
+              },
+            ],
+            snapshot: {
+              ...base.snapshot,
+              stage: 'PRE_WRITE',
+              rules_coverage: {
+                ...base.snapshot.rules_coverage!,
+                stage: 'PRE_WRITE',
+                active_rule_ids: [
+                  'skills.ios.no-force-unwrap',
+                  'skills.ios.prefer-swift-testing',
+                ],
+                evaluated_rule_ids: [
+                  'skills.ios.no-force-unwrap',
+                  'skills.ios.prefer-swift-testing',
+                ],
+                matched_rule_ids: ['skills.ios.prefer-swift-testing'],
+                unevaluated_rule_ids: [],
+                counts: {
+                  active: 2,
+                  evaluated: 2,
+                  matched: 1,
+                  unevaluated: 0,
+                },
+                coverage_ratio: 1,
+              },
+            },
+          }),
+        captureRepoState: () => ({
+          ...sampleEvidence().repo_state!,
+          repo_root: repoRoot,
+          git: {
+            ...sampleEvidence().repo_state!.git,
+            pending_changes: 1,
+            staged: 1,
+            unstaged: 0,
+          },
+        }),
+      }
+    );
+
+    assert.equal(result.status, 'ALLOWED');
+    assert.equal(result.allowed, true);
+    assert.equal(
+      result.violations.some(
+        (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+      ),
+      false
+    );
+    const iosRequirement = result.skills_contract.requirements.find(
+      (requirement) => requirement.platform === 'ios'
+    );
+    assert.deepEqual(iosRequirement?.required_critical_rule_ids, [
+      'skills.ios.critical-test-quality',
+    ]);
+    assert.deepEqual(iosRequirement?.missing_critical_rule_ids, []);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('evaluateAiGate no exige critical-test-quality para staged iOS productivo aunque haya tests unstaged', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-ios-product-slice-'));
+  try {
+    execFileSync('git', ['init'], { cwd: repoRoot, stdio: 'ignore' });
+    mkdirSync(join(repoRoot, 'apps/ios/Presentation/Views'), { recursive: true });
+    mkdirSync(join(repoRoot, 'apps/ios/Tests/Mac/Presentation'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'apps/ios/Presentation/Views/SplashView.swift'),
+      'import SwiftUI\nstruct SplashView: View { var body: some View { Text(\"Hola\") } }\n'
+    );
+    execFileSync('git', ['add', 'apps/ios/Presentation/Views/SplashView.swift'], {
+      cwd: repoRoot,
+      stdio: 'ignore',
+    });
+    writeFileSync(
+      join(repoRoot, 'apps/ios/Tests/Mac/Presentation/SplashViewTests.spec.swift'),
+      'import XCTest\nfinal class SplashViewTests: XCTestCase {}\n'
+    );
+
+    const base = sampleEvidence();
+    const result = evaluateAiGate(
+      {
+        repoRoot,
+        stage: 'PRE_WRITE',
+      },
+      {
+        now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+        readEvidenceResult: () =>
+          validEvidenceResult({
+            ...base,
+            platforms: {
+              ios: {
+                detected: true,
+                confidence: 'HIGH',
+              },
+            },
+            rulesets: [
+              {
+                platform: 'skills',
+                bundle: 'ios-guidelines@1.0.0',
+                hash: 'skills-ios-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-concurrency-guidelines@1.0.0',
+                hash: 'skills-ios-concurrency-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+                hash: 'skills-ios-swiftui-hash',
+              },
+            ],
+            snapshot: {
+              ...base.snapshot,
+              rules_coverage: {
+                ...base.snapshot.rules_coverage!,
+                active_rule_ids: ['skills.ios.no-force-unwrap'],
+                evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
+                matched_rule_ids: [],
+                unevaluated_rule_ids: [],
+                counts: {
+                  active: 1,
+                  evaluated: 1,
+                  matched: 0,
+                  unevaluated: 0,
+                },
+                coverage_ratio: 1,
+              },
+            },
+          }),
+        captureRepoState: () => ({
+          ...sampleEvidence().repo_state!,
+          repo_root: repoRoot,
+          git: {
+            ...sampleEvidence().repo_state!.git,
+            pending_changes: 2,
+            staged: 1,
+            unstaged: 1,
+          },
+        }),
+      }
+    );
+
+    assert.equal(
+      result.violations.some(
+        (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+      ),
+      false
+    );
+    const iosRequirement = result.skills_contract.requirements.find(
+      (requirement) => requirement.platform === 'ios'
+    );
+    assert.deepEqual(iosRequirement?.required_critical_rule_ids, []);
+    assert.deepEqual(iosRequirement?.missing_critical_rule_ids, []);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('evaluateAiGate no exige critical-test-quality en PRE_WRITE sin cambios efectivos', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-ios-clean-scope-'));
+  try {
+    execFileSync('git', ['init'], { cwd: repoRoot, stdio: 'ignore' });
+
+    const base = sampleEvidence();
+    const result = evaluateAiGate(
+      {
+        repoRoot,
+        stage: 'PRE_WRITE',
+      },
+      {
+        now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+        readEvidenceResult: () =>
+          validEvidenceResult({
+            ...base,
+            platforms: {
+              ios: {
+                detected: true,
+                confidence: 'HIGH',
+              },
+            },
+            rulesets: [
+              {
+                platform: 'skills',
+                bundle: 'ios-guidelines@1.0.0',
+                hash: 'skills-ios-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-concurrency-guidelines@1.0.0',
+                hash: 'skills-ios-concurrency-hash',
+              },
+              {
+                platform: 'skills',
+                bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+                hash: 'skills-ios-swiftui-hash',
+              },
+            ],
+            snapshot: {
+              ...base.snapshot,
+              rules_coverage: {
+                ...base.snapshot.rules_coverage!,
+                active_rule_ids: ['skills.ios.no-force-unwrap'],
+                evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
+                matched_rule_ids: [],
+                unevaluated_rule_ids: [],
+                counts: {
+                  active: 1,
+                  evaluated: 1,
+                  matched: 0,
+                  unevaluated: 0,
+                },
+                coverage_ratio: 1,
+              },
+            },
+          }),
+        captureRepoState: () => ({
+          ...sampleEvidence().repo_state!,
+          repo_root: repoRoot,
+          git: {
+            ...sampleEvidence().repo_state!.git,
+            pending_changes: 0,
+            staged: 0,
+            unstaged: 0,
+          },
+        }),
+      }
+    );
+
+    assert.equal(
+      result.violations.some(
+        (item) => item.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+      ),
+      false
+    );
+    const iosRequirement = result.skills_contract.requirements.find(
+      (requirement) => requirement.platform === 'ios'
+    );
+    assert.deepEqual(iosRequirement?.required_critical_rule_ids, []);
+    assert.deepEqual(iosRequirement?.missing_critical_rule_ids, []);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
 });
 
 test('evaluateAiGate permite PRE_WRITE cuando iOS detectado incluye regla crítica de calidad de tests', () => {
@@ -1362,7 +2058,7 @@ test('evaluateAiGate bloquea PRE_WRITE cuando se requiere recibo MCP y no existe
   );
 });
 
-test('evaluateAiGate mantiene PRE_PUSH en advisory cuando contrato skills/policy queda incompleto para plataforma detectada', () => {
+test('evaluateAiGate bloquea PRE_PUSH cuando contrato skills/policy queda incompleto para plataforma detectada', () => {
   const base = sampleEvidence();
   const result = evaluateAiGate(
     {
@@ -1409,8 +2105,8 @@ test('evaluateAiGate mantiene PRE_PUSH en advisory cuando contrato skills/policy
     }
   );
 
-  assert.equal(result.status, 'ALLOWED');
-  assert.equal(result.allowed, true);
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
   assert.equal(
     result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
     true
@@ -1418,7 +2114,7 @@ test('evaluateAiGate mantiene PRE_PUSH en advisory cuando contrato skills/policy
   assert.equal(
     result.violations.find((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE')
       ?.severity,
-    'WARN'
+    'ERROR'
   );
   assert.equal(result.skills_contract?.status, 'FAIL');
   assert.equal(
@@ -2037,6 +2733,111 @@ test('evaluateAiGate no arrastra plataformas desde el árbol completo del repo e
   }
 });
 
+test('evaluateAiGate detecta plataforma iOS desde staged Swift cuando PRE_WRITE evidence no materializa platforms', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
+    const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-prewrite-ios-staged-'));
+
+    try {
+      execFileSync('git', ['init'], { cwd: tmpRoot, stdio: 'ignore' });
+      mkdirSync(join(tmpRoot, 'apps/ios/Presentation/Features/BuyerCommerce'), { recursive: true });
+      writeFileSync(
+        join(tmpRoot, 'apps/ios/Presentation/Features/BuyerCommerce/BuyerAuthScreen.swift'),
+        'struct BuyerAuthScreen {}\n'
+      );
+      execFileSync(
+        'git',
+        ['add', 'apps/ios/Presentation/Features/BuyerCommerce/BuyerAuthScreen.swift'],
+        { cwd: tmpRoot, stdio: 'ignore' }
+      );
+
+      const base = sampleEvidence();
+      const result = evaluateAiGate(
+        {
+          repoRoot: tmpRoot,
+          stage: 'PRE_WRITE',
+        },
+        {
+          now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+          readEvidenceResult: () =>
+            validEvidenceResult({
+              ...base,
+              platforms: {},
+              rulesets: [
+                {
+                  platform: 'skills',
+                  bundle: 'ios-guidelines@1.0.0',
+                  hash: 'skills-ios-hash',
+                },
+                {
+                  platform: 'skills',
+                  bundle: 'ios-concurrency-guidelines@1.0.0',
+                  hash: 'skills-ios-concurrency-hash',
+                },
+                {
+                  platform: 'skills',
+                  bundle: 'ios-swiftui-expert-guidelines@1.0.0',
+                  hash: 'skills-ios-swiftui-hash',
+                },
+              ],
+              repo_state: {
+                ...base.repo_state!,
+                repo_root: tmpRoot,
+              },
+              snapshot: {
+                ...base.snapshot,
+                stage: 'PRE_WRITE',
+                rules_coverage: {
+                  ...base.snapshot.rules_coverage!,
+                  stage: 'PRE_WRITE',
+                  active_rule_ids: ['skills.ios.no-force-unwrap'],
+                  evaluated_rule_ids: ['skills.ios.no-force-unwrap'],
+                  matched_rule_ids: [],
+                  unevaluated_rule_ids: [],
+                  counts: {
+                    active: 1,
+                    evaluated: 1,
+                    matched: 0,
+                    unevaluated: 0,
+                  },
+                  coverage_ratio: 1,
+                },
+              },
+            }),
+          captureRepoState: () => ({
+            ...sampleEvidence().repo_state!,
+            repo_root: tmpRoot,
+            git: {
+              ...sampleEvidence().repo_state!.git,
+              pending_changes: 1,
+              staged: 1,
+              unstaged: 0,
+            },
+          }),
+          loadRequiredSkillsLock: () => sampleMultiPlatformSkillsLock(),
+        }
+      );
+
+      assert.equal(result.status, 'ALLOWED');
+      assert.equal(result.allowed, true);
+      assert.equal(result.skills_contract?.enforced, true);
+      assert.equal(result.skills_contract?.status, 'PASS');
+      assert.deepEqual(result.skills_contract?.detected_platforms, ['ios']);
+      assert.equal(
+        result.skills_contract?.violations.some(
+          (item) => item.code === 'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED'
+        ),
+        false
+      );
+      assert.equal(
+        result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
+        false
+      );
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+});
+
 test('evaluateAiGate no bloquea PRE_WRITE cuando el worktree está limpio y no hay plataformas activas detectables', async () => {
   await withSkillsEnforcementEnv('strict', async () => {
     const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-prewrite-clean-'));
@@ -2178,6 +2979,203 @@ test('evaluateAiGate trata PRE_WRITE de tooling puro como no-op aunque existan p
         false
       );
       assert.deepEqual(result.skills_contract?.detected_platforms, []);
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+});
+
+test('evaluateAiGate no activa contrato skills iOS para staged documental BDD bajo apps/ios', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
+    const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-prewrite-ios-docs-'));
+
+    try {
+      execFileSync('git', ['init'], { cwd: tmpRoot, stdio: 'ignore' });
+      mkdirSync(join(tmpRoot, 'apps/ios/Documentation/Features'), { recursive: true });
+      mkdirSync(join(tmpRoot, 'docs/technical/08-validation/refactor'), { recursive: true });
+      writeFileSync(
+        join(tmpRoot, 'apps/ios/Documentation/Features/Authentication.feature'),
+        'Feature: Authentication provider blockers\n'
+      );
+      writeFileSync(join(tmpRoot, 'docs/RURALGO_SEGUIMIENTO.md'), '# Seguimiento\n');
+      writeFileSync(
+        join(tmpRoot, 'docs/technical/08-validation/refactor/pumuki-integration-feedback.md'),
+        '# Pumuki feedback\n'
+      );
+      execFileSync(
+        'git',
+        [
+          'add',
+          'apps/ios/Documentation/Features/Authentication.feature',
+          'docs/RURALGO_SEGUIMIENTO.md',
+          'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
+        ],
+        { cwd: tmpRoot, stdio: 'ignore' }
+      );
+
+      const base = sampleEvidence();
+      const result = evaluateAiGate(
+        {
+          repoRoot: tmpRoot,
+          stage: 'PRE_WRITE',
+        },
+        {
+          now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+          readEvidenceResult: () =>
+            validEvidenceResult({
+              ...base,
+              platforms: {
+                ios: {
+                  detected: true,
+                  confidence: 'HIGH',
+                },
+              },
+              rulesets: [],
+              repo_state: {
+                ...base.repo_state!,
+                repo_root: tmpRoot,
+              },
+              snapshot: {
+                ...base.snapshot,
+                stage: 'PRE_WRITE',
+                rules_coverage: {
+                  ...base.snapshot.rules_coverage!,
+                  stage: 'PRE_WRITE',
+                  active_rule_ids: ['project.rules.audit'],
+                  evaluated_rule_ids: ['project.rules.audit'],
+                  matched_rule_ids: [],
+                  unevaluated_rule_ids: [],
+                  counts: {
+                    active: 1,
+                    evaluated: 1,
+                    matched: 0,
+                    unevaluated: 0,
+                  },
+                  coverage_ratio: 1,
+                },
+              },
+            }),
+          captureRepoState: () => ({
+            ...sampleEvidence().repo_state!,
+            repo_root: tmpRoot,
+            git: {
+              ...sampleEvidence().repo_state!.git,
+              pending_changes: 3,
+              staged: 3,
+              unstaged: 0,
+            },
+          }),
+          loadRequiredSkillsLock: () => sampleMultiPlatformSkillsLock(),
+        }
+      );
+
+      assert.equal(result.status, 'ALLOWED');
+      assert.equal(result.allowed, true);
+      assert.equal(result.skills_contract?.enforced, false);
+      assert.equal(result.skills_contract?.status, 'NOT_APPLICABLE');
+      assert.deepEqual(result.skills_contract?.detected_platforms, []);
+      assert.equal(
+        result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'),
+        false
+      );
+      assert.equal(
+        result.skills_contract?.violations.some(
+          (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
+        ),
+        false
+      );
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+});
+
+test('evaluateAiGate no bloquea PRE_COMMIT staged no-code por plataformas skills no detectadas', async () => {
+  await withSkillsEnforcementEnv('strict', async () => {
+    const tmpRoot = mkdtempSync(join(tmpdir(), 'pumuki-ai-gate-precommit-nocode-'));
+
+    try {
+      execFileSync('git', ['init'], { cwd: tmpRoot, stdio: 'ignore' });
+      mkdirSync(join(tmpRoot, 'apps/ios'), { recursive: true });
+      mkdirSync(join(tmpRoot, 'docs/technical/08-validation/refactor'), { recursive: true });
+      writeFileSync(join(tmpRoot, 'apps/ios/App.swift'), 'struct AppEntry {}\n');
+      writeFileSync(join(tmpRoot, 'package.json'), '{"name":"consumer","private":true}\n');
+      writeFileSync(join(tmpRoot, 'package-lock.json'), '{"lockfileVersion":3}\n');
+      writeFileSync(
+        join(tmpRoot, 'docs/technical/08-validation/refactor/pumuki-integration-feedback.md'),
+        '# Feedback\n'
+      );
+      execFileSync(
+        'git',
+        [
+          'add',
+          'package.json',
+          'package-lock.json',
+          'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
+        ],
+        { cwd: tmpRoot, stdio: 'ignore' }
+      );
+
+      const base = sampleEvidence();
+      const result = evaluateAiGate(
+        {
+          repoRoot: tmpRoot,
+          stage: 'PRE_COMMIT',
+        },
+        {
+          now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+          readEvidenceResult: () =>
+            validEvidenceResult({
+              ...base,
+              platforms: {},
+              rulesets: [],
+              repo_state: {
+                ...base.repo_state!,
+                repo_root: tmpRoot,
+              },
+              snapshot: {
+                ...base.snapshot,
+                stage: 'PRE_COMMIT',
+                rules_coverage: {
+                  ...base.snapshot.rules_coverage!,
+                  stage: 'PRE_COMMIT',
+                  active_rule_ids: ['project.rules.audit'],
+                  evaluated_rule_ids: ['project.rules.audit'],
+                  matched_rule_ids: [],
+                  unevaluated_rule_ids: [],
+                  counts: {
+                    active: 1,
+                    evaluated: 1,
+                    matched: 0,
+                    unevaluated: 0,
+                  },
+                  coverage_ratio: 1,
+                },
+              },
+            }),
+          captureRepoState: () => ({
+            ...sampleEvidence().repo_state!,
+            repo_root: tmpRoot,
+            git: {
+              ...sampleEvidence().repo_state!.git,
+              pending_changes: 3,
+              staged: 3,
+              unstaged: 0,
+            },
+          }),
+          loadRequiredSkillsLock: () => sampleMultiPlatformSkillsLock(),
+        }
+      );
+
+      assert.equal(result.status, 'ALLOWED');
+      assert.equal(result.allowed, true);
+      assert.equal(result.skills_contract?.enforced, false);
+      assert.equal(result.skills_contract?.status, 'NOT_APPLICABLE');
+      assert.deepEqual(result.skills_contract?.detected_platforms, []);
+      assert.equal(
+        result.violations.some((item) => item.code === 'EVIDENCE_SKILLS_PLATFORMS_UNDETECTED'),
+        false
+      );
     } finally {
       rmSync(tmpRoot, { recursive: true, force: true });
     }

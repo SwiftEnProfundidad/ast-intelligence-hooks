@@ -18,6 +18,16 @@ import type {
   ConsumerRuntimeWrite,
 } from './framework-menu-consumer-runtime-types';
 
+const PUMUKI_LEGACY_BANNER = [
+  '██████╗ ██╗   ██╗███╗   ███╗██╗   ██╗██╗  ██╗██╗',
+  '██╔══██╗██║   ██║████╗ ████║██║   ██║██║ ██╔╝██║',
+  '██████╔╝██║   ██║██╔████╔██║██║   ██║█████╔╝ ██║',
+  '██╔═══╝ ██║   ██║██║╚██╔╝██║██║   ██║██╔═██╗ ██║',
+  '██║     ╚██████╔╝██║ ╚═╝ ██║╚██████╔╝██║  ██╗██║',
+  '╚═╝      ╚═════╝ ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝',
+  '                      🐈 En memoria de Pumuki 💚',
+];
+
 const buildConsumerRuntimeMenuStatus = (
   menuSummary: FrameworkMenuEvidenceSummary
 ): { level: 'info' | 'block' | 'warn' | 'ok'; label: string } =>
@@ -35,17 +45,26 @@ export const renderConsumerRuntimeClassicMenu = (
   actions: ReadonlyArray<ConsumerAction>,
   useColor: () => boolean
 ): string => {
-  const groupedActions = resolveConsumerMenuLayout(actions);
+  const actionById = new Map(actions.map((action) => [action.id, action]));
+  const label = (id: string): string => actionById.get(id)?.label ?? 'Unavailable';
   const lines = [
-    'PUMUKI — Hook-System (run: npx ast-hooks)',
-    'AST Intelligence System Overview',
-    'A. Switch to advanced menu',
+    ...PUMUKI_LEGACY_BANNER,
     '',
-    ...groupedActions.flatMap((group) => [
-      group.title,
-      ...group.items.map((item) => `${item.id}) ${item.action.label}`),
-      '',
-    ]),
+    'Advanced Project Audit — AST Intelligence & Quality Gate',
+    '',
+    `1) ${label('1')}   6) ${label('6')}`,
+    `2) ${label('2')}  7) ${label('7')}`,
+    `3) ${label('3')}    8) ${label('8')}`,
+    `4) ${label('4')}       9) ${label('9')}`,
+    `5) ${label('5')}                 10) ${label('10')}`,
+    '',
+    'Additional engine flows',
+    `11) ${label('11')}`,
+    `12) ${label('12')}`,
+    `13) ${label('13')}`,
+    `14) ${label('14')}`,
+    '',
+    'A) Switch to advanced menu',
   ];
   return renderLegacyPanel(lines, {
     width: resolveLegacyPanelOuterWidth(),
@@ -68,8 +87,9 @@ export const renderConsumerRuntimeModernMenu = (
   });
   const groupedActions = resolveConsumerMenuLayout(params.actions);
   const lines = [
-    'PUMUKI — Hook-System (run: npx ast-hooks)',
-    'AST Intelligence System Overview',
+    ...PUMUKI_LEGACY_BANNER,
+    '',
+    'Advanced Project Audit — AST Intelligence & Quality Gate',
     `Status: ${renderBadge(menuStatus.label, menuStatus.level, tokens)}`,
     'A. Switch to advanced menu',
     '',

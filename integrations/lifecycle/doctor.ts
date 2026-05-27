@@ -20,12 +20,23 @@ import {
   readLifecycleDependencyInventory,
   type LifecycleDependencyInventory,
 } from './dependencyInventory';
+import { readPreWriteLeaseStatus } from './preWriteLease';
+import {
+  readLifecycleNotificationStatus,
+  type LifecycleNotificationStatus,
+} from './notificationStatus';
+import {
+  extractEvidenceBlockingCauses,
+  formatEvidenceBlockingCause,
+  type EvidenceBlockingCause,
+} from '../evidence/blockingCauses';
 
 export type DoctorIssueSeverity = 'warning' | 'error';
 
 export type DoctorIssue = {
   severity: DoctorIssueSeverity;
   message: string;
+  blockingCauses?: ReadonlyArray<EvidenceBlockingCause>;
 };
 
 export type DoctorDeepCheckId =
@@ -101,6 +112,7 @@ export type LifecycleDoctorReport = {
   hooksDirectory: string;
   hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   policyValidation: LifecyclePolicyValidationSnapshot;
+  notifications: LifecycleNotificationStatus;
   policy_signature_remediation?: string;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
@@ -116,7 +128,32 @@ const buildDoctorIssues = (params: {
   lifecycleState: LifecycleState;
 }): ReadonlyArray<DoctorIssue> => {
   const issues: DoctorIssue[] = [];
+  const notificationStatus = readLifecycleNotificationStatus({
+    repoRoot: params.repoRoot,
+  });
   const evidenceResult = readEvidenceResult(params.repoRoot);
+  const preWriteLeaseStatus = readPreWriteLeaseStatus({
+    repoRoot: params.repoRoot,
+    git: new LifecycleGitService(),
+  });
+
+  if (!preWriteLeaseStatus.valid && preWriteLeaseStatus.changedCodePaths.length > 0) {
+    issues.push({
+      severity: 'error',
+      message:
+        `ENFORCEMENT_GAP: PRE_WRITE hard-stop lease is not valid (${preWriteLeaseStatus.code}) ` +
+        `for ${preWriteLeaseStatus.changedCodePaths.length} changed code file(s).`,
+    });
+  }
+
+  if (!notificationStatus.deliverable) {
+    issues.push({
+      severity: 'warning',
+      message:
+        `System notifications are not deliverable (${notificationStatus.disabledReason ?? 'unknown'}). ` +
+        `${notificationStatus.remediation ?? 'Review notification configuration.'}`,
+    });
+  }
 
   if (params.trackedNodeModulesPaths.length > 0) {
     issues.push({
@@ -162,12 +199,20 @@ const buildDoctorIssues = (params: {
       evidence.severity_metrics.gate_status === 'BLOCKED';
     if (blocked) {
       const blockedStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
+      const blockingCauses = extractEvidenceBlockingCauses(evidence);
+      const causeDetails =
+        blockingCauses.length > 0
+          ? ` Blocking causes: ${blockingCauses.length}. ${blockingCauses
+              .map(formatEvidenceBlockingCause)
+              .join(' | ')}`
+          : '';
       issues.push({
         severity: 'error',
         message: appendTrackingActionableContext({
           repoRoot: params.repoRoot,
-          message: `Governance is blocked (${blockedStage}).`,
+          message: `Governance is blocked (${blockedStage}).${causeDetails}`,
         }),
+        blockingCauses,
       });
     } else if (evidence.snapshot.outcome === 'WARN') {
       const warnStage = evidence?.snapshot?.stage ?? 'PRE_WRITE';
@@ -222,6 +267,20 @@ const readNestedString = (
     cursor = cursor[segment];
   }
   return typeof cursor === 'string' && cursor.trim().length > 0 ? cursor : undefined;
+};
+
+const readNestedBoolean = (
+  source: Record<string, unknown>,
+  path: ReadonlyArray<string>
+): boolean | undefined => {
+  let cursor: unknown = source;
+  for (const segment of path) {
+    if (!isRecord(cursor)) {
+      return undefined;
+    }
+    cursor = cursor[segment];
+  }
+  return typeof cursor === 'boolean' ? cursor : undefined;
 };
 
 const hasRobustPumukiCommandResolution = (command: string): boolean => {
@@ -351,17 +410,26 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
   const missingPaths = requiredCommandPaths
     .filter((path) => !readNestedString(parsed, path))
     .map((path) => path.join('.'));
+  const missingContractPaths = [
+    !readNestedBoolean(parsed, ['enforcement', 'pre_write', 'required_before_edit'])
+      ? 'enforcement.pre_write.required_before_edit'
+      : undefined,
+    !readNestedString(parsed, ['enforcement', 'pre_write', 'agent_instruction'])
+      ? 'enforcement.pre_write.agent_instruction'
+      : undefined,
+  ].filter((path): path is string => typeof path === 'string');
 
-  if (missingPaths.length > 0) {
+  if (missingPaths.length > 0 || missingContractPaths.length > 0) {
+    const missing = [...missingPaths, ...missingContractPaths];
     return buildDeepCheck({
       id: 'adapter-wiring',
       status: 'fail',
       severity: 'error',
-      message: `Adapter wiring is incomplete (missing: ${missingPaths.join(', ')}).`,
+      message: `Adapter wiring is incomplete (missing: ${missing.join(', ')}).`,
       remediation: 'Re-run "pumuki adapter install --agent=codex" and keep generated commands unchanged.',
       metadata: {
         path: adapterPath,
-        missing_count: missingPaths.length,
+        missing_count: missing.length,
       },
     });
   }
@@ -400,13 +468,26 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
     });
   }
 
+  const preWriteEnforcementCommand =
+    readNestedString(parsed, ['enforcement', 'pre_write', 'command']) ??
+    readNestedString(parsed, ['hooks', 'pre_write', 'command']);
+  const preWriteAgentInstruction = readNestedString(parsed, [
+    'enforcement',
+    'pre_write',
+    'agent_instruction',
+  ]);
+
   return buildDeepCheck({
     id: 'adapter-wiring',
     status: 'pass',
     severity: 'info',
-    message: 'Adapter wiring contract is valid.',
+    message:
+      'Adapter wiring contract is valid; PRE_WRITE hard-stop is required before editing.',
     metadata: {
       path: adapterPath,
+      pre_write_required_before_edit: true,
+      pre_write_command: preWriteEnforcementCommand ?? null,
+      pre_write_agent_instruction: preWriteAgentInstruction ?? null,
     },
   });
 };
@@ -886,6 +967,7 @@ export const runLifecycleDoctor = (params?: {
 
   const policyValidation = readLifecyclePolicyValidationSnapshot(repoRoot);
   const policySignatureRemediation = buildPolicySignatureRemediation(policyValidation);
+  const notifications = readLifecycleNotificationStatus({ repoRoot });
 
   return {
     repoRoot,
@@ -898,6 +980,7 @@ export const runLifecycleDoctor = (params?: {
     hooksDirectory: hooksDirectory.path,
     hooksDirectoryResolution: hooksDirectory.source,
     policyValidation,
+    notifications,
     ...(policySignatureRemediation
       ? { policy_signature_remediation: policySignatureRemediation }
       : {}),

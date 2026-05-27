@@ -25,6 +25,7 @@ const sampleEvidence: AiEvidenceV2_1 = {
         code: 'NO_CONSOLE_LOG',
         message: 'console.log is not allowed.',
         file: 'apps/frontend/src/components/Banner.tsx',
+        expected_fix: 'Remove console.log.',
       },
       {
         ruleId: 'ios.no-force-unwrap',
@@ -95,6 +96,14 @@ test('toSummaryPayload builds deterministic summary counters and detected platfo
   assert.equal(summary.snapshot.findings_count, 3);
   assert.equal(summary.snapshot.findings_with_lines_count, 1);
   assert.equal(summary.snapshot.findings_without_lines_count, 2);
+  assert.equal(summary.snapshot.blocking_causes_count, 2);
+  assert.deepEqual(
+    summary.snapshot.blocking_causes.map((entry) => `${entry.ruleId}|${entry.file}`),
+    [
+      'frontend.no-console-log|apps/frontend/src/components/Banner.tsx',
+      'ios.no-force-unwrap|apps/ios/App/Feature.swift',
+    ]
+  );
   assert.equal(summary.ledger_count, 2);
   assert.equal(summary.rulesets_count, 2);
   assert.equal(summary.suppressed_findings_count, 1);

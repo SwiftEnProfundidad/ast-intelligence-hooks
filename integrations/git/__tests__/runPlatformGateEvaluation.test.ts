@@ -182,6 +182,53 @@ test('evaluatePlatformGateFindings normaliza stage STAGED y eleva scope TS a all
   assert.deepEqual(result.findings, findings);
 });
 
+test('evaluatePlatformGateFindings carga contrato PRE_WRITE de skills en PRE_WRITE', () => {
+  const inputFacts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileChange',
+      path: 'apps/web-app/src/App.tsx',
+      changeType: 'modified',
+      source: 'test',
+    },
+  ];
+  const detectedPlatforms: DetectedPlatforms = {
+    frontend: { detected: true, confidence: 'HIGH' },
+  };
+  const skillsRule = makeRule('skills.frontend.no-console-log');
+  const skillsRuleSet: SkillsRuleSetLoadResult = {
+    rules: [skillsRule],
+    activeBundles: [],
+    mappedHeuristicRuleIds: new Set<string>(),
+    requiresHeuristicFacts: false,
+  };
+
+  let capturedSkillsStage: 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI' | undefined;
+  const result = evaluatePlatformGateFindings(
+    {
+      facts: inputFacts,
+      stage: 'PRE_WRITE',
+      repoRoot: '/repo',
+    },
+    {
+      detectPlatformsFromFacts: () => detectedPlatforms,
+      loadHeuristicsConfig: () => ({ astSemanticEnabled: false, typeScriptScope: 'platform' }),
+      loadSkillsRuleSetForStage: (stage) => {
+        capturedSkillsStage = stage;
+        return skillsRuleSet;
+      },
+      buildCombinedBaselineRules: () => [],
+      loadProjectRules: () => undefined,
+      mergeRuleSets: (baselineRules) => baselineRules,
+      evaluateRulesWithCoverage: (rules) => ({ findings: [], evaluatedRuleIds: rules.map((rule) => rule.id) }),
+      attachFindingTraceability: (input) => input.findings,
+    }
+  );
+
+  assert.equal(capturedSkillsStage, 'PRE_WRITE');
+  assert.equal(result.coverage.activeRuleIds.includes('skills.frontend.no-console-log'), true);
+  assert.equal(result.coverage.evaluatedRuleIds.includes('skills.frontend.no-console-log'), true);
+});
+
 test('evaluatePlatformGateFindings mantiene scope TS platform cuando hay archivos en apps/*', () => {
   const inputFacts: ReadonlyArray<Fact> = [
     {

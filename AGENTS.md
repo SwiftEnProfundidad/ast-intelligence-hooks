@@ -113,15 +113,93 @@ Antes de realizar cualquier accion:
   - `release/*`: debe salir de `develop` y solo contener cambios de estabilizacion/release.
   - `hotfix/*`: debe salir de `main` para fixes urgentes de produccion.
 - Esta prohibido commitear en `main` y `develop` sin instruccion explicita del usuario.
+- Ciclo de cierre de ramas obligatorio:
+  - una rama `feature/*`, `bugfix/*`, `chore/*`, `refactor/*` o `docs/*` terminada debe integrarse en `develop` mediante el flujo acordado;
+  - una rama `release/*` terminada debe integrarse en `main` y `develop`;
+  - una rama `hotfix/*` terminada debe integrarse en `main` y propagarse a `develop`;
+  - tras confirmar que la rama esta mergeada en sus destinos obligatorios, debe eliminarse la rama local y remota si existe;
+  - las ramas cerradas no pueden quedar acumuladas como backlog, marcador historico o pseudo-tracking.
+- Criterio de borrado seguro de ramas:
+  - antes de borrar cualquier rama, comprobar si esta mergeada con `git branch --merged <destino>`;
+  - si no aparece como mergeada, no borrarla sin revisar commits no integrados;
+  - si contiene commits utiles no integrados, integrarlos, crear backup branch explicita o stash/patch documentado antes de eliminar;
+  - nunca usar borrado forzado de ramas (`git branch -D` o delete remoto forzado) sin instruccion explicita y evidencia de preservacion.
+- La limpieza de ramas forma parte del cierre de cada slice:
+  - no se considera cerrada una task si deja worktrees temporales o ramas de trabajo ya mergeadas sin limpiar;
+  - si no se puede limpiar por riesgo, reportar `STATUS: BLOCKED` o dejar `NEXT instruction` explicita con la razon.
 - Si la rama actual no cumple naming o flujo:
   - detener implementacion,
   - declarar `STATUS: BLOCKED`,
   - explicar el conflicto de rama/flujo, y
   - pedir al usuario el cambio o confirmacion de rama antes de continuar.
 
+## Contrato hard de commits atomicos y limite de worktree (no negociable)
+- Todo cambio debe cerrarse en commits atomicos por slice funcional, bug o contrato tecnico.
+- Esta prohibido acumular cambios de varios subsistemas sin commit intermedio.
+- Un commit atomico debe tener una unica intencion verificable, por ejemplo:
+  - un detector AST/nodal concreto y sus tests,
+  - una correccion de gate/lifecycle concreta y sus tests,
+  - una mejora de notificacion concreta y sus tests,
+  - una actualizacion de tracking/docs estrictamente asociada a esa slice,
+  - una preparacion de release/versionado separada del codigo funcional.
+- Esta prohibido mezclar en el mismo commit:
+  - detectores AST con versionado/release,
+  - cambios de lifecycle/gate con cambios de menu/runtime no relacionados,
+  - cambios de consumers con cambios internos de Pumuki,
+  - tracking amplio con implementacion funcional no relacionada,
+  - limpieza de ramas/worktrees con codigo de producto.
+- Umbral hard de higiene:
+  - si `git status --short` muestra mas de 24 rutas pendientes, no se permite seguir implementando;
+  - si muestra mas de 12 rutas pendientes, se debe evaluar si la slice ya debe cerrarse;
+  - si existen archivos `??` fuera del alcance de la slice, deben clasificarse antes de continuar.
+- Si el worktree supera el umbral hard:
+  - declarar `STATUS: BLOCKED`,
+  - detener nuevas ediciones funcionales,
+  - listar cambios por subsistema,
+  - crear commits atomicos separados o stashes con nombre explicito antes de continuar,
+  - no usar un commit masivo para "limpiar" el estado.
+- Antes de cada commit:
+  - confirmar RED registrado o justificar que es cambio documental puro;
+  - confirmar GREEN con test focal ejecutado;
+  - confirmar REFACTOR acotado y gobernado por las skills aplicables;
+  - confirmar VERIFY con typecheck/compilacion/build aplicable;
+  - revisar `git diff --cached --name-status`,
+  - confirmar que todos los archivos staged pertenecen a la misma intencion,
+  - dejar fuera del stage cualquier archivo no relacionado,
+  - documentar en la respuesta la relacion `escenario -> tests -> evidencia -> task`.
+- Si los hooks bloquean por deuda ajena al staged:
+  - no ampliar el commit para "aprovechar",
+  - reportar la causa exacta,
+  - corregir Pumuki si es bug del gate,
+  - o aislar la slice si es deuda del worktree.
+- Las ramas locales y worktrees temporales deben revisarse con inventario antes de borrarse.
+- Esta prohibido borrar ramas, worktrees, stashes o directorios temporales con cambios sin:
+  - comprobar estado,
+  - preservar cambios en commit o stash con nombre explicito,
+  - y reportar la evidencia.
+
+## Golden Flow TDD / Red-Green-Refactor (flujo principal no negociable)
+- Pumuki es primero un orquestador de flujo seguro de ingenieria: las skills son reglas de calidad dentro de este flujo, no sustituyen el flujo.
+- Todo cambio funcional, bugfix de gate/lifecycle, detector AST/nodal, notificacion, hook, policy o codigo de producto debe seguir obligatoriamente:
+  1. `RED`: crear o actualizar primero un test/regresion que falle por el bug o comportamiento esperado.
+  2. `GREEN`: tocar el minimo codigo de produccion necesario para hacer pasar ese test.
+  3. `REFACTOR`: limpiar solo dentro del alcance de la slice, sin cambiar comportamiento.
+  4. `VERIFY`: ejecutar test focal y compilacion/typecheck/build aplicable.
+  5. `COMMIT ATOMICO`: cerrar una unica intencion funcional o tecnica.
+- La fase `REFACTOR` debe aplicar las skills de plataforma correspondientes:
+  - iOS/Swift/SwiftUI: `ios-enterprise-rules`, `swift-concurrency`, `swiftui-expert-skill`; y `swift-testing-expert`, `core-data-expert` o skills Apple adicionales cuando aplique.
+  - Android: `android-enterprise-rules`.
+  - Frontend: `frontend-enterprise-rules`.
+  - Backend: `backend-enterprise-rules`.
+- Esta prohibido commitear codigo funcional sin test focal ejecutado y verde.
+- Esta prohibido publicar release o repinear consumers si el test focal, typecheck o build aplicable fallan.
+- Si no es tecnicamente posible escribir RED antes de tocar produccion, declarar `STATUS: BLOCKED` o documentar una excepcion explicita y trazable antes de continuar.
+- Cambios documentales puros pueden omitir RED, pero deben mantener diff acotado, trazabilidad y commit atomico.
+
 ## Gate operativo obligatorio (antes de editar codigo)
 - Declarar internamente las skills aplicables y tratarlas como activas durante TODO el turno.
 - Verificar cumplimiento minimo previo:
+  - Golden Flow TDD `RED -> GREEN -> REFACTOR -> VERIFY -> COMMIT ATOMICO` requerido para todo cambio funcional.
   - BDD/TDD requerido por la skill correspondiente.
   - Concurrencia y aislamiento segun `swift-concurrency` cuando haya codigo Swift.
   - Estado/arquitectura/UI segun `swiftui-expert-skill` e `ios-enterprise-rules` cuando aplique iOS/SwiftUI.

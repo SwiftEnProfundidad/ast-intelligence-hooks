@@ -1,9 +1,13 @@
 import type { SmokeMode } from './package-install-smoke-contract';
-import { runDefaultSmokeGateSteps } from './package-install-smoke-execution-steps-lib';
+import {
+  runDefaultSmokeGateSteps,
+  runSmokeGoldenFlowEvidenceStep,
+} from './package-install-smoke-execution-steps-lib';
 import {
   assertLifecycleStatusMatchesSnapshot,
   captureLifecycleStatusSnapshot,
   runLifecycleInstallStep,
+  runLifecyclePreWriteStep,
   runLifecycleUninstallStep,
 } from './package-install-smoke-lifecycle-lib';
 import {
@@ -37,10 +41,12 @@ export const runPackageInstallSmoke = (mode: SmokeMode): void => {
     });
 
     setupConsumerRepository(workspace, mode);
+    runLifecycleInstallStep(workspace);
+    runLifecyclePreWriteStep(workspace);
     writeStagedPayload(workspace, mode);
+    runSmokeGoldenFlowEvidenceStep(workspace);
 
     const lifecycleStatusSnapshot = captureLifecycleStatusSnapshot(workspace);
-    runLifecycleInstallStep(workspace);
 
     const results = runDefaultSmokeGateSteps({
       workspace,

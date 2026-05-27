@@ -27,7 +27,7 @@ const makeEvidence = (params: {
           severity: params.findingSeverity,
           code: params.findingCode,
           message: params.findingMessage,
-          filePath: 'src/sample.ts',
+          file: 'src/sample.ts',
           matchedBy: 'AstRule',
           source: 'skills.backend.sample',
         },
@@ -114,7 +114,16 @@ const withAllowedAtomicity = (dependencies: WatchDependencies): WatchDependencie
 });
 
 test('runLifecycleWatch ejecuta evaluate->notify en cambios de worktree', async () => {
-  const blockedNotifications: Array<{ code: string }> = [];
+  const blockedNotifications: Array<{
+    code: string;
+    blockingCauses?: ReadonlyArray<{
+      code: string;
+      message: string;
+      ruleId?: string;
+      file?: string;
+      remediation?: string;
+    }>;
+  }> = [];
   const summaryNotifications: number[] = [];
   const tickLines: string[] = [];
   let tokenIndex = 0;
@@ -188,7 +197,10 @@ test('runLifecycleWatch ejecuta evaluate->notify en cambios de worktree', async 
               aiGateStatus: 'ALLOWED',
             }),
       emitGateBlockedNotification: (params) => {
-        blockedNotifications.push({ code: params.causeCode });
+        blockedNotifications.push({
+          code: params.causeCode,
+          blockingCauses: params.blockingCauses,
+        });
         return { delivered: true, reason: 'delivered' };
       },
       emitAuditSummaryNotificationFromEvidence: () => {
@@ -203,7 +215,16 @@ test('runLifecycleWatch ejecuta evaluate->notify en cambios de worktree', async 
   assert.equal(result.evaluations, 2);
   assert.equal(result.notificationsSent, 2);
   assert.equal(result.notificationsSuppressed, 0);
-  assert.deepEqual(blockedNotifications, [{ code: 'FIRST_BLOCK' }]);
+  assert.equal(blockedNotifications[0]?.code, 'FIRST_BLOCK');
+  assert.deepEqual(blockedNotifications[0]?.blockingCauses, [
+    {
+      code: 'FIRST_BLOCK',
+      message: 'primer bloqueo',
+      ruleId: 'rule.sample',
+      file: 'src/sample.ts',
+      remediation: undefined,
+    },
+  ]);
   assert.equal(summaryNotifications.length, 1);
   assert.deepEqual(result.lastTick.changedFiles, ['src/sample.ts']);
   assert.deepEqual(result.lastTick.evaluatedFiles, ['src/sample.ts']);

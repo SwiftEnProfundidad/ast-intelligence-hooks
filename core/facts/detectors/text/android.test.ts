@@ -6,17 +6,40 @@ import {
   findKotlinLiskovSubstitutionMatch,
   findKotlinOpenClosedWhenMatch,
   findKotlinPresentationSrpMatch,
+  hasAndroidAsyncTaskUsage,
+  hasAndroidCustomSingletonObjectUsage,
+  hasAndroidHiltInjectionWithoutEntryPointUsage,
+  hasAndroidLegacyFingerprintApiUsage,
   hasKotlinCoroutineTryCatchUsage,
   hasKotlinDispatcherMainBoundaryLeakUsage,
   hasKotlinGlobalScopeUsage,
+  hasKotlinGodActivityUsage,
   hasKotlinHardcodedBackgroundDispatcherUsage,
+  hasKotlinApplicationOnCreateHeavyInitializationUsage,
+  hasKotlinIncompleteMaterialThemeUsage,
   hasKotlinJUnit4Usage,
+  hasKotlinHardcodedUiStringUsage,
+  collectKotlinHardcodedUiStringLines,
+  hasKotlinImperativeNavigationUsage,
+  hasKotlinLaunchedEffectBusyLoopUsage,
   hasKotlinLiveDataStateExposureUsage,
   hasKotlinLifecycleScopeUsage,
+  hasKotlinLegacyBottomNavigationUsage,
+  hasKotlinComposableObjectCreationWithoutRememberUsage,
+  hasKotlinComposableStateCreationWithoutRememberUsage,
+  hasKotlinForceUnwrapUsage,
+  hasKotlinFontScaleDisabledUsage,
   hasKotlinProductionMockUsage,
+  hasKotlinNonLazyScrollableCollectionUsage,
+  hasKotlinProductionLoggingUsage,
   hasKotlinSharedPreferencesUsage,
+  hasKotlinSharedFlowUsedAsStateUsage,
+  hasKotlinUnstableLaunchedEffectKeyUsage,
+  hasKotlinViewModelFlowWithoutStateInUsage,
   hasKotlinWithContextUsage,
   hasKotlinManualCoroutineScopeInViewModelUsage,
+  hasKotlinMissingContentDescriptionUsage,
+  hasKotlinModifierBackgroundBeforePaddingUsage,
   hasKotlinRunBlockingUsage,
   hasKotlinSupervisorScopeUsage,
   hasKotlinThreadSleepCall,
@@ -102,6 +125,479 @@ fun main() {
   assert.equal(hasKotlinRunBlockingUsage(partialSource), false);
 });
 
+test('hasAndroidAsyncTaskUsage detecta AsyncTask legacy en Kotlin y Java', () => {
+  const kotlinSource = `
+class LegacySyncTask : AsyncTask<Unit, Unit, Unit>() {
+  override fun doInBackground(vararg params: Unit) = Unit
+}
+`;
+  const javaSource = `
+class LegacySyncTask extends android.os.AsyncTask<Void, Void, Void> {
+}
+`;
+  const executorSource = `
+fun executeLegacy(task: Runnable) {
+  AsyncTask.THREAD_POOL_EXECUTOR.execute(task)
+}
+`;
+  assert.equal(hasAndroidAsyncTaskUsage(kotlinSource), true);
+  assert.equal(hasAndroidAsyncTaskUsage(javaSource), true);
+  assert.equal(hasAndroidAsyncTaskUsage(executorSource), true);
+});
+
+test('hasAndroidAsyncTaskUsage ignora imports, comentarios y strings', () => {
+  const source = `
+import android.os.AsyncTask
+// class LegacySyncTask : AsyncTask<Unit, Unit, Unit>()
+val sample = "AsyncTask.THREAD_POOL_EXECUTOR"
+class ModernSyncTask {
+  suspend fun execute() = coroutineScope { }
+}
+`;
+  assert.equal(hasAndroidAsyncTaskUsage(source), false);
+});
+
+test('hasKotlinGodActivityUsage detecta Activity con UI, red y persistencia mezcladas', () => {
+  const source = `
+class CheckoutActivity : ComponentActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContent { CheckoutScreen() }
+  }
+
+  fun loadRemoteCheckout() {
+    OkHttpClient().newCall(request).execute()
+  }
+
+  fun cacheCheckoutState() {
+    getSharedPreferences("checkout", MODE_PRIVATE).edit().apply()
+  }
+}
+`;
+  assert.equal(hasKotlinGodActivityUsage(source), true);
+});
+
+test('hasKotlinGodActivityUsage permite Activity entrypoint delgada', () => {
+  const source = `
+class MainActivity : ComponentActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContent { AppRoot() }
+  }
+}
+`;
+  assert.equal(hasKotlinGodActivityUsage(source), false);
+});
+
+test('hasKotlinApplicationOnCreateHeavyInitializationUsage detecta inicializacion pesada en Application.onCreate', () => {
+  const source = `
+class RuralGoApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+    FirebaseApp.initializeApp(this)
+    WorkManager.initialize(this, configuration)
+    Room.databaseBuilder(this, AppDatabase::class.java, "app.db").build()
+  }
+}
+`;
+  assert.equal(hasKotlinApplicationOnCreateHeavyInitializationUsage(source), true);
+});
+
+test('hasKotlinApplicationOnCreateHeavyInitializationUsage permite Application delgada e Initializer dedicado', () => {
+  const thinApplication = `
+class RuralGoApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+  }
+}
+`;
+  const startupInitializer = `
+class AnalyticsInitializer : Initializer<FirebaseApp> {
+  override fun create(context: Context): FirebaseApp {
+    return FirebaseApp.initializeApp(context)!!
+  }
+}
+`;
+  assert.equal(hasKotlinApplicationOnCreateHeavyInitializationUsage(thinApplication), false);
+  assert.equal(hasKotlinApplicationOnCreateHeavyInitializationUsage(startupInitializer), false);
+});
+
+test('hasKotlinNonLazyScrollableCollectionUsage detecta Column scrollable con iteracion de coleccion', () => {
+  const source = `
+@Composable
+fun OrdersScreen(orders: List<Order>) {
+  Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+    orders.forEach { order ->
+      Text(order.name)
+    }
+  }
+}
+`;
+  assert.equal(hasKotlinNonLazyScrollableCollectionUsage(source), true);
+});
+
+test('hasKotlinNonLazyScrollableCollectionUsage permite LazyColumn y Column estatica', () => {
+  const lazySource = `
+@Composable
+fun OrdersScreen(orders: List<Order>) {
+  LazyColumn {
+    items(orders) { order -> Text(order.name) }
+  }
+}
+`;
+  const staticSource = `
+@Composable
+fun EmptyState() {
+  Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+    Text("One")
+    Text("Two")
+  }
+}
+`;
+  assert.equal(hasKotlinNonLazyScrollableCollectionUsage(lazySource), false);
+  assert.equal(hasKotlinNonLazyScrollableCollectionUsage(staticSource), false);
+});
+
+test('hasKotlinUnstableLaunchedEffectKeyUsage detecta claves constantes o ausentes', () => {
+  const unitSource = `
+@Composable
+fun OrdersScreen(viewModel: OrdersViewModel) {
+  LaunchedEffect(Unit) { viewModel.load() }
+}
+`;
+  const trueSource = `
+@Composable
+fun OrdersScreen(viewModel: OrdersViewModel) {
+  LaunchedEffect(true) { viewModel.load() }
+}
+`;
+  const emptySource = `
+@Composable
+fun OrdersScreen(viewModel: OrdersViewModel) {
+  LaunchedEffect() { viewModel.load() }
+}
+`;
+  assert.equal(hasKotlinUnstableLaunchedEffectKeyUsage(unitSource), true);
+  assert.equal(hasKotlinUnstableLaunchedEffectKeyUsage(trueSource), true);
+  assert.equal(hasKotlinUnstableLaunchedEffectKeyUsage(emptySource), true);
+});
+
+test('hasKotlinUnstableLaunchedEffectKeyUsage permite claves de estado estables e ignora comentarios', () => {
+  const source = `
+// LaunchedEffect(Unit) { debug() }
+val sample = "LaunchedEffect(true) { debug() }"
+@Composable
+fun OrdersScreen(orderId: String, viewModel: OrdersViewModel) {
+  LaunchedEffect(orderId) { viewModel.load(orderId) }
+}
+`;
+  assert.equal(hasKotlinUnstableLaunchedEffectKeyUsage(source), false);
+});
+
+test('hasKotlinLaunchedEffectBusyLoopUsage detecta bucle no cooperativo dentro de LaunchedEffect', () => {
+  const source = `
+@Composable
+fun SyncPulse(viewModel: SyncViewModel) {
+  LaunchedEffect(viewModel.sessionId) {
+    while (true) {
+      viewModel.poll()
+    }
+  }
+}
+`;
+  assert.equal(hasKotlinLaunchedEffectBusyLoopUsage(source), true);
+});
+
+test('hasKotlinLaunchedEffectBusyLoopUsage permite bucles cooperativos e ignora comentarios y strings', () => {
+  const source = `
+// LaunchedEffect(Unit) { while (true) { poll() } }
+val sample = "LaunchedEffect(Unit) { while (isActive) { poll() } }"
+@Composable
+fun SyncPulse(viewModel: SyncViewModel) {
+  LaunchedEffect(viewModel.sessionId) {
+    while (isActive) {
+      viewModel.poll()
+      delay(1000)
+    }
+  }
+}
+`;
+  assert.equal(hasKotlinLaunchedEffectBusyLoopUsage(source), false);
+});
+
+test('hasKotlinProductionLoggingUsage detecta logs directos de produccion', () => {
+  const source = `
+class CheckoutRepository {
+  fun load() {
+    println("loading")
+    System.out.println("debug")
+    Log.d("Checkout", "loading")
+    Timber.e(error)
+  }
+}
+`;
+  assert.equal(hasKotlinProductionLoggingUsage(source), true);
+});
+
+test('hasKotlinProductionLoggingUsage permite imports, comentarios, strings y logs guardados por debug', () => {
+  const source = `
+import android.util.Log
+// Log.d("Checkout", "debug")
+val sample = "println(\\"debug\\")"
+class CheckoutRepository {
+  fun load() {
+    if (BuildConfig.DEBUG) Timber.d("loading")
+  }
+}
+`;
+  assert.equal(hasKotlinProductionLoggingUsage(source), false);
+});
+
+test('hasKotlinModifierBackgroundBeforePaddingUsage detecta background antes de padding', () => {
+  const source = `
+@Composable
+fun CheckoutCard() {
+  Box(
+    modifier = Modifier
+      .fillMaxWidth()
+      .background(Color.Red)
+      .padding(16.dp)
+  )
+}
+`;
+  assert.equal(hasKotlinModifierBackgroundBeforePaddingUsage(source), true);
+});
+
+test('hasKotlinModifierBackgroundBeforePaddingUsage permite padding antes de background e ignora comentarios', () => {
+  const source = `
+// Modifier.background(Color.Red).padding(16.dp)
+val sample = "Modifier.background(Color.Red).padding(16.dp)"
+@Composable
+fun CheckoutCard() {
+  Box(
+    modifier = Modifier
+      .padding(16.dp)
+      .background(Color.Red)
+  )
+}
+`;
+  assert.equal(hasKotlinModifierBackgroundBeforePaddingUsage(source), false);
+});
+
+test('hasKotlinMissingContentDescriptionUsage detecta Image e Icon sin contentDescription', () => {
+  const source = `
+@Composable
+fun CheckoutIcon() {
+  Image(painter = painterResource(R.drawable.checkout), modifier = Modifier.size(24.dp))
+  Icon(Icons.Default.Warning, tint = Color.Red)
+}
+`;
+  assert.equal(hasKotlinMissingContentDescriptionUsage(source), true);
+});
+
+test('hasKotlinMissingContentDescriptionUsage permite contentDescription explicita e ignora comentarios', () => {
+  const source = `
+// Image(painter = painterResource(R.drawable.checkout))
+val sample = "Icon(Icons.Default.Warning)"
+@Composable
+fun CheckoutIcon() {
+  Image(
+    painter = painterResource(R.drawable.checkout),
+    contentDescription = stringResource(R.string.checkout_icon)
+  )
+  Icon(
+    imageVector = Icons.Default.Warning,
+    contentDescription = null
+  )
+}
+`;
+  assert.equal(hasKotlinMissingContentDescriptionUsage(source), false);
+});
+
+test('hasKotlinFontScaleDisabledUsage detecta desactivacion del fontScale del sistema', () => {
+  const source = `
+@Composable
+fun FixedTextScale(content: @Composable () -> Unit) {
+  val density = LocalDensity.current
+  CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale = 1f)) {
+    content()
+  }
+}
+`;
+  assert.equal(hasKotlinFontScaleDisabledUsage(source), true);
+});
+
+test('hasKotlinFontScaleDisabledUsage permite LocalDensity sin forzar fontScale e ignora comentarios', () => {
+  const source = `
+// Density(density.density, fontScale = 1f)
+val sample = "fontScale = 1f"
+@Composable
+fun ScalableText(content: @Composable () -> Unit) {
+  val density = LocalDensity.current
+  CompositionLocalProvider(LocalDensity provides density) {
+    content()
+  }
+}
+`;
+  assert.equal(hasKotlinFontScaleDisabledUsage(source), false);
+});
+
+test('hasKotlinIncompleteMaterialThemeUsage detecta MaterialTheme incompleto', () => {
+  const source = `
+@Composable
+fun AppTheme(content: @Composable () -> Unit) {
+  MaterialTheme(
+    colorScheme = AppColorScheme,
+    content = content
+  )
+}
+`;
+  assert.equal(hasKotlinIncompleteMaterialThemeUsage(source), true);
+});
+
+test('hasKotlinIncompleteMaterialThemeUsage permite MaterialTheme con colorScheme typography y shapes', () => {
+  const source = `
+// MaterialTheme(colorScheme = AppColorScheme)
+val sample = "MaterialTheme(colorScheme = AppColorScheme)"
+@Composable
+fun AppTheme(content: @Composable () -> Unit) {
+  MaterialTheme(
+    colorScheme = AppColorScheme,
+    typography = AppTypography,
+    shapes = AppShapes,
+    content = content
+  )
+}
+`;
+  assert.equal(hasKotlinIncompleteMaterialThemeUsage(source), false);
+});
+
+test('hasKotlinLegacyBottomNavigationUsage detecta BottomNavigation legacy de Material 2', () => {
+  const source = `
+@Composable
+fun LegacyBottomBar() {
+  BottomNavigation {
+    BottomNavigationItem(selected = true, onClick = {}, icon = { Text("Home") })
+  }
+}
+`;
+  assert.equal(hasKotlinLegacyBottomNavigationUsage(source), true);
+});
+
+test('hasKotlinLegacyBottomNavigationUsage permite NavigationBar Material 3 e ignora comentarios', () => {
+  const source = `
+// BottomNavigation { }
+val sample = "BottomNavigationItem(selected = true)"
+@Composable
+fun ModernBottomBar() {
+  NavigationBar {
+    NavigationBarItem(selected = true, onClick = {}, icon = { Text("Home") })
+  }
+}
+`;
+  assert.equal(hasKotlinLegacyBottomNavigationUsage(source), false);
+});
+
+test('hasKotlinImperativeNavigationUsage detecta navegacion imperative legacy', () => {
+  const source = `
+class CheckoutActivity : ComponentActivity() {
+  fun openOrder() {
+    startActivity(Intent(this, OrderActivity::class.java))
+    supportFragmentManager.beginTransaction().replace(R.id.container, OrderFragment()).commit()
+  }
+}
+`;
+  assert.equal(hasKotlinImperativeNavigationUsage(source), true);
+});
+
+test('hasKotlinImperativeNavigationUsage permite Navigation Compose e ignora comentarios y strings', () => {
+  const source = `
+// startActivity(Intent(this, LegacyActivity::class.java))
+val sample = "supportFragmentManager.beginTransaction()"
+@Composable
+fun AppNav() {
+  val navController = rememberNavController()
+  NavHost(navController = navController, startDestination = "home") { }
+}
+`;
+  assert.equal(hasKotlinImperativeNavigationUsage(source), false);
+});
+
+test('hasKotlinComposableObjectCreationWithoutRememberUsage detecta objetos recreados en Composable', () => {
+  const source = `
+@Composable
+fun PriceLabel(value: BigDecimal) {
+  val formatter = DecimalFormat("#.00")
+  Text(formatter.format(value))
+}
+`;
+  assert.equal(hasKotlinComposableObjectCreationWithoutRememberUsage(source), true);
+});
+
+test('hasKotlinComposableObjectCreationWithoutRememberUsage permite remember e ignora codigo no Composable', () => {
+  const source = `
+fun buildFormatter() {
+  val formatter = DecimalFormat("#.00")
+}
+
+@Composable
+fun PriceLabel(value: BigDecimal) {
+  val formatter = remember { DecimalFormat("#.00") }
+  Text(formatter.format(value))
+}
+`;
+  assert.equal(hasKotlinComposableObjectCreationWithoutRememberUsage(source), false);
+});
+
+test('hasKotlinComposableStateCreationWithoutRememberUsage detecta estado creado sin remember', () => {
+  const source = `
+@Composable
+fun SearchBox() {
+  val query = mutableStateOf("")
+  val filtered = derivedStateOf { query.value.trim() }
+  Text(filtered.value)
+}
+`;
+  assert.equal(hasKotlinComposableStateCreationWithoutRememberUsage(source), true);
+});
+
+test('hasKotlinComposableStateCreationWithoutRememberUsage permite remember e ignora codigo no Composable', () => {
+  const source = `
+fun buildState() {
+  val query = mutableStateOf("")
+}
+
+@Composable
+fun SearchBox() {
+  val query = remember { mutableStateOf("") }
+  val filtered = remember { derivedStateOf { query.value.trim() } }
+  Text(filtered.value)
+}
+`;
+  assert.equal(hasKotlinComposableStateCreationWithoutRememberUsage(source), false);
+});
+
+test('hasKotlinForceUnwrapUsage detecta force unwrap Kotlin', () => {
+  const source = `
+class CheckoutState {
+  fun title(value: String?) = value!!.trim()
+}
+`;
+  assert.equal(hasKotlinForceUnwrapUsage(source), true);
+});
+
+test('hasKotlinForceUnwrapUsage ignora comentarios, strings y operadores no unwrap', () => {
+  const source = `
+// value!!.trim()
+val sample = "value!!.trim()"
+class CheckoutState {
+  fun same(left: String, right: String) = left !== right
+  fun different(left: String, right: String) = left != right
+}
+`;
+  assert.equal(hasKotlinForceUnwrapUsage(source), false);
+});
+
 test('hasKotlinLiveDataStateExposureUsage detecta LiveData y MutableLiveData como estado observable legacy', () => {
   const source = `
 class OrdersViewModel : ViewModel() {
@@ -122,6 +618,52 @@ class OrdersViewModel : ViewModel() {
 }
 `;
   assert.equal(hasKotlinLiveDataStateExposureUsage(source), false);
+});
+
+test('hasKotlinViewModelFlowWithoutStateInUsage detecta Flow expuesto desde ViewModel sin stateIn', () => {
+  const source = `
+class OrdersViewModel : ViewModel() {
+  val state: Flow<OrdersUiState> = repository.observeOrders().map { OrdersUiState(it) }
+}
+`;
+  assert.equal(hasKotlinViewModelFlowWithoutStateInUsage(source), true);
+});
+
+test('hasKotlinViewModelFlowWithoutStateInUsage permite stateIn e ignora imports, comentarios y strings', () => {
+  const source = `
+import kotlinx.coroutines.flow.Flow
+// val state: Flow<OrdersUiState> = repository.observeOrders()
+val sample = "val state: Flow<OrdersUiState>"
+class OrdersViewModel : ViewModel() {
+  val state: StateFlow<OrdersUiState> = repository.observeOrders()
+    .map { OrdersUiState(it) }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), OrdersUiState())
+}
+`;
+  assert.equal(hasKotlinViewModelFlowWithoutStateInUsage(source), false);
+});
+
+test('hasKotlinSharedFlowUsedAsStateUsage detecta SharedFlow usado como estado de ViewModel', () => {
+  const source = `
+class OrdersViewModel : ViewModel() {
+  val uiState: SharedFlow<OrdersUiState> = MutableSharedFlow()
+  private val _screenState: MutableSharedFlow<CheckoutState> = MutableSharedFlow()
+}
+`;
+  assert.equal(hasKotlinSharedFlowUsedAsStateUsage(source), true);
+});
+
+test('hasKotlinSharedFlowUsedAsStateUsage permite SharedFlow de eventos y StateFlow de estado', () => {
+  const source = `
+import kotlinx.coroutines.flow.SharedFlow
+// val uiState: SharedFlow<OrdersUiState> = MutableSharedFlow()
+val sample = "val state: SharedFlow<OrdersUiState>"
+class OrdersViewModel : ViewModel() {
+  val uiState: StateFlow<OrdersUiState> = MutableStateFlow(OrdersUiState())
+  val events: SharedFlow<OrdersEvent> = MutableSharedFlow()
+}
+`;
+  assert.equal(hasKotlinSharedFlowUsedAsStateUsage(source), false);
 });
 
 test('hasKotlinManualCoroutineScopeInViewModelUsage detecta CoroutineScope manual dentro de ViewModel', () => {
@@ -350,6 +892,39 @@ class OrdersRepositoryFactory {
 }
 `;
   assert.equal(hasKotlinProductionMockUsage(source), false);
+});
+
+test('hasKotlinHardcodedUiStringUsage detecta textos UI hardcodeados en Compose', () => {
+  const source = `
+@Composable
+fun CheckoutHeader() {
+  Text("Comprar ahora")
+  Icon(
+    imageVector = Icons.Default.Warning,
+    contentDescription = "Aviso"
+  )
+}
+`;
+  assert.equal(hasKotlinHardcodedUiStringUsage(source), true);
+  assert.deepEqual(collectKotlinHardcodedUiStringLines(source), [4, 7]);
+});
+
+test('hasKotlinHardcodedUiStringUsage ignora imports, comentarios y strings localizados', () => {
+  const source = `
+import androidx.compose.material3.Text
+// Text("Debug")
+val sample = "Text(\\"Debug\\")"
+@Composable
+fun CheckoutHeader() {
+  Text(stringResource(R.string.checkout_title))
+  Icon(
+    imageVector = Icons.Default.Warning,
+    contentDescription = stringResource(R.string.warning)
+  )
+}
+`;
+  assert.equal(hasKotlinHardcodedUiStringUsage(source), false);
+  assert.deepEqual(collectKotlinHardcodedUiStringLines(source), []);
 });
 
 test('hasKotlinSupervisorScopeUsage detecta supervisorScope con parentesis y llaves', () => {
@@ -670,4 +1245,90 @@ class PumukiLspAndroidCanaryPremiumDiscountPolicy : PumukiLspAndroidCanaryDiscou
   assert.match(match.why, /LSP/i);
   assert.match(match.impact, /sustituci|regresion|crash/i);
   assert.match(match.expected_fix, /contrato base|estrategia|subtipo/i);
+});
+
+test('hasAndroidLegacyFingerprintApiUsage detecta APIs biométricas legacy y preserva BiometricPrompt', () => {
+  const legacyManager = `
+import android.hardware.fingerprint.FingerprintManager
+
+class LegacyBiometricAuth(private val fingerprintManager: FingerprintManager) {
+  fun authenticate(callback: FingerprintManager.AuthenticationCallback) {
+    fingerprintManager.authenticate(null, null, 0, callback, null)
+  }
+}
+`;
+  const legacyCompat = `
+class LegacyCompatAuth(private val fingerprintManager: FingerprintManagerCompat) {
+  fun authenticate(callback: FingerprintManagerCompat.AuthenticationCallback) {
+    fingerprintManager.authenticate(null, 0, null, callback, null)
+  }
+}
+`;
+  const modern = `
+import androidx.biometric.BiometricPrompt
+
+class ModernBiometricAuth(private val biometricPrompt: BiometricPrompt) {
+  fun authenticate(promptInfo: BiometricPrompt.PromptInfo) {
+    biometricPrompt.authenticate(promptInfo)
+  }
+}
+// FingerprintManager should not match inside comments
+val sample = "FingerprintManagerCompat"
+`;
+
+  assert.equal(hasAndroidLegacyFingerprintApiUsage(legacyManager), true);
+  assert.equal(hasAndroidLegacyFingerprintApiUsage(legacyCompat), true);
+  assert.equal(hasAndroidLegacyFingerprintApiUsage(modern), false);
+});
+
+test('hasAndroidCustomSingletonObjectUsage detecta singletons Kotlin propios y preserva objetos seguros', () => {
+  const singletonSource = `
+object CheckoutRepository {
+  fun loadCheckout() = Unit
+}
+
+object SessionManager {
+  fun clear() = Unit
+}
+`;
+  const safeSource = `
+object CheckoutRoute {
+  const val PATH = "checkout"
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+object CheckoutModule {
+  @Provides
+  fun provideRepository(): CheckoutRepository = CheckoutRepository()
+}
+`;
+
+  assert.equal(hasAndroidCustomSingletonObjectUsage(singletonSource), true);
+  assert.equal(hasAndroidCustomSingletonObjectUsage(safeSource), false);
+});
+
+test('hasAndroidHiltInjectionWithoutEntryPointUsage detecta Activity o Fragment con inyección Hilt sin AndroidEntryPoint', () => {
+  const missingEntryPoint = `
+class CheckoutActivity : AppCompatActivity() {
+  @Inject lateinit var analytics: CheckoutAnalytics
+}
+
+class StoresFragment : Fragment() {
+  @Inject lateinit var repository: StoresRepository
+}
+`;
+  const validEntryPoint = `
+@AndroidEntryPoint
+class CheckoutActivity : AppCompatActivity() {
+  @Inject lateinit var analytics: CheckoutAnalytics
+}
+
+class CheckoutViewModel @Inject constructor(
+  private val repository: CheckoutRepository
+) : ViewModel()
+`;
+
+  assert.equal(hasAndroidHiltInjectionWithoutEntryPointUsage(missingEntryPoint), true);
+  assert.equal(hasAndroidHiltInjectionWithoutEntryPointUsage(validEntryPoint), false);
 });

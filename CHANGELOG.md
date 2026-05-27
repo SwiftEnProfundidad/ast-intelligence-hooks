@@ -1,5 +1,103 @@
 # Changelog
 
+## [6.3.335] - 2026-05-21
+
+- `R_GO`: `skills.ios.no-wait-for-expectations` no longer reports domain helper calls such as `await waiter.wait(for:)` as XCTest legacy waits. The detector still reports free `wait(for:)`, `self.wait(for:)`, `waitForExpectations`, `XCTWaiter.wait(for:)` and `waitForExistence`.
+
+## [6.3.308] - 2026-05-20
+
+- `R_GO`: PRE_WRITE deja de exigir `skills.ios.critical-test-quality` cuando no hay cambios efectivos de test iOS en el scope actual aunque la evidencia previa arrastre `platforms.ios`. Evita el bloqueo falso `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` sobre `.ai_evidence.json` en repos limpios/no-code.
+- iOS AST skills: añadidos detectores nodales con lineas y metadata accionable para `clean architecture layer direction`, `third-party UI test framework` y `excessive public API`.
+- Canary multi-plataforma: endurecido para exigir bloqueo real, diagnostico `violations-detected`, rule id esperado/equivalente y finding asociado al archivo canario.
+
+## [6.3.301] - 2026-05-19
+
+- `PUMUKI-INC-157`: PRE_WRITE no longer hard-blocks when evidence reports `ai_gate.status=BLOCKED` but exposes no real blocking causes and only non-blocking WARN signals such as worktree hygiene warnings. Explicit AST/skills findings with `blocking=true` still block, even when their inherited severity is WARN.
+
+## [6.3.300] - 2026-05-19
+
+- CLI: `pumuki --version` and `pumuki -v` now return the effective package version with exit code `0` without invoking lifecycle status, audit, gates, notifications or evidence writes. This prevents consumer repin checks from mutating `.ai_evidence.json` just to read the installed version.
+
+## [6.3.298] - 2026-05-19
+
+## [6.3.299] - 2026-05-19
+
+- Release line for INC145 AST/skills actionable next actions. Block summaries now emit rule, file, line and expected fix for any unmapped AST/skills finding instead of falling back to a generic primary-blocker message, while preserving specific mappings such as console.log.
+
+- Release line for the merged notification/evidence/context cleanup on develop. Keeps the published package unique after 6.3.297 was already present on npm, preserving the actionable notification payloads, expanded AST detector coverage, PRE_WRITE lease/evidence cause propagation, lifecycle hook alignment, local context gate scaffold and atomic Git hygiene rules.
+
+## [6.3.297] - 2026-05-19
+
+- `PUMUKI-INC-157`: staged no-code/documentation/repin scopes no longer fail the skills contract with `EVIDENCE_SKILLS_PLATFORMS_UNDETECTED`. When the effective staged scope has no iOS, Android, backend or frontend code paths, platform skills are reported as `NOT_APPLICABLE` instead of blocking, while code-bearing slices keep the hard skills gate.
+
+## [6.3.296] - 2026-05-19
+
+- `PUMUKI-INC-156`: follow-up after RuralGo replay. Broad SwiftUI findings are now considered non-actionable even when they include a `primary_node` if that node spans many lines. Only a bounded AST/node range can hard-block a staged diff; file-level brownfield SwiftUI debt remains advisory for the atomic slice.
+
+## [6.3.295] - 2026-05-19
+
+- `PUMUKI-INC-156`: staged PRE_WRITE/PRE_COMMIT no longer blocks an atomic iOS slice with broad file-level SwiftUI skill findings that expose dozens of lines without a precise AST node introduced by the diff. Precise AST/skills findings still block in every severity when they intersect changed lines; broad brownfield file debt is retained as advisory with remediation demanding line/node-level evidence or a dedicated remediation slice.
+
+## [6.3.283] - 2026-05-19
+
+- `PUMUKI-INC-150`: brownfield XCTest specs that satisfy `makeSUT()` and `trackForMemoryLeaks()` are also exempt from Swift Testing migration assertion findings (`skills.ios.no-xctassert` / `skills.ios.no-xctunwrap`). These rules remain active for modern Swift Testing suites and XCTest specs without an explicit brownfield quality contract.
+
+## [6.3.282] - 2026-05-19
+
+- `PUMUKI-INC-150`: PRE_WRITE evidence coverage now materializes `skills.ios.critical-test-quality` as active and evaluated for XCTest test scopes that satisfy `makeSUT()` and `trackForMemoryLeaks()`. This removes the false `EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING` block after the brownfield XCTest spec has no quality findings.
+
+## [6.3.281] - 2026-05-19
+
+- `PUMUKI-INC-150`: `skills.ios.prefer-swift-testing` no longer blocks brownfield XCTest specs that already follow the repo quality contract with `makeSUT()` and `trackForMemoryLeaks()`. Swift Testing migration findings remain active for modernizable XCTest suites without an explicit brownfield quality pattern.
+
+## [6.3.280] - 2026-05-18
+
+- `PUMUKI-INC-149`: PRE_WRITE validation no longer reports the generic `EVIDENCE_GATE_BLOCKED` symptom when a concrete actionable cause has already been resolved from `next_action`. JSON output, panels and blocked notifications now keep the real cause only, avoiding contradictory "blocked by stale evidence" guidance when the remediation is an atomic-slice/worktree action.
+
+## [6.3.279] - 2026-05-18
+
+- `PUMUKI-INC-149`: `pumuki sdd validate --stage=PRE_WRITE --json` now reports the resolved actionable blocking cause first when `next_action` identifies a concrete remediation. This prevents stale `EVIDENCE_GATE_BLOCKED` symptoms from hiding the real PRE_WRITE cause in JSON, terminal panels and blocked notifications.
+
+## [6.3.278] - 2026-05-18
+
+- `PUMUKI-INC-149`: `EVIDENCE_GATE_BLOCKED` no longer hides the real blocking cause. PRE_WRITE/AI Gate now expands blocked evidence into actionable causes from `snapshot.findings` and `ai_gate.violations`, including rule, code, file, lines and remediation when available, while preserving the PRE_WRITE lease fail-closed contract.
+
+## [6.3.277] - 2026-05-18
+
+- `PUMUKI-INC-146`: PRE_WRITE now resolves the effective iOS test-quality scope from staged paths first when a staged slice exists, falling back to the worktree only when there is no staged code. This prevents unstaged Swift test files from forcing `skills.ios.critical-test-quality` onto unrelated staged iOS/SwiftUI production commits, while preserving the hard block for staged Swift test slices.
+
+## [6.3.276] - 2026-05-18
+
+- `PUMUKI-INC-146`: PRE_WRITE no longer requires `skills.ios.critical-test-quality` for iOS/SwiftUI production-only slices that do not touch test files. The rule remains hard-blocking when the PRE_WRITE scope includes Swift test paths (`/Tests/`, `/UITests/`, `*Test.swift`, `*Tests.swift`, `*.spec.swift`), preserving XCTest/Swift Testing quality enforcement without blocking unrelated visual/product commits.
+
+## [6.3.275] - 2026-05-18
+
+- PRE_WRITE skills coverage: `PRE_WRITE` now loads the full runtime skills contract for the detected platform, so Web/Frontend slices evaluate `skills.frontend.*` before commit instead of failing with `EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE` while no frontend rule was active.
+
+## [6.3.274] - 2026-05-18
+
+- Notifications: gate blocks now propagate every blocking cause as `blockingCauses[]`, emit one `[pumuki][blocked-cause]` line per violation with rule, file, reason and fix, and show rule/file/remediation in the macOS dialog without hiding AST skill violations behind tracking or governance.
+
+## [6.3.273] - 2026-05-18
+
+- Fix `PUMUKI-INC-142` residual hook communication: when PRE_WRITE cannot issue a lease because real gate findings exist, PRE_COMMIT/PRE_PUSH keep failing closed but prioritize the real blocking finding before the lease symptom.
+
+## [6.3.272] - 2026-05-18
+
+- Fix lifecycle PRE_WRITE validated-diff lease materialization: `pumuki sdd validate --stage=PRE_WRITE` refreshes evidence with PRE_WRITE semantics instead of self-blocking through PRE_COMMIT/PRE_PUSH before the lease exists.
+
+## [6.3.271] - 2026-05-18
+
+- Lifecycle: PRE_WRITE can now materialize a `validated-diff` lease after SDD and AI Gate allow an already staged slice; PRE_COMMIT/PRE_PUSH accept it only while the current code paths match the validated diff, fixing RuralGo `PUMUKI-INC-142` without opening a bypass.
+
+## [6.3.267] - 2026-05-14
+
+- iOS: `skills.ios.no-dispatchsemaphore` now emits actionable AST-style evidence for `DispatchSemaphore` usage, including exact lines, primary/related nodes and remediation toward `TaskGroup`, `AsyncStream` or explicit async boundaries.
+
+## [6.3.266] - 2026-05-14
+
+- iOS: `skills.ios.no-dispatchgroup` now emits actionable AST-style evidence for `DispatchGroup` usage, including exact lines, primary/related nodes and remediation toward `TaskGroup` or other Swift concurrency boundaries.
+
 ## [6.3.265] - 2026-05-14
 
 - iOS: `skills.ios.no-dispatchqueue` now emits actionable AST-style evidence for GCD `DispatchQueue` calls, including exact lines, primary/related nodes and remediation toward Swift structured concurrency.

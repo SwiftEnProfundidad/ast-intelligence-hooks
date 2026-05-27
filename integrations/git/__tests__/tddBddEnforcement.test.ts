@@ -101,6 +101,7 @@ test('enforceTddBddPolicy pasa cuando contrato es valido y enlaza .feature exist
               red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
               green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
               refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
+              verify: { status: 'passed', timestamp: '2026-02-26T10:03:00.000Z' },
             },
           ],
         },
@@ -119,7 +120,54 @@ test('enforceTddBddPolicy pasa cuando contrato es valido y enlaza .feature exist
     assert.equal(result.snapshot.status, 'passed');
     assert.equal(result.snapshot.evidence.state, 'valid');
     assert.equal(result.snapshot.evidence.slices_valid, 1);
+    assert.equal(result.snapshot.evidence.phases?.verify, 'passed');
     assert.equal(result.findings.length, 0);
+  });
+});
+
+test('enforceTddBddPolicy bloquea evidencia sin fase VERIFY', async () => {
+  await withTempDir('pumuki-tdd-enforce-missing-verify-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki', 'artifacts'), { recursive: true });
+    mkdirSync(join(repoRoot, 'features'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'features', 'checkout.feature'),
+      'Feature: Checkout\n  Scenario: user checkout\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json'),
+      JSON.stringify(
+        {
+          version: '1',
+          generated_at: '2026-02-26T10:00:00.000Z',
+          slices: [
+            {
+              id: 'slice-1',
+              scenario_ref: 'features/checkout.feature:2',
+              red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
+              green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
+              refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
+            },
+          ],
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const result = enforceTddBddPolicy({
+      repoRoot,
+      branch: 'feature/tdd',
+      facts: addedFeatureFacts(),
+    });
+
+    assert.equal(result.snapshot.status, 'blocked');
+    assert.equal(result.snapshot.evidence.phases?.verify, 'missing');
+    assert.equal(
+      result.findings.some((finding) => finding.code === 'GOLDEN_FLOW_VERIFY_EVIDENCE_MISSING'),
+      true
+    );
   });
 });
 
@@ -139,6 +187,7 @@ test('enforceTddBddPolicy bloquea cuando scenario_ref no apunta a archivo .featu
               red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
               green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
               refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
+              verify: { status: 'passed', timestamp: '2026-02-26T10:03:00.000Z' },
             },
           ],
         },
@@ -159,6 +208,58 @@ test('enforceTddBddPolicy bloquea cuando scenario_ref no apunta a archivo .featu
       result.findings.some((finding) => finding.ruleId === 'generic_bdd_feature_required'),
       true
     );
+  });
+});
+
+test('enforceTddBddPolicy no revalida slices historicas acumuladas si la ultima slice vigente es valida', async () => {
+  await withTempDir('pumuki-tdd-enforce-current-slice-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki', 'artifacts'), { recursive: true });
+    mkdirSync(join(repoRoot, 'features'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'features', 'current.feature'),
+      'Feature: Current slice\n  Scenario: current behavior\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json'),
+      JSON.stringify(
+        {
+          version: '1',
+          generated_at: '2026-02-26T10:00:00.000Z',
+          slices: [
+            {
+              id: 'PUMUKI-INC-059',
+              scenario_ref: 'PUMUKI-INC-059.feature',
+              red: { status: 'failed', timestamp: '2026-02-26T09:00:00.000Z' },
+              green: { status: 'passed', timestamp: '2026-02-26T09:01:00.000Z' },
+              refactor: { status: 'passed', timestamp: '2026-02-26T09:02:00.000Z' },
+              verify: { status: 'passed', timestamp: '2026-02-26T09:03:00.000Z' },
+            },
+            {
+              id: 'PUMUKI-INC-173',
+              scenario_ref: 'features/current.feature:2',
+              red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
+              green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
+              refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
+              verify: { status: 'passed', timestamp: '2026-02-26T10:03:00.000Z' },
+            },
+          ],
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const result = enforceTddBddPolicy({
+      repoRoot,
+      branch: 'bugfix/platform-skills-enforcement-canary',
+      facts: addedFeatureFacts(),
+    });
+
+    assert.equal(result.snapshot.status, 'passed');
+    assert.equal(result.snapshot.evidence.slices_total, 1);
+    assert.equal(result.findings.length, 0);
   });
 });
 

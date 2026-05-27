@@ -21,6 +21,8 @@ import {
   type PreWriteEnforcementResolution,
 } from '../policy/preWriteEnforcement';
 import { readLifecycleExperimentalFeaturesSnapshot } from './experimentalFeaturesSnapshot';
+import { GitService } from '../git/GitService';
+import { evaluatePreWriteAgentGuard } from './preWriteLease';
 
 import {
   type ParsedArgs,
@@ -37,6 +39,7 @@ import {
   buildSddExperimentalEnableAdvisoryCommand,
   runRawPreWriteAiGateCheck,
   buildPreWriteExperimentalEnableAdvisoryCommand,
+  prioritizePreWriteAiGateViolations,
 } from './cli';
 
 export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: LifecycleCliDependencies): Promise<number> => {
@@ -65,6 +68,39 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             }
           }
           return 0;
+        }
+        if (parsed.sddCommand === 'guard') {
+          const requestedStage = parsed.sddStage ?? 'PRE_WRITE';
+          if (requestedStage !== 'PRE_WRITE') {
+            if (parsed.json) {
+              writeInfo(JSON.stringify({
+                allowed: false,
+                stage: requestedStage,
+                code: 'PRE_WRITE_AGENT_GUARD_UNSUPPORTED_STAGE',
+                message: 'Agent pre-write guard only supports PRE_WRITE.',
+              }, null, 2));
+            } else {
+              writeInfo('[pumuki][sdd] guard allowed=no code=PRE_WRITE_AGENT_GUARD_UNSUPPORTED_STAGE');
+              writeInfo('[pumuki][sdd] Agent pre-write guard only supports PRE_WRITE.');
+            }
+            return 1;
+          }
+          const guard = evaluatePreWriteAgentGuard({
+            repoRoot: process.cwd(),
+            git: new GitService(),
+          });
+          if (parsed.json) {
+            writeInfo(JSON.stringify(guard, null, 2));
+          } else {
+            writeInfo(
+              `[pumuki][sdd] guard stage=PRE_WRITE allowed=${guard.allowed ? 'yes' : 'no'} code=${guard.code}`
+            );
+            writeInfo(`[pumuki][sdd] ${guard.message}`);
+            if (!guard.allowed) {
+              writeInfo(`[pumuki][sdd] solution: ${guard.expected_fix}`);
+            }
+          }
+          return guard.allowed ? 0 : 1;
         }
         if (parsed.sddCommand === 'validate') {
           const requestedStage = parsed.sddStage ?? 'PRE_COMMIT';
@@ -205,6 +241,55 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             sdd: result,
             aiGate: rawPreWriteAiGate ?? aiGate,
           });
+          const effectiveAiGate = rawPreWriteAiGate ?? aiGate;
+          let reportedAiGate = effectiveAiGate
+            ? prioritizePreWriteAiGateViolations(effectiveAiGate, nextAction)
+            : null;
+          if (
+            result.stage === 'PRE_WRITE' &&
+            result.decision.allowed &&
+            reportedAiGate?.allowed
+          ) {
+            try {
+              const lease = activeDependencies.writePreWriteLease({
+                repoRoot: process.cwd(),
+                git: new GitService(),
+                allowExistingCodeChanges: true,
+              });
+              if (!lease.valid) {
+                reportedAiGate = {
+                  ...reportedAiGate,
+                  status: 'BLOCKED',
+                  allowed: false,
+                  violations: [
+                    ...reportedAiGate.violations,
+                    {
+                      code: lease.code,
+                      severity: 'ERROR',
+                      message: lease.message,
+                    },
+                  ],
+                };
+              }
+            } catch (error) {
+              reportedAiGate = {
+                ...reportedAiGate,
+                status: 'BLOCKED',
+                allowed: false,
+                violations: [
+                  ...reportedAiGate.violations,
+                  {
+                    code: 'PRE_WRITE_LEASE_WRITE_FAILED',
+                    severity: 'ERROR',
+                    message:
+                      error instanceof Error
+                        ? `PRE_WRITE validation passed but could not write the required lease: ${error.message}`
+                        : 'PRE_WRITE validation passed but could not write the required lease.',
+                  },
+                ],
+              };
+            }
+          }
           const sddExperimentalNextAction =
             !aiGate && result.decision.code === 'SDD_EXPERIMENTAL_DISABLED'
               ? {
@@ -215,10 +300,10 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
           if (parsed.json) {
             writeInfo(
               JSON.stringify(
-                (rawPreWriteAiGate ?? aiGate)
+                reportedAiGate
                   ? buildPreWriteValidationEnvelope(
                     result,
-                    rawPreWriteAiGate ?? aiGate!,
+                    reportedAiGate,
                     preWriteEnforcement,
                     experimentalFeatures,
                     policyValidation,
@@ -272,16 +357,16 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
                 );
               }
             }
-            if (aiGate) {
+            if (reportedAiGate) {
               writeInfo(buildPreWriteValidationPanel({
                 sdd: result,
-                aiGate,
+                aiGate: reportedAiGate,
                 automation: automationTrace,
               }));
               writeInfo(
-                `[pumuki][ai-gate] stage=${aiGate.stage} status=${aiGate.status} violations=${aiGate.violations.length}`
+                `[pumuki][ai-gate] stage=${reportedAiGate.stage} status=${reportedAiGate.status} violations=${reportedAiGate.violations.length}`
               );
-              for (const violation of aiGate.violations) {
+              for (const violation of reportedAiGate.violations) {
                 writeInfo(
                   withOptionalLocation(
                     `[pumuki][ai-gate] ${violation.code}: ${violation.message}`,
@@ -303,14 +388,14 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             activeDependencies.emitAuditSummaryNotificationFromAiGate({
               repoRoot: process.cwd(),
               stage: result.stage,
-              aiGateResult: aiGate,
+              aiGateResult: reportedAiGate ?? aiGate,
             });
           }
           if (!result.decision.allowed && preWriteEnforcement.blocking) {
             activeDependencies.emitGateBlockedNotification({
               repoRoot: process.cwd(),
               stage: result.stage,
-              totalViolations: aiGate?.violations.length ?? 0,
+              totalViolations: reportedAiGate?.violations.length ?? aiGate?.violations.length ?? 0,
               causeCode: result.decision.code,
               causeMessage: result.decision.message,
               remediation: resolvePreWriteBlockedRemediation({
@@ -320,20 +405,30 @@ export const runSddCommand = async (parsed: ParsedArgs, activeDependencies: Life
             });
             return 1;
           }
-          if (aiGate && !aiGate.allowed && preWriteEnforcement.blocking) {
-            const firstViolation = aiGate.violations[0];
+          if (reportedAiGate && !reportedAiGate.allowed && preWriteEnforcement.blocking) {
+            const firstViolation = reportedAiGate.violations[0];
             const causeCode = firstViolation?.code ?? 'AI_GATE_BLOCKED';
             const causeMessage = firstViolation?.message ?? 'AI gate blocked PRE_WRITE stage.';
             activeDependencies.emitGateBlockedNotification({
               repoRoot: process.cwd(),
               stage: result.stage,
-              totalViolations: aiGate.violations.length,
+              totalViolations: reportedAiGate.violations.length,
               causeCode,
               causeMessage,
               remediation: resolvePreWriteBlockedRemediation({
                 causeCode,
                 nextAction,
               }),
+              blockingCauses: reportedAiGate.violations.map((violation) => ({
+                code: violation.code,
+                message: violation.message,
+                ruleId: violation.code,
+                file: resolveAiGateViolationLocation(violation.code),
+                remediation: resolvePreWriteBlockedRemediation({
+                  causeCode: violation.code,
+                  nextAction,
+                }),
+              })),
             });
             return 1;
           }

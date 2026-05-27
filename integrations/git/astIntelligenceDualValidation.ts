@@ -188,6 +188,7 @@ const toDualValidationFinding = (params: {
   return {
     ruleId: 'governance.ast-intelligence.dual-validation.shadow',
     severity: 'INFO',
+    blocking: false,
     code: 'AST_INTELLIGENCE_DUAL_VALIDATION_SHADOW',
     message:
       `AST Intelligence dual validation shadow at ${params.stage}: ` +

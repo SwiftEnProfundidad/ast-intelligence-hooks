@@ -64,7 +64,17 @@ const writeBlockedEvidence = (params: {
     snapshot: {
       stage: params.stage,
       outcome: 'BLOCK' as const,
-      findings: [],
+      findings: [
+        {
+          ruleId: 'skills.ios.no-force-unwrap',
+          severity: 'ERROR' as const,
+          code: 'NO_FORCE_UNWRAP',
+          message: 'Force unwrap is not allowed.',
+          file: 'apps/ios/App/Feature.swift',
+          lines: [12],
+          expected_fix: 'Use guard let or optional binding.',
+        },
+      ],
     },
     ledger: [],
     platforms: {},
@@ -527,6 +537,10 @@ test('readLifecycleStatus expone issues canónicos cuando governance está bloqu
       status.issues.find((issue) => issue.message.includes('Governance is blocked'))?.message ?? '',
       /active_entries=PUMUKI-INC-078@L3, PUMUKI-INC-079@L4/i
     );
+    const issue = status.issues.find((entry) => entry.message.includes('Governance is blocked'));
+    assert.match(issue?.message ?? '', /skills\.ios\.no-force-unwrap/i);
+    assert.equal(issue?.blockingCauses?.length, 1);
+    assert.equal(issue?.blockingCauses?.[0]?.file, 'apps/ios/App/Feature.swift');
   });
 });
 
@@ -593,5 +607,31 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
     assert.equal(status.experimentalFeatures.features.learning_context.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.mcp_enterprise.mode, 'strict');
     assert.equal(status.experimentalFeatures.features.sdd.mode, 'strict');
+  });
+});
+
+test('readLifecycleStatus expone diagnostico de notificaciones desactivadas', async () => {
+  await withTempDir('pumuki-lifecycle-status-notifications-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'system-notifications.json'),
+      JSON.stringify({ enabled: false, channel: 'macos', blockedDialogEnabled: true }, null, 2),
+      'utf8'
+    );
+    const git = new FakeLifecycleGitService(repoRoot, [], {});
+
+    const status = readLifecycleStatus({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(status.notifications.enabled, false);
+    assert.equal(status.notifications.deliverable, false);
+    assert.equal(status.notifications.disabledReason, 'disabled');
+    assert.match(status.notifications.remediation ?? '', /Activa notificaciones/i);
+    assert.match(
+      status.issues.map((issue) => issue.message).join('\n'),
+      /System notifications are not deliverable/
+    );
   });
 });

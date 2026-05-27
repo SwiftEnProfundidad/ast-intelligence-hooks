@@ -3,30 +3,49 @@ import test from 'node:test';
 import { iosRules } from './ios';
 
 test('iosRules define reglas heurísticas locked para plataforma ios', () => {
-  assert.equal(iosRules.length, 88);
+  assert.equal(iosRules.length, 137);
 
   const ids = iosRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
     'heuristics.ios.force-unwrap.ast',
     'heuristics.ios.anyview.ast',
+    'heuristics.ios.type-erasure.any.ast',
     'heuristics.ios.force-try.ast',
     'heuristics.ios.force-cast.ast',
     'heuristics.ios.callback-style.ast',
+    'heuristics.ios.combine.sink-without-store.ast',
     'heuristics.ios.dispatchqueue.ast',
     'heuristics.ios.dispatchgroup.ast',
     'heuristics.ios.dispatchsemaphore.ast',
     'heuristics.ios.operation-queue.ast',
     'heuristics.ios.task-detached.ast',
+    'heuristics.ios.concurrency.long-task-without-cancellation-check.ast',
     'heuristics.ios.concurrency.async-without-await.ast',
+    'heuristics.ios.concurrency.dummy-await.ast',
     'heuristics.ios.error.empty-catch.ast',
+    'heuristics.ios.error.nserror-throw.ast',
+    'heuristics.ios.networking.endpoint-enum-ocp.ast',
     'heuristics.ios.swiftui.onappear-task.ast',
     'heuristics.ios.swiftui.onchange-task.ast',
+    'heuristics.ios.swiftui.onchange-readonly-var.ast',
     'heuristics.ios.memory.strong-delegate.ast',
+    'heuristics.ios.architecture.cross-feature-import.ast',
+    'heuristics.ios.architecture.layer-direction-violation.ast',
+    'heuristics.ios.architecture.excessive-public-api.ast',
     'heuristics.ios.memory.strong-self-escaping-closure.ast',
+    'heuristics.ios.memory.unowned-self-capture.ast',
+    'heuristics.ios.memory.manual-management.ast',
+    'heuristics.ios.testing.makesut-without-memory-tracking.ast',
+    'heuristics.ios.testing.direct-sut-instantiation-without-makesut.ast',
+    'heuristics.ios.maintainability.nested-if-pyramid.ast',
+    'heuristics.ios.maintainability.comment-trivia.ast',
+    'heuristics.ios.maintainability.warning-suppression.ast',
     'heuristics.ios.architecture.custom-singleton.ast',
     'heuristics.ios.architecture.swinject.ast',
+    'heuristics.ios.architecture.tca-composable-architecture.ast',
     'heuristics.ios.architecture.massive-view-controller.ast',
     'heuristics.ios.maintainability.magic-number-layout.ast',
+    'heuristics.ios.uikit.manual-frame-layout.ast',
     'heuristics.ios.safety.non-iboutlet-iuo.ast',
     'heuristics.ios.logging.adhoc-print.ast',
     'heuristics.ios.logging.sensitive-data.ast',
@@ -36,21 +55,43 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.json.jsonserialization.ast',
     'heuristics.ios.dependencies.cocoapods.ast',
     'heuristics.ios.dependencies.carthage.ast',
+    'heuristics.ios.dependencies.swiftpm-branch-dependency.ast',
+    'heuristics.ios.dependencies.swift-tools-version-below-6-2.ast',
+    'heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast',
+    'heuristics.ios.concurrency.strict-concurrency-below-complete.ast',
+    'heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast',
+    'heuristics.ios.concurrency.upcoming-feature-disabled.ast',
+    'heuristics.ios.concurrency.ui-state-without-mainactor.ast',
+    'heuristics.ios.concurrency.shared-mutable-state-without-actor.ast',
+    'heuristics.ios.concurrency.mainactor-run-patch.ast',
+    'heuristics.ios.naming.non-pascal-case-type.ast',
+    'heuristics.ios.uikit.cell-without-reuse.ast',
     'heuristics.ios.security.userdefaults-sensitive-data.ast',
     'heuristics.ios.security.insecure-transport.ast',
+    'heuristics.ios.security.urlsession-trust-bypass.ast',
     'heuristics.ios.localization.localizable-strings.ast',
+    'heuristics.ios.interface-builder.storyboard-xib.ast',
     'heuristics.ios.localization.hardcoded-ui-string.ast',
     'heuristics.ios.assets.loose-resource.ast',
     'heuristics.ios.accessibility.fixed-font-size.ast',
     'heuristics.ios.localization.physical-text-alignment.ast',
     'heuristics.ios.performance.blocking-sleep.ast',
+    'heuristics.ios.concurrency.thread-centric-debugging.ast',
     'heuristics.ios.accessibility.icon-only-control-label.ast',
+    'heuristics.ios.accessibility.missing-accessibility-identifier.ast',
+    'heuristics.ios.swiftui.missing-bindable-observable-binding.ast',
     'heuristics.ios.unchecked-sendable.ast',
     'heuristics.ios.preconcurrency.ast',
     'heuristics.ios.nonisolated-unsafe.ast',
     'heuristics.ios.assume-isolated.ast',
     'heuristics.ios.observable-object.ast',
+    'heuristics.ios.swiftui.legacy-preview-provider.ast',
     'heuristics.ios.legacy-swiftui-observable-wrapper.ast',
+    'heuristics.ios.swiftui.environment-object.ast',
+    'heuristics.ios.testing.test-double-without-protocol.ast',
+    'heuristics.ios.testing.production-test-double.ast',
+    'heuristics.ios.accessibility.low-contrast-static-color-pair.ast',
     'heuristics.ios.swiftui.non-private-state-ownership.ast',
     'heuristics.ios.passed-value-state-wrapper.ast',
     'heuristics.ios.foreach-indices.ast',
@@ -70,13 +111,20 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.swiftui.non-lazy-scroll-foreach.ast',
     'heuristics.ios.swiftui.body-object-creation.ast',
     'heuristics.ios.swiftui.image-data-decoding.ast',
+    'heuristics.ios.swiftui.manual-rendering-without-imagerenderer.ast',
+    'heuristics.ios.swiftui.large-viewbuilder-function.ast',
+    'heuristics.ios.accessibility.animation-without-reduce-motion.ast',
     'heuristics.ios.swiftui.inline-action-logic.ast',
     'heuristics.ios.navigation-view.ast',
+    'heuristics.ios.navigation.path-without-restoration.ast',
     'heuristics.ios.swiftui.untyped-navigation-link-destination.ast',
     'heuristics.ios.foreground-color.ast',
     'heuristics.ios.corner-radius.ast',
     'heuristics.ios.tab-item.ast',
     'heuristics.ios.on-tap-gesture.ast',
+    'heuristics.ios.accessibility.on-tap-without-button-trait.ast',
+    'heuristics.ios.swiftui.glass-interactive-static-element.ast',
+    'heuristics.ios.swiftui.glasseffectid-without-namespace.ast',
     'heuristics.ios.string-format.ast',
     'heuristics.ios.scrollview-shows-indicators.ast',
     'heuristics.ios.sheet-is-presented.ast',
@@ -90,6 +138,7 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'heuristics.ios.testing.legacy-expectation-description.ast',
     'heuristics.ios.testing.mixed-frameworks.ast',
     'heuristics.ios.testing.quick-nimble.ast',
+    'heuristics.ios.testing.third-party-ui-test-framework.ast',
     'heuristics.ios.core-data.nsmanagedobject-boundary.ast',
     'heuristics.ios.core-data.nsmanagedobject-async-boundary.ast',
     'heuristics.ios.core-data.layer-leak.ast',
@@ -103,20 +152,152 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'HEURISTICS_IOS_FORCE_UNWRAP_AST'
   );
   assert.equal(
+    byId.get('heuristics.ios.type-erasure.any.ast')?.then.code,
+    'HEURISTICS_IOS_TYPE_ERASURE_ANY_AST'
+  );
+  assert.equal(
     byId.get('heuristics.ios.task-detached.ast')?.then.code,
     'HEURISTICS_IOS_TASK_DETACHED_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.long-task-without-cancellation-check.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_LONG_TASK_WITHOUT_CANCELLATION_CHECK_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.concurrency.async-without-await.ast')?.then.code,
     'HEURISTICS_IOS_CONCURRENCY_ASYNC_WITHOUT_AWAIT_AST'
   );
   assert.equal(
+    byId.get('heuristics.ios.concurrency.dummy-await.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_DUMMY_AWAIT_AST'
+  );
+  assert.equal(
     byId.get('heuristics.ios.error.empty-catch.ast')?.then.code,
     'HEURISTICS_IOS_ERROR_EMPTY_CATCH_AST'
   );
   assert.equal(
+    byId.get('heuristics.ios.combine.sink-without-store.ast')?.then.code,
+    'HEURISTICS_IOS_COMBINE_SINK_WITHOUT_STORE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.memory.unowned-self-capture.ast')?.then.code,
+    'HEURISTICS_IOS_MEMORY_UNOWNED_SELF_CAPTURE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.memory.manual-management.ast')?.then.code,
+    'HEURISTICS_IOS_MEMORY_MANUAL_MANAGEMENT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.dependencies.swift-tools-version-below-6-2.ast')?.then.code,
+    'HEURISTICS_IOS_DEPENDENCIES_SWIFT_TOOLS_VERSION_BELOW_6_2_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.swiftpm-default-isolation-not-mainactor.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_SWIFTPM_DEFAULT_ISOLATION_NOT_MAINACTOR_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.swiftpm-strict-concurrency-below-complete.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_SWIFTPM_STRICT_CONCURRENCY_BELOW_COMPLETE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.strict-concurrency-below-complete.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_STRICT_CONCURRENCY_BELOW_COMPLETE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.default-actor-isolation-not-mainactor.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_DEFAULT_ACTOR_ISOLATION_NOT_MAINACTOR_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.upcoming-feature-disabled.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_UPCOMING_FEATURE_DISABLED_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.ui-state-without-mainactor.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_UI_STATE_WITHOUT_MAINACTOR_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.shared-mutable-state-without-actor.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_SHARED_MUTABLE_STATE_WITHOUT_ACTOR_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.concurrency.mainactor-run-patch.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_MAINACTOR_RUN_PATCH_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.architecture.cross-feature-import.ast')?.then.code,
+    'HEURISTICS_IOS_ARCHITECTURE_CROSS_FEATURE_IMPORT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.architecture.layer-direction-violation.ast')?.then.code,
+    'HEURISTICS_IOS_ARCHITECTURE_LAYER_DIRECTION_VIOLATION_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.architecture.excessive-public-api.ast')?.then.code,
+    'HEURISTICS_IOS_ARCHITECTURE_EXCESSIVE_PUBLIC_API_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.naming.non-pascal-case-type.ast')?.then.code,
+    'HEURISTICS_IOS_NAMING_NON_PASCAL_CASE_TYPE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.uikit.cell-without-reuse.ast')?.then.code,
+    'HEURISTICS_IOS_UIKIT_CELL_WITHOUT_REUSE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.testing.makesut-without-memory-tracking.ast')?.then.code,
+    'HEURISTICS_IOS_TESTING_MAKESUT_WITHOUT_MEMORY_TRACKING_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.testing.direct-sut-instantiation-without-makesut.ast')?.then.code,
+    'HEURISTICS_IOS_TESTING_DIRECT_SUT_INSTANTIATION_WITHOUT_MAKESUT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.manual-rendering-without-imagerenderer.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_MANUAL_RENDERING_WITHOUT_IMAGERENDERER_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.large-viewbuilder-function.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_LARGE_VIEWBUILDER_FUNCTION_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.accessibility.animation-without-reduce-motion.ast')?.then.code,
+    'HEURISTICS_IOS_ACCESSIBILITY_ANIMATION_WITHOUT_REDUCE_MOTION_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.accessibility.on-tap-without-button-trait.ast')?.then.code,
+    'HEURISTICS_IOS_ACCESSIBILITY_ON_TAP_WITHOUT_BUTTON_TRAIT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.navigation.path-without-restoration.ast')?.then.code,
+    'HEURISTICS_IOS_NAVIGATION_PATH_WITHOUT_RESTORATION_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.glasseffectid-without-namespace.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_GLASSEFFECTID_WITHOUT_NAMESPACE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.maintainability.nested-if-pyramid.ast')?.then.code,
+    'HEURISTICS_IOS_MAINTAINABILITY_NESTED_IF_PYRAMID_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.maintainability.comment-trivia.ast')?.then.code,
+    'HEURISTICS_IOS_MAINTAINABILITY_COMMENT_TRIVIA_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.maintainability.warning-suppression.ast')?.then.code,
+    'HEURISTICS_IOS_MAINTAINABILITY_WARNING_SUPPRESSION_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.uikit.manual-frame-layout.ast')?.then.code,
+    'HEURISTICS_IOS_UIKIT_MANUAL_FRAME_LAYOUT_AST'
+  );
+  assert.equal(
     byId.get('heuristics.ios.swiftui.onchange-task.ast')?.then.code,
     'HEURISTICS_IOS_SWIFTUI_ONCHANGE_TASK_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.onchange-readonly-var.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_ONCHANGE_READONLY_VAR_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.logging.adhoc-print.ast')?.then.code,
@@ -129,6 +310,14 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
   assert.equal(
     byId.get('heuristics.ios.networking.alamofire.ast')?.then.code,
     'HEURISTICS_IOS_NETWORKING_ALAMOFIRE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.architecture.tca-composable-architecture.ast')?.then.code,
+    'HEURISTICS_IOS_ARCHITECTURE_TCA_COMPOSABLE_ARCHITECTURE_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.testing.third-party-ui-test-framework.ast')?.then.code,
+    'HEURISTICS_IOS_TESTING_THIRD_PARTY_UI_TEST_FRAMEWORK_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.json.jsonserialization.ast')?.then.code,
@@ -155,6 +344,10 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'HEURISTICS_IOS_LOCALIZATION_LOCALIZABLE_STRINGS_AST'
   );
   assert.equal(
+    byId.get('heuristics.ios.interface-builder.storyboard-xib.ast')?.then.code,
+    'HEURISTICS_IOS_INTERFACE_BUILDER_STORYBOARD_XIB_AST'
+  );
+  assert.equal(
     byId.get('heuristics.ios.localization.hardcoded-ui-string.ast')?.then.code,
     'HEURISTICS_IOS_LOCALIZATION_HARDCODED_UI_STRING_AST'
   );
@@ -179,8 +372,20 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'HEURISTICS_IOS_PERFORMANCE_BLOCKING_SLEEP_AST'
   );
   assert.equal(
+    byId.get('heuristics.ios.concurrency.thread-centric-debugging.ast')?.then.code,
+    'HEURISTICS_IOS_CONCURRENCY_THREAD_CENTRIC_DEBUGGING_AST'
+  );
+  assert.equal(
     byId.get('heuristics.ios.accessibility.icon-only-control-label.ast')?.then.code,
     'HEURISTICS_IOS_ACCESSIBILITY_ICON_ONLY_CONTROL_LABEL_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.accessibility.missing-accessibility-identifier.ast')?.then.code,
+    'HEURISTICS_IOS_ACCESSIBILITY_MISSING_ACCESSIBILITY_IDENTIFIER_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.missing-bindable-observable-binding.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_MISSING_BINDABLE_OBSERVABLE_BINDING_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.preconcurrency.ast')?.then.code,
@@ -195,8 +400,24 @@ test('iosRules define reglas heurísticas locked para plataforma ios', () => {
     'HEURISTICS_IOS_ASSUME_ISOLATED_AST'
   );
   assert.equal(
+    byId.get('heuristics.ios.dependencies.swiftpm-branch-dependency.ast')?.then.code,
+    'HEURISTICS_IOS_DEPENDENCIES_SWIFTPM_BRANCH_DEPENDENCY_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.error.nserror-throw.ast')?.then.code,
+    'HEURISTICS_IOS_ERROR_NSERROR_THROW_AST'
+  );
+  assert.equal(
     byId.get('heuristics.ios.legacy-swiftui-observable-wrapper.ast')?.then.code,
     'HEURISTICS_IOS_LEGACY_SWIFTUI_OBSERVABLE_WRAPPER_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.swiftui.environment-object.ast')?.then.code,
+    'HEURISTICS_IOS_SWIFTUI_ENVIRONMENT_OBJECT_AST'
+  );
+  assert.equal(
+    byId.get('heuristics.ios.testing.production-test-double.ast')?.then.code,
+    'HEURISTICS_IOS_TESTING_PRODUCTION_TEST_DOUBLE_AST'
   );
   assert.equal(
     byId.get('heuristics.ios.passed-value-state-wrapper.ast')?.then.code,

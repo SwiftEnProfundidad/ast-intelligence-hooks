@@ -2,6 +2,11 @@ import type { EvidenceReadResult } from '../evidence/readEvidence';
 import { readEvidenceResult } from '../evidence/readEvidence';
 import { captureRepoState } from '../evidence/repoState';
 import type { RepoState } from '../evidence/schema';
+import {
+  extractEvidenceBlockingCauses,
+  type EvidenceBlockingCause,
+  formatEvidenceBlockingCause,
+} from '../evidence/blockingCauses';
 import { resolvePolicyForStage } from './stagePolicies';
 import { execFileSync } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
@@ -27,6 +32,11 @@ export type AiGateViolation = {
   code: string;
   message: string;
   severity: 'ERROR' | 'WARN';
+  ruleId?: string;
+  file?: string;
+  line?: number;
+  lines?: readonly number[];
+  remediation?: string;
 };
 
 type PreWriteWorktreeHygienePolicy = {
@@ -194,6 +204,50 @@ const toWarnViolation = (code: string, message: string): AiGateViolation => ({
   message,
 });
 
+const normalizeEvidenceCauseLines = (
+  lines: EvidenceBlockingCause['lines']
+): Pick<AiGateViolation, 'line' | 'lines'> => {
+  if (typeof lines === 'number' && Number.isFinite(lines) && lines > 0) {
+    return { line: Math.floor(lines) };
+  }
+  if (Array.isArray(lines)) {
+    const normalized = Array.from(
+      new Set(
+        lines
+          .filter((line): line is number => typeof line === 'number' && Number.isFinite(line) && line > 0)
+          .map((line) => Math.floor(line))
+      )
+    ).sort((left, right) => left - right);
+    return normalized.length > 0 ? { lines: normalized } : {};
+  }
+  if (typeof lines === 'string') {
+    const normalized = Array.from(
+      new Set(
+        lines
+          .split(',')
+          .map((line) => Number.parseInt(line.trim(), 10))
+          .filter((line) => Number.isFinite(line) && line > 0)
+      )
+    ).sort((left, right) => left - right);
+    return normalized.length > 0 ? { lines: normalized } : {};
+  }
+  return {};
+};
+
+const toEvidenceGateBlockedViolation = (
+  severity: AiGateViolation['severity'],
+  message: string,
+  cause?: EvidenceBlockingCause
+): AiGateViolation => ({
+  code: 'EVIDENCE_GATE_BLOCKED',
+  severity,
+  message,
+  ruleId: cause?.ruleId,
+  file: cause?.file,
+  remediation: cause?.remediation,
+  ...normalizeEvidenceCauseLines(cause?.lines),
+});
+
 const toSkillsViolation = (
   resolution: SkillsEnforcementResolution,
   code: string,
@@ -206,6 +260,24 @@ const toSkillsViolation = (
 
 const toCriticalSkillsViolation = (code: string, message: string): AiGateViolation =>
   toErrorViolation(code, message);
+
+const buildEvidenceGateBlockedMessage = (result: Extract<EvidenceReadResult, { kind: 'valid' }>): string => {
+  const causes = extractEvidenceBlockingCauses(result.evidence);
+  if (causes.length === 0) {
+    return 'Evidence AI gate status is BLOCKED. No blocking causes were found in evidence; rerun PRE_WRITE audit to regenerate actionable evidence.';
+  }
+  const formattedCauses = causes
+    .slice(0, 8)
+    .map((cause, index) => `${index + 1}) ${formatEvidenceBlockingCause(cause)}`);
+  const suffix =
+    causes.length > formattedCauses.length
+      ? ` ... and ${causes.length - formattedCauses.length} more blocking cause(s).`
+      : '';
+  return `Evidence AI gate status is BLOCKED. Blocking causes: ${formattedCauses.join(' || ')}${suffix}`;
+};
+
+const hasEvidenceBlockingCause = (result: Extract<EvidenceReadResult, { kind: 'valid' }>): boolean =>
+  extractEvidenceBlockingCauses(result.evidence).length > 0;
 
 const normalizeRepoStateLifecycleVersions = (repoState: RepoState): RepoState => {
   const packageVersion = repoState.lifecycle.package_version;
@@ -401,18 +473,110 @@ const collectWorktreeChangedPaths = (repoRoot: string): ReadonlyArray<string> =>
   }
 };
 
+const collectStagedChangedPaths = (repoRoot: string): ReadonlyArray<string> => {
+  try {
+    const output = execFileSync(
+      'git',
+      ['diff', '--cached', '--name-only'],
+      {
+        cwd: repoRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }
+    );
+    const files = output
+      .split('\n')
+      .map((line) => normalizeChangedPath(line))
+      .filter((line) => line.length > 0);
+    return [...new Set(files)];
+  } catch {
+    return [];
+  }
+};
+
+const collectPreWriteEffectiveChangedPaths = (repoRoot: string): ReadonlyArray<string> => {
+  const stagedPaths = collectStagedChangedPaths(repoRoot);
+  if (stagedPaths.length > 0) {
+    return stagedPaths;
+  }
+  return collectWorktreeChangedPaths(repoRoot);
+};
+
+const isIosTestQualityPath = (filePath: string): boolean => {
+  const normalized = normalizeChangedPath(filePath).toLowerCase();
+  if (!normalized.endsWith('.swift')) {
+    return false;
+  }
+  return normalized.includes('/tests/')
+    || normalized.includes('/uitests/')
+    || normalized.endsWith('test.swift')
+    || normalized.endsWith('tests.swift')
+    || normalized.endsWith('.spec.swift');
+};
+
+const hasPreWriteIosTestQualityScope = (repoRoot: string): boolean =>
+  collectPreWriteEffectiveChangedPaths(repoRoot).some((filePath) =>
+    isIosTestQualityPath(filePath)
+  );
+
+const resolvePreWriteCriticalSkillsRules = (params: {
+  platform: PreWriteSkillsPlatform;
+  stage: AiGateStage;
+  repoRoot: string;
+}): ReadonlyArray<string> => {
+  const ruleIds = PREWRITE_CRITICAL_SKILLS_RULES[params.platform];
+  if (
+    params.platform === 'ios'
+    && params.stage === 'PRE_WRITE'
+    && ruleIds.includes('skills.ios.critical-test-quality')
+    && !hasPreWriteIosTestQualityScope(params.repoRoot)
+  ) {
+    return ruleIds.filter((ruleId) => ruleId !== 'skills.ios.critical-test-quality');
+  }
+  return ruleIds;
+};
+
+const hasRuleCoverage = (
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>,
+  ruleId: string
+): boolean =>
+  coverage.active_rule_ids.includes(ruleId) && coverage.evaluated_rule_ids.includes(ruleId);
+
+const hasEquivalentCriticalRuleCoverage = (
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>,
+  ruleId: string
+): boolean => {
+  if (ruleId !== 'skills.ios.critical-test-quality') {
+    return false;
+  }
+  return hasRuleCoverage(coverage, 'skills.ios.prefer-swift-testing');
+};
+
+const hasRequiredCriticalRuleCoverage = (
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>,
+  ruleId: string
+): boolean =>
+  hasRuleCoverage(coverage, ruleId) || hasEquivalentCriticalRuleCoverage(coverage, ruleId);
+
 const isPlatformPath = (platform: PreWriteSkillsPlatform, filePath: string): boolean => {
   const normalized = normalizeChangedPath(filePath).toLowerCase();
   if (platform === 'ios') {
     return normalized.endsWith('.swift')
-      || normalized.startsWith('apps/ios/')
-      || normalized.startsWith('ios/');
+      || normalized.endsWith('.m')
+      || normalized.endsWith('.mm')
+      || normalized.endsWith('.h')
+      || normalized.endsWith('.xib')
+      || normalized.endsWith('.storyboard')
+      || normalized.endsWith('.xcstrings')
+      || normalized.endsWith('.plist');
   }
   if (platform === 'android') {
     return normalized.endsWith('.kt')
       || normalized.endsWith('.kts')
-      || normalized.startsWith('apps/android/')
-      || normalized.startsWith('android/');
+      || normalized.endsWith('.java')
+      || normalized.endsWith('.xml')
+      || normalized.endsWith('.gradle')
+      || normalized.endsWith('.gradle.kts');
   }
   if (platform === 'backend') {
     const isTypeScriptOrJavaScript =
@@ -457,6 +621,26 @@ const hasWorktreeCodePlatforms = (params: {
   }
   return changedPaths.some((filePath) =>
     params.requiredPlatforms.some((platform) => isPlatformPath(platform, filePath))
+  );
+};
+
+const hasEffectiveChangedCodePlatforms = (params: {
+  changedPaths: ReadonlyArray<string>;
+  requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
+}): boolean =>
+  params.changedPaths.some((filePath) =>
+    params.requiredPlatforms.some((platform) => isPlatformPath(platform, filePath))
+  );
+
+const toChangedPathDetectedPlatforms = (params: {
+  changedPaths: ReadonlyArray<string>;
+  requiredPlatforms: ReadonlyArray<PreWriteSkillsPlatform>;
+}): ReadonlyArray<PreWriteSkillsPlatform> => {
+  if (params.changedPaths.length === 0 || params.requiredPlatforms.length === 0) {
+    return [];
+  }
+  return params.requiredPlatforms.filter((platform) =>
+    params.changedPaths.some((filePath) => isPlatformPath(platform, filePath))
   );
 };
 
@@ -552,6 +736,7 @@ const collectActiveRuleIdsCoverageViolations = (params: {
 };
 
 const collectPreWritePlatformSkillsViolations = (params: {
+  repoRoot: string;
   evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
   coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
   skillsEnforcement: SkillsEnforcementResolution;
@@ -561,6 +746,16 @@ const collectPreWritePlatformSkillsViolations = (params: {
     coverage: params.coverage,
   });
   if (detectedPlatforms.length === 0) {
+    return [];
+  }
+  const effectiveChangedPaths = collectPreWriteEffectiveChangedPaths(params.repoRoot);
+  const isNoCodeEffectiveScope =
+    effectiveChangedPaths.length > 0
+    && !hasEffectiveChangedCodePlatforms({
+      changedPaths: effectiveChangedPaths,
+      requiredPlatforms: detectedPlatforms,
+    });
+  if (isNoCodeEffectiveScope) {
     return [];
   }
 
@@ -625,14 +820,16 @@ const collectPreWritePlatformSkillsViolations = (params: {
 
   const missingCriticalRulesByPlatform: string[] = [];
   for (const platform of detectedPlatforms) {
-    const requiredCriticalRuleIds = PREWRITE_CRITICAL_SKILLS_RULES[platform];
+    const requiredCriticalRuleIds = resolvePreWriteCriticalSkillsRules({
+      platform,
+      stage: 'PRE_WRITE',
+      repoRoot: params.repoRoot,
+    });
     if (requiredCriticalRuleIds.length === 0) {
       continue;
     }
     const missingCriticalRuleIds = requiredCriticalRuleIds.filter((ruleId) => {
-      const hasActive = params.coverage.active_rule_ids.includes(ruleId);
-      const hasEvaluated = params.coverage.evaluated_rule_ids.includes(ruleId);
-      return !hasActive || !hasEvaluated;
+      return !hasRequiredCriticalRuleCoverage(params.coverage, ruleId);
     });
     if (missingCriticalRuleIds.length === 0) {
       continue;
@@ -705,6 +902,25 @@ const toSkillsContractAssessment = (params: {
   skillsEnforcement: SkillsEnforcementResolution;
 }): AiGateSkillsContractAssessment => {
   const requiredPlatforms = toLockRequiredPlatforms(params.requiredLock);
+  const effectiveChangedPaths = collectPreWriteEffectiveChangedPaths(params.repoRoot);
+  const hasEffectiveChangedPaths = effectiveChangedPaths.length > 0;
+  const hasEffectiveCodePlatforms = hasEffectiveChangedCodePlatforms({
+    changedPaths: effectiveChangedPaths,
+    requiredPlatforms,
+  });
+  const isNoCodeEffectiveScope =
+    requiredPlatforms.length > 0 && hasEffectiveChangedPaths && !hasEffectiveCodePlatforms;
+
+  if (isNoCodeEffectiveScope) {
+    return {
+      stage: params.stage,
+      enforced: false,
+      status: 'NOT_APPLICABLE',
+      detected_platforms: [],
+      requirements: [],
+      violations: [],
+    };
+  }
 
   if (params.evidenceResult.kind !== 'valid') {
     return {
@@ -716,14 +932,22 @@ const toSkillsContractAssessment = (params: {
         platform,
         required_rule_prefix: PLATFORM_SKILLS_RULE_PREFIXES[platform],
         required_bundles: [...PLATFORM_REQUIRED_SKILLS_BUNDLES[platform]],
-        required_critical_rule_ids: [...PREWRITE_CRITICAL_SKILLS_RULES[platform]],
+        required_critical_rule_ids: resolvePreWriteCriticalSkillsRules({
+          platform,
+          stage: params.stage,
+          repoRoot: params.repoRoot,
+        }),
         required_any_transversal_critical_rule_ids: [
           ...PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES[platform],
         ],
         active_prefix_covered: false,
         evaluated_prefix_covered: false,
         missing_bundles: [...PLATFORM_REQUIRED_SKILLS_BUNDLES[platform]],
-        missing_critical_rule_ids: [...PREWRITE_CRITICAL_SKILLS_RULES[platform]],
+        missing_critical_rule_ids: resolvePreWriteCriticalSkillsRules({
+          platform,
+          stage: params.stage,
+          repoRoot: params.repoRoot,
+        }),
         transversal_critical_covered: false,
         missing_any_transversal_critical_rule_ids: [
           ...PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES[platform],
@@ -745,8 +969,12 @@ const toSkillsContractAssessment = (params: {
   const coverage = params.evidenceResult.evidence.snapshot.rules_coverage;
   const explicitlyDetectedPlatforms = toDetectedSkillsPlatforms(params.evidenceResult.evidence.platforms);
   const inferredPlatforms = toCoverageInferredPlatforms(coverage);
+  const changedPathDetectedPlatforms = toChangedPathDetectedPlatforms({
+    changedPaths: effectiveChangedPaths,
+    requiredPlatforms,
+  });
   const repoTreeDetectedPlatforms =
-    params.stage !== 'PRE_WRITE' && requiredPlatforms.length > 0
+    params.stage !== 'PRE_WRITE' && requiredPlatforms.length > 0 && !hasEffectiveChangedPaths
       ? toRepoTreeDetectedPlatforms({
           repoRoot: params.repoRoot,
           platforms: requiredPlatforms,
@@ -764,7 +992,9 @@ const toSkillsContractAssessment = (params: {
       ? explicitlyDetectedEffectivePlatforms
       : inferredPlatforms.length > 0
         ? inferredPlatforms
-        : repoTreeDetectedPlatforms;
+        : changedPathDetectedPlatforms.length > 0
+          ? changedPathDetectedPlatforms
+          : repoTreeDetectedPlatforms;
   const pendingChanges = resolvePendingChanges(params.repoState);
   const detectedPlatformSet = new Set(detectedPlatforms);
   const assessmentPlatforms =
@@ -776,13 +1006,16 @@ const toSkillsContractAssessment = (params: {
 
   if (requiredPlatforms.length > 0 && detectedPlatforms.length === 0) {
     if (
-      params.stage === 'PRE_WRITE'
-      && (
+      (
         pendingChanges === 0
-        || !hasWorktreeCodePlatforms({
-          repoRoot: params.repoRoot,
-          requiredPlatforms,
-        })
+        || !hasEffectiveCodePlatforms
+        || (
+          params.stage === 'PRE_WRITE'
+          && !hasWorktreeCodePlatforms({
+            repoRoot: params.repoRoot,
+            requiredPlatforms,
+          })
+        )
       )
     ) {
       return {
@@ -798,14 +1031,22 @@ const toSkillsContractAssessment = (params: {
       platform,
       required_rule_prefix: PLATFORM_SKILLS_RULE_PREFIXES[platform],
       required_bundles: [...PLATFORM_REQUIRED_SKILLS_BUNDLES[platform]],
-      required_critical_rule_ids: [...PREWRITE_CRITICAL_SKILLS_RULES[platform]],
+      required_critical_rule_ids: resolvePreWriteCriticalSkillsRules({
+        platform,
+        stage: params.stage,
+        repoRoot: params.repoRoot,
+      }),
       required_any_transversal_critical_rule_ids: [
         ...PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES[platform],
       ],
       active_prefix_covered: false,
       evaluated_prefix_covered: false,
       missing_bundles: [...PLATFORM_REQUIRED_SKILLS_BUNDLES[platform]],
-      missing_critical_rule_ids: [...PREWRITE_CRITICAL_SKILLS_RULES[platform]],
+      missing_critical_rule_ids: resolvePreWriteCriticalSkillsRules({
+        platform,
+        stage: params.stage,
+        repoRoot: params.repoRoot,
+      }),
       transversal_critical_covered: false,
       missing_any_transversal_critical_rule_ids: [
         ...PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES[platform],
@@ -859,7 +1100,13 @@ const toSkillsContractAssessment = (params: {
   for (const platform of assessmentPlatforms) {
     const requiredRulePrefix = PLATFORM_SKILLS_RULE_PREFIXES[platform];
     const requiredBundles = [...PLATFORM_REQUIRED_SKILLS_BUNDLES[platform]];
-    const requiredCriticalRuleIds = [...PREWRITE_CRITICAL_SKILLS_RULES[platform]];
+    const requiredCriticalRuleIds = [
+      ...resolvePreWriteCriticalSkillsRules({
+        platform,
+        stage: params.stage,
+        repoRoot: params.repoRoot,
+      }),
+    ];
     const requiredAnyTransversalCriticalRuleIds = [
       ...PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES[platform],
     ];
@@ -874,9 +1121,7 @@ const toSkillsContractAssessment = (params: {
     );
     const missingCriticalRuleIds = coverage
       ? requiredCriticalRuleIds.filter((ruleId) => {
-          const hasActive = coverage.active_rule_ids.includes(ruleId);
-          const hasEvaluated = coverage.evaluated_rule_ids.includes(ruleId);
-          return !hasActive || !hasEvaluated;
+          return !hasRequiredCriticalRuleCoverage(coverage, ruleId);
         })
       : [...requiredCriticalRuleIds];
     const transversalCriticalCovered =
@@ -1057,6 +1302,7 @@ const collectPreWriteCoherenceViolations = (params: {
 
     violations.push(
       ...collectPreWritePlatformSkillsViolations({
+        repoRoot: params.repoRoot,
         evidence: params.evidence,
         coverage,
         skillsEnforcement,
@@ -1131,14 +1377,20 @@ const collectEvidenceViolations = (
   }
 
   if (result.evidence.ai_gate.status === 'BLOCKED') {
-    const gateBlockedMessage = 'Evidence AI gate status is BLOCKED.';
+    const blockingCause = extractEvidenceBlockingCauses(result.evidence)[0];
+    const gateBlockedMessage = buildEvidenceGateBlockedMessage(result);
     violations.push(
-      isAdvisoryDocumentationRenderSlice(repoRoot, ageSeconds, maxAgeSeconds)
+      !hasEvidenceBlockingCause(result) && ageSeconds <= maxAgeSeconds
+        ? toWarnViolation(
+            'EVIDENCE_GATE_BLOCKED',
+            `${gateBlockedMessage} Advisory because the evidence snapshot did not expose any blocking cause.`
+          )
+        : isAdvisoryDocumentationRenderSlice(repoRoot, ageSeconds, maxAgeSeconds)
         ? toWarnViolation(
             'EVIDENCE_GATE_BLOCKED',
             `${gateBlockedMessage} Advisory because the current slice only contains documentation/render/tooling artifacts and evidence is fresh.`
           )
-        : toErrorViolation('EVIDENCE_GATE_BLOCKED', gateBlockedMessage)
+        : toEvidenceGateBlockedViolation('ERROR', gateBlockedMessage, blockingCause)
     );
   }
 
@@ -1335,9 +1587,6 @@ const appendWorktreeHygieneViolations = (
 };
 
 const toPolicyStage = (stage: AiGateStage): SkillsStage => {
-  if (stage === 'PRE_WRITE') {
-    return 'PRE_COMMIT';
-  }
   return stage;
 };
 
@@ -1533,6 +1782,9 @@ export const evaluateAiGate = (
     suppressSkillsContractViolation
     || skillsContract.status !== 'FAIL'
     || (params.stage === 'PRE_WRITE' && requiredSkillsPlatforms.length === 0)
+    || skillsContract.violations.some((violation) =>
+      violation.code === 'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING'
+    )
         ? []
       : [
           toSkillsViolation(

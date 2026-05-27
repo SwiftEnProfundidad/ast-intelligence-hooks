@@ -21,6 +21,12 @@ const BLOCK_NEXT_ACTION_BY_CODE: Readonly<Record<string, string>> = {
     'Reconcilia policy/skills y reintenta PRE_COMMIT: npx --yes --package pumuki@latest pumuki policy reconcile --strict --json && npx --yes --package pumuki@latest pumuki-pre-commit',
   SKILLS_SKILLS_FRONTEND_NO_SOLID_VIOLATIONS:
     'Aplica refactor incremental: extrae 1 componente/hook por commit y vuelve a ejecutar PRE_COMMIT.',
+  SKILLS_SKILLS_BACKEND_NO_CONSOLE_LOG:
+    'Elimina console.log del backend o sustitúyelo por el logger aprobado para runtime; vuelve a ejecutar el gate.',
+  SKILLS_SKILLS_FRONTEND_NO_CONSOLE_LOG:
+    'Elimina console.log del frontend de producción o muévelo a instrumentación aprobada; vuelve a ejecutar el gate.',
+  HEURISTICS_CONSOLE_LOG_AST:
+    'Elimina console.log del código productivo o usa el logger aprobado del proyecto; vuelve a ejecutar el gate.',
 };
 
 const severityWeight = (severity: string): number => {
@@ -38,6 +44,23 @@ const severityWeight = (severity: string): number => {
   }
 };
 
+const isAstSkillFinding = (finding: Finding): boolean => {
+  const ruleId = finding.ruleId.toLowerCase();
+  const code = finding.code.toLowerCase();
+  return (
+    ruleId.startsWith('skills.') ||
+    ruleId.startsWith('heuristics.') ||
+    code.startsWith('skills_') ||
+    code.startsWith('heuristics_') ||
+    code.includes('_ast')
+  );
+};
+
+const primaryWeight = (finding: Finding): number => {
+  const astSkillWeight = isAstSkillFinding(finding) ? 100 : 0;
+  return astSkillWeight + severityWeight(finding.severity);
+};
+
 const resolvePrimaryFinding = (findings: ReadonlyArray<Finding>): Finding => {
   let primary = findings[0];
   for (const finding of findings.slice(1)) {
@@ -45,7 +68,7 @@ const resolvePrimaryFinding = (findings: ReadonlyArray<Finding>): Finding => {
       primary = finding;
       continue;
     }
-    if (severityWeight(finding.severity) > severityWeight(primary.severity)) {
+    if (primaryWeight(finding) > primaryWeight(primary)) {
       primary = finding;
     }
   }
@@ -54,6 +77,10 @@ const resolvePrimaryFinding = (findings: ReadonlyArray<Finding>): Finding => {
 
 const sortFindingsBySeverity = (findings: ReadonlyArray<Finding>): ReadonlyArray<Finding> =>
   [...findings].sort((left, right) => {
+    const primaryDelta = primaryWeight(right) - primaryWeight(left);
+    if (primaryDelta !== 0) {
+      return primaryDelta;
+    }
     const severityDelta = severityWeight(right.severity) - severityWeight(left.severity);
     if (severityDelta !== 0) {
       return severityDelta;
@@ -94,6 +121,16 @@ const formatLocation = (finding: Finding): string | null => {
   return `${finding.filePath.replace(/\\/g, '/')}:${anchorLine}`;
 };
 
+const resolveAstSkillNextAction = (finding: Finding): string | null => {
+  if (!isAstSkillFinding(finding)) {
+    return null;
+  }
+  const location = formatLocation(finding);
+  const fix = finding.expected_fix?.trim() || 'corrige la violación indicada por la regla';
+  const locationText = location ? ` en ${location}` : '';
+  return `Corrige ${finding.ruleId}${locationText}: ${fix}. Vuelve a ejecutar el gate.`;
+};
+
 const formatFinding = (finding: Finding): string => {
   const location = formatLocation(finding);
   const severity = finding.severity.toUpperCase();
@@ -111,6 +148,7 @@ export const printGateFindings = (findings: ReadonlyArray<Finding>): void => {
   const primary = resolvePrimaryFinding(orderedFindings);
   const nextAction =
     BLOCK_NEXT_ACTION_BY_CODE[primary.code]
+    ?? resolveAstSkillNextAction(primary)
     ?? 'Corrige el bloqueante primario y vuelve a ejecutar el mismo comando.';
   process.stdout.write(
     `[pumuki][block-summary] primary=${primary.code} severity=${primary.severity.toUpperCase()} rule=${primary.ruleId}\n`
@@ -126,7 +164,8 @@ export const printGateFindings = (findings: ReadonlyArray<Finding>): void => {
       `[pumuki][warning-summary] secondary=${finding.code} severity=${finding.severity.toUpperCase()} rule=${finding.ruleId}\n`
     );
   }
-  for (const finding of orderedFindings) {
-    process.stdout.write(`${formatFinding(finding)}\n`);
+  process.stdout.write(`[pumuki][findings] total=${orderedFindings.length}\n`);
+  for (const [index, finding] of orderedFindings.entries()) {
+    process.stdout.write(`\n${index + 1}. ${formatFinding(finding)}\n`);
   }
 };

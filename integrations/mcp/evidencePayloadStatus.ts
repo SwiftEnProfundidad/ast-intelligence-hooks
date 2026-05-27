@@ -21,6 +21,7 @@ import {
 } from './evidenceFacets';
 import { CONTEXT_API_CAPABILITIES } from './evidencePayloadConfig';
 import { toSuppressedSummaryFields } from './evidencePayloadSummarySuppressed';
+import { extractEvidenceBlockingCauses } from '../evidence/blockingCauses';
 
 export const toStatusPayload = (repoRoot: string): unknown => {
   const readResult = readEvidenceResult(repoRoot);
@@ -61,6 +62,7 @@ export const toStatusPayload = (repoRoot: string): unknown => {
   const detectedPlatformsCount = sortedPlatforms.filter((entry) => entry.detected).length;
   const suppressedFindingsCount = evidence.consolidation?.suppressed?.length ?? 0;
   const findingsWithLinesCount = toFindingsWithLinesCount(evidence.snapshot.findings);
+  const blockingCauses = extractEvidenceBlockingCauses(evidence);
   return {
     status: 'ok',
     context_api: CONTEXT_API_CAPABILITIES,
@@ -83,6 +85,8 @@ export const toStatusPayload = (repoRoot: string): unknown => {
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
       highest_severity: toHighestSeverity(evidence.snapshot.findings),
       blocking_findings_count: toBlockingFindingsCount(evidence.snapshot.findings),
+      blocking_causes_count: blockingCauses.length,
+      blocking_causes: blockingCauses,
       ledger_count: evidence.ledger.length,
       ledger_files_count: toLedgerFilesCount(evidence.ledger),
       ledger_rules_count: toLedgerRulesCount(evidence.ledger),

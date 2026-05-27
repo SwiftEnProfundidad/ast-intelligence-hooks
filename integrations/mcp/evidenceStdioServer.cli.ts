@@ -108,8 +108,8 @@ const startOrReuseEvidenceHttp = async (): Promise<{
     if (health.status === 'ok') {
       return { host, port: requestedPort, route };
     }
-  } catch {
-    // ignored
+  } catch (error) {
+    void error;
   }
 
   const portInUse = await isPortInUse(host, requestedPort);

@@ -3,6 +3,7 @@ import { isAbsolute, resolve } from 'node:path';
 import type { Fact } from '../../core/facts/Fact';
 import type { Finding } from '../../core/gate/Finding';
 import { readTddBddEvidence } from './contract';
+import type { TddSlice } from './contract';
 import { classifyTddBddScope } from './scope';
 import type { TddBddSnapshot } from './types';
 import { resolveActiveTddBddWaiver } from './waiver';
@@ -19,6 +20,7 @@ const buildFinding = (params: {
   severity?: Finding['severity'];
   filePath?: string;
   source?: string;
+  expected_fix?: string;
 }): Finding => {
   return {
     ruleId: params.ruleId,
@@ -28,6 +30,7 @@ const buildFinding = (params: {
     filePath: params.filePath,
     matchedBy: 'TddBddEnforcer',
     source: params.source ?? 'tdd-bdd-contract',
+    expected_fix: params.expected_fix,
   };
 };
 
@@ -76,6 +79,14 @@ const isTimelineOrdered = (timestamps: ReadonlyArray<string | undefined>): boole
   return true;
 };
 
+const selectEnforcedEvidenceSlices = (slices: ReadonlyArray<TddSlice>): ReadonlyArray<TddSlice> => {
+  if (slices.length <= 1) {
+    return slices;
+  }
+  const latestSlice = slices[slices.length - 1];
+  return latestSlice ? [latestSlice] : [];
+};
+
 export const enforceTddBddPolicy = (params: {
   facts: ReadonlyArray<Fact>;
   repoRoot: string;
@@ -96,15 +107,21 @@ export const enforceTddBddPolicy = (params: {
         public_interface_files: scope.metrics.publicInterfaceFiles,
       },
     },
-    evidence: {
-      path: '',
-      state: 'not_required',
-      slices_total: 0,
-      slices_valid: 0,
-      slices_invalid: 0,
-      integrity_ok: true,
-      errors: [],
-    },
+      evidence: {
+        path: '',
+        state: 'not_required',
+        slices_total: 0,
+        slices_valid: 0,
+        slices_invalid: 0,
+        integrity_ok: true,
+        errors: [],
+        phases: {
+          red: 'missing',
+          green: 'missing',
+          refactor: 'missing',
+          verify: 'missing',
+        },
+      },
     waiver: {
       applied: false,
     },
@@ -163,7 +180,7 @@ export const enforceTddBddPolicy = (params: {
       ruleId: 'generic_evidence_integrity_required',
       code: 'TDD_BDD_EVIDENCE_MISSING',
       message:
-        'TDD/BDD evidence contract is required for new/complex changes and was not found.',
+        'Golden Flow evidence is required for functional code changes and was not found. Required phases: RED failed, GREEN passed, REFACTOR passed, VERIFY passed.',
       filePath: evidenceRead.path,
     });
     return {
@@ -207,8 +224,16 @@ export const enforceTddBddPolicy = (params: {
   const sliceFindings: Finding[] = [];
   const seenSliceIds = new Set<string>();
   let validSlices = 0;
+  const phaseState: NonNullable<TddBddSnapshot['evidence']['phases']> = {
+    red: 'missing',
+    green: 'missing',
+    refactor: 'missing',
+    verify: 'missing',
+  };
 
-  if (evidenceRead.evidence.slices.length === 0) {
+  const enforcedSlices = selectEnforcedEvidenceSlices(evidenceRead.evidence.slices);
+
+  if (enforcedSlices.length === 0) {
     sliceFindings.push(
       buildFinding({
         ruleId: 'generic_tdd_vertical_required',
@@ -219,7 +244,7 @@ export const enforceTddBddPolicy = (params: {
     );
   }
 
-  for (const slice of evidenceRead.evidence.slices) {
+  for (const slice of enforcedSlices) {
     const sliceErrorsBefore = sliceFindings.length;
 
     if (seenSliceIds.has(slice.id)) {
@@ -258,6 +283,7 @@ export const enforceTddBddPolicy = (params: {
     }
 
     if (slice.red.status !== 'failed') {
+      phaseState.red = slice.red.status;
       sliceFindings.push(
         buildFinding({
           ruleId: 'generic_tdd_vertical_required',
@@ -266,8 +292,12 @@ export const enforceTddBddPolicy = (params: {
           filePath: evidenceRead.path,
         })
       );
+    } else {
+      phaseState.red = 'failed';
     }
 
+    phaseState.green = slice.green.status;
+    phaseState.refactor = slice.refactor.status;
     if (slice.green.status !== 'passed' || slice.refactor.status !== 'passed') {
       sliceFindings.push(
         buildFinding({
@@ -279,18 +309,53 @@ export const enforceTddBddPolicy = (params: {
       );
     }
 
+    if (!slice.verify) {
+      sliceFindings.push(
+        buildFinding({
+          ruleId: 'generic_golden_flow_verify_required',
+          code: 'GOLDEN_FLOW_VERIFY_EVIDENCE_MISSING',
+          message:
+            `Slice ${slice.id} is missing final test verification after REFACTOR. ` +
+            `missing=[verify.status=passed] test_ref=${slice.refactor.test_ref ?? slice.green.test_ref ?? 'unregistered'}`,
+          filePath: evidenceRead.path,
+          expected_fix:
+            `Si el test/build ya pasó, informa a Pumuki del resultado real con: ` +
+            `npx pumuki sdd evidence --scenario-id=${slice.id} --test-command="<comando XCTest/build ejecutado>" --test-status=passed. ` +
+            `Después haz un commit atómico del slice.`,
+        })
+      );
+    } else {
+      phaseState.verify = slice.verify.status;
+      if (slice.verify.status !== 'passed') {
+        sliceFindings.push(
+          buildFinding({
+          ruleId: 'generic_golden_flow_verify_required',
+          code: 'GOLDEN_FLOW_VERIFY_MUST_PASS',
+          message:
+            `Slice ${slice.id} has final test verification but it is not green. ` +
+            `missing=[verify.status=passed] test_ref=${slice.verify.test_ref ?? 'unregistered'}`,
+          filePath: evidenceRead.path,
+          expected_fix:
+            `Corrige el fallo del test/build final y vuelve a informar a Pumuki con ` +
+            `npx pumuki sdd evidence --scenario-id=${slice.id} --test-command="<comando XCTest/build ejecutado>" --test-status=passed.`,
+        })
+      );
+    }
+    }
+
     if (
       !isTimelineOrdered([
         slice.red.timestamp,
         slice.green.timestamp,
         slice.refactor.timestamp,
+        slice.verify?.timestamp,
       ])
     ) {
       sliceFindings.push(
         buildFinding({
           ruleId: 'generic_red_green_refactor_enforced',
           code: 'TDD_PHASE_TIMELINE_INVALID',
-          message: `Slice ${slice.id} has invalid RED->GREEN->REFACTOR timestamp ordering.`,
+          message: `Slice ${slice.id} has invalid RED->GREEN->REFACTOR->VERIFY timestamp ordering.`,
           filePath: evidenceRead.path,
         })
       );
@@ -301,7 +366,7 @@ export const enforceTddBddPolicy = (params: {
     }
   }
 
-  const invalidSlices = Math.max(0, evidenceRead.evidence.slices.length - validSlices);
+  const invalidSlices = Math.max(0, enforcedSlices.length - validSlices);
   const hasBlockingFindings = sliceFindings.some(
     (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
   );
@@ -315,11 +380,12 @@ export const enforceTddBddPolicy = (params: {
         ...baseSnapshot.evidence,
         state: 'valid',
         version: evidenceRead.evidence.version,
-        slices_total: evidenceRead.evidence.slices.length,
+        slices_total: enforcedSlices.length,
         slices_valid: validSlices,
         slices_invalid: invalidSlices,
         integrity_ok: evidenceRead.integrity.valid,
         errors: sliceFindings.map((finding) => finding.code),
+        phases: phaseState,
       },
       waiver: {
         applied: false,
